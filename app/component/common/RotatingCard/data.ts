@@ -1,0 +1,35 @@
+export const rotateCardData = [
+  {
+    id: 1,
+    name: "Nikita Bhati, RCI-CP",
+    title: "",
+    experience: "",
+    image: "/images/therapisthomepage1.webp",
+    opacity: 1,
+    width: "16rem",
+    height: "18rem",
+    link: "https://secure.therasoft.in/TSI/Bookyoursession.aspx?CC=zz3CPddnUoI=&CON=vHhhQjp5odE=",  // Add your link here
+  },
+  {
+    id: 2,
+    name: "Maiena Pant, RCI-CP",
+    title: "",
+    experience: "",
+    image: "/images/therapisthomepage2.webp",
+    opacity: 0.5,
+    width: "14rem",
+    height: "16rem",
+    link: "https://secure.therasoft.in/TSI/Bookyoursession.aspx?CC=zz3CPddnUoI=&CON=9ziJM2yrlOg=",
+  },
+  {
+    id: 3,
+    name: "Pooja Bharadwaj, RCI-CP",
+    title: "",
+    experience: "",
+    image: "/images/therapisthomepage3.webp",
+    opacity: 0.5,
+    width: "14rem",
+    height: "16rem",
+    link: "https://secure.therasoft.in/TSI/Bookyoursession.aspx?CC=zz3CPddnUoI=&CON=8rMNlUWtcq4=",
+  },
+];

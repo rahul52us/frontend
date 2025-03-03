@@ -1,0 +1,68 @@
+.customScrollBar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  /* Track */
+  .customScrollBar::-webkit-scrollbar-track {
+    background-color: #BED5D7; /* Track color */
+    border-radius: 16px; 
+    /* background: #f1f1f1;  */
+    /* box-shadow: inset 0 0 5px grey; */
+    border-radius: 12px;
+  }
+  
+  /* Handle */
+  .customScrollBar::-webkit-scrollbar-thumb {
+    background: #045B64;
+    border-radius: 12px;
+  }
+  
+  .customScrollBar a {
+    text-decoration: none !important;
+  }
+  
+  .customScrollBarHidden::-webkit-scrollbar {
+    width: 2px;
+    height: 6px;  
+  }
+  
+  /* Track */
+  .customScrollBarHidden::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px white;
+    border-radius: 10px;
+  }
+  
+  /* Handle */
+  .customScrollBarHidden::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
+  
+  .customScrollBarHidden:hover::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px grey;
+    border-radius: 10px;
+  }
+  
+  /* Handle */
+  .customScrollBarHidden:hover::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 10px;
+  }
+  
+  .customScrollBarHidden a {
+    text-decoration: none !important;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .customScrollBar::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+  
+    .customScrollBarHidden::-webkit-scrollbar {
+      width: 1px;
+      height: 3px;
+    }
+  }
+  

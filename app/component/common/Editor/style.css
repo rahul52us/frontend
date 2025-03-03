@@ -1,0 +1,34 @@
+/* custom-editor-styles.css */
+
+/* Center alignment for custom image, video, and embed formats */
+.ql-custom-image,
+.ql-custom-video,
+.ql-custom-embed {
+  display: block;
+  margin: 0 auto; /* Horizontal center alignment */
+}
+
+.ql-container {
+  height: 100% !important; /* Ensure the editor container has a fixed height */
+  overflow: hidden; /* Prevent container scrolling */
+  display: flex; /* Ensures proper alignment */
+  flex-direction: column;
+}
+
+.ql-editor {
+  flex-grow: 1; /* Allow the editor to use the remaining height */
+  overflow-y: auto; /* Enable scrolling within the editor */
+  padding: 12px; /* Add padding for better spacing */
+  box-sizing: border-box; /* Ensure padding doesn’t affect height */
+}
+
+.ql-toolbar {
+  flex-shrink: 0; /* Prevent toolbar from shrinking */
+  border-radius: 4px 4px 0 0; /* Round toolbar corners */
+  z-index: 1 !important;
+
+}
+
+.ql-container {
+  border-radius: 0 0 4px 4px; /* Round editor container corners */
+}
