@@ -31,7 +31,7 @@ export default function RootLayout({
   }, [getCompanyDetails]); // Removed getCompanyDetails from the dependency array to avoid unnecessary re-renders
 
   const getLayout = () => {
-    if (pathname === '/login' || pathname === '/register' || pathname === "/forgot-password") {
+    if (pathname === '/login' || pathname === '/register' || pathname === "/forgot-password" || pathname === '/signUp') {
       return AuthenticationLayout;
     } else if (pathname.startsWith('/dashboard')) {
       return DashboardLayout;

@@ -1,76 +1,87 @@
 'use client';
 
-import { Box, Flex, Image, useBreakpointValue } from '@chakra-ui/react';
+import { Box, Grid, useBreakpointValue, Text, VStack } from '@chakra-ui/react';
 import React from 'react';
 
 const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
-  // const pathname = usePathname();
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-  // if (pathname === '/register') {
-  //   return <>{children}</>;
-  // }
-
   return (
-    <Flex
+    <Grid
       minHeight="100vh"
-      direction={{ base: 'column', md: 'row' }}
+      maxH={'100vh'}
+      templateColumns={'1fr 1fr'}
       justifyContent="center"
       alignItems="center"
       bg="gray.50"
-      p={5}
-      gap={{ md: 8 ,xl:10}}
-    >
+      gap={{ md: 8, xl: 10 }}
+      >
       {/* Left Section - Background Image */}
       {!isMobile && (
         <Box
           position="relative"
-          bgImage="/images/auth/bgImage.png"
-          height={{ md: '90vh',xl:"94vh" }}
-          width={{ md: '40%', lg: '45%' }}
+          bgImage="/images/signupBg.jpg"
+          height={{ md: '90vh', xl: "100vh" }}
+          width={{ md: '40%', lg: '100%' }}
           bgSize="cover"
           bgPosition="center"
-          rounded="xl"
           display="flex"
           flexDirection="column"
           alignItems="center"
           justifyContent="center"
           alignSelf="center"
         >
-          <Image
-            src="/images/whiteLogo.png"
-            alt="Logo"
-            position="absolute"
-            top={4}
-            left={8}
-            width={{ base: '60px', md: '160px' }}
-          />
-          <Image
-            src="/images/auth/gridImages.png"
-            alt="Grid Image"
-            width={{ base: '50%', md: '70%' }}
-            maxW="450px"
-          />
+          {/* Semi-transparent overlay */}
+          <Box
+            bg="blackAlpha.500"
+            p={8} // Increased padding to make the box bigger
+            py={12}
+            borderRadius="xl" // Rounded corners for a modern look
+            textAlign="center"
+            backdropFilter="blur(12px)"
+            // maxW="600px" // Set a max width for the box
+            width="90%" // Make the box wider
+          >
+            <VStack spacing={6} alignItems="start">
+              {/* Larger heading */}
+              <Text fontSize="4xl" fontWeight="bold" color="white" lineHeight="1.2">
+                Welcome to Our Platform
+              </Text>
+
+              {/* Structured text */}
+              <VStack spacing={4} alignItems="start">
+                <Text fontSize="lg" color="white" textAlign={'start'}>
+                  Join us and explore a world of opportunities. Sign up now to get started!
+                </Text>
+                <Text fontSize="md" color="white" fontStyle="italic">
+                  "The best way to predict the future is to create it."
+                </Text>
+                {/* <Text fontSize="md" color="white">
+                  Already have an account?{' '}
+                  <Text as="span" fontWeight="bold" color="blue.200">
+                    Log in here.
+                  </Text>
+                </Text> */}
+              </VStack>
+            </VStack>
+          </Box>
         </Box>
       )}
 
       {/* Right Section - Form Content */}
       <Box
-        bg="white"
         p={{ base: 6, md: 8 }}
         borderRadius="md"
-        width={{ base: '100%', md: '40%', lg: '45%' }}
-        maxW="550px"
+        width={{ base: '100%', md: '40%', lg: '90%' }}
         display="flex"
         flexDirection="column"
         justifyContent="center"
-        // boxShadow={{ base: 'none', md: 'lg' }}
         minHeight={{ md: 'auto' }}
         ml={4}
       >
         {children}
       </Box>
-    </Flex>
+    </Grid>
   );
 };
 
