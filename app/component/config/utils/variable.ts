@@ -1,0 +1,14 @@
+export const tablePageLimit = 10
+export const paginationLimit = 10
+export const miniTablePageLimit = 6
+export const LargeScreenHeaderHeight = "80px"
+export const SmallScreenHeaderHeight = "60px"
+export const sidebarWidth = '250px';
+export const mediumSidebarWidth = '72px';
+export const headerHeight = '60px';
+export const headerPadding = '10px';
+export const contentLargeBodyPadding = '15px';
+export const contentSmallBodyPadding = '8px';
+export const CardBoxShadow="rgb(0 0 0 / 20%) 0px 0px 11px"
+export const WebLargeScreenHeaderHeight = "0px"
+export const WebSmallScreenHeaderHeight = "0px"

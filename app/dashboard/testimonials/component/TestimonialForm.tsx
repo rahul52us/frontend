@@ -1,127 +1,96 @@
-'use client'
-import {
-  Avatar,
-  Box,
-  Button,
-  Flex,
-  useBreakpointValue,
-} from "@chakra-ui/react";
-import { FaPlus, FaTimes } from "react-icons/fa";
+'use client';
+import {  Button, Flex, VStack, Stack, Card, SimpleGrid, Box } from "@chakra-ui/react";
+import { FaCheck, FaTimes } from "react-icons/fa";
 import { Form, Formik } from "formik";
-import testimonialValidation from "../utils/validation";
 import { useState } from "react";
-import { observer } from "mobx-react-lite";
-import stores from "../../../store/stores";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
+import testimonialValidation from "../utils/validation";
+import { removeDataByIndex } from "../../../config/utils/utils";
+import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 
-interface TestimonialFormValues {
-  name: string;
-  profession: string;
-  description: string;
-  image?: any;
+interface TestimonialFormProps {
+  initialValues: { name: string; profession: string; description: string; image?: any };
+  onSubmit: any;
+  close: () => void;
+  isEdit?:boolean
 }
 
-const TestimonialForm = observer(({ close }: any) => {
-  const [showError, setShowError] = useState(false)
-  const {
-    testimonialStore: { createTestimonial },
-    auth: { openNotification },
-  } = stores;
-  const flexDirection = useBreakpointValue<"row" | "column">({
-    base: "column",
-    md: "row",
-  }) as "row" | "column";
-
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const content = reader.result;
-        if (typeof content === "string") {
-          setAvatarUrl(content);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+const TestimonialForm: React.FC<TestimonialFormProps> = ({ initialValues, onSubmit, close, isEdit }) => {
+  const [showError, setShowError] = useState(false);
 
   return (
-    <Box>
-      <Formik<TestimonialFormValues>
-        initialValues={{ name: "", profession: "", description: "" }}
-        onSubmit={(values, { setSubmitting, resetForm }) => {
-          values.image = avatarUrl;
-          createTestimonial(values)
-            .then((data) => {
-              openNotification({
-                title: "Create Successfully",
-                message: data?.message,
-                type: "success",
-              });
-              resetForm()
-              close()
-            })
-            .catch((err) => [
-              openNotification({
-                title: "Create Failed",
-                message: err?.message,
-                type: "error",
-              }),
-            ])
-            .finally(() => {
-              setSubmitting(false);
-            });
-        }}
+    <Card p={8} borderRadius={10} bg="white" boxShadow="lg">
+      <Formik
+        initialValues={initialValues}
         validationSchema={testimonialValidation}
+        onSubmit={(values, actions) => {
+          onSubmit({ ...values }, actions);
+        }}
       >
-        {({ handleChange, values, errors , isSubmitting}) => {
-          return (
-            <Form>
-              <Flex
-                columnGap={8}
-                alignItems="center"
-                justifyContent="center"
-                direction={flexDirection}
-              >
-                <label htmlFor="avatar-upload">
-                  <Avatar
-                    mt={2}
-                    borderRadius={10}
-                    src={avatarUrl || "avatar-image.jpg"}
-                    style={{ width: "120px", height: "120px" }}
-                    cursor="pointer"
-                  />
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                <Box w="100%" mt={-2}>
-                  <CustomInput
-                    name="name"
-                    placeholder="Enter the Name"
-                    label="Name"
-                    onChange={handleChange}
-                    value={values.name}
-                    error={errors.name}
-                    showError={showError}
-                  />
-                  <CustomInput
-                    name="profession"
-                    placeholder="Write Your Profession"
-                    label="Profession"
-                    onChange={handleChange}
-                    value={values.profession}
-                    error={errors.profession}
-                    showError={showError}
-                  />
-                </Box>
-              </Flex>
+        {({ handleChange, values, errors, isSubmitting, setFieldValue } : any) => (
+          <Form>
+            <VStack spacing={6} align="center">
+              {/* Image Upload Section */}
+              <Stack direction="column" align="center">
+              <Flex>
+                  {values?.image?.file?.length === 0 ? (
+                    <CustomInput
+                      type="file-drag"
+                      name="image"
+                      value={values.image}
+                      isMulti={true}
+                      accept="image/*"
+                      onChange={(e: any) => {
+                        setFieldValue("image", {
+                          ...values.image,
+                          file: e.target.files[0],
+                          isAdd: 1,
+                        });
+                      }}
+                      showError={showError}
+                      error={errors.image}
+                    />
+                  ) : (
+                    <Box mt={-5} width="100%">
+                      <ShowFileUploadFile
+                        files={values.image?.file}
+                        removeFile={() => {
+                          setFieldValue("image", {
+                            ...values.image,
+                            file: removeDataByIndex(values.image, 0),
+                            isDeleted: 1,
+                          });
+                        }}
+                        edit={isEdit}
+                      />
+                    </Box>
+                  )}
+                </Flex>
+              </Stack>
+
+              {/* Form Fields */}
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
+                <CustomInput
+                  name="name"
+                  placeholder="Enter the Name"
+                  label="Name"
+                  onChange={handleChange}
+                  value={values.name}
+                  error={errors.name}
+                  showError={showError}
+                />
+                <CustomInput
+                  name="profession"
+                  placeholder="Write Your Profession"
+                  label="Profession"
+                  onChange={handleChange}
+                  value={values.profession}
+                  error={errors.profession}
+                  showError={showError}
+                />
+              </SimpleGrid>
+
+              {/* Description Field */}
               <CustomInput
                 name="description"
                 placeholder="Description"
@@ -133,20 +102,28 @@ const TestimonialForm = observer(({ close }: any) => {
                 rows={4}
                 showError={showError}
               />
-              <Flex justifyContent="end" mt={5} mr={3} mb={2}>
-                <Button leftIcon={<FaTimes />} mr={2} onClick={close}>
+
+              {/* Action Buttons */}
+              <Flex justifyContent="end" w="full" mt={4}>
+                <Button leftIcon={<FaTimes />} mr={3} onClick={close} variant="outline" colorScheme="red">
                   Cancel
                 </Button>
-                <Button type="submit" leftIcon={<FaPlus />} colorScheme="blue" isLoading={isSubmitting} onClick={() => setShowError(true)}>
-                  Create
+                <Button
+                  type="submit"
+                  leftIcon={<FaCheck />}
+                  colorScheme="blue"
+                  isLoading={isSubmitting}
+                  onClick={() => setShowError(true)}
+                >
+                  Save
                 </Button>
               </Flex>
-            </Form>
-          );
-        }}
+            </VStack>
+          </Form>
+        )}
       </Formik>
-    </Box>
+    </Card>
   );
-});
+};
 
 export default TestimonialForm;

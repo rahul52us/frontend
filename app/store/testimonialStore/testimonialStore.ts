@@ -1,15 +1,14 @@
 import { makeAutoObservable } from "mobx";
 import axios from "axios";
+import { authStore } from "../authStore/authStore";
 
 class TestimonialStore {
   testimonialLayout = "table";
 
   testimonials = {
     data: [],
-    currentPage: 1,
-    hasMore: false,
-    loading: true,
-    hasFetch: false,
+    totalPages: 1,
+    loading : false
   };
 
   openTestimonialDrawer = {
@@ -21,21 +20,24 @@ class TestimonialStore {
   }
 
   // Fetch Testimonials
-  getTestimonials = async (sendData: { page: number }) => {
+
+  getTestimonials = async (sendData: { page: number, search: string }) => {
     this.testimonials.loading = true;
     try {
+      const searchQuery = sendData.search ? `&search=${encodeURIComponent(sendData.search)}` : '';
       const { data } = await axios.get(
-        `/testimonial/get?page=${sendData.page}&limit=10`
+        `/testimonial/get?page=${sendData.page}&limit=10${searchQuery}`
       );
-      this.testimonials.data = [...this.testimonials.data, ...data.data];
-      this.testimonials.hasMore = data.data.length > 0;
-      this.testimonials.hasFetch = true;
+      this.testimonials.data = data?.data || [];
+      this.testimonials.totalPages = data?.totalPages || 0;
+      return data.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
     } finally {
       this.testimonials.loading = false;
     }
   };
+
 
   // Delete Testimonial
   deleteTestimonial = async (sendData: { id: string }) => {
@@ -53,7 +55,10 @@ class TestimonialStore {
   // Create Testimonial
   createTestimonial = async (sendData: any) => {
     try {
-      const { data } = await axios.post(`/testimonial/create`, sendData);
+      const { data } = await axios.post(`/testimonial/create`, {
+        ...sendData,
+        company: authStore.company,
+      });
       this.testimonials.data.unshift(data.data);
       return data;
     } catch (err: any) {
@@ -62,18 +67,14 @@ class TestimonialStore {
   };
 
   // Edit Testimonial
-  editTestimonial = async (sendData: any, id: string) => {
+  updateTestimonial = async (id : any,sendData : any) => {
     try {
-      const { data } = await axios.put(`/testimonial/update`, sendData);
-      const index = this.testimonials.data.findIndex((item) => item.id === id);
-      if (index !== -1) {
-        this.testimonials.data.splice(index, 1, data.data);
-      }
+      const { data } = await axios.put(`testimonial/${id}`, sendData);
       return data;
     } catch (err: any) {
-      return Promise.reject(err?.response?.data);
+      return Promise.reject(err?.response || err);
     }
-  };
+  }
 
   // Download Testimonial List
   downloadTestimonialList = async (sendData: any) => {
