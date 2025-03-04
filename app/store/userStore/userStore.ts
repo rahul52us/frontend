@@ -5,7 +5,7 @@ class UserStore {
   therapist: any = {
     loading : false,
     data : [],
-    page : 1
+    totalPages : 1
   }
   userSettings: any = {};
   userPreferences: any = {};
@@ -46,18 +46,19 @@ class UserStore {
   };
 
   getAllUsers = async (payload: any) => {
-    this.isLoading = true;
+    this.therapist.loading = true;
     try {
-      const response = await axios.post("/user", {
+      const response : any = await axios.post("/user", {
         ...payload,
         company: authStore.company,
       });
-      this.therapist.data = response?.data?.data || []
+      this.therapist.data = response?.data?.data?.data || []
+      this.therapist.totalPages = response?.data?.data?.totalPages || 1
       return response;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
     } finally {
-      this.isLoading = false;
+      this.therapist.loading = false;
     }
   };
 

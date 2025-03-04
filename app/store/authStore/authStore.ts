@@ -23,7 +23,7 @@ class AuthStore {
   constructor() {
     makeAutoObservable(this);
     axios.defaults.baseURL = BACKEND_URL
-    axios.defaults.timeout = 10000;
+    axios.defaults.timeout = 0;
     axios.defaults.headers["Content-Type"] = "application/json";
 
     // Attach token automatically for all requests

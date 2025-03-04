@@ -1,0 +1,57 @@
+.calendarElementMobile .rdrDayToday .rdrDayNumber span:after {
+  background: #4fd1c5;
+}
+
+.calendarElementMobile .rdrNextPrevButton {
+  box-sizing: inherit;
+  cursor: pointer;
+  outline: none;
+  background-color: #81e6d9;
+}
+
+.calendarElementMobile .rdrNextPrevButton:hover {
+  box-sizing: inherit;
+  cursor: pointer;
+  outline: none;
+  background-color: #38b2ac;
+}
+
+.calendarElementMobile .rdrDateDisplayItemActive {
+  border-color: #4fd1c5;
+}
+
+.calendarElementMobile .rdrInRange {
+  background-color: #81e6d9;
+}
+
+.calendarElementMobile .rdrStartEdge,
+.calendarElementMobile .rdrEndEdge {
+  background-color: #319795;
+}
+
+.calendarElementMobile .rdrNextButton i {
+  border-color: transparent transparent transparent #fff;
+}
+
+.calendarElementMobile .rdrPprevButton i {
+  border-color: transparent #fff transparent transparent;
+}
+
+.calendarElementMobile .rdrMonthName {
+  font-weight: 700;
+}
+
+.calendarElementMobile .rdrWeekDay,
+.calendarElementMobile .rdrDayNumber {
+  font-weight: 600;
+}
+
+.calendarElementMobile .rdrCalendarWrapper {
+  font-size: 12.5px;
+}
+
+.calendarElementMobile .rdrStaticRangeLabel,
+.calendarElementMobile .rdrInputRange {
+  font-size: 12.5px;
+  font-weight: 400;
+}

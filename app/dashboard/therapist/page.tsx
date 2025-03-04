@@ -1,21 +1,15 @@
 "use client";
 import {
   Box,
-  Button,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
   DrawerContent,
   DrawerHeader,
   DrawerOverlay,
-  Flex,
-  Heading,
-  Icon,
-  Text,
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
 import { readFileAsBase64 } from "../../config/utils/utils";
 import stores from "../../store/stores";
 import Form from "./component/Form";
@@ -26,7 +20,7 @@ const TherapistPage = () => {
     userStore: { createUser, getAllUsers },
   } = stores;
   const [entries, setEntries] = useState<any[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<any>({isOpen : false, type : 'add', data : null});
   const [thumbnail, setThumbnail] = useState([])
   const [currentEntry] = useState<any>({
     name: "",
@@ -61,7 +55,7 @@ const TherapistPage = () => {
       })
         .then(() => {
           getAllUsers({ page: 1, limit: 30 });
-          setIsDrawerOpen(false);
+          setIsDrawerOpen({isOpen : false, type : 'add', data : null});
           toast({
             title: "Therapist Added.",
             description: `${formData.name} has been successfully added.`,
@@ -96,7 +90,7 @@ const TherapistPage = () => {
         entry.username === formData.username ? formData : entry
       )
     );
-    setIsDrawerOpen(false);
+    setIsDrawerOpen({isOpen : false, type : 'add', data : null});
     toast({
       title: "Therapist Updated.",
       description: `${formData.name} has been updated successfully.`,
@@ -106,55 +100,14 @@ const TherapistPage = () => {
     });
   };
 
-  // const handleEditClick = (entry: any) => {
-  //   setCurrentEntry(entry); // Set current entry to the therapist being edited
-  //   setIsDrawerOpen(true);
-  // };
-
   return (
-    <Box p="5">
-      <Box mb="6">
-        {/* Flex container to align title and button */}
-        <Flex justify="space-between" align="center" mb="4">
-          <Heading as="h1" size="lg" fontWeight="bold" color="teal.600">
-            Therapist Directory
-          </Heading>
-
-          {/* Add Therapist button with icon */}
-          <Button
-            colorScheme="teal"
-            variant="solid"
-            onClick={() => setIsDrawerOpen(true)}
-            leftIcon={<Icon as={FaPlus} />} // Adding a plus icon to the button
-            size="md"
-            borderRadius="md"
-            _hover={{
-              bg: "teal.400",
-              transform: "scale(1.05)",
-              boxShadow: "md",
-            }}
-            _focus={{
-              boxShadow: "outline",
-            }}
-          >
-            Add Therapist
-          </Button>
-        </Flex>
-
-        {/* Optionally, add a description or additional styling below */}
-        <Box>
-          <Text fontSize="md" color="gray.500">
-            Manage and view therapists in the directory.
-          </Text>
-        </Box>
-      </Box>
-
-      <TherapistsTable />
+    <Box>
+      <TherapistsTable onAdd={() => setIsDrawerOpen({isOpen : true, type : 'add', data : null})} onEdit={setIsDrawerOpen}/>
       <Drawer
         size="md"
-        isOpen={isDrawerOpen}
+        isOpen={isDrawerOpen.isOpen}
         placement="right"
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={() => setIsDrawerOpen({isOpen : false, type : 'add', data : null})}
         autoFocus={false}
       >
         <DrawerOverlay>
@@ -183,7 +136,7 @@ const TherapistPage = () => {
                   currentEntry.username ? handleEditSubmit : handleAddSubmit
                 }
                 isOpen={isDrawerOpen}
-                onClose={() => setIsDrawerOpen(false)}
+                onClose={() => setIsDrawerOpen({isOpen : false, type : 'add', data : null})}
                 thumbnail={thumbnail}
                 setThumbnail={setThumbnail}
               />
