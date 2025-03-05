@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useTheme } from "@chakra-ui/react";
-import { backendBaseUrl } from "../../../../config/utils/urls";
 import stores from "../../../../store/stores";
+import { backendBaseUrl } from "../../utils/urls";
 
 // Define TypeScript interfaces for the payment options and user info
 interface UserInfo {

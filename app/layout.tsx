@@ -1,8 +1,8 @@
 'use client';
 
 import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
-import theme from "./theme/theme"; // Import the default exported theme
-import { lato } from "./theme/theme"; // Import Lato (already defined)
+import theme from "./theme/theme";
+import { lato } from "./theme/theme";
 import MainLayout from "./layouts/mainLayout/MainLayout";
 import AuthenticationLayout from "./layouts/authenticationLayout/AuthenticationLayout";
 import DashboardLayout from "./layouts/dashboardLayout/DashboardLayout";
@@ -14,7 +14,6 @@ import Script from 'next/script';
 import { Montserrat } from 'next/font/google';
 import WhatsAppButton from "./component/common/whatsApp/whatsAppButton";
 import Image from "next/image";
-
 
 const montserrat = Montserrat({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
@@ -28,7 +27,7 @@ export default function RootLayout({
 
   useEffect(() => {
     getCompanyDetails();
-  }, [getCompanyDetails]); // Removed getCompanyDetails from the dependency array to avoid unnecessary re-renders
+  }, [getCompanyDetails]); // This is fine as is
 
   const getLayout = () => {
     if (pathname === '/login' || pathname === '/register' || pathname === "/forgot-password") {
@@ -44,7 +43,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google Tag Manager */}
         <Script id="gtm-script" strategy="afterInteractive">
           {`
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -55,7 +53,6 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* Meta Pixel Code */}
         <Script id="facebook-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
@@ -74,23 +71,30 @@ export default function RootLayout({
         <ColorModeScript initialColorMode="light" />
       </head>
 
-      <body className={`${lato.className} ${montserrat.className}`}>
-        {/* Google Tag Manager (noscript fallback) */}
+      <body className={`${lato.className} ${montserrat.className}`} style={{ margin: 0, padding: 0 }}>
         <noscript>
-          <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WQW7482D"
-            height="0" width="0" style={{ display: "none", visibility: "hidden" }}></iframe>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-WQW7482D"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
         </noscript>
 
-        {/* Meta Pixel (noscript fallback) */}
         <noscript>
-          <Image alt="" height="1" width="1" style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=615471921116956&ev=PageView&noscript=1" />
+          <Image
+            alt=""
+            height={1}
+            width={1}
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=615471921116956&ev=PageView&noscript=1"
+          />
         </noscript>
 
         <ChakraProvider theme={theme}>
           <Notification />
           <LayoutComponent>{children}</LayoutComponent>
-          <WhatsAppButton /> {/* WhatsApp Button Added Here ✅ */}
+          <WhatsAppButton />
         </ChakraProvider>
       </body>
     </html>

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useEffect, useState, useCallback } from "react";
-import { Avatar, Box, Badge, Drawer, DrawerBody, DrawerCloseButton, DrawerContent, DrawerHeader, DrawerOverlay, Flex, Grid, GridItem, Image, Stack, Tab, Table, TabList, TabPanel, TabPanels, Tabs, Text, Tooltip, useDisclosure } from "@chakra-ui/react";
+import { Avatar, Box, Badge, Drawer, DrawerBody, DrawerCloseButton, DrawerContent, DrawerHeader, DrawerOverlay, Flex, Grid, GridItem, Image, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, Tooltip, useDisclosure } from "@chakra-ui/react";
 import { FaBrain, FaUserFriends, FaVideo } from "react-icons/fa";
 import { GiPsychicWaves } from "react-icons/gi";
 import Link from "next/link";
@@ -8,7 +8,6 @@ import stores from "../../../../store/stores";
 import useDebounce from "../../../../component/config/component/customHooks/useDebounce";
 import { tablePageLimit } from "../../../../component/config/utils/variable";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
-import { toJS } from "mobx";
 
 const TherapistsTable = observer(({onAdd, onEdit} : any) => {
   const {
@@ -172,8 +171,6 @@ const TherapistsTable = observer(({onAdd, onEdit} : any) => {
       },
     },
   ];
-
-  console.log(toJS(therapist))
 
   return (
     <Box p={4}>

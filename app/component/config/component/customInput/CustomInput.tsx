@@ -26,6 +26,7 @@ import Select from "react-select";
 import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import OtpInput from "./element/OtpInput";
 
 interface CustomInputProps {
   type?:
@@ -46,7 +47,8 @@ interface CustomInputProps {
     | "dateAndTime"
     | "file-drag"
     | "tags"
-    | "real-time-user-search";
+    | "real-time-user-search"
+    | "otp"; // Added "otp" type
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -123,21 +125,20 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
   const handleTagAdd = (e?: React.KeyboardEvent<HTMLInputElement>) => {
     if ((!e || e.key === "Enter") && inputValue) {
-        const newTags = [...(value || []), inputValue];
-        if (onChange) {
-            onChange(newTags);
-        }
-        setInputValue("");
+      const newTags = [...(value || []), inputValue];
+      if (onChange) {
+        onChange(newTags);
+      }
+      setInputValue("");
     }
-};
+  };
 
-const handleTagRemove = (tagToRemove: string) => {
-  const newTags = (value || []).filter((tag: string) => tag !== tagToRemove);
-  if (onChange) {
-    onChange(newTags);
-  }
-};
-
+  const handleTagRemove = (tagToRemove: string) => {
+    const newTags = (value || []).filter((tag: string) => tag !== tagToRemove);
+    if (onChange) {
+      onChange(newTags);
+    }
+  };
 
   const inputBg = useColorModeValue("transparent", "gray.700");
 
@@ -191,19 +192,10 @@ const handleTagRemove = (tagToRemove: string) => {
         );
 
       case "switch":
-        return (
-          <Switch name={name} onChange={onChange} isChecked={value} {...rest} />
-        );
+        return <Switch name={name} onChange={onChange} isChecked={value} {...rest} />;
 
       case "checkbox":
-        return (
-          <Checkbox
-            name={name}
-            onChange={onChange}
-            isChecked={value}
-            {...rest}
-          />
-        );
+        return <Checkbox name={name} onChange={onChange} isChecked={value} {...rest} />;
 
       case "phone":
         return (
@@ -218,6 +210,7 @@ const handleTagRemove = (tagToRemove: string) => {
             }}
           />
         );
+
       case "dateAndTime":
         return (
           <Input
@@ -234,6 +227,7 @@ const handleTagRemove = (tagToRemove: string) => {
             {...rest}
           />
         );
+
       case "tags":
         return (
           <Box>
@@ -257,6 +251,7 @@ const handleTagRemove = (tagToRemove: string) => {
             </Wrap>
           </Box>
         );
+
       case "file-drag":
         return (
           <div
@@ -293,6 +288,7 @@ const handleTagRemove = (tagToRemove: string) => {
             </Button>
           </div>
         );
+
       case "url":
         return (
           <Input
@@ -325,6 +321,7 @@ const handleTagRemove = (tagToRemove: string) => {
             {...rest}
           />
         );
+
       case "select":
         return (
           <Select
@@ -363,8 +360,7 @@ const handleTagRemove = (tagToRemove: string) => {
                 color: colorMode === "light" ? "black" : "white",
                 padding: "8px 12px",
                 ":hover": {
-                  backgroundColor:
-                    colorMode === "light" ? "#bee3f8" : "#2b6cb0",
+                  backgroundColor: colorMode === "light" ? "#bee3f8" : "#2b6cb0",
                 },
               }),
               menu: (baseStyles) => ({
@@ -400,13 +396,25 @@ const handleTagRemove = (tagToRemove: string) => {
             }}
             components={{
               IndicatorSeparator: null,
-              DropdownIndicator: () => (
-                <div className="chakra-select__dropdown-indicator" />
-              ),
+              DropdownIndicator: () => <div className="chakra-select__dropdown-indicator" />,
             }}
             menuPosition={isPortal ? "fixed" : undefined}
           />
         );
+      case "otp":
+        return (
+          <OtpInput
+            value={value || ""}
+            onChange={onChange}
+            label={label}
+            error={error}
+            showError={showError}
+            disabled={disabled}
+            required={required}
+            labelcolor={labelcolor}
+          />
+        );
+
       default:
         return (
           <Input
@@ -424,11 +432,13 @@ const handleTagRemove = (tagToRemove: string) => {
 
   return (
     <FormControl id={name} isInvalid={!!error && showError}>
-      <FormLabel color={labelcolor}>
-        {label} {required && <span style={{ color: "red" }}>*</span>}
-      </FormLabel>
+      {type !== "otp" && ( // Skip FormLabel for OTP since OtpInput handles it internally
+        <FormLabel color={labelcolor}>
+          {label} {required && <span style={{ color: "red" }}>*</span>}
+        </FormLabel>
+      )}
       {renderInputComponent()}
-      {showError && error && <FormErrorMessage>{error}</FormErrorMessage>}
+      {type !== "otp" && showError && error && <FormErrorMessage>{error}</FormErrorMessage>}
     </FormControl>
   );
 };
