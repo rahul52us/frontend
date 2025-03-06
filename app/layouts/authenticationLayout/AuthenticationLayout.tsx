@@ -3,7 +3,7 @@
 import { Box, Flex, useBreakpointValue, useColorModeValue, VStack, Text, Icon } from '@chakra-ui/react';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaChartLine } from 'react-icons/fa'; // Growth-focused icon for business
+import { FaChartLine } from 'react-icons/fa';
 
 const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
@@ -12,8 +12,6 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const bgColor = useColorModeValue('gray.50', 'gray.900');
   const textColor = useColorModeValue('white', 'gray.200');
-
-
 
   return (
     <MotionFlex

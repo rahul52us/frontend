@@ -41,7 +41,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
           : Array(length).fill("")
       );
     }
-  }, [value, length]);
+  }, [value, length, otp]);
 
   const handleChange = (index: number, newValue: string) => {
     if (!/^\d*$/.test(newValue)) return; // Allow only digits
