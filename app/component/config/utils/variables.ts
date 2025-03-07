@@ -1,0 +1,4 @@
+export const AUTH_TOKEN = process.env.NEXT_PUBLIC_TOKEN_VAR
+export const WEBSITE_TITLE = process.env.NEXT_PUBLIC_WEBSITE_TITLE
+export const WEBSITE_DESCRIPTIOn = process.env.NEXT_PUBLIC_WEBSITE_DESCRIPTION
+export const BACKEND_URL=process.env.NEXT_PUBLIC_BACKEND_URL

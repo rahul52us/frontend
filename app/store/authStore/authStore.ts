@@ -88,19 +88,31 @@ class AuthStore {
   };
 
   // Register user
-  register = async (email: string, password: string) => {
+  register = async (payload : any) => {
     this.isLoading = true;
     try {
-      const response = await axios.post("/auth/register", { email, password });
-      this.token = response.data.token;
+      const response = await axios.post("/auth/admin/signup", payload);
+      return response?.data?.data
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    } finally {
+      this.isLoading = false;
+    }
+  };
 
-      if (typeof window !== "undefined") {  // ✅ Prevent SSR issues
-        localStorage.setItem("META", this.token);
+  verifyRegisterOtp = async (payload : any) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.post("/auth/admin/signup/verify", payload);
+      this.token = response?.data?.data?.authorization_token;
+
+      if (this.token && typeof window !== "undefined") {
+        localStorage.setItem(AUTH_TOKEN, this.token);
       }
 
-      await this.fetchUser();
+      return response?.data?.data
     } catch (err: any) {
-      this.error = err?.response?.data?.message || "Registration failed.";
+      return Promise.reject(err?.response?.data || err);
     } finally {
       this.isLoading = false;
     }
@@ -111,20 +123,32 @@ class AuthStore {
     this.isLoading = true;
     try {
       const response = await axios.post("/auth/login", payload);
+      return response?.data?.data
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
+  verifyLoginOtp = async (payload : any) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.post("/auth/login/verify", payload);
       this.token = response?.data?.data?.authorization_token;
 
       if (this.token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN, this.token);
       }
 
-      await this.fetchUser();
-      return response?.data
+      return response?.data?.data
     } catch (err: any) {
-      this.error = err?.response?.data?.message || "Login failed.";
+      return Promise.reject(err?.response?.data || err);
     } finally {
       this.isLoading = false;
     }
   };
+
 
   // Fetch User Info
   fetchUser = async () => {

@@ -29,9 +29,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = observer(({ children }) 
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    alert("this is dashboard")
-  },[])
 
   useEffect(() => {
     const token = localStorage.getItem(AUTH_TOKEN);

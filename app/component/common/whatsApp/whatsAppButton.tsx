@@ -5,7 +5,7 @@ import { FaWhatsapp } from "react-icons/fa";
 // Declare fbq globally for TypeScript
 declare global {
     interface Window {
-        fbq?: (...args: any[]) => void;
+        fbq?: any;
     }
 }
 
@@ -17,16 +17,16 @@ const WhatsAppButton = () => {
         // 🔥 Meta Pixel Event Tracking
         if (window.fbq) {
             window.fbq("track", "Contact", { method: "WhatsApp" });
-            console.log("✅ Meta Pixel Contact event fired for WhatsApp");
+            // console.log("✅ Meta Pixel Contact event fired for WhatsApp");
         } else {
-            console.warn("⚠️ Meta Pixel (fbq) is not available");
+            // console.warn("⚠️ Meta Pixel (fbq) is not available");
         }
     };
 
     // ✅ Ensure Meta Pixel is initialized
     useEffect(() => {
         if (!window.fbq) {
-            console.warn("⚠️ Meta Pixel is not installed. Please add the Pixel script.");
+            // console.warn("⚠️ Meta Pixel is not installed. Please add the Pixel script.");
         }
     }, []);
 
