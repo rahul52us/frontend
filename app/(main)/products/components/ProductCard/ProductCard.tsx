@@ -9,6 +9,7 @@ const ProductCard = ({ product }) => {
     <Box
     //   mx={'auto'}
       // my={12}
+      h={'100%'}
       shadow={'base'}
       position="relative"
       bg="white"
