@@ -8,7 +8,7 @@ const ProductCard = ({ product }) => {
   return (
     <Box
     //   mx={'auto'}
-      my={12}
+      // my={12}
       shadow={'base'}
       position="relative"
       bg="white"
