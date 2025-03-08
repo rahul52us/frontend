@@ -147,7 +147,7 @@ export const Footer: React.FC = () => {
               bottom={0}
               left={0}
               src="/images/footerImage.png"
-              alt="footer"
+              alt="Who are some good psychiatrists in Noida?"
               mixBlendMode={"multiply"}
             />
           </Box>

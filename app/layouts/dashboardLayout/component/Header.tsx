@@ -16,6 +16,7 @@ import React from 'react';
 import stores from '../../../store/stores';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/navigation';
+import { WEBSITE_TITLE } from '../../../config/utils/variables';
 
 const Header: React.FC = observer(() => {
   const {
@@ -39,7 +40,7 @@ const Header: React.FC = observer(() => {
       <Flex justify="space-between" align="center" px={6}>
         {/* Brand Name */}
         <Heading size="md" color="white" fontWeight="bold">
-          Meta Mind
+          {WEBSITE_TITLE}
         </Heading>
 
         <Flex align="center" gap={4}>

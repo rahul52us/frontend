@@ -12,8 +12,8 @@ import ArrowTestimonial from "../../component/common/ArrowTestimonial/ArrowTesti
     } = stores;
 
     useEffect(() => {
-      if (!testimonials.hasFetch) {
-        getTestimonials({ page: 1 })
+      if (!testimonials) {
+        getTestimonials({ page: 1,search : "" })
           .then(() => {})
           .catch((err) => {
             openNotification({
@@ -23,7 +23,7 @@ import ArrowTestimonial from "../../component/common/ArrowTestimonial/ArrowTesti
             });
           });
       }
-    }, [getTestimonials, openNotification, testimonials.hasFetch]);
+    }, [getTestimonials, openNotification, testimonials]);
 
     return (
       <Container maxW="7xl">

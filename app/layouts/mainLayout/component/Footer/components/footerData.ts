@@ -1,5 +1,5 @@
-import { FaTwitter, FaInstagram, FaLinkedinIn, FaFacebook } from 'react-icons/fa';
-// import { FooterProps } from '../components/footer/types';
+import { FaInstagram, FaLinkedinIn, FaFacebook, FaYoutube } from 'react-icons/fa';
+import { FaXTwitter } from "react-icons/fa6";
 
 export const footerData = {
   companyInfo: {
@@ -13,9 +13,9 @@ export const footerData = {
         icon: FaLinkedinIn
       },
       {
-        name: "Twitter",
+        name: "FaXTwitter",
         url: "https://x.com/metamindhealth",
-        icon: FaTwitter
+        icon: FaXTwitter
       },
       {
         name: "Instagram",
@@ -27,10 +27,15 @@ export const footerData = {
         url: "https://www.facebook.com/profile.php?id=61562244046160",
         icon: FaFacebook
       },
+      {
+        name: "YouTube",
+        url: "https://www.youtube.com/@Metamind_health",
+        icon: FaYoutube
+      }
     ]
   },
   contactInfo: {
-    phone: "+91 9090404949",
+    phone: "+91 9090 404949",
     email: "Support@metamindhealth.com",
     address: "2nd Floor, LC complex, Sector 49, Noida, UP, IN- 201301"
   },

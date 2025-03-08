@@ -1,14 +1,17 @@
 'use client'
 import React from "react";
 import NextLink from "next/link";
-import { Box, VStack, Link as ChakraLink, Icon, Text, Image, Flex } from "@chakra-ui/react";
+import { Box, VStack, Link as ChakraLink, Icon, Text , Flex } from "@chakra-ui/react";
 import { AtSignIcon, SettingsIcon, CalendarIcon } from "@chakra-ui/icons";
+import { WEBSITE_TITLE } from "../../../config/utils/variables";
 
 const Sidebar: React.FC = () => {
   const navItems = [
     { label: "Overview", icon: AtSignIcon, href: "/dashboard" },
     { label: "Therapist", icon: CalendarIcon, href: "/dashboard/therapist" },
     { label: "FAQs", icon: CalendarIcon, href: "/dashboard/faqs" },
+    { label: "Contacts", icon: CalendarIcon, href: "/dashboard/contacts" },
+    { label: "Blogs", icon: CalendarIcon, href: "/dashboard/blogs" },
     { label: "Testimonials", icon: CalendarIcon, href: "/dashboard/testimonials" },
     { label: "Content Sections", icon: CalendarIcon, href: "/dashboard/content-section" },
   ];
@@ -17,7 +20,7 @@ const Sidebar: React.FC = () => {
     <Box as="aside" color="white" h="100vh" p="3" boxShadow="lg" borderRight="1px" position="relative">
       {/* Logo Section */}
       <Box cursor="pointer" mb="4" textAlign="center" borderBottom="1.2px solid gray" mt={-2}>
-        <Image src="/images/logo.png" alt="Logo" width="150px" margin="0 auto" display="block" />
+        {WEBSITE_TITLE}
       </Box>
 
       <Flex direction="column" justifyContent="space-between" h="full">
