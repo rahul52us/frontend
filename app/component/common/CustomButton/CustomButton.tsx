@@ -8,6 +8,9 @@ type CustomButtonProps = ButtonProps & {
   height?: string | number;
   width?: string | number;
   rounded?: string;
+  bgGradient?: string; // Dynamic gradient prop
+  color?: string; // Dynamic color prop
+  borderColor?: string; // Dynamic border color
 };
 
 const CustomButton: FC<CustomButtonProps> = ({
@@ -17,10 +20,13 @@ const CustomButton: FC<CustomButtonProps> = ({
   height = "50px",
   width,
   rounded,
+  bgGradient = "linear(to-r, #065F68, #065F68, #2A8A94)", // Default gradient
+  color = "#FFFFFF", // Default text color
+  borderColor = "transparent", // Default border color
   ...props
 }) => {
   const fontSizes = useBreakpointValue({ base: "14px", md: "16px" });
-  const buttonSize = useBreakpointValue({ base: "lg", lg: "lg",xl:"xl" });
+  const buttonSize = useBreakpointValue({ base: "lg", lg: "lg", xl: "xl" });
 
   return (
     <Button
@@ -34,8 +40,8 @@ const CustomButton: FC<CustomButtonProps> = ({
       justifyContent="center"
       borderRadius="8px"
       rounded={rounded}
-      bgGradient={"linear(to-r, #065F68, #065F68, #2A8A94)"}
-      color="#FFFFFF"
+      bgGradient={bgGradient} // Use dynamic gradient
+      color={color} // Use dynamic color
       fontWeight="400"
       fontSize={fontSizes}
       gap="8px"
@@ -51,13 +57,13 @@ const CustomButton: FC<CustomButtonProps> = ({
         },
       }}
       _active={{
-        transform: "scale(1.015)", // Keep same scale when clicked (no blue focus)
-        backgroundColor: "transparent", // Remove blue background when clicked
-        boxShadow: "none", // Remove the default focus box shadow
+        transform: "scale(1.015)",
+        backgroundColor: "transparent",
+        boxShadow: "none",
       }}
       _focus={{
-        boxShadow: "none", // Remove default blue outline when focused
-        backgroundColor: "transparent", // Optional: removes the default focus background
+        boxShadow: "none",
+        backgroundColor: "transparent",
       }}
       _before={{
         content: "''",

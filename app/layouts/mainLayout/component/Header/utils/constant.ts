@@ -1,12 +1,9 @@
 export const navItems = [
     { title: 'Home', link: '/' },
-    // { title: 'Our Values', link: '/our-values' },
-    // { title: 'Services', link: '/services' },
-    { title: 'Therapists', link: '/therapist' },
-    // { title: 'Testimonials', link: '/testimonials' },
+    { title: 'Shop', link: '/shop' },
+    { title: 'Categories', link: '/categories' },
+    { title: 'About Us', link: '/about-us' },
     { title: 'Contact', link: '/contact-us' },
-    { title: 'About', link: '/about-us' },
-    { title: 'Blogs', link: '/blogs' },
-    { title: 'Log in', link: 'https://secure.therasoft.in/tsi/clientportal.aspx', external: true },
-
+    { title: 'Cart', link: '/cart' },
+    { title: 'Log in', link: '/login' },
 ];

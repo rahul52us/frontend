@@ -24,71 +24,82 @@ const Header = () => {
   const router = useRouter();
 
   return (
-    <Box shadow="sm" position="sticky" top="0" zIndex="1000" bg="white">
-
+    <Box
+      shadow="sm"
+      position="sticky"
+      top="0"
+      zIndex="1000"
+      bg="gray.50" // Subtle background color
+      borderBottom="2px solid #E5E7EB" // Softer border color
+    >
       {/* Top Bar */}
       <Box
-        h={{ lg: "2rem", xl: "2.5rem" }} // Reduce height
+        h={{ base: "2rem", lg: "2.5rem" }}
         color="white"
         textAlign="center"
-        bg="#045B64"
-        fontSize={{ base: "xs", lg: "lg" }} // Reduce font size
-        p={1} // Reduce padding
+        bgGradient="linear(to-r, teal.500, blue.500)" // Smooth gradient
+        fontSize={{ base: "xs", lg: "md" }}
+        fontWeight="medium"
+        p={1.5}
       >
-        Get 30% discount on your first therapy session!
+        🎉 Enjoy 30% OFF on your first order! Limited Time Only.
       </Box>
 
       {/* Header for Mobile */}
       <Flex
         alignItems="center"
         justify="space-between"
-        px={{ base: 2, md: 6 }}
-        py={1} // Reduced padding
+        px={{ base: 4, md: 6 }}
+        py={2}
         bg="white"
         display={{ base: "flex", md: "none" }}
-        h="4rem" // Reduced height
+        h="4rem"
       >
+        {/* Logo */}
         <Image
           src="/images/logo.png"
-          alt="best child psychologist in noida"
-          h={{ base: "43px", sm: "48px" }}  // Reduced logo size
+          alt="eCommerce Logo"
+          h="40px"
           cursor="pointer"
           onClick={() => router.push("/")}
-          mr="auto"
         />
-        <Flex gap={2}>
 
+        {/* Hamburger Menu */}
         <IconButton
-          icon={<HamburgerIcon fontSize={"22px"} />} // Reduced icon size
+          icon={<HamburgerIcon fontSize="24px" />}
           onClick={onOpen}
           aria-label="Open menu"
           variant="ghost"
-          size={"md"} // Adjusted size
-          />
-          </Flex>
+          size="lg"
+          _hover={{ bg: "blue.100" }} // Subtle hover effect
+        />
       </Flex>
 
       {/* Drawer for Mobile Navigation */}
       <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
         <DrawerOverlay />
-        <DrawerContent>
+        <DrawerContent bg="white">
           <DrawerCloseButton />
           <DrawerBody>
             {/* Centered Logo */}
             <Center mt={6} mb={4}>
               <Image
                 src="/images/logo.png"
-                alt="Mental Health Clinic In Noida"
-                h="50px" // Reduced logo size in mobile menu
+                alt="eCommerce Logo"
+                h="50px"
+                cursor="pointer"
                 onClick={() => router.push("/")}
               />
             </Center>
+
             {/* Navigation Items */}
             <Box px={4}>
               <NavItemsLayout onClose={onClose} />
             </Box>
-            <Center my={4}>
-            <WhatsAppButton/>
+
+            {/* WhatsApp Button */}
+            <Center my={6}>
+              <WhatsAppButton />
             </Center>
           </DrawerBody>
         </DrawerContent>
@@ -98,21 +109,26 @@ const Header = () => {
       <Flex
         alignItems="center"
         justify="space-between"
-        px={{ lg: 5, xl: 8 }}
-        py={2.5} // Reduced padding
+        px={{ lg: 8 }}
+        py={3}
         display={{ base: "none", md: "flex" }}
-      // h="4rem" // Reduced height
+        bg="white"
       >
+        {/* Logo */}
         <Image
           src="/images/logo.png"
-          alt="Mental Health Doctor In Noida"
-          h={{ base: "35px", lg: "50px", xl: "60px" }} // Reduced logo size
-          cursor={"pointer"}
+          alt="eCommerce Logo"
+          h={{ base: "40px", lg: "50px" }}
+          cursor="pointer"
           onClick={() => router.push("/")}
         />
-        <Flex flex={1} justify="center" pr={2}>
+
+        {/* Navigation Items */}
+        <Flex flex={1} justify="center">
           <NavItemsLayout />
         </Flex>
+
+        {/* Hero Button */}
         <HeroNavButton />
       </Flex>
     </Box>

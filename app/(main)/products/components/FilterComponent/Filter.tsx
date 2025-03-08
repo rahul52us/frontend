@@ -71,9 +71,9 @@ const CompactFilters = () => {
       <Flex gap={3} my={4} align="center" wrap="wrap" justify={'end'}>
         {/* Price Filter */}
         <Menu closeOnSelect={false}>
-            <MenuButton 
-              as={Button} 
-              size="sm" 
+            <MenuButton
+              as={Button}
+              size="sm"
               variant="outline"
               leftIcon={<FiDollarSign />}
               rightIcon={<FiChevronDown />}
@@ -108,9 +108,9 @@ const CompactFilters = () => {
 
         {/* Category Filter */}
         <Menu closeOnSelect={false}>
-            <MenuButton 
-              as={Button} 
-              size="sm" 
+            <MenuButton
+              as={Button}
+              size="sm"
               variant="outline"
               leftIcon={<FiSliders />}
               rightIcon={<FiChevronDown />}
@@ -126,8 +126,8 @@ const CompactFilters = () => {
             >
               <Stack spacing={2}>
                 {categories.map(category => (
-                  <Checkbox 
-                    key={category} 
+                  <Checkbox
+                    key={category}
                     value={category}
                     size="sm"
                     colorScheme="purple"
@@ -144,9 +144,9 @@ const CompactFilters = () => {
 
         {/* Vendor Filter */}
         <Menu closeOnSelect={false}>
-            <MenuButton 
-              as={Button} 
-              size="sm" 
+            <MenuButton
+              as={Button}
+              size="sm"
               variant="outline"
               leftIcon={<FiSliders />}
               rightIcon={<FiChevronDown />}
@@ -162,8 +162,8 @@ const CompactFilters = () => {
             >
               <Stack spacing={2}>
                 {vendors.map(vendor => (
-                  <Checkbox 
-                    key={vendor} 
+                  <Checkbox
+                    key={vendor}
                     value={vendor}
                     size="sm"
                     colorScheme="purple"
@@ -213,11 +213,11 @@ const CompactFilters = () => {
         >
           <Wrap spacing={2} mb={4}>
             {selectedCategories.map(category => (
-              <Tag 
-                size="sm" 
-                key={category} 
-                borderRadius="full" 
-                variant="subtle" 
+              <Tag
+                size="sm"
+                key={category}
+                borderRadius="full"
+                variant="subtle"
                 colorScheme="purple"
                 _hover={{ transform: "scale(1.05)" }}
                 transition="transform 0.2s"
@@ -227,11 +227,11 @@ const CompactFilters = () => {
               </Tag>
             ))}
             {selectedVendors.map(vendor => (
-              <Tag 
-                size="sm" 
-                key={vendor} 
-                borderRadius="full" 
-                variant="subtle" 
+              <Tag
+                size="sm"
+                key={vendor}
+                borderRadius="full"
+                variant="subtle"
                 colorScheme="purple"
                 _hover={{ transform: "scale(1.05)" }}
                 transition="transform 0.2s"

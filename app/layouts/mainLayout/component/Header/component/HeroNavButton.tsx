@@ -7,25 +7,28 @@ const HeroNavButton = () => {
   const router = useRouter();
 
   return (
-    <Box>
-      {/* <Button bg={"#045B64"} size={"lg"} fontWeight={500} fontSize={"sm"}>
-        Book Apppointment
-      </Button> */}
-      <CustomButton width={"180px"} size={"lg"} onClick={() => router.push('/therapist')}>
-      Book Appointment
-      </CustomButton>
-      {/* <Button
-        colorScheme="teal"
-        size={"lg"}
-        variant={"outline"}
-        ml={3}
-        fontSize={"sm"}
-        onClick={() => {
-          router.push('/login')
-        }}
+    <Box display="flex" gap={2}>
+      <CustomButton
+        width="auto"
+        size="md"
+        bgGradient="linear(to-r, teal.500, blue.500)" // Smooth gradient
+        color="white" // Text color
+        onClick={() => router.push('/shop')}
       >
-        Log In
-      </Button> */}
+        Shop Now
+      </CustomButton>
+      <CustomButton
+        width="auto"
+        size="md"
+        variant="outline"
+        borderColor="transparent" // Make border transparent for a smooth gradient look
+        color="transparent" // Make text transparent to show the gradient
+        bgGradient="linear(to-r, teal.500, blue.500)" // Smooth gradient
+        backgroundClip="text" // Make background clip the text color
+        onClick={() => router.push('/login')}
+      >
+        Sign In
+      </CustomButton>
     </Box>
   );
 };

@@ -93,7 +93,7 @@ export const Footer: React.FC = () => {
           <Stack
               direction="row"
               spacing={4}
-              ml={{ base: -3, md: 5 }} 
+              ml={{ base: -3, md: 5 }}
               mt={2}
               justify={{ base: "center", md: "flex-start" }}
             >
@@ -114,7 +114,7 @@ export const Footer: React.FC = () => {
               ))}
             </Stack>
           </Box>
-         
+
         </SimpleGrid>
 
         {/* Crisis Notice */}
