@@ -22,7 +22,6 @@ const CustomButton: FC<CustomButtonProps> = ({
   rounded,
   bgGradient = "linear(to-r, #065F68, #065F68, #2A8A94)", // Default gradient
   color = "#FFFFFF", // Default text color
-  borderColor = "transparent", // Default border color
   ...props
 }) => {
   const fontSizes = useBreakpointValue({ base: "14px", md: "16px" });

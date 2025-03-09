@@ -57,7 +57,7 @@ const Header = () => {
       >
         {/* Logo */}
         <Image
-          src="/images/logo.png"
+          src="/images/logo3.jpg"
           alt="eCommerce Logo"
           h="40px"
           cursor="pointer"
@@ -84,8 +84,8 @@ const Header = () => {
             {/* Centered Logo */}
             <Center mt={6} mb={4}>
               <Image
-                src="/images/logo.png"
-                alt="eCommerce Logo"
+          src="/images/logo3.jpg"
+          alt="eCommerce Logo"
                 h="50px"
                 cursor="pointer"
                 onClick={() => router.push("/")}
@@ -116,7 +116,7 @@ const Header = () => {
       >
         {/* Logo */}
         <Image
-          src="/images/logo.png"
+          src="/images/logo3.jpg"
           alt="eCommerce Logo"
           h={{ base: "40px", lg: "50px" }}
           cursor="pointer"

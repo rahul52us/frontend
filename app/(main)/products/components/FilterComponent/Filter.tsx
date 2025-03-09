@@ -83,16 +83,17 @@ const CompactFilters = () => {
               Price
             </MenuButton>
           <MenuList p={3} minWidth="240px" borderRadius="lg" boxShadow="lg">
-            <RangeSlider
-              value={priceRange}
-              min={0}
-              max={1000}
-              step={50}
-              onChange={setPriceRange}
-              mt={4}
-              mb={2}
-              aria-label={['min', 'max']}
-            >
+          <RangeSlider
+  value={priceRange}
+  min={0}
+  max={1000}
+  step={50}
+  onChange={setPriceRange}
+  mt={4}
+  mb={2}
+  aria-label={['Min Price', 'Max Price']}
+>
+
               <RangeSliderTrack bg="gray.100">
                 <RangeSliderFilledTrack bgGradient={`linear(to-r, ${accentColor}, pink.400)`} />
               </RangeSliderTrack>
