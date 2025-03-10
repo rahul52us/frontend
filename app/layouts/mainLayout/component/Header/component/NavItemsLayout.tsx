@@ -6,20 +6,20 @@ import NavItem from "../element/NavItem";
 
 interface NavItemType {
   title: string;
-  link:string;
+  link: string;
 }
 
-const NavItemsLayout: React.FC<any> = ({onClose}) => {
+const NavItemsLayout: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   return (
     <Flex
       direction={{ base: "column", md: "row" }}
-      gap={{ base: 4, md: 6 }}
-      alignItems={{ base: "center", md: "start" }}
+      gap={{ base: 6, md: 8 }} // Simple, clean spacing
+      alignItems="center"
       justifyContent="center"
       wrap={{ base: "wrap", md: "nowrap" }}
     >
       {navItems.map((item: NavItemType) => (
-        <NavItem item={item} key={item.title} onClose={onClose} />
+        <NavItem item={item} key={item.title} onClose={onClose || (() => {})} />
       ))}
     </Flex>
   );

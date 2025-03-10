@@ -1,43 +1,52 @@
 "use client";
-import { Box } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-// Define the type for the item prop
 interface NavItemProps {
   item: {
     title: string;
-    link:string;
+    link: string;
   };
-  onClose:any;
+  onClose: () => void;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ item ,onClose}) => {
-  const router = useRouter()
+const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
+  const router = useRouter();
+
   return (
     <Box
       as="span"
-      fontSize={{lg:"16px",xl:"18px"}}
-      color="#045B64"
-      position="relative"
+      fontSize={{ base: "md", md: "md", lg: "lg" }} // Simple, readable sizes
+      color="gray.700" // Soft, neutral color
       cursor="pointer"
+      fontWeight="medium"
+      px={2}
+      py={1}
+      position="relative"
+      transition="all 0.2s ease"
       _hover={{
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          bottom: "-4px",
-          left: 0,
-          width: "100%",
-          height: "4px",
-          backgroundColor: "#045B64",
-        },
+        color: "blue.600", // Simple, bold hover color
+        transform: "translateY(-1px)", // Minimal lift
       }}
+      _after={{
+        content: '""',
+        position: "absolute",
+        bottom: "-2px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "0%",
+        height: "2px",
+        bg: "blue.600",
+        transition: "width 0.2s ease",
+      }}
+
       onClick={() => {
-        router.push(item.link)
+        router.push(item.link);
         onClose();
       }}
     >
-      {item.title}
+      <Text as="span">{item.title}</Text>
     </Box>
   );
 };

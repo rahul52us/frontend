@@ -14,8 +14,7 @@ const page = () => {
       <TopFilterBar />
       <ProductsListSection />
       <ProductCarousel />
-      {/* <ProductBanner/> */}
-
+      <ProductBanner/>
       <BentoGrid />
     </Box>
   );

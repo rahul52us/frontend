@@ -25,7 +25,7 @@ const Carousel = ({
     slidesToScroll: 1,
     autoplay: autoplay,
     autoplaySpeed: autoplaySpeed,
-    
+
     arrows: false,
     responsive: [
       {
