@@ -2,16 +2,21 @@
 import { Box, Flex } from "@chakra-ui/react";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
+import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
+import FilterPanel from "../../component/config/component/filterPanel/FIlterPanel";
+import HeroSection from "../../component/HeroSection/HeroSection";
+import BenefitSection from "./components/BenefitSection/BenefitSection";
 import BentoGrid from "./components/BentoGrid/BentoGrid";
+import CreativeEcommerceSection from "./components/ContentSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
-import FilterPanel from "../../component/config/component/filterPanel/FIlterPanel";
 
 const Page = () => {
 
   return (
     <Box maxW="95%" mx="auto" py={{ base: 4, md: 2 }} overflowX="hidden">
       <CategoryFilter />
+      <HeroSection/>
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -40,9 +45,13 @@ const Page = () => {
           <ProductsListSection />
         </Box>
       </Flex>
+
       <Box>
         <ProductCarousel />
       </Box>
+      <IndianStateFilter/>
+      <CreativeEcommerceSection/>
+      <BenefitSection/>
       <Box>
         <BentoGrid />
       </Box>

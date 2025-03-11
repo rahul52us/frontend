@@ -91,7 +91,7 @@ const CompactFilters = () => {
   onChange={setPriceRange}
   mt={4}
   mb={2}
-  aria-label={['Min Price', 'Max Price']}
+  // aria-label={"Price Range"}
 >
 
               <RangeSliderTrack bg="gray.100">

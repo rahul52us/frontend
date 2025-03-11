@@ -79,11 +79,10 @@ const Carousel = ({
         {children}
       </Slider>
 
-      {/* Custom Navigation Buttons */}
       <Box
         position="absolute"
-        bottom={{ base: "-10%", md: "-10%" }}
-        right="2%"
+        bottom={{ base: "-10%", md: "-14%" }}
+        right="1%"
         zIndex={2}
         display="flex"
         gap={2}

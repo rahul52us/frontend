@@ -1,12 +1,12 @@
 "use client";
 
 import { Box, Grid, useBreakpointValue } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import Carousel from '../../../../component/common/CommonCarousel/CommonCarousel';
 import CommonHeading from '../../../../component/common/CommonHeading/CommonHeading';
-import ProductCard from './ProductCard';
-import { observer } from 'mobx-react-lite';
-import { uniqueProducts } from '../utils/constant';
 import stores from '../../../../store/stores';
+import { uniqueProducts } from '../utils/constant';
+import ProductCard from './ProductCard';
 
 const ProductsListSection = observer(() => {
   const { themeStore: { themeConfig } } = stores;
@@ -22,7 +22,7 @@ const ProductsListSection = observer(() => {
     sm: 'repeat(2, 1fr)',   // 2 columns on small screens
     md: 'repeat(3, 1fr)',   // 3 columns on medium screens
     lg: 'repeat(3, 1fr)',   // 4 columns on large screens
-    xl: 'repeat(3, 1fr)',   // 5 columns on extra-large screens
+    xl: 'repeat(4, 1fr)',   // 5 columns on extra-large screens
   });
 
   // Responsive slides to show in carousel
