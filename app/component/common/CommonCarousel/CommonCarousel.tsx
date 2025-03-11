@@ -1,7 +1,9 @@
+'use client';
+
 import { Box, IconButton, useBreakpointValue } from "@chakra-ui/react";
 import Slider from "react-slick";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -12,20 +14,33 @@ const Carousel = ({
   autoplaySpeed = 3000,
   buttonColor = "white",
   buttonBgColor = "rgba(0,0,0,0.6)",
-  dots=false
+  dots = false,
 }) => {
   const sliderRef = useRef(null);
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Ensure component is only rendered on client side
+  useEffect(() => {
+    setIsMounted(true);
+    // Check if window is available and update the mobile state
+    setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint as needed
+  }, []);
+
+  // Get breakpoint value only after mounting
+  const mobileBreakpoint = useBreakpointValue({ base: true, md: false });
+
+  // Default to non-mobile settings until mounted
+  const isMobileResolved = isMounted ? (mobileBreakpoint || isMobile) : false;
 
   const settings = {
     dots: dots,
     infinite: true,
     speed: 500,
-    slidesToShow: isMobile ? 1 : slidesToShow,
+    slidesToShow: isMobileResolved ? 1 : slidesToShow,
     slidesToScroll: 1,
     autoplay: autoplay,
     autoplaySpeed: autoplaySpeed,
-
     arrows: false,
     responsive: [
       {
@@ -53,8 +68,13 @@ const Carousel = ({
     transition: "all 0.3s ease",
   };
 
+  // Render nothing or a fallback until mounted
+  if (!isMounted) {
+    return null; // Or a loading placeholder if preferred
+  }
+
   return (
-    <Box position="relative" width="full" p={{ base: 0, md: 2 }} >
+    <Box position="relative" width="full" p={{ base: 0, md: 2 }}>
       <Slider ref={sliderRef} {...settings}>
         {children}
       </Slider>
@@ -72,13 +92,13 @@ const Carousel = ({
           aria-label="Previous slide"
           icon={<FaChevronLeft />}
           {...buttonStyles}
-          onClick={() => sliderRef.current.slickPrev()}
+          onClick={() => sliderRef.current?.slickPrev()}
         />
         <IconButton
           aria-label="Next slide"
           icon={<FaChevronRight />}
           {...buttonStyles}
-          onClick={() => sliderRef.current.slickNext()}
+          onClick={() => sliderRef.current?.slickNext()}
         />
       </Box>
 
@@ -90,7 +110,7 @@ const Carousel = ({
         .slick-slide > div {
           height: 100%;
           padding: 0 6px; /* Horizontal gap */
-          padding-bottom:4px
+          padding-bottom: 4px;
         }
         .slick-track {
           display: flex;

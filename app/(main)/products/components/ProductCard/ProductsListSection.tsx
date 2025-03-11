@@ -1,110 +1,48 @@
+"use client";
+
 import { Box, Grid, useBreakpointValue } from '@chakra-ui/react';
 import Carousel from '../../../../component/common/CommonCarousel/CommonCarousel';
 import CommonHeading from '../../../../component/common/CommonHeading/CommonHeading';
 import ProductCard from './ProductCard';
+import { observer } from 'mobx-react-lite';
+import { uniqueProducts } from '../utils/constant';
+import stores from '../../../../store/stores';
 
-// Define product interface
-interface Product {
-  id: number;
-  image: string;
-  category: string;
-  name: string;
-  price: string;
-  rating: number;
-  freeShipping: boolean;
-}
+const ProductsListSection = observer(() => {
+  const { themeStore: { themeConfig } } = stores;
+  const isDarkMode = themeConfig.config.initialColorMode === "dark";
 
-// Unique products array
-const uniqueProducts: Product[] = Array.from(
-  new Map(
-    [
-      {
-        id: 1,
-        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60",
-        category: "Business Supplies",
-        name: "Premium Office Chair",
-        price: "299.99",
-        rating: 4,
-        freeShipping: true,
-      },
-      {
-        id: 2,
-        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=60",
-        category: "Electronics",
-        name: "Wireless Headphones",
-        price: "149.99",
-        rating: 5,
-        freeShipping: false,
-      },
-      {
-        id: 3,
-        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60",
-        category: "Fashion",
-        name: "Running Shoes",
-        price: "89.99",
-        rating: 3,
-        freeShipping: true,
-      },
-      {
-        id: 4,
-        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60",
-        category: "Business Supplies",
-        name: "Ergonomic Desk",
-        price: "399.99",
-        rating: 4,
-        freeShipping: true,
-      },
-      {
-        id: 5,
-        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=60",
-        category: "Electronics",
-        name: "Bluetooth Speaker",
-        price: "99.99",
-        rating: 5,
-        freeShipping: false,
-      },
-      {
-        id: 6,
-        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60",
-        category: "Fashion",
-        name: "Sports Watch",
-        price: "129.99",
-        rating: 3,
-        freeShipping: true,
-      },
-    ].map((product) => [product.id, product])
-  ).values()
-);
+  const headingColor = isDarkMode
+    ? themeConfig.colors.dark.primary[500]
+    : themeConfig.colors.light.primary[500];
 
-const ProductsListSection: React.FC = () => {
   // Responsive grid columns
   const gridColumns = useBreakpointValue({
-    base: 'repeat(1, 1fr)',    // Mobile: 1 column
-    sm: 'repeat(1, 1fr)',     // Small: 2 columns
-    md: 'repeat(3, 1fr)',     // Tablet: 3 columns
-    lg: 'repeat(4, 1fr)',     // Desktop: 4 columns
-    xl: 'repeat(4, 1fr)',     // Large desktop: 4 columns
+    base: 'repeat(1, 1fr)',  // 1 column on mobile
+    sm: 'repeat(2, 1fr)',   // 2 columns on small screens
+    md: 'repeat(3, 1fr)',   // 3 columns on medium screens
+    lg: 'repeat(3, 1fr)',   // 4 columns on large screens
+    xl: 'repeat(3, 1fr)',   // 5 columns on extra-large screens
   });
 
-  // Responsive carousel slides
+  // Responsive slides to show in carousel
   const slidesToShow = useBreakpointValue({
     base: 1,
-    sm: 1,
+    sm: 2,
     md: 3,
     lg: 3,
-    xl: 4,
+    xl: 3,
   });
 
-  // Carousel settings aligned with Chakra UI breakpoints
   const carouselSettings = {
     slidesToShow,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 2500,
+    autoplaySpeed: 3000,
     speed: 600,
     dots: true,
     infinite: true,
-    arrows: slidesToShow > 1, // Show arrows only when more than 1 slide
+    arrows: slidesToShow > 1, // Show arrows only if more than 1 slide visible
     centerMode: false,
     centerPadding: '20px',
     pauseOnHover: true,
@@ -123,13 +61,15 @@ const ProductsListSection: React.FC = () => {
         <CommonHeading
           mb={{ base: 4, md: 6 }}
           fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
-          color="gray.800"
+          color={headingColor}
+          textAlign={{ base: 'center', md: 'left' }}
         >
           Trending Products
         </CommonHeading>
         <Grid
           templateColumns={gridColumns}
-          gap={{ base: 4, md: 6, lg: 8 }}
+          gap={{ base: 4, md: 3, lg: 4 }}
+          justifyItems="center"
         >
           {uniqueProducts.map((product) => (
             <ProductCard
@@ -145,7 +85,8 @@ const ProductsListSection: React.FC = () => {
         <CommonHeading
           mb={{ base: 4, md: 6 }}
           fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
-          color="gray.800"
+          color={headingColor}
+          textAlign={{ base: 'center', md: 'left' }}
         >
           Recently Added
         </CommonHeading>
@@ -155,8 +96,8 @@ const ProductsListSection: React.FC = () => {
             content: '""',
             position: 'absolute',
             top: 0,
-            left: 0,
-            right: 0,
+            left: { base: 0, md: '10%' },
+            right: { base: 0, md: '10%' },
             height: '1px',
             bg: 'gray.200',
             display: { base: 'none', md: 'block' },
@@ -166,7 +107,7 @@ const ProductsListSection: React.FC = () => {
             {uniqueProducts.map((product) => (
               <Box
                 key={`${product.id}-${product.name}-carousel`}
-                px={{ base: 1, md: 2, lg: 3 }}
+                px={{ base: 2, md: 3 }}
                 py={2}
                 width="100%"
               >
@@ -178,6 +119,6 @@ const ProductsListSection: React.FC = () => {
       </Box>
     </Box>
   );
-};
+});
 
 export default ProductsListSection;

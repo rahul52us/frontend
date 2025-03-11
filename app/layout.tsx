@@ -1,8 +1,6 @@
 'use client';
 
-import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
-import theme from "./theme/theme";
-import { lato } from "./theme/theme";
+import { ChakraProvider, ColorModeScript, extendTheme } from "@chakra-ui/react";
 import MainLayout from "./layouts/mainLayout/MainLayout";
 import AuthenticationLayout from "./layouts/authenticationLayout/AuthenticationLayout";
 import DashboardLayout from "./layouts/dashboardLayout/DashboardLayout";
@@ -24,6 +22,7 @@ export default function RootLayout({
 }>) {
   const { companyStore: { getCompanyDetails } } = stores;
   const pathname = usePathname();
+  const theme = extendTheme(stores.themeStore);
 
   useEffect(() => {
     getCompanyDetails();
@@ -71,7 +70,7 @@ export default function RootLayout({
         <ColorModeScript initialColorMode="light" />
       </head>
 
-      <body className={`${lato.className} ${montserrat.className}`} style={{ margin: 0, padding: 0 }}>
+      <body className={`${montserrat.className}`} style={{ margin: 0, padding: 0 }}>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-WQW7482D"

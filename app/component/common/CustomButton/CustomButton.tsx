@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Icon, ButtonProps, useBreakpointValue } from "@chakra-ui/react";
 import { FC, ReactNode } from "react";
 
@@ -24,6 +26,7 @@ const CustomButton: FC<CustomButtonProps> = ({
   color = "#FFFFFF", // Default text color
   ...props
 }) => {
+  // Directly using the useBreakpointValue hook to get the font size and button size
   const fontSizes = useBreakpointValue({ base: "14px", md: "16px" });
   const buttonSize = useBreakpointValue({ base: "lg", lg: "lg", xl: "xl" });
 
@@ -48,6 +51,7 @@ const CustomButton: FC<CustomButtonProps> = ({
       cursor="pointer"
       transition="all 0.3s ease-in-out"
       overflow="hidden"
+      p={3}
       _hover={{
         borderColor: "#fff9",
         transform: "scale(1.015)",
