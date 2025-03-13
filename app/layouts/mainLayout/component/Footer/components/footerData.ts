@@ -1,4 +1,4 @@
-import { FaInstagram, FaLinkedinIn, FaFacebook, FaYoutube, FaPhone } from 'react-icons/fa';
+import { FaInstagram, FaLinkedinIn, FaFacebook, FaYoutube } from 'react-icons/fa';
 import { FaXTwitter } from "react-icons/fa6";
 
 export const footerData = {
