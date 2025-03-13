@@ -5,9 +5,10 @@ import { slides } from './constant';
 
 const HeroSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % slides.length);
+      setActiveIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -15,17 +16,17 @@ const HeroSection = () => {
   return (
     <Box
       position="relative"
-      height={{ base: "500px", md: "480px" }}
+      height={{ base: "400px", md: "480px" }} // Adjusted for mobile height
       mb={2}
       mt={4}
       borderWidth={2}
       overflow="hidden"
       borderColor={'gray.200'}
       rounded={'2xl'}
-      >
+    >
       {/* Background Slideshow */}
       {slides.map((slide, index) => (
-          <Box
+        <Box
           key={index}
           position="absolute"
           top={0}
@@ -37,18 +38,7 @@ const HeroSection = () => {
           bgGradient={slide.bgGradient}
           transition="opacity 1s ease-in-out"
           zIndex={0}
-        >
-          {/* <Image
-            src={slide.image}
-            alt="Background"
-            width="100%"
-            height="100%"
-            objectFit="cover"
-            filter="auto"
-            brightness={'0.3'}
-            blur={'2px'}
-          /> */}
-        </Box>
+        ></Box>
       ))}
 
       <Container
@@ -61,12 +51,12 @@ const HeroSection = () => {
         alignItems="center"
       >
         <Grid
-          templateColumns="repeat(2, 1fr)"
+          templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} // Single column on mobile
           gap={6}
           height="100%"
           alignItems="center"
         >
-          <GridItem  pl={8}>
+          <GridItem pl={{ base: 2, md: 8 }}>
             <VStack
               spacing={6}
               align="flex-start"
@@ -89,8 +79,8 @@ const HeroSection = () => {
               <Heading
                 size="2xl"
                 lineHeight="1.2"
-                // textShadow="0 2px 4px rgba(0,0,0,0.3)"
                 maxW={{ base: "100%", md: "80%" }}
+                fontSize={{ base: "xl", md: "2xl" }} // Adjusted for mobile font size
               >
                 {slides[activeIndex].title}
               </Heading>
@@ -98,13 +88,18 @@ const HeroSection = () => {
               <Text
                 fontSize="lg"
                 maxW={{ base: "100%", md: "80%" }}
-                // textShadow="0 1px 2px rgba(0,0,0,0.3)"
                 color="blackAlpha.900"
               >
                 {slides[activeIndex].text}
               </Text>
 
-              <HStack spacing={4} pt={4}>
+              <HStack
+                spacing={{base : 2, md : 4}}
+                pt={4}
+                direction={{ base: 'column', md: 'row' }} // Stack buttons on mobile
+                align="center" // Center buttons on mobile
+                w="full" // Ensure full width for buttons
+              >
                 <Button
                   size="lg"
                   bg="white"
@@ -112,6 +107,7 @@ const HeroSection = () => {
                   _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
                   borderRadius="full"
                   px={8}
+                  w={{ base: '100%', md: 'auto' }} // Full width on mobile
                   transition="all 0.2s"
                 >
                   Shop Now
@@ -124,6 +120,7 @@ const HeroSection = () => {
                   _hover={{ bg: 'whiteAlpha.100' }}
                   borderRadius="full"
                   px={8}
+                  w={{ base: '100%', md: 'auto' }} // Full width on mobile
                   rightIcon={<FiPlayCircle />}
                 >
                   Watch Video
@@ -133,7 +130,6 @@ const HeroSection = () => {
           </GridItem>
 
           <GridItem
-            // colSpan={{ base: 12, md: 5 }}
             display={{ base: 'none', md: 'block' }}
             height="100%"
             position="relative"
@@ -149,8 +145,7 @@ const HeroSection = () => {
               <Box
                 borderRadius="xl"
                 overflow="hidden"
-                // boxShadow="2xl"
-                width={{ base: "100%", md: "100%" }}
+                width="100%"
                 height={{ base: "300px", md: "460px" }}
                 h={'100%'}
                 position="relative"
@@ -159,7 +154,6 @@ const HeroSection = () => {
               >
                 <Image
                   src={slides[activeIndex].image}
-                // src='/images/heroImage.png'
                   alt="Featured product"
                   objectFit="contain"
                   width="100%"
@@ -201,4 +195,5 @@ const HeroSection = () => {
     </Box>
   );
 };
+
 export default HeroSection;

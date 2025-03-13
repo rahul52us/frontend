@@ -13,7 +13,7 @@ import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 
 const Page = () => {
   return (
-    <Box maxW="98%" mx="auto" py={{ base: 4, md: 2 }} overflowX="hidden">
+    <Box maxW="98%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
       <CategoryFilter />
       <HeroSection/>
       <Flex

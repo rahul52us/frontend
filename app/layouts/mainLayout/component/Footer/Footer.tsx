@@ -4,7 +4,6 @@ import {
   Divider,
   Grid,
   Icon,
-  Image,
   Link,
   SimpleGrid,
   Stack,
@@ -17,80 +16,47 @@ import FooterSection from "./components/FooterSection";
 import { footerData } from "./components/footerData";
 import Conditions from "./components/Conditions";
 
-// Removed empty interface
 export const Footer: React.FC = () => {
-  const textColor = useColorModeValue("white", "white");
+  const textColor = useColorModeValue("white", "white"); // White text for readability
 
   return (
-    <Box bg={"#065F68"} color={textColor} borderTopRadius={{ base: "24px", md: "40px" }} py={{ base: "8", md: 14 }}>
+    <Box
+      bg="linear-gradient(to right, #2b5876, #4e4376)" // Darker blue and purple gradient for strong contrast
+      color={textColor}
+      borderTopRadius={{ base: "24px", md: "40px" }}
+      py={{ base: "8", md: "6" }} // Increased padding for more spacing
+    >
       <Container as={Stack} maxW={{ lg: "90%" }} px={{ base: 4, md: 8 }}>
-      <Box mb={6} textAlign={{ base: "center", md: "left" }} w={{ base: "100%", md: "80%", lg: "75%" }} mx="auto">
-          <Text textAlign="center" fontSize={{ base: "sm", md: "md" }} lineHeight="1.6">
-          We’re not a crisis service. For immediate help, call <strong> Lifeline at 1800-891-4416 </strong> (TeleMANAS- mental health crisis service)/ <strong>Call 112</strong>  (National emergency number)/ <strong>Call 1098</strong> (Child Helpline)/ <strong>Call 1091</strong>  (Women Helpline)/ Go to the nearest emergency room of your choice.
-            {/* <br /> */}
-            {/* {footerData.companyInfo.crisisNumber}. */}
-          </Text>
+        <Box mb={6} textAlign="center" w="100%" mx="auto">
+        <Text fontSize={{ base: "sm", md: "md" }} lineHeight="1.6">
+  Need assistance? For immediate support, please contact us at{" "}
+  <strong>Customer Support: 1800-123-4567</strong> or visit our{" "}
+  <strong>Help Center</strong> for FAQs and guidance. If you have any issues with your orders or need assistance with our platform, our team is here to help.
+  Alternatively, you can reach out via email at <strong>support@businesssahayata.com</strong>.
+</Text>
+
         </Box>
+
         <SimpleGrid
           templateColumns={{
             base: "1fr", // Stacks items on small screens
             sm: "1fr 1fr", // Two columns on small screens
-            md: "1fr 1fr 1fr", // Standard grid layout on medium and larger screens
-            lg: "1fr 1fr 1fr 1fr", // Standard grid layout on medium and larger screens
+            md: "1fr 1fr 1fr", // Three columns on medium screens
+            lg: "1fr 1fr 1fr 1fr", // Four columns on large screens
           }}
-          spacing={{ base: 3, md: 4 }}
+          spacing={{ base: 6, md: 8 }} // Increased spacing for better readability
         >
-          {/* Company Info */}
-          {/* <Stack
-            spacing={{ base: 4, md: 4 }}
-            align={{ base: "center", md: "flex-start" }}
-          >
-            <Box textAlign={{ base: "center", md: "left" }}>
-              <Image
-                src="/images/whiteLogo.png"
-                alt="logo"
-                h={{ base: "70px", lg: "100px" }}
-                mx={{ base: "auto", md: 0 }}
-              />
-              <Text pl={1} fontSize={{ base: "lg", md: "xl", lg: "2xl" }} mt={-2}>
-                {footerData.companyInfo.tagline}
-              </Text>
-            </Box>
-            <Stack
-              direction="row"
-              spacing={4}
-              justify={{ base: "center", md: "flex-start" }}
-            >
-              {footerData.companyInfo.socialLinks.map((social) => (
-                <Link key={social.name} href={social.url}>
-                  <Box
-                    boxSize={7}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    rounded="full"
-                    bg="#FFFFFF1C"
-                    _hover={{ color: "gray.300" }}
-                  >
-                    <Icon as={social.icon} boxSize="60%" />
-                  </Box>
-                </Link>
-              ))}
-            </Stack>
-          </Stack> */}
-
-          {/* Sections */}
           {footerData.sections.map((section) => (
             <FooterSection key={section.title} section={section} />
           ))}
 
           <Box>
-            <Conditions/>
+            <Conditions />
           </Box>
-          {/* Contact Info */}
+
           <Box>
-          <ContactSection contactInfo={footerData.contactInfo} />
-          <Stack
+            <ContactSection contactInfo={footerData.contactInfo} />
+            <Stack
               direction="row"
               spacing={4}
               ml={{ base: -3, md: 5 }}
@@ -105,8 +71,11 @@ export const Footer: React.FC = () => {
                     alignItems="center"
                     justifyContent="center"
                     rounded="full"
-                    bg="#FFFFFF1C"
-                    _hover={{ color: "gray.300" }}
+                    bg="rgba(255, 255, 255, 0.2)" // Slightly transparent social icons
+                    _hover={{
+                      bg: "rgba(255, 255, 255, 0.4)", // Light hover effect for social icons
+                      color: "gray.300",
+                    }}
                   >
                     <Icon as={social.icon} boxSize="60%" />
                   </Box>
@@ -114,73 +83,47 @@ export const Footer: React.FC = () => {
               ))}
             </Stack>
           </Box>
-
         </SimpleGrid>
-
-        {/* Crisis Notice */}
-        {/* <Box pt={{ base: 4, md: 10 }} pb={2} textAlign={{ base: "center", md: "left" }} w={{ base: "100%", md: "80%", lg: "70%" }} mx="auto">
-          <Text textAlign="center" fontSize={{ base: "sm", md: "lg" }} lineHeight="1.6">
-            We’re not a crisis service. For immediate help, call Lifeline at <strong>1800-891-4416</strong> (TeleMANAS – mental health crisis service) or call <strong>112</strong> (National emergency number), <strong>1098</strong> (Child Helpline), <strong>1091</strong> (Women Helpline), or go to the nearest emergency room of your choice.
-            <br />
-            {footerData.companyInfo.crisisNumber}.
-          </Text>
-        </Box> */}
-
       </Container>
 
-      <Box>
-        <Divider borderColor={"#FFFFFF33"} />
+      <Box pt={6}>
+        <Divider borderColor={"#FFFFFF66"} /> {/* Subtle divider with opacity */}
         <Grid
           pt={6}
-          gap={4}
+          gap={6} // Increased gap for better space
           templateColumns={{
             base: "1fr", // Single column on small screens
             lg: "1fr 1fr 1fr", // Three columns on medium and larger screens
           }}
           textAlign={{ base: "center", lg: "left" }}
           alignItems={"center"}
+          justifyContent={"center"} // Centers horizontally
+          alignContent={"center"} // Centers vertically within grid
         >
-          <Box display={{ base: "none", sm: "block" }}>
-            <Image
-              position={"absolute"}
-              h={"260px"}
-              bottom={0}
-              left={0}
-              src="/images/footerImage.png"
-              alt="Who are some good psychiatrists in Noida?"
-              mixBlendMode={"multiply"}
-            />
-          </Box>
-          <Text fontSize={{ base: "xs", sm: "sm" }} textAlign={'center'}>
+          <Box display={{ base: "none", sm: "block" }}></Box>
+          <Text fontSize={{ base: "xs", sm: "sm" }} textAlign="center">
             ©{new Date().getFullYear()}{" "}
-            <Text as={"span"} color={"#DF837C"}>
+            <Text as={"span"} color={"#FF6F61"}> {/* Soft coral accent color */}
               {footerData.companyInfo.name}
             </Text>{" "}
             . All rights reserved.
           </Text>
+
           <Stack
-            direction="row" // Always a horizontal row
-            spacing={2} // Small spacing between items
-            justify={{ base: "center", lg: "flex-end" }} // Align to the right
-            align="center" // Vertically center items
-            wrap="wrap" // Wrap items if needed on very small screens
+            direction="row"
+            spacing={4}
+            justify={{ base: "center", lg: "flex-end" }}
+            align="center"
+            wrap="wrap"
             pr={{ md: 8 }}
           >
             {footerData.legalLinks.map((link, index) => (
               <React.Fragment key={link.name}>
-                <Link
-                  href={link.href}
-                  _hover={{ color: "gray.300" }}
-                  fontSize={{ base: "xs", sm: "sm" }} // Smaller font size for better scaling
-                >
+                <Link href={link.href} _hover={{ color: "gray.300" }} fontSize={{ base: "xs", sm: "sm" }}>
                   {link.name}
                 </Link>
                 {index < footerData.legalLinks.length - 1 && (
-                  <Text
-                    fontSize={{ base: "xs", sm: "sm" }} // Match separator size with links
-                  >
-                    /
-                  </Text>
+                  <Text fontSize={{ base: "xs", sm: "sm" }}>/</Text>
                 )}
               </React.Fragment>
             ))}

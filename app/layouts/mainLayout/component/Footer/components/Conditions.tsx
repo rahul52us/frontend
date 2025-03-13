@@ -1,19 +1,22 @@
-import { Box, Stack, Text, UnorderedList, ListItem, Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel } from '@chakra-ui/react';
+import {
+  Box, Stack, Text, UnorderedList, ListItem,
+  Accordion, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel
+} from '@chakra-ui/react';
 import React from 'react';
 
-const conditions = [
-  "Depression",
-  "Anxiety",
-  "Social Anxiety",
-  "ADHD",
-  "Bipolar Disorder",
-  "OCD",
-  "Sleep Disorder",
-  "Trauma",
-  "Post-partum Depression",
-  "Autism",
-  "Eating Disorder",
-  "Personality Disorder"
+const businessCategories = [
+  "Grocery Stores",
+  "Electronics & Appliances",
+  "Clothing & Fashion",
+  "Automobile & Accessories",
+  "Restaurants & Cafes",
+  "Furniture & Home Decor",
+  "Beauty & Wellness",
+  "Healthcare & Pharmacies",
+  "Books & Stationery",
+  "Sports & Fitness",
+  "Toys & Games",
+  "Handmade & Artisanal"
 ];
 
 const Conditions = () => {
@@ -23,12 +26,12 @@ const Conditions = () => {
       <Box display={{ base: 'none', md: 'block' }}>
         <Stack align={'flex-start'} mt={2}>
           <Text fontWeight={'400'} fontSize={'lg'} mb={1}>
-            Conditions We Treat
+            Business Categories
           </Text>
           <UnorderedList listStyleType={'none'} ml={0}>
-            {conditions.map((condition, index) => (
-              <ListItem fontSize={'sm'} ml={0} display="block" key={index}>
-                {condition}
+            {businessCategories.map((category, index) => (
+              <ListItem fontSize={'sm'} ml={0} mt={3} display="block" key={index}>
+                {category}
               </ListItem>
             ))}
           </UnorderedList>
@@ -41,15 +44,15 @@ const Conditions = () => {
           <AccordionItem border="none">
             <AccordionButton _hover={{ bg: 'transparent' }} _expanded={{ bg: 'transparent' }}>
               <Box flex="1" textAlign="left" fontWeight={'400'} fontSize={'lg'}>
-                Conditions We Treat
+                Business Categories
               </Box>
               <AccordionIcon />
             </AccordionButton>
             <AccordionPanel pb={4}>
               <UnorderedList listStyleType={'none'} ml={0}>
-                {conditions.map((condition, index) => (
-                  <ListItem fontSize={'sm'} ml={0} display="block" key={index}>
-                    {condition}
+                {businessCategories.map((category, index) => (
+                  <ListItem fontSize={'sm'} ml={0} mt={2} display="block" key={index}>
+                    {category}
                   </ListItem>
                 ))}
               </UnorderedList>
