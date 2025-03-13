@@ -11,15 +11,6 @@ const HeroNavButton = () => {
       <CustomButton
         width="auto"
         size="md"
-        bgGradient="linear(to-r, teal.500, blue.500)" // Smooth gradient
-        color="white" // Text color
-        onClick={() => router.push('/shop')}
-      >
-        Shop Now
-      </CustomButton>
-      <CustomButton
-        width="auto"
-        size="md"
         variant="outline"
         borderColor="transparent" // Make border transparent for a smooth gradient look
         color="transparent" // Make text transparent to show the gradient

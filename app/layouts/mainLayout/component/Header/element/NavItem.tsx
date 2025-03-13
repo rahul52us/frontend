@@ -1,7 +1,8 @@
 "use client";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { ChevronDownIcon } from "@chakra-ui/icons";
 
 interface NavItemProps {
   item: {
@@ -17,8 +18,8 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
   return (
     <Box
       as="span"
-      fontSize={{ base: "md", md: "md", lg: "lg" }} // Simple, readable sizes
-      color="gray.700" // Soft, neutral color
+      fontSize={{ base: "md", md: "sm", lg: "md" }} // Compact yet readable
+      color="gray.700"
       cursor="pointer"
       fontWeight="medium"
       px={2}
@@ -26,27 +27,17 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
       position="relative"
       transition="all 0.2s ease"
       _hover={{
-        color: "blue.600", // Simple, bold hover color
-        transform: "translateY(-1px)", // Minimal lift
+        color: "orange.500",
       }}
-      _after={{
-        content: '""',
-        position: "absolute",
-        bottom: "-2px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "0%",
-        height: "2px",
-        bg: "blue.600",
-        transition: "width 0.2s ease",
-      }}
-
       onClick={() => {
         router.push(item.link);
         onClose();
       }}
     >
-      <Text as="span">{item.title}</Text>
+      <Flex alignItems="center" gap={1}>
+        <Text as="span">{item.title}</Text>
+        <ChevronDownIcon fontSize="sm" color="gray.500" />
+      </Flex>
     </Box>
   );
 };

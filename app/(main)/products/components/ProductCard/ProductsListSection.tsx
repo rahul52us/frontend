@@ -18,20 +18,19 @@ const ProductsListSection = observer(() => {
 
   // Responsive grid columns
   const gridColumns = useBreakpointValue({
-    base: 'repeat(1, 1fr)',  // 1 column on mobile
-    sm: 'repeat(2, 1fr)',   // 2 columns on small screens
-    md: 'repeat(3, 1fr)',   // 3 columns on medium screens
-    lg: 'repeat(3, 1fr)',   // 4 columns on large screens
-    xl: 'repeat(4, 1fr)',   // 5 columns on extra-large screens
+    base: 'repeat(1, 1fr)',
+    sm: 'repeat(2, 1fr)',
+    md: 'repeat(3, 1fr)',
+    lg: 'repeat(4, 1fr)',
+    xl: 'repeat(5, 1fr)',
   });
 
-  // Responsive slides to show in carousel
   const slidesToShow = useBreakpointValue({
     base: 1,
     sm: 2,
     md: 3,
-    lg: 3,
-    xl: 3,
+    lg: 4,
+    xl: 5,
   });
 
   const carouselSettings = {
@@ -50,22 +49,20 @@ const ProductsListSection = observer(() => {
 
   return (
     <Box
-      maxW="container.xl"
+      // maxW="container.xl"
       mx="auto"
-      px={{ base: 4, md: 6, lg: 8 }}
+      px={{ base: 3, md: 4, lg: 6 }}
       py={{ base: 6, md: 8 }}
       overflow="hidden"
     >
       {/* Trending Products Section */}
-      <Box mb={{ base: 8, md: 12 }}>
-        <CommonHeading
-          mb={{ base: 4, md: 6 }}
-          fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
-          color={headingColor}
-          textAlign={{ base: 'center', md: 'left' }}
-        >
-          Trending Products
-        </CommonHeading>
+      <Box mb={{ base: 8, md: 8 }}>
+      <CommonHeading
+  heading="Trending Products"
+  subheading="Discover the most popular products"
+  mb={{ base: 4, md: 8 }}
+  color={headingColor}
+/>
         <Grid
           templateColumns={gridColumns}
           gap={{ base: 4, md: 3, lg: 4 }}
@@ -82,26 +79,14 @@ const ProductsListSection = observer(() => {
 
       {/* Recently Added Section */}
       <Box>
-        <CommonHeading
-          mb={{ base: 4, md: 6 }}
-          fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }}
-          color={headingColor}
-          textAlign={{ base: 'center', md: 'left' }}
-        >
-          Recently Added
-        </CommonHeading>
+      <CommonHeading
+  heading="Recently Added"
+  subheading="Check out the latest arrivals"
+  mb={{ base: 6, md: 6 }}
+  color={headingColor}
+  align={{ base: "center", md: "center" }}
+/>
         <Box
-          position="relative"
-          _before={{
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: { base: 0, md: '10%' },
-            right: { base: 0, md: '10%' },
-            height: '1px',
-            bg: 'gray.200',
-            display: { base: 'none', md: 'block' },
-          }}
         >
           <Carousel {...carouselSettings}>
             {uniqueProducts.map((product) => (

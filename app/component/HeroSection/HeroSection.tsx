@@ -13,10 +13,10 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <Box 
-      position="relative" 
+    <Box
+      position="relative"
       height={{ base: "500px", md: "480px" }}
-      mb={16}
+      mb={2}
       mt={4}
       borderWidth={2}
       overflow="hidden"
@@ -51,52 +51,52 @@ const HeroSection = () => {
         </Box>
       ))}
 
-      <Container 
+      <Container
         maxW="100%"
-        w={'100%'} 
-        height="100%" 
-        position="relative" 
+        w={'100%'}
+        height="100%"
+        position="relative"
         zIndex={1}
         display="flex"
         alignItems="center"
       >
-        <Grid 
-          templateColumns="repeat(2, 1fr)" 
-          gap={6} 
+        <Grid
+          templateColumns="repeat(2, 1fr)"
+          gap={6}
           height="100%"
           alignItems="center"
         >
           <GridItem  pl={8}>
-            <VStack 
-              spacing={6} 
-              align="flex-start" 
+            <VStack
+              spacing={6}
+              align="flex-start"
               color="gray.700"
               position="relative"
               key={activeIndex}
               animation="fadeIn 1s ease-in-out"
             >
-              <Badge 
-                colorScheme="blackAlpha" 
-                fontSize="md" 
-                px={4} 
-                py={1.5} 
+              <Badge
+                colorScheme="blackAlpha"
+                fontSize="md"
+                px={4}
+                py={1.5}
                 borderRadius="full"
                 backdropFilter="blur(4px)"
               >
                 {slides[activeIndex].badge}
               </Badge>
-              
-              <Heading 
-                size="2xl" 
+
+              <Heading
+                size="2xl"
                 lineHeight="1.2"
                 // textShadow="0 2px 4px rgba(0,0,0,0.3)"
                 maxW={{ base: "100%", md: "80%" }}
               >
                 {slides[activeIndex].title}
               </Heading>
-              
-              <Text 
-                fontSize="lg" 
+
+              <Text
+                fontSize="lg"
                 maxW={{ base: "100%", md: "80%" }}
                 // textShadow="0 1px 2px rgba(0,0,0,0.3)"
                 color="blackAlpha.900"
@@ -105,9 +105,9 @@ const HeroSection = () => {
               </Text>
 
               <HStack spacing={4} pt={4}>
-                <Button 
-                  size="lg" 
-                  bg="white" 
+                <Button
+                  size="lg"
+                  bg="white"
                   color={`${slides[activeIndex].buttonColor}.600`}
                   _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
                   borderRadius="full"
@@ -116,9 +116,9 @@ const HeroSection = () => {
                 >
                   Shop Now
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
+                <Button
+                  size="lg"
+                  variant="outline"
                   color="black"
                   borderColor="blackAlpha.400"
                   _hover={{ bg: 'whiteAlpha.100' }}
@@ -132,13 +132,13 @@ const HeroSection = () => {
             </VStack>
           </GridItem>
 
-          <GridItem 
-            // colSpan={{ base: 12, md: 5 }} 
+          <GridItem
+            // colSpan={{ base: 12, md: 5 }}
             display={{ base: 'none', md: 'block' }}
             height="100%"
             position="relative"
           >
-            <Box 
+            <Box
               height="100%"
               display="flex"
               alignItems="center"

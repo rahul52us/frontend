@@ -1,59 +1,71 @@
-'use client';
-
+"use client";
 import { Box, IconButton, useBreakpointValue } from "@chakra-ui/react";
-import Slider from "react-slick";
+import Slider, { Settings } from "react-slick";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, RefObject } from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-const Carousel = ({
+// Define props interface for TypeScript
+interface CarouselProps {
+  children: React.ReactNode;
+  slidesToShow?: number;
+  autoplay?: boolean;
+  autoplaySpeed?: number;
+  buttonColor?: string;
+  buttonBgColor?: string;
+  dots?: boolean;
+}
+
+const Carousel: React.FC<CarouselProps> = ({
   children,
   slidesToShow = 4,
   autoplay = true,
   autoplaySpeed = 3000,
   buttonColor = "white",
-  buttonBgColor = "rgba(0,0,0,0.6)",
-  dots = false,
+  buttonBgColor = "rgba(0, 0, 0, 0.6)",
+  dots = true, // Default to true for visibility
 }) => {
-  const sliderRef = useRef(null);
+  const sliderRef = useRef<Slider>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Ensure component is only rendered on client side
+  // Handle client-side mounting
   useEffect(() => {
     setIsMounted(true);
-    // Check if window is available and update the mobile state
-    setIsMobile(window.innerWidth <= 768); // Adjust the breakpoint as needed
   }, []);
 
-  // Get breakpoint value only after mounting
-  const mobileBreakpoint = useBreakpointValue({ base: true, md: false });
+  // Responsive slidesToShow based on breakpoint
+  const slidesToShowResponsive = useBreakpointValue({
+    base: 1,
+    sm: 2,
+    md: 3,
+    lg: slidesToShow,
+  }) || slidesToShow;
 
-  // Default to non-mobile settings until mounted
-  const isMobileResolved = isMounted ? (mobileBreakpoint || isMobile) : false;
-
-  const settings = {
+  // Carousel settings with TypeScript typing
+  const settings: Settings = {
     dots: dots,
     infinite: true,
-    speed: 500,
-    slidesToShow: isMobileResolved ? 1 : slidesToShow,
+    speed: 600,
+    slidesToShow: slidesToShowResponsive,
     slidesToScroll: 1,
     autoplay: autoplay,
     autoplaySpeed: autoplaySpeed,
     arrows: false,
+    pauseOnHover: true,
+    lazyLoad: "ondemand" as const,
     responsive: [
       {
         breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-        },
+        settings: { slidesToShow: 3 },
       },
       {
         breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-        },
+        settings: { slidesToShow: 2 },
+      },
+      {
+        breakpoint: 480,
+        settings: { slidesToShow: 1 },
       },
     ],
   };
@@ -61,31 +73,36 @@ const Carousel = ({
   const buttonStyles = {
     color: buttonColor,
     bg: buttonBgColor,
-    _hover: { bg: buttonBgColor, opacity: 0.8 },
-    _active: { bg: buttonBgColor, opacity: 0.6 },
-    size: "md",
+    _active: { bg: buttonBgColor, opacity: 0.7, transform: "scale(0.95)" },
+    size: { base: "sm", md: "md" },
     borderRadius: "full",
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
     transition: "all 0.3s ease",
   };
 
-  // Render nothing or a fallback until mounted
   if (!isMounted) {
-    return null; // Or a loading placeholder if preferred
+    return null; // Or a loading placeholder
   }
 
   return (
-    <Box position="relative" width="full" p={{ base: 0, md: 2 }}>
-      <Slider ref={sliderRef} {...settings}>
+    <Box
+      position="relative"
+      width="full"
+      px={{ base: 2, md: 4 }}
+      py={2}
+      overflow="hidden"
+    >
+      <Slider ref={sliderRef as RefObject<Slider>} {...settings}>
         {children}
       </Slider>
 
+      {/* Navigation Buttons at Bottom */}
       <Box
-        position="absolute"
-        bottom={{ base: "-10%", md: "-14%" }}
-        right="1%"
-        zIndex={2}
         display="flex"
-        gap={2}
+        justifyContent="end" // Center buttons horizontally
+        gap={4} // Space between buttons
+        mt={4} // Margin-top to position below carousel
+        zIndex={2}
       >
         <IconButton
           aria-label="Previous slide"
@@ -101,22 +118,44 @@ const Carousel = ({
         />
       </Box>
 
-      {/* Custom Dots Styles */}
+      {/* Custom Styles */}
       <style jsx global>{`
         .slick-slide {
           height: auto !important;
         }
         .slick-slide > div {
           height: 100%;
-          padding: 0 6px; /* Horizontal gap */
-          padding-bottom: 4px;
+          padding: 0 8px;
+          padding-bottom: 8px;
         }
         .slick-track {
           display: flex;
           align-items: stretch;
         }
         .slick-list {
-          margin: 0 -6px; /* Compensate for padding */
+          margin: 0 -8px;
+          overflow: hidden;
+        }
+        .slick-slider {
+          transition: opacity 0.3s ease;
+        }
+        .slick-dots {
+          bottom: -30px; /* Position dots below the carousel */
+          // padding-bottom: 10px;
+        }
+        .slick-dots li button:before {
+          font-size: 10px; /* Smaller dots */
+          color: gray; /* Default dot color */
+          opacity: 0.5;
+          transition: all 0.3s ease;
+        }
+        .slick-dots li.slick-active button:before {
+          color: teal; /* Active dot color */
+          opacity: 1;
+        }
+        .slick-dots li button:hover:before {
+          color: teal; /* Hover dot color */
+          opacity: 0.75;
         }
       `}</style>
     </Box>

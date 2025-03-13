@@ -57,6 +57,33 @@ export const uniqueProducts: Product[] = Array.from(
           rating: 3,
           freeShipping: true,
         },
+        {
+          id: 7,
+          image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60",
+          category: "Business Supplies",
+          name: "Ergonomic Desk",
+          price: "399.99",
+          rating: 4,
+          freeShipping: true,
+        },
+        {
+          id: 8,
+          image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=60",
+          category: "Electronics",
+          name: "Bluetooth Speaker",
+          price: "99.99",
+          rating: 5,
+          freeShipping: false,
+        },
+        {
+          id: 9,
+          image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60",
+          category: "Fashion",
+          name: "Sports Watch",
+          price: "129.99",
+          rating: 3,
+          freeShipping: true,
+        },
       ].map((product) => [product.id, product])
     ).values()
   );
