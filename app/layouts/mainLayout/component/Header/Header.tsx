@@ -42,8 +42,8 @@ const Header = () => {
         transition="background 0.3s ease"
         _hover={{ bg: "gray.700" }}
       >
-        <Text as="span">🚚 Free Shipping on Orders Over $50 – Shop Now!</Text>
-      </Box>
+<Text as="span">🛍️ Shop directly from local vendors and grab exclusive deals!</Text>
+</Box>
 
       {/* Main Header */}
       <Box

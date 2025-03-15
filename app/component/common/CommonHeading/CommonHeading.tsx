@@ -1,8 +1,8 @@
 import { Heading as ChakraHeading, forwardRef, Box, Text } from "@chakra-ui/react";
 
-const CommonHeading = forwardRef(({ heading, subheading, align = "center", ...props }) => {
+const CommonHeading = forwardRef(({ heading, subheading, align = "center", ...props }, ref) => {
   return (
-    <Box textAlign={align} mb={10} {...props}>
+    <Box textAlign={align} mb={10} ref={ref} {...props}>
       {heading && (
         <ChakraHeading
           as="h1"

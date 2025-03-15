@@ -51,17 +51,17 @@ export const footerData = {
         { name: "FAQ", href: "/faq" }
       ]
     },
-    {
-      title: "Business Categories",
-      links: [
-        { name: "Grocery Stores", href: "/category/grocery" },
-        { name: "Electronics & Appliances", href: "/category/electronics" },
-        { name: "Clothing & Fashion", href: "/category/clothing" },
-        { name: "Restaurants & Cafes", href: "/category/restaurants" },
-        { name: "Beauty & Wellness", href: "/category/beauty" },
-        { name: "Healthcare & Pharmacies", href: "/category/healthcare" }
-      ]
-    },
+    // {
+    //   title: "Business Categories",
+    //   links: [
+    //     { name: "Grocery Stores", href: "/category/grocery" },
+    //     { name: "Electronics & Appliances", href: "/category/electronics" },
+    //     { name: "Clothing & Fashion", href: "/category/clothing" },
+    //     { name: "Restaurants & Cafes", href: "/category/restaurants" },
+    //     { name: "Beauty & Wellness", href: "/category/beauty" },
+    //     { name: "Healthcare & Pharmacies", href: "/category/healthcare" }
+    //   ]
+    // },
     {
       title: "Services for Businesses",
       links: [

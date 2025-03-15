@@ -18,7 +18,7 @@ class AuthStore {
   isLoading: boolean = false;
   error: string | null = null;
   notification: Notification | null = null;
-  company: any = "65f65a70fbe7ae65d05dac64"
+  company: any = "67c7380f5e373d64c5b56fbe"
 
   constructor() {
     makeAutoObservable(this);
