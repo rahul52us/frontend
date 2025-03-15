@@ -3,7 +3,6 @@ import { Box, Flex } from "@chakra-ui/react";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
-// import FilterPanel from "../../component/config/component/filterPanel/FIlterPanel";
 import HeroSection from "../../component/HeroSection/HeroSection";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
 import BentoGrid from "./components/BentoGrid/BentoGrid";
@@ -22,17 +21,6 @@ const Page = () => {
         align="stretch"
         w="full"
       >
-        {/* <Box
-          w={{ base: "100%", md: "280px", lg: "320px" }}
-          flexShrink={0}
-          position={{ md: "sticky" }}
-          top={{ md: "20px" }}
-          maxH={{ md: "calc(100vh - 40px)" }}
-          overflowY={{ md: "auto" }}
-          display="none"
-        >
-          <FilterPanel />
-        </Box> */}
         <Box
           w="full"
           overflowY={{ base: "visible", md: "auto" }}
