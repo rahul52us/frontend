@@ -32,9 +32,9 @@ const ContactSection = ({ shopData }) => {
       <Box mt={8}>
         <Grid templateColumns={["1fr", "1fr", "repeat(3, 1fr)"]} gap={8}>
           {[
-            { icon: FaPhone, label: "Call Us", value: shopData.contact.phone, href: `tel:${shopData.contact.phone}` },
-            { icon: FaEnvelope, label: "Email Us", value: shopData.contact.email, href: `mailto:${shopData.contact.email}` },
-            { icon: FaGlobe, label: "Visit Us", value: shopData.contact.website, href: shopData.contact.website },
+            { icon: FaPhone, label: "Call Us", value: shopData.contactInfo?.phone, href: `tel:${shopData.contactInfo?.phone}` },
+            { icon: FaEnvelope, label: "Email Us", value: shopData.contactInfo?.email, href: `mailto:${shopData.contactInfo?.email}` },
+            { icon: FaGlobe, label: "Visit Us", value: shopData.contactInfo?.website, href: shopData.contactInfo?.website },
           ].map((item, index) => (
             <motion.div whileHover={{ scale: 1.05 }} key={index}>
               <Flex
@@ -81,9 +81,9 @@ const ContactSection = ({ shopData }) => {
           </Heading>
           <HStack spacing={6} justify="center">
             {[
-              { icon: FaInstagram, color: "pink.500", name: "Instagram", link: shopData.contact.socialMedia.instagram },
-              { icon: FaFacebook, color: "blue.600", name: "Facebook", link: shopData.contact.socialMedia.facebook },
-              { icon: FaTwitter, color: "blue.400", name: "Twitter", link: shopData.contact.socialMedia.twitter },
+              { icon: FaInstagram, color: "pink.500", name: "Instagram", link: shopData.contactInfo?.socialMedia?.instagram },
+              { icon: FaFacebook, color: "blue.600", name: "Facebook", link: shopData.contactInfo?.socialMedia?.facebook },
+              { icon: FaTwitter, color: "blue.400", name: "Twitter", link: shopData.contactInfo?.socialMedia?.twitter },
             ].map((social, index) => {
               const IconComponent = social.icon;
               return (

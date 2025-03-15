@@ -23,6 +23,17 @@ class ShopStore {
       this.shop.loading = false;
     }
   };
+
+  getSingleShop = async (sendData : any) => {
+    try {
+      const response = await axios.get(`/company/${sendData.title}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+    }
+  };
+
 }
 
 export const shopStore = new ShopStore();

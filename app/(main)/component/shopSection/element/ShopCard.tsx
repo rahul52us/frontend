@@ -10,6 +10,7 @@ import {
   HStack,
   Tooltip,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import { FaMapMarkerAlt, FaPhoneAlt } from "react-icons/fa";
 
 interface ShopCardProps {
@@ -60,6 +61,7 @@ interface ShopCardProps {
 }
 
 const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
+  const router = useRouter()
   return (
     <Box
       maxW="340px"
@@ -125,7 +127,10 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
             noOfLines={1}
             flex="1"
             letterSpacing="wide"
-          >
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/${shop.name?.replace(/\s+/g, "-").toLowerCase()}`);
+            }}>
             {shop.name}
           </Text>
         </HStack>

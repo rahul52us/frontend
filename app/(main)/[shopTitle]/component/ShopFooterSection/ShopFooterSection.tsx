@@ -9,7 +9,7 @@ const ShopFooterSection = ({shopData}) => {
               <Flex alignItems="center" mb={{ base: "4", md: "0" }}>
                 <Box position="relative" w="40px" h="40px" mr="3">
                   <Image
-                    src={shopData.images.logo}
+                    src={shopData.logo?.url}
                     alt={shopData.name}
                     h={'100%'}
                     objectFit="cover"

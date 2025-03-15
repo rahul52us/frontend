@@ -31,7 +31,7 @@ const ShopHeroSection = ({ shopData }: any) => {
           w="full"
         >
           <Image
-            src={shopData.images.cover}
+            src={shopData.coverImage?.url}
             alt={`${shopData.name} cover`}
             w="full"
             h="full"
@@ -75,7 +75,7 @@ const ShopHeroSection = ({ shopData }: any) => {
               mb={{ base: 2, md: 0 }}
             >
               <Image
-                src={shopData?.images?.logo}
+                src={shopData?.logo?.url}
                 alt={shopData.name}
                 h="full"
                 w="full"
