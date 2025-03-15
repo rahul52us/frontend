@@ -1,7 +1,5 @@
 "use client";
-
 import {
-  AspectRatio,
   Badge,
   Box,
   Link as ChakraLink,
@@ -18,7 +16,6 @@ import {
   Heading,
   IconButton,
   Image,
-  Text,
   useBreakpointValue,
   useDisclosure,
   VStack,
@@ -259,7 +256,7 @@ export default function ShopPage() {
       <ShopHeroSection shopData={shopData} />
       <StickyNav shopData={shopData} />
       <Container maxW="container.xl" px="4" py="8" id="about" mt="8">
-        <Box >
+        <Box>
           <Grid templateColumns={{ base: "1fr", md: "2fr 1fr" }} gap="8">
             <GridItem>
               <ShopAbout shopData={shopData} />
@@ -274,30 +271,29 @@ export default function ShopPage() {
           </Grid>
         </Box>
       </Container>
-<Box id="gallery">
+      <Box id="gallery">
+        <ShopImages shopData={shopData} />
+      </Box>
+      <Container maxW={"container.xl"} id="products">
+        <CommonHeading
+          heading="Our Products"
+          subheading="Discover Our most popular products"
+          mb={{ base: 4, md: 8 }}
+        />
 
-        <ShopImages shopData={shopData}  />
-</Box>
-        <Container maxW={'container.xl'} id="products">
-          <CommonHeading
-            heading="Our Products"
-            subheading="Discover Our most popular products"
-            mb={{ base: 4, md: 8 }}
-          />
-
-          <Grid
-            templateColumns={gridColumns}
-            gap={{ base: 4, md: 3, lg: 4 }}
-            justifyItems="center"
-          >
-            {uniqueProducts.map((product) => (
-              <ProductCard
-                key={`${product.id}-${product.name}`}
-                product={product}
-              />
-            ))}
-          </Grid>
-        </Container>
+        <Grid
+          templateColumns={gridColumns}
+          gap={{ base: 4, md: 3, lg: 4 }}
+          justifyItems="center"
+        >
+          {uniqueProducts.map((product) => (
+            <ProductCard
+              key={`${product.id}-${product.name}`}
+              product={product}
+            />
+          ))}
+        </Grid>
+      </Container>
       <LocationSection shopData={shopData} />
 
       <NewsLetter />

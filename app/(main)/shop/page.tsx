@@ -1,14 +1,15 @@
-"use client"
-import { Box } from '@chakra-ui/react'
-import React from 'react'
-import ShopPage from './component/ShopPage/ShopPage'
+"use client";
+import { Box } from "@chakra-ui/react";
+import React from "react";
+import ShopPage from "./component/ShopPage/ShopPage";
+import { observer } from "mobx-react-lite";
 
-const page = () => {
+const page = observer(() => {
   return (
     <Box>
-<ShopPage/>
+      <ShopPage />
     </Box>
-  )
-}
+  );
+});
 
-export default page
+export default page;
