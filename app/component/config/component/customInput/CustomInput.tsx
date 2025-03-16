@@ -21,6 +21,7 @@ import {
   TagCloseButton,
   Checkbox,
   Button,
+  Flex,
 } from "@chakra-ui/react";
 import Select from "react-select";
 import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
@@ -47,6 +48,7 @@ interface CustomInputProps {
     | "dateAndTime"
     | "file-drag"
     | "tags"
+    | "multi-dates"
     | "real-time-user-search"
     | "otp"; // Added "otp" type
   label?: string;
@@ -123,14 +125,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
     [name, onChange]
   );
 
-  const handleTagAdd = (e?: React.KeyboardEvent<HTMLInputElement>) => {
-    if ((!e || e.key === "Enter") && inputValue) {
-      const newTags = [...(value || []), inputValue];
-      if (onChange) {
-        onChange(newTags);
-      }
-      setInputValue("");
+  const handleTagAdd = (inputValue: string) => {
+    const newTags = [...(value || []), inputValue];
+    if (onChange) {
+      onChange(newTags);
     }
+    setInputValue("");
   };
 
   const handleTagRemove = (tagToRemove: string) => {
@@ -138,6 +138,20 @@ const CustomInput: React.FC<CustomInputProps> = ({
     if (onChange) {
       onChange(newTags);
     }
+  };
+
+  const handleAddDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = e.target.value;
+    if (selectedDate && !value.includes(selectedDate)) {
+      const newDates = [...value, selectedDate];
+      onChange?.(newDates);
+    }
+    setInputValue(""); // Reset input after selection
+  };
+
+  const handleRemoveDate = (dateToRemove: string) => {
+    const filteredDates = value.filter((date) => date !== dateToRemove);
+    onChange?.(filteredDates);
   };
 
   const inputBg = useColorModeValue("transparent", "gray.700");
@@ -159,7 +173,11 @@ const CustomInput: React.FC<CustomInputProps> = ({
               {...rest}
             />
             <InputRightElement cursor="pointer" onClick={handleTogglePassword}>
-              {showPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
+              {showPassword ? (
+                <RiEyeOffLine size={18} />
+              ) : (
+                <RiEyeLine size={18} />
+              )}
             </InputRightElement>
           </InputGroup>
         );
@@ -192,10 +210,19 @@ const CustomInput: React.FC<CustomInputProps> = ({
         );
 
       case "switch":
-        return <Switch name={name} onChange={onChange} isChecked={value} {...rest} />;
+        return (
+          <Switch name={name} onChange={onChange} isChecked={value} {...rest} />
+        );
 
       case "checkbox":
-        return <Checkbox name={name} onChange={onChange} isChecked={value} {...rest} />;
+        return (
+          <Checkbox
+            name={name}
+            onChange={onChange}
+            isChecked={value}
+            {...rest}
+          />
+        );
 
       case "phone":
         return (
@@ -231,20 +258,53 @@ const CustomInput: React.FC<CustomInputProps> = ({
       case "tags":
         return (
           <Box>
-            <Input
-              placeholder={placeholder}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              name={name}
-              disabled={disabled}
-              onKeyDown={handleTagAdd}
-            />
+            <Flex align="center" gap={2}>
+              <Input
+                placeholder={placeholder}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleTagAdd(inputValue)}
+                name={name}
+                disabled={disabled}
+                aria-label="Input field"
+              />
+              <Button
+                onClick={() => handleTagAdd(inputValue)}
+                isDisabled={!inputValue.trim()}
+                colorScheme="blue"
+                aria-label="Add Data"
+              >
+                Add Data
+              </Button>
+            </Flex>
             <Wrap mt={2}>
               {value?.map((tag: string, index: number) => (
                 <WrapItem key={index}>
                   <Tag size="md" borderRadius="full" colorScheme="blue">
                     <TagLabel>{tag}</TagLabel>
                     <TagCloseButton onClick={() => handleTagRemove(tag)} />
+                  </Tag>
+                </WrapItem>
+              ))}
+            </Wrap>
+          </Box>
+        );
+      case "multi-dates":
+        return (
+          <Box>
+            <Input
+              type="date"
+              placeholder={placeholder}
+              value={inputValue}
+              onChange={handleAddDate}
+              disabled={disabled}
+            />
+            <Wrap mt={2}>
+              {value.map((date, index) => (
+                <WrapItem key={index}>
+                  <Tag size="md" borderRadius="full" colorScheme="blue">
+                    <TagLabel>{date}</TagLabel>
+                    <TagCloseButton onClick={() => handleRemoveDate(date)} />
                   </Tag>
                 </WrapItem>
               ))}
@@ -330,7 +390,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
             onChange={onChange}
             placeholder={placeholder}
             isClearable={isClear ? true : undefined}
-            className={`chakra-select ${theme ? theme.components.Select.baseStyle : ""}`}
+            className={`chakra-select ${
+              theme ? theme.components.Select.baseStyle : ""
+            }`}
             isMulti={isMulti}
             isSearchable={isSearchable}
             getOptionLabel={getOptionLabel}
@@ -360,7 +422,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
                 color: colorMode === "light" ? "black" : "white",
                 padding: "8px 12px",
                 ":hover": {
-                  backgroundColor: colorMode === "light" ? "#bee3f8" : "#2b6cb0",
+                  backgroundColor:
+                    colorMode === "light" ? "#bee3f8" : "#2b6cb0",
                 },
               }),
               menu: (baseStyles) => ({
@@ -396,7 +459,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
             }}
             components={{
               IndicatorSeparator: null,
-              DropdownIndicator: () => <div className="chakra-select__dropdown-indicator" />,
+              DropdownIndicator: () => (
+                <div className="chakra-select__dropdown-indicator" />
+              ),
             }}
             menuPosition={isPortal ? "fixed" : undefined}
           />
@@ -438,7 +503,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
         </FormLabel>
       )}
       {renderInputComponent()}
-      {type !== "otp" && showError && error && <FormErrorMessage>{error}</FormErrorMessage>}
+      {type !== "otp" && showError && error && (
+        <FormErrorMessage>{error}</FormErrorMessage>
+      )}
     </FormControl>
   );
 };

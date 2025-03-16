@@ -1,34 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
-import { Formik, FieldArray, Form } from "formik";
+import React, { useEffect, useState } from "react";
+import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import {
   Box,
-  VStack,
   Button,
-  IconButton,
-  Grid,
-  GridItem,
-  HStack,
-  Text,
-  Divider,
+  useToast,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  VStack,
+  Heading,
   Flex,
+  HStack,
+  Divider,
+  Center,
+  Text,
 } from "@chakra-ui/react";
-import { FaPlus, FaMinus } from "react-icons/fa";
 import { observer } from "mobx-react-lite";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
-import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
-import {
-  readFileAsBase64,
-  removeDataByIndex,
-} from "../../../config/utils/utils";
+import { readFileAsBase64 } from "../../../config/utils/utils";
 import stores from "../../../store/stores";
 import { getStatusType } from "../../../component/config/utils/function";
+import ShopDetailsSection from "./ShopDetailsSection";
+import MainLocationSection from "./MainLocationSection";
+import AdditionalLocationsSection from "./AdditionalLocationsSection";
+import ContactInfoSection from "./ContactInfoSection";
+import OperatingHoursSection from "./OperatingHoursSection";
+import GallerySection from "./GallerySection";
+import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
+import { useParams } from "next/navigation";
+import { dummyData } from "./utils/constant";
 
+// Validation Schema (unchanged)
 const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
-  description: Yup.string().required("Description is required"),
+  name: Yup.string().required("Name is required").trim(),
+  description: Yup.string().required("Description is required").trim(),
+  about: Yup.string().required("Description is required").trim(),
   logo: Yup.mixed(),
   coverImage: Yup.mixed(),
   location: Yup.object({
@@ -61,6 +71,7 @@ const validationSchema = Yup.object({
         .required("Coordinates are required"),
     })
   ),
+  gallery: Yup.array().of(Yup.mixed()),
   contactInfo: Yup.object({
     phone: Yup.string().required("Phone is required"),
     email: Yup.string().email("Invalid email format").optional(),
@@ -73,751 +84,415 @@ const validationSchema = Yup.object({
       youtube: Yup.string().url("Invalid URL").optional(),
     }).optional(),
   }),
-  operatingHours: Yup.object({
-    monday: Yup.string().optional(),
-    tuesday: Yup.string().optional(),
-    wednesday: Yup.string().optional(),
-    thursday: Yup.string().optional(),
-    friday: Yup.string().optional(),
-    saturday: Yup.string().optional(),
-    sunday: Yup.string().optional(),
-  }),
+  operatingHours: Yup.array().of(
+    Yup.object({
+      day: Yup.string().required("Day is required"),
+      open: Yup.string()
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Use HH:mm format")
+        .optional(),
+      close: Yup.string()
+        .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Use HH:mm format")
+        .optional(),
+    })
+  ),
+  closedDates: Yup.array()
+    .of(
+      Yup.string().matches(
+        /^\d{4}-\d{2}-\d{2}$/,
+        "Invalid date format (YYYY-MM-DD)"
+      )
+    )
+    .optional(),
 });
 
 const ShopForm = observer(() => {
+  const [initialValues, setInitialValues] = useState(dummyData);
   const [showError, setShowError] = useState(false);
   const {
     companyStore: { updateCompanyDetails },
     auth: { openNotification },
   } = stores;
+  const toast = useToast();
 
-  const initialValues = {
-    name: "",
-    description: "",
-    logo: { file: [] },
-    coverImage: { file: [] },
-    location: {
-      address: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "",
-      coordinates: [0, 0],
-    },
-    multipleLocations: [
-      {
-        address: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "",
-        coordinates: [0, 0], // [longitude, latitude]
-      },
-    ],
-    contactInfo: {
-      phone: "",
-      email: "",
-      website: "",
-      socialMedia: {
-        facebook: "",
-        instagram: "",
-        twitter: "",
-        linkedin: "",
-        youtube: "",
-      },
-    },
-    operatingHours: {
-      monday: "",
-      tuesday: "",
-      wednesday: "",
-      thursday: "",
-      friday: "",
-      saturday: "",
-      sunday: "",
-    },
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const { shopTitle } = useParams();
+  const {
+    shopStore: { getSingleShop },
+  } = stores;
+
+  useEffect(() => {
+    const fetchShopData = async () => {
+      setLoading(true);
+      setError(null); // Reset error before fetching
+
+      try {
+        const data = await getSingleShop({ title: "shop" });
+
+        if (!data?.data) {
+          setError("Shop not found");
+        } else {
+          const coverImage = data?.data?.coverImage?.url
+            ? { file: [data.data.coverImage] }
+            : { file: [] };
+
+          const logo = data?.data?.logo?.url
+            ? { file: [data.data.logo] }
+            : { file: [] };
+
+            const gallery = data?.data?.gallery && Array.isArray(data.data.gallery)
+            ?  data.data.gallery.map(item => ({
+                  file: item.file?.url ? [item.file] : [],
+                  title: item.title || '',
+                }))
+            : []
+
+          setInitialValues({
+            ...initialValues,
+            ...data?.data,
+            coverImage: coverImage,
+            logo: logo,
+            gallery:gallery
+          });
+        }
+      } catch ({}) {
+        setError("Failed to fetch shop data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShopData();
+  }, [shopTitle, getSingleShop]);
+
+  const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
+    if (imageFile && imageFile.length !== 0 && isAdd) {
+      return await readFileAsBase64(imageFile).then((buffer) => ({
+        buffer,
+        filename: imageFile.name,
+        type: imageFile.type,
+        isDeleted: isDeleted || 0,
+        isAdd: isAdd || 0,
+      }));
+    } else if (isDeleted) {
+      return { isDeleted: isDeleted || 0, isAdd: isAdd || 0 };
+    }
+    return null;
+  };
+
+  const onSubmit = async (values, { setSubmitting }) => {
+    try {
+      const formData = { ...values };
+
+      const logoData = await handleImageProcessing(
+        formData?.logo?.file,
+        formData?.logo?.isAdd,
+        formData?.logo?.isDeleted
+      );
+      const coverImageData = await handleImageProcessing(
+        formData?.coverImage?.file,
+        formData?.coverImage?.isAdd,
+        formData?.coverImage?.isDeleted
+      );
+
+      if (logoData) formData.logo = logoData;
+      if (coverImageData) formData.coverImage = coverImageData;
+
+      const updatedGallery = await Promise.all(
+        formData.gallery
+          .filter((item) => item.isAdd || !item.isAdd)
+          .map(async (item) => {
+            if (item.isAdd) {
+              const processedFile = await handleImageProcessing(item.file, true, false);
+              return processedFile
+                ? { file: processedFile, title: item.title }
+                : null;
+            } else {
+              return { file: Array.isArray(item.file) ? item.file[0] : item.file , title: item.title };
+            }
+          })
+      );
+
+      formData.gallery = updatedGallery.filter(Boolean);
+
+      updateCompanyDetails({...formData, _id : initialValues?._id})
+        .then((data: any) => {
+          openNotification({
+            title: "Successfully Updated",
+            message: data.message,
+            type: "success",
+          });
+          toast({
+            title: "Shop Saved",
+            description: "Your shop details have been updated successfully.",
+            status: "success",
+            duration: 4000,
+            isClosable: true,
+            position: "top-right",
+          });
+        })
+        .catch((err) => {
+          openNotification({
+            title: "Update Failed",
+            message: err?.data?.message,
+            type: getStatusType(err.status),
+          });
+          toast({
+            title: "Error",
+            description: err?.data?.message || "Failed to save shop details.",
+            status: "error",
+            duration: 4000,
+            isClosable: true,
+            position: "top-right",
+          });
+        })
+        .finally(() => setSubmitting(false));
+    } catch ({}) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+        position: "top-right",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Center minH="80vh">
+        <SpinnerLoader size="xl" />
+      </Center>
+    );
   }
 
+  if (error) {
+    return (
+      <Center minH="80vh">
+        <Text fontSize="lg" color="red.500">
+          {error}
+        </Text>
+      </Center>
+    );
+  }
 
   return (
     <Box
-      p={{ base: 4, md: 8 }}
+      // maxW={{ base: "100%", md: "container.md", lg: "container.lg" }}
+      mx="auto"
+      // my={{ base: 6, md: 8 }}
+      p={{ base: 3, md: 4 }}
       bg="white"
-      borderRadius="lg"
-      boxShadow="md"
+      borderRadius="2xl"
+      boxShadow="lg"
       border="1px"
       borderColor="gray.200"
+      overflow="hidden"
     >
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        enableReinitialize={true}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            const formData: any = {
-              ...values,
-            };
-            if (
-              formData?.logo?.file &&
-              formData?.logo?.file?.length !== 0 &&
-              formData?.logo?.isAdd
-            ) {
-              const buffer = await readFileAsBase64(formData?.logo?.file);
-              const fileData = {
-                buffer: buffer,
-                filename: formData?.logo?.file?.name,
-                type: formData?.logo?.file?.type,
-                isDeleted: formData?.logo?.isDeleted || 0,
-                isAdd: formData?.logo?.isAdd || 0,
-              };
-              formData.logo = fileData;
-            } else {
-              if (formData?.logo?.isDeleted) {
-                const fileData = {
-                  isDeleted: formData?.logo?.isDeleted || 0,
-                  isAdd: formData?.logo?.isAdd || 0,
-                };
-                formData.logo = fileData;
-              }
-            }
-
-            if (
-              formData?.coverImage?.file &&
-              formData?.coverImage?.file?.length !== 0 &&
-              formData?.coverImage?.isAdd
-            ) {
-              const buffer = await readFileAsBase64(formData?.coverImage?.file);
-              const fileData = {
-                buffer: buffer,
-                filename: formData?.coverImage?.file?.name,
-                type: formData?.coverImage?.file?.type,
-                isDeleted: formData?.coverImage?.isDeleted || 0,
-                isAdd: formData?.coverImage?.isAdd || 0,
-              };
-              formData.coverImage = fileData;
-            } else {
-              if (formData?.coverImage?.isDeleted) {
-                const fileData = {
-                  isDeleted: formData?.coverImage?.isDeleted || 0,
-                  isAdd: formData?.coverImage?.isAdd || 0,
-                };
-                formData.coverImage = fileData;
-              }
-            }
-
-            updateCompanyDetails(formData)
-              .then((data: any) => {
-                openNotification({
-                  title: "Successfully Updated",
-                  message: `${data.message}`,
-                  type: "success",
-                });
-              })
-              .catch((err: any) => {
-                openNotification({
-                  title: "Update Failed",
-                  message: err?.data?.message,
-                  type: getStatusType(err.status),
-                });
-              })
-              .finally(() => {
-                setSubmitting(false);
-              });
-          } catch ({}) {
-            // console.error("Error creating shop:", error);
-          }
-        }}
-      >
-        {({ values, errors, setFieldValue, isSubmitting }: any) => (
-          <Form>
-            <VStack spacing={8} align="stretch">
-              {/* Shop Details */}
-              <Box>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-                  Shop Details
-                </Text>
-                <Flex mt={4} mb={6}>
-                  {values?.logo?.file?.length === 0 ? (
-                    <CustomInput
-                      type="file-drag"
-                      name="logo"
-                      value={values.logo}
-                      isMulti={true}
-                      accept="image/*"
-                      onChange={(e: any) => {
-                        setFieldValue("logo", {
-                          ...values.logo,
-                          file: e.target.files[0],
-                          isAdd: 1,
-                        });
-                      }}
-                      showError={showError}
-                      error={errors.logo}
-                    />
-                  ) : (
-                    <Box mt={-5} width="100%">
-                      <ShowFileUploadFile
-                        files={values.logo?.file}
-                        removeFile={() => {
-                          setFieldValue("logo", {
-                            ...values.logo,
-                            file: removeDataByIndex(values.logo, 0),
-                            isDeleted: 1,
-                          });
-                        }}
-                        edit={true}
+      <VStack spacing={4} align="stretch">
+        <HStack justify="space-between" align="center">
+          <Heading
+            as="h3"
+            size={{ base: "lg", md: "xl" }}
+            color="gray.800"
+            fontWeight="bold"
+            letterSpacing="wide"
+            textTransform="uppercase"
+            textAlign={{ base: "center", md: "left" }}
+          >
+            Create Your Shop
+          </Heading>
+        </HStack>
+        <Divider borderColor="gray.300" />
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          enableReinitialize={true}
+          onSubmit={onSubmit}
+        >
+          {({ values, errors, setFieldValue, isSubmitting }) => {
+            console.log("the values are", values);
+            return (
+              <Form>
+                <Tabs
+                  variant="soft-rounded"
+                  colorScheme="blue"
+                  isLazy
+                  bg="gray.50"
+                  borderRadius="lg"
+                  p={2}
+                >
+                  <TabList
+                    overflowX={{ base: "scroll", md: "auto" }}
+                    overflowY="hidden"
+                    whiteSpace="nowrap"
+                    position="sticky"
+                    top={0}
+                    bg="gray.50"
+                    zIndex={1}
+                    py={2}
+                    px={1}
+                    borderBottom="1px"
+                    borderColor="gray.200"
+                  >
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Shop Details
+                    </Tab>
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Main Location
+                    </Tab>
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Additional Locations
+                    </Tab>
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Gallery
+                    </Tab>
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Contact Info
+                    </Tab>
+                    <Tab
+                      fontSize={{ base: "sm", md: "md" }}
+                      fontWeight="semibold"
+                      px={{ base: 4, md: 6 }}
+                      py={2}
+                      borderRadius="full"
+                      _selected={{ bg: "blue.500", color: "white" }}
+                      _hover={{ bg: "blue.100" }}
+                    >
+                      Operating Hours
+                    </Tab>
+                  </TabList>
+                  <TabPanels
+                    bg="white"
+                    borderRadius="lg"
+                    boxShadow="sm"
+                    p={{ base: 2, md: 4 }}
+                    mt={2}
+                  >
+                    <TabPanel>
+                      <ShopDetailsSection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
                       />
-                    </Box>
-                  )}
+                    </TabPanel>
+                    <TabPanel>
+                      <MainLocationSection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
+                      />
+                    </TabPanel>
+
+                    <TabPanel>
+                      <AdditionalLocationsSection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
+                      />
+                    </TabPanel>
+                    <TabPanel>
+                      <GallerySection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
+                      />
+                    </TabPanel>
+                    <TabPanel>
+                      <ContactInfoSection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
+                      />
+                    </TabPanel>
+                    <TabPanel>
+                      <OperatingHoursSection
+                        values={values}
+                        errors={errors}
+                        setFieldValue={setFieldValue}
+                        showError={showError}
+                      />
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
+                <Flex
+                  justify={{ base: "center", md: "flex-end" }}
+                  mt={{ base: 6, md: 8 }}
+                  flexWrap="wrap"
+                  gap={4}
+                >
+                  <Button
+                    type="submit"
+                    size={{ base: "md", md: "lg" }}
+                    px={{ base: 8, md: 10 }}
+                    py={{ base: 6, md: 7 }}
+                    isLoading={isSubmitting}
+                    loadingText="Saving..."
+                    onClick={() => setShowError(true)}
+                    bgGradient="linear(to-r, blue.500, blue.600)"
+                    color="white"
+                    _hover={{ bgGradient: "linear(to-r, blue.600, blue.700)" }}
+                    _active={{ bgGradient: "linear(to-r, blue.700, blue.800)" }}
+                    borderRadius="full"
+                    boxShadow="md"
+                    fontWeight="bold"
+                    w={{ base: "full", sm: "auto" }}
+                  >
+                    Save Shop
+                  </Button>
                 </Flex>
-                <VStack spacing={4}>
-                  <CustomInput
-                    label="Shop Name"
-                    name="name"
-                    required
-                    error={errors.name}
-                    value={values.name}
-                    onChange={(e) => setFieldValue("name", e.target.value)}
-                    showError={showError}
-                  />
-                  <CustomInput
-                    label="Description"
-                    name="description"
-                    type="textarea"
-                    required
-                    error={errors.description}
-                    value={values.description}
-                    onChange={(e) =>
-                      setFieldValue("description", e.target.value)
-                    }
-                    showError={showError}
-                  />
-                  <Flex mt={4} width="100%">
-                    {values?.coverImage?.file?.length === 0 ? (
-                      <CustomInput
-                        type="file-drag"
-                        name="coverImage"
-                        value={values.coverImage}
-                        isMulti={true}
-                        accept="image/*"
-                        onChange={(e: any) => {
-                          setFieldValue("coverImage", {
-                            ...values.coverImage,
-                            file: e.target.files[0],
-                            isAdd: 1,
-                          });
-                        }}
-                        showError={showError}
-                        error={errors.coverImage}
-                      />
-                    ) : (
-                      <Box width="100%">
-                        <ShowFileUploadFile
-                          files={values.coverImage?.file}
-                          removeFile={() => {
-                            setFieldValue("coverImage", {
-                              ...values.coverImage,
-                              file: removeDataByIndex(values.coverImage, 0),
-                              isDeleted: 1,
-                            });
-                          }}
-                          edit={true}
-                        />
-                      </Box>
-                    )}
-                  </Flex>
-                </VStack>
-              </Box>
-
-              <Divider borderColor="gray.300" />
-
-              {/* Main Shop Location */}
-              <Box>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-                  Main Shop Location
-                </Text>
-                <Grid
-                  templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-                  gap={6}
-                >
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Address"
-                      name="location.address"
-                      required
-                      error={errors.location?.address}
-                      value={values.location.address}
-                      onChange={(e) =>
-                        setFieldValue("location.address", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="City"
-                      name="location.city"
-                      required
-                      error={errors.location?.city}
-                      value={values.location.city}
-                      onChange={(e) =>
-                        setFieldValue("location.city", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="State"
-                      name="location.state"
-                      required
-                      error={errors.location?.state}
-                      value={values.location.state}
-                      onChange={(e) =>
-                        setFieldValue("location.state", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Postal Code"
-                      name="location.postalCode"
-                      required
-                      error={errors.location?.postalCode}
-                      value={values.location.postalCode}
-                      onChange={(e) =>
-                        setFieldValue("location.postalCode", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Country"
-                      name="location.country"
-                      required
-                      error={errors.location?.country}
-                      value={values.location.country}
-                      onChange={(e) =>
-                        setFieldValue("location.country", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Longitude"
-                      name="location.coordinates[0]"
-                      required
-                      error={errors.location?.coordinates?.[0]}
-                      value={values.location.coordinates[0]}
-                      onChange={(e) =>
-                        setFieldValue("location.coordinates[0]", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Latitude"
-                      name="location.coordinates[1]"
-                      required
-                      error={errors.location?.coordinates?.[1]}
-                      value={values.location.coordinates[1]}
-                      onChange={(e) =>
-                        setFieldValue("location.coordinates[1]", e.target.value)
-                      }
-                    />
-                  </GridItem>
-                </Grid>
-              </Box>
-
-              <Divider borderColor="gray.300" />
-
-              {/* Additional Locations */}
-              <Box>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-                  Additional Locations
-                </Text>
-                <FieldArray name="multipleLocations">
-                  {({ push, remove }) => (
-                    <VStack spacing={6} align="stretch">
-                      {values.multipleLocations.map((location, index) => (
-                        <Box
-                          key={index}
-                          p={4}
-                          border="1px"
-                          borderColor="gray.200"
-                          borderRadius="md"
-                          bg="gray.50"
-                        >
-                          <HStack justify="space-between" mb={4}>
-                            <Text
-                              fontSize="lg"
-                              fontWeight="semibold"
-                              color="teal.500"
-                            >
-                              Location {index + 1}
-                            </Text>
-                            <IconButton
-                              aria-label="Remove Location"
-                              icon={<FaMinus />}
-                              size="sm"
-                              colorScheme="red"
-                              variant="outline"
-                              onClick={() => remove(index)}
-                            />
-                          </HStack>
-                          <Grid
-                            templateColumns={{
-                              base: "1fr",
-                              md: "repeat(2, 1fr)",
-                            }}
-                            gap={6}
-                          >
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="Address"
-                                name={`multipleLocations[${index}].address`}
-                                required
-                                error={
-                                  errors.multipleLocations?.[index]?.address
-                                }
-                                value={location.address}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].address`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="City"
-                                name={`multipleLocations[${index}].city`}
-                                required
-                                error={errors.multipleLocations?.[index]?.city}
-                                value={location.city}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].city`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="State"
-                                name={`multipleLocations[${index}].state`}
-                                required
-                                error={errors.multipleLocations?.[index]?.state}
-                                value={location.state}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].state`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="Postal Code"
-                                name={`multipleLocations[${index}].postalCode`}
-                                required
-                                error={
-                                  errors.multipleLocations?.[index]?.postalCode
-                                }
-                                value={location.postalCode}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].postalCode`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="Country"
-                                name={`multipleLocations[${index}].country`}
-                                required
-                                error={
-                                  errors.multipleLocations?.[index]?.country
-                                }
-                                value={location.country}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].country`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="Longitude"
-                                name={`multipleLocations[${index}].coordinates[0]`}
-                                required
-                                error={
-                                  errors.multipleLocations?.[index]
-                                    ?.coordinates?.[0]
-                                }
-                                value={location.coordinates[0]}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].coordinates[0]`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                            <GridItem>
-                              <CustomInput
-                                showError={showError}
-                                label="Latitude"
-                                name={`multipleLocations[${index}].coordinates[1]`}
-                                required
-                                error={
-                                  errors.multipleLocations?.[index]
-                                    ?.coordinates?.[1]
-                                }
-                                value={location.coordinates[1]}
-                                onChange={(e) =>
-                                  setFieldValue(
-                                    `multipleLocations[${index}].coordinates[1]`,
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </GridItem>
-                          </Grid>
-                        </Box>
-                      ))}
-                      <Button
-                        leftIcon={<FaPlus />}
-                        colorScheme="teal"
-                        variant="outline"
-                        size="md"
-                        w="fit-content"
-                        onClick={() =>
-                          push({
-                            address: "",
-                            city: "",
-                            state: "",
-                            postalCode: "",
-                            country: "",
-                            coordinates: [0, 0], // [longitude, latitude]
-                          })
-                        }
-                      >
-                        Add Location
-                      </Button>
-                    </VStack>
-                  )}
-                </FieldArray>
-              </Box>
-
-              <Divider borderColor="gray.300" />
-
-              {/* Contact Information */}
-              <Box>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-                  Contact Information
-                </Text>
-                <VStack spacing={4}>
-                  <CustomInput
-                    showError={showError}
-                    label="Phone"
-                    name="contactInfo.phone"
-                    required
-                    error={errors.contactInfo?.phone}
-                    value={values.contactInfo.phone}
-                    onChange={(e) =>
-                      setFieldValue("contactInfo.phone", e.target.value)
-                    }
-                  />
-                  <CustomInput
-                    showError={showError}
-                    label="Email"
-                    name="contactInfo.email"
-                    type="text"
-                    error={errors.contactInfo?.email}
-                    value={values.contactInfo.email}
-                    onChange={(e) =>
-                      setFieldValue("contactInfo.email", e.target.value)
-                    }
-                  />
-                  <CustomInput
-                    showError={showError}
-                    label="Website"
-                    name="contactInfo.website"
-                    type="url"
-                    error={errors.contactInfo?.website}
-                    value={values.contactInfo.website}
-                    onChange={(e) =>
-                      setFieldValue("contactInfo.website", e.target.value)
-                    }
-                  />
-                </VStack>
-                <Text
-                  fontSize="lg"
-                  fontWeight="semibold"
-                  color="teal.500"
-                  mt={6}
-                  mb={4}
-                >
-                  Social Media Links
-                </Text>
-                <Grid
-                  templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-                  gap={6}
-                >
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Facebook"
-                      name="contactInfo.socialMedia.facebook"
-                      type="url"
-                      error={errors.contactInfo?.socialMedia?.facebook}
-                      value={values.contactInfo.socialMedia.facebook}
-                      onChange={(e) =>
-                        setFieldValue(
-                          "contactInfo.socialMedia.facebook",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Instagram"
-                      name="contactInfo.socialMedia.instagram"
-                      type="url"
-                      error={errors.contactInfo?.socialMedia?.instagram}
-                      value={values.contactInfo.socialMedia.instagram}
-                      onChange={(e) =>
-                        setFieldValue(
-                          "contactInfo.socialMedia.instagram",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="Twitter"
-                      name="contactInfo.socialMedia.twitter"
-                      type="url"
-                      error={errors.contactInfo?.socialMedia?.twitter}
-                      value={values.contactInfo.socialMedia.twitter}
-                      onChange={(e) =>
-                        setFieldValue(
-                          "contactInfo.socialMedia.twitter",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="LinkedIn"
-                      name="contactInfo.socialMedia.linkedin"
-                      type="url"
-                      error={errors.contactInfo?.socialMedia?.linkedin}
-                      value={values.contactInfo.socialMedia.linkedin}
-                      onChange={(e) =>
-                        setFieldValue(
-                          "contactInfo.socialMedia.linkedin",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <CustomInput
-                      showError={showError}
-                      label="YouTube"
-                      name="contactInfo.socialMedia.youtube"
-                      type="url"
-                      error={errors.contactInfo?.socialMedia?.youtube}
-                      value={values.contactInfo.socialMedia.youtube}
-                      onChange={(e) =>
-                        setFieldValue(
-                          "contactInfo.socialMedia.youtube",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </GridItem>
-                </Grid>
-              </Box>
-
-              <Divider borderColor="gray.300" />
-
-              {/* Operating Hours */}
-              <Box>
-                <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-                  Operating Hours
-                </Text>
-                <Grid
-                  templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-                  gap={6}
-                >
-                  {[
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday",
-                  ].map((day) => (
-                    <GridItem key={day}>
-                      <CustomInput
-                        label={day.charAt(0).toUpperCase() + day.slice(1)}
-                        name={`operatingHours.${day}`}
-                        value={values.operatingHours[day]}
-                        showError={showError}
-                        onChange={(e) =>
-                          setFieldValue(`operatingHours.${day}`, e.target.value)
-                        }
-                      />
-                    </GridItem>
-                  ))}
-                </Grid>
-              </Box>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                colorScheme="blue"
-                size="lg"
-                w={{ base: "full", md: "fit-content" }}
-                alignSelf="flex-end"
-                mt={6}
-                px={8}
-                onClick={() => setShowError(true)}
-                isLoading={isSubmitting}
-              >
-                Create Shop
-              </Button>
-            </VStack>
-          </Form>
-        )}
-      </Formik>
+              </Form>
+            );
+          }}
+        </Formik>
+      </VStack>
     </Box>
   );
 });

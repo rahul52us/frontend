@@ -28,13 +28,31 @@ const float = keyframes`
 const ContactSection = ({ shopData }) => {
   return (
     <Box id="contact" py={2} px={6}>
-      <CommonHeading heading="Let's Connect" subheading="Get in touch with us" />
+      <CommonHeading
+        heading="Let's Connect"
+        subheading="Get in touch with us"
+      />
       <Box mt={8}>
         <Grid templateColumns={["1fr", "1fr", "repeat(3, 1fr)"]} gap={8}>
           {[
-            { icon: FaPhone, label: "Call Us", value: shopData.contactInfo?.phone, href: `tel:${shopData.contactInfo?.phone}` },
-            { icon: FaEnvelope, label: "Email Us", value: shopData.contactInfo?.email, href: `mailto:${shopData.contactInfo?.email}` },
-            { icon: FaGlobe, label: "Visit Us", value: shopData.contactInfo?.website, href: shopData.contactInfo?.website },
+            {
+              icon: FaPhone,
+              label: "Call Us",
+              value: shopData.contactInfo?.phone,
+              href: `tel:${shopData.contactInfo?.phone}`,
+            },
+            {
+              icon: FaEnvelope,
+              label: "Email Us",
+              value: shopData.contactInfo?.email,
+              href: `mailto:${shopData.contactInfo?.email}`,
+            },
+            {
+              icon: FaGlobe,
+              label: "Visit Us",
+              value: shopData.contactInfo?.website,
+              href: shopData.contactInfo?.website,
+            },
           ].map((item, index) => (
             <motion.div whileHover={{ scale: 1.05 }} key={index}>
               <Flex
@@ -56,16 +74,23 @@ const ContactSection = ({ shopData }) => {
                   color="purple.500"
                   animation={`${float} 3s ease-in-out infinite`}
                 />
-                <Heading fontSize="2xl" mb={2} color="purple.800" fontWeight="bold">
+                <Heading
+                  fontSize="2xl"
+                  mb={2}
+                  color="purple.800"
+                  fontWeight="bold"
+                >
                   {item.label}
                 </Heading>
                 <Link
                   href={item.href}
-                  fontSize="lg"
+                  fontSize="sm"
                   fontWeight="semibold"
                   color="gray.700"
                   _hover={{ color: "purple.600", textDecoration: "underline" }}
                   isExternal={item.label === "Visit Us"}
+                  wordBreak="break-word"
+                  overflowWrap="break-word"
                 >
                   {item.value}
                 </Link>
@@ -81,16 +106,31 @@ const ContactSection = ({ shopData }) => {
           </Heading>
           <HStack spacing={6} justify="center">
             {[
-              { icon: FaInstagram, color: "pink.500", name: "Instagram", link: shopData.contactInfo?.socialMedia?.instagram },
-              { icon: FaFacebook, color: "blue.600", name: "Facebook", link: shopData.contactInfo?.socialMedia?.facebook },
-              { icon: FaTwitter, color: "blue.400", name: "Twitter", link: shopData.contactInfo?.socialMedia?.twitter },
+              {
+                icon: FaInstagram,
+                color: "pink.500",
+                name: "Instagram",
+                link: shopData.contactInfo?.socialMedia?.instagram,
+              },
+              {
+                icon: FaFacebook,
+                color: "blue.600",
+                name: "Facebook",
+                link: shopData.contactInfo?.socialMedia?.facebook,
+              },
+              {
+                icon: FaTwitter,
+                color: "blue.400",
+                name: "Twitter",
+                link: shopData.contactInfo?.socialMedia?.twitter,
+              },
             ].map((social, index) => {
               const IconComponent = social.icon;
               return (
                 <motion.div key={index} whileHover={{ scale: 1.2 }}>
                   <IconButton
                     as="a"
-                    href={`https://${social.name.toLowerCase()}.com/${social.link}`}
+                    href={social.link}
                     target="_blank"
                     aria-label={social.name}
                     icon={<IconComponent size="1.5em" />} // Correct way to use the icon

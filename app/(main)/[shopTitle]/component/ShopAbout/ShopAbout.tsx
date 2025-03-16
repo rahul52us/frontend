@@ -1,59 +1,54 @@
-import {
-    Box,
-    Button,
-    Collapse,
-    Flex,
-    Heading,
-    Tag,
-    TagLabel,
-    Text,
-} from "@chakra-ui/react";
+import { Box, Button, Collapse, Text, Heading, Flex, Tag, TagLabel } from "@chakra-ui/react";
 import { useState } from "react";
 
 const ShopAbout = ({ shopData }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const previewText = shopData.description.slice(0, 150); // Show first 150 characters
+  const previewText = shopData.about.slice(0, 150); // Show first 150 characters
 
   return (
-    <Box>
+    <Box mb="6">
       <Heading as="h2" size="lg" fontWeight="bold" mb="4">
-        About
+        About Us
       </Heading>
-      <Text color="gray.600" mb="4">{shopData.about}</Text>
 
-      {/* Collapsible Description with smooth transition */}
-      <Box>
-        <Text color="gray.600">
+      {/* About Preview Text */}
+      <Box mb="4">
+        <Text color="gray.600" fontSize="lg" mb="2">
           {previewText}...
         </Text>
         <Collapse in={isExpanded} animateOpacity>
-          <Text color="gray.600">{shopData.description.slice(150)}</Text>
+          <Text color="gray.600" fontSize="lg">{shopData.about.slice(150)}</Text>
         </Collapse>
+
+        {/* Toggle button for expanded text */}
         <Button
           size="sm"
           variant="link"
           color="blue.500"
           onClick={() => setIsExpanded(!isExpanded)}
           mt="2"
+          _focus={{ boxShadow: "none" }} // Remove focus outline on click
         >
           {isExpanded ? "Read Less" : "Read More"}
         </Button>
       </Box>
 
-      {/* Tags Section */}
-      <Box mt="6">
-        <Heading as="h3" size="md" fontWeight="medium" mb="2">
-          Tags
-        </Heading>
-        <Flex flexWrap="wrap" gap="2">
-          {shopData.tags.map((tag, index) => (
-            <Tag key={index} variant="outline" size="md" colorScheme="pink">
-              <TagLabel>#{tag}</TagLabel>
-            </Tag>
-          ))}
-        </Flex>
-      </Box>
+      {/* Optional Tags Section (Can be removed if not needed) */}
+      {shopData.tags && shopData.tags.length > 0 && (
+        <Box mt="6">
+          <Heading as="h3" size="md" fontWeight="medium" mb="2">
+            Tags
+          </Heading>
+          <Flex flexWrap="wrap" gap="2">
+            {shopData.tags.map((tag, index) => (
+              <Tag key={index} variant="outline" size="md" colorScheme="pink">
+                <TagLabel>#{tag}</TagLabel>
+              </Tag>
+            ))}
+          </Flex>
+        </Box>
+      )}
     </Box>
   );
 };

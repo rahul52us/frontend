@@ -5,13 +5,13 @@ import CommonHeading from '../../../../component/common/CommonHeading/CommonHead
 const LocationSection = ({shopData}) => {
   return (
     <Box id="location" py={16} bgGradient="linear(to-b, gray.50, white)">
-  
+
     <Container maxW="container.xl" px={{ base: 4, lg: 8 }}>
-    
+
       <CommonHeading  heading="Find Us" subheading=" Visit our locations or explore virtually through our interactive map" />
-  
+
       {/* Map + Addresses Container */}
-      <Flex 
+      <Flex
         direction={{ base: "column", lg: "row" }}
         gap={8}
         bg="white"
@@ -22,9 +22,9 @@ const LocationSection = ({shopData}) => {
         overflow="hidden"
       >
         {/* Map Section (Fluid width) */}
-        <Box 
-          flex="1.5" 
-          borderRadius="2xl" 
+        <Box
+          flex="1.5"
+          borderRadius="2xl"
           overflow="hidden"
           minH={{ base: "400px", lg: "auto" }}
           position="relative"
@@ -36,11 +36,11 @@ const LocationSection = ({shopData}) => {
             />
           </AspectRatio>
         </Box>
-  
+
         {/* Addresses Section */}
         <Box flex="1" position="relative">
           {/* Floating Address Cards */}
-          <Box 
+          <Box
             position="relative"
             pl={{ lg: 6 }}
             _before={{
@@ -55,7 +55,7 @@ const LocationSection = ({shopData}) => {
             }}
           >
             {/* Primary Location */}
-            <Box 
+            <Box
               bg="white"
               p={8}
               borderRadius="2xl"
@@ -71,7 +71,7 @@ const LocationSection = ({shopData}) => {
                 <Icon as={FiMapPin} w={6} h={6} color="purple.600" mr={3} />
                 <Heading fontSize="xl" fontWeight="700">Main Studio</Heading>
               </Flex>
-              <Text 
+              <Text
                 color="gray.600"
                 lineHeight="tall"
                 fontSize="md"
@@ -83,11 +83,11 @@ const LocationSection = ({shopData}) => {
                 {shopData.location.country}
               </Text>
             </Box>
-  
+
             {/* Additional Locations */}
-            {shopData.location.additionalLocations?.length > 0 && (
+            {shopData?.multipleLocations?.length > 0 && (
               <SimpleGrid columns={1} spacing={6}>
-                {shopData.location.additionalLocations.map((location, index) => (
+                {shopData.multipleLocations.map((location, index) => (
                   <Box
                     key={index}
                     bg="white"
