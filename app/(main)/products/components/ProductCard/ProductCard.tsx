@@ -1,9 +1,27 @@
+import React, { useState } from "react";
 import { StarIcon } from "@chakra-ui/icons";
-import { Box, Flex, Heading, HStack, IconButton, Image, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Heading,
+  HStack,
+  IconButton,
+  Image,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { FiEye, FiHeart } from "react-icons/fi";
+import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product } : any) => {
   const { image, category, name, price, rating, freeShipping } = product;
+  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal state management
+  const [selectedImage, setSelectedImage] = useState<any>([]); // State to hold the selected image for ImageViewer
+
+  const handleImageClick = () => {
+    setSelectedImage([image]); // Set the selected image when the image is clicked
+    onOpen(); // Open the ImageViewer modal
+  };
 
   return (
     <Box
@@ -55,6 +73,7 @@ const ProductCard = ({ product }) => {
             bg="blackAlpha.700"
             color="white"
             _hover={{ bg: "blackAlpha.800" }}
+            onClick={handleImageClick} // Open ImageViewer modal on button click
           />
           <IconButton
             aria-label="Add to wishlist"
@@ -91,17 +110,24 @@ const ProductCard = ({ product }) => {
           </Box>
           <HStack spacing={1}>
             {Array(5)
-              .fill('')
+              .fill("")
               .map((_, i) => (
                 <StarIcon
                   key={i}
                   boxSize={4}
-                  color={i < rating ? 'yellow.400' : 'gray.300'}
+                  color={i < rating ? "yellow.400" : "gray.300"}
                 />
               ))}
           </HStack>
         </Flex>
       </Box>
+
+      {/* ImageViewer Modal */}
+      <ImageViewerWithModal
+        isOpen={isOpen}
+        onClose={onClose}
+        images={selectedImage}
+      />
     </Box>
   );
 };
