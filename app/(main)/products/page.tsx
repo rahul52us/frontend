@@ -1,8 +1,8 @@
 "use client";
-import { Box, Flex, Grid } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
-import ProductImageViewer from "../../component/common/ProductImagesViewer/ProductImagesViewer";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
@@ -10,7 +10,6 @@ import BentoGrid from "./components/BentoGrid/BentoGrid";
 import CreativeEcommerceSection from "./components/ContentSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
-import { observer } from "mobx-react-lite";
 
 const Page = observer(() => {
   return (
