@@ -4,7 +4,8 @@ import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import { FaBox, FaHome, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
 import { AddressesSection } from "./AddressSection/AddressSection";
-import { OrdersSection } from "./OrderSection/OrderSection";
+// import { OrdersSection } from "./OrderSection/OrderSection";
+import OrdersSection from "./OrderSection/OrderSection";
 import { ProfileSection } from "./ProfileSection/ProfileSection";
 import SidebarButton from "./SidebarButton/SidebarButton";
 import { WalletSection } from "./WalletSection/WalletSection";
@@ -12,7 +13,7 @@ import { WalletSection } from "./WalletSection/WalletSection";
 const AccountPage = observer(() => {
   const [activeTab, setActiveTab] = useState("profile");
   const accentColor = useColorModeValue("purple.500", "purple.200");
-  const hoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
+  // const hoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
   const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
 
   // Mock user data

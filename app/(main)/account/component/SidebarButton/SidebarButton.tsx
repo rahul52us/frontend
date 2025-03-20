@@ -3,6 +3,8 @@ import { observer } from "mobx-react-lite";
 
 const SidebarButton = ({ label, icon, isActive, onClick, color }) => {
   const hoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
+  // const activeBg = isActive ? useColorModeValue("purple.50", "whiteAlpha.100") : "transparent"
+  const activeBg = isActive ? "purple.50" : "transparent"
 
   return (
     <>
@@ -14,7 +16,7 @@ const SidebarButton = ({ label, icon, isActive, onClick, color }) => {
         leftIcon={icon}
         fontWeight={600}
         color={isActive ? color : "inherit"}
-        bg={isActive ? useColorModeValue("purple.50", "whiteAlpha.100") : "transparent"}
+        bg={activeBg}
         _hover={{ bg: hoverBg }}
         onClick={onClick}
         position="relative"

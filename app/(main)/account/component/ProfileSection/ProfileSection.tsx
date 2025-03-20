@@ -129,7 +129,7 @@ export function ProfileSection({ user }: { user: any }) {
                 onChange={handleInputChange}
               />
               <FormHelperText>
-                This is the email we'll use for order confirmations.
+                This is the email we&apos;ll use for order confirmations.
               </FormHelperText>
               <FormErrorMessage>{errors.email}</FormErrorMessage>
             </FormControl>
