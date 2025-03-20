@@ -1,21 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { FaSave } from "react-icons/fa";
 import {
   Box,
   Button,
+  Card,
+  Flex,
   FormControl,
-  FormLabel,
   FormErrorMessage,
   FormHelperText,
-  Input,
-  Textarea,
-  VStack,
+  FormLabel,
   Heading,
+  Icon,
+  Input,
+  SimpleGrid,
   Text,
+  Textarea,
+  useColorModeValue,
   useToast,
+  VStack,
 } from "@chakra-ui/react";
+import { useState } from "react";
+import { FaEnvelope, FaExclamationCircle, FaInfoCircle, FaPencilAlt, FaPhoneAlt, FaSave, FaUser, FaUserEdit } from "react-icons/fa";
 
 export function ProfileSection({ user }: { user: any }) {
   const toast = useToast();
@@ -95,88 +100,149 @@ export function ProfileSection({ user }: { user: any }) {
 
   return (
     <Box>
-      <VStack spacing={6} align="start">
-        <Box>
-          <Heading as="h2" size="md" fontWeight="bold">
-            Profile Details
-          </Heading>
-          <Text color="gray.500" mt={2}>
-            Update your personal information and how we can reach you
-          </Text>
-        </Box>
-
-        <Box as="form" onSubmit={handleSubmit} w="full">
-          <VStack spacing={6} align="start">
-            {/* Name Field */}
+    <VStack spacing={4} align="stretch">
+      {/* Header Section */}
+      <Box pb={4} borderBottomWidth="2px" borderColor={useColorModeValue('purple.100', 'blue.800')}>
+        <Heading as="h2" size="md" fontWeight="extrabold" color={useColorModeValue('purple.600', 'blue.300')}>
+          <Icon as={FaUserEdit} mr={3} />
+          Profile Details
+        </Heading>
+        <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.400')} mt={3}>
+          Manage your personal information and communication preferences
+        </Text>
+      </Box>
+  
+      {/* Form Section */}
+      <Box as="form" onSubmit={handleSubmit} w="full">
+        <VStack spacing={4} align="stretch">
+          {/* Name Field */}
+          <Card variant="elevated" p={6} borderRadius="xl">
             <FormControl isInvalid={!!errors.name}>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                <Icon as={FaUser} mr={2} />
+                Full Name
+              </FormLabel>
               <Input
-                placeholder="Your name"
+                placeholder="John Doe"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
+                focusBorderColor="blue.400"
+                variant="flushed"
+                // size="lg"
               />
-              <FormErrorMessage>{errors.name}</FormErrorMessage>
+              <FormErrorMessage fontSize="sm" mt={1}>
+                <Icon as={FaExclamationCircle} mr={2} />
+                {errors.name}
+              </FormErrorMessage>
             </FormControl>
-
+          </Card>
+  
+          {/* Contact Section */}
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
             {/* Email Field */}
-            <FormControl isInvalid={!!errors.email}>
-              <FormLabel>Email</FormLabel>
-              <Input
-                placeholder="Your email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-              <FormHelperText>
-                This is the email we&apos;ll use for order confirmations.
-              </FormHelperText>
-              <FormErrorMessage>{errors.email}</FormErrorMessage>
-            </FormControl>
-
+            <Card variant="elevated" p={6} borderRadius="xl">
+              <FormControl isInvalid={!!errors.email}>
+                <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                  <Icon as={FaEnvelope} mr={2} />
+                  Email Address
+                </FormLabel>
+                <Input
+                  type="email"
+                  placeholder="john@example.com"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  focusBorderColor="blue.400"
+                  variant="flushed"
+                />
+                <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.600', 'gray.400')} mt={2}>
+                  <Icon as={FaInfoCircle} mr={2} />
+                  Used for order confirmations and account security
+                </FormHelperText>
+                <FormErrorMessage fontSize="sm" mt={1}>
+                  <Icon as={FaExclamationCircle} mr={2} />
+                  {errors.email}
+                </FormErrorMessage>
+              </FormControl>
+            </Card>
+  
             {/* Phone Field */}
-            <FormControl isInvalid={!!errors.phone}>
-              <FormLabel>Phone Number</FormLabel>
-              <Input
-                placeholder="Your phone number"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-              <FormHelperText>
-                Used for delivery updates and account verification.
-              </FormHelperText>
-              <FormErrorMessage>{errors.phone}</FormErrorMessage>
-            </FormControl>
-
-            {/* Bio Field */}
+            <Card variant="elevated" p={6} borderRadius="xl">
+              <FormControl isInvalid={!!errors.phone}>
+                <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                  <Icon as={FaPhoneAlt} mr={2} />
+                  Phone Number
+                </FormLabel>
+                <Input
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  focusBorderColor="blue.400"
+                  variant="flushed"
+                />
+                <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.600', 'gray.400')} mt={2}>
+                  <Icon as={FaInfoCircle} mr={2} />
+                  Used for delivery updates and OTP verification
+                </FormHelperText>
+                <FormErrorMessage fontSize="sm" mt={1}>
+                  <Icon as={FaExclamationCircle} mr={2} />
+                  {errors.phone}
+                </FormErrorMessage>
+              </FormControl>
+            </Card>
+          </SimpleGrid>
+  
+          {/* Bio Field */}
+          <Card variant="elevated" p={6} borderRadius="xl">
             <FormControl isInvalid={!!errors.bio}>
-              <FormLabel>Bio</FormLabel>
+              <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                <Icon as={FaPencilAlt} mr={2} />
+                Personal Bio
+              </FormLabel>
               <Textarea
-                placeholder="Tell us a little bit about yourself"
+                placeholder="Share something interesting about yourself..."
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                resize="none"
+                resize="vertical"
+                focusBorderColor="blue.400"
+                minH="100px"
               />
-              <FormHelperText>
-                This will be displayed on your public profile.
+              <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.600', 'gray.400')} mt={2}>
+                <Icon as={FaInfoCircle} mr={2} />
+                This will be visible on your public profile
               </FormHelperText>
-              <FormErrorMessage>{errors.bio}</FormErrorMessage>
+              <FormErrorMessage fontSize="sm" mt={1}>
+                <Icon as={FaExclamationCircle} mr={2} />
+                {errors.bio}
+              </FormErrorMessage>
             </FormControl>
-
-            {/* Submit Button */}
+          </Card>
+  
+          {/* Submit Button */}
+          <Flex justify={'end'} pt={2}>
             <Button
               type="submit"
               colorScheme="blue"
               isLoading={isLoading}
               leftIcon={<FaSave />}
+              // size="lg"
+              w={{ base: 'full', md: 'auto' }}
+              // px={10}
+              fontWeight="bold"
+              boxShadow="md"
+              _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+              transition="all 0.2s"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Saving Changes..." : "Update Profile"}
             </Button>
-          </VStack>
-        </Box>
-      </VStack>
-    </Box>
+          </Flex>
+        </VStack>
+      </Box>
+    </VStack>
+  </Box>
   );
 }

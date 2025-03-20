@@ -1,4 +1,3 @@
-// pages/AccountPage.js
 import { Avatar, Box, Button, Card, CardBody, Flex, Grid, Text, VStack, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
@@ -13,10 +12,8 @@ import { WalletSection } from "./WalletSection/WalletSection";
 const AccountPage = observer(() => {
   const [activeTab, setActiveTab] = useState("profile");
   const accentColor = useColorModeValue("purple.500", "purple.200");
-  // const hoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
   const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
 
-  // Mock user data
   const user = {
     name: "John Doe",
     email: "john.doe@example.com",
