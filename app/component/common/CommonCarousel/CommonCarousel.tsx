@@ -1,10 +1,10 @@
 "use client";
 import { Box, IconButton, useBreakpointValue } from "@chakra-ui/react";
-import Slider, { Settings } from "react-slick";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useRef, useState, useEffect, RefObject } from "react";
-import "slick-carousel/slick/slick.css";
+import Slider, { Settings } from "react-slick";
 import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
 
 // Define props interface for TypeScript
 interface CarouselProps {
@@ -125,7 +125,7 @@ const Carousel: React.FC<CarouselProps> = ({
         }
         .slick-slide > div {
           height: 100%;
-          padding: 0 8px;
+          padding: 0 4px;
           padding-bottom: 8px;
         }
         .slick-track {
@@ -141,7 +141,7 @@ const Carousel: React.FC<CarouselProps> = ({
         }
         .slick-dots {
           bottom: -30px; /* Position dots below the carousel */
-          // padding-bottom: 10px;
+          
         }
         .slick-dots li button:before {
           font-size: 10px; /* Smaller dots */

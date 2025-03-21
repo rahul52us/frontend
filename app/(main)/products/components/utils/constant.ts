@@ -7,7 +7,7 @@ export const uniqueProducts: Product[] = Array.from(
           id: 1,
           image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60",
           category: "Business Supplies",
-          name: "Premium Office Chair",
+          name: "Premium Office Chair Office Chair",
           price: "299.99",
           rating: 4,
           freeShipping: true,

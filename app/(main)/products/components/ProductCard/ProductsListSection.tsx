@@ -5,9 +5,10 @@ import { observer } from "mobx-react-lite";
 import Carousel from "../../../../component/common/CommonCarousel/CommonCarousel";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import stores from "../../../../store/stores";
+import ShopSection from "../../../component/shopSection/ShopSection";
 import { uniqueProducts } from "../utils/constant";
 import ProductCard from "./ProductCard";
-import ShopSection from "../../../component/shopSection/ShopSection";
+import ProductCardSkeleton from "./ProductCardSkeleton/ProductCardSkeleton";
 
 const ProductsListSection = observer(() => {
   const {
@@ -75,11 +76,23 @@ const ProductsListSection = observer(() => {
             {uniqueProducts.map((product) => (
               <Box
                 key={`${product.id}-${product.name}-carousel`}
-                px={{ base: 2, md: 3 }}
+                px={{ base: 2, md: 2 }}
                 py={2}
                 width="100%"
               >
                 <ProductCard product={product} />
+              </Box>
+            ))}
+          </Carousel>
+          <Carousel {...carouselSettings}>
+            {uniqueProducts.map((_) => (
+              <Box
+              px={{ base: 2, md: 1 }}
+              py={2}
+              width="100%"
+              >
+
+            <ProductCardSkeleton />
               </Box>
             ))}
           </Carousel>

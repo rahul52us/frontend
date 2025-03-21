@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { StarIcon } from "@chakra-ui/icons";
 import {
   Box,
+  Button,
   Flex,
   Heading,
   HStack,
@@ -10,14 +9,16 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import { FiEye, FiHeart } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 
-const ProductCard = ({ product } : any) => {
+const ProductCard = ({ product }: any) => {
   const { image, category, name, price, rating, freeShipping } = product;
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal state management
   const [selectedImage, setSelectedImage] = useState<any>([]); // State to hold the selected image for ImageViewer
 
+  console.log(rating,freeShipping)
   const handleImageClick = () => {
     setSelectedImage([image]); // Set the selected image when the image is clicked
     onOpen(); // Open the ImageViewer modal
@@ -25,7 +26,7 @@ const ProductCard = ({ product } : any) => {
 
   return (
     <Box
-      h="100%"
+      h="350px" // Fixed height
       shadow="base"
       position="relative"
       bg="white"
@@ -39,7 +40,6 @@ const ProductCard = ({ product } : any) => {
         shadow: "lg",
       }}
       role="group"
-      maxW={{ base: "100%", sm: "300px", md: "280px" }} // Consistent card width
       w="100%"
     >
       <Box position="relative" overflow="hidden" borderRadius="lg">
@@ -92,36 +92,36 @@ const ProductCard = ({ product } : any) => {
             <Text fontSize="sm" color="gray.500" mb={1}>
               {category}
             </Text>
-            <Heading fontSize={{ base: "md", md: "lg" }} mb={2} fontWeight="600" noOfLines={2}>
+            <Heading
+              fontSize={{ base: "md", md: "lg" }}
+              mb={2}
+              minH={"40px"}
+              fontWeight="600"
+              noOfLines={2} // Limit title to 2 lines
+            >
               {name}
             </Heading>
           </Box>
         </HStack>
-        <Flex mt={2} justifyContent="space-between" alignItems="center">
+        <Flex mt={1} justifyContent="space-between" alignItems="end">
           <Box>
             <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="brand.600">
               ₹{price}
             </Text>
-            {freeShipping && (
-              <Text fontSize="sm" color="green.500" mt={1}>
-                Free Shipping
-              </Text>
-            )}
+        
           </Box>
-          <HStack spacing={1}>
-            {Array(5)
-              .fill("")
-              .map((_, i) => (
-                <StarIcon
-                  key={i}
-                  boxSize={4}
-                  color={i < rating ? "yellow.400" : "gray.300"}
-                />
-              ))}
-          </HStack>
+          <Button
+          mt={3}
+          // w="100%"
+          colorScheme="purple"
+          variant={'outline'}
+          size="sm"
+          onClick={() => alert("Added to cart!")} // Add functionality here
+        >
+          Add
+        </Button>
         </Flex>
       </Box>
-
       {/* ImageViewer Modal */}
       <ImageViewerWithModal
         isOpen={isOpen}
