@@ -10,6 +10,7 @@ import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
 import { tablePageLimit } from "../../../component/config/utils/variable";
 import ShopCard from "./element/ShopCard";
+import ShopCardSkeleton from "../ShopSkeletonCard/ShowSkeletonCard";
 
 const ShopSection = observer(() => {
   const {
@@ -65,6 +66,9 @@ const ShopSection = observer(() => {
             {allShops.map((shop, index : number) => (
               <ShopCard shop={shop} key={index} onClick={() => {}} />
             ))}
+          </SimpleGrid>
+          <SimpleGrid columns={[1, 2, 3]} spacing={6}>
+       <ShopCardSkeleton/>
           </SimpleGrid>
         </Box>
       )}

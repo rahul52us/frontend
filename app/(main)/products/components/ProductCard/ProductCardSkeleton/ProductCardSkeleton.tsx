@@ -1,8 +1,8 @@
 import { Box, Flex, Skeleton, SkeletonText } from "@chakra-ui/react";
+import { endColor, startColor } from "../../../../../component/common/utils/skeletonColors";
 
 const ProductCardSkeleton = () => {
-  const startColor = "purple.50";
-  const endColor = "purple.100";
+ 
   return (
     <Box
       h="330px" // Fixed height to match the ProductCard

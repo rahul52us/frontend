@@ -1,21 +1,22 @@
 "use client";
 import { Box, Flex } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
+import HeroSkeleton from "../../component/HeroSection/HeroSkeleton/HeroSkeleton";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
-import BentoGrid from "./components/BentoGrid/BentoGrid";
 import CreativeEcommerceSection from "./components/ContentSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
-import { observer } from "mobx-react-lite";
 
 const Page = observer(() => {
   return (
-    <Box maxW="98%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
+    <Box maxW="95%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
       <CategoryFilter />
       <HeroSection/>
+      <HeroSkeleton/>
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -39,9 +40,9 @@ const Page = observer(() => {
       <IndianStateFilter/>
       <CreativeEcommerceSection/>
       <BenefitSection/>
-      <Box>
+      {/* <Box>
         <BentoGrid />
-      </Box>
+      </Box> */}
       <Box mb={{ base: 4, md: 6 }}>
         <ProductBanner />
       </Box>

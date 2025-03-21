@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Grid, useBreakpointValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import Carousel from "../../../../component/common/CommonCarousel/CommonCarousel";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
@@ -84,18 +84,13 @@ const ProductsListSection = observer(() => {
               </Box>
             ))}
           </Carousel>
-          <Carousel {...carouselSettings}>
-            {uniqueProducts.map((_) => (
-              <Box
-              px={{ base: 2, md: 1 }}
-              py={2}
-              width="100%"
-              >
-
+        <Grid templateColumns={'repeat(5, 1fr)'} gap={4} my={2}>
+{[...Array(5)].map((_) => (
+  
             <ProductCardSkeleton />
-              </Box>
-            ))}
-          </Carousel>
+))}
+        </Grid>
+         
         </Box>
       </Box>
     </Box>
