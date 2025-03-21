@@ -166,7 +166,7 @@ const ShopForm = observer(() => {
     fetchShopData();
   }, [shopTitle, getSingleShop]);
 
-  const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
+  const handleImageProcessing = async (imageFile : any, isAdd : any, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
       return await readFileAsBase64(imageFile).then((buffer) => ({
         buffer,

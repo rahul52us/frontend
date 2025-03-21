@@ -1,7 +1,8 @@
 // stores/authStore.ts
 import { makeAutoObservable } from "mobx";
 import axios from "axios";
-import { AUTH_TOKEN, BACKEND_URL } from "../../config/utils/variables";
+import { AUTH_TOKEN, BACKEND_URL, USER_SESSION_DATA } from "../../config/utils/variables";
+import stores from "../stores";
 
 interface Notification {
   title?: any;
@@ -64,6 +65,27 @@ class AuthStore {
         await this.fetchUser();
       }
     }
+  };
+
+  changePassword = async (sendData: any) => {
+    try {
+      const { data } = await axios.post("/auth/change-password", {...sendData,company : stores.auth.company});
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  doLogout = () => {
+    this.user = null;
+    this.clearLocalStorage();
+  };
+
+  clearLocalStorage = () => {
+    localStorage.removeItem(
+      AUTH_TOKEN as string
+    );
+    sessionStorage.removeItem(USER_SESSION_DATA!);
   };
 
   openNotification = (data: {

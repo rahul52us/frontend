@@ -1,123 +1,147 @@
 'use client';
-import { HamburgerIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Drawer,
-  DrawerContent,
-  DrawerOverlay,
-  Flex,
-  IconButton,
-  useDisclosure,
-} from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
-import Header from "./component/Header";
-import Sidebar from "./component/Sidebar";
-import { useRouter } from "next/navigation";
-import Loader from "../../component/common/Loader/Loader";
-import stores from "../../store/stores";
-import { observer } from "mobx-react-lite";
-import { AUTH_TOKEN } from "../../config/utils/variables";
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = observer(({ children }) => {
-  const { auth: { user, openNotification } } = stores;
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(true);
+import { useEffect, useRef } from 'react';
+import { observer } from 'mobx-react-lite';
+import { Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
+import styled from 'styled-components';
+import stores from '../../store/stores';
+// import { authenticastion } from '../../config/utils/routes';
+import SidebarLayout from './SidebarLayout/SidebarLayout';
+import HeaderLayout from './HeaderLayout/HeaderLayout';
+// import PermissionDeniedPage from '../../component/common/Loader/PermissionDeniedPage';
+import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
+import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
+import PageLoader from '../../component/common/Loader/PageLoader';
 
 
-  useEffect(() => {
-    const token = localStorage.getItem(AUTH_TOKEN);
+const DashboardLayout = observer(({ children }: { children: React.ReactNode }) => {
+  const {
+    auth: { user },
+    layout: { fullScreenMode, mediumScreenMode, isCallapse, openDashSidebarFun, openMobileSideDrawer, setOpenMobileSideDrawer },
+    themeStore: { themeConfig },
+  } = stores;
+  const theme = useTheme();
 
-    if (!token) {
-      openNotification({
-        title: "Oops! You're not logged in",
-        message: "Please log in to continue and access your dashboard.",
-        type: "error",
-      });
-      router.push("/login");
-    } else {
-      setLoading(false);
-    }
-  }, [router,openNotification]);
+  const [sizeStatus] = useMediaQuery(`(max-width: ${theme.breakpoints.xl})`);
+  const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  const renderChildren = () => {
-    if (!user) {
-      return <Loader fullPage message="Verifying permissions..." />;
-    }
-    return children;
+  const closeDrawerModel = () => {
+    setOpenMobileSideDrawer(false);
   };
 
-  if (loading) {
-    return <Loader fullPage message="Loading dashboard..." />;
-  }
+  const handleSidebarItemClick = (item: any) => {
+    if (!item.children || item.url) {
+      localStorage.setItem('activeComponentName', item.id);
+    }
+  };
 
-  return (
-    <Flex minH="100vh" direction="row" bg="gray.100">
-      <IconButton
-        aria-label="Open Menu"
-        icon={<HamburgerIcon />}
-        display={{ base: "block", md: "none" }}
-        onClick={onOpen}
-        position="fixed"
-        top="4"
-        left="4"
-        zIndex="overlay"
-      />
-      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-        <DrawerOverlay />
-        <DrawerContent bg="gray.800" color="white">
-          <Sidebar />
-        </DrawerContent>
-      </Drawer>
-      <Box
-        as="aside"
-        w="250px"
-        bg="gray.800"
-        color="white"
-        position="fixed"
-        top="0"
-        left="0"
-        h="100vh"
-        display={{ base: "none", md: "block" }}
-        boxShadow="lg"
-      >
-        <Sidebar />
-      </Box>
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        openDashSidebarFun(true);
+      }
+    };
 
-      <Flex flex="1" direction="column" ml={{ base: "0", md: "250px" }}>
-        <Box
-          as="header"
-          bg="blue.500"
-          color="white"
-          px="6"
-          py="4"
-          boxShadow="md"
-          position="sticky"
-          top="0"
-          zIndex="sticky"
-        >
-          <Box ml={{ base: "50px", md: "2px" }}>
-            <Header />
-          </Box>
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCallapse, openDashSidebarFun]);
+
+  return user ? (
+    <Box
+    >
+      <MainContainer isMobile={isMobile}>
+        <Box ref={sidebarRef}>
+          <SidebarLayout
+            onItemClick={handleSidebarItemClick}
+            isCollapsed={isCallapse}
+            onLeafItemClick={handleSidebarItemClick}
+            openMobileSideDrawer={openMobileSideDrawer}
+            setOpenMobileSideDrawer={closeDrawerModel}
+          />
         </Box>
-
-        <Box
-          as="main"
-          flex="1"
-          p="2"
-          overflowY="auto"
-          h={{ base: "calc(100vh - 4rem)", md: "calc(100vh - 4rem)" }}
-        >
-          {renderChildren()}
-        </Box>
-      </Flex>
-    </Flex>
+        <Container fullScreenMode={fullScreenMode}>
+          <HeaderContainer
+            isMobile={isMobile}
+            sizeStatus={sizeStatus}
+            mediumScreenMode={mediumScreenMode}
+            fullScreenMode={fullScreenMode}
+            backgroundColor={useColorModeValue(
+              themeConfig.colors.custom.light.primary,
+              themeConfig.colors.custom.dark.primary
+            )}
+          >
+            <HeaderLayout />
+          </HeaderContainer>
+          <ContentContainer
+            isMobile={isMobile}
+            mediumScreenMode={mediumScreenMode}
+            className={
+              fullScreenMode ? 'fullscreen' : mediumScreenMode ? 'mediumScreen' : ''
+            }
+            fullScreenMode={fullScreenMode}
+            sizeStatus={sizeStatus}
+          >
+            {children}
+          </ContentContainer>
+        </Container>
+      </MainContainer>
+      <ThemeChangeContainer />
+    </Box>
+  ) : (
+    <PageLoader loading={true}>
+    <Spinner />
+    </PageLoader>
+    // <RedirectComponent />
   );
 });
 
 export default DashboardLayout;
+
+const MainContainer = styled.div<{ isMobile: boolean }>`
+  display: flex;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden;
+  margin-left: ${(props) => (props.isMobile ? '0px' : mediumSidebarWidth)};
+`;
+
+const Container = styled.div<{ fullScreenMode: boolean }>`
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease-in-out;
+`;
+
+const HeaderContainer = styled.div<{
+  fullScreenMode: boolean;
+  sizeStatus: boolean;
+  mediumScreenMode: boolean;
+  backgroundColor: string;
+  isMobile: boolean;
+}>`
+  z-index: 99;
+  height: ${headerHeight};
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: ${(props) => props.backgroundColor};
+  left: ${(props) => (props.isMobile ? '0px' : mediumSidebarWidth)};
+  transition: all 0.3s ease-in-out;
+`;
+
+const ContentContainer = styled.div<{
+  sizeStatus: boolean;
+  fullScreenMode: boolean;
+  mediumScreenMode: boolean;
+  isMobile: boolean;
+}>`
+  padding: ${({ isMobile }) =>
+    isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
+  width: ${({ isMobile }) =>
+    isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
+  overflow-x: hidden;
+  height: calc(100vh - ${headerHeight});
+  transition: all 0.3s ease-in-out;
+  margin-top: ${headerHeight};
+`;

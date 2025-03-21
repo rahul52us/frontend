@@ -1,8 +1,7 @@
 "use client";
-import { Box, Flex, Grid } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
-import ProductImageViewer from "../../component/common/ProductImagesViewer/ProductImagesViewer";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
