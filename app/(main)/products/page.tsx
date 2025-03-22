@@ -35,13 +35,13 @@ const Page = observer(() => {
           <ProductsListSection />
         </Box>
       </Flex>
+      <SpecificCategorySection/>
       <Box>
         <ProductCarousel />
       </Box>
       
       <IndianStateFilter/>
-      <CreativeEcommerceSection/>
-      <SpecificCategorySection/>
+      {/* <CreativeEcommerceSection/> */}
       <BenefitSection/>
       {/* <Box>
         <BentoGrid />

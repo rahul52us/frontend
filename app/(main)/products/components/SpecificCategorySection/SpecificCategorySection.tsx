@@ -1,15 +1,5 @@
 import { Box, Button, Center, Flex, Grid, Image, Text } from "@chakra-ui/react";
-
-const data = [
-  { id: 1, img: "/images/product/watch.webp", title: "Smart Watches" },
-  { id: 2, img: "/images/product/headphone.webp", title: "Headphones" },
-  { id: 3, img: "/images/product/hoodie.webp", title: "Fashion Wear" },
-  { id: 4, img: "/images/product/purse.webp", title: "Luxury Bags" },
-  { id: 5, img: "/images/product/bag.webp", title: "Travel Gear" },
-  { id: 6, img: "/images/product/speaker.webp", title: "Audio Systems" },
-  { id: 7, img: "/images/product/sunglasses.webp", title: "Eyewear" },
-  { id: 8, img: "/images/product/shoes.webp", title: "Footwear" },
-];
+import { data } from "./utils/constant";
 
 const SpecificCategorySection = () => {
   return (
@@ -56,7 +46,6 @@ const SpecificCategorySection = () => {
             </Button>
           </Box>
         </Box>
-
         {/* Right Section - Category Grid */}
         <Box flex={1}>
           <Grid 
