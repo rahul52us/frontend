@@ -10,6 +10,7 @@ import BenefitSection from "./components/BenefitSection/BenefitSection";
 import CreativeEcommerceSection from "./components/ContentSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
+import SpecificCategorySection from "./components/SpecificCategorySection/SpecificCategorySection";
 
 const Page = observer(() => {
   return (
@@ -37,8 +38,10 @@ const Page = observer(() => {
       <Box>
         <ProductCarousel />
       </Box>
+      
       <IndianStateFilter/>
       <CreativeEcommerceSection/>
+      <SpecificCategorySection/>
       <BenefitSection/>
       {/* <Box>
         <BentoGrid />
