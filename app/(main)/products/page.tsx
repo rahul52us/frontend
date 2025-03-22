@@ -5,9 +5,8 @@ import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
-// import HeroSkeleton from "../../component/HeroSection/HeroSkeleton/HeroSkeleton";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
-import CreativeEcommerceSection from "./components/ContentSection";
+import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 import SpecificCategorySection from "./components/SpecificCategorySection/SpecificCategorySection";
@@ -39,6 +38,8 @@ const Page = observer(() => {
       <Box>
         <ProductCarousel />
       </Box>
+
+      <CategoryTabs/>
       
       <IndianStateFilter/>
       {/* <CreativeEcommerceSection/> */}

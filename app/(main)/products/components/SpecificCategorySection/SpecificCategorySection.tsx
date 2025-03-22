@@ -77,6 +77,7 @@ const SpecificCategorySection = () => {
                     <Image
                       src={item.img}
                       p={2}
+                      alt="Image"
                       boxSize={{ base: "60px", md: "80px" }}
                       objectFit="contain"
                       transition="transform 0.3s ease"
