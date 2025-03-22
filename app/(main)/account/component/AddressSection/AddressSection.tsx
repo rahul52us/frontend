@@ -17,6 +17,7 @@ import { FaPlusCircle } from "react-icons/fa";
 import AddressCard from "./AddressCard/AddressCard";
 import AddressModal from "./AddressModal/AddressModal";
 import { initialAddresses } from "./utils/constant";
+import GetCurrentLocation from "../../../../component/common/Locations/GetCurrentLocation";
 
 export const AddressesSection = observer(() => {
   const toast = useToast();
@@ -116,6 +117,7 @@ export const AddressesSection = observer(() => {
 
   return (
     <Box>
+      <GetCurrentLocation />
       <Flex justify="space-between" align="center" mb={6}>
         <Box>
           <Heading as="h2" size="md" fontWeight="bold">

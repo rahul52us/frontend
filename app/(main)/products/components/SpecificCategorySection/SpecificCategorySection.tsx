@@ -15,8 +15,8 @@ const SpecificCategorySection = () => {
       <Flex gap={8} flexDirection={{ base: "column", md: "row" }}>
         {/* Left Section - Featured Category */}
         <Box w={{ md: "35%" }} position="relative" overflow="hidden" rounded="xl">
-          <Box 
-            p={8} 
+          <Box
+            p={8}
             // bgGradient="linear(to-br, blue.600, purple.500)"
             color="purple.500"
             h="full"
@@ -32,9 +32,9 @@ const SpecificCategorySection = () => {
             <Text fontSize="md" mb={6} opacity={0.9}>
               Discover our most popular collections featuring the latest trends in technology, fashion, and lifestyle.
             </Text>
-            <Button 
-              variant="outline" 
-              color="purple.500" 
+            <Button
+              variant="outline"
+              color="purple.500"
               _hover={{ bg: "whiteAlpha.200", color: "purple.600" }}
               size="lg"
               alignSelf="flex-start"
@@ -48,27 +48,27 @@ const SpecificCategorySection = () => {
         </Box>
         {/* Right Section - Category Grid */}
         <Box flex={1}>
-          <Grid 
-            gap={{ base: 4, md: 6 }} 
-            templateColumns={{ 
-              base: "repeat(2, 1fr)", 
-              sm: "repeat(3, 1fr)", 
-              md: "repeat(4, 1fr)", 
+          <Grid
+            gap={{ base: 4, md: 6 }}
+            templateColumns={{
+              base: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
               lg: "repeat(5, 1fr)"
             }}
           >
             {data.map((item) => (
-              <Box 
-                key={item.id} 
+              <Box
+                key={item.id}
                 cursor="pointer"
                 role="group"
                 transition="all 0.3s ease"
                 _hover={{ transform: "translateY(-5px)" }}
               >
                 <Center>
-                  <Box 
-                    p={1} 
-                    rounded="full" 
+                  <Box
+                    p={1}
+                    rounded="full"
                     bg="white"
                     boxShadow="md"
                     transition="all 0.3s ease"
@@ -77,6 +77,7 @@ const SpecificCategorySection = () => {
                     <Image
                       src={item.img}
                       p={2}
+                      alt=""
                       boxSize={{ base: "60px", md: "80px" }}
                       objectFit="contain"
                       transition="transform 0.3s ease"
@@ -84,10 +85,10 @@ const SpecificCategorySection = () => {
                     />
                   </Box>
                 </Center>
-                <Text 
-                  mt={2} 
-                  fontSize={{ base: "xs", md: "sm" }} 
-                  fontWeight={600} 
+                <Text
+                  mt={2}
+                  fontSize={{ base: "xs", md: "sm" }}
+                  fontWeight={600}
                   textAlign="center"
                   color="gray.700"
                   _groupHover={{ color: "purple.600" }}
