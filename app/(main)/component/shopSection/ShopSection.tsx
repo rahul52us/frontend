@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
   SimpleGrid,
-  Spinner,
 } from "@chakra-ui/react";
 import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
@@ -50,27 +49,20 @@ const ShopSection = observer(() => {
 
   return (
     <Box>
-      {/* Show loading spinner */}
-      {loading ? (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
-        >
-          <Spinner size="xl" />
-        </Box>
-      ) : (
-        <Box>
-          <SimpleGrid columns={[1, 2, 3]} spacing={6}>
-            {allShops.map((shop, index : number) => (
-              <ShopCard shop={shop} key={index} onClick={() => {}} />
-            ))}
-          </SimpleGrid>
-          <SimpleGrid columns={[1, 2, 3]} spacing={6}>
-       <ShopCardSkeleton/>
-          </SimpleGrid>
-        </Box>
+      {/* Display Shop Cards */}
+      <SimpleGrid columns={[1, 2, 3, 4]} spacing={2}>
+        {allShops.map((shop, index) => (
+          <ShopCard shop={shop} key={index} onClick={() => {}} />
+        ))}
+      </SimpleGrid>
+
+      {/* Show Skeleton Cards at the Bottom While Loading */}
+      {loading && (
+        <SimpleGrid columns={[1, 2,3 , 4]} spacing={2} mt={2}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <ShopCardSkeleton key={index} />
+          ))}
+        </SimpleGrid>
       )}
     </Box>
   );

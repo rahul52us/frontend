@@ -14,11 +14,10 @@ import { FiEye, FiHeart } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 
 const ProductCard = ({ product }: any) => {
-  const { image, category, name, price, rating, freeShipping } = product;
+  const { image, category, name, price } = product;
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal state management
   const [selectedImage, setSelectedImage] = useState<any>([]); // State to hold the selected image for ImageViewer
 
-  console.log(rating,freeShipping)
   const handleImageClick = () => {
     setSelectedImage([image]); // Set the selected image when the image is clicked
     onOpen(); // Open the ImageViewer modal
@@ -108,7 +107,7 @@ const ProductCard = ({ product }: any) => {
             <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="brand.600">
               ₹{price}
             </Text>
-        
+
           </Box>
           <Button
           mt={3}

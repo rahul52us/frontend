@@ -5,7 +5,7 @@ import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
-import HeroSkeleton from "../../component/HeroSection/HeroSkeleton/HeroSkeleton";
+// import HeroSkeleton from "../../component/HeroSection/HeroSkeleton/HeroSkeleton";
 import BenefitSection from "./components/BenefitSection/BenefitSection";
 import CreativeEcommerceSection from "./components/ContentSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
@@ -16,7 +16,7 @@ const Page = observer(() => {
     <Box maxW="95%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
       <CategoryFilter />
       <HeroSection/>
-      <HeroSkeleton/>
+      {/* <HeroSkeleton/> */}
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}

@@ -84,13 +84,11 @@ const ProductsListSection = observer(() => {
               </Box>
             ))}
           </Carousel>
-        <Grid templateColumns={'repeat(5, 1fr)'} gap={4} my={2}>
-{[...Array(5)].map((_) => (
-  
-            <ProductCardSkeleton />
-))}
-        </Grid>
-         
+          <Grid templateColumns={"repeat(5, 1fr)"} gap={4} my={2}>
+            {[...Array(5)].map((it : any) => (
+              <ProductCardSkeleton key={it}/>
+            ))}
+          </Grid>
         </Box>
       </Box>
     </Box>
