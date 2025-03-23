@@ -10,12 +10,22 @@ import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 import SpecificCategorySection from "./components/SpecificCategorySection/SpecificCategorySection";
+import ShopByValues from "./components/ValueCard";
+
+const banners = [
+'/images/banners/blackFriday.jpg' ,
+  '/images/banners/shoes.jpg' ,
+  '/images/banners/summerSale.jpg' ,
+'/images/banners/cyberMonday.jpg' ,
+  '/images/banners/sofa.jpg' 
+];
 
 const Page = observer(() => {
   return (
     <Box maxW="95%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
       <CategoryFilter />
       <HeroSection/>
+      <ShopByValues images={banners} />
       {/* <HeroSkeleton/> */}
       <Flex
         direction={{ base: "column", md: "row" }}
@@ -42,6 +52,7 @@ const Page = observer(() => {
       <CategoryTabs/>
       
       <IndianStateFilter/>
+     
       {/* <CreativeEcommerceSection/> */}
       <BenefitSection/>
       {/* <Box>
