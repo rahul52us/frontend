@@ -1,11 +1,10 @@
 "use client";
-import { Box, Flex } from "@chakra-ui/react";
+import { Box, Flex, Grid } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
-import BenefitSection from "./components/BenefitSection/BenefitSection";
 import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
@@ -17,7 +16,7 @@ const banners = [
   '/images/banners/shoes.jpg' ,
   '/images/banners/summerSale.jpg' ,
 '/images/banners/cyberMonday.jpg' ,
-  '/images/banners/sofa.jpg' 
+  '/images/banners/sofa.jpg'
 ];
 
 const Page = observer(() => {
@@ -25,8 +24,6 @@ const Page = observer(() => {
     <Box maxW="95%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
       <CategoryFilter />
       <HeroSection/>
-      <ShopByValues images={banners} />
-      {/* <HeroSkeleton/> */}
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -48,16 +45,14 @@ const Page = observer(() => {
       <Box>
         <ProductCarousel />
       </Box>
-
       <CategoryTabs/>
-
       <IndianStateFilter/>
-     
-      {/* <CreativeEcommerceSection/> */}
-      <BenefitSection/>
-      {/* <Box>
-        <BentoGrid />
-      </Box> */}
+        <Grid gridTemplateColumns={{base : '1fr', md : '1fr 1fr'}} gap={4} mb={5}>
+          {/* <BenefitSection/> */}
+          <ShopByValues images={banners} />
+          <ShopByValues images={banners} />
+
+          </Grid>
       <Box mb={{ base: 4, md: 6 }}>
         <ProductBanner />
       </Box>

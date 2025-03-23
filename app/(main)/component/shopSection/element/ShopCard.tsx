@@ -61,26 +61,25 @@ interface ShopCardProps {
 }
 
 const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
-  const router = useRouter()
+  const router = useRouter();
+
   return (
     <Box
-      maxW="340px"
-      m={4}
+      maxW="100%"
       bg="white"
-      borderRadius="xl"
+      borderRadius="lg"
       overflow="hidden"
       boxShadow="lg"
-      transition="all 0.3s ease"
+      transition="transform 0.3s ease, box-shadow 0.3s ease"
       _hover={{
         boxShadow: "xl",
-        transform: "translateY(-8px)",
-        cursor: "pointer",
+        transform: "scale(1.03)",
       }}
       onClick={onClick}
       border="1px solid"
       borderColor="gray.200"
     >
-      {/* Image Section */}
+      {/* Cover Image */}
       <Box position="relative" h="180px">
         <Image
           src={shop?.coverImage?.url}
@@ -88,49 +87,45 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
           w="100%"
           h="100%"
           objectFit="cover"
-          borderTopRadius="xl"
         />
         {/* Status Badge */}
         <Badge
           position="absolute"
-          top={3}
-          left={3}
-          bg={shop.shopStatus === "active" ? "green.400" : "red.400"}
-          color="white"
+          top="10px"
+          right="10px"
+          colorScheme={shop.shopStatus === "active" ? "green" : "red"}
           px={3}
           py={1}
-          fontSize="sm"
           borderRadius="full"
-          fontWeight="bold"
+          fontSize="xs"
         >
           {shop.shopStatus.charAt(0).toUpperCase() + shop.shopStatus.slice(1)}
         </Badge>
       </Box>
 
-      {/* Content Section */}
-      <VStack p={4} spacing={4} align="start">
-        {/* Name and Logo */}
-        <HStack spacing={3} w="full" align="center">
+      {/* Content */}
+      <VStack p={4} spacing={3} align="start">
+        {/* Shop Name & Logo */}
+        <HStack w="full" align="center">
           <Image
             src={shop?.logo?.url}
             alt={shop?.logo?.name}
-            boxSize="50px"
+            boxSize="45px"
             borderRadius="full"
-            border="2px solid"
-            borderColor="amber.300"
+            border="2px solid teal"
             objectFit="contain"
           />
           <Text
-            fontSize="xl"
+            fontSize="lg"
             fontWeight="bold"
             color="gray.800"
-            noOfLines={1}
-            flex="1"
-            letterSpacing="wide"
+            cursor="pointer"
+            _hover={{ color: "teal.600" }}
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/${shop.name?.replace(/\s+/g, "-").toLowerCase()}`);
-            }}>
+            }}
+          >
             {shop.name}
           </Text>
         </HStack>
@@ -138,17 +133,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
         {/* Categories */}
         <Flex wrap="wrap" gap={2}>
           {shop.categories.slice(0, 3).map((category, index) => (
-            <Badge
-              key={index}
-              bg="amber.100"
-              color="amber.800"
-              px={3}
-              py={1}
-              fontSize="sm"
-              borderRadius="full"
-              textTransform="capitalize"
-              fontWeight="medium"
-            >
+            <Badge key={index} colorScheme="teal" px={2} py={0.5} fontSize="xs">
               {category}
             </Badge>
           ))}
@@ -156,31 +141,31 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
 
         {/* Location */}
         <HStack spacing={2} color="gray.600" fontSize="sm">
-          <Box as={FaMapMarkerAlt} color="amber.500" />
-          <Text noOfLines={1}>
+          <FaMapMarkerAlt color="teal" />
+          <Text fontWeight="medium">
             {`${shop.location.city}, ${shop.location.state}`}
           </Text>
         </HStack>
 
         {/* Description */}
-        <Text fontSize="sm" color="gray.600" noOfLines={2} fontStyle="italic">
+        <Text fontSize="sm" color="gray.500" noOfLines={2}>
           {shop.description}
         </Text>
 
         {/* Contact */}
         <HStack spacing={3} w="full">
-          <Tooltip label="Call Shop" aria-label="Call Shop Tooltip">
+          <Tooltip label="Call Shop">
             <Link
               href={`tel:${shop.contactInfo.phone}`}
               display="flex"
               alignItems="center"
-              color="amber.600"
-              fontWeight="medium"
+              color="teal.600"
+              fontWeight="semibold"
               fontSize="sm"
-              _hover={{ color: "amber.800" }}
+              _hover={{ color: "teal.700" }}
             >
-              <Box as={FaPhoneAlt} mr={2} />
-              {shop.contactInfo.phone}
+              <FaPhoneAlt />
+              <Text ml={2}>{shop.contactInfo.phone}</Text>
             </Link>
           </Tooltip>
         </HStack>

@@ -3,7 +3,6 @@ import {
   Button,
   Flex,
   Heading,
-  HStack,
   IconButton,
   Image,
   Text,
@@ -12,54 +11,79 @@ import {
 import { useState } from "react";
 import { FiEye, FiHeart } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
+import { useRouter } from "next/navigation";
 
 const ProductCard = ({ product }: any) => {
+  const router = useRouter();
   const { image, category, name, price } = product;
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal state management
-  const [selectedImage, setSelectedImage] = useState<any>([]); // State to hold the selected image for ImageViewer
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedImage, setSelectedImage] = useState<any>([]);
+
+  // Static discount price for now
+  const discountPrice = 499; // Example static value
+  // Calculate discount percentage statically
+  const discountPercentage = Math.round(((price - discountPrice) / price) * 100);
 
   const handleImageClick = () => {
-    setSelectedImage([image]); // Set the selected image when the image is clicked
-    onOpen(); // Open the ImageViewer modal
+    setSelectedImage([image]);
+    onOpen();
   };
 
   return (
     <Box
-      h="350px" // Fixed height
-      shadow="base"
-      position="relative"
+      h="340px"
+      maxW="100%"
       bg="white"
-      borderWidth="1px"
-      borderColor="gray.100"
-      borderRadius="xl"
+      border="1px solid"
+      borderColor="gray.200"
+      borderRadius="lg"
       overflow="hidden"
       transition="all 0.3s ease"
       _hover={{
-        transform: "translateY(-6px)",
-        shadow: "lg",
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)", // Slightly deeper shadow
+        borderColor: "gray.300",
       }}
       role="group"
       w="100%"
     >
-      <Box position="relative" overflow="hidden" borderRadius="lg">
+      <Box position="relative" h="180px">
         <Image
           src={image}
           alt={name}
           objectFit="cover"
-          width="100%"
-          height={{ base: "180px", md: "200px" }}
-          transition="transform 0.5s ease"
+          w="100%"
+          h="100%"
+          transition="all 0.3s ease"
           _groupHover={{
-            transform: "scale(1.1)",
+            filter: "brightness(1.1) contrast(1.03)", // Enhanced image pop
           }}
         />
+        {/* Stylish Gradient Discount Badge */}
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          bgGradient="linear(to-r, purple.600, purple.800)" // Gradient for flair
+          color="white"
+          fontSize="xs"
+          fontWeight="bold"
+          px={2.5}
+          py={1}
+          borderRadius="0 0 6px 0" // Slightly larger curve
+          transform="translate(-1px, -1px)"
+          boxShadow="0 2px 6px rgba(0, 0, 0, 0.25)" // Deeper shadow
+          textTransform="uppercase"
+          letterSpacing="wide" // Stylish spacing
+        >
+          {discountPercentage}% Off
+        </Box>
         <Flex
           position="absolute"
-          bottom="3"
-          right="3"
-          gap={2}
+          top="2"
+          right="2"
+          gap={1.5}
           opacity={0}
-          transition="opacity 0.2s ease"
+          transition="opacity 0.25s ease"
           _groupHover={{
             opacity: 1,
           }}
@@ -68,65 +92,76 @@ const ProductCard = ({ product }: any) => {
             aria-label="Quick view"
             icon={<FiEye />}
             size="sm"
-            borderRadius="full"
-            bg="blackAlpha.700"
-            color="white"
-            _hover={{ bg: "blackAlpha.800" }}
-            onClick={handleImageClick} // Open ImageViewer modal on button click
+            borderRadius="full" // Circular for a modern touch
+            bg="white"
+            color="gray.700"
+            border="1px solid"
+            borderColor="gray.200"
+            _hover={{ bg: "gray.50", color: "purple.600" }} // Tie to theme
+            onClick={handleImageClick}
           />
           <IconButton
             aria-label="Add to wishlist"
             icon={<FiHeart />}
             size="sm"
             borderRadius="full"
-            bg="blackAlpha.700"
-            color="white"
-            _hover={{ bg: "blackAlpha.800" }}
+            bg="white"
+            color="gray.700"
+            border="1px solid"
+            borderColor="gray.200"
+            _hover={{ bg: "gray.50", color: "red.500" }}
           />
         </Flex>
       </Box>
-      <Box px={4} py={3}>
-        <HStack justifyContent="space-between" alignItems="flex-start">
+      <Box px={4} py={4} h="160px" display="flex" flexDir="column" justifyContent="space-between">
+        <Box>
+          <Text fontSize="xs" color="gray.600" fontWeight="medium" textTransform="uppercase" mb={2}>
+            {category}
+          </Text>
+          <Heading
+            fontSize={{ base: "md", md: "lg" }} // Responsive size
+            fontWeight="semibold"
+            minH="40px"
+            cursor="pointer"
+            onClick={() => router.push("individual-product")}
+            noOfLines={2}
+            color="gray.900" // Darker for contrast
+            _hover={{ color: "purple.700" }}
+          >
+            {name}
+          </Heading>
+        </Box>
+        <Flex justify="space-between" align="center">
           <Box>
-            <Text fontSize="sm" color="gray.500" mb={1}>
-              {category}
-            </Text>
-            <Heading
-              fontSize={{ base: "md", md: "lg" }}
-              mb={2}
-              minH={"40px"}
-              fontWeight="600"
-              noOfLines={2} // Limit title to 2 lines
+            <Text
+              fontSize="sm"
+              fontWeight="medium"
+              color="gray.500" // Slightly darker gray
+              textDecoration="line-through"
             >
-              {name}
-            </Heading>
-          </Box>
-        </HStack>
-        <Flex mt={1} justifyContent="space-between" alignItems="end">
-          <Box>
-            <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color="brand.600">
               ₹{price}
             </Text>
-
+            <Text fontSize="lg" fontWeight="extrabold" color="purple.700">
+              ₹{discountPrice}
+            </Text>
           </Box>
           <Button
-          mt={3}
-          // w="100%"
-          colorScheme="purple"
-          variant={'outline'}
-          size="sm"
-          onClick={() => alert("Added to cart!")} // Add functionality here
-        >
-          Add
-        </Button>
+            size="sm"
+            colorScheme="purple"
+            variant="solid"
+            borderRadius="full" // Circular button
+            px={5} // Wider for balance
+            bg="purple.600"
+            fontWeight="semibold"
+            _hover={{ bg: "purple.700", transform: "scale(1.05)" }} // Subtle scale
+            _active={{ bg: "purple.800" }}
+            onClick={() => alert("Added to cart!")}
+          >
+            Add
+          </Button>
         </Flex>
       </Box>
-      {/* ImageViewer Modal */}
-      <ImageViewerWithModal
-        isOpen={isOpen}
-        onClose={onClose}
-        images={selectedImage}
-      />
+      <ImageViewerWithModal isOpen={isOpen} onClose={onClose} images={selectedImage} />
     </Box>
   );
 };
