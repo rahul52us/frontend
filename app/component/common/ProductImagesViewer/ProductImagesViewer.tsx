@@ -1,25 +1,26 @@
 import {
-    Box,
-    Circle,
-    Flex,
-    IconButton,
-    Image,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalOverlay,
-    Text,
-    Tooltip,
-    useBreakpointValue,
-    useDisclosure
+  Box,
+  Button,
+  Circle,
+  Flex,
+  IconButton,
+  Image,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalOverlay,
+  Text,
+  Tooltip,
+  useBreakpointValue,
+  useDisclosure
 } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
 import {
-    FiChevronLeft,
-    FiChevronRight,
-    FiMaximize,
-    FiZoomIn,
-    FiZoomOut
+  FiChevronLeft,
+  FiChevronRight,
+  FiMaximize,
+  FiZoomIn,
+  FiZoomOut
 } from 'react-icons/fi';
 
 const ProductImageViewer = ({ images }) => {
@@ -31,8 +32,8 @@ const ProductImageViewer = ({ images }) => {
   const containerRef = useRef(null);
 
   // Responsive values
-  const imageHeight = useBreakpointValue({ base: '300px', sm: '400px', md: '500px' });
-  const thumbnailSize = useBreakpointValue({ base: '50px', sm: '60px', md: '70px' });
+  const imageHeight = useBreakpointValue({ base: '300px', sm: '400px', md: '450px' });
+  const thumbnailSize = useBreakpointValue({ base: '40px', sm: '50px', md: '60px' });
   const controlSize = "sm"
   const isMobile = useBreakpointValue({ base: true, md: false });
 
@@ -64,103 +65,11 @@ const ProductImageViewer = ({ images }) => {
   };
 
   return (
-    <Box p={4}>
+    <Box >
       {/* Main Image Container */}
-      <Box
-        ref={containerRef}
-        position="relative"
-        overflow="hidden"
-        borderRadius="xl"
-        onMouseMove={!isMobile ? handleMouseMove : undefined}
-        onMouseEnter={!isMobile ? () => setIsHovered(true) : undefined}
-        onMouseLeave={!isMobile ? () => setIsHovered(false) : undefined}
-        cursor={!isMobile && isHovered && zoomLevel > 1 ? 'zoom-in' : 'pointer'}
-        onClick={!isMobile ? handleClickZoom : undefined}
-        // touchAction="none"
-      >
-        <Image
-          src={images[selectedIndex]}
-          alt={`Product view ${selectedIndex + 1}`}
-          objectFit="contain"
-          w="100%"
-          h={imageHeight}
-          transform={zoomLevel > 1 ? `scale(${zoomLevel})` : 'scale(1)'}
-          transformOrigin={`${position.x}% ${position.y}%`}
-          transition="transform 0.1s ease-out"
-        />
+      <Flex gap={4} align={'start'}>
 
-        {/* Controls */}
-        <Flex position="absolute" top="6" right="2" gap={2} zIndex={1}>
-          {!isMobile && (
-            <>
-              <Tooltip label="Zoom In">
-                <IconButton
-                  icon={<FiZoomIn />}
-                  onClick={() => handleButtonZoom(zoomLevel + 0.5)}
-                  aria-label="Zoom In"
-                  size={controlSize}
-                  isDisabled={zoomLevel >= 2}
-                />
-              </Tooltip>
-              <Tooltip label="Zoom Out">
-                <IconButton
-                  icon={<FiZoomOut />}
-                  size={controlSize}
-                  onClick={() => handleButtonZoom(zoomLevel - 0.5)}
-                  aria-label="Zoom Out"
-                  isDisabled={zoomLevel <= 1}
-                />
-              </Tooltip>
-            </>
-          )}
-          <Tooltip label="Fullscreen">
-            <IconButton
-              icon={<FiMaximize />}
-              size={controlSize}
-              onClick={onOpen}
-              aria-label="Fullscreen"
-            />
-          </Tooltip>
-        </Flex>
-
-        {/* Navigation Arrows */}
-        <Flex justify="space-between" position="absolute" top="50%" w="100%" px={2}>
-          <IconButton
-            icon={<FiChevronLeft />}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
-              setZoomLevel(1);
-            }}
-            colorScheme='blackAlpha'
-            aria-label="Previous Image"
-            borderRadius="full"
-            size={controlSize}
-          />
-          <IconButton
-            icon={<FiChevronRight />}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedIndex((prev) => (prev + 1) % images.length);
-              setZoomLevel(1);
-            }}
-            colorScheme='blackAlpha'
-            aria-label="Next Image"
-            borderRadius="full"
-            size={controlSize}
-          />
-        </Flex>
-
-        {/* Zoom Level Indicator */}
-        {!isMobile && zoomLevel > 1 && (
-          <Box position="absolute" bottom="4" left="4" bg="blackAlpha.600" px={3} py={1} borderRadius="md">
-            <Text color="white" fontSize="sm">Zoom: {zoomLevel}x</Text>
-          </Box>
-        )}
-      </Box>
-
-      {/* Thumbnail Strip */}
-      <Flex overflowX="auto" py={4} gap={2} sx={{ scrollbarWidth: 'none', '::-webkit-scrollbar': { display: 'none' } }}>
+      <Flex overflowX="auto" py={4} gap={2} sx={{ scrollbarWidth: 'none', '::-webkit-scrollbar': { display: 'none' } }} direction={{ base: 'row', md: 'column' }}>
         {images.map((img, index) => (
           <Circle
             key={index}
@@ -189,7 +98,109 @@ const ProductImageViewer = ({ images }) => {
           </Circle>
         ))}
       </Flex>
+      <Box>
 
+      <Box
+  ref={containerRef}
+  position="relative"
+  borderRadius="2xl"
+  borderWidth={1}
+  overflow="hidden"
+  w="100%" // Set a fixed width for the container
+  h={imageHeight} // Set a fixed height for the container
+  onMouseMove={!isMobile ? handleMouseMove : undefined}
+  onMouseEnter={!isMobile ? () => setIsHovered(true) : undefined}
+  onMouseLeave={!isMobile ? () => setIsHovered(false) : undefined}
+  cursor={!isMobile && isHovered && zoomLevel > 1 ? 'zoom-in' : 'pointer'}
+  onClick={!isMobile ? handleClickZoom : undefined}
+>
+  <Image
+    src={images[selectedIndex]}
+    alt={`Product view ${selectedIndex + 1}`}
+    objectFit="contain"
+    w="24rem" // Ensure the image takes up the full width of the container
+    h="100%" // Ensure the image takes up the full height of the container
+    transform={zoomLevel > 1 ? `scale(${zoomLevel})` : 'scale(1)'}
+    transformOrigin={`${position.x}% ${position.y}%`}
+    transition="transform 0.1s ease-out"
+  />
+
+  {/* Controls */}
+  <Flex position="absolute" direction={'column'} top="2" right="2" gap={2} zIndex={1}>
+    {!isMobile && (
+      <>
+        <Tooltip label="Zoom In">
+          <IconButton
+            icon={<FiZoomIn />}
+            onClick={() => handleButtonZoom(zoomLevel + 0.5)}
+            aria-label="Zoom In"
+            size={controlSize}
+            isDisabled={zoomLevel >= 2}
+          />
+        </Tooltip>
+        <Tooltip label="Zoom Out">
+          <IconButton
+            icon={<FiZoomOut />}
+            size={controlSize}
+            onClick={() => handleButtonZoom(zoomLevel - 0.5)}
+            aria-label="Zoom Out"
+            isDisabled={zoomLevel <= 1}
+          />
+        </Tooltip>
+      </>
+    )}
+    <Tooltip label="Fullscreen">
+      <IconButton
+        icon={<FiMaximize />}
+        size={controlSize}
+        onClick={onOpen}
+        aria-label="Fullscreen"
+      />
+    </Tooltip>
+  </Flex>
+
+  {/* Navigation Arrows */}
+  <Flex justify="end" gap={2} bottom={4} position="absolute" w="100%" px={2}>
+    <IconButton
+      icon={<FiChevronLeft />}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+        setZoomLevel(1);
+      }}
+      colorScheme='blackAlpha'
+      aria-label="Previous Image"
+      borderRadius="full"
+      size={controlSize}
+    />
+    <IconButton
+      icon={<FiChevronRight />}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedIndex((prev) => (prev + 1) % images.length);
+        setZoomLevel(1);
+      }}
+      colorScheme='blackAlpha'
+      aria-label="Next Image"
+      borderRadius="full"
+      size={controlSize}
+    />
+  </Flex>
+
+  {/* Zoom Level Indicator */}
+  {!isMobile && zoomLevel > 1 && (
+    <Box position="absolute" bottom="4" left="4" bg="blackAlpha.600" px={3} py={1} borderRadius="md">
+      <Text color="white" fontSize="sm">Zoom: {zoomLevel}x</Text>
+    </Box>
+  )}
+</Box>
+
+      <Button bgGradient={'linear(to-br,purple.400, purple.600)'} _hover={{bgGradient:'linear(to-br,purple.600, purple.800)'}} color={'white'} w={'full'} mt={2} rounded={'full'}> Buy Now</Button>
+      </Box>
+
+      {/* Thumbnail Strip */}
+     
+      </Flex>
       {/* Fullscreen Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="full">
         <ModalOverlay />
