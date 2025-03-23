@@ -1,4 +1,5 @@
 import { Box, Flex, Image, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 const ProductColorSelector = ({ colors }) => {
@@ -28,4 +29,4 @@ const ProductColorSelector = ({ colors }) => {
   );
 };
 
-export default ProductColorSelector;
+export default observer(ProductColorSelector);

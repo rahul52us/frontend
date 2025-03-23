@@ -1,4 +1,5 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
 const ProductSizeSelector = ({ sizes }) => {
@@ -29,4 +30,4 @@ const ProductSizeSelector = ({ sizes }) => {
   );
 };
 
-export default ProductSizeSelector;
+export default observer(ProductSizeSelector);

@@ -1,4 +1,5 @@
 import { Flex, Tag, TagLeftIcon, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { FiStar } from 'react-icons/fi';
 
 const ProductRating = ({ rating, reviews }) => {
@@ -13,4 +14,4 @@ const ProductRating = ({ rating, reviews }) => {
   );
 };
 
-export default ProductRating;
+export default observer(ProductRating);

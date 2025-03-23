@@ -14,6 +14,7 @@ import {
   useBreakpointValue,
   useDisclosure
 } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { useRef, useState } from 'react';
 import {
   FiChevronLeft,
@@ -228,4 +229,4 @@ const ProductImageViewer = ({ images }) => {
   );
 };
 
-export default ProductImageViewer;
+export default observer(ProductImageViewer);

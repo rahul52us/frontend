@@ -1,4 +1,5 @@
 import { Box, Grid, GridItem, Heading } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 
 const ProductSpecs = ({ specs ,title}) => {
   return (
@@ -20,4 +21,4 @@ const ProductSpecs = ({ specs ,title}) => {
   );
 };
 
-export default ProductSpecs;
+export default observer(ProductSpecs);

@@ -1,4 +1,5 @@
 import { Box, Flex, Icon, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { FiShare } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
 
@@ -17,4 +18,4 @@ const ProductTitle = ({ brand, title }) => {
   );
 };
 
-export default ProductTitle;
+export default observer(ProductTitle);

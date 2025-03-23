@@ -1,6 +1,7 @@
 import { Box, Flex } from "@chakra-ui/react";
 import ProductImageViewer from "../../../component/common/ProductImagesViewer/ProductImagesViewer";
 import ProductDetailsSection from "./ProductDetailsSection/ProductDetailsSection";
+import { observer } from "mobx-react-lite";
 
 const IndividualProductPage = () => {
   return (
@@ -22,4 +23,4 @@ const IndividualProductPage = () => {
   );
 };
 
-export default IndividualProductPage;
+export default observer(IndividualProductPage);

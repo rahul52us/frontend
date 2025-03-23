@@ -1,4 +1,5 @@
 import { Stat, StatHelpText, StatNumber, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 
 const ProductPrice = ({ price, discount, mrp }) => {
   return (
@@ -20,4 +21,4 @@ const ProductPrice = ({ price, discount, mrp }) => {
   );
 };
 
-export default ProductPrice;
+export default observer(ProductPrice);

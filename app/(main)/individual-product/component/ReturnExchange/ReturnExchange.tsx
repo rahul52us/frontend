@@ -1,4 +1,5 @@
 import { Box, Center, Flex, Icon, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { TbExchange, TbRefresh, TbTruckDelivery } from 'react-icons/tb';
 
 const ReturnExchange = ({ services }) => {
@@ -39,4 +40,4 @@ const ReturnExchange = ({ services }) => {
   );
 };
 
-export default ReturnExchange;
+export default observer(ReturnExchange);

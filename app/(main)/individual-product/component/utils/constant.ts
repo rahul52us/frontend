@@ -1,4 +1,50 @@
-export const productData = { 
+interface Rating {  
+  score: number;  
+  reviewsCount: number;  
+}  
+
+interface PriceDetails {  
+  currentPrice: string;  
+  discount: number;  
+  originalPrice: string;  
+}  
+
+interface Color {  
+  name: string;  
+  image: string;  
+}  
+
+interface Service {  
+  type: string;  
+  label: string;  
+}  
+
+interface Highlight {  
+  label: string;  
+  value: string | string[];  
+}  
+
+interface Information {  
+  label: string;  
+  value: string;  
+}  
+
+interface ProductData {  
+  brand: string;  
+  title: string;  
+  rating: Rating;  
+  priceDetails: PriceDetails;  
+  colors?: Color[];  
+  sizes?: string[];  
+  offers: string[];  
+  services: Service[];  
+  highlights: Highlight[];  
+  information: Information[];  
+}  
+
+
+
+export const productData:ProductData = { 
     brand: 'Campus',
     title: "Campus Syrus Black Men's Running Shoes - UK 8",
     rating: {

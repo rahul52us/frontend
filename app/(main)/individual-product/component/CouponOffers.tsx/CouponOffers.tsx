@@ -1,4 +1,5 @@
 import { Box, Divider, Flex, Icon, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
 import { CiDiscount1 } from 'react-icons/ci';
 
 const CouponOffers = ({ offers }) => {
@@ -18,4 +19,4 @@ const CouponOffers = ({ offers }) => {
   );
 };
 
-export default CouponOffers;
+export default observer(CouponOffers);
