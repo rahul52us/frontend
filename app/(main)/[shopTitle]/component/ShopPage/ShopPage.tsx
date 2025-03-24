@@ -21,6 +21,10 @@ import ShopImages from "../ShopImages/ShopImages";
 import StickyNav from "../StickyNav/StickyNav";
 import LocationSection from "../LocationSection/LocationSection";
 import { observer } from "mobx-react-lite";
+import ShopHeaderSkeleton from "../ShopHeroSection/ShopHeroSkeleton";
+import AboutUsSkeleton from "../ShopAbout/ShopAboutSkeleton";
+import ShopImageSkeleton from "../ShopImages/ShopImageSkeleton";
+import AddressMapSkeleton from "../LocationSection/AddressMapSkeleton";
 
 const ShopPage = observer(({ shopData }: any) => {
   const getCurrentDayHours = () => {
@@ -89,11 +93,13 @@ const ShopPage = observer(({ shopData }: any) => {
         </Flex>
       </Box>
       <ShopHeroSection shopData={shopData} />
+      <ShopHeaderSkeleton/>
       <StickyNav shopData={shopData} />
       <Container maxW="container.xl" px="4" py="8" id="about">
         <Grid templateColumns={{ base: "1fr", md: "2fr 1fr" }} gap="8">
           <GridItem>
             <ShopAbout shopData={shopData} />
+            <AboutUsSkeleton/>
           </GridItem>
           <GridItem>
             <OperatingHours
@@ -105,6 +111,7 @@ const ShopPage = observer(({ shopData }: any) => {
       </Container>
       <Box id="gallery">
         <ShopImages shopData={shopData} />
+        <ShopImageSkeleton/>
       </Box>
       <Container maxW="container.xl" id="products">
         <CommonHeading
@@ -130,6 +137,7 @@ const ShopPage = observer(({ shopData }: any) => {
         </Grid>
       </Container>
       <LocationSection shopData={shopData} />
+      <AddressMapSkeleton/>
       <NewsLetter />
       <Container my={16} maxW="container.xl">
         <ContactSection shopData={shopData} />

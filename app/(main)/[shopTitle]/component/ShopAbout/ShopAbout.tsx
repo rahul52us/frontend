@@ -14,11 +14,11 @@ const ShopAbout = ({ shopData }) => {
 
       {/* About Preview Text */}
       <Box mb="4">
-        <Text color="gray.600" fontSize="lg" mb="2">
+        <Text color="gray.600" fontSize={{base:"sm",lg:"md"}} mb="2">
           {previewText}...
         </Text>
         <Collapse in={isExpanded} animateOpacity>
-          <Text color="gray.600" fontSize="lg">{shopData.about.slice(150)}</Text>
+          <Text color="gray.600" fontSize={{base:"sm",lg:"md"}}>{shopData.about.slice(150)}</Text>
         </Collapse>
 
         {/* Toggle button for expanded text */}

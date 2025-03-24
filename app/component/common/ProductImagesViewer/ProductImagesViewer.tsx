@@ -196,7 +196,7 @@ const ProductImageViewer = ({ images }) => {
   )}
 </Box>
 
-      <Button bgGradient={'linear(to-br,purple.400, purple.600)'} _hover={{bgGradient:'linear(to-br,purple.600, purple.800)'}} color={'white'} w={'full'} mt={2} rounded={'full'}> Buy Now</Button>
+      <Button bgGradient={'linear(to-br,purple.400, purple.600)'} _hover={{bgGradient:'linear(to-br,purple.600, purple.800)'}} color={'white'} w={'full'} mt={2} rounded={'full'}> Add to Cart</Button>
       </Box>
 
       {/* Thumbnail Strip */}
