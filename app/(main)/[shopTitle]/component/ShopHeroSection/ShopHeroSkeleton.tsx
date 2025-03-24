@@ -9,10 +9,10 @@ const ShopHeaderSkeleton = () => {
           <Box
             position="absolute"
             inset="0"
-            bgGradient={{
-              base: "linear(to-t, burple.800, blackAlpha.400)",
-              md: "linear(to-t, black, 20%,transparent)"
-            }}
+            // bgGradient={{
+            //   base: "linear(to-t, burple.800, blackAlpha.400)",
+            //   md: "linear(to-t, black, 20%,transparent)"
+            // }}
           />
         </Box>
 
