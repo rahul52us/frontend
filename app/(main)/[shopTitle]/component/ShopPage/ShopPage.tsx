@@ -25,6 +25,7 @@ import ShopHeaderSkeleton from "../ShopHeroSection/ShopHeroSkeleton";
 import AboutUsSkeleton from "../ShopAbout/ShopAboutSkeleton";
 import ShopImageSkeleton from "../ShopImages/ShopImageSkeleton";
 import AddressMapSkeleton from "../LocationSection/AddressMapSkeleton";
+import ContactSkeleton from "../ContactSection/ContactSkeleton";
 
 const ShopPage = observer(({ shopData }: any) => {
   const getCurrentDayHours = () => {
@@ -141,6 +142,7 @@ const ShopPage = observer(({ shopData }: any) => {
       <NewsLetter />
       <Container my={16} maxW="container.xl">
         <ContactSection shopData={shopData} />
+        <ContactSkeleton/>
       </Container>
       <ShopFooterSection shopData={shopData} />
     </Box>

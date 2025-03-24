@@ -23,7 +23,7 @@ const ShopHeaderSkeleton = () => {
             </Box>
 
             <Box flex="1" color="white" textAlign={{ base: "center", md: "left" }} maxW={{ base: "100%", md: "60%" }}>
-              <SkeletonText noOfLines={1} skeletonHeight="6" w="60%"  />
+              <SkeletonText noOfLines={1} skeletonHeight="6" w="60%" mx={{base:"auto",lg:"0"}}   />
 
               <Flex alignItems="center" mt={2} gap={2} flexDir={{ base: "column", md: "row" }} justify={{ base: "center", md: "flex-start" }}>
                 <SkeletonText noOfLines={1} skeletonHeight="4" w="40%" />

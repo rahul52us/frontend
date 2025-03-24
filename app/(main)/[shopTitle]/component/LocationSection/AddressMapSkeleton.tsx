@@ -6,7 +6,7 @@ const AddressMapSkeleton = () => {
     <Flex
       direction={{ base: "column", lg: "row" }}
       gap={4}
-      maxW={'80%'}
+      maxW={{base:"90%",lg:'80%'}}
       mx={'auto'}
       bg="white"
       borderRadius="2xl"
@@ -20,7 +20,7 @@ const AddressMapSkeleton = () => {
         flex="1.5"
         borderRadius="2xl"
         overflow="hidden"
-        minH={{ base: "400px", lg: "auto" }}
+        minH={{ base: "auto", lg: "auto" }}
         position="relative"
       >
         <AspectRatio ratio={16 / 9}>

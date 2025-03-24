@@ -4,7 +4,7 @@ import { endColor, startColor } from '../../../../component/common/utils/skeleto
 const ShopImageSkeleton = () => {
   return (
     <Box maxW={'90%'} mx={'auto'}>
-        <Grid templateColumns={'1fr 1fr 1fr'} gap={8}>
+        <Grid templateColumns={{lg:'1fr 1fr 1fr'}} gap={{base:4,lg:8}}>
 
         <Skeleton h={'240px'} startColor={startColor} endColor={endColor} rounded={'xl'} />
         <Skeleton h={'240px'} startColor={startColor} endColor={endColor} rounded={'xl'} />
