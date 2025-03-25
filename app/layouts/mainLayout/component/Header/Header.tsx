@@ -1,31 +1,32 @@
 "use client";
+import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Flex,
-  Image,
-  IconButton,
+  Center,
   Drawer,
   DrawerBody,
-  DrawerOverlay,
-  DrawerContent,
   DrawerCloseButton,
-  useDisclosure,
-  Center,
+  DrawerContent,
+  DrawerOverlay,
+  Flex,
+  IconButton,
+  Image,
   Input,
   InputGroup,
   InputLeftElement,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
-import React from "react";
-import NavItemsLayout from "./component/NavItemsLayout";
-import HeroNavButton from "./component/HeroNavButton";
-import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
 import { useRouter } from "next/navigation";
+import { FiShoppingCart } from "react-icons/fi";
+import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
-import { BsShop } from "react-icons/bs";
+import HeroNavButton from "./component/HeroNavButton";
+import NavItemsLayout from "./component/NavItemsLayout";
 
 const Header = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen:isCartOpen, onOpen:onCartOpen, onClose:onCartClose } = useDisclosure();
   const router = useRouter();
 
   return (
@@ -190,17 +191,19 @@ const Header = () => {
               <NavItemsLayout />
             </Flex>
             <IconButton
-              icon={<BsShop fontSize="24px" />}
+              icon={<FiShoppingCart  fontSize="24px" />}
               aria-label="Cart"
               variant="ghost"
               color="gray.600"
               _hover={{ color: "orange.500", bg: "gray.50" }}
-              onClick={() => router.push("/cart")}
+              // onClick={() => router.push("/cart")}
+              onClick={onCartOpen}
             />
             <HeroNavButton />
           </Flex>
         </Flex>
       </Box>
+      <CartDrawer isOpen={isCartOpen} onClose={onCartClose}  />
     </Box>
   );
 };

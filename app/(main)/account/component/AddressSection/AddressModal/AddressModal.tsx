@@ -15,7 +15,7 @@ import {
     Checkbox,
   } from "@chakra-ui/react";
   
-  const AddressForm = ({ currentAddress, onSubmit }) => {
+  export const AddressForm = ({ currentAddress, onSubmit }) => {
     return (
       <form onSubmit={onSubmit} id="address-form">
         <VStack spacing={5} align="stretch">
