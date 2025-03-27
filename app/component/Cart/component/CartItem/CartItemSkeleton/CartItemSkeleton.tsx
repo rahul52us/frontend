@@ -21,7 +21,7 @@ const CartItemSkeleton = () => {
           <Skeleton startColor={startColor} endColor={endColor} height="14px" width="60%" />
         </Box>
         
-        {/* Quantity controls Skeleton */}
+        {/* Quantity controls Skeleton */}                                                                                                                                                                                  
         <HStack 
           borderWidth="1px" 
           borderRadius="md" 
