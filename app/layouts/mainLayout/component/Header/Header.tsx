@@ -23,10 +23,15 @@ import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDraw
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
 import HeroNavButton from "./component/HeroNavButton";
 import NavItemsLayout from "./component/NavItemsLayout";
+import SearchInput from "./element/SearchInput";
 
 const Header = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen:isCartOpen, onOpen:onCartOpen, onClose:onCartClose } = useDisclosure();
+  const {
+    isOpen: isCartOpen,
+    onOpen: onCartOpen,
+    onClose: onCartClose,
+  } = useDisclosure();
   const router = useRouter();
 
   return (
@@ -43,15 +48,13 @@ const Header = () => {
         transition="background 0.3s ease"
         _hover={{ bg: "gray.700" }}
       >
-<Text as="span">🛍️ Shop directly from local vendors and grab exclusive deals!</Text>
-</Box>
+        <Text as="span">
+          🛍️ Shop directly from local vendors and grab exclusive deals!
+        </Text>
+      </Box>
 
       {/* Main Header */}
-      <Box
-        bg="white"
-        boxShadow="0 2px 12px rgba(0, 0, 0, 0.06)"
-        borderBottom="1px solid"
-        borderColor="gray.100"
+      <Box bgGradient="linear(to-b, #5a97c2 10%, #89c2d9 35%, #b0dff7 65%, #f0faff 100%)"
       >
         {/* Mobile Header */}
         <Flex
@@ -129,7 +132,10 @@ const Header = () => {
                     placeholder="Search products..."
                     borderRadius="full"
                     borderColor="gray.200"
-                    _focus={{ borderColor: "orange.400", boxShadow: "0 0 0 1px orange.400" }}
+                    _focus={{
+                      borderColor: "orange.400",
+                      boxShadow: "0 0 0 1px orange.400",
+                    }}
                   />
                 </InputGroup>
               </Box>
@@ -171,18 +177,7 @@ const Header = () => {
 
           {/* Search Bar */}
           <Flex flex={1} mx={{ md: 6, lg: 10 }} maxW="500px">
-            <InputGroup>
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="gray.400" />
-              </InputLeftElement>
-              <Input
-                placeholder="Search products, categories..."
-                borderRadius="full"
-                borderColor="gray.200"
-                bg="gray.50"
-                _focus={{ borderColor: "orange.400", boxShadow: "0 0 0 1px orange.400", bg: "white" }}
-              />
-            </InputGroup>
+            <SearchInput />
           </Flex>
 
           {/* Navigation and Icons */}
@@ -191,7 +186,7 @@ const Header = () => {
               <NavItemsLayout />
             </Flex>
             <IconButton
-              icon={<FiShoppingCart  fontSize="24px" />}
+              icon={<FiShoppingCart fontSize="24px" />}
               aria-label="Cart"
               variant="ghost"
               color="gray.600"
@@ -203,7 +198,7 @@ const Header = () => {
           </Flex>
         </Flex>
       </Box>
-      <CartDrawer isOpen={isCartOpen} onClose={onCartClose}  />
+      <CartDrawer isOpen={isCartOpen} onClose={onCartClose} />
     </Box>
   );
 };

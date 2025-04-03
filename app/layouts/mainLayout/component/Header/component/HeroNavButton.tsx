@@ -1,25 +1,31 @@
 "use client";
-import { Box } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import CustomButton from "../../../../../component/common/CustomButton/CustomButton";
 
 const HeroNavButton = () => {
   const router = useRouter();
 
   return (
     <Box display="flex" gap={2}>
-      <CustomButton
-        width="auto"
+      <Button
         size="md"
         variant="outline"
-        borderColor="transparent" // Make border transparent for a smooth gradient look
-        color="transparent" // Make text transparent to show the gradient
-        bgGradient="linear(to-r, teal.500, blue.500)" // Smooth gradient
-        backgroundClip="text" // Make background clip the text color
-        onClick={() => router.push('/login')}
+        border="2px solid transparent" // Keep border minimal initially
+        fontWeight="medium"
+        bgGradient="linear(to-r, teal.400, blue.500)"
+        backgroundClip="text" // Apply gradient to text
+        _hover={{
+          color: "white",
+          bgGradient: "linear(to-r, blue.500, teal.400)", // Reverse gradient on hover
+          borderColor: "blue.400", // Add border effect
+          transform: "scale(1.07)", // Slight scale-up effect
+          boxShadow: "lg", // Add subtle shadow for depth
+        }}
+        transition="all 0.3s ease-in-out"
+        onClick={() => router.push("/login")}
       >
         Sign In
-      </CustomButton>
+      </Button>
     </Box>
   );
 };
