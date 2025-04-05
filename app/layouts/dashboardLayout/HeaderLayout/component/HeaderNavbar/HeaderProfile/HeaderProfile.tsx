@@ -26,7 +26,7 @@ import {
   FaLock,
 } from "react-icons/fa";
 import stores from "../../../../../../store/stores";
-import { authentication, main } from "../../../../../../config/utils/routes";
+import { authentication, dashboard, main } from "../../../../../../config/utils/routes";
 import { useRouter, usePathname } from "next/navigation";
 import { WEBSITE_TITLE } from "../../../../../../config/utils/variables";
 import ChangePasswordModal from "./component/ChangePasswordModal";
@@ -74,8 +74,8 @@ const HeaderProfile = observer(() => {
                   <FaHome style={{ marginRight: "8px" }} /> Home
                 </MenuItem>
               )}
-              <MenuItem onClick={() => router.push(main.profile)}>
-                <FaCog style={{ marginRight: "8px" }} /> Profile Settings
+              <MenuItem onClick={() => router.push(dashboard.shop)}>
+                <FaCog style={{ marginRight: "8px" }} /> {user?.company?.name}
               </MenuItem>
               <MenuItem onClick={onOpen}>
                 <FaLock style={{ marginRight: "8px" }} /> Change Password

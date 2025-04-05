@@ -13,6 +13,7 @@ const dashboardName = "dashboard";
 
 export const dashboard = {
   home: `/${dashboardName}`,
+  shop:`/${dashboardName}/shop`,
   calender: `/${dashboardName}/calender`,
   testimonial: `/${dashboardName}/testimonial`,
   videos: `/${dashboardName}/videos`,
