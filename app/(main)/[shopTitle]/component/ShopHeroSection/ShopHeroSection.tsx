@@ -1,25 +1,58 @@
-import { Badge, Box, Button, Container, Divider, Flex, Heading, Image, Text } from '@chakra-ui/react'
+import {
+  Badge,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Flex,
+  Heading,
+  Image,
+  Text,
+} from '@chakra-ui/react'
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa'
 
-const ShopHeroSection = ({ shopData }: any) => {
+interface ShopData {
+  name: string
+  coverImage?: { url: string }
+  logo?: { url: string }
+  ratings?: {
+    average?: number
+    total?: number
+  }
+  location?: {
+    city?: string
+    state?: string
+  }
+  categories?: string[]
+  operatingHours?: {
+    day: string
+    open: string
+    close: string
+  }[]
+}
+
+const ShopHeroSection = ({ shopData }: { shopData: ShopData }) => {
   const getCurrentDayHours = () => {
+    if (!shopData?.operatingHours) return null
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const today = days[new Date().getDay()]
-    return shopData.operatingHours.find((day) => day.day === today)
+    return shopData.operatingHours.find((day) => day.day === today) || null
   }
+
   const todayHours = getCurrentDayHours()
 
-  const isOpen24Hours = () => {
+  const isOpenNow = () => {
     if (!todayHours) return false
     const now = new Date()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
+    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+
     const [openHour, openMinute] = todayHours.open.split(":").map(Number)
     const [closeHour, closeMinute] = todayHours.close.split(":").map(Number)
-    const currentTime = currentHour * 60 + currentMinute
-    const openTime = openHour * 60 + openMinute
-    const closeTime = closeHour * 60 + closeMinute
-    return currentTime >= openTime && currentTime < closeTime
+
+    const openMinutes = openHour * 60 + openMinute
+    const closeMinutes = closeHour * 60 + closeMinute
+
+    return currentMinutes >= openMinutes && currentMinutes < closeMinutes
   }
 
   return (
@@ -31,8 +64,8 @@ const ShopHeroSection = ({ shopData }: any) => {
           w="full"
         >
           <Image
-            src={shopData.coverImage?.url}
-            alt={`${shopData.name} cover`}
+            src={shopData?.coverImage?.url || "/fallback-cover.jpg"}
+            alt={`${shopData?.name || "Shop"} cover`}
             w="full"
             h="full"
             objectFit="cover"
@@ -42,7 +75,7 @@ const ShopHeroSection = ({ shopData }: any) => {
             inset="0"
             bgGradient={{
               base: "linear(to-t, blackAlpha.800, blackAlpha.400)",
-              md: "linear(to-t, black, 20%,transparent)"
+              md: "linear(to-t, black, 20%,transparent)",
             }}
           />
         </Box>
@@ -75,8 +108,8 @@ const ShopHeroSection = ({ shopData }: any) => {
               mb={{ base: 2, md: 0 }}
             >
               <Image
-                src={shopData?.logo?.url}
-                alt={shopData.name}
+                src={shopData?.logo?.url || "/fallback-logo.jpg"}
+                alt={shopData?.name || "Shop Logo"}
                 h="full"
                 w="full"
                 objectFit="cover"
@@ -96,7 +129,7 @@ const ShopHeroSection = ({ shopData }: any) => {
                 fontWeight="bold"
                 lineHeight="tight"
               >
-                {shopData.name}
+                {shopData?.name || "Unnamed Shop"}
               </Heading>
 
               <Flex
@@ -110,10 +143,10 @@ const ShopHeroSection = ({ shopData }: any) => {
                   <Flex alignItems="center" gap={1}>
                     <Box as={FaStar} color="orange.400" boxSize={{ base: 4, md: 5 }} />
                     <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>
-                      {shopData.ratings.average}
+                      {shopData?.ratings?.average?.toFixed(1) || "0.0"}
                     </Text>
                     <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
-                      ({shopData.ratings.total} reviews)
+                      ({shopData?.ratings?.total || 0} reviews)
                     </Text>
                   </Flex>
 
@@ -127,7 +160,8 @@ const ShopHeroSection = ({ shopData }: any) => {
                   <Flex alignItems="center" fontSize={{ base: "xs", md: "sm" }}>
                     <Box as={FaMapMarkerAlt} mr={1} color="gray.300" boxSize={{ base: 3, md: 4 }} />
                     <Text>
-                      {shopData.location.city}, {shopData.location.state}
+                      {shopData?.location?.city || "Unknown City"},{" "}
+                      {shopData?.location?.state || "Unknown State"}
                     </Text>
                   </Flex>
                 </Flex>
@@ -139,22 +173,28 @@ const ShopHeroSection = ({ shopData }: any) => {
                 mt={2}
                 justify={{ base: "center", md: "flex-start" }}
               >
-                {shopData.categories.map((category, index) => (
-                  <Badge
-                    key={index}
-                    colorScheme="whiteAlpha"
-                    variant="subtle"
-                    rounded="full"
-                    py={0.5}
-                    px={2}
-                    fontSize={{ base: "xs", md: "sm" }}
-                  >
-                    {category}
-                  </Badge>
-                ))}
+                {shopData?.categories?.length ? (
+                  shopData.categories.map((category, index) => (
+                    <Badge
+                      key={index}
+                      colorScheme="whiteAlpha"
+                      variant="subtle"
+                      rounded="full"
+                      py={0.5}
+                      px={2}
+                      fontSize={{ base: "xs", md: "sm" }}
+                    >
+                      {category}
+                    </Badge>
+                  ))
+                ) : (
+                  <Text fontSize="xs" color="gray.300">
+                    No categories listed
+                  </Text>
+                )}
               </Flex>
 
-              {/* Mobile-specific status and button */}
+              {/* Mobile status and button */}
               <Flex
                 alignItems="center"
                 justifyContent="center"
@@ -164,14 +204,14 @@ const ShopHeroSection = ({ shopData }: any) => {
                 flexWrap="wrap"
               >
                 <Badge
-                  colorScheme={isOpen24Hours() ? "green" : "orange"}
-                  variant={isOpen24Hours() ? "solid" : "outline"}
+                  colorScheme={isOpenNow() ? "green" : "orange"}
+                  variant={isOpenNow() ? "solid" : "outline"}
                   fontSize="xs"
                   py={1}
                   px={2}
                   rounded="full"
                 >
-                  {isOpen24Hours() ? "Open" : "Closed"}
+                  {isOpenNow() ? "Open" : "Closed"}
                 </Badge>
                 <Button
                   colorScheme="blue"
@@ -196,18 +236,15 @@ const ShopHeroSection = ({ shopData }: any) => {
               flexShrink={0}
             >
               <Badge
-                colorScheme={isOpen24Hours() ? "green" : "orange"}
-                variant={isOpen24Hours() ? "solid" : "outline"}
+                colorScheme={isOpenNow() ? "green" : "orange"}
+                variant={isOpenNow() ? "solid" : "outline"}
                 fontSize="sm"
                 py={2}
                 px={3}
               >
-                {isOpen24Hours() ? "Open Now" : "Closed"}
+                {isOpenNow() ? "Open Now" : "Closed"}
               </Badge>
-              <Button
-                colorScheme="blue"
-                size="md"
-              >
+              <Button colorScheme="blue" size="md">
                 Contact Shop
               </Button>
             </Flex>

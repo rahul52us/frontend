@@ -14,7 +14,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
         name="contactInfo.phone"
         required
         error={errors.contactInfo?.phone}
-        value={values.contactInfo.phone}
+        value={values?.contactInfo?.phone}
         onChange={(e) => setFieldValue("contactInfo.phone", e.target.value)}
       />
       <CustomInput
@@ -22,8 +22,8 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
         label="Email"
         name="contactInfo.email"
         type="text"
-        error={errors.contactInfo?.email}
-        value={values.contactInfo.email}
+        error={errors?.contactInfo?.email}
+        value={values?.contactInfo?.email}
         onChange={(e) => setFieldValue("contactInfo.email", e.target.value)}
       />
       <CustomInput
@@ -32,7 +32,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
         name="contactInfo.website"
         type="url"
         error={errors.contactInfo?.website}
-        value={values.contactInfo.website}
+        value={values?.contactInfo?.website}
         onChange={(e) => setFieldValue("contactInfo.website", e.target.value)}
       />
     </VStack>
@@ -47,7 +47,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
           name="contactInfo.socialMedia.facebook"
           type="url"
           error={errors.contactInfo?.socialMedia?.facebook}
-          value={values.contactInfo.socialMedia.facebook}
+          value={values?.contactInfo?.socialMedia?.facebook}
           onChange={(e) => setFieldValue("contactInfo.socialMedia.facebook", e.target.value)}
         />
       </GridItem>
@@ -58,7 +58,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
           name="contactInfo.socialMedia.instagram"
           type="url"
           error={errors.contactInfo?.socialMedia?.instagram}
-          value={values.contactInfo.socialMedia.instagram}
+          value={values?.contactInfo?.socialMedia?.instagram}
           onChange={(e) => setFieldValue("contactInfo.socialMedia.instagram", e.target.value)}
         />
       </GridItem>
@@ -69,7 +69,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
           name="contactInfo.socialMedia.twitter"
           type="url"
           error={errors.contactInfo?.socialMedia?.twitter}
-          value={values.contactInfo.socialMedia.twitter}
+          value={values?.contactInfo?.socialMedia?.twitter}
           onChange={(e) => setFieldValue("contactInfo.socialMedia.twitter", e.target.value)}
         />
       </GridItem>
@@ -80,7 +80,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
           name="contactInfo.socialMedia.linkedin"
           type="url"
           error={errors.contactInfo?.socialMedia?.linkedin}
-          value={values.contactInfo.socialMedia.linkedin}
+          value={values?.contactInfo?.socialMedia?.linkedin}
           onChange={(e) => setFieldValue("contactInfo.socialMedia.linkedin", e.target.value)}
         />
       </GridItem>
@@ -91,7 +91,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
           name="contactInfo.socialMedia.youtube"
           type="url"
           error={errors.contactInfo?.socialMedia?.youtube}
-          value={values.contactInfo.socialMedia.youtube}
+          value={values?.contactInfo?.socialMedia?.youtube}
           onChange={(e) => setFieldValue("contactInfo.socialMedia.youtube", e.target.value)}
         />
       </GridItem>

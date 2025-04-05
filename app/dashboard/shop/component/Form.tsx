@@ -33,6 +33,7 @@ import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
 import { useParams } from "next/navigation";
 import { dummyData } from "./utils/constant";
+import { toJS } from "mobx";
 
 // Validation Schema (unchanged)
 const validationSchema = Yup.object({
@@ -72,6 +73,7 @@ const validationSchema = Yup.object({
     })
   ),
   gallery: Yup.array().of(Yup.mixed()),
+  categories: Yup.array().of(Yup.string()),
   contactInfo: Yup.object({
     phone: Yup.string().required("Phone is required"),
     email: Yup.string().email("Invalid email format").optional(),
@@ -110,8 +112,11 @@ const ShopForm = observer(() => {
   const [showError, setShowError] = useState(false);
   const {
     companyStore: { updateCompanyDetails },
-    auth: { openNotification },
+    auth: { openNotification, user },
   } = stores;
+
+  console.log(toJS(user))
+
   const toast = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -128,7 +133,7 @@ const ShopForm = observer(() => {
       setError(null); // Reset error before fetching
 
       try {
-        const data = await getSingleShop({ title: "shop" });
+        const data = await getSingleShop({ title: user?.company?.name, status : user?.company?.shopStatus });
 
         if (!data?.data) {
           setError("Shop not found");
@@ -216,12 +221,12 @@ const ShopForm = observer(() => {
 
       formData.gallery = updatedGallery.filter(Boolean);
 
-      updateCompanyDetails({...formData, _id : initialValues?._id})
+      updateCompanyDetails({...formData, _id : user?.company?._id, shopStatus : 'active'})
         .then((data: any) => {
           openNotification({
             title: "Successfully Updated",
             message: data.message,
-            type: "success",
+            type: "success"
           });
           toast({
             title: "Shop Saved",
@@ -295,7 +300,7 @@ const ShopForm = observer(() => {
         <HStack justify="space-between" align="center">
           <Heading
             as="h3"
-            size={{ base: "lg", md: "xl" }}
+            size={{ base: "sm", md: "sm" }}
             color="gray.800"
             fontWeight="bold"
             letterSpacing="wide"
@@ -313,7 +318,8 @@ const ShopForm = observer(() => {
           onSubmit={onSubmit}
         >
           {({ values, errors, setFieldValue, isSubmitting }) => {
-            console.log("the values are", values);
+            console.log(errors)
+            console.log('the values are', values)
             return (
               <Form>
                 <Tabs

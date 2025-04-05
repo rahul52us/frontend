@@ -93,13 +93,13 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
           position="absolute"
           top="10px"
           right="10px"
-          colorScheme={shop.shopStatus === "active" ? "green" : "red"}
+          colorScheme={shop?.shopStatus === "active" ? "green" : "red"}
           px={3}
           py={1}
           borderRadius="full"
           fontSize="xs"
         >
-          {shop.shopStatus.charAt(0).toUpperCase() + shop.shopStatus.slice(1)}
+          {shop?.shopStatus?.charAt(0).toUpperCase() + shop?.shopStatus?.slice(1)}
         </Badge>
       </Box>
 
@@ -126,37 +126,37 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
               router.push(`/${shop.name?.replace(/\s+/g, "-").toLowerCase()}`);
             }}
           >
-            {shop.name}
+            {shop?.name}
           </Text>
         </HStack>
 
         {/* Categories */}
-        <Flex wrap="wrap" gap={2}>
-          {shop.categories.slice(0, 3).map((category, index) => (
+        {Array.isArray(shop?.categories) && <Flex wrap="wrap" gap={2}>
+          {shop?.categories?.slice(0, 3).map((category, index) => (
             <Badge key={index} colorScheme="teal" px={2} py={0.5} fontSize="xs">
               {category}
             </Badge>
           ))}
-        </Flex>
+        </Flex>}
 
         {/* Location */}
         <HStack spacing={2} color="gray.600" fontSize="sm">
           <FaMapMarkerAlt color="teal" />
           <Text fontWeight="medium">
-            {`${shop.location.city}, ${shop.location.state}`}
+            {`${shop?.location?.city}, ${shop?.location?.state}`}
           </Text>
         </HStack>
 
         {/* Description */}
         <Text fontSize="sm" color="gray.500" noOfLines={2}>
-          {shop.description}
+          {shop?.description}
         </Text>
 
         {/* Contact */}
         <HStack spacing={3} w="full">
           <Tooltip label="Call Shop">
             <Link
-              href={`tel:${shop.contactInfo.phone}`}
+              href={`tel:${shop?.contactInfo?.phone}`}
               display="flex"
               alignItems="center"
               color="teal.600"
@@ -165,7 +165,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
               _hover={{ color: "teal.700" }}
             >
               <FaPhoneAlt />
-              <Text ml={2}>{shop.contactInfo.phone}</Text>
+              <Text ml={2}>{shop?.contactInfo?.phone}</Text>
             </Link>
           </Tooltip>
         </HStack>

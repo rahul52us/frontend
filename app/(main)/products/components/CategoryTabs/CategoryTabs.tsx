@@ -100,8 +100,7 @@ const CreativeTabs = () => {
           justifyContent="center"
           gap={{ base: 1, md: 2 }}
           p={{ base: 1.5, md: 2 }}
-          bgGradient="linear(to-r, purple.100, purple.200)"
-          borderRadius="lg"
+          bgGradient="linear(to-b, #5a97c2 10%, #89c2d9 35%, #b0dff7 65%, #f0faff 100%)"           borderRadius="lg"
           boxShadow="sm"
           transition="all 0.3s ease"
         >

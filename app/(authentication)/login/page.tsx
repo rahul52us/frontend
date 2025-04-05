@@ -104,7 +104,7 @@ const LoginForm = observer(() => {
           type: "success",
         });
         sessionStorage.clear();
-        router.push("/dashboard/company-details/update");
+        router.push("/dashboard/shop");
       })
       .catch((err) => {
         openNotification({

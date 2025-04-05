@@ -31,6 +31,7 @@ const signupSchema = Yup.object({
     .min(2, "Name must be at least 2 characters")
     .required("Name is required"),
   email: Yup.string().email("Invalid email address"),
+  companyName: Yup.string().min(3,'Company Name minium should of 3 character').required("Company Name is required").trim(),
   phone: Yup.string()
     .matches(/^[0-9]{10}$/, "Phone must be 10 digits")
     .required("Phone is required"),
@@ -106,7 +107,7 @@ const SignupForm = observer(() => {
       .finally(() => actions.setSubmitting(false));
   };
 
-  const handleOtpSubmit = (values, actions) => {
+  const handleOtpSubmit = (values : any, actions : any) => {
     verifyRegisterOtp({ ...values, token: signInfo?.token })
       .then(() => {
         openNotification({
@@ -115,7 +116,7 @@ const SignupForm = observer(() => {
           type: "success",
         });
         sessionStorage.clear();
-        router.push("/dashboard/company-details/update");
+        router.push("/dashboard/shop");
       })
       .catch((err) => {
         openNotification({
@@ -172,7 +173,7 @@ const SignupForm = observer(() => {
                 <Formik
                   initialValues={
                     step === 1
-                      ? { name: "", email: "", phone: "", category: "" }
+                      ? { name: "", email: "", phone: "", category: "", companyName: "edukateus" }
                       : { otp: "" }
                   }
                   validationSchema={step === 1 ? signupSchema : otpSchema}
@@ -214,6 +215,17 @@ const SignupForm = observer(() => {
                               showError={showError.form}
                               onChange={(e) => setFieldValue("phone", e.target.value)}
                               error={errors.phone}
+                            />
+                            <CustomInput
+                              type="text"
+                              name="companyName"
+                              label="Company Name"
+                              required={true}
+                              placeholder="Enter your Shop Name"
+                              value={values.companyName}
+                              showError={showError.form}
+                              onChange={(e) => setFieldValue("companyName", e.target.value)}
+                              error={errors.companyName}
                             />
                             <CustomInput
                               type="select"

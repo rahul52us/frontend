@@ -33,9 +33,9 @@ class CompanyStores {
   updateCompanyDetails = async (payload: any) => {
     this.isLoading = true;
     try {
-      const response = await axios.post("/company/update", {
+      const response = await axios.put("/company", {
         ...payload,
-        company: authStore.company
+        company: payload?._id
       });
       return response;
     } catch (err: any) {

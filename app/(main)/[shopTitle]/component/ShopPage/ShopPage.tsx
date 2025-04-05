@@ -34,29 +34,33 @@ const ShopPage = observer(({ shopData }: any) => {
       "Saturday",
     ];
     const today = days[new Date().getDay()];
-    return shopData.operatingHours.find((day) => day.day === today);
+    return shopData?.operatingHours?.find((day: any) => day.day === today) ?? null;
   };
 
   const isShopClosed = () => {
-    const todayDate = new Date().toISOString().split("T")[0]; // Get current date in "YYYY-MM-DD" format
-
-    return shopData.closedDates.includes(todayDate);
+    const todayDate = new Date().toISOString().split("T")[0];
+    return Array.isArray(shopData?.closedDates)
+      ? shopData.closedDates.includes(todayDate)
+      : false;
   };
 
   const todayHours = getCurrentDayHours();
+
   const isOpen24Hours = () => {
     if (isShopClosed()) return false;
-    if (!todayHours) return false;
+    if (!todayHours?.open || !todayHours?.close) return false;
+
+    const openParts = todayHours.open.split(":").map(Number);
+    const closeParts = todayHours.close.split(":").map(Number);
+
+    if (openParts.length !== 2 || closeParts.length !== 2 || openParts.some(isNaN) || closeParts.some(isNaN)) {
+      return false;
+    }
 
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const [openHour, openMinute] = todayHours.open.split(":").map(Number);
-    const [closeHour, closeMinute] = todayHours.close.split(":").map(Number);
-
-    const currentTime = currentHour * 60 + currentMinute;
-    const openTime = openHour * 60 + openMinute;
-    const closeTime = closeHour * 60 + closeMinute;
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const openTime = openParts[0] * 60 + openParts[1];
+    const closeTime = closeParts[0] * 60 + closeParts[1];
 
     return currentTime >= openTime && currentTime < closeTime;
   };
@@ -77,7 +81,7 @@ const ShopPage = observer(({ shopData }: any) => {
         <Flex h="14" alignItems="center" px="4">
           <Flex flex="1" justify="center">
             <Heading as="h1" size="md" fontWeight="semibold">
-              {shopData.name}
+              {shopData?.name ?? "Shop"}
             </Heading>
           </Flex>
           <Badge
@@ -121,7 +125,7 @@ const ShopPage = observer(({ shopData }: any) => {
           gap={{ base: 4, md: 3, lg: 4 }}
           justifyItems="center"
         >
-          {uniqueProducts.map((product) => (
+          {(Array.isArray(uniqueProducts) ? uniqueProducts : []).map((product) => (
             <ProductCard
               key={`${product.id}-${product.name}`}
               product={product}

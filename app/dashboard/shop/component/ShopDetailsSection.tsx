@@ -79,6 +79,17 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             showError={showError}
           />
         </SimpleGrid>
+        <CustomInput
+            label="Categories"
+            name="categories"
+            placeholder="Add Category"
+            required
+            type="tags"
+            error={errors.categories}
+            value={values.categories}
+            onChange={(e) => setFieldValue("categories", e)}
+            showError={showError}
+          />
       </VStack>
 
       <Divider my={6} />

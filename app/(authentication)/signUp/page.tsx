@@ -5,7 +5,7 @@ import SignUpForm from './components/SignUpComponent'
 const page = () => {
   return (
     <Box>
-        <SignUpForm/>
+        <SignUpForm />
     </Box>
   )
 }

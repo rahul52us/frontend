@@ -1,10 +1,18 @@
 import { Box, Button, Collapse, Text, Heading, Flex, Tag, TagLabel } from "@chakra-ui/react";
 import { useState } from "react";
 
-const ShopAbout = ({ shopData }) => {
+type ShopAboutProps = {
+  shopData: {
+    about?: string;
+    tags?: string[];
+  };
+};
+
+const ShopAbout = ({ shopData }: ShopAboutProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const previewText = shopData.about.slice(0, 150); // Show first 150 characters
+  const aboutText = shopData.about || "";
+  const previewText = aboutText.slice(0, 150);
 
   return (
     <Box mb="6">
@@ -13,29 +21,38 @@ const ShopAbout = ({ shopData }) => {
       </Heading>
 
       {/* About Preview Text */}
-      <Box mb="4">
-        <Text color="gray.600" fontSize={{base:"sm",lg:"md"}} mb="2">
-          {previewText}...
-        </Text>
-        <Collapse in={isExpanded} animateOpacity>
-          <Text color="gray.600" fontSize={{base:"sm",lg:"md"}}>{shopData.about.slice(150)}</Text>
-        </Collapse>
+      {aboutText.length > 0 ? (
+        <Box mb="4">
+          <Text color="gray.600" fontSize={{ base: "sm", lg: "md" }} mb="2">
+            {previewText}
+            {aboutText.length > 150 && "..."}
+          </Text>
 
-        {/* Toggle button for expanded text */}
-        <Button
-          size="sm"
-          variant="link"
-          color="blue.500"
-          onClick={() => setIsExpanded(!isExpanded)}
-          mt="2"
-          _focus={{ boxShadow: "none" }} // Remove focus outline on click
-        >
-          {isExpanded ? "Read Less" : "Read More"}
-        </Button>
-      </Box>
+          <Collapse in={isExpanded} animateOpacity>
+            <Text color="gray.600" fontSize={{ base: "sm", lg: "md" }}>
+              {aboutText.slice(150)}
+            </Text>
+          </Collapse>
 
-      {/* Optional Tags Section (Can be removed if not needed) */}
-      {shopData.tags && shopData.tags.length > 0 && (
+          {aboutText.length > 150 && (
+            <Button
+              size="sm"
+              variant="link"
+              color="blue.500"
+              onClick={() => setIsExpanded(!isExpanded)}
+              mt="2"
+              _focus={{ boxShadow: "none" }}
+            >
+              {isExpanded ? "Read Less" : "Read More"}
+            </Button>
+          )}
+        </Box>
+      ) : (
+        <Text color="gray.500" fontSize="sm">No information available.</Text>
+      )}
+
+      {/* Tags Section */}
+      {Array.isArray(shopData.tags) && shopData.tags.length > 0 && (
         <Box mt="6">
           <Heading as="h3" size="md" fontWeight="medium" mb="2">
             Tags

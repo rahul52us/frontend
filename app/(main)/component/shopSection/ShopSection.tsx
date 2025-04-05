@@ -18,7 +18,7 @@ const ShopSection = observer(() => {
   } = stores;
 
   const [allShops, setAllShops] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [currentPage] = useState<number>(1);
   const [searchQuery] = useState<string>("");
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);

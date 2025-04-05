@@ -4,9 +4,9 @@ export const dummyData = {
     deletedFiles : [],
     closedDates : [],
     description:
-      "Premium handcrafted goods made with sustainable materials and traditional techniques. Premium handcrafted goods made with sustainable materials and traditional techniques. Premium handcrafted goods made with sustainable materials and traditional techniques. Premium handcrafted goods made with sustainable materials and traditional techniques.",
+      "",
     about:
-      "Founded in 2015, Artisan Crafts & Co. brings together skilled artisans from around the world. We believe in preserving traditional craftsmanship while embracing modern design sensibilities. Each product tells a story and supports local communities.",
+      "",
     categories: ["Home Decor", "Furniture", "Textiles", "Ceramics"],
     tags: ["handmade", "sustainable", "eco-friendly", "fair-trade", "artisanal"],
     images: {
@@ -20,25 +20,25 @@ export const dummyData = {
     },
     gallery: [],
     location: {
-      address: "123 Craft Avenue",
-      city: "Portland",
-      state: "Oregon",
-      postalCode: "97201",
-      country: "USA",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
       coordinates: {
-        latitude: 45.523064,
-        longitude: -122.676483,
+        latitude: 0,
+        longitude: -0,
       },
       additionalLocations: [
         {
-          address: "456 Artisan Street",
-          city: "Seattle",
-          state: "Washington",
-          postalCode: "98101",
-          country: "USA",
+          address: "",
+          city: "",
+          state: "",
+          postalCode: "",
+          country: "",
           coordinates: {
-            latitude: 47.606209,
-            longitude: -122.332071,
+            latitude: 0,
+            longitude: -0,
           },
         },
       ],
