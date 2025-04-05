@@ -49,7 +49,7 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
             src="/images/auth/gridImages.png"
             alt="Top Clinical Psychologist Doctors in Noida"
             width={{ base: '50%', md: '70%' }}
-            maxW="450px"
+            maxW="400px"
           />
         </Box>
       )}
@@ -60,7 +60,7 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
         p={{ base: 6, md: 8 }}
         borderRadius="md"
         width={{ base: '100%', md: '40%', lg: '45%' }}
-        maxW="550px"
+        // maxW="550px"
         display="flex"
         flexDirection="column"
         justifyContent="center"

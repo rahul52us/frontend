@@ -55,7 +55,7 @@ const ProductsListSection = observer(() => {
         <CommonHeading
           heading="New Shops Added"
           subheading="Discover the latest shops and explore their offerings"
-          mb={{ base: 6, md: 6 }}
+          mb={{ base: 6, md: 8 }}
           color={headingColor}
           align={{ base: "center", md: "center" }}
         />

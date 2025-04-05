@@ -5,8 +5,8 @@ export const navItems = [
         title: "Shops",
         link: "/shops",
         children: [
-            { title: "Local Shops", link: "/shops/local" },
-            { title: "Online Shops", link: "/shops/online" },
+            { title: "Local Shops", link: "/shops/" },
+            { title: "Online Shops", link: "/shops" },
         ],
     },
     {

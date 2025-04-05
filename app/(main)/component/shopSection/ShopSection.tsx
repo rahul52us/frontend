@@ -50,7 +50,7 @@ const ShopSection = observer(() => {
   return (
     <Box>
       {/* Display Shop Cards */}
-      <SimpleGrid columns={[1, 2, 3, 4]} spacing={2}>
+      <SimpleGrid columns={[1, 1, 2, 3]} gap={8} spacing={2}>
         {allShops.map((shop, index) => (
           <ShopCard shop={shop} key={index} onClick={() => {}} />
         ))}

@@ -13,6 +13,7 @@ import {
   Fade,
   HStack,
   Flex,
+  Grid,
 } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
@@ -31,7 +32,7 @@ const signupSchema = Yup.object({
     .min(2, "Name must be at least 2 characters")
     .required("Name is required"),
   email: Yup.string().email("Invalid email address"),
-  companyName: Yup.string().min(3,'Company Name minium should of 3 character').required("Company Name is required").trim(),
+  companyName: Yup.string().min(3, "Company Name must be at least 3 characters").required("Company Name is required").trim(),
   phone: Yup.string()
     .matches(/^[0-9]{10}$/, "Phone must be 10 digits")
     .required("Phone is required"),
@@ -56,6 +57,7 @@ const SignupForm = observer(() => {
   const {
     auth: { register, verifyRegisterOtp, openNotification },
   } = stores;
+
   const [step, setStep] = useState(1);
   const [showError, setShowError] = useState({ form: false, otp: false });
   const [signInfo, setSignInfo] = useState(null);
@@ -65,7 +67,7 @@ const SignupForm = observer(() => {
   const cardBg = useColorModeValue("white", "gray.800");
   const headingColor = useColorModeValue("gray.800", "white");
   const textColor = useColorModeValue("gray.600", "gray.400");
-  const buttonGradient = "linear(to-r, blue.500, purple.600)"; // Matching LoginForm
+  const buttonGradient = "linear(to-r, blue.500, purple.600)";
 
   useEffect(() => {
     const savedInfo = sessionStorage.getItem("signInfo");
@@ -107,7 +109,7 @@ const SignupForm = observer(() => {
       .finally(() => actions.setSubmitting(false));
   };
 
-  const handleOtpSubmit = (values : any, actions : any) => {
+  const handleOtpSubmit = (values, actions) => {
     verifyRegisterOtp({ ...values, token: signInfo?.token })
       .then(() => {
         openNotification({
@@ -129,12 +131,12 @@ const SignupForm = observer(() => {
   };
 
   return (
-    <Box overflow={'hidden'}>
+    <Box overflow="hidden" px={{ base: 4, md: 0 }}>
       <Fade in>
         <MotionCard
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
           bg={cardBg}
           borderRadius="3xl"
           boxShadow="2xl"
@@ -142,38 +144,31 @@ const SignupForm = observer(() => {
           border="1px"
           borderColor={useColorModeValue("gray.100", "gray.700")}
         >
-          <Box bgGradient={buttonGradient} h="8px" width="100%" />
-          <CardBody p={{ base: 6, md: 10 }}>
-            <MotionBox
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              <VStack spacing={4}>
+          <Box justifyContent="center" bgGradient={buttonGradient} h="8px" width="100%" />
+          <CardBody>
+            <MotionBox initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <VStack spacing={3} align="stretch">
                 <Heading
-                  size={{ base: "lg", md: "xl" }}
-                  fontWeight="extrabold"
+                  size={{ base: "xl", md: "xl" }}
+                  fontWeight="bold"
                   textAlign="center"
                   color={headingColor}
-                  bgGradient="linear(to-r, blue.500, purple.500)"
+                  lineHeight="1.2"
+                  bgGradient="linear(to-r, blue.500, purple.600)"
                   bgClip="text"
                 >
                   {step === 1 ? "Join BusinessSahayata" : "Verify Your OTP"}
                 </Heading>
-                <Text
-                  textAlign="center"
-                  color={textColor}
-                  fontSize={{ base: "sm", md: "md" }}
-                  maxW="sm"
-                >
+                <Text textAlign="center" color={textColor} fontSize={{ base: "sm", md: "md" }} maxW="lg" mx="auto">
                   {step === 1
                     ? "Sign up to unlock your business potential"
                     : `A 6-digit OTP was sent to ${signInfo?.phone?.slice(0, 2)}******${signInfo?.phone?.slice(-2)}`}
                 </Text>
+
                 <Formik
                   initialValues={
                     step === 1
-                      ? { name: "", email: "", phone: "", category: "", companyName: "edukateus" }
+                      ? { name: "", email: "", phone: "", category: "", companyName: "" }
                       : { otp: "" }
                   }
                   validationSchema={step === 1 ? signupSchema : otpSchema}
@@ -184,27 +179,29 @@ const SignupForm = observer(() => {
                       <VStack spacing={6} width="full">
                         {step === 1 ? (
                           <>
-                            <CustomInput
-                              type="text"
-                              name="name"
-                              label="Full Name"
-                              placeholder="Enter your full name"
-                              required
-                              value={values.name}
-                              showError={showError.form}
-                              onChange={(e) => setFieldValue("name", e.target.value)}
-                              error={errors.name}
-                            />
-                            <CustomInput
-                              type="text"
-                              name="email"
-                              label="Email (Optional)"
-                              placeholder="Enter your email"
-                              value={values.email}
-                              showError={showError.form}
-                              onChange={(e) => setFieldValue("email", e.target.value)}
-                              error={errors.email}
-                            />
+                            <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6} width="100%">
+                              <CustomInput
+                                type="text"
+                                name="name"
+                                label="Full Name"
+                                placeholder="Enter your full name"
+                                required
+                                value={values.name}
+                                showError={showError.form}
+                                onChange={(e) => setFieldValue("name", e.target.value)}
+                                error={errors.name}
+                              />
+                              <CustomInput
+                                type="text"
+                                name="email"
+                                label="Email (Optional)"
+                                placeholder="Enter your email"
+                                value={values.email}
+                                showError={showError.form}
+                                onChange={(e) => setFieldValue("email", e.target.value)}
+                                error={errors.email}
+                              />
+                            </Grid>
                             <CustomInput
                               type="number"
                               name="phone"
@@ -220,8 +217,8 @@ const SignupForm = observer(() => {
                               type="text"
                               name="companyName"
                               label="Company Name"
-                              required={true}
                               placeholder="Enter your Shop Name"
+                              required
                               value={values.companyName}
                               showError={showError.form}
                               onChange={(e) => setFieldValue("companyName", e.target.value)}
@@ -233,31 +230,30 @@ const SignupForm = observer(() => {
                               label="Business Category"
                               placeholder="Select category"
                               required
-                              isPortal={true}
+                              isPortal
                               options={categories}
                               showError={showError.form}
                               value={categories.find((cat) => cat.value === values.category)}
-                              onChange={(option) =>
-                                setFieldValue("category", option ? option.value : "")
-                              }
+                              onChange={(option) => setFieldValue("category", option ? option.value : "")}
                               error={errors.category}
                             />
                           </>
                         ) : (
-                          <Flex justifyContent="center">
-                          <CustomInput
-                            type="otp"
-                            name="otp"
-                            label="OTP Code"
-                            placeholder="••••••"
-                            required
-                            value={values.otp}
-                            showError={showError.otp}
-                            onChange={(e) => setFieldValue("otp", e)}
-                            error={errors.otp}
-                          />
+                          <Flex justifyContent="center" width="full">
+                            <CustomInput
+                              type="otp"
+                              name="otp"
+                              label="OTP Code"
+                              placeholder="••••••"
+                              required
+                              value={values.otp}
+                              showError={showError.otp}
+                              onChange={(e) => setFieldValue("otp", e)}
+                              error={errors.otp}
+                            />
                           </Flex>
                         )}
+
                         <Button
                           type="submit"
                           bgGradient={buttonGradient}
@@ -265,30 +261,33 @@ const SignupForm = observer(() => {
                           isLoading={isSubmitting}
                           width="full"
                           size="lg"
-                          borderRadius="lg"
-                          fontWeight="bold"
+                          borderRadius="xl"
+                          fontWeight="semibold"
                           py={6}
+                          letterSpacing="wide"
+                          boxShadow="lg"
                           _hover={{
-                            bgGradient: "linear(to-r, blue.600, purple.700)", // Matching LoginForm
+                            bgGradient: "linear(to-r, blue.600, purple.700)",
                             transform: "translateY(-2px)",
+                            boxShadow: "xl",
                           }}
-                          _active={{ transform: "translateY(0)" }}
-                          transition="all 0.2s ease-out"
+                          _active={{ transform: "translateY(0)", boxShadow: "md" }}
                           _loading={{ opacity: 0.8 }}
                           onClick={() => setShowError((prev) => ({ ...prev, [step === 2 ? "otp" : "form"]: true }))}
                         >
-                          {step === 1 ? "Sign Up " : "Verify & Join"}
+                          {step === 1 ? "Sign Up" : "Verify & Join"}
                         </Button>
                       </VStack>
                     </Form>
                   )}
                 </Formik>
+
                 {step === 2 && (
                   <VStack spacing={4}>
                     <HStack justify="right" spacing={2}>
                       <Button
                         variant="link"
-                        color="blue.500" // Matching LoginForm
+                        color="blue.500"
                         size="sm"
                         isDisabled={otpTimer > 0}
                         onClick={() => {
@@ -308,15 +307,16 @@ const SignupForm = observer(() => {
                     </Text>
                   </VStack>
                 )}
-                <HStack justify="center" spacing={2}>
+
+                <HStack justify="center" spacing={1} pt={4}>
                   <Text color={textColor} fontSize="sm">
                     Already have an account?
                   </Text>
                   <Button
                     variant="link"
-                    color="blue.500" // Matching LoginForm
-                    size="sm"
+                    color="blue.500"
                     fontWeight="medium"
+                    fontSize="sm"
                     onClick={() => router.push("/login")}
                   >
                     Login

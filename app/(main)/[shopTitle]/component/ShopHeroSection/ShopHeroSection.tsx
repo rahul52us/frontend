@@ -92,7 +92,7 @@ const ShopHeroSection = ({ shopData }: { shopData: ShopData }) => {
             flexDir={{ base: "column", md: "row" }}
             alignItems={{ base: "center", md: "flex-end" }}
             gap={{ base: 3, md: 6 }}
-            justifyContent="space-between"
+            // justifyContent="space-between"
             flexWrap={{ base: "wrap", md: "nowrap" }}
           >
             {/* Shop Logo */}
@@ -124,8 +124,8 @@ const ShopHeroSection = ({ shopData }: { shopData: ShopData }) => {
               maxW={{ base: "100%", md: "60%" }}
             >
               <Heading
-                as="h1"
-                size={{ base: "lg", md: "xl" }}
+                as="h2"
+                size={{ base: "lg", md: "lg" }}
                 fontWeight="bold"
                 lineHeight="tight"
               >
