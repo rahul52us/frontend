@@ -15,6 +15,7 @@ import {
   InputGroup,
   InputLeftElement,
   Text,
+  useBreakpointValue,
   useDisclosure,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ const Header = () => {
     onClose: onCartClose,
   } = useDisclosure();
   const router = useRouter();
+  const drawerWidth = useBreakpointValue({ base: "90%", md: "50%", lg: "400px" });
 
   return (
     <Box position="sticky" top="0" zIndex="1000">
@@ -48,14 +50,13 @@ const Header = () => {
         transition="background 0.3s ease"
         _hover={{ bg: "gray.700" }}
       >
-        <Text as="span">
+        <Text as="span" cursor="pointer">
           🛍️ Shop directly from local vendors and grab exclusive deals!
         </Text>
       </Box>
 
       {/* Main Header */}
-      <Box bgGradient="linear(to-b, #5a97c2 10%, #89c2d9 35%, #b0dff7 65%, #f0faff 100%)"
-      >
+      <Box bgGradient="linear(to-b, #5a97c2 10%, #89c2d9 35%, #b0dff7 65%, #f0faff 100%)">
         {/* Mobile Header */}
         <Flex
           alignItems="center"
@@ -99,27 +100,33 @@ const Header = () => {
           </Flex>
         </Flex>
 
-        {/* Drawer for Mobile Navigation */}
+        {/* ✅ Updated Mobile Drawer */}
         <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
-          <DrawerOverlay bg="rgba(0, 0, 0, 0.2)" />
-          <DrawerContent bg="white" maxW="80%">
+          <DrawerOverlay bg="blackAlpha.300" />
+          <DrawerContent bg="white" maxW={drawerWidth}>
             <DrawerCloseButton size="md" color="gray.600" mt={3} mr={3} />
-            <DrawerBody p={0}>
+            <DrawerBody px={0} pt={4}>
               {/* Logo */}
-              <Center mt={6} mb={6}>
-                <Image
-                  src="/images/logo3.jpg"
-                  alt="eCommerce Logo"
-                  h="50px"
-                  cursor="pointer"
+              <Center mb={6}>
+                <Box
                   onClick={() => {
                     router.push("/");
                     onClose();
                   }}
+                  cursor="pointer"
+                  _hover={{ transform: "scale(1.05)" }}
                   transition="transform 0.2s ease"
-                  _hover={{ transform: "scale(1.1)" }}
-                  borderRadius="sm"
-                />
+                  borderRadius="md"
+                  overflow="hidden"
+                >
+                  <Image
+                    src="/images/logo3.jpg"
+                    alt="eCommerce Logo"
+                    width={120}
+                    height={50}
+                    style={{ borderRadius: "4px" }}
+                  />
+                </Box>
               </Center>
 
               {/* Search Bar */}
@@ -131,22 +138,24 @@ const Header = () => {
                   <Input
                     placeholder="Search products..."
                     borderRadius="full"
+                    border="1px solid"
                     borderColor="gray.200"
                     _focus={{
                       borderColor: "orange.400",
                       boxShadow: "0 0 0 1px orange.400",
                     }}
+                    aria-label="Search products"
                   />
                 </InputGroup>
               </Box>
 
               {/* Navigation Items */}
-              <Box px={4} py={2}>
+              <Box px={4}>
                 <NavItemsLayout onClose={onClose} />
               </Box>
 
               {/* WhatsApp Button */}
-              <Center my={6}>
+              <Center mt={8} mb={4}>
                 <WhatsAppButton />
               </Center>
             </DrawerBody>
@@ -191,7 +200,6 @@ const Header = () => {
               variant="ghost"
               color="gray.600"
               _hover={{ color: "orange.500", bg: "gray.50" }}
-              // onClick={() => router.push("/cart")}
               onClick={onCartOpen}
             />
             <HeroNavButton />

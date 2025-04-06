@@ -33,7 +33,6 @@ import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
 import { useParams } from "next/navigation";
 import { dummyData } from "./utils/constant";
-import { toJS } from "mobx";
 
 // Validation Schema (unchanged)
 const validationSchema = Yup.object({
@@ -114,8 +113,6 @@ const ShopForm = observer(() => {
     companyStore: { updateCompanyDetails },
     auth: { openNotification, user },
   } = stores;
-
-  console.log(toJS(user))
 
   const toast = useToast();
 
@@ -318,8 +315,6 @@ const ShopForm = observer(() => {
           onSubmit={onSubmit}
         >
           {({ values, errors, setFieldValue, isSubmitting }) => {
-            console.log(errors)
-            console.log('the values are', values)
             return (
               <Form>
                 <Tabs

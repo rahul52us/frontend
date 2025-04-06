@@ -1,5 +1,5 @@
 import { Box, Flex, HStack, Skeleton, SkeletonCircle, VStack } from "@chakra-ui/react";
-import { endColor, startColor } from "../../../component/common/utils/skeletonColors";
+import { endColor, startColor } from "../../../../component/common/utils/skeletonColors";
 
 const ShopCardSkeleton = () => {
   return (

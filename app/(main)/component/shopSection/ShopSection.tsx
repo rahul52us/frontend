@@ -9,7 +9,7 @@ import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
 import { tablePageLimit } from "../../../component/config/utils/variable";
 import ShopCard from "./element/ShopCard";
-import ShopCardSkeleton from "../ShopSkeletonCard/ShowSkeletonCard";
+import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
 
 const ShopSection = observer(() => {
   const {

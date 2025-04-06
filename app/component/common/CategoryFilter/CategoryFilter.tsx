@@ -67,8 +67,8 @@ const CategoryFilter = () => {
             borderColor={activeCategory === category.id ? category.color : 'gray.200'}
             transition="all 0.3s ease"
             _hover={{
-              bg: `${category.color}20`, // Slightly darker on hover
-              transform: "scale(1.05)", // Subtle scale-up
+              bg: `${category.color}20`,
+              transform: "scale(1.05)",
               boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)", // Shadow on hover
             }}
             animation={activeCategory === category.id ? `${bounce} 1.5s infinite` : undefined}
@@ -77,7 +77,7 @@ const CategoryFilter = () => {
             <Image
               src={category.image}
               alt={category.name}
-              height={{ base: '60px', md: '80px' }} // Taller images
+              height={{ base: '60px', md: '80px' }}
               width="100%"
               objectFit="cover"
               borderRadius="md"
@@ -87,12 +87,14 @@ const CategoryFilter = () => {
             />
             <Text
               py={2}
-              fontSize={{ base: 'sm', md: 'md' }}
+              fontSize={{ base: 'xs', md: 'sm' }}
               fontWeight="bold"
               color={activeCategory === category.id ? category.color : 'gray.800'}
               textAlign="center"
               textTransform="capitalize"
               letterSpacing="0.5px"
+              overflowWrap="break-word"
+              overflow="hidden"
             >
               {category.name}
             </Text>
