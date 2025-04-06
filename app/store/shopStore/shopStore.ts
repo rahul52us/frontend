@@ -2,20 +2,33 @@ import { makeAutoObservable } from "mobx";
 import axios from "axios";
 class ShopStore {
   shop: any = {
-    loading : false,
+    loading : true,
     data : [],
-    page : 1
+    totalPages : 1
   }
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  getAllShops = async (sendData : any) => {
+  getAllShops = async (sendData: any) => {
+    const { page = 1 } = sendData;
     this.shop.loading = true;
+
     try {
-      const response = await axios.post(`/company`,sendData);
-      this.shop.data = response.data?.data
+      const response = await axios.post(`/company`, sendData);
+      const newShops = response.data?.data?.data || [];
+
+      if (page === 1) {
+        this.shop.data = newShops;
+      } else {
+        this.shop.data = [...(this.shop.data || []), ...newShops];
+      }
+
+      this.shop.totalPages = response?.data?.data?.totalPages || 1;
+      this.shop.totalCount = response?.data?.data?.total || 0;
+      this.shop.currentPage = page;
+
       return response;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
@@ -23,6 +36,7 @@ class ShopStore {
       this.shop.loading = false;
     }
   };
+
 
   getSingleShop = async (sendData : any) => {
     try {

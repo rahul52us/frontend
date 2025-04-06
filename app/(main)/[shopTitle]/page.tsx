@@ -198,6 +198,7 @@ const Page = observer(() => {
             _hover={{ bg: "pink.50", transform: "scale(1.05)" }}
             transition="all 0.3s ease"
             alignSelf="center"
+            mt={2}
           >
             Start Your Shop
           </Button>
