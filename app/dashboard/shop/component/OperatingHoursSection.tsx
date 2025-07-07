@@ -16,9 +16,9 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
   return (
     <Box
     >
-      <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
+      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
       Operating Hours
-      </Text>
+      </Text> */}
 
       {/* Operating Hours Grid */}
       <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>

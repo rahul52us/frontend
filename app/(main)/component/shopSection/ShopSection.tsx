@@ -14,6 +14,7 @@ import useDebounce from "../../../component/config/component/customHooks/useDebo
 import ShopCard from "./element/ShopCard";
 import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
 import { keyframes } from "@emotion/react";
+import { tablePageLimit } from "../../../component/config/utils/variable";
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -34,7 +35,7 @@ const ShopSection = observer(() => {
   const applyGetAllShops = useCallback(
     async ({
       page = 1,
-      limit = 10,
+      limit = tablePageLimit,
       search = "",
       append = false,
     }) => {
@@ -55,6 +56,7 @@ const ShopSection = observer(() => {
     setCurrentPage(1);
     applyGetAllShops({
       page: 1,
+      limit : tablePageLimit,
       search: debouncedSearchQuery,
       append: false,
     });
@@ -72,8 +74,8 @@ const ShopSection = observer(() => {
     });
   }, [currentPage, shop.totalPages, applyGetAllShops, debouncedSearchQuery]);
 
-  // Infinite scroll observer
   useEffect(() => {
+    const currentLoadMoreRef = loadMoreRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
         if (
@@ -87,13 +89,13 @@ const ShopSection = observer(() => {
       { threshold: 0.5 }
     );
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+    if (currentLoadMoreRef) {
+      observer.observe(currentLoadMoreRef);
     }
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
+      if (currentLoadMoreRef) {
+        observer.unobserve(currentLoadMoreRef);
       }
     };
   }, [shop.loading, currentPage, shop.totalPages, handleLoadMore]);
@@ -103,17 +105,19 @@ const ShopSection = observer(() => {
   const totalShops = shop?.totalPages || 0;
   const loading = shop?.loading && currentPage === 1;
   const loadingMore = shop?.loading && currentPage > 1;
-
-  const allLoaded =
-    !shop.loading && currentPage >= totalPages && shops.length >= totalShops;
+  const allLoaded = currentPage >= totalPages;
 
   const progress = totalShops > 0 ? (shops.length / totalShops) * 100 : 0;
 
   return (
     <Box position="relative">
+      {/* Shop Cards */}
       <SimpleGrid columns={[1, 1, 2, 3]} gap={8} spacing={2}>
         {shops.map((shop: any, index: number) => (
-          <Box key={index} animation={`${fadeIn} 0.5s ease-out`}>
+          <Box
+            key={index}
+            animation={`${fadeIn} 0.5s ease-out ${index * 0.1}s`}
+          >
             <ShopCard shop={shop} onClick={() => {}} />
           </Box>
         ))}
@@ -131,14 +135,12 @@ const ShopSection = observer(() => {
       {/* Dynamic Load More Indicator */}
       {!loading && !allLoaded && (
         <Center mt={12} flexDirection="column" gap={4}>
-          <VStack ref={loadMoreRef} spacing={3}>
+          <VStack ref={loadMoreRef}>
             <Circle
               size="80px"
-              bg="gray.50"
+              bg="gray.100"
               position="relative"
-              shadow="md"
-              border="1px solid"
-              borderColor="gray.200"
+              overflow="hidden"
             >
               <Circle
                 size="80px"
@@ -149,19 +151,13 @@ const ShopSection = observer(() => {
                 position="absolute"
                 transform={`rotate(${(progress / 100) * 360}deg)`}
                 transition="transform 0.5s ease-in-out"
-                borderRadius="full"
               />
-              <Center position="absolute" inset={0}>
-                <Text fontSize="lg" fontWeight="semibold" color="teal.600">
-                  {shops.length}/{totalShops}
-                </Text>
-              </Center>
+              <Text fontSize="lg" fontWeight="bold" color="teal.600">
+                {shops.length}/{totalShops}
+              </Text>
             </Circle>
-
-            <Text fontSize="sm" color="gray.600" textAlign="center">
-              {loadingMore
-                ? "Hang tight, fetching more awesome shops for you..."
-                : "Keep scrolling to explore more gems 🔍"}
+            <Text fontSize="sm" color="gray.600">
+              {loadingMore ? "Discovering more shops..." : "Scroll for more"}
             </Text>
           </VStack>
         </Center>

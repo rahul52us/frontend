@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Grid, GridItem, Text } from "@chakra-ui/react";
+import { Box, Grid, GridItem } from "@chakra-ui/react";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 
 const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
@@ -10,9 +10,9 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
 
   return (
     <Box>
-      <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
+      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
         Main Shop Location
-      </Text>
+      </Text> */}
       <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
         <GridItem>
           <CustomInput

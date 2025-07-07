@@ -7,9 +7,9 @@ import { removeDataByIndex } from "../../../config/utils/utils";
 const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
   return (
     <Box p={2}>
-      <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
+      {/* <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
         Shop Details
-      </Text>
+      </Text> */}
 
       {/* Logo Upload Section */}
       <Box mb={6}>

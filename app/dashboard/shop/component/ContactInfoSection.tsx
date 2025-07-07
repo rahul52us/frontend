@@ -4,9 +4,9 @@ import CustomInput from "../../../component/config/component/customInput/CustomI
 
 const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => (
   <Box>
-      <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
+      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
       Contact Information
-    </Text>
+    </Text> */}
     <VStack spacing={4}>
       <CustomInput
         showError={showError}

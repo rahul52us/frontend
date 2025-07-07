@@ -6,9 +6,9 @@ import CustomInput from "../../../component/config/component/customInput/CustomI
 
 const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }) => (
   <Box>
-      <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
+      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
       Additional Locations
-    </Text>
+    </Text> */}
     <FieldArray name="multipleLocations">
       {({ push, remove }) => (
         <VStack spacing={6} align="stretch">

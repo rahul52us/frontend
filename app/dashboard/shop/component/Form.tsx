@@ -6,19 +6,25 @@ import * as Yup from "yup";
 import {
   Box,
   Button,
-  useToast,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabPanel,
   VStack,
   Heading,
   Flex,
-  HStack,
   Divider,
   Center,
   Text,
+  useColorModeValue,
+  Container,
+  HStack,
+  Icon,
+  Progress,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
+  IconButton,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { readFileAsBase64 } from "../../../config/utils/utils";
@@ -33,6 +39,15 @@ import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
 import { useParams } from "next/navigation";
 import { dummyData } from "./utils/constant";
+import {
+  FaStore,
+  FaMapMarkerAlt,
+  FaMap,
+  FaImages,
+  FaPhone,
+  FaClock,
+  FaBars,
+} from "react-icons/fa";
 
 // Validation Schema (unchanged)
 const validationSchema = Yup.object({
@@ -109,28 +124,69 @@ const validationSchema = Yup.object({
 const ShopForm = observer(() => {
   const [initialValues, setInitialValues] = useState(dummyData);
   const [showError, setShowError] = useState(false);
+  const [activeSection, setActiveSection] = useState(0);
   const {
     companyStore: { updateCompanyDetails },
     auth: { openNotification, user },
   } = stores;
 
-  const toast = useToast();
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const textColor = useColorModeValue("gray.800", "white");
+  const accentColor = useColorModeValue("blue.500", "blue.300");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const { shopTitle } = useParams();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     shopStore: { getSingleShop },
   } = stores;
 
+  const sections = [
+    {
+      title: "Shop Details",
+      icon: FaStore,
+      component: ShopDetailsSection,
+    },
+    {
+      title: "Main Location",
+      icon: FaMapMarkerAlt,
+      component: MainLocationSection,
+    },
+    {
+      title: "Additional Locations",
+      icon: FaMap,
+      component: AdditionalLocationsSection,
+    },
+    {
+      title: "Gallery",
+      icon: FaImages,
+      component: GallerySection,
+    },
+    {
+      title: "Contact Info",
+      icon: FaPhone,
+      component: ContactInfoSection,
+    },
+    {
+      title: "Operating Hours",
+      icon: FaClock,
+      component: OperatingHoursSection,
+    },
+  ];
+
   useEffect(() => {
     const fetchShopData = async () => {
       setLoading(true);
-      setError(null); // Reset error before fetching
+      setError(null);
 
       try {
-        const data = await getSingleShop({ title: user?.company?.name, status : user?.company?.shopStatus });
+        const data = await getSingleShop({
+          title: user?.company?.name,
+          status: user?.company?.shopStatus,
+        });
 
         if (!data?.data) {
           setError("Shop not found");
@@ -143,22 +199,22 @@ const ShopForm = observer(() => {
             ? { file: [data.data.logo] }
             : { file: [] };
 
-            const gallery = data?.data?.gallery && Array.isArray(data.data.gallery)
-            ?  data.data.gallery.map(item => ({
-                  file: item.file?.url ? [item.file] : [],
-                  title: item.title || '',
-                }))
-            : []
+          const gallery = data?.data?.gallery && Array.isArray(data.data.gallery)
+            ? data.data.gallery.map((item) => ({
+                file: item.file?.url ? [item.file] : [],
+                title: item.title || "",
+              }))
+            : [];
 
           setInitialValues({
             ...initialValues,
             ...data?.data,
             coverImage: coverImage,
             logo: logo,
-            gallery:gallery
+            gallery: gallery,
           });
         }
-      } catch ({}) {
+      } catch {
         setError("Failed to fetch shop data. Please try again.");
       } finally {
         setLoading(false);
@@ -168,7 +224,7 @@ const ShopForm = observer(() => {
     fetchShopData();
   }, [shopTitle, getSingleShop]);
 
-  const handleImageProcessing = async (imageFile : any, isAdd : any, isDeleted) => {
+  const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
       return await readFileAsBase64(imageFile).then((buffer) => ({
         buffer,
@@ -206,33 +262,37 @@ const ShopForm = observer(() => {
           .filter((item) => item.isAdd || !item.isAdd)
           .map(async (item) => {
             if (item.isAdd) {
-              const processedFile = await handleImageProcessing(item.file, true, false);
+              const processedFile = await handleImageProcessing(
+                item.file,
+                true,
+                false
+              );
               return processedFile
                 ? { file: processedFile, title: item.title }
                 : null;
             } else {
-              return { file: Array.isArray(item.file) ? item.file[0] : item.file , title: item.title };
+              return {
+                file: Array.isArray(item.file) ? item.file[0] : item.file,
+                title: item.title,
+              };
             }
           })
       );
 
       formData.gallery = updatedGallery.filter(Boolean);
 
-      updateCompanyDetails({...formData, _id : user?.company?._id, shopStatus : 'active'})
-        .then((data: any) => {
+      updateCompanyDetails({
+        ...formData,
+        _id: user?.company?._id,
+        shopStatus: "active",
+      })
+        .then((data : any) => {
           openNotification({
             title: "Successfully Updated",
             message: data.message,
-            type: "success"
+            type: "success",
           });
-          toast({
-            title: "Shop Saved",
-            description: "Your shop details have been updated successfully.",
-            status: "success",
-            duration: 4000,
-            isClosable: true,
-            position: "top-right",
-          });
+          setActiveSection(0);
         })
         .catch((err) => {
           openNotification({
@@ -240,31 +300,20 @@ const ShopForm = observer(() => {
             message: err?.data?.message,
             type: getStatusType(err.status),
           });
-          toast({
-            title: "Error",
-            description: err?.data?.message || "Failed to save shop details.",
-            status: "error",
-            duration: 4000,
-            isClosable: true,
-            position: "top-right",
-          });
         })
         .finally(() => setSubmitting(false));
-    } catch ({}) {
-      toast({
+    } catch {
+      openNotification({
         title: "Error",
-        description: "An unexpected error occurred.",
-        status: "error",
-        duration: 4000,
-        isClosable: true,
-        position: "top-right",
+        message: "An unexpected error occurred.",
+        type: "error",
       });
     }
   };
 
   if (loading) {
     return (
-      <Center minH="80vh">
+      <Center minH="80vh" bg={bgColor}>
         <SpinnerLoader size="xl" />
       </Center>
     );
@@ -272,8 +321,8 @@ const ShopForm = observer(() => {
 
   if (error) {
     return (
-      <Center minH="80vh">
-        <Text fontSize="lg" color="red.500">
+      <Center minH="80vh" bg={bgColor}>
+        <Text fontSize="xl" color="red.500" fontWeight="semibold">
           {error}
         </Text>
       </Center>
@@ -281,220 +330,266 @@ const ShopForm = observer(() => {
   }
 
   return (
-    <Box
-      // maxW={{ base: "100%", md: "container.md", lg: "container.lg" }}
-      mx="auto"
-      // my={{ base: 6, md: 8 }}
-      p={{ base: 3, md: 4 }}
-      bg="white"
-      borderRadius="2xl"
-      boxShadow="lg"
-      border="1px"
-      borderColor="gray.200"
-      overflow="hidden"
-    >
-      <VStack spacing={4} align="stretch">
-        <HStack justify="space-between" align="center">
-          <Heading
-            as="h3"
-            size={{ base: "sm", md: "sm" }}
-            color="gray.800"
-            fontWeight="bold"
-            letterSpacing="wide"
-            textTransform="uppercase"
-            textAlign={{ base: "center", md: "left" }}
-          >
-            Create Your Shop
-          </Heading>
-        </HStack>
-        <Divider borderColor="gray.300" />
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          enableReinitialize={true}
-          onSubmit={onSubmit}
+    <Container maxW="container.2xl" py={{ base: 2, md: 2 }}>
+      <Flex direction={{ base: "column", md: "row" }} gap={2}>
+        {/* Sidebar for Desktop */}
+        <Box
+          display={{ base: "none", md: "block" }}
+          w={{ md: "280px" }}
+          bg={bgColor}
+          borderRadius="xl"
+          boxShadow="lg"
+          border="1px"
+          borderColor={borderColor}
+          p={4}
+          position="sticky"
+          top={0}
+          height="fit-content"
         >
-          {({ values, errors, setFieldValue, isSubmitting }) => {
-            return (
-              <Form>
-                <Tabs
-                  variant="soft-rounded"
-                  colorScheme="blue"
-                  isLazy
-                  bg="gray.50"
-                  borderRadius="lg"
-                  p={2}
-                >
-                  <TabList
-                    overflowX={{ base: "scroll", md: "auto" }}
-                    overflowY="hidden"
-                    whiteSpace="nowrap"
-                    position="sticky"
-                    top={0}
-                    bg="gray.50"
-                    zIndex={1}
-                    py={2}
-                    px={1}
-                    borderBottom="1px"
-                    borderColor="gray.200"
-                  >
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Shop Details
-                    </Tab>
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Main Location
-                    </Tab>
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Additional Locations
-                    </Tab>
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Gallery
-                    </Tab>
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Contact Info
-                    </Tab>
-                    <Tab
-                      fontSize={{ base: "sm", md: "md" }}
-                      fontWeight="semibold"
-                      px={{ base: 4, md: 6 }}
-                      py={2}
-                      borderRadius="full"
-                      _selected={{ bg: "blue.500", color: "white" }}
-                      _hover={{ bg: "blue.100" }}
-                    >
-                      Operating Hours
-                    </Tab>
-                  </TabList>
-                  <TabPanels
-                    bg="white"
-                    borderRadius="lg"
-                    boxShadow="sm"
-                    p={{ base: 2, md: 4 }}
-                    mt={2}
-                  >
-                    <TabPanel>
-                      <ShopDetailsSection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
-                    <TabPanel>
-                      <MainLocationSection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
+          <VStack align="stretch" spacing={2}>
+            <Text fontSize="lg" fontWeight="bold" color={textColor} mb={4}>
+              Form Sections
+            </Text>
+            {sections.map((section, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                justifyContent="flex-start"
+                bg={activeSection === index ? "blue.50" : "transparent"}
+                color={activeSection === index ? accentColor : textColor}
+                _hover={{
+                  bg: "blue.50",
+                  transform: "translateX(5px)",
+                }}
+                transition="all 0.2s ease"
+                borderRadius="md"
+                p={3}
+                onClick={() => setActiveSection(index)}
+              >
+                <HStack spacing={3}>
+                  <Icon as={section.icon} boxSize={5} />
+                  <Text fontWeight="medium">{section.title}</Text>
+                </HStack>
+              </Button>
+            ))}
+            <Progress
+              value={(activeSection + 1) * (100 / sections.length)}
+              size="sm"
+              colorScheme="blue"
+              borderRadius="full"
+              mt={4}
+            />
+          </VStack>
+        </Box>
 
-                    <TabPanel>
-                      <AdditionalLocationsSection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
-                    <TabPanel>
-                      <GallerySection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
-                    <TabPanel>
-                      <ContactInfoSection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
-                    <TabPanel>
-                      <OperatingHoursSection
-                        values={values}
-                        errors={errors}
-                        setFieldValue={setFieldValue}
-                        showError={showError}
-                      />
-                    </TabPanel>
-                  </TabPanels>
-                </Tabs>
-                <Flex
-                  justify={{ base: "center", md: "flex-end" }}
-                  mt={{ base: 6, md: 8 }}
-                  flexWrap="wrap"
-                  gap={4}
-                >
-                  <Button
-                    type="submit"
-                    size={{ base: "md", md: "lg" }}
-                    px={{ base: 8, md: 10 }}
-                    py={{ base: 6, md: 7 }}
-                    isLoading={isSubmitting}
-                    loadingText="Saving..."
-                    onClick={() => setShowError(true)}
-                    bgGradient="linear(to-r, blue.500, blue.600)"
-                    color="white"
-                    _hover={{ bgGradient: "linear(to-r, blue.600, blue.700)" }}
-                    _active={{ bgGradient: "linear(to-r, blue.700, blue.800)" }}
-                    borderRadius="full"
+        {/* Bottom Navigation for Mobile */}
+        <Box
+          display={{ base: "block", md: "none" }}
+          position="fixed"
+          bottom={0}
+          left={0}
+          right={0}
+          bg={bgColor}
+          borderTop="1px"
+          borderColor={borderColor}
+          p={3}
+          zIndex={10}
+        >
+          <HStack justify="space-between" align="center">
+            <Text fontSize="sm" fontWeight="bold" color={textColor}>
+              Step {activeSection + 1} of {sections.length}
+            </Text>
+            <IconButton
+              aria-label="Open navigation"
+              icon={<FaBars />}
+              onClick={onOpen}
+              colorScheme="blue"
+              variant="outline"
+              size="sm"
+            />
+          </HStack>
+          <Drawer isOpen={isOpen} placement="bottom" onClose={onClose}>
+            <DrawerOverlay />
+            <DrawerContent borderTopRadius="xl">
+              <DrawerCloseButton />
+              <DrawerHeader fontSize="lg" color={textColor}>
+                Form Sections
+              </DrawerHeader>
+              <DrawerBody pb={6}>
+                <VStack align="stretch" spacing={2}>
+                  {sections.map((section, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      justifyContent="flex-start"
+                      bg={activeSection === index ? "blue.50" : "transparent"}
+                      color={activeSection === index ? accentColor : textColor}
+                      _hover={{ bg: "blue.50" }}
+                      borderRadius="md"
+                      p={3}
+                      onClick={() => {
+                        setActiveSection(index);
+                        onClose();
+                      }}
+                    >
+                      <HStack spacing={3}>
+                        <Icon as={section.icon} boxSize={5} />
+                        <Text fontWeight="medium">{section.title}</Text>
+                      </HStack>
+                    </Button>
+                  ))}
+                </VStack>
+              </DrawerBody>
+            </DrawerContent>
+          </Drawer>
+        </Box>
+
+        {/* Main Content */}
+        <Box
+          flex={1}
+          bg={bgColor}
+          borderRadius="2xl"
+          boxShadow="xl"
+          border="1px"
+          borderColor={borderColor}
+          p={{ base: 6, md: 2 }}
+          transition="all 0.3s ease"
+        >
+          <VStack spacing={1} align="stretch">
+            <Box p={4}>
+            <Heading
+              as="h1"
+              size={{ base: "sm", md: "md" }}
+              color={textColor}
+              fontWeight="extrabold"
+              letterSpacing="tight"
+              textAlign={{ base: "center", md: "left" }}
+              bgGradient="linear(to-r, blue.500, teal.400)"
+              bgClip="text"
+            >
+              Build Your Shop
+            </Heading>
+            </Box>
+            <Divider borderColor={borderColor} opacity={0.5} />
+            <Formik
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              enableReinitialize={true}
+              onSubmit={onSubmit}
+            >
+              {({ values, errors, setFieldValue, isSubmitting }) => (
+                <Form>
+                  <Box
+                    // bgGradient={bgGradient}
+                    borderRadius="xl"
+                    p={{ base: 4, md: 6 }}
                     boxShadow="md"
-                    fontWeight="bold"
-                    w={{ base: "full", sm: "auto" }}
+                    transition="all 0.3s ease"
+                    _hover={{ boxShadow: "lg", transform: "translateY(-4px)" }}
                   >
-                    Save Shop
-                  </Button>
-                </Flex>
-              </Form>
-            );
-          }}
-        </Formik>
-      </VStack>
-    </Box>
+                    {sections[activeSection].component({
+                      values,
+                      errors,
+                      setFieldValue,
+                      showError,
+                    })}
+                  </Box>
+                  <Flex
+                    justify={{ base: "space-between", md: "flex-end" }}
+                    mt={{ base: 6, md: 8 }}
+                    gap={4}
+                    flexWrap="wrap"
+                  >
+                    {activeSection > 0 && (
+                      <Button
+                        size={{ base: "md", md: "lg" }}
+                        px={{ base: 8, md: 12 }}
+                        py={{ base: 6, md: 7 }}
+                        onClick={() => setActiveSection(activeSection - 1)}
+                        bgGradient="linear(to-r, gray.400, gray.500)"
+                        color="white"
+                        _hover={{
+                          bgGradient: "linear(to-r, gray.500, gray.600)",
+                          transform: "translateY(-2px)",
+                        }}
+                        _active={{
+                          bgGradient: "linear(to-r, gray.600, gray.700)",
+                          transform: "translateY(0)",
+                        }}
+                        borderRadius="full"
+                        boxShadow="lg"
+                        fontWeight="bold"
+                        w={{ base: "full", sm: "auto" }}
+                        transition="all 0.3s ease"
+                      >
+                        Previous
+                      </Button>
+                    )}
+                    {activeSection < sections.length - 1 ? (
+                      <Button
+                        size={{ base: "md", md: "lg" }}
+                        px={{ base: 8, md: 12 }}
+                        py={{ base: 6, md: 7 }}
+                        onClick={() => setActiveSection(activeSection + 1)}
+                        bgGradient="linear(to-r, blue.500, teal.400)"
+                        color="white"
+                        _hover={{
+                          bgGradient: "linear(to-r, blue.600, teal.500)",
+                          transform: "translateY(-2px)",
+                        }}
+                        _active={{
+                          bgGradient: "linear(to-r, blue.700, teal.600)",
+                          transform: "translateY(0)",
+                        }}
+                        borderRadius="full"
+                        boxShadow="lg"
+                        fontWeight="bold"
+                        w={{ base: "full", sm: "auto" }}
+                        transition="all 0.3s ease"
+                      >
+                        Next
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        size={{ base: "md", md: "lg" }}
+                        px={{ base: 8, md: 12 }}
+                        py={{ base: 6, md: 7 }}
+                        isLoading={isSubmitting}
+                        loadingText="Saving..."
+                        onClick={() => setShowError(true)}
+                        bgGradient="linear(to-r, blue.500, teal.400)"
+                        color="white"
+                        _hover={{
+                          bgGradient: "linear(to-r, blue.600, teal.500)",
+                          transform: "translateY(-2px)",
+                        }}
+                        _active={{
+                          bgGradient: "linear(to-r, blue.700, teal.600)",
+                          transform: "translateY(0)",
+                        }}
+                        borderRadius="full"
+                        boxShadow="lg"
+                        fontWeight="bold"
+                        w={{ base: "full", sm: "auto" }}
+                        transition="all 0.3s ease"
+                        _disabled={{
+                          opacity: 0.6,
+                          cursor: "not-allowed",
+                          transform: "none",
+                        }}
+                      >
+                        Save Shop
+                      </Button>
+                    )}
+                  </Flex>
+                </Form>
+              )}
+            </Formik>
+          </VStack>
+        </Box>
+      </Flex>
+    </Container>
   );
 });
 

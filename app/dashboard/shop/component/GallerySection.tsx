@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, VStack, Flex, Text, IconButton, Button } from "@chakra-ui/react";
+import { Box, VStack, Flex, IconButton, Button } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
@@ -28,9 +28,9 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
 
   return (
     <Box>
-      <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={4}>
+      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={4}>
         Gallery
-      </Text>
+      </Text> */}
       <VStack spacing={4} align="start" width="100%">
         {values?.gallery?.map((item, index) => (
           <Flex
