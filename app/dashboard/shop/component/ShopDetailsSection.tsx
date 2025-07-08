@@ -1,21 +1,80 @@
 import React from "react";
-import { Box, VStack, Text, SimpleGrid, Divider, Center } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Text,
+  SimpleGrid,
+  Center,
+  Flex,
+  Icon,
+  useColorModeValue,
+  Circle,
+} from "@chakra-ui/react";
+import {
+  FiImage,
+  FiInfo,
+  FiTag,
+  FiUploadCloud,
+} from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import { removeDataByIndex } from "../../../config/utils/utils";
 
+// Card layout with header and clean solid colors
+const SectionCard = ({ icon, title, description, children }) => {
+  const headerBg = useColorModeValue("gray.100", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+
+  return (
+    <Box
+      bg={cardBg}
+      borderRadius="xl"
+      border="1px solid"
+      borderColor={cardBorder}
+      overflow="hidden"
+      boxShadow="md"
+    >
+      <Flex
+        bg={headerBg}
+        px={5}
+        py={3}
+        align="center"
+        gap={3}
+        borderBottom="1px solid"
+        borderColor={cardBorder}
+      >
+        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
+          <Icon as={icon} color="blue.600" boxSize={5} />
+        </Circle>
+        <Box>
+          <Text fontSize="md" fontWeight="bold" color={textColor}>
+            {title}
+          </Text>
+          {description && (
+            <Text fontSize="xs" color="gray.500">
+              {description}
+            </Text>
+          )}
+        </Box>
+      </Flex>
+      <Box px={{ base: 4, md: 6 }} py={6}>
+        {children}
+      </Box>
+    </Box>
+  );
+};
+
 const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
   return (
-    <Box p={2}>
-      {/* <Text fontSize="2xl" fontWeight="bold" color="teal.600" mb={4}>
-        Shop Details
-      </Text> */}
-
-      {/* Logo Upload Section */}
-      <Box mb={6}>
-        <Text fontSize="lg" fontWeight="semibold" color="gray.700" mb={2}>
-          Shop Logo
-        </Text>
+    <VStack spacing={8} align="stretch">
+      {/* Logo Upload */}
+      <SectionCard
+        icon={FiUploadCloud}
+        title="Shop Logo"
+        description="Upload your business logo"
+      >
         <Center>
           {values?.logo?.file?.length === 0 ? (
             <CustomInput
@@ -48,15 +107,14 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             />
           )}
         </Center>
-      </Box>
+      </SectionCard>
 
-      <Divider my={6} />
-
-      {/* Basic Info Section */}
-      <VStack spacing={6} align="stretch">
-        <Text fontSize="lg" fontWeight="semibold" color="gray.700">
-          Basic Information
-        </Text>
+      {/* Basic Info */}
+      <SectionCard
+        icon={FiInfo}
+        title="Basic Information"
+        description="Shop name, tags and categories"
+      >
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
           <CustomInput
             label="Shop Name"
@@ -79,7 +137,8 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             showError={showError}
           />
         </SimpleGrid>
-        <CustomInput
+        <Box mt={4}>
+          <CustomInput
             label="Categories"
             name="categories"
             placeholder="Add Category"
@@ -90,20 +149,15 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             onChange={(e) => setFieldValue("categories", e)}
             showError={showError}
           />
-      </VStack>
+        </Box>
+      </SectionCard>
 
-      <Divider my={6} />
-
-      {/* Description & About Section */}
-      <VStack spacing={6} align="stretch">
-        <Text fontSize="lg" fontWeight="semibold" color="gray.700">
-          Shop Description
-        </Text>
-
-        <Box>
-        <Text fontSize="lg" fontWeight="semibold" color="gray.700" mb={2}>
-          Cover Image
-        </Text>
+      {/* Cover Image */}
+      <SectionCard
+        icon={FiImage}
+        title="Cover Image"
+        description="Image shown at the top of your shop page"
+      >
         <Center>
           {values?.coverImage?.file?.length === 0 ? (
             <CustomInput
@@ -136,36 +190,39 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             />
           )}
         </Center>
-      </Box>
+      </SectionCard>
 
-        <CustomInput
-          label="Description"
-          name="description"
-          type="textarea"
-          required
-          error={errors.description}
-          value={values.description}
-          onChange={(e) => setFieldValue("description", e.target.value)}
-          showError={showError}
-        />
-        <CustomInput
-          rows={10}
-          label="About"
-          name="about"
-          type="textarea"
-          placeholder="Write about your shop..."
-          error={errors.about}
-          value={values.about}
-          onChange={(e) => setFieldValue("about", e.target.value)}
-          showError={showError}
-        />
-      </VStack>
-
-      <Divider my={6} />
-
-      {/* Cover Image Upload Section */}
-
-    </Box>
+      {/* Description */}
+      <SectionCard
+        icon={FiTag}
+        title="Shop Description"
+        description="Describe your business in detail"
+      >
+        <VStack spacing={4}>
+          <CustomInput
+            label="Description"
+            name="description"
+            type="textarea"
+            required
+            error={errors.description}
+            value={values.description}
+            onChange={(e) => setFieldValue("description", e.target.value)}
+            showError={showError}
+          />
+          <CustomInput
+            rows={8}
+            label="About"
+            name="about"
+            type="textarea"
+            placeholder="Write about your shop..."
+            error={errors.about}
+            value={values.about}
+            onChange={(e) => setFieldValue("about", e.target.value)}
+            showError={showError}
+          />
+        </VStack>
+      </SectionCard>
+    </VStack>
   );
 };
 

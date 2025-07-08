@@ -1,19 +1,87 @@
 import React from "react";
-import { Box, VStack, Button, IconButton, Grid, GridItem, HStack, Text } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Button,
+  IconButton,
+  Grid,
+  GridItem,
+  HStack,
+  Text,
+  Flex,
+  useColorModeValue,
+  Circle,
+  Icon,
+} from "@chakra-ui/react";
 import { FaPlus, FaMinus } from "react-icons/fa";
+import { FiMapPin } from "react-icons/fi";
 import { FieldArray } from "formik";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 
+// Shared SectionCard wrapper
+const SectionCard = ({ icon, title, description, children }) => {
+  const headerBg = useColorModeValue("gray.100", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+
+  return (
+    <Box
+      bg={cardBg}
+      borderRadius="xl"
+      border="1px solid"
+      borderColor={cardBorder}
+      overflow="hidden"
+      boxShadow="md"
+    >
+      <Flex
+        bg={headerBg}
+        px={5}
+        py={3}
+        align="center"
+        gap={3}
+        borderBottom="1px solid"
+        borderColor={cardBorder}
+      >
+        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
+          <Icon as={icon} color="blue.600" boxSize={5} />
+        </Circle>
+        <Box>
+          <Text fontSize="md" fontWeight="bold" color={textColor}>
+            {title}
+          </Text>
+          {description && (
+            <Text fontSize="xs" color="gray.500">
+              {description}
+            </Text>
+          )}
+        </Box>
+      </Flex>
+      <Box px={{ base: 4, md: 6 }} py={6}>
+        {children}
+      </Box>
+    </Box>
+  );
+};
+
 const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }) => (
-  <Box>
-      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
-      Additional Locations
-    </Text> */}
+  <SectionCard
+    icon={FiMapPin}
+    title="Additional Locations"
+    description="Add multiple branches or delivery points"
+  >
     <FieldArray name="multipleLocations">
       {({ push, remove }) => (
         <VStack spacing={6} align="stretch">
           {values.multipleLocations.map((location, index) => (
-            <Box key={index} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="gray.50">
+            <Box
+              key={index}
+              p={4}
+              border="1px solid"
+              borderColor="gray.200"
+              borderRadius="md"
+              bg="gray.50"
+            >
               <HStack justify="space-between" mb={4}>
                 <Text fontSize="lg" fontWeight="semibold" color="teal.500">
                   Location {index + 1}
@@ -36,7 +104,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.address}
                     value={location.address}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].address`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].address`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -47,7 +117,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.city}
                     value={location.city}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].city`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].city`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -58,7 +130,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.state}
                     value={location.state}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].state`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].state`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -69,7 +143,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.postalCode}
                     value={location.postalCode}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].postalCode`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].postalCode`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -80,7 +156,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.country}
                     value={location.country}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].country`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].country`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -91,7 +169,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.coordinates?.[0]}
                     value={location.coordinates[0]}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].coordinates[0]`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].coordinates[0]`, e.target.value)
+                    }
                   />
                 </GridItem>
                 <GridItem>
@@ -102,7 +182,9 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                     required
                     error={errors.multipleLocations?.[index]?.coordinates?.[1]}
                     value={location.coordinates[1]}
-                    onChange={(e) => setFieldValue(`multipleLocations[${index}].coordinates[1]`, e.target.value)}
+                    onChange={(e) =>
+                      setFieldValue(`multipleLocations[${index}].coordinates[1]`, e.target.value)
+                    }
                   />
                 </GridItem>
               </Grid>
@@ -130,7 +212,7 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
         </VStack>
       )}
     </FieldArray>
-  </Box>
+  </SectionCard>
 );
 
 export default AdditionalLocationsSection;

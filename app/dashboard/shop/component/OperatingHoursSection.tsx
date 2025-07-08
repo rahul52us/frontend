@@ -9,36 +9,91 @@ import {
   Checkbox,
   Divider,
   Flex,
+  Icon,
+  Circle,
+  useColorModeValue,
 } from "@chakra-ui/react";
+import { FiClock } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 
-const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => {
+// Reusable section layout
+const SectionCard = ({ icon, title, description, children }) => {
+  const headerBg = useColorModeValue("gray.100", "gray.700");
+  const cardBg = useColorModeValue("white", "gray.800");
+  const cardBorder = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+
   return (
     <Box
+      bg={cardBg}
+      borderRadius="xl"
+      border="1px solid"
+      borderColor={cardBorder}
+      overflow="hidden"
+      boxShadow="md"
     >
-      {/* <Text fontSize="xl" fontWeight="bold" color="teal.600" mb={2}>
-      Operating Hours
-      </Text> */}
+      <Flex
+        bg={headerBg}
+        px={5}
+        py={3}
+        align="center"
+        gap={3}
+        borderBottom="1px solid"
+        borderColor={cardBorder}
+      >
+        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
+          <Icon as={icon} color="blue.600" boxSize={5} />
+        </Circle>
+        <Box>
+          <Text fontSize="md" fontWeight="bold" color={textColor}>
+            {title}
+          </Text>
+          {description && (
+            <Text fontSize="xs" color="gray.500">
+              {description}
+            </Text>
+          )}
+        </Box>
+      </Flex>
+      <Box px={{ base: 4, md: 6 }} py={6}>
+        {children}
+      </Box>
+    </Box>
+  );
+};
 
-      {/* Operating Hours Grid */}
+const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => {
+  const bgColor = useColorModeValue("gray.50", "gray.700");
+  const hoverBg = useColorModeValue("gray.100", "gray.600");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.700", "gray.100");
+
+  return (
+    <SectionCard
+      icon={FiClock}
+      title="Operating Hours"
+      description="Set your shop’s daily schedule and any closed days"
+    >
       <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
         {values.operatingHours.map((hour, index) => (
           <GridItem key={hour.day}>
             <VStack
               spacing={5}
               p={6}
-              bg="gray.50"
+              bg={bgColor}
               borderRadius="xl"
               border="1px solid"
-              borderColor="gray.200"
+              borderColor={borderColor}
               boxShadow="md"
               align="stretch"
-              _hover={{ boxShadow: "xl", bg: "gray.100" }}
+              _hover={{
+                boxShadow: "xl",
+                bg: hoverBg,
+              }}
               transition="all 0.2s ease-in-out"
             >
-              {/* Day & Closed Checkbox */}
               <HStack justify="space-between">
-                <Text fontSize="lg" fontWeight="bold" color="gray.700">
+                <Text fontSize="lg" fontWeight="bold" color={textColor}>
                   {hour.day}
                 </Text>
                 <Checkbox
@@ -59,7 +114,6 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
 
               <Divider borderColor="gray.300" />
 
-              {/* Open & Close Time Fields */}
               <Flex gap={4} align="center">
                 <CustomInput
                   label="Open"
@@ -91,8 +145,7 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
         ))}
       </Grid>
 
-      {/* Closed Dates Section */}
-      <Box mt={8} p={6} bg="gray.50" borderRadius="xl" boxShadow="md">
+      <Box mt={8}>
         <CustomInput
           type="multi-dates"
           label="Closed Dates"
@@ -101,13 +154,11 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
           onChange={(dates) => setFieldValue("closedDates", dates)}
           showError={showError}
           error={
-            errors.closedDates && typeof errors.closedDates === "string"
-              ? errors.closedDates
-              : undefined
+            typeof errors.closedDates === "string" ? errors.closedDates : undefined
           }
         />
       </Box>
-    </Box>
+    </SectionCard>
   );
 };
 
