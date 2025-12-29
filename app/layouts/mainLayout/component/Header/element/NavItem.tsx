@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Box,
   Text,
@@ -7,10 +8,12 @@ import {
   PopoverTrigger,
   PopoverContent,
   PopoverBody,
+  Icon,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion"; // Smooth animations
+import { motion } from "framer-motion";
+import { navIcons } from "../utils/navIcons"; 
 
 const MotionPopoverContent = motion(PopoverContent);
 
@@ -28,7 +31,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <Popover trigger="hover" placement="bottom-start" gutter={10}>
+    <Popover trigger="hover" placement="bottom-start" gutter={12}>
       <PopoverTrigger>
         <Box
           as="span"
@@ -41,59 +44,90 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
           display="inline-flex"
           alignItems="center"
           gap={2}
+          borderRadius="full"
           transition="all 0.3s ease"
-          _hover={{ color: "orange.500" }}
+          _hover={{
+            color: "orange.500",
+            bg: "orange.50",
+            transform: "translateY(-1px)",
+          }}
         >
-          <Text onClick={() => {
-            if(!hasChildren){
-              router.push(item.link);
-            }
-                }}>{item.title}</Text>
-          {hasChildren && <ChevronDownIcon fontSize="lg" color="gray.500" />}
+          {/* 🔥 ICON + TITLE */}
+          <Flex
+            alignItems="center"
+            gap={2}
+            onClick={() => {
+              if (!hasChildren) {
+                router.push(item.link);
+              }
+            }}
+          >
+            {navIcons[item.title] && (
+              <Icon as={navIcons[item.title]} boxSize={4.5} />
+            )}
+            <Text>{item.title}</Text>
+          </Flex>
+
+          {/* 🔽 DROPDOWN ARROW */}
+          {hasChildren && (
+            <Icon
+              as={ChevronDownIcon}
+              fontSize="lg"
+              color="gray.500"
+              transition="transform 0.25s ease"
+            />
+          )}
         </Box>
       </PopoverTrigger>
 
+      {/* 🔥 DROPDOWN */}
       {hasChildren && (
         <MotionPopoverContent
-          w="220px"
+          w="230px"
           bg="white"
-          boxShadow="xl"
-          borderRadius="lg"
-          mt={2}
+          boxShadow="2xl"
+          borderRadius="xl"
+          mt={3}
           border="1px solid"
           borderColor="gray.200"
           overflow="hidden"
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
         >
           <PopoverBody p={2}>
             {item.children.map((child, index) => (
               <Flex
                 key={child.title}
                 alignItems="center"
-                justifyContent="space-between"
+                gap={3}
                 px={4}
                 py={3}
                 fontSize="md"
                 fontWeight="medium"
                 cursor="pointer"
-                borderRadius="md"
-                transition="all 0.3s ease-in-out"
+                borderRadius="lg"
+                transition="all 0.25s ease"
                 _hover={{
-                  bg: "linear-gradient(135deg, #87CEEB, #00BFFF)", // Gradient only on hover
+                  bg: "linear-gradient(135deg, #FDBA74, #FB923C)",
                   color: "white",
-                  transform: "scale(1.05)"
+                  transform: "translateX(4px) scale(1.04)",
                 }}
-                borderBottom={index !== item.children.length - 1 ? "1px solid" : "none"}
-                borderColor="gray.200"
+                borderBottom={
+                  index !== item.children!.length - 1 ? "1px solid" : "none"
+                }
+                borderColor="gray.100"
                 onClick={() => {
                   router.push(child.link);
                   onClose();
                 }}
               >
-                {child.title}
+                {/* 🔥 CHILD ICON */}
+                {navIcons[child.title] && (
+                  <Icon as={navIcons[child.title]} boxSize={4} />
+                )}
+                <Text>{child.title}</Text>
               </Flex>
             ))}
           </PopoverBody>
