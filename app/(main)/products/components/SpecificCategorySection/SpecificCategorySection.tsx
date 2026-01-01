@@ -1,154 +1,237 @@
-import { Box, Button, Center, Flex, Grid, Image, Text } from "@chakra-ui/react";
-import { data } from "./utils/constant";
+"use client";
 
-const SpecificCategorySection = () => {
+import { 
+  Box, 
+  Button, 
+  Flex, 
+  Grid, 
+  Image, 
+  Text, 
+  VStack, 
+  Icon, 
+  Badge, 
+  Heading 
+} from "@chakra-ui/react";
+import { data } from "./utils/constant";
+import { keyframes } from "@emotion/react";
+import { FiArrowRight, FiChevronRight } from "react-icons/fi";
+
+// --- PROFESSIONAL ANIMATIONS ---
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const softFloat = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`;
+
+const HeroSectionProfessional = () => {
   return (
     <Box
-      maxW="95%"
-      my={{ base: 8, md: 12 }}
+      maxW="1440px"
+      my={{ base: 16, md: 28 }}
       mx="auto"
-      p={{ base: 4, md: 8 }}
-      bgGradient="linear(to-br, blue.200, purple.300)" // Richer, more vibrant gradient
-      rounded="3xl" // Softer, larger radius
-      boxShadow="lg" // Bolder shadow for depth
-      overflow="hidden"
       position="relative"
-      _before={{
-        content: '""',
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        bg: "rgba(255, 255, 255, 0.1)", // Subtle overlay for texture
-        rounded: "3xl",
-        pointerEvents: "none",
-      }}
+      px={{ base: 6, md: 10 }}
+      animation={`${slideUp} 1s ease-out`}
     >
-      <Flex
-        gap={{ base: 4, md: 8 }}
-        flexDirection={{ base: "column", md: "row" }}
-        align={{ base: "stretch", md: "center" }}
-      >
-        {/* Left Section - Featured Category */}
-        <Box
-          w={{ base: "100%", md: "35%" }}
-          position="relative"
-          rounded="2xl" // Slightly larger inner radius
-          bg="white"
-          p={{ base: 6, md: 8 }}
-          boxShadow="md" // Stronger base shadow
-          transition="all 0.3s ease"
-          _hover={{ boxShadow: "lg", transform: "translateY(-6px)" }} // More pronounced lift
-        >
-          <Box
-            color="gray.800"
-            h="full"
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-          >
-            <Text
-              fontSize={{ base: "xl", md: "3xl" }} // Larger on desktop for impact
-              fontWeight="black" // Maximum boldness
-              mb={3}
-              lineHeight="tight"
-              bgGradient="linear(to-r, blue.600, purple.600)" // Gradient text
-              bgClip="text"
-            >
-              Trending Categories
-            </Text>
-            <Text
-              fontSize={{ base: "sm", md: "md" }}
-              mb={6}
-              color="gray.600"
-              lineHeight="relaxed"
-              fontWeight="medium"
-            >
-              Dive into the latest tech, fashion, and lifestyle with our handpicked collections.
-            </Text>
-            <Button
-              variant="solid"
-              colorScheme="purple"
-              bg="purple.600"
-              _hover={{ bg: "purple.700", transform: "scale(1.08)", boxShadow: "md" }} // Enhanced hover
-              _active={{ bg: "purple.800" }}
-              size={{ base: "md", md: "lg" }}
-              borderRadius="full"
-              alignSelf="flex-start"
-              transition="all 0.3s ease"
-              px={{ base: 6, md: 8 }}
-              fontWeight="bold"
-              boxShadow="sm" // Default shadow for depth
-            >
-              Shop Now
-            </Button>
-          </Box>
-        </Box>
+      {/* BACKGROUND ELEGANCE */}
+      <Box
+        position="absolute"
+        top="-15%"
+        left="5%"
+        w="500px"
+        h="500px"
+        bgGradient="radial(purple.400, transparent, transparent)"
+        filter="blur(140px)"
+        opacity={0.12}
+        zIndex={0}
+      />
 
-        {/* Right Section - Category Grid */}
-        <Box flex={1}>
-          <Grid
-            gap={{ base: 3, sm: 4, md: 6 }}
-            templateColumns={{
-              base: "repeat(2, 1fr)",
-              sm: "repeat(3, 1fr)",
-              md: "repeat(4, 1fr)",
-              lg: "repeat(5, 1fr)",
-            }}
-            justifyItems="center"
+      <Box
+        position="relative"
+        zIndex={1}
+        bg="#0B0E14" // Solid deep charcoal for professional contrast
+        p={{ base: 8, md: 20 }}
+        rounded={{ base: "40px", md: "70px" }}
+        boxShadow="0 60px 100px -30px rgba(0,0,0,0.7)"
+        border="1px solid"
+        borderColor="whiteAlpha.100"
+        overflow="hidden"
+      >
+        {/* Subtle Grid for Texture */}
+        <Box
+          position="absolute"
+          inset={0}
+          opacity={0.15}
+          bgImage="url('https://www.transparenttextures.com/patterns/carbon-fibre.png')"
+          pointerEvents="none"
+        />
+
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          gap={{ base: 16, lg: 24 }}
+          align="center"
+        >
+          {/* --- CONTENT BLOCK --- */}
+          <VStack 
+            align={{ base: "center", lg: "start" }} 
+            spacing={8} 
+            flex="1"
+            textAlign={{ base: "center", lg: "left" }}
           >
-            {data.map((item) => (
-              <Box
-                key={item.id}
-                cursor="pointer"
-                role="group"
-                transition="all 0.3s ease"
-                _hover={{ transform: "translateY(-8px)" }} // Stronger lift
-                textAlign="center"
-                p={{ base: 2, md: 0 }}
+            <Badge
+              colorScheme="purple"
+              variant="outline"
+              px={4}
+              py={1.5}
+              rounded="full"
+              fontSize="xs"
+              fontWeight="extrabold"
+              letterSpacing="widest"
+              borderColor="purple.500"
+              color="purple.300"
+              bg="purple.900"
+            >
+              PREMIUM EXPERIENCE
+            </Badge>
+
+            <Box>
+              <Heading
+                as="h2"
+                fontSize={{ base: "4xl", md: "7xl" }}
+                fontWeight="900"
+                lineHeight="0.95"
+                color="white"
+                letterSpacing="-4px"
               >
-                <Center>
-                  <Box
-                    p={{ base: 2, md: 3 }}
-                    rounded="full"
-                    bg="white"
-                    boxShadow="md"
-                    transition="all 0.3s ease"
-                    _groupHover={{
-                      boxShadow: "xl",
-                      bg: "purple.100", // Richer hover background
-                      border: "1px solid",
-                      borderColor: "purple.300", // Subtle border accent
-                    }}
-                  >
-                    <Image
-                      src={item.img}
-                      alt={item.title}
-                      boxSize={{ base: "50px", sm: "60px", md: "80px" }}
-                      objectFit="contain"
-                      transition="transform 0.3s ease"
-                      _groupHover={{ transform: "scale(1.2)" }} // Bolder scale
-                    />
-                  </Box>
-                </Center>
+                Refine Your{" "}
                 <Text
-                  mt={2}
-                  fontSize={{ base: "xs", sm: "sm", md: "md" }}
-                  fontWeight="bold" // Bolder for emphasis
-                  color="gray.800" // Darker for contrast
-                  _groupHover={{ color: "purple.700" }} // Richer hover color
-                  noOfLines={1}
+                  as="span"
+                  bgGradient="linear(to-tr, #8B5CF6, #EC4899)"
+                  bgClip="text"
                 >
-                  {item.title}
-                </Text>
-              </Box>
-            ))}
-          </Grid>
-        </Box>
-      </Flex>
+                  Daily
+                </Text>{" "}
+                Life.
+              </Heading>
+              <Text
+                mt={6}
+                fontSize={{ base: "md", md: "lg" }}
+                color="whiteAlpha.600"
+                maxW="500px"
+                lineHeight="tall"
+              >
+                Experience a hand-picked collection of technology and fashion designed for the modern connoisseur. Quality meets aesthetic.
+              </Text>
+            </Box>
+
+            <Flex gap={4} direction={{ base: "column", sm: "row" }}>
+              <Button
+                size="lg"
+                height="65px"
+                px={10}
+                bg="white"
+                color="black"
+                rounded="full"
+                fontWeight="bold"
+                rightIcon={<FiArrowRight />}
+                _hover={{ bg: "purple.100", transform: "translateY(-4px)" }}
+                transition="all 0.3s ease"
+              >
+                Shop Collection
+              </Button>
+              <Button
+                size="lg"
+                height="65px"
+                px={10}
+                variant="outline"
+                color="white"
+                rounded="full"
+                borderColor="whiteAlpha.300"
+                _hover={{ bg: "whiteAlpha.100" }}
+              >
+                View Catalog
+              </Button>
+            </Flex>
+          </VStack>
+
+          {/* --- CATEGORY GRID --- */}
+          <Box flex="1.2" w="full">
+            <Grid
+              templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }}
+              gap={6}
+            >
+              {data.slice(0, 6).map((item, idx) => (
+                <Box
+                  key={item.id}
+                  role="group"
+                  cursor="pointer"
+                  animation={`${softFloat} ${4 + idx}s infinite ease-in-out`}
+                >
+                  <VStack
+                    p={8}
+                    bg="whiteAlpha.50"
+                    rounded="3xl"
+                    border="1px solid"
+                    borderColor="whiteAlpha.100"
+                    transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{
+                      bg: "whiteAlpha.200",
+                      borderColor: "purple.500",
+                      transform: "scale(1.05)",
+                      boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+                    }}
+                    textAlign="center"
+                  >
+                    <Box 
+                      p={4} 
+                      bg="whiteAlpha.100" 
+                      rounded="2xl" 
+                      mb={2}
+                      transition="0.4s"
+                      _groupHover={{ bg: "white", transform: "rotate(-5deg)" }}
+                    >
+                      <Image
+                        src={item.img}
+                        alt={item.title}
+                        boxSize="70px"
+                        objectFit="contain"
+                        filter="grayscale(100%)"
+                        transition="0.4s"
+                        _groupHover={{ filter: "grayscale(0%)", transform: "scale(1.1)" }}
+                      />
+                    </Box>
+
+                    <Text
+                      fontWeight="bold"
+                      color="white"
+                      fontSize="sm"
+                      letterSpacing="wide"
+                    >
+                      {item.title}
+                    </Text>
+                    
+                    <Icon 
+                      as={FiChevronRight} 
+                      color="purple.400" 
+                      opacity={0} 
+                      transform="translateX(-10px)"
+                      transition="0.3s"
+                      _groupHover={{ opacity: 1, transform: "translateX(0)" }}
+                    />
+                  </VStack>
+                </Box>
+              ))}
+            </Grid>
+          </Box>
+        </Flex>
+      </Box>
     </Box>
   );
 };
 
-export default SpecificCategorySection;
+export default HeroSectionProfessional;

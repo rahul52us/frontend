@@ -15,7 +15,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Text,
+  // Text removed to resolve 'no-unused-vars' error
   useBreakpointValue,
   useDisclosure,
 } from "@chakra-ui/react";

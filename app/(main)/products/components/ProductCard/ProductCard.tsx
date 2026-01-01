@@ -1,166 +1,253 @@
+"use client";
+
 import {
   Box,
   Button,
   Flex,
   Heading,
-  IconButton,
   Image,
   Text,
   useDisclosure,
+  Badge,
+  VStack,
+  useColorModeValue,
+  Circle,
+  HStack,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FiEye, FiHeart } from "react-icons/fi";
+import { FiEye, FiHeart, FiShoppingBag } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 import { useRouter } from "next/navigation";
+import { keyframes } from "@emotion/react";
 
-const ProductCard = ({ product }: any) => {
+const pulse = keyframes`
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+`;
+
+// FIX: Updated interface to accept number OR string for price
+interface ProductCardProps {
+  product: {
+    id?: string | number; // Added to match the key usage in ShopPage
+    image: string;
+    category: string;
+    name: string;
+    price: number | string; 
+  };
+}
+
+const ProductCard = ({ product }: ProductCardProps) => {
   const router = useRouter();
   const { image, category, name, price } = product;
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedImage, setSelectedImage] = useState<any>([]);
+  const [selectedImage, setSelectedImage] = useState<string[]>([]);
 
-  // Static discount price for now
-  const discountPrice = 499; // Example static value
-  // Calculate discount percentage statically
-  const discountPercentage = Math.round(((price - discountPrice) / price) * 100);
+  // FIX: Safety check to ensure price is treated as a number for calculations
+  const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+  
+  const discountPrice = 499;
+  // Calculate percentage only if price is valid and greater than discount
+  const discountPercentage = numericPrice > 0 
+    ? Math.round(((numericPrice - discountPrice) / numericPrice) * 100) 
+    : 0;
 
-  const handleImageClick = () => {
+  const cardBg = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.900", "whiteAlpha.900");
+  const borderColor = useColorModeValue("gray.50", "whiteAlpha.100");
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setSelectedImage([image]);
     onOpen();
   };
 
   return (
     <Box
-      h="340px"
-      maxW="100%"
-      bg="white"
-      border="1px solid"
-      borderColor="gray.200"
-      borderRadius="lg"
-      overflow="hidden"
-      transition="all 0.3s ease"
-      _hover={{
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)", // Slightly deeper shadow
-        borderColor: "gray.300",
-      }}
+      position="relative"
       role="group"
+      h="440px"
       w="100%"
+      bg={cardBg}
+      borderRadius="30px"
+      overflow="hidden"
+      transition="all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+      border="1px solid"
+      borderColor={borderColor}
+      _hover={{
+        transform: "translateY(-12px)",
+        boxShadow: "0 30px 60px -15px rgba(0, 0, 0, 0.1)",
+      }}
     >
-      <Box position="relative" h="180px">
+      <Box position="relative" h="240px" overflow="hidden">
         <Image
           src={image}
           alt={name}
           objectFit="cover"
           w="100%"
           h="100%"
-          transition="all 0.3s ease"
-          _groupHover={{
-            filter: "brightness(1.1) contrast(1.03)", // Enhanced image pop
-          }}
+          cursor="pointer"
+          onClick={() => router.push("individual-product")}
+          transition="transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)"
+          _groupHover={{ transform: "scale(1.12)" }}
         />
-        {/* Stylish Gradient Discount Badge */}
-        <Box
+
+        <Badge
           position="absolute"
-          top="0"
-          left="0"
-          bgGradient="linear(to-r, purple.600, purple.800)" // Gradient for flair
-          color="white"
-          fontSize="xs"
-          fontWeight="bold"
-          px={2.5}
+          top="4"
+          left="4"
+          variant="solid"
+          bg="whiteAlpha.900"
+          backdropFilter="blur(10px)"
+          color="gray.800"
+          px={3}
           py={1}
-          borderRadius="0 0 6px 0" // Slightly larger curve
-          transform="translate(-1px, -1px)"
-          boxShadow="0 2px 6px rgba(0, 0, 0, 0.25)" // Deeper shadow
+          borderRadius="full"
+          fontSize="10px"
+          fontWeight="bold"
           textTransform="uppercase"
-          letterSpacing="wide" // Stylish spacing
+          letterSpacing="wider"
         >
-          {discountPercentage}% Off
-        </Box>
+          {category}
+        </Badge>
+
         <Flex
           position="absolute"
-          top="2"
-          right="2"
-          gap={1.5}
+          inset="0"
+          bg="blackAlpha.200"
           opacity={0}
-          transition="opacity 0.25s ease"
-          _groupHover={{
-            opacity: 1,
-          }}
+          transition="all 0.3s ease"
+          _groupHover={{ opacity: 1 }}
+          align="center"
+          justify="center"
+          gap={3}
         >
-          <IconButton
-            aria-label="Quick view"
-            icon={<FiEye />}
-            size="sm"
-            borderRadius="full" // Circular for a modern touch
-            bg="white"
-            color="gray.700"
-            border="1px solid"
-            borderColor="gray.200"
-            _hover={{ bg: "gray.50", color: "purple.600" }} // Tie to theme
-            onClick={handleImageClick}
-          />
-          <IconButton
-            aria-label="Add to wishlist"
-            icon={<FiHeart />}
-            size="sm"
-            borderRadius="full"
-            bg="white"
-            color="gray.700"
-            border="1px solid"
-            borderColor="gray.200"
-            _hover={{ bg: "gray.50", color: "red.500" }}
-          />
+          <Tooltip label="Quick View" hasArrow>
+            <Circle
+              size="46px"
+              bg="white"
+              color="purple.600"
+              cursor="pointer"
+              onClick={handleImageClick}
+              transition="0.2s"
+              _hover={{ transform: "scale(1.1)", bg: "purple.600", color: "white" }}
+            >
+              <FiEye size="20px" />
+            </Circle>
+          </Tooltip>
+          <Tooltip label="Add to Wishlist" hasArrow>
+            <Circle
+              size="46px"
+              bg="white"
+              color="red.400"
+              cursor="pointer"
+              transition="0.2s"
+              _hover={{ transform: "scale(1.1)", bg: "red.400", color: "white" }}
+            >
+              <FiHeart size="20px" />
+            </Circle>
+          </Tooltip>
         </Flex>
       </Box>
-      <Box px={4} py={4} h="160px" display="flex" flexDir="column" justifyContent="space-between">
-        <Box>
-          <Text fontSize="xs" color="gray.600" fontWeight="medium" textTransform="uppercase" mb={2}>
-            {category}
-          </Text>
+
+      <Box px={6} py={5}>
+        <VStack align="start" spacing={1} mb={4}>
+          <HStack spacing={2}>
+            <Box
+              w="8px"
+              h="8px"
+              bg="green.400"
+              borderRadius="full"
+              animation={`${pulse} 2s infinite`}
+            />
+            <Text fontSize="10px" fontWeight="black" color="gray.400" letterSpacing="1px">
+              IN STOCK
+            </Text>
+          </HStack>
           <Heading
-            fontSize={{ base: "md", md: "lg" }} // Responsive size
-            fontWeight="semibold"
-            minH="40px"
+            fontSize="lg"
+            fontWeight="bold"
+            color={textColor}
+            noOfLines={1}
             cursor="pointer"
             onClick={() => router.push("individual-product")}
-            noOfLines={2}
-            color="gray.900" // Darker for contrast
-            _hover={{ color: "purple.700" }}
+            _hover={{ color: "purple.500" }}
           >
             {name}
           </Heading>
-        </Box>
-        <Flex justify="space-between" align="center">
-          <Box>
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color="gray.500" // Slightly darker gray
-              textDecoration="line-through"
-            >
-              ₹{price}
-            </Text>
-            <Text fontSize="lg" fontWeight="extrabold" color="purple.700">
+        </VStack>
+
+        <Flex justify="space-between" align="flex-end">
+          <VStack align="start" spacing={0}>
+            <HStack align="center" spacing={2}>
+                <Text fontSize="xs" color="gray.400" textDecoration="line-through">
+                ₹{price}
+                </Text>
+                {discountPercentage > 0 && (
+                  <Badge colorScheme="purple" variant="subtle" borderRadius="md" fontSize="9px">
+                      -{discountPercentage}%
+                  </Badge>
+                )}
+            </HStack>
+            <Text fontSize="2xl" fontWeight="900" color="purple.600" letterSpacing="-1px">
               ₹{discountPrice}
             </Text>
-          </Box>
+          </VStack>
+
           <Button
-            size="sm"
-            colorScheme="purple"
-            variant="solid"
-            borderRadius="full" // Circular button
-            px={5} // Wider for balance
+            leftIcon={<FiShoppingBag />}
+            size="lg"
             bg="purple.600"
-            fontWeight="semibold"
-            _hover={{ bg: "purple.700", transform: "scale(1.05)" }} // Subtle scale
-            _active={{ bg: "purple.800" }}
-            onClick={() => alert("Added to cart!")}
+            color="white"
+            borderRadius="18px"
+            px={7}
+            fontSize="sm"
+            fontWeight="bold"
+            boxShadow="0 10px 20px -10px rgba(128, 90, 213, 0.6)"
+            _hover={{
+              bg: "purple.700",
+              transform: "translateY(-2px)",
+              boxShadow: "0 15px 30px -10px rgba(128, 90, 213, 0.7)",
+            }}
+            _active={{ transform: "scale(0.95)" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              alert("Added to cart!");
+            }}
           >
             Add
           </Button>
         </Flex>
+
+        <Box 
+            mt={5} 
+            opacity={0} 
+            transform="translateY(10px)" 
+            transition="0.4s ease" 
+            _groupHover={{ opacity: 1, transform: "translateY(0)" }}
+        >
+            <Flex justify="space-between" align="center" mb={1.5}>
+                <Text fontSize="10px" fontWeight="bold" color="orange.500">LIMITED QUANTITY</Text>
+                <Text fontSize="10px" fontWeight="bold" color="gray.400">8 LEFT</Text>
+            </Flex>
+            <Box w="100%" h="4px" bg="gray.100" borderRadius="full">
+                <Box w="30%" h="100%" bg="orange.400" borderRadius="full" />
+            </Box>
+        </Box>
       </Box>
+
+      <Box
+        position="absolute"
+        bottom="0"
+        left="0"
+        h="6px"
+        w="0%"
+        bgGradient="linear(to-r, purple.400, pink.400, orange.400)"
+        transition="all 0.8s cubic-bezier(0.23, 1, 0.32, 1)"
+        _groupHover={{ w: "100%" }}
+      />
+
       <ImageViewerWithModal isOpen={isOpen} onClose={onClose} images={selectedImage} />
     </Box>
   );

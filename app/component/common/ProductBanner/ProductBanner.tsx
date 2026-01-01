@@ -1,167 +1,224 @@
-import { Box, Button, Flex, Heading, IconButton, Image, Stack, Text } from '@chakra-ui/react';
+'use client'
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  IconButton,
+  Image,
+  Stack,
+  Text,
+  Badge,
+  HStack,
+  VStack,
+  chakra,
+  shouldForwardProp,
+} from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiChevronLeft, FiChevronRight, FiShoppingBag } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Properly filter props and handle the transition type conflict
+const MotionBox = chakra(motion.div, {
+  shouldForwardProp: (prop) => shouldForwardProp(prop) || prop === 'transition',
+});
 
 const ProductBanner = () => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(0);
+
   const productImages = [
-    'https://images.unsplash.com/photo-1619113026857-7aa017691b1f?w=600&auto=format&fit=crop&q=60',
-    'https://images.unsplash.com/photo-1615281612781-4b972bd4e3fe?w=600&auto=format&fit=crop&q=60',
-    'https://images.unsplash.com/photo-1715548199124-3e49b59feb5c?w=600&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1619113026857-7aa017691b1f?w=800&q=80',
+    'https://images.unsplash.com/photo-1615281612781-4b972bd4e3fe?w=800&q=80',
+    'https://images.unsplash.com/photo-1715548199124-3e49b59feb5c?w=800&q=80',
   ];
 
-  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
-  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.8,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+      scale: 0.8,
+    }),
+  };
+
+  const paginate = (newDirection: number) => {
+    setDirection(newDirection);
+    setCurrent((prev) => (prev + newDirection + productImages.length) % productImages.length);
+  };
 
   return (
-    <Flex
-      direction={{ base: 'column', md: 'row' }} // Column on mobile, row on tablet/desktop
-      position="relative"
-      minH={{ base: 'auto', md: '450px', lg: '500px' }}
-      borderRadius={{ base: 'xl', md: '2xl', lg: '3xl' }}
-      overflow="hidden"
-      boxShadow={{ base: 'md', md: 'lg', lg: 'dark-lg' }}
-      bgGradient="linear(to-r, #1e3a8a, #9333ea)"
-      _hover={{ transform: { md: 'scale(1.005)' } }} // Hover effect only on larger screens
-      transition="all 0.4s ease"
-      p={{ base: 4, md: 6, lg: 8 }} // Responsive padding
-      align="center"
-      justify="space-between"
-      w="100%"
-      // maxW="1200px" // Max width for desktop
-      mx="auto" // Center on page
-    >
-      {/* Left Side - Product Info */}
-      <Stack
-        flex={{ base: '1', md: '1' }}
-        spacing={{ base: 4, md: 6 }}
-        color="white"
-        maxW={{ base: '100%', md: '450px', lg: '500px' }}
-        zIndex={2}
-        align={{ base: 'center', md: 'flex-start' }}
-        textAlign={{ base: 'center', md: 'left' }}
-      >
-        <Box
-          bg="whiteAlpha.300"
-          px={{ base: 3, md: 4 }}
-          py={2}
-          borderRadius="full"
-          w="fit-content"
-          backdropFilter="blur(10px)"
-        >
-          <Text fontSize={{ base: 'xs', md: 'sm', lg: 'lg' }} fontWeight="bold">🔥 Limited Time Offer</Text>
-        </Box>
-
-        <Heading
-          fontSize={{ base: '2xl', md: '4xl', lg: '5xl' }}
-          fontWeight="extrabold"
-          lineHeight="1.1"
-        >
-          Quantum X3 Pro{' '}
-          <Text as="span" bgGradient="linear(to-r, yellow.400, orange.400)" bgClip="text">
-            Wireless
-          </Text>
-        </Heading>
-
-        <Text
-          fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}
-          color="gray.200"
-          noOfLines={{ base: 3, md: 4 }} // Limit text overflow
-        >
-          Experience unparalleled sound with AI-enhanced noise cancellation and ultra-fast charging.
-        </Text>
-
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          align="center"
-          gap={{ base: 2, md: 4 }}
-        >
-          <Text fontSize={{ base: 'xl', md: '2xl', lg: '3xl' }} fontWeight="bold">
-            $199
-            <Text as="span" fontSize={{ base: 'md', md: 'xl' }} color="gray.300">
-              .99
-            </Text>
-          </Text>
-          <Text
-            textDecoration="line-through"
-            fontSize={{ base: 'md', md: 'xl' }}
-            color="gray.400"
-          >
-            $399.99
-          </Text>
-        </Flex>
-
-        <Button
-          size={{ base: 'md', md: 'lg' }}
-          px={{ base: 6, md: 8 }}
-          py={{ base: 4, md: 6 }}
-          borderRadius="xl"
-          w={'100%'}
-          bgGradient="linear(to-r, yellow.400, orange.400)"
-          color="black"
-          fontSize={{ base: 'md', md: 'xl' }}
-          fontWeight="bold"
-          boxShadow={{ base: 'md', md: 'lg' }}
-          _hover={{
-            transform: { md: 'scale(1.08)' },
-            bgGradient: 'linear(to-r, yellow.300, orange.300)'
-          }}
-          transition="all 0.3s ease"
-          rightIcon={<FiShoppingBag />}
-        >
-          Add to Cart
-        </Button>
-      </Stack>
-
-      {/* Right Side - Product Image Carousel */}
-      <Box
-        flex={{ base: '1', md: '0.8', lg: '0.4' }}
+    <Box position="relative" w="100%" overflow="hidden" py={10} px={4}>
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
         position="relative"
-        // maxW={{ base: '100%', md: '400px', lg: '450px' }}
-        mt={{ base: 6, md: 0 }}
+        minH={{ base: '600px', md: '500px' }}
+        borderRadius="3xl"
+        overflow="hidden"
+        bg="gray.900"
+        p={{ base: 6, md: 12 }}
+        align="center"
+        justify="space-between"
       >
-        <Image
-          src={productImages[currentImageIndex]}
-          alt="Quantum X3 Pro"
-          w="100%"
-          h={{ base: '300px', md: '350px', lg: '400px' }}
-          objectFit="cover"
-          borderRadius={{ base: 'lg', md: 'xl' }}
-          boxShadow={{ base: 'lg', md: '2xl' }}
-          transition="opacity 0.5s ease-in-out"
+        {/* Background Decorations */}
+        <Box
+          position="absolute"
+          top="-20%"
+          right="-10%"
+          w="500px"
+          h="500px"
+          bgGradient="radial(circle, purple.600 0%, transparent 70%)"
+          opacity="0.4"
+          filter="blur(80px)"
+          zIndex={0}
         />
 
-        {/* Carousel Controls - Hidden on mobile if space is tight */}
-        <IconButton
-          aria-label="Previous Image"
-          icon={<FiChevronLeft />}
-          position="absolute"
-          left={{ base: 2, md: -6 }}
-          top="50%"
-          transform="translateY(-50%)"
-          bg="whiteAlpha.300"
+        {/* Left Content */}
+        <Stack
+          flex="1"
+          spacing={8}
           color="white"
-          size={{ base: 'sm', md: 'md' }}
-          _hover={{ bg: 'whiteAlpha.500' }}
-          onClick={prevImage}
-          display={{ base: productImages.length > 1 ? 'flex' : 'none', md: 'flex' }}
-        />
-        <IconButton
-          aria-label="Next Image"
-          icon={<FiChevronRight />}
-          position="absolute"
-          right={{ base: 2, md: -6 }}
-          top="50%"
-          transform="translateY(-50%)"
-          bg="whiteAlpha.300"
-          color="white"
-          size={{ base: 'sm', md: 'md' }}
-          _hover={{ bg: 'whiteAlpha.500' }}
-          onClick={nextImage}
-          display={{ base: productImages.length > 1 ? 'flex' : 'none', md: 'flex' }}
-        />
-      </Box>
-    </Flex>
+          zIndex={2}
+          align={{ base: 'center', md: 'flex-start' }}
+          textAlign={{ base: 'center', md: 'left' }}
+        >
+          <MotionBox
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 } as any}
+          >
+            <Badge
+              px={4}
+              py={1}
+              borderRadius="full"
+              bg="whiteAlpha.200"
+              color="orange.300"
+              border="1px solid"
+              borderColor="whiteAlpha.300"
+              backdropFilter="blur(10px)"
+              textTransform="none"
+              fontSize="sm"
+            >
+              ✨ New Arrival: Edition 2024
+            </Badge>
+          </MotionBox>
+
+          <VStack align={{ base: 'center', md: 'flex-start' }} spacing={3}>
+            <Heading fontSize={{ base: '4xl', md: '6xl' }} fontWeight="900" lineHeight="1">
+              Quantum <br />
+              <chakra.span color="blue.400">X3 Pro</chakra.span>
+            </Heading>
+            <Text fontSize="lg" color="gray.400" maxW="400px">
+              Precision engineered for those who demand absolute sonic purity.
+            </Text>
+          </VStack>
+
+          <HStack spacing={4}>
+            <Text fontSize="4xl" fontWeight="800">$199</Text>
+            <Text textDecoration="line-through" color="gray.500" fontSize="xl">$349</Text>
+          </HStack>
+
+          <Button
+            as={motion.button}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            size="lg"
+            h="70px"
+            px={10}
+            bg="white"
+            color="black"
+            fontSize="xl"
+            borderRadius="2xl"
+            rightIcon={<FiShoppingBag />}
+            _hover={{ bg: 'blue.400', color: 'white' }}
+          >
+            Pre-order Now
+          </Button>
+        </Stack>
+
+        {/* Right Carousel */}
+        <Box
+          flex="1"
+          position="relative"
+          w="100%"
+          h={{ base: '300px', md: '450px' }}
+          mt={{ base: 12, md: 0 }}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <AnimatePresence initial={false} custom={direction}>
+            <MotionBox
+              key={current}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.2 },
+              } as any}
+              position="absolute"
+              w="100%"
+              h="100%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Image
+                src={productImages[current]}
+                alt="Product"
+                objectFit="contain"
+                maxH="100%"
+                filter="drop-shadow(0 20px 50px rgba(0,0,0,0.5))"
+              />
+            </MotionBox>
+          </AnimatePresence>
+
+          {/* Indicators & Controls */}
+          <HStack position="absolute" bottom="-10" spacing={4} zIndex={10}>
+            <IconButton
+              aria-label="prev"
+              icon={<FiChevronLeft />}
+              onClick={() => paginate(-1)}
+              rounded="full"
+              variant="outline"
+              color="white"
+            />
+            {productImages.map((_, i) => (
+              <Box
+                key={i}
+                w={current === i ? '30px' : '8px'}
+                h="8px"
+                bg={current === i ? 'blue.400' : 'gray.600'}
+                borderRadius="full"
+                transition="0.3s ease"
+              />
+            ))}
+            <IconButton
+              aria-label="next"
+              icon={<FiChevronRight />}
+              onClick={() => paginate(1)}
+              rounded="full"
+              variant="outline"
+              color="white"
+            />
+          </HStack>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 

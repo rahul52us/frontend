@@ -1,11 +1,6 @@
-// Updated ShopForm with:
-// - Static sidebar on all screens
-// - Save Section button per step
-// - Clean buttons
-
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Formik, Form } from "formik";
 import {
   Box,
@@ -62,7 +57,6 @@ const SectionHeader = ({ activeSection, sections }) => {
       boxShadow="md"
       position="relative"
     >
-      {/* Top Progress Bar */}
       <Box
         position="absolute"
         top={0}
@@ -97,11 +91,7 @@ const SectionHeader = ({ activeSection, sections }) => {
             <Icon as={sections[activeSection]?.icon || FiLayers} boxSize={6} />
           </Box>
           <VStack align="start" spacing={0}>
-            <Heading
-              fontSize={{ base: "lg", md: "2xl" }}
-              fontWeight="bold"
-              color="gray.800"
-            >
+            <Heading fontSize={{ base: "lg", md: "2xl" }} fontWeight="bold" color="gray.800">
               Build Your Shop
             </Heading>
             <Text fontSize="sm" color="gray.500">
@@ -141,7 +131,8 @@ const ShopForm = observer(() => {
     shopStore: { getSingleShop },
   } = stores;
 
-  const { shopTitle } = useParams();
+  // shopTitle removed as it was unused
+  useParams(); 
 
   const sections = [
     { title: "Shop Details", icon: FaStore, component: ShopDetailsSection },
@@ -152,33 +143,46 @@ const ShopForm = observer(() => {
     { title: "Operating Hours", icon: FaClock, component: OperatingHoursSection },
   ];
 
-  useEffect(() => {
-    const fetchShopData = async () => {
-      try {
-        const data = await getSingleShop({
-          title: user?.company?.name,
-          status: user?.company?.shopStatus,
-        });
+  const fetchShopData = useCallback(async () => {
+    if (!user?.company?.name) return;
+    
+    try {
+      setLoading(true);
+      const data = await getSingleShop({
+        title: user.company.name,
+        status: user.company.shopStatus,
+      });
 
-        if (!data?.data) setError("Shop not found");
-        else {
-          const coverImage = data.data.coverImage?.url ? { file: [data.data.coverImage] } : { file: [] };
-          const logo = data.data.logo?.url ? { file: [data.data.logo] } : { file: [] };
-          const gallery = Array.isArray(data.data.gallery)
-            ? data.data.gallery.map((item) => ({ file: item.file?.url ? [item.file] : [], title: item.title || "" }))
-            : [];
+      if (!data?.data) {
+        setError("Shop not found");
+      } else {
+        const coverImage = data.data.coverImage?.url ? { file: [data.data.coverImage] } : { file: [] };
+        const logo = data.data.logo?.url ? { file: [data.data.logo] } : { file: [] };
+        const gallery = Array.isArray(data.data.gallery)
+          ? data.data.gallery.map((item) => ({ 
+              file: item.file?.url ? [item.file] : [], 
+              title: item.title || "" 
+            }))
+          : [];
 
-          setInitialValues({ ...initialValues, ...data.data, coverImage, logo, gallery });
-        }
-      } catch {
-        setError("Failed to fetch shop data.");
-      } finally {
-        setLoading(false);
+        setInitialValues(prev => ({ 
+            ...prev, 
+            ...data.data, 
+            coverImage, 
+            logo, 
+            gallery 
+        }));
       }
-    };
+    } catch {
+      setError("Failed to fetch shop data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [getSingleShop, user?.company?.name, user?.company?.shopStatus]);
 
+  useEffect(() => {
     fetchShopData();
-  }, [shopTitle, getSingleShop]);
+  }, [fetchShopData]);
 
   const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
@@ -220,7 +224,7 @@ const ShopForm = observer(() => {
 
       await updateCompanyDetails({ ...formData, _id: user?.company?._id, shopStatus: "active" });
       openNotification({ title: "Success", message: "Shop saved", type: "success" });
-    } catch (err) {
+    } catch (err: any) {
       openNotification({
         title: "Update Failed",
         message: err?.data?.message || "Something went wrong",
@@ -232,65 +236,55 @@ const ShopForm = observer(() => {
   };
 
   if (loading) return <Center minH="80vh"><SpinnerLoader size="xl" /></Center>;
-  if (error) return <Center minH="80vh"><Text color="red.500">{error}</Text></Center>;
+  if (error) return <Center minH="80vh"><VStack><Text color="red.500">{error}</Text><Button onClick={fetchShopData} size="sm">Retry</Button></VStack></Center>;
 
   return (
     <Container maxW="container.2xl" py={4}>
       <Flex direction={{ base: "column", md: "row" }} gap={4}>
-        {/* Static Sidebar */}
-        <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200">
+        <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200" bg="white" height="fit-content">
           <VStack align="stretch" spacing={3} px={2}>
-  <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
-    Form Sections
-  </Text>
-  <Divider borderColor="gray.300" mb={2} />
+            <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
+              Form Sections
+            </Text>
+            <Divider borderColor="gray.300" mb={2} />
 
-  {sections.map((section, index) => {
-    const isActive = activeSection === index;
+            {sections.map((section, index) => {
+              const isActive = activeSection === index;
+              return (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  leftIcon={<Icon as={section.icon} boxSize={5} />}
+                  fontWeight={isActive ? "bold" : "normal"}
+                  color={isActive ? "blue.600" : "gray.700"}
+                  bg={isActive ? "blue.50" : "transparent"}
+                  _hover={{ bg: "blue.50", transform: "translateX(2px)" }}
+                  size="md"
+                  onClick={() => setActiveSection(index)}
+                  borderRadius="md"
+                  px={3}
+                  py={2}
+                  transition="all 0.2s ease"
+                >
+                  {section.title}
+                </Button>
+              );
+            })}
 
-    return (
-      <Button
-        key={index}
-        variant="ghost"
-        justifyContent="flex-start"
-        leftIcon={<Icon as={section.icon} boxSize={5} />}
-        fontWeight={isActive ? "bold" : "normal"}
-        color={isActive ? "blue.600" : "gray.700"}
-        bg={isActive ? "blue.50" : "transparent"}
-        _hover={{
-          bg: "blue.50",
-          transform: "translateX(2px)",
-        }}
-        _active={{
-          bg: "blue.100",
-        }}
-        size="md"
-        onClick={() => setActiveSection(index)}
-        borderRadius="md"
-        px={3}
-        py={2}
-        transition="all 0.2s ease"
-      >
-        {section.title}
-      </Button>
-    );
-  })}
-
-  <Progress
-    mt={3}
-    size="sm"
-    value={(activeSection + 1) * (100 / sections.length)}
-    borderRadius="full"
-    colorScheme="blue"
-    bg="gray.100"
-    hasStripe
-  />
-</VStack>
-
+            <Progress
+              mt={3}
+              size="sm"
+              value={(activeSection + 1) * (100 / sections.length)}
+              borderRadius="full"
+              colorScheme="blue"
+              bg="gray.100"
+              hasStripe
+            />
+          </VStack>
         </Box>
 
-        {/* Main Form */}
-        <Box flex={1} borderRadius="2xl" boxShadow="xl" p={2} border="1px solid" borderColor="gray.200">
+        <Box flex={1} borderRadius="2xl" boxShadow="xl" p={6} border="1px solid" borderColor="gray.200" bg="white">
           <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
@@ -299,28 +293,16 @@ const ShopForm = observer(() => {
           >
             {({ values, errors, setFieldValue, isSubmitting, submitForm }) => (
               <Form>
-                <VStack spacing={4} align="stretch">
+                <VStack spacing={6} align="stretch">
                   <SectionHeader activeSection={activeSection} sections={sections} />
-                  {sections[activeSection].component({ values, errors, setFieldValue, showError })}
+                  
+                  <Box minH="400px">
+                    {sections[activeSection].component({ values, errors, setFieldValue, showError })}
+                  </Box>
 
-                  {/* Inline Save Section */}
-                  <Flex justify="flex-end">
-                    <Button
-                      size="sm"
-                      colorScheme="teal"
-                      variant="outline"
-                      isLoading={isSubmitting}
-                      onClick={() => {
-                        setShowError(true);
-                        submitForm();
-                      }}
-                    >
-                      Save Section
-                    </Button>
-                  </Flex>
+                  <Divider />
 
-                  {/* Navigation */}
-                  <Flex justify="space-between" pt={4}>
+                  <Flex justify="space-between" align="center">
                     <Button
                       onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
                       isDisabled={activeSection === 0}
@@ -328,23 +310,39 @@ const ShopForm = observer(() => {
                     >
                       Previous
                     </Button>
-                    {activeSection < sections.length - 1 ? (
+
+                    <HStack spacing={4}>
                       <Button
-                        onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
-                        colorScheme="blue"
-                      >
-                        Next
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
+                        size="md"
+                        colorScheme="teal"
+                        variant="ghost"
                         isLoading={isSubmitting}
-                        colorScheme="blue"
-                        onClick={() => setShowError(true)}
+                        onClick={() => {
+                          setShowError(true);
+                          submitForm();
+                        }}
                       >
-                        Save Shop
+                        Save Section
                       </Button>
-                    )}
+
+                      {activeSection < sections.length - 1 ? (
+                        <Button
+                          onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
+                          colorScheme="blue"
+                        >
+                          Next
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          isLoading={isSubmitting}
+                          colorScheme="blue"
+                          onClick={() => setShowError(true)}
+                        >
+                          Save Shop
+                        </Button>
+                      )}
+                    </HStack>
                   </Flex>
                 </VStack>
               </Form>

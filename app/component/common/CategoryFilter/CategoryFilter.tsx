@@ -1,5 +1,21 @@
+"use client";
+
 import React, { useState } from 'react';
-import { Box, Flex, Image, Text, Center, VStack, Circle, BoxProps } from '@chakra-ui/react';
+import { 
+  Box, 
+  Image, 
+  Text, 
+  useColorModeValue,
+  chakra,
+  shouldForwardProp,
+  HStack,
+  Center
+} from '@chakra-ui/react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const MotionBox = chakra(motion.div, {
+  shouldForwardProp: (prop) => shouldForwardProp(prop) && prop !== 'transition',
+});
 
 interface Category {
   id: number;
@@ -9,138 +25,142 @@ interface Category {
 }
 
 const categories: Category[] = [
-  { id: 1, name: 'Electronics', image: 'https://images.unsplash.com/photo-1610438250910-01cb769c1334?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'blue.400' },
-  { id: 2, name: 'Fashion', image: 'https://images.unsplash.com/photo-1587467512961-120760940315?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'pink.400' },
-  { id: 3, name: 'Home Decor', image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'green.400' },
-  { id: 4, name: 'Mobiles', image: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'purple.400' },
-  { id: 5, name: 'Beauty', image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'red.400' },
-  { id: 6, name: 'Sports', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'orange.400' },
-  { id: 7, name: 'Books', image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'teal.400' },
-  { id: 8, name: 'Toys', image: 'https://images.unsplash.com/photo-1556012018-50c5c0da73bf?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'yellow.500' },
-  { id: 9, name: 'Fitness', image: 'https://images.unsplash.com/photo-1655869443567-492f48ee8d77?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3', color: 'cyan.400' },
+  { id: 1, name: 'Electronics', image: 'https://images.unsplash.com/photo-1610438250910-01cb769c1334?w=200&q=80', color: '#3182CE' },
+  { id: 2, name: 'Fashion', image: 'https://images.unsplash.com/photo-1587467512961-120760940315?w=200&q=80', color: '#D53F8C' },
+  { id: 3, name: 'Home Decor', image: 'https://images.unsplash.com/photo-1615874694520-474822394e73?w=200&q=80', color: '#38A169' },
+  { id: 4, name: 'Mobiles', image: 'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=200&q=80', color: '#805AD5' },
+  { id: 5, name: 'Beauty', image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&q=80', color: '#E53E3E' },
+  { id: 6, name: 'Sports', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&q=80', color: '#DD6B20' },
+  { id: 7, name: 'Books', image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=200&q=80', color: '#319795' },
+  { id: 8, name: 'Toys', image: 'https://images.unsplash.com/photo-1556012018-50c5c0da73bf?w=200&q=80', color: '#D69E2E' },
+  { id: 9, name: 'Fitness', image: 'https://images.unsplash.com/photo-1655869443567-492f48ee8d77?w=200&q=80', color: '#00B5D8' },
 ];
 
 const CategoryFilter: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number>(1);
+  const activeColor = categories.find(c => c.id === selected)?.color || '#3182CE';
+
+  const dockBg = useColorModeValue("rgba(255, 255, 255, 0.6)", "rgba(15, 15, 20, 0.6)");
+  const borderCol = useColorModeValue("whiteAlpha.800", "whiteAlpha.100");
 
   return (
-    <Box
-      as="nav"
-      py={8}
-      px={{ base: 4, md: 10 }}
-      bg="white"
-      overflowX="auto"
-      sx={{
-        '&::-webkit-scrollbar': { display: 'none' },
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-      }}
-    >
-      <Flex
-        maxW="1400px"
-        mx="auto"
-        gap={{ base: 8, md: 12 }}
-        justifyContent={{ base: 'flex-start', md: 'center' }}
-        alignItems="flex-end" // Aligns text and icons beautifully
+    <Center py={10} px={4} position="relative">
+      {/* 1. BACKGROUND AMBIENCE - Subtle pulse of the active color */}
+      <MotionBox
+        animate={{ scale: [1, 1.05, 1], opacity: [0.05, 0.08, 0.05] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" } as any}
+        position="absolute"
+        w="500px"
+        h="150px"
+        bg={activeColor}
+        filter="blur(80px)"
+        borderRadius="full"
+        zIndex={0}
+      />
+
+      {/* 2. THE DOCK */}
+      <MotionBox
+        layout
+        bg={dockBg}
+        backdropFilter="blur(20px) saturate(160%)"
+        p={1.5}
+        borderRadius="28px"
+        border="1px solid"
+        borderColor={borderCol}
+        boxShadow="0 20px 40px -15px rgba(0,0,0,0.1)"
+        position="relative"
+        zIndex={1}
       >
-        {categories.map((category) => {
-          const isActive = activeCategory === category.id;
+        <HStack spacing={1} align="center">
+          {categories.map((category) => {
+            const isActive = selected === category.id;
 
-          return (
-            <VStack
-              key={category.id}
-              spacing={4}
-              onClick={() => setActiveCategory(category.id)}
-              cursor="pointer"
-              role="group"
-              flexShrink={0}
-              position="relative"
-              transition="all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-              _hover={{ transform: 'translateY(-5px)' }}
-              _active={{ transform: 'scale(0.9)' }}
-            >
-              {/* Outer Decorative Ring */}
-              <Box position="relative">
-                <Circle
-                  size={{ base: '70px', md: '85px' }}
-                  p="3px"
-                  bg={isActive ? category.color : 'transparent'}
-                  border={isActive ? 'none' : '2px solid'}
-                  borderColor="gray.100"
-                  transition="all 0.3s ease"
-                  _groupHover={{ borderColor: category.color, transform: 'rotate(15deg)' }}
+            return (
+              <Box 
+                key={category.id} 
+                onClick={() => setSelected(category.id)}
+                position="relative"
+              >
+                <MotionBox
+                  layout
+                  cursor="pointer"
+                  display="flex"
+                  alignItems="center"
+                  transition={{ type: "spring", stiffness: 350, damping: 28 } as any}
+                  px={isActive ? 4 : 2}
+                  py={2}
+                  borderRadius="22px"
+                  zIndex={2}
+                  position="relative"
                 >
-                  <Circle size="100%" bg="white" p="2px">
-                    <Box
-                      w="100%"
-                      h="100%"
-                      borderRadius="full"
-                      overflow="hidden"
-                      bg="gray.50"
-                    >
-                      <Image
-                        src={category.image}
-                        alt={category.name}
-                        w="100%"
-                        h="100%"
-                        objectFit="cover"
-                        transition="all 0.5s ease"
-                        filter={isActive ? 'none' : 'grayscale(60%)'}
-                        _groupHover={{ filter: 'none', transform: 'scale(1.15) rotate(-15deg)' }}
-                      />
-                    </Box>
-                  </Circle>
-                </Circle>
+                  {/* LIQUID ACTIVE PILL - This slides smoothly between items */}
+                  {isActive && (
+                    <MotionBox
+                      layoutId="active-pill"
+                      position="absolute"
+                      inset={0}
+                      bg={`${category.color}15`}
+                      borderRadius="20px"
+                      border="1px solid"
+                      borderColor={`${category.color}30`}
+                      zIndex={-1}
+                    />
+                  )}
 
-                {/* Lovable Floating Label (Only visible when active) */}
-                {isActive && (
-                  <Box
-                    position="absolute"
-                    top="-12px"
-                    left="50%"
-                    transform="translateX(-50%)"
-                    bg={category.color}
-                    color="white"
-                    px={2}
-                    py={0.5}
-                    borderRadius="full"
-                    fontSize="9px"
-                    fontWeight="bold"
-                    boxShadow="0 4px 10px rgba(0,0,0,0.1)"
-                    whiteSpace="nowrap"
+                  {/* ICON - Transforms from circle to squircle */}
+                  <MotionBox
+                    layout
+                    w="34px"
+                    h="34px"
+                    borderRadius={isActive ? "12px" : "full"}
+                    overflow="hidden"
+                    flexShrink={0}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 } as any}
                   >
-                    SELECTED
-                  </Box>
-                )}
-              </Box>
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      w="full"
+                      h="full"
+                      objectFit="cover"
+                      filter={isActive ? "none" : "grayscale(0.6) opacity(0.7)"}
+                      transform={isActive ? "scale(1.15)" : "scale(1)"}
+                      transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
+                    />
+                  </MotionBox>
 
-              {/* Text with soft transition */}
-              <VStack spacing={1}>
-                <Text
-                  fontSize="xs"
-                  fontWeight={isActive ? "800" : "700"}
-                  color={isActive ? "gray.800" : "gray.400"}
-                  textTransform="uppercase"
-                  letterSpacing="1px"
-                  transition="all 0.2s ease"
-                >
-                  {category.name}
-                </Text>
-                
-                {/* The "Blob" Indicator */}
-                <Box
-                  h="6px"
-                  w={isActive ? "6px" : "0px"}
-                  bg={category.color}
-                  borderRadius="full"
-                  transition="all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)"
-                />
-              </VStack>
-            </VStack>
-          );
-        })}
-      </Flex>
-    </Box>
+                  {/* TEXT REVEAL - "Springy" and clean */}
+                  <AnimatePresence mode="popLayout">
+                    {isActive && (
+                      <MotionBox
+                        initial={{ opacity: 0, width: 0, x: -8 }}
+                        animate={{ opacity: 1, width: "auto", x: 0 }}
+                        exit={{ opacity: 0, width: 0, x: -8 }}
+                        transition={{ duration: 0.3, ease: "easeOut" } as any}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <Text
+                          ml={3}
+                          fontSize="xs"
+                          fontWeight="800"
+                          color={category.color}
+                          whiteSpace="nowrap"
+                          textTransform="uppercase"
+                          letterSpacing="1px"
+                          filter={`drop-shadow(0 0 8px ${category.color}40)`}
+                        >
+                          {category.name}
+                        </Text>
+                      </MotionBox>
+                    )}
+                  </AnimatePresence>
+                </MotionBox>
+              </Box>
+            );
+          })}
+        </HStack>
+      </MotionBox>
+    </Center>
   );
 };
 

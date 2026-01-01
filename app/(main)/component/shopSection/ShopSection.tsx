@@ -8,6 +8,12 @@ import {
   Text,
   VStack,
   Circle,
+  HStack,
+  Icon,
+  Heading,
+  Container,
+  useColorModeValue,
+  Flex,
 } from "@chakra-ui/react";
 import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
@@ -15,10 +21,20 @@ import ShopCard from "./element/ShopCard";
 import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
 import { keyframes } from "@emotion/react";
 import { tablePageLimit } from "../../../component/config/utils/variable";
+// Removed FaCompass (Unused)
+import { FaStoreAlt, FaRocket, FaWind, FaQuoteLeft } from "react-icons/fa";
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+// 1. 3D Tilt Entrance
+const tiltIn = keyframes`
+  0% { opacity: 0; transform: perspective(1000px) rotateX(10deg) translateY(60px); filter: blur(15px); }
+  100% { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0); filter: blur(0); }
+`;
+
+// 2. Floating Parallax Orbs
+const floatingOrb = keyframes`
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-30px) translateX(20px); }
+  66% { transform: translateY(15px) translateX(-20px); }
 `;
 
 const ShopSection = observer(() => {
@@ -32,21 +48,15 @@ const ShopSection = observer(() => {
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  const accentColor = "teal.400";
+  const bgBase = useColorModeValue("gray.50", "gray.950");
+
   const applyGetAllShops = useCallback(
-    async ({
-      page = 1,
-      limit = tablePageLimit,
-      search = "",
-      append = false,
-    }) => {
+    async ({ page = 1, limit = tablePageLimit, search = "", append = false }) => {
       try {
         await getAllShops({ page, limit, search, append });
       } catch (err: any) {
-        openNotification({
-          title: "Failed to get Shops",
-          message: err.message,
-          type: "error",
-        });
+        openNotification({ title: "Portal Busy", message: err.message, type: "error" });
       }
     },
     [getAllShops, openNotification]
@@ -54,140 +64,148 @@ const ShopSection = observer(() => {
 
   useEffect(() => {
     setCurrentPage(1);
-    applyGetAllShops({
-      page: 1,
-      limit : tablePageLimit,
-      search: debouncedSearchQuery,
-      append: false,
-    });
+    applyGetAllShops({ page: 1, limit: tablePageLimit, search: debouncedSearchQuery, append: false });
   }, [debouncedSearchQuery, applyGetAllShops]);
 
   const handleLoadMore = useCallback(() => {
     const nextPage = currentPage + 1;
     if (nextPage > (shop.totalPages || 1)) return;
-
     setCurrentPage(nextPage);
-    applyGetAllShops({
-      page: nextPage,
-      search: debouncedSearchQuery,
-      append: true,
-    });
+    applyGetAllShops({ page: nextPage, search: debouncedSearchQuery, append: true });
   }, [currentPage, shop.totalPages, applyGetAllShops, debouncedSearchQuery]);
 
   useEffect(() => {
-    const currentLoadMoreRef = loadMoreRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !shop.loading &&
-          currentPage < (shop.totalPages || 1)
-        ) {
+        if (entries[0].isIntersecting && !shop.loading && currentPage < (shop.totalPages || 1)) {
           handleLoadMore();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     );
-
-    if (currentLoadMoreRef) {
-      observer.observe(currentLoadMoreRef);
-    }
-
-    return () => {
-      if (currentLoadMoreRef) {
-        observer.unobserve(currentLoadMoreRef);
-      }
-    };
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
   }, [shop.loading, currentPage, shop.totalPages, handleLoadMore]);
 
   const shops = shop?.data || [];
-  const totalPages = shop?.totalPages || 1;
-  const totalShops = shop?.totalPages || 0;
+  const totalShops = shop?.totalShops || 0;
   const loading = shop?.loading && currentPage === 1;
   const loadingMore = shop?.loading && currentPage > 1;
-  const allLoaded = currentPage >= totalPages;
-
-  const progress = totalShops > 0 ? (shops.length / totalShops) * 100 : 0;
+  const allLoaded = currentPage >= (shop?.totalPages || 1);
 
   return (
-    <Box position="relative">
-      {/* Shop Cards */}
-      <SimpleGrid columns={[1, 1, 2, 3]} gap={8} spacing={2}>
-        {shops.map((shop: any, index: number) => (
-          <Box
-            key={index}
-            animation={`${fadeIn} 0.5s ease-out ${index * 0.1}s`}
-          >
-            <ShopCard shop={shop} onClick={() => {}} />
-          </Box>
-        ))}
-      </SimpleGrid>
+    <Box position="relative" overflow="hidden" bg={bgBase} minH="100vh" pb={32}>
+      
+      {/* --- PARALLAX ARTISTIC BACKGROUND --- */}
+      <Box position="absolute" top="5%" left="-5%" w="600px" h="600px" bg="teal.100" filter="blur(140px)" borderRadius="full" opacity="0.4" animation={`${floatingOrb} 15s infinite ease-in-out`} />
+      <Box position="absolute" bottom="10%" right="-5%" w="500px" h="500px" bg="blue.100" filter="blur(140px)" borderRadius="full" opacity="0.3" animation={`${floatingOrb} 20s infinite ease-in-out reverse`} />
 
-      {/* Initial Skeleton */}
-      {loading && (
-        <SimpleGrid columns={[1, 2, 3, 4]} spacing={4} mt={4}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <ShopCardSkeleton key={index} />
+      <Container maxW="container.xl" pt={20} position="relative" zIndex={2}>
+        
+        {/* --- EDITORIAL HEADER DESIGN --- */}
+        <Flex direction={{ base: "column", lg: "row" }} align="flex-end" justify="space-between" mb={20} gap={8}>
+          <VStack align="start" spacing={4} maxW="700px">
+            <HStack spacing={3}>
+                <Box w="40px" h="2px" bg={accentColor} />
+                <Text color={accentColor} fontWeight="black" textTransform="uppercase" letterSpacing="4px" fontSize="xs">
+                  The Storefront Collection
+                </Text>
+            </HStack>
+            <Heading size="3xl" fontWeight="900" lineHeight="0.9" letterSpacing="-2px">
+              Curated Spaces. <br />
+              <Text as="span" color="transparent" style={{ WebkitTextStroke: "1px #319795" }}>Unique</Text> Stories.
+            </Heading>
+          </VStack>
+          
+          <Box p={6} borderLeft="4px solid" borderColor="teal.400" bg="whiteAlpha.400" backdropFilter="blur(10px)">
+             <Icon as={FaQuoteLeft} color="teal.200" boxSize={6} mb={2} />
+             {/* Fixed unescaped double quotes */}
+             <Text fontSize="sm" fontWeight="bold" color="gray.600" maxW="250px">
+               &quot;Every neighborhood has a heartbeat. These shops are ours.&quot;
+             </Text>
+          </Box>
+        </Flex>
+
+        {/* --- DYNAMIC GRID --- */}
+        <SimpleGrid columns={[1, 1, 2, 3]} spacingX={10} spacingY={20}>
+          {shops.map((item: any, index: number) => (
+            <Box
+              key={item.id || index}
+              animation={`${tiltIn} 1s cubic-bezier(0.19, 1, 0.22, 1) both`}
+              style={{ animationDelay: `${(index % 6) * 0.1}s` }}
+            >
+              <ShopCard shop={item} onClick={() => {}} />
+            </Box>
           ))}
         </SimpleGrid>
-      )}
 
-      {/* Dynamic Load More Indicator */}
-      {!loading && !allLoaded && (
-        <Center mt={12} flexDirection="column" gap={4}>
-          <VStack ref={loadMoreRef}>
-            <Circle
-              size="80px"
-              bg="gray.100"
-              position="relative"
-              overflow="hidden"
-            >
-              <Circle
-                size="80px"
-                border="4px solid"
-                borderColor="teal.400"
-                borderTopColor="transparent"
-                borderRightColor="transparent"
-                position="absolute"
-                transform={`rotate(${(progress / 100) * 360}deg)`}
-                transition="transform 0.5s ease-in-out"
-              />
-              <Text fontSize="lg" fontWeight="bold" color="teal.600">
-                {shops.length}/{totalShops}
-              </Text>
-            </Circle>
-            <Text fontSize="sm" color="gray.600">
-              {loadingMore ? "Discovering more shops..." : "Scroll for more"}
-            </Text>
-          </VStack>
-        </Center>
-      )}
+        {/* --- SKELETONS --- */}
+        {loading && (
+          <SimpleGrid columns={[1, 1, 2, 3]} spacing={10} mt={10}>
+            {[1, 2, 3].map((i) => <ShopCardSkeleton key={i} />)}
+          </SimpleGrid>
+        )}
 
-      {/* Completion Celebration */}
-      {!loading && allLoaded && shops.length > 0 && (
-        <Center mt={12} flexDirection="column" gap={3}>
-          <Circle size="60px" bg="teal.100">
-            <Text fontSize="xl" fontWeight="bold" color="teal.600">
-              ✓
-            </Text>
-          </Circle>
-          <Text fontSize="lg" fontWeight="medium" color="gray.700">
-            All {shops.length} Shops Unlocked!
-          </Text>
-          <Text fontSize="sm" color="gray.500" fontStyle="italic">
-            Explore every corner of our collection 🌟
-          </Text>
-        </Center>
-      )}
+        {/* --- THE INFINITE HUD (Heads-Up Display) --- */}
+        <Box
+            ref={loadMoreRef}
+            position="fixed"
+            bottom="40px"
+            left="50%"
+            transform="translateX(-50%)"
+            zIndex={100}
+            pointerEvents="none"
+        >
+            {!allLoaded && (
+                <Flex 
+                    bg="rgba(255, 255, 255, 0.7)" 
+                    backdropFilter="blur(20px)" 
+                    px={6} py={3} 
+                    borderRadius="full" 
+                    boxShadow="0 10px 40px rgba(0,0,0,0.1)"
+                    border="1px solid rgba(255,255,255,0.5)"
+                    align="center"
+                    gap={4}
+                    animation="fadeIn 0.5s ease"
+                    pointerEvents="auto"
+                >
+                    <Icon as={loadingMore ? FaRocket : FaWind} color="teal.500" animation={loadingMore ? "pulse 1s infinite" : "none"} />
+                    <Text fontSize="xs" fontWeight="black" color="gray.700" letterSpacing="1px">
+                        {loadingMore ? "EXPANDING..." : `DISCOVERED ${shops.length} / ${totalShops}`}
+                    </Text>
+                    <Box w="100px" h="4px" bg="gray.100" borderRadius="full" position="relative" overflow="hidden">
+                        <Box 
+                            position="absolute" left={0} top={0} h="full" bg="teal.400" 
+                            w={`${(shops.length / (totalShops || 1)) * 100}%`} 
+                            transition="width 1s ease"
+                        />
+                    </Box>
+                </Flex>
+            )}
+        </Box>
 
-      {/* Empty State */}
-      {!loading && shops.length === 0 && (
-        <Center mt={12}>
-          <Text fontSize="lg" color="gray.500">
-            No shops found yet - check back soon!
-          </Text>
-        </Center>
-      )}
+        {/* --- FINAL CELEBRATION --- */}
+        {!loading && allLoaded && shops.length > 0 && (
+          <Center mt={40} pb={20}>
+            <VStack spacing={8}>
+                <Box position="relative">
+                    <Circle size="120px" bg="teal.50" border="1px dashed" borderColor="teal.200" />
+                    <Icon as={FaStoreAlt} position="absolute" top="35px" left="35px" boxSize={12} color="teal.400" />
+                </Box>
+                <VStack spacing={0}>
+                    <Text fontSize="4xl" fontWeight="900" letterSpacing="-1px">End of the road.</Text>
+                    {/* Fixed unescaped apostrophe */}
+                    <Text color="gray.400" fontWeight="bold">You&apos;ve officially seen every shop in the district.</Text>
+                </VStack>
+            </VStack>
+          </Center>
+        )}
+      </Container>
+
+      <style jsx global>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+      `}</style>
     </Box>
   );
 });

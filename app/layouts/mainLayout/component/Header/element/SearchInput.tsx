@@ -1,5 +1,6 @@
-'use client'
-import { SearchIcon, CloseIcon, ChevronDownIcon, StarIcon } from "@chakra-ui/icons";
+"use client";
+
+import { SearchIcon, CloseIcon, StarIcon } from "@chakra-ui/icons";
 import {
   Input,
   InputGroup,
@@ -12,411 +13,236 @@ import {
   useOutsideClick,
   useColorModeValue,
   VStack,
-  Divider,
   Badge,
   Spinner,
+  Kbd,
+  chakra,
 } from "@chakra-ui/react";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react"; // Removed unused useCallback
 import debounce from "lodash/debounce";
-import { keyframes } from "@emotion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Animations
-const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const placeholderFade = keyframes`
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
-`;
+const MotionBox = chakra(motion.div);
 
 const SearchInput = () => {
   const [query, setQuery] = useState("");
-  const [filteredResults, setFilteredResults] = useState([]);
+  const [filteredResults, setFilteredResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   const ref = useRef(null);
-  const inputRef = useRef(null);
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const accentColor = "purple.500";
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useOutsideClick({
-    ref,
-    handler: () => setShowDropdown(false),
-  });
+  const accentColor = "#FF6F61";
+  
+  const glassBg = useColorModeValue("rgba(255, 255, 255, 0.9)", "rgba(26, 32, 44, 0.9)");
+  const inputBg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const inputFocusBg = useColorModeValue("white", "gray.800");
+  const dropdownBorder = useColorModeValue("whiteAlpha.900", "whiteAlpha.200");
+  const itemHoverBg = useColorModeValue("white", "whiteAlpha.100");
+
+  useOutsideClick({ ref, handler: () => setShowDropdown(false) });
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setRecentSearches(JSON.parse(localStorage.getItem("recentSearches") || "[]"));
-    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const popularSearches = [
-    { term: "Fresh Fruits", trending: true },
-    { term: "Milk Products", trending: false },
-    { term: "Snacks", trending: true },
-    { term: "Vegetables", trending: false },
-  ];
-
-  const placeholderSuggestions = [
-    "Search for products",
-    "Find your brands",
-    "Explore deals",
-    "Discover more",
-  ];
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-
-  // Rotate placeholder text
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholderSuggestions.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [placeholderSuggestions]);
-
-  const fetchSearchResults = useCallback(
-    debounce(async (searchQuery) => {
-      if (searchQuery.length <= 1) {
-        setFilteredResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const mockApiCall = new Promise((resolve) => {
-          setTimeout(() => {
-            const results = [
-              { id: 1, name: "Apple iPhone 13", category: "electronics", price: 799, rating: 4.5 },
-              { id: 2, name: "Leather Jacket", category: "fashion", price: 199, rating: 4.2 },
-              { id: 3, name: "Smart TV", category: "electronics", price: 499, rating: 4.7 },
-              { id: 4, name: "Running Shoes", category: "fashion", price: 89, rating: 4.0 },
-            ].filter((item) =>
-              item.name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            resolve(results);
-          }, 300);
-        });
-
-        const results : any = await mockApiCall;
-        setFilteredResults(results);
-      } catch ({}) {
-      } finally {
-        setIsLoading(false);
-      }
-    }, 200),
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(async (searchQuery: string) => {
+        if (searchQuery.length <= 1) {
+          setFilteredResults([]);
+          return;
+        }
+        setIsLoading(true);
+        setTimeout(() => {
+          const results = [
+            { id: 1, name: "Premium Wireless Headphones", category: "Audio", price: 299, rating: 4.9 },
+            { id: 2, name: "Minimalist Leather Watch", category: "Accessories", price: 150, rating: 4.7 },
+          ].filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+          setFilteredResults(results);
+          setIsLoading(false);
+        }, 400);
+      }, 300),
     []
   );
 
-  const handleSearch = (value) => {
-    setQuery(value);
-    fetchSearchResults(value);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    debouncedFetch(val);
     setShowDropdown(true);
   };
 
-  const saveSearch = (searchTerm: string) => {
-    if (!searchTerm) return;
-    const updatedSearches = [searchTerm, ...recentSearches.filter((item) => item !== searchTerm)].slice(0, 5);
-    setRecentSearches(updatedSearches);
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
-    }
-  };
-
-
-  const handleSelect = (value) => {
-    setQuery(value);
-    saveSearch(value);
-    setShowDropdown(false);
-    inputRef.current.focus();
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && query) {
-      handleSelect(query);
-    }
-    if (e.key === "Escape") {
-      setShowDropdown(false);
-      inputRef.current.blur();
-    }
-  };
-
   return (
-    <Box
-      position="relative"
-      w={{ base: "full", md: "600px" }}
-      ref={ref}
-      mx={{ base: 2, md: 4 }}
-    >
+    <Box position="relative" w={{ base: "full", md: "550px" }} ref={ref} mx={4}>
       <InputGroup size="lg">
         <InputLeftElement pointerEvents="none">
-          <SearchIcon
-            color={query ? accentColor : "gray.400"}
-            transition="all 0.3s ease"
-            transform={query ? "scale(1.1)" : "scale(1)"}
-          />
+          <MotionBox
+            animate={{
+              rotate: query ? 90 : 0,
+              color: query ? accentColor : "#A0AEC0",
+            }}
+          >
+            <SearchIcon boxSize={4} />
+          </MotionBox>
         </InputLeftElement>
 
         <Input
           ref={inputRef}
-          placeholder={placeholderSuggestions[placeholderIndex]}
-          borderRadius="full"
-          borderWidth="2px"
-          borderColor={query ? accentColor : borderColor}
-          bg={bgColor}
+          placeholder="Search collections..."
           value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          onKeyDown={handleKeyDown}
+          onChange={handleInputChange}
           onFocus={() => setShowDropdown(true)}
+          variant="unstyled"
+          h="50px"
+          px="45px"
+          borderRadius="xl"
+          bg={inputBg}
+          border="1px solid"
+          borderColor="transparent"
           _focus={{
             borderColor: accentColor,
-            boxShadow: `0 0 0 3px ${accentColor}30`,
-            bg: "white",
+            bg: inputFocusBg,
+            boxShadow: "0 0 20px rgba(255, 111, 97, 0.15)",
           }}
-          _hover={{
-            borderColor: query ? accentColor : "gray.300",
-          }}
-          _placeholder={{
-            color: "gray.500",
-            animation: `${placeholderFade} 2.5s infinite`,
-            fontStyle: "italic"
-          }}
-          transition="all 0.3s ease"
-          fontSize="md"
-          py={6}
-          px={12}
-          pr="5rem"
-          fontWeight="medium"
-          boxShadow="sm"
+          transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          fontSize="15px"
+          fontWeight="500"
         />
 
-        {query && (
-          <InputRightElement width="5rem">
-            {isLoading ? (
-              <Spinner size="sm" color={accentColor} thickness="2px" />
+        <InputRightElement width="4.5rem">
+          {query ? (
+            isLoading ? (
+              <Spinner size="xs" color={accentColor} />
             ) : (
               <IconButton
-                icon={<CloseIcon boxSize={4} />}
-                aria-label="Clear Search"
-                size="md"
                 variant="ghost"
-                color="gray.500"
-                _hover={{ color: accentColor, bg: "gray.100" }}
-                transition="all 0.3s ease"
-                onClick={() => {
-                  setQuery("");
-                  setFilteredResults([]);
-                  inputRef.current.focus();
-                }}
+                aria-label="clear"
+                icon={<CloseIcon boxSize={3} />}
+                size="xs"
+                onClick={() => setQuery("")}
               />
-            )}
-          </InputRightElement>
-        )}
+            )
+          ) : (
+            <Kbd display={{ base: "none", md: "inline-block" }} py={0.5} opacity={0.6}>
+              ⌘K
+            </Kbd>
+          )}
+        </InputRightElement>
       </InputGroup>
 
-      {showDropdown && (
-        <Box
-          position="absolute"
-          top="100%"
-          left={0}
-          right={0}
-          mt={3}
-          bg={bgColor}
-          boxShadow="0 8px 16px rgba(0, 0, 0, 0.1)"
-          borderRadius="xl"
-          borderWidth="1px"
-          borderColor={borderColor}
-          maxH="500px"
-          overflowY="auto"
-          zIndex={20}
-          p={4}
-          animation={`${slideIn} 0.25s ease-out`}
-        >
-          <VStack align="stretch" spacing={4}>
-            {query.length <= 1 && recentSearches.length > 0 && (
-              <>
-                <Flex justify="space-between" align="center" px={2}>
-                  <Text
-                    fontSize="sm"
-                    color="gray.600"
-                    fontWeight="bold"
-                    textTransform="uppercase"
-                    letterSpacing="wide"
-                  >
-                    Recent Searches
-                  </Text>
-                  <Text
-                    fontSize="xs"
-                    color={accentColor}
-                    cursor="pointer"
-                    _hover={{ textDecoration: "underline", color: "purple.700" }}
-                    transition="all 0.2s"
-                    onClick={() => {
-                      setRecentSearches([]);
-                      localStorage.removeItem("recentSearches");
-                    }}
-                  >
-                    Clear All
-                  </Text>
-                </Flex>
-                {recentSearches.map((search, index) => (
-                  <Flex
-                    key={index}
-                    px={4}
-                    py={3}
-                    align="center"
-                    borderRadius="lg"
-                    _hover={{ bg: hoverBg, transform: "translateX(4px)" }}
-                    cursor="pointer"
-                    transition="all 0.2s ease"
-                    bg="gray.50"
-                    onClick={() => handleSelect(search)}
-                  >
-                    <SearchIcon mr={4} color={accentColor} boxSize={5} />
-                    <Text fontSize="md" fontWeight="medium" color="gray.700">
-                      {search}
-                    </Text>
-                  </Flex>
-                ))}
-                <Divider borderColor={borderColor} opacity={0.5} />
-              </>
-            )}
-
-            {query.length > 1 ? (
-              isLoading ? (
-                <Flex justify="center" p={6}>
-                  <Spinner color={accentColor} size="lg" thickness="3px" />
-                </Flex>
-              ) : filteredResults.length > 0 ? (
-                filteredResults.map((result) => (
-                  <Flex
-                    key={result.id}
-                    px={4}
-                    py={3}
-                    justify="space-between"
-                    borderRadius="lg"
-                    _hover={{ bg: hoverBg, transform: "scale(1.02)" }}
-                    cursor="pointer"
-                    transition="all 0.2s ease"
-                    bg="gray.50"
-                    onClick={() => handleSelect(result.name)}
-                  >
-                    <Flex align="center" gap={4}>
-                      <Box
-                        w={10}
-                        h={10}
-                        bg="gray.200"
-                        borderRadius="md"
-                        flexShrink={0}
-                        position="relative"
-                        _after={{
-                          content: '""',
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          bg: "gray.300",
-                          opacity: 0,
-                          transition: "all 0.2s",
-                          _hover: { opacity: 0.1 },
-                        }}
-                      />
-                      <VStack align="start" spacing={1}>
-                        <Text fontWeight="semibold" fontSize="md" color="gray.800">
-                          {result.name}
-                        </Text>
-                        <Flex align="center" gap={2}>
-                          <StarIcon color="yellow.400" boxSize={4} />
-                          <Text fontSize="sm" color="gray.600">
-                            {result.rating} • <Text as="span" fontWeight="medium">{result.category}</Text>
-                          </Text>
-                        </Flex>
-                      </VStack>
-                    </Flex>
-                    <Badge
-                      colorScheme="purple"
-                      fontSize="sm"
-                      px={3}
-                      py={1}
-                      borderRadius="full"
-                      fontWeight="bold"
-                      bg={`${accentColor}10`}
-                      color={accentColor}
+      <AnimatePresence>
+        {showDropdown && (
+          <MotionBox
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 5, scale: 0.98 }}
+            position="absolute"
+            top="110%"
+            left={0}
+            right={0}
+            bg={glassBg}
+            backdropFilter="blur(12px)"
+            borderRadius="2xl"
+            boxShadow="0 20px 50px rgba(0,0,0,0.15)"
+            border="1px solid"
+            borderColor={dropdownBorder}
+            zIndex={100}
+            overflow="hidden"
+            p={2}
+          >
+            <VStack align="stretch" spacing={1}>
+              {query.length > 1 ? (
+                filteredResults.length > 0 ? (
+                  filteredResults.map((item) => (
+                    <Flex
+                      key={item.id}
+                      p={3}
+                      align="center"
+                      justify="space-between"
+                      borderRadius="xl"
+                      cursor="pointer"
+                      role="group"
+                      _hover={{ bg: itemHoverBg }}
+                      transition="0.2s"
                     >
-                      ${result.price}
-                    </Badge>
-                  </Flex>
-                ))
-              ) : (
-                <Text px={4} py={3} color="gray.500" fontSize="md" fontStyle="italic">
-                  No results found
-                </Text>
-              )
-            ) : (
-              <>
-                <Text
-                  px={2}
-                  fontSize="sm"
-                  color="gray.600"
-                  fontWeight="bold"
-                  textTransform="uppercase"
-                  letterSpacing="wide"
-                >
-                  Popular Searches
-                </Text>
-                {popularSearches.map((search, index) => (
-                  <Flex
-                    key={index}
-                    px={4}
-                    py={3}
-                    align="center"
-                    borderRadius="lg"
-                    _hover={{ bg: hoverBg, transform: "translateX(4px)" }}
-                    cursor="pointer"
-                    transition="all 0.2s ease"
-                    bg="gray.50"
-                    onClick={() => handleSelect(search.term)}
-                  >
-                    <ChevronDownIcon mr={4} color={accentColor} boxSize={6} />
-                    <Text fontSize="md" fontWeight="medium" color="gray.700">
-                      {search.term}
+                      <Flex align="center" gap={4}>
+                        <Box boxSize="45px" bg="gray.200" borderRadius="lg" overflow="hidden" />
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="700" fontSize="14px">
+                            {item.name}
+                          </Text>
+                          <Text fontSize="12px" color="gray.500">
+                            {item.category}
+                          </Text>
+                        </VStack>
+                      </Flex>
+                      <Flex align="center" gap={3}>
+                        <Text fontWeight="800" fontSize="14px" color={accentColor}>
+                          ${item.price}
+                        </Text>
+                        <Icon as={StarIcon} color="orange.300" boxSize={3} />
+                      </Flex>
+                    </Flex>
+                  ))
+                ) : (
+                  <Flex p={8} direction="column" align="center">
+                    <Text color="gray.400" fontSize="14px">
+                      No matches found for &quot;{query}&quot;
                     </Text>
-                    {search.trending && (
+                  </Flex>
+                )
+              ) : (
+                <Box p={4}>
+                  <Text
+                    fontSize="11px"
+                    fontWeight="800"
+                    color="gray.400"
+                    textTransform="uppercase"
+                    mb={3}
+                    letterSpacing="1px"
+                  >
+                    Trending Now
+                  </Text>
+                  <Flex wrap="wrap" gap={2}>
+                    {["AirPods", "Sneakers", "Summer Sale"].map((tag) => (
                       <Badge
-                        ml={3}
-                        colorScheme="red"
-                        variant="solid"
-                        fontSize="0.75em"
+                        key={tag}
                         px={3}
                         py={1}
                         borderRadius="full"
-                        fontWeight="bold"
+                        textTransform="none"
+                        cursor="pointer"
+                        _hover={{ bg: accentColor, color: "white" }}
                       >
-                        Trending
+                        {tag}
                       </Badge>
-                    )}
+                    ))}
                   </Flex>
-                ))}
-              </>
-            )}
-          </VStack>
-        </Box>
-      )}
+                </Box>
+              )}
+            </VStack>
+          </MotionBox>
+        )}
+      </AnimatePresence>
     </Box>
   );
 };
+
+const Icon = chakra(Box, {
+  baseStyle: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
 
 export default SearchInput;
