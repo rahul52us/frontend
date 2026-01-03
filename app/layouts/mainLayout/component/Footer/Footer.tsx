@@ -18,20 +18,56 @@ import {
   shouldForwardProp,
 } from "@chakra-ui/react";
 import React from "react";
-import { motion } from "framer-motion";
-import { FiSend, FiArrowUpRight, FiHeart } from "react-icons/fi";
+import { motion, isValidMotionProp, Transition } from "framer-motion";
+import { 
+  FiSend, FiArrowUpRight, FiHeart, FiShoppingBag, 
+  FiTag, FiShoppingCart, FiBox, FiTruck, FiStar, FiZap 
+} from "react-icons/fi";
 import ContactSection from "./components/ContactSection";
-// FooterSection import removed to resolve 'no-unused-vars' error
 import { footerData } from "./components/footerData";
 import Conditions from "./components/Conditions";
 
+// 1. FIX: Refined shouldForwardProp logic
 const MotionBox = chakra(motion.div, {
-  shouldForwardProp: (prop) => shouldForwardProp(prop) || prop === "transition",
+  shouldForwardProp: (prop) => isValidMotionProp(prop) || shouldForwardProp(prop),
 });
 
+const FloatingIcon = ({ icon, top, left, delay, duration = 6 }: any) => {
+  // 2. FIX: Define the transition separately with a explicit type to avoid Chakra conflicts
+  const iconTransition: Transition = {
+    duration: duration,
+    repeat: Infinity,
+    delay: delay,
+    ease: "easeInOut",
+  };
+
+  return (
+    <MotionBox
+      position="absolute"
+      top={top}
+      left={left}
+      fontSize={{ base: "3xl", md: "5xl" }}
+      color="skyblue"
+      opacity={0.15}
+      initial={{ y: 0, rotate: 0, opacity: 0 }}
+      animate={{
+        y: [0, -30, 0],
+        rotate: [0, 15, -15, 0],
+        opacity: [0.1, 0.2, 0.1],
+      }}
+      // @ts-ignore or 'as any' if the transition type still conflicts with Chakra
+      transition={iconTransition as any}
+      zIndex={1}
+      pointerEvents="none"
+    >
+      <Icon as={icon} />
+    </MotionBox>
+  );
+};
+
 export const Footer: React.FC = () => {
-  const accentColor = "#FF6F61";
-  const bgDeep = "#050505"; 
+  const accentColor = "#00BFFF";
+  const bgDeep = "#050A14";
 
   return (
     <Box
@@ -43,66 +79,66 @@ export const Footer: React.FC = () => {
       pt={{ base: "20", md: "32" }}
       pb="10"
     >
-      {/* 1. ARTISTIC BACKGROUND ELEMENTS */}
+      {/* Background Icons */}
+      <FloatingIcon icon={FiShoppingCart} top="10%" left="5%" delay={0} duration={7} />
+      <FloatingIcon icon={FiShoppingBag} top="25%" left="80%" delay={2} duration={8} />
+      <FloatingIcon icon={FiTag} top="65%" left="10%" delay={4} duration={6} />
+      <FloatingIcon icon={FiBox} top="15%" left="60%" delay={1} duration={9} />
+      <FloatingIcon icon={FiTruck} top="80%" left="75%" delay={3} duration={7} />
+      <FloatingIcon icon={FiStar} top="45%" left="45%" delay={5} duration={10} />
+      <FloatingIcon icon={FiZap} top="5%" left="30%" delay={1.5} duration={5} />
+
+      {/* Glow Effects */}
       <Box
         position="absolute"
         top="-10%"
         left="-5%"
-        w="600px"
-        h="600px"
-        bgGradient={`radial(${accentColor}22 0%, transparent 70%)`}
-        filter="blur(100px)"
+        w="800px"
+        h="800px"
+        bgGradient={`radial(${accentColor}10 0%, transparent 70%)`}
+        filter="blur(120px)"
         zIndex={0}
       />
-      
-      <Container maxW="container.xl" position="relative" zIndex={1}>
-        
-        {/* 2. THE LOVEABLE NEWSLETTER CARD */}
+
+      <Container maxW="container.xl" position="relative" zIndex={2}>
+        {/* Newsletter Section */}
         <Flex
           direction={{ base: "column", lg: "row" }}
-          bg="whiteAlpha.50"
+          bg="rgba(255, 255, 255, 0.02)"
           backdropFilter="blur(20px)"
           border="1px solid"
           borderColor="whiteAlpha.100"
           borderRadius={{ base: "3xl", md: "full" }}
-          p={{ base: 8, md: 2 }}
+          p={{ base: 8, md: 3 }}
           pl={{ md: 12 }}
           align="center"
           justify="space-between"
           mb={24}
-          boxShadow="0 20px 50px rgba(0,0,0,0.3)"
         >
           <VStack align={{ base: "center", md: "flex-start" }} spacing={0} mb={{ base: 6, md: 0 }}>
-            <Text fontSize="xl" fontWeight="bold">Join the inner circle</Text>
+            <Text fontSize="xl" fontWeight="bold">
+              Join the <chakra.span color={accentColor}>inner circle</chakra.span>
+            </Text>
             <Text fontSize="sm" color="whiteAlpha.600">Get 10% off your first order & exclusive drops.</Text>
           </VStack>
           
           <HStack 
             w={{ base: "full", md: "auto" }} 
             as="form" 
-            spacing={0} 
             bg="whiteAlpha.100" 
             rounded="full" 
-            p={1}
+            p={1.5}
             border="1px solid"
-            borderColor="whiteAlpha.100"
-            onSubmit={(e) => e.preventDefault()}
+            borderColor="whiteAlpha.200"
           >
-            <Input 
-              variant="unstyled" 
-              placeholder="Your email address" 
-              px={6} 
-              fontSize="sm"
-              _placeholder={{ color: "whiteAlpha.400" }}
-            />
+            <Input variant="unstyled" placeholder="Your email address" px={6} fontSize="sm" />
             <Button 
               bg={accentColor} 
               color="white" 
               rounded="full" 
               px={8} 
-              h="50px"
-              _hover={{ bg: "white", color: "black", transform: "scale(1.05)" }}
-              transition="0.3s cubic-bezier(.47,1.64,.41,.8)"
+              h="54px"
+              _hover={{ bg: "white", color: bgDeep }}
               rightIcon={<FiSend />}
             >
               Subscribe
@@ -110,30 +146,20 @@ export const Footer: React.FC = () => {
           </HStack>
         </Flex>
 
-        {/* 3. CORE ARCHITECTURE GRID */}
-        <SimpleGrid
-          columns={{ base: 1, sm: 2, md: 3, lg: 5 }}
-          spacing={{ base: 12, md: 8 }}
-          mb={20}
-        >
+        {/* Links Grid */}
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing={8} mb={20}>
           <Stack spacing={6} gridColumn={{ lg: "span 2" }}>
-            <Heading fontSize="2xl" fontWeight="900" letterSpacing="tighter">
+            <Heading fontSize="2xl" fontWeight="900">
               BUSINESS<chakra.span color={accentColor}>SAHAYATA</chakra.span>
             </Heading>
-            <Text color="whiteAlpha.600" fontSize="md" lineHeight="1.7" maxW="320px">
-              Redefining the digital marketplace with curated solutions for the modern entrepreneur. 
-              Built for speed, styled for life.
+            <Text color="whiteAlpha.500" fontSize="md" maxW="320px">
+              Redefining the digital marketplace with curated solutions.
             </Text>
             <HStack spacing={4}>
               {footerData.companyInfo.socialLinks.map((social) => (
                 <Link key={social.name} href={social.url} isExternal>
-                  <MotionBox
-                    whileHover={{ y: -5, color: accentColor }}
-                    transition={{ duration: 0.2 } as any}
-                    fontSize="xl"
-                    color="whiteAlpha.500"
-                  >
-                    <Icon as={social.icon} />
+                  <MotionBox whileHover={{ y: -5, color: accentColor }} color="whiteAlpha.400">
+                    <Icon as={social.icon} fontSize="xl" />
                   </MotionBox>
                 </Link>
               ))}
@@ -141,42 +167,20 @@ export const Footer: React.FC = () => {
           </Stack>
 
           {footerData.sections.map((section) => (
-            <VStack key={section.title} align="flex-start" spacing={5}>
-              <Text fontSize="sm" fontWeight="800" letterSpacing="widest" color="whiteAlpha.400">
+            <VStack key={section.title} align="flex-start">
+              <Text fontSize="xs" fontWeight="800" color={accentColor} mb={2}>
                 {section.title.toUpperCase()}
               </Text>
-              <VStack align="flex-start" spacing={3}>
-                {section.links.map((link: any) => (
-                  <Link 
-                    key={link.name} 
-                    href={link.url || link.href}
-                    fontSize="md"
-                    color="whiteAlpha.800"
-                    _hover={{ color: accentColor, paddingLeft: "8px" }}
-                    transition="0.2s ease"
-                    display="flex"
-                    alignItems="center"
-                    role="group"
-                  >
-                    {link.name}
-                    <Icon 
-                      as={FiArrowUpRight} 
-                      boxSize={3} 
-                      ml={1} 
-                      opacity={0} 
-                      _groupHover={{ opacity: 1, transform: "translate(2px, -2px)" }} 
-                      transition="0.2s"
-                    />
-                  </Link>
-                ))}
-              </VStack>
+              {section.links.map((link: any) => (
+                <Link key={link.name} href={link.url || link.href} color="whiteAlpha.700" _hover={{ color: "white" }}>
+                  {link.name}
+                </Link>
+              ))}
             </VStack>
           ))}
 
-          <VStack align="flex-start" spacing={5}>
-              <Text fontSize="sm" fontWeight="800" letterSpacing="widest" color="whiteAlpha.400">
-                GET IN TOUCH
-              </Text>
+          <VStack align="flex-start">
+              <Text fontSize="xs" fontWeight="800" color={accentColor} mb={2}>GET IN TOUCH</Text>
               <ContactSection contactInfo={footerData.contactInfo} />
               <Conditions />
           </VStack>
@@ -184,37 +188,14 @@ export const Footer: React.FC = () => {
 
         <Divider borderColor="whiteAlpha.100" mb={10} />
 
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          justify="space-between"
-          align="center"
-          gap={6}
-          fontSize="xs"
-          color="whiteAlpha.500"
-        >
-          <HStack spacing={1}>
+        {/* Bottom Bar */}
+        <Flex direction={{ base: "column", md: "row" }} justify="space-between" align="center" color="whiteAlpha.400" fontSize="xs">
+          <HStack>
             <Text>© {new Date().getFullYear()} Made with</Text>
-            <Icon as={FiHeart} color={accentColor} />
+            <MotionBox animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity } as any}>
+              <Icon as={FiHeart} color={accentColor} />
+            </MotionBox>
             <Text>by {footerData.companyInfo.name}</Text>
-          </HStack>
-
-          <HStack spacing={8} wrap="wrap" justify="center">
-            {footerData.legalLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                href={link.href} 
-                _hover={{ color: "white" }}
-                letterSpacing="1px"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </HStack>
-
-          <HStack spacing={4} opacity={0.4}>
-             <Text fontSize="10px" fontWeight="bold" border="1px solid" px={2} py={0.5} rounded="md">VISA</Text>
-             <Text fontSize="10px" fontWeight="bold" border="1px solid" px={2} py={0.5} rounded="md">STRIPE</Text>
-             <Text fontSize="10px" fontWeight="bold" border="1px solid" px={2} py={0.5} rounded="md">PAYPAL</Text>
           </HStack>
         </Flex>
       </Container>

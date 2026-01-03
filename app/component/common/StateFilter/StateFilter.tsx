@@ -19,11 +19,12 @@ const MotionBox = motion(Box);
 const MotionImage = motion(Image);
 
 const StateFilter = () => {
-  const cardBg = useColorModeValue("white", "gray.900");
+  // Theme Colors
+  const skyBlue = "#00BFFF";
+  const midnightBg = useColorModeValue("#fbfbf9", "#050A14"); // Custom Midnight Navy
+  const cardBg = useColorModeValue("white", "rgba(15, 25, 40, 0.7)");
   const textColor = useColorModeValue("gray.700", "whiteAlpha.900");
-  const bgColor = useColorModeValue("#fbfbf9", "gray.950");
-  const decorationColor = useColorModeValue("gray.100", "whiteAlpha.50");
-  // Fixed: Call Hook at top level, not inside the map loop
+  const decorationColor = useColorModeValue("gray.100", "whiteAlpha.100");
   const cardBorderColor = useColorModeValue("gray.50", "whiteAlpha.200");
 
   const carouselSettings = {
@@ -47,11 +48,11 @@ const StateFilter = () => {
   return (
     <Box 
       py={{ base: 16, md: 24 }} 
-      bg={bgColor} 
+      bg={midnightBg} 
       position="relative" 
       overflow="hidden"
     >
-      {/* 1. ARTISTIC DECOR BACKGROUND */}
+      {/* 1. ARTISTIC DECOR BACKGROUND - "HERITAGE" TEXT */}
       <Text
         position="absolute"
         top="0"
@@ -78,11 +79,11 @@ const StateFilter = () => {
             subheading="Explore a variety of handmade and traditional items from all over India."
           />
           <Flex align="center" gap={4}>
-            <Box h="1px" w="40px" bg="orange.400" />
-            <Text fontWeight="bold" fontSize="sm" color="orange.400" textTransform="uppercase" letterSpacing="3px">
+            <Box h="1px" w="40px" bg={skyBlue} />
+            <Text fontWeight="bold" fontSize="sm" color={skyBlue} textTransform="uppercase" letterSpacing="3px">
               Crafted with Love
             </Text>
-            <Box h="1px" w="40px" bg="orange.400" />
+            <Box h="1px" w="40px" bg={skyBlue} />
           </Flex>
         </VStack>
 
@@ -105,6 +106,7 @@ const StateFilter = () => {
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   borderRadius="2xl" 
                   bg={cardBg}
+                  backdropFilter="blur(10px)"
                   boxShadow="0 20px 40px rgba(0,0,0,0.08)"
                   border="1px solid"
                   borderColor={cardBorderColor}
@@ -136,7 +138,7 @@ const StateFilter = () => {
                     justify="center"
                     align="center"
                     transition="all 0.4s ease"
-                    _groupHover={{ bg: "orange.400" }}
+                    _groupHover={{ bg: skyBlue }}
                   >
                     <Heading 
                       as="h3" 
@@ -169,14 +171,14 @@ const StateFilter = () => {
                   top="-10px"
                   right="10px"
                   size="40px"
-                  bg="white"
+                  bg={useColorModeValue("white", "gray.800")}
                   boxShadow="lg"
                   fontSize="xs"
+                  border="2px solid"
+                  borderColor={skyBlue}
                   fontWeight="black"
-                  color="gray.400"
+                  color={useColorModeValue(skyBlue, "white")}
                   zIndex={2}
-                  border="1px solid"
-                  borderColor="gray.100"
                 >
                   {String(index + 1).padStart(2, '0')}
                 </Circle>
@@ -192,9 +194,10 @@ const StateFilter = () => {
             animate={{ x: [-5, 5, -5] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             fontSize="xs" 
-            color="gray.400" 
+            color={skyBlue} 
             fontWeight="bold" 
             letterSpacing="2px"
+            opacity={0.8}
          >
             SWIPE TO EXPLORE BHARAT →
          </MotionBox>

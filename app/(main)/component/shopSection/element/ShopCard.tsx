@@ -12,7 +12,6 @@ import {
   Circle,
   useColorModeValue,
 } from "@chakra-ui/react";
-// Removed unused useRouter import
 import { FaMapMarkerAlt, FaPhoneAlt, FaArrowRight, FaStar } from "react-icons/fa";
 
 interface ShopCardProps {
@@ -30,16 +29,15 @@ interface ShopCardProps {
 }
 
 const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
-  // 1. Fixed: Removed unused 'router' assignment
-  const cardBg = useColorModeValue("white", "gray.800");
-  const accentColor = "teal.500";
+  // Theme Colors - Skyblue focused
+  const accentColor = "#00BFFF"; 
+  const cardBg = useColorModeValue("white", "rgba(15, 25, 40, 1)"); // Deep Midnight Navy
   const mutedText = useColorModeValue("gray.500", "gray.400");
   
-  // 2. Fixed: Call hooks at the top level, not inside the .map() loop
-  const badgeBg = useColorModeValue("teal.50", "rgba(49, 151, 149, 0.1)");
-  const borderColor = useColorModeValue("gray.50", "gray.700");
-  const footerBg = useColorModeValue("gray.50", "whiteAlpha.50");
-  const footerBorder = useColorModeValue("gray.100", "whiteAlpha.100");
+  const badgeBg = useColorModeValue("blue.50", "rgba(0, 191, 255, 0.1)");
+  const borderColor = useColorModeValue("gray.100", "whiteAlpha.100");
+  const footerBg = useColorModeValue("gray.50", "rgba(255, 255, 255, 0.03)");
+  const footerBorder = useColorModeValue("gray.100", "whiteAlpha.200");
 
   return (
     <Box
@@ -56,7 +54,10 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
         bg={cardBg}
         borderRadius="40px"
         overflow="hidden"
-        boxShadow="0 20px 40px rgba(0,0,0,0.06)"
+        boxShadow={useColorModeValue(
+          "0 20px 40px rgba(0,0,0,0.06)",
+          "0 20px 40px rgba(0,0,0,0.4)"
+        )}
         border="1px solid"
         borderColor={borderColor}
         position="relative"
@@ -74,12 +75,13 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
             _groupHover={{ transform: "scale(1.15)" }}
           />
           
+          {/* Status Badge with Glassmorphism */}
           <Box
             position="absolute"
             top="20px"
             right="20px"
             backdropFilter="blur(12px) saturate(180%)"
-            bg={shop?.shopStatus === "active" ? "rgba(72, 187, 120, 0.7)" : "rgba(245, 101, 101, 0.7)"}
+            bg={shop?.shopStatus === "active" ? "rgba(0, 191, 255, 0.7)" : "rgba(245, 101, 101, 0.7)"}
             px={4}
             py={1}
             borderRadius="full"
@@ -95,7 +97,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
             bottom="0"
             w="full"
             h="50%"
-            bgGradient="linear(to-t, rgba(0,0,0,0.6), transparent)"
+            bgGradient="linear(to-t, rgba(5, 10, 20, 0.8), transparent)"
           />
         </Box>
 
@@ -108,7 +110,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
               borderRadius="28px"
               boxShadow="0 10px 25px rgba(0,0,0,0.15)"
               transition="all 0.4s ease"
-              _groupHover={{ transform: "rotate(-6deg) scale(1.1)", boxShadow: "0 15px 35px rgba(0,0,0,0.2)" }}
+              _groupHover={{ transform: "rotate(-6deg) scale(1.1)", boxShadow: `0 15px 35px ${accentColor}30` }}
             >
               <Image
                 src={shop?.logo?.url}
@@ -124,9 +126,9 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
               bg={accentColor} 
               color="white" 
               mb={2}
-              boxShadow="0 10px 20px rgba(49, 151, 149, 0.4)"
+              boxShadow={`0 10px 20px rgba(0, 191, 255, 0.4)`}
               transition="all 0.3s ease"
-              _groupHover={{ transform: "scale(1.1) rotate(90deg)", bg: "teal.400" }}
+              _groupHover={{ transform: "scale(1.1) rotate(90deg)", bg: "blue.400" }}
             >
               <FaArrowRight size="18px" />
             </Circle>
@@ -146,6 +148,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
                 lineHeight="1.1"
                 letterSpacing="-0.5px"
                 transition="all 0.3s ease"
+                color={useColorModeValue("black", "white")}
                 _groupHover={{ color: accentColor }}
               >
                 {shop?.name}
@@ -167,7 +170,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
               {shop?.categories?.slice(0, 3).map((cat, i) => (
                 <Badge
                   key={i}
-                  bg={badgeBg} // Using the variable defined at top level
+                  bg={badgeBg}
                   color={accentColor}
                   px={3}
                   py={1}
@@ -175,6 +178,8 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
                   fontSize="9px"
                   fontWeight="bold"
                   variant="subtle"
+                  border="1px solid"
+                  borderColor={`${accentColor}20`}
                 >
                   #{cat}
                 </Badge>
@@ -209,7 +214,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
                 >
                   <FaPhoneAlt size="12px" />
                 </Box>
-                <Text fontSize="sm" fontWeight="800" letterSpacing="0.5px">
+                <Text fontSize="sm" fontWeight="800" letterSpacing="0.5px" color={useColorModeValue("gray.800", "white")}>
                   {shop?.contactInfo?.phone}
                 </Text>
               </HStack>
@@ -230,7 +235,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
         </Box>
       </Box>
 
-      {/* Background Decorative Element */}
+      {/* Background Decorative Glow */}
       <Box
         position="absolute"
         top="10%"

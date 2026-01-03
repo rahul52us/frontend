@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Box,
   Text,
   Flex,
   Popover,
@@ -12,17 +11,13 @@ import {
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
-import { navIcons } from "../utils/navIcons"; 
+import { motion, AnimatePresence } from "framer-motion";
+import { navIcons } from "../utils/navIcons";
 
 const MotionPopoverContent = motion(PopoverContent);
 
 interface NavItemProps {
-  item: {
-    title: string;
-    link: string;
-    children?: { title: string; link: string }[];
-  };
+  item: any;
   onClose: () => void;
 }
 
@@ -30,109 +25,112 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
   const router = useRouter();
   const hasChildren = item.children && item.children.length > 0;
 
-  return (
-    <Popover trigger="hover" placement="bottom-start" gutter={12}>
-      <PopoverTrigger>
-        <Box
-          as="span"
-          fontSize={{ base: "md", md: "lg" }}
-          fontWeight="medium"
-          px={4}
-          py={2}
-          cursor="pointer"
-          position="relative"
-          display="inline-flex"
-          alignItems="center"
-          gap={2}
-          borderRadius="full"
-          transition="all 0.3s ease"
-          _hover={{
-            color: "orange.500",
-            bg: "orange.50",
-            transform: "translateY(-1px)",
-          }}
-        >
-          {/* 🔥 ICON + TITLE */}
-          <Flex
-            alignItems="center"
-            gap={2}
-            onClick={() => {
-              if (!hasChildren) {
-                router.push(item.link);
-              }
-            }}
-          >
-            {navIcons[item.title] && (
-              <Icon as={navIcons[item.title]} boxSize={4.5} />
-            )}
-            <Text>{item.title}</Text>
-          </Flex>
+  // Theme Constants
+  const accentColor = "#00BFFF"; // Skyblue
+  const hoverBg = "rgba(0, 191, 255, 0.08)"; // Subtle skyblue background on hover
 
-          {/* 🔽 DROPDOWN ARROW */}
+  return (
+    <Popover trigger="hover" placement="bottom" gutter={18} openDelay={50}>
+      <PopoverTrigger>
+        <Flex
+          align="center"
+          gap={2.5}
+          cursor="pointer"
+          role="group"
+          userSelect="none"
+          onClick={() => !hasChildren && router.push(item.link)}
+        >
+          {/* ICON: Black by default, Skyblue on hover */}
+          {navIcons[item.title] && (
+            <Icon 
+              as={navIcons[item.title]} 
+              boxSize="18px" 
+              color="black" 
+              _groupHover={{ color: accentColor, transform: "scale(1.1)" }}
+              transition="all 0.3s ease"
+            />
+          )}
+          
+          {/* TEXT: Black by default, Skyblue on hover */}
+          <Text
+            fontSize="15px"
+            fontWeight="700"
+            color="black" // <--- Basic state is Black
+            _groupHover={{ 
+              color: accentColor, // <--- Hover state is Skyblue
+            }}
+            transition="all 0.2s ease-in-out"
+          >
+            {item.title}
+          </Text>
+
           {hasChildren && (
             <Icon
               as={ChevronDownIcon}
-              fontSize="lg"
-              color="gray.500"
-              transition="transform 0.25s ease"
+              boxSize="14px"
+              color="black"
+              _groupHover={{ transform: "rotate(180deg)", color: accentColor }}
+              transition="all 0.3s"
             />
           )}
-        </Box>
+        </Flex>
       </PopoverTrigger>
 
-      {/* 🔥 DROPDOWN */}
-      {hasChildren && (
-        <MotionPopoverContent
-          w="230px"
-          bg="white"
-          boxShadow="2xl"
-          borderRadius="xl"
-          mt={3}
-          border="1px solid"
-          borderColor="gray.200"
-          overflow="hidden"
-          initial={{ opacity: 0, y: -8, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-        >
-          <PopoverBody p={2}>
-            {item.children.map((child, index) => (
-              <Flex
-                key={child.title}
-                alignItems="center"
-                gap={3}
-                px={4}
-                py={3}
-                fontSize="md"
-                fontWeight="medium"
-                cursor="pointer"
-                borderRadius="lg"
-                transition="all 0.25s ease"
-                _hover={{
-                  bg: "linear-gradient(135deg, #FDBA74, #FB923C)",
-                  color: "white",
-                  transform: "translateX(4px) scale(1.04)",
-                }}
-                borderBottom={
-                  index !== item.children!.length - 1 ? "1px solid" : "none"
-                }
-                borderColor="gray.100"
-                onClick={() => {
-                  router.push(child.link);
-                  onClose();
-                }}
-              >
-                {/* 🔥 CHILD ICON */}
-                {navIcons[child.title] && (
-                  <Icon as={navIcons[child.title]} boxSize={4} />
-                )}
-                <Text>{child.title}</Text>
-              </Flex>
-            ))}
-          </PopoverBody>
-        </MotionPopoverContent>
-      )}
+      <AnimatePresence>
+        {hasChildren && (
+          <MotionPopoverContent
+            bg="white" // Popover usually looks better white if text is black
+            backdropFilter="blur(20px)"
+            boxShadow="0 15px 50px rgba(0, 0, 0, 0.1)"
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor="gray.100"
+            minW="250px"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            zIndex={9999}
+          >
+            <PopoverBody p={2}>
+              {item.children.map((child: any) => (
+                <Flex
+                  key={child.title}
+                  align="center"
+                  gap={3}
+                  px={4}
+                  py={3}
+                  borderRadius="xl"
+                  cursor="pointer"
+                  role="group"
+                  transition="all 0.2s"
+                  _hover={{ bg: hoverBg, transform: "translateX(5px)" }}
+                  onClick={() => {
+                    router.push(child.link);
+                    onClose();
+                  }}
+                >
+                  {navIcons[child.title] && (
+                    <Icon 
+                      as={navIcons[child.title]} 
+                      boxSize="16px" 
+                      color="black" // Sub-link icon black by default
+                      _groupHover={{ color: accentColor }} 
+                    />
+                  )}
+                  <Text 
+                    fontSize="sm" 
+                    fontWeight="600" 
+                    color="black" // Sub-link text black by default
+                    _groupHover={{ color: accentColor }} // Skyblue on hover
+                  >
+                    {child.title}
+                  </Text>
+                </Flex>
+              ))}
+            </PopoverBody>
+          </MotionPopoverContent>
+        )}
+      </AnimatePresence>
     </Popover>
   );
 };

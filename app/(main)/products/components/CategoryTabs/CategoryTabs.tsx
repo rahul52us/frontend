@@ -37,17 +37,20 @@ const MotionVStack = motion(VStack);
 const MotionHeading = motion(Heading);
 
 const CreativeTabs = () => {
-  const categories = [
-    { icon: FiShoppingBag, name: "Essentials", color: "blue.400", slogan: "Daily needs, delivered with care." },
-    { icon: FiDroplet, name: "Dairy", color: "cyan.400", slogan: "Fresh from the farm to your fridge." },
-    { icon: FiHeart, name: "Sweets", color: "pink.400", slogan: "Indulge in a moment of pure bliss." },
-    { icon: AiFillApple, name: "Fruits", color: "orange.400", slogan: "Nature's candy, ripe and ready." },
-    { icon: FiSmile, name: "Beauty", color: "purple.400", slogan: "Radiate confidence every single day." },
-    { icon: FiPackage, name: "Snacks", color: "teal.400", slogan: "Crunchy, salty, and totally addictive." },
-  ];
-
-  const bgColor = useColorModeValue("gray.50", "gray.950");
+  // Theme Colors
+  const skyBlue = "#00BFFF";
+  const midnightBg = useColorModeValue("gray.50", "#050A14");
+  const tabListBg = useColorModeValue("white", "rgba(255, 255, 255, 0.05)");
   const headingColor = useColorModeValue("gray.800", "white");
+
+  const categories = [
+    { icon: FiShoppingBag, name: "Essentials", slogan: "Daily needs, delivered with care." },
+    { icon: FiDroplet, name: "Dairy", slogan: "Fresh from the farm to your fridge." },
+    { icon: FiHeart, name: "Sweets", slogan: "Indulge in a moment of pure bliss." },
+    { icon: AiFillApple, name: "Fruits", slogan: "Nature's candy, ripe and ready." },
+    { icon: FiSmile, name: "Beauty", slogan: "Radiate confidence every single day." },
+    { icon: FiPackage, name: "Snacks", slogan: "Crunchy, salty, and totally addictive." },
+  ];
 
   const slidesToShow = useBreakpointValue({
     base: 1,
@@ -83,37 +86,37 @@ const CreativeTabs = () => {
     <Box
       px={{ base: 4, md: 10 }}
       py={{ base: 12, md: 20 }}
-      bg={bgColor}
+      bg={midnightBg}
       borderRadius={{ base: "40px", md: "80px" }}
       position="relative"
       overflow="hidden"
     >
-      {/* Background Decorative Element */}
+      {/* Background Decorative Glow */}
       <Box
         position="absolute"
         top="-10%"
         left="-5%"
         w="400px"
         h="400px"
-        bg={categories[activeTab].color}
+        bg={skyBlue}
         filter="blur(150px)"
-        opacity={0.1}
+        opacity={0.08}
         transition="all 0.8s ease"
       />
 
       <VStack spacing={2} mb={12} textAlign="center" position="relative" zIndex={1}>
         <HStack spacing={2}>
-          <Box w="8px" h="8px" rounded="full" bg={categories[activeTab].color} />
+          <Box w="8px" h="8px" rounded="full" bg={skyBlue} boxShadow={`0 0 8px ${skyBlue}`} />
           <Text 
             fontSize="xs" 
             fontWeight="black" 
-            color={categories[activeTab].color} 
+            color={skyBlue} 
             letterSpacing="3px" 
             textTransform="uppercase"
           >
             Our Collection
           </Text>
-          <Box w="8px" h="8px" rounded="full" bg={categories[activeTab].color} />
+          <Box w="8px" h="8px" rounded="full" bg={skyBlue} boxShadow={`0 0 8px ${skyBlue}`} />
         </HStack>
         
         <MotionHeading
@@ -152,10 +155,12 @@ const CreativeTabs = () => {
           <TabList
             display="flex"
             p={3}
-            bg={useColorModeValue("white", "whiteAlpha.100")}
-            backdropFilter="blur(10px)"
+            bg={tabListBg}
+            backdropFilter="blur(20px)"
             borderRadius="full"
-            boxShadow="xl"
+            boxShadow="2xl"
+            border="1px solid"
+            borderColor={useColorModeValue("gray.100", "whiteAlpha.100")}
             gap={{ base: 2, md: 4 }}
             overflowX="auto"
             maxW="100%"
@@ -175,7 +180,7 @@ const CreativeTabs = () => {
                     minW={isActive ? "140px" : "60px"}
                     rounded="full"
                     animate={{
-                      backgroundColor: isActive ? category.color : "transparent",
+                      backgroundColor: isActive ? skyBlue : "transparent",
                       scale: isActive ? 1.05 : 1,
                     }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
@@ -183,7 +188,7 @@ const CreativeTabs = () => {
                     <Icon
                       as={category.icon}
                       fontSize={isActive ? "20px" : "24px"}
-                      color={isActive ? "white" : "gray.400"}
+                      color={isActive ? "white" : useColorModeValue("gray.400", "whiteAlpha.400")}
                     />
                     {isActive && (
                       <Text
@@ -230,8 +235,8 @@ const CreativeTabs = () => {
                       '.slick-list': { overflow: 'visible' },
                       '.custom-dots': {
                         bottom: '-50px',
-                        'li button:before': { color: categories[activeTab].color, fontSize: '10px' },
-                        'li.slick-active button:before': { color: categories[activeTab].color, transform: 'scale(1.5)', opacity: 1 }
+                        'li button:before': { color: skyBlue, fontSize: '10px' },
+                        'li.slick-active button:before': { color: skyBlue, transform: 'scale(1.5)', opacity: 1 }
                       }
                     }}
                   >
@@ -242,7 +247,6 @@ const CreativeTabs = () => {
                             <ProductCard 
                               product={{
                                 ...product,
-                                // FIX: Cast price to number to prevent build error
                                 price: Number(product.price) 
                               }} 
                             />

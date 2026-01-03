@@ -1,120 +1,104 @@
 "use client";
 
-import { Flex, chakra, Box, Text } from "@chakra-ui/react";
-import React from "react";
-import { motion } from "framer-motion";
+import { Flex, Box, useColorModeValue, Icon } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { navItems } from "../utils/constant";
 import NavItem from "../element/NavItem";
+import { FiZap } from "react-icons/fi";
 
-interface NavItemType {
-  title: string;
-  link: string;
-}
-
-const MotionBox = chakra(motion.div);
+const MotionBox = motion(Box);
 
 const NavItemsLayout: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
+  // THEME COLORS
+  const accentColor = "#00BFFF"; // Skyblue
+  // Adjusted background for a better glass effect in dark mode
+  const navBg = useColorModeValue("rgba(255, 255, 255, 0.7)", "rgba(2, 12, 27, 0.8)");
+  const activePillBg = useColorModeValue("#00BFFF", "#00BFFF"); 
+  const borderColor = useColorModeValue("blue.100", "whiteAlpha.200");
+
   return (
     <Flex
       as="nav"
       direction={{ base: "column", md: "row" }}
-      gap={{ base: 4, md: 2 }} // Tighter gap for the "pill" effect
       alignItems="center"
-      justifyContent="center"
-      w={{ base: "full", md: "auto" }}
+      position="relative"
+      bg={navBg}
+      backdropFilter="blur(15px)"
+      p={2}
+      borderRadius="full"
+      border="1px solid"
+      borderColor={borderColor}
+      // Shadow updated to match Skyblue theme
+      boxShadow={`0 10px 30px -10px rgba(0, 191, 255, 0.3)`}
+      gap={0}
+      isolation="isolate"
     >
-      {navItems.map((item: NavItemType, index: number) => (
-        <MotionBox
-          key={item.title}
-          role="group"
-          initial="initial"
-          animate="animate"
-          whileHover="hover"
-          whileTap="tap"
-          w={{ base: "full", md: "auto" }}
-          position="relative"
-          variants={{
-            initial: { opacity: 0, x: -15 },
-            animate: { 
-              opacity: 1, 
-              x: 0, 
-              transition: { 
-                type: "spring", 
-                stiffness: 260, 
-                damping: 20, 
-                delay: index * 0.08 
-              } 
-            },
-            hover: { y: -2 },
-            tap: { scale: 0.95 }
-          }}
-        >
-          {/* 🌟 UNIQUE: The "Velvet Glow" Hover Background */}
-          <Box
-            as={motion.div}
+      <AnimatePresence>
+        {hoveredIndex !== null && (
+          <MotionBox
+            layoutId="nav-pill"
             position="absolute"
-            inset={0}
-            bgGradient="linear(to-r, orange.400, pink.400)"
-            filter="blur(12px)"
-            rounded="full"
-            zIndex={-1}
-            opacity="0"
-            variants={{
-              hover: { opacity: 0.15, scale: 1.1 }
+            zIndex={0}
+            bg={activePillBg}
+            borderRadius="full"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              transition: { type: "spring", stiffness: 400, damping: 30 } 
             }}
-            transition="0.3s ease-out"
+            exit={{ opacity: 0, scale: 0.8 }}
+            top={2}
+            bottom={2}
+            // Logic to calculate pill position roughly (if dynamic width is needed, Framer layoutId handles it)
+            left={{ base: "8px", md: "auto" }} 
+            right={{ base: "8px", md: "auto" }}
           />
+        )}
+      </AnimatePresence>
 
-          {/* 💊 UNIQUE: The Pill Container */}
-          <Flex
-            align="center"
-            justify={{ base: "space-between", md: "center" }}
-            px={{ base: 6, md: 5 }}
-            py={{ base: 4, md: 2 }}
+      {navItems.map((item, index) => (
+        <Box
+          key={item.title}
+          position="relative"
+          onMouseEnter={() => setHoveredIndex(index)}
+          onMouseLeave={() => setHoveredIndex(null)}
+          w={{ base: "full", md: "auto" }}
+        >
+          <MotionBox
             position="relative"
-            bg="transparent"
-            _groupHover={{ bg: { base: "whiteAlpha.900", md: "transparent" } }}
-            rounded="full"
-            transition="all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+            zIndex={1}
+            px={8}
+            py={3}
+            cursor="pointer"
+            whileTap={{ scale: 0.95 }}
           >
-            <Box zIndex={1}>
-              <NavItem
-                item={item}
-                onClose={onClose || (() => {})}
-              />
-            </Box>
-
-            {/* ✨ UNIQUE: Floating Indicator (Desktop) */}
             <Box
-              as={motion.div}
-              display={{ base: "none", md: "block" }}
-              position="absolute"
-              bottom="6px"
-              w="5px"
-              h="5px"
-              bg="orange.400"
-              rounded="full"
-              initial={{ opacity: 0, scale: 0 }}
-              variants={{
-                hover: { opacity: 1, scale: 1.5, y: 0 }
-              }}
-              transition={{ type: "spring", stiffness: 300 } as any}
-            />
-
-            {/* 📱 Mobile Chevron (Unique to Mobile Drawer) */}
-            <Box display={{ base: "block", md: "none" }} opacity="0.3">
-               <Text fontSize="xl">→</Text>
+              // Text becomes white when background pill is Skyblue
+              color={hoveredIndex === index ? "white" : "whiteAlpha.600"}
+              transition="color 0.3s ease"
+              fontWeight="medium"
+            >
+              <NavItem item={item} onClose={onClose || (() => {})} />
             </Box>
-          </Flex>
-          
-          {/* Subtle line for mobile separation */}
-          <Box 
-            display={{ base: "block", md: "none" }} 
-            h="1px" 
-            bg="gray.50" 
-            mx={6} 
-          />
-        </MotionBox>
+
+            {hoveredIndex === index && (
+              <MotionBox
+                position="absolute"
+                top="-2px"
+                right="2px"
+                initial={{ rotate: 0, scale: 0 }}
+                animate={{ rotate: 180, scale: 1 }}
+              >
+                {/* Zap icon updated to a brighter yellow for skyblue contrast */}
+                <Icon as={FiZap} color="yellow.200" boxSize={3} />
+              </MotionBox>
+            )}
+          </MotionBox>
+        </Box>
       ))}
     </Flex>
   );

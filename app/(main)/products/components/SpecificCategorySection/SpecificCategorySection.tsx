@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { 
   Box, 
   Button, 
@@ -9,220 +10,156 @@ import {
   Text, 
   VStack, 
   Icon, 
-  Badge, 
-  Heading 
+  HStack,
+  Heading,
+  useColorModeValue,
+  Skeleton
 } from "@chakra-ui/react";
 import { data } from "./utils/constant";
 import { keyframes } from "@emotion/react";
-import { FiArrowRight, FiChevronRight } from "react-icons/fi";
+import { FiChevronRight, FiShield } from "react-icons/fi";
 
-// --- PROFESSIONAL ANIMATIONS ---
+// --- ANIMATIONS ---
 const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
 const softFloat = keyframes`
-  0% { transform: translateY(0px); }
+  0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
 `;
 
 const HeroSectionProfessional = () => {
+  // --- HOOKS (Top Level Only) ---
+  const mainBg = useColorModeValue("#F4F7FF", "#060910"); 
+  const cardBg = useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(15, 20, 28, 0.7)");
+  const textColor = useColorModeValue("gray.800", "white");
+  const subTextColor = useColorModeValue("gray.600", "whiteAlpha.600");
+  const badgeBg = useColorModeValue("blue.50", "whiteAlpha.100");
+  const itemBorderColor = useColorModeValue("white", "whiteAlpha.100");
+  const imgBoxBg = useColorModeValue("blue.50", "whiteAlpha.50");
+  const imgFilter = useColorModeValue("none", "brightness(0.9)");
+
+  const accentColor = "#3B82F6"; 
+  const secondaryAccent = "#8B5CF6";
+
+  // --- DUMMY IMAGE FALLBACK LOGIC ---
+  const getFallbackImage = (id: number) => {
+    const fallbacks = [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=200&auto=format&fit=crop", 
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200&auto=format&fit=crop", 
+      "https://images.unsplash.com/photo-1526170315873-3a5616282a63?q=80&w=200&auto=format&fit=crop", 
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=200&auto=format&fit=crop", 
+    ];
+    return fallbacks[id % fallbacks.length];
+  };
+
   return (
     <Box
-      maxW="1440px"
-      my={{ base: 16, md: 28 }}
+      maxW="1550px"
+      my={{ base: 12, md: 20 }}
       mx="auto"
       position="relative"
-      px={{ base: 6, md: 10 }}
-      animation={`${slideUp} 1s ease-out`}
+      px={{ base: 4, md: 10 }}
+      animation={`${slideUp} 1.2s cubic-bezier(0.19, 1, 0.22, 1)`}
     >
-      {/* BACKGROUND ELEGANCE */}
+      {/* Background Glow */}
       <Box
         position="absolute"
-        top="-15%"
-        left="5%"
-        w="500px"
-        h="500px"
-        bgGradient="radial(purple.400, transparent, transparent)"
-        filter="blur(140px)"
-        opacity={0.12}
+        top="-10%"
+        right="-5%"
+        w={{ base: "300px", md: "700px" }}
+        h={{ base: "300px", md: "700px" }}
+        bgGradient={`radial(${accentColor}, transparent, transparent)`}
+        filter="blur(120px)"
+        opacity={0.15}
         zIndex={0}
       />
 
       <Box
         position="relative"
         zIndex={1}
-        bg="#0B0E14" // Solid deep charcoal for professional contrast
-        p={{ base: 8, md: 20 }}
-        rounded={{ base: "40px", md: "70px" }}
-        boxShadow="0 60px 100px -30px rgba(0,0,0,0.7)"
+        bg={mainBg}
+        p={{ base: 6, md: 16, lg: 24 }}
+        rounded={{ base: "40px", md: "80px" }}
+        boxShadow="0 80px 150px -40px rgba(0,0,0,0.4)"
         border="1px solid"
-        borderColor="whiteAlpha.100"
+        borderColor={useColorModeValue("blue.100", "whiteAlpha.100")}
         overflow="hidden"
       >
-        {/* Subtle Grid for Texture */}
-        <Box
-          position="absolute"
-          inset={0}
-          opacity={0.15}
-          bgImage="url('https://www.transparenttextures.com/patterns/carbon-fibre.png')"
-          pointerEvents="none"
-        />
-
-        <Flex
-          direction={{ base: "column", lg: "row" }}
-          gap={{ base: 16, lg: 24 }}
-          align="center"
-        >
-          {/* --- CONTENT BLOCK --- */}
-          <VStack 
-            align={{ base: "center", lg: "start" }} 
-            spacing={8} 
-            flex="1"
-            textAlign={{ base: "center", lg: "left" }}
-          >
-            <Badge
-              colorScheme="purple"
-              variant="outline"
-              px={4}
-              py={1.5}
-              rounded="full"
-              fontSize="xs"
-              fontWeight="extrabold"
-              letterSpacing="widest"
-              borderColor="purple.500"
-              color="purple.300"
-              bg="purple.900"
-            >
-              PREMIUM EXPERIENCE
-            </Badge>
+        <Flex direction={{ base: "column", lg: "row" }} gap={{ base: 12, lg: 20 }} align="center">
+          
+          {/* LEFT CONTENT */}
+          <VStack align={{ base: "center", lg: "start" }} spacing={10} flex="1" textAlign={{ base: "center", lg: "left" }}>
+            <HStack bg={badgeBg} px={5} py={2} rounded="full" spacing={3}>
+              <Icon as={FiShield} color={accentColor} />
+              <Text fontSize="xs" fontWeight="black" letterSpacing="2px">ELITE SELECTION</Text>
+            </HStack>
 
             <Box>
-              <Heading
-                as="h2"
-                fontSize={{ base: "4xl", md: "7xl" }}
-                fontWeight="900"
-                lineHeight="0.95"
-                color="white"
-                letterSpacing="-4px"
-              >
-                Refine Your{" "}
-                <Text
-                  as="span"
-                  bgGradient="linear(to-tr, #8B5CF6, #EC4899)"
-                  bgClip="text"
-                >
-                  Daily
-                </Text>{" "}
-                Life.
+              <Heading fontSize={{ base: "4xl", md: "6xl", xl: "8xl" }} fontWeight="900" lineHeight="0.9" letterSpacing="-4px">
+                The Art of <Text as="span" bgGradient={`linear(to-r, ${accentColor}, ${secondaryAccent})`} bgClip="text">Modern</Text> Living.
               </Heading>
-              <Text
-                mt={6}
-                fontSize={{ base: "md", md: "lg" }}
-                color="whiteAlpha.600"
-                maxW="500px"
-                lineHeight="tall"
-              >
-                Experience a hand-picked collection of technology and fashion designed for the modern connoisseur. Quality meets aesthetic.
+              <Text mt={8} fontSize="xl" color={subTextColor} maxW="550px">
+                Curating sophisticated tech and fashion where precision meets aesthetic.
               </Text>
             </Box>
 
-            <Flex gap={4} direction={{ base: "column", sm: "row" }}>
-              <Button
-                size="lg"
-                height="65px"
-                px={10}
-                bg="white"
-                color="black"
-                rounded="full"
-                fontWeight="bold"
-                rightIcon={<FiArrowRight />}
-                _hover={{ bg: "purple.100", transform: "translateY(-4px)" }}
-                transition="all 0.3s ease"
-              >
-                Shop Collection
-              </Button>
-              <Button
-                size="lg"
-                height="65px"
-                px={10}
-                variant="outline"
-                color="white"
-                rounded="full"
-                borderColor="whiteAlpha.300"
-                _hover={{ bg: "whiteAlpha.100" }}
-              >
-                View Catalog
+            <Flex gap={5} direction={{ base: "column", sm: "row" }} w={{ base: "full", sm: "auto" }}>
+              <Button size="lg" h="70px" px={12} bg={accentColor} color="white" rounded="2xl" _hover={{ transform: "translateY(-5px)" }}>
+                Explore Gear
               </Button>
             </Flex>
           </VStack>
 
-          {/* --- CATEGORY GRID --- */}
-          <Box flex="1.2" w="full">
-            <Grid
-              templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }}
-              gap={6}
-            >
-              {data.slice(0, 6).map((item, idx) => (
+          {/* RIGHT GRID WITH SMART IMAGES */}
+          <Box flex="1.1" w="full">
+            <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }} gap={5}>
+              {data.slice(0, 6).map((item: any, idx: number) => (
                 <Box
                   key={item.id}
                   role="group"
                   cursor="pointer"
-                  animation={`${softFloat} ${4 + idx}s infinite ease-in-out`}
+                  animation={`${softFloat} ${5 + idx}s infinite ease-in-out`}
                 >
                   <VStack
-                    p={8}
-                    bg="whiteAlpha.50"
+                    p={6}
+                    bg={cardBg}
+                    backdropFilter="blur(20px)"
                     rounded="3xl"
                     border="1px solid"
-                    borderColor="whiteAlpha.100"
-                    transition="all 0.4s cubic-bezier(0.4, 0, 0.2, 1)"
-                    _hover={{
-                      bg: "whiteAlpha.200",
-                      borderColor: "purple.500",
-                      transform: "scale(1.05)",
-                      boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
-                    }}
-                    textAlign="center"
+                    borderColor={itemBorderColor}
+                    transition="all 0.4s"
+                    _hover={{ transform: "translateY(-10px)", borderColor: accentColor }}
                   >
                     <Box 
-                      p={4} 
-                      bg="whiteAlpha.100" 
+                      p={2} 
+                      bg={imgBoxBg} 
                       rounded="2xl" 
-                      mb={2}
+                      overflow="hidden"
                       transition="0.4s"
-                      _groupHover={{ bg: "white", transform: "rotate(-5deg)" }}
+                      _groupHover={{ bg: accentColor }}
                     >
                       <Image
-                        src={item.img}
+                        src={item.img || getFallbackImage(idx)}
                         alt={item.title}
-                        boxSize="70px"
-                        objectFit="contain"
-                        filter="grayscale(100%)"
-                        transition="0.4s"
-                        _groupHover={{ filter: "grayscale(0%)", transform: "scale(1.1)" }}
+                        boxSize={{ base: "70px", md: "90px" }}
+                        objectFit="cover"
+                        rounded="xl"
+                        fallback={<Skeleton boxSize="90px" rounded="xl" />}
+                        filter={imgFilter}
+                        _groupHover={{ filter: "brightness(1.1)", transform: "scale(1.1)" }}
                       />
                     </Box>
 
-                    <Text
-                      fontWeight="bold"
-                      color="white"
-                      fontSize="sm"
-                      letterSpacing="wide"
-                    >
+                    <Text fontWeight="800" color={textColor} fontSize="sm">
                       {item.title}
                     </Text>
                     
-                    <Icon 
-                      as={FiChevronRight} 
-                      color="purple.400" 
-                      opacity={0} 
-                      transform="translateX(-10px)"
-                      transition="0.3s"
-                      _groupHover={{ opacity: 1, transform: "translateX(0)" }}
-                    />
+                    <Flex align="center" color={accentColor} fontSize="xs" fontWeight="bold" opacity={0} _groupHover={{ opacity: 1 }}>
+                      VIEW <Icon as={FiChevronRight} />
+                    </Flex>
                   </VStack>
                 </Box>
               ))}

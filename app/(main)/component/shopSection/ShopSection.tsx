@@ -21,16 +21,14 @@ import ShopCard from "./element/ShopCard";
 import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
 import { keyframes } from "@emotion/react";
 import { tablePageLimit } from "../../../component/config/utils/variable";
-// Removed FaCompass (Unused)
 import { FaStoreAlt, FaRocket, FaWind, FaQuoteLeft } from "react-icons/fa";
 
-// 1. 3D Tilt Entrance
+// --- Animations ---
 const tiltIn = keyframes`
   0% { opacity: 0; transform: perspective(1000px) rotateX(10deg) translateY(60px); filter: blur(15px); }
   100% { opacity: 1; transform: perspective(1000px) rotateX(0deg) translateY(0); filter: blur(0); }
 `;
 
-// 2. Floating Parallax Orbs
 const floatingOrb = keyframes`
   0%, 100% { transform: translateY(0) translateX(0); }
   33% { transform: translateY(-30px) translateX(20px); }
@@ -48,8 +46,9 @@ const ShopSection = observer(() => {
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const accentColor = "teal.400";
-  const bgBase = useColorModeValue("gray.50", "gray.950");
+  // THEME COLORS
+  const accentColor = "#00BFFF"; // Skyblue
+  const bgBase = useColorModeValue("gray.50", "rgba(5, 10, 20, 1)"); // Midnight Navy
 
   const applyGetAllShops = useCallback(
     async ({ page = 1, limit = tablePageLimit, search = "", append = false }) => {
@@ -96,9 +95,9 @@ const ShopSection = observer(() => {
   return (
     <Box position="relative" overflow="hidden" bg={bgBase} minH="100vh" pb={32}>
       
-      {/* --- PARALLAX ARTISTIC BACKGROUND --- */}
-      <Box position="absolute" top="5%" left="-5%" w="600px" h="600px" bg="teal.100" filter="blur(140px)" borderRadius="full" opacity="0.4" animation={`${floatingOrb} 15s infinite ease-in-out`} />
-      <Box position="absolute" bottom="10%" right="-5%" w="500px" h="500px" bg="blue.100" filter="blur(140px)" borderRadius="full" opacity="0.3" animation={`${floatingOrb} 20s infinite ease-in-out reverse`} />
+      {/* --- PARALLAX ARTISTIC BACKGROUND (Skyblue & Deep Blue Orbs) --- */}
+      <Box position="absolute" top="5%" left="-5%" w="600px" h="600px" bg={`${accentColor}20`} filter="blur(140px)" borderRadius="full" opacity="0.4" animation={`${floatingOrb} 15s infinite ease-in-out`} />
+      <Box position="absolute" bottom="10%" right="-5%" w="500px" h="500px" bg="blue.900" filter="blur(140px)" borderRadius="full" opacity="0.3" animation={`${floatingOrb} 20s infinite ease-in-out reverse`} />
 
       <Container maxW="container.xl" pt={20} position="relative" zIndex={2}>
         
@@ -111,16 +110,15 @@ const ShopSection = observer(() => {
                   The Storefront Collection
                 </Text>
             </HStack>
-            <Heading size="3xl" fontWeight="900" lineHeight="0.9" letterSpacing="-2px">
+            <Heading size="3xl" fontWeight="900" lineHeight="0.9" letterSpacing="-2px" color={useColorModeValue("black", "white")}>
               Curated Spaces. <br />
-              <Text as="span" color="transparent" style={{ WebkitTextStroke: "1px #319795" }}>Unique</Text> Stories.
+              <Text as="span" color="transparent" style={{ WebkitTextStroke: `1px ${accentColor}` }}>Unique</Text> Stories.
             </Heading>
           </VStack>
           
-          <Box p={6} borderLeft="4px solid" borderColor="teal.400" bg="whiteAlpha.400" backdropFilter="blur(10px)">
-             <Icon as={FaQuoteLeft} color="teal.200" boxSize={6} mb={2} />
-             {/* Fixed unescaped double quotes */}
-             <Text fontSize="sm" fontWeight="bold" color="gray.600" maxW="250px">
+          <Box p={6} borderLeft="4px solid" borderColor={accentColor} bg={useColorModeValue("whiteAlpha.400", "whiteAlpha.100")} backdropFilter="blur(10px)">
+             <Icon as={FaQuoteLeft} color={accentColor} boxSize={6} mb={2} opacity={0.6} />
+             <Text fontSize="sm" fontWeight="bold" color={useColorModeValue("gray.600", "whiteAlpha.800")} maxW="250px">
                &quot;Every neighborhood has a heartbeat. These shops are ours.&quot;
              </Text>
           </Box>
@@ -158,26 +156,32 @@ const ShopSection = observer(() => {
         >
             {!allLoaded && (
                 <Flex 
-                    bg="rgba(255, 255, 255, 0.7)" 
+                    bg={useColorModeValue("rgba(255, 255, 255, 0.8)", "rgba(10, 20, 35, 0.8)")} 
                     backdropFilter="blur(20px)" 
                     px={6} py={3} 
                     borderRadius="full" 
-                    boxShadow="0 10px 40px rgba(0,0,0,0.1)"
-                    border="1px solid rgba(255,255,255,0.5)"
+                    boxShadow="0 10px 40px rgba(0,0,0,0.3)"
+                    border="1px solid"
+                    borderColor={useColorModeValue("whiteAlpha.500", "whiteAlpha.200")}
                     align="center"
                     gap={4}
                     animation="fadeIn 0.5s ease"
                     pointerEvents="auto"
                 >
-                    <Icon as={loadingMore ? FaRocket : FaWind} color="teal.500" animation={loadingMore ? "pulse 1s infinite" : "none"} />
-                    <Text fontSize="xs" fontWeight="black" color="gray.700" letterSpacing="1px">
+                    <Icon 
+                      as={loadingMore ? FaRocket : FaWind} 
+                      color={accentColor} 
+                      animation={loadingMore ? "pulse 1s infinite" : "none"} 
+                    />
+                    <Text fontSize="xs" fontWeight="black" color={useColorModeValue("gray.700", "whiteAlpha.900")} letterSpacing="1px">
                         {loadingMore ? "EXPANDING..." : `DISCOVERED ${shops.length} / ${totalShops}`}
                     </Text>
-                    <Box w="100px" h="4px" bg="gray.100" borderRadius="full" position="relative" overflow="hidden">
+                    <Box w="100px" h="4px" bg={useColorModeValue("gray.100", "whiteAlpha.100")} borderRadius="full" position="relative" overflow="hidden">
                         <Box 
-                            position="absolute" left={0} top={0} h="full" bg="teal.400" 
+                            position="absolute" left={0} top={0} h="full" bg={accentColor} 
                             w={`${(shops.length / (totalShops || 1)) * 100}%`} 
                             transition="width 1s ease"
+                            boxShadow={`0 0 10px ${accentColor}`}
                         />
                     </Box>
                 </Flex>
@@ -189,13 +193,12 @@ const ShopSection = observer(() => {
           <Center mt={40} pb={20}>
             <VStack spacing={8}>
                 <Box position="relative">
-                    <Circle size="120px" bg="teal.50" border="1px dashed" borderColor="teal.200" />
-                    <Icon as={FaStoreAlt} position="absolute" top="35px" left="35px" boxSize={12} color="teal.400" />
+                    <Circle size="120px" bg={useColorModeValue("blue.50", "whiteAlpha.50")} border="1px dashed" borderColor={accentColor} />
+                    <Icon as={FaStoreAlt} position="absolute" top="35px" left="35px" boxSize={12} color={accentColor} />
                 </Box>
                 <VStack spacing={0}>
-                    <Text fontSize="4xl" fontWeight="900" letterSpacing="-1px">End of the road.</Text>
-                    {/* Fixed unescaped apostrophe */}
-                    <Text color="gray.400" fontWeight="bold">You&apos;ve officially seen every shop in the district.</Text>
+                    <Text fontSize="4xl" fontWeight="900" letterSpacing="-1px" color={useColorModeValue("black", "white")}>End of the road.</Text>
+                    <Text color="gray.500" fontWeight="bold">You&apos;ve officially seen every shop in the district.</Text>
                 </VStack>
             </VStack>
           </Center>
