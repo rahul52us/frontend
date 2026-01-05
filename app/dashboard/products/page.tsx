@@ -90,12 +90,19 @@ const ProductsPage = () => {
     };
 
     const handleSubmit = async (values: any, actions: any) => {
+        // Clean images for backend (remove preview URL)
         try {
-            // Note: images are sending as Blob URLs (strings).
-            // A real implementation requires a file upload handler (e.g. S3/Cloudinary)
-            // to convert Files -> URLs before sending to this endpoint.
+            const cleanImages = values.images.map((img: any) => {
+                if (img.buffer) {
+                    const { preview, ...rest } = img;
+                    return rest;
+                }
+                return img;
+            });
 
-            const response = await axios.post("/product/create", values);
+            const payload = { ...values, images: cleanImages };
+
+            const response = await axios.post("/product/create", payload);
 
             if (response.data?.success || response.status === 201) {
                 toast({
@@ -121,12 +128,31 @@ const ProductsPage = () => {
         }
     };
 
-    const handleImageUpload = (event, setFieldValue, currentImages) => {
+    const handleImageUpload = async (event: any, setFieldValue: any, currentImages: any[]) => {
         const files = Array.from(event.target.files);
-        // In a real app, you might upload these to S3/Cloudinary here or convert to Base64
-        // For this demo, we'll create object URLs
-        const newImages = files.map((file: any) => URL.createObjectURL(file));
-        setFieldValue("images", [...currentImages, ...newImages]);
+
+        const fileReaders = files.map((file: any) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    resolve({
+                        filename: file.name,
+                        buffer: reader.result, // This is the Base64 string
+                        isAdd: true,
+                        preview: URL.createObjectURL(file) // Keep this for UI display
+                    });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        });
+
+        try {
+            const newImages = await Promise.all(fileReaders);
+            setFieldValue("images", [...currentImages, ...newImages]);
+        } catch (error) {
+            console.error("Error reading files:", error);
+        }
     };
 
     return (
@@ -158,10 +184,10 @@ const ProductsPage = () => {
                         {(props) => (
                             <Form>
                                 <VStack spacing={6} align="stretch">
-                                    {/* Basic Info */}
+                                    {/* ... Basic Info ... */}
                                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                                         <Field name="name">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.name && form.touched.name}
                                                     isRequired
@@ -174,7 +200,7 @@ const ProductsPage = () => {
                                         </Field>
 
                                         <Field name="brand">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.brand && form.touched.brand}
                                                 >
@@ -188,7 +214,7 @@ const ProductsPage = () => {
 
                                     <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
                                         <Field name="sku">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.sku && form.touched.sku}
                                                 >
@@ -200,7 +226,7 @@ const ProductsPage = () => {
                                         </Field>
 
                                         <Field name="weight">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.weight && form.touched.weight}
                                                 >
@@ -212,7 +238,7 @@ const ProductsPage = () => {
                                         </Field>
 
                                         <Field name="category">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={
                                                         form.errors.category && form.touched.category
@@ -236,7 +262,7 @@ const ProductsPage = () => {
                                     </SimpleGrid>
 
                                     <Field name="description">
-                                        {({ field, form }) => (
+                                        {({ field, form }: any) => (
                                             <FormControl
                                                 isInvalid={
                                                     form.errors.description && form.touched.description
@@ -257,7 +283,7 @@ const ProductsPage = () => {
 
                                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                                         <Field name="price">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.price && form.touched.price}
                                                     isRequired
@@ -276,7 +302,7 @@ const ProductsPage = () => {
                                         </Field>
 
                                         <Field name="stock">
-                                            {({ field, form }) => (
+                                            {({ field, form }: any) => (
                                                 <FormControl
                                                     isInvalid={form.errors.stock && form.touched.stock}
                                                     isRequired
@@ -299,9 +325,15 @@ const ProductsPage = () => {
                                     <FormControl isInvalid={!!(props.errors.images && props.touched.images)}>
                                         <FormLabel>Product Images</FormLabel>
                                         <HStack spacing={4} wrap="wrap">
-                                            {props.values.images.map((src, index) => (
+                                            {props.values.images.map((img: any, index: number) => (
                                                 <Box key={index} position="relative" boxSize="100px">
-                                                    <Image src={src} alt={`Product ${index}`} boxSize="100%" objectFit="cover" borderRadius="md" />
+                                                    <Image
+                                                        src={img.preview || img}
+                                                        alt={`Product ${index}`}
+                                                        boxSize="100%"
+                                                        objectFit="cover"
+                                                        borderRadius="md"
+                                                    />
                                                     <IconButton
                                                         aria-label="Remove image"
                                                         icon={<FaTrash />}
@@ -311,7 +343,7 @@ const ProductsPage = () => {
                                                         top={-2}
                                                         right={-2}
                                                         onClick={() => {
-                                                            const newImages = props.values.images.filter((_, i) => i !== index);
+                                                            const newImages = props.values.images.filter((_: any, i: number) => i !== index);
                                                             props.setFieldValue("images", newImages);
                                                         }}
                                                     />
