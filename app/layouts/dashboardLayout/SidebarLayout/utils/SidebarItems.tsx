@@ -6,6 +6,7 @@ import {
   FaCog,
   FaBookOpen,
   FaFileAlt,
+  FaBox,
 } from "react-icons/fa";
 import { CalendarIcon } from "@chakra-ui/icons";
 import { dashboard } from "../../../../config/utils/routes";
@@ -53,6 +54,13 @@ const sidebarDatas: SidebarItem[] = [
     name: "Page Sections",
     icon: <FaFileAlt />,
     url: "/dashboard/content-section",
+    role: ["user"],
+  },
+  {
+    id: 6,
+    name: "Products",
+    icon: <FaBox />,
+    url: "/dashboard/products",
     role: ["user"],
   },
   // Blogs
