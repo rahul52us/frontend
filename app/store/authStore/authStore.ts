@@ -10,7 +10,7 @@ interface Notification {
   type?: any;
   placement?: string;
   action?: any;
-  duration?:number
+  duration?: number
 }
 
 class AuthStore {
@@ -69,7 +69,7 @@ class AuthStore {
 
   changePassword = async (sendData: any) => {
     try {
-      const { data } = await axios.post("/auth/change-password", {...sendData,company : stores.auth.company});
+      const { data } = await axios.post("/auth/change-password", { ...sendData, company: stores.auth.company });
       return data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
@@ -94,7 +94,7 @@ class AuthStore {
     type?: string;
     placement?: string;
     action?: any;
-    duration?:number
+    duration?: number
   }) => {
     this.notification = {
       title: data.title,
@@ -110,7 +110,7 @@ class AuthStore {
   };
 
   // Register user
-  register = async (payload : any) => {
+  register = async (payload: any) => {
     this.isLoading = true;
     try {
       const response = await axios.post("/auth/admin/signup", payload);
@@ -122,7 +122,7 @@ class AuthStore {
     }
   };
 
-  verifyRegisterOtp = async (payload : any) => {
+  verifyRegisterOtp = async (payload: any) => {
     this.isLoading = true;
     try {
       const response = await axios.post("/auth/admin/signup/verify", payload);
@@ -153,7 +153,7 @@ class AuthStore {
     }
   };
 
-  verifyLoginOtp = async (payload : any) => {
+  verifyLoginOtp = async (payload: any) => {
     this.isLoading = true;
     try {
       const response = await axios.post("/auth/login/verify", payload);
@@ -161,6 +161,7 @@ class AuthStore {
 
       if (this.token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN, this.token);
+        stores.cartStore.syncCart();
       }
 
       return response?.data?.data

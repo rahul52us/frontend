@@ -13,6 +13,7 @@ import { useState } from "react";
 import { FiEye, FiHeart } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 import { useRouter } from "next/navigation";
+import stores from "../../../../store/stores";
 
 const ProductCard = ({ product }: any) => {
   const router = useRouter();
@@ -32,7 +33,10 @@ const ProductCard = ({ product }: any) => {
     onOpen();
   };
 
-  const handleAddToCart = () => {
+  const { cartStore } = stores;
+
+  const handleAddToCart = async () => {
+    await cartStore.addToCart(product);
     toast({
       title: "Product Added to the cart",
       status: "success",
