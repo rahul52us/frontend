@@ -7,6 +7,7 @@ import {
   Image,
   Text,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { FiEye, FiHeart } from "react-icons/fi";
@@ -18,6 +19,7 @@ const ProductCard = ({ product }: any) => {
   const { image, images, category, name, price } = product;
   const displayImage = image || (images && images.length > 0 ? images[0] : "");
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
   const [selectedImage, setSelectedImage] = useState<any>([]);
 
   // Static discount price for now
@@ -28,6 +30,16 @@ const ProductCard = ({ product }: any) => {
   const handleImageClick = () => {
     setSelectedImage([displayImage]);
     onOpen();
+  };
+
+  const handleAddToCart = () => {
+    toast({
+      title: "Product Added to the cart",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "top-right",
+    });
   };
 
   return (
@@ -156,7 +168,7 @@ const ProductCard = ({ product }: any) => {
             fontWeight="semibold"
             _hover={{ bg: "purple.700", transform: "scale(1.05)" }} // Subtle scale
             _active={{ bg: "purple.800" }}
-            onClick={() => alert("Added to cart!")}
+            onClick={handleAddToCart}
           >
             Add
           </Button>
