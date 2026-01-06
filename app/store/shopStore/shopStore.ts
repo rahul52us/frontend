@@ -2,9 +2,9 @@ import { makeAutoObservable } from "mobx";
 import axios from "axios";
 class ShopStore {
   shop: any = {
-    loading : true,
-    data : [],
-    totalPages : 1
+    loading: true,
+    data: [],
+    totalPages: 1
   }
 
   constructor() {
@@ -38,9 +38,19 @@ class ShopStore {
   };
 
 
-  getSingleShop = async (sendData : any) => {
+  getSingleShop = async (sendData: any) => {
     try {
       const response = await axios.get(`/company/${sendData.title}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+    }
+  };
+
+  getShopProducts = async (sendData: any) => {
+    try {
+      const response = await axios.post(`/product`, sendData);
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);

@@ -10,7 +10,6 @@ import {
 } from "@chakra-ui/react";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import ProductCard from "../../../products/components/ProductCard/ProductCard";
-import { uniqueProducts } from "../../../products/components/utils/constant";
 import ContactSection from "../ContactSection/ContactSection";
 import NewsLetter from "../NewsLetter/NewsLetter";
 import OperatingHours from "../OperatingHours/OperatingHours";
@@ -21,8 +20,21 @@ import ShopImages from "../ShopImages/ShopImages";
 import StickyNav from "../StickyNav/StickyNav";
 import LocationSection from "../LocationSection/LocationSection";
 import { observer } from "mobx-react-lite";
+import stores from "../../../../store/stores";
+import { useEffect, useState } from "react";
 
 const ShopPage = observer(({ shopData }: any) => {
+  const { shopStore: { getShopProducts } } = stores;
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (shopData?._id) {
+      getShopProducts({ company: shopData?._id }).then((res: any) => {
+        setProducts(res?.data || [])
+      })
+    }
+  }, [shopData?._id])
+
   const getCurrentDayHours = () => {
     const days = [
       "Sunday",
@@ -125,9 +137,9 @@ const ShopPage = observer(({ shopData }: any) => {
           gap={{ base: 4, md: 3, lg: 4 }}
           justifyItems="center"
         >
-          {(Array.isArray(uniqueProducts) ? uniqueProducts : []).map((product) => (
+          {(Array.isArray(products) && products.length > 0 ? products : []).map((product) => (
             <ProductCard
-              key={`${product.id}-${product.name}`}
+              key={`${product._id || product.id}-${product.name}`}
               product={product}
             />
           ))}

@@ -15,7 +15,8 @@ import { useRouter } from "next/navigation";
 
 const ProductCard = ({ product }: any) => {
   const router = useRouter();
-  const { image, category, name, price } = product;
+  const { image, images, category, name, price } = product;
+  const displayImage = image || (images && images.length > 0 ? images[0] : "");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedImage, setSelectedImage] = useState<any>([]);
 
@@ -25,7 +26,7 @@ const ProductCard = ({ product }: any) => {
   const discountPercentage = Math.round(((price - discountPrice) / price) * 100);
 
   const handleImageClick = () => {
-    setSelectedImage([image]);
+    setSelectedImage([displayImage]);
     onOpen();
   };
 
@@ -48,7 +49,7 @@ const ProductCard = ({ product }: any) => {
     >
       <Box position="relative" h="180px">
         <Image
-          src={image}
+          src={displayImage}
           alt={name}
           objectFit="cover"
           w="100%"
