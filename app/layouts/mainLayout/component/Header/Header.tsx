@@ -152,6 +152,23 @@ const Header = observer(() => {
                 </InputGroup>
               </Box>
 
+              {/* Mobile Cart Option - Simple Text Style */}
+              <Box px={4} mb={4} display="flex" justifyContent="center">
+                <Text
+                  fontSize="md"
+                  fontWeight="500"
+                  // color="gray.600"
+                  cursor="pointer"
+                  _hover={{ color: "orange.500" }}
+                  onClick={() => {
+                    onClose();
+                    onCartOpen();
+                  }}
+                >
+                  Cart {stores.cartStore.totalItems > 0 && `(${stores.cartStore.totalItems})`}
+                </Text>
+              </Box>
+
               {/* Navigation Items */}
               <Box px={4}>
                 <NavItemsLayout onClose={onClose} />
@@ -178,12 +195,18 @@ const Header = observer(() => {
             <Image
               src="/images/logo3.jpg"
               alt="eCommerce Logo"
-              h={{ md: "45px", lg: "55px" }}
+              h={{ base: "40px", md: "45px", lg: "55px" }}
               cursor="pointer"
               onClick={() => router.push("/")}
-              transition="transform 0.2s ease"
-              _hover={{ transform: "scale(1.05)" }}
-              borderRadius="sm"
+              transition="all 0.3s ease-in-out"
+              _hover={{
+                transform: "scale(1.05)",
+                boxShadow: "md",
+                filter: "brightness(1.05)",
+              }}
+              boxShadow="sm"
+              borderRadius="md"
+              objectFit="contain"
             />
           </Flex>
 
@@ -202,8 +225,17 @@ const Header = observer(() => {
                 icon={<FiShoppingCart fontSize="24px" />}
                 aria-label="Cart"
                 variant="ghost"
-                color="gray.600"
-                _hover={{ color: "orange.500", bg: "gray.50" }}
+                color="gray.700"
+                size="md"
+                _hover={{
+                  color: "orange.600",
+                  bg: "gray.100",
+                  transform: "scale(1.05)",
+                }}
+                _active={{
+                  transform: "scale(0.95)",
+                }}
+                transition="all 0.2s ease-in-out"
                 onClick={onCartOpen}
               />
               {stores.cartStore.totalItems > 0 && (
@@ -211,10 +243,12 @@ const Header = observer(() => {
                   colorScheme="red"
                   borderRadius="full"
                   position="absolute"
-                  top="-2px"
-                  right="-2px"
+                  top="-1px"
+                  right="-1px"
                   variant="solid"
-                  fontSize="0.7em"
+                  fontSize="0.8em"
+                  px={2}
+                  boxShadow="sm"
                 >
                   {stores.cartStore.totalItems}
                 </Badge>
