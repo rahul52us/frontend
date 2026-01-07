@@ -28,6 +28,10 @@ class CartStore {
         return false;
     }
 
+    get totalItems() {
+        return this.cartItems.reduce((total, item) => total + item.quantity, 0);
+    }
+
     fetchCart = async () => {
         console.log("CartStore: fetchCart called. isLoggedIn:", this.isLoggedIn);
         this.loading = true;

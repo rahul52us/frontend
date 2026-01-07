@@ -17,7 +17,10 @@ import {
   Text,
   useBreakpointValue,
   useDisclosure,
+  Badge,
 } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
+import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
 import { FiShoppingCart } from "react-icons/fi";
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
@@ -26,7 +29,7 @@ import HeroNavButton from "./component/HeroNavButton";
 import NavItemsLayout from "./component/NavItemsLayout";
 import SearchInput from "./element/SearchInput";
 
-const Header = () => {
+const Header = observer(() => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isCartOpen,
@@ -194,21 +197,37 @@ const Header = () => {
             <Flex gap={4}>
               <NavItemsLayout />
             </Flex>
-            <IconButton
-              icon={<FiShoppingCart fontSize="24px" />}
-              aria-label="Cart"
-              variant="ghost"
-              color="gray.600"
-              _hover={{ color: "orange.500", bg: "gray.50" }}
-              onClick={onCartOpen}
-            />
+            <Box position="relative">
+              <IconButton
+                icon={<FiShoppingCart fontSize="24px" />}
+                aria-label="Cart"
+                variant="ghost"
+                color="gray.600"
+                _hover={{ color: "orange.500", bg: "gray.50" }}
+                onClick={onCartOpen}
+              />
+              {stores.cartStore.totalItems > 0 && (
+                <Badge
+                  colorScheme="red"
+                  borderRadius="full"
+                  position="absolute"
+                  top="-2px"
+                  right="-2px"
+                  variant="solid"
+                  fontSize="0.7em"
+                >
+                  {stores.cartStore.totalItems}
+                </Badge>
+              )}
+            </Box>
             <HeroNavButton />
           </Flex>
         </Flex>
       </Box>
       <CartDrawer isOpen={isCartOpen} onClose={onCartClose} />
     </Box>
-  );
-};
+  )
+});
+
 
 export default Header;
