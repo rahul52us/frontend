@@ -29,6 +29,7 @@ class CartStore {
     }
 
     fetchCart = async () => {
+        console.log("CartStore: fetchCart called. isLoggedIn:", this.isLoggedIn);
         this.loading = true;
         try {
             if (this.isLoggedIn) {
@@ -55,18 +56,22 @@ class CartStore {
     };
 
     fetchUserCart = async () => {
+        console.log("CartStore: fetchUserCart started");
         try {
             const response = await axios.get("/cart");
+            console.log("CartStore: fetchUserCart response", response.data);
             const backendCart = response.data?.data;
-            if (backendCart && backendCart.items) {
-                // Map backend items to store format
-                this.cartItems = backendCart.items.map((item: any) => ({
-                    product: item.product,
-                    quantity: item.quantity
-                }));
-            }
+            runInAction(() => {
+                if (backendCart && backendCart.items) {
+                    // Map backend items to store format
+                    this.cartItems = backendCart.items.map((item: any) => ({
+                        product: item.product,
+                        quantity: item.quantity
+                    }));
+                }
+            });
         } catch (error) {
-            console.error("Error fetching user cart", error);
+            console.error("CartStore: Error fetching user cart", error);
         }
     };
 
