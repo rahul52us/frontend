@@ -58,6 +58,24 @@ class ShopStore {
     }
   };
 
+  deleteProduct = async (id: string) => {
+    try {
+      const response = await axios.delete(`/product/delete/${id}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
+  updateProduct = async (id: string, sendData: any) => {
+    try {
+      const response = await axios.put(`/product/update/${id}`, sendData);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
 }
 
 export const shopStore = new ShopStore();
