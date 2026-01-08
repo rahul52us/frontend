@@ -191,6 +191,15 @@ class AuthStore {
     }
   };
 
+  getCompanyUsers = async (sendData : any = {}) => {
+    try {
+      const { data } = await axios.post(`auth/get/users`,{},{params : {...sendData}});
+      return data.data?.map((item : any) => ({user : {...item}})) || [];
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
   // Logout user
   logout = () => {
     this.token = null;

@@ -16,7 +16,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 interface ProductCardProps {
     product: any;
     onEdit: (product: any) => void;
-    onDelete: (productId: string) => void;
+    onDelete: any
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
@@ -113,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
                                 colorScheme="red"
                                 variant="ghost"
                                 _hover={{ color: "red.500", bg: "red.50" }}
-                                onClick={() => onDelete(product._id)}
+                                onClick={() => onDelete(product)}
                             />
                         </Tooltip>
                     </HStack>
