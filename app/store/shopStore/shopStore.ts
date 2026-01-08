@@ -48,6 +48,16 @@ class ShopStore {
     }
   };
 
+  getAllShopProducts = async () => {
+    try {
+      const response = await axios.get(`/allproducts`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+    }
+  };
+
   getShopProducts = async (sendData: any) => {
     try {
       const response = await axios.post(`/product`, sendData);

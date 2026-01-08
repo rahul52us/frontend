@@ -2,23 +2,45 @@
 
 import { Box, Grid, useBreakpointValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
 import Carousel from "../../../../component/common/CommonCarousel/CommonCarousel";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import stores from "../../../../store/stores";
 import ShopSection from "../../../component/shopSection/ShopSection";
-import { uniqueProducts } from "../utils/constant";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton/ProductCardSkeleton";
 
 const ProductsListSection = observer(() => {
   const {
     themeStore: { themeConfig },
+    shopStore,
   } = stores;
   const isDarkMode = themeConfig.config.initialColorMode === "dark";
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const headingColor = isDarkMode
     ? themeConfig.colors.dark.primary[500]
     : themeConfig.colors.light.primary[500];
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await shopStore.getAllShopProducts();
+      const allProducts = res.data || [];
+      // Shuffle and take 10
+      const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
+      setProducts(shuffled.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const slidesToShow = useBreakpointValue({
     base: 1,
@@ -72,23 +94,30 @@ const ProductsListSection = observer(() => {
           align={{ base: "center", md: "center" }}
         />
         <Box>
-          <Carousel {...carouselSettings}>
-            {uniqueProducts.map((product) => (
-              <Box
-                key={`${product.id}-${product.name}-carousel`}
-                px={{ base: 2, md: 2 }}
-                py={2}
-                width="100%"
-              >
-                <ProductCard product={product} />
-              </Box>
-            ))}
-          </Carousel>
-          <Grid display="none" templateColumns={"repeat(5, 1fr)"} gap={4} my={2}>
-            {[...Array(5)].map((_ : any, index : number) => (
-              <ProductCardSkeleton key={index}/>
-            ))}
-          </Grid>
+          {loading ? (
+            <Grid templateColumns={{ base: "repeat(1, 1fr)", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }} gap={4} my={2}>
+              {[...Array(5)].map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </Grid>
+          ) : (
+            products.length > 0 ? (
+              <Carousel {...carouselSettings}>
+                {products.map((product) => (
+                  <Box
+                    key={`${product._id}-${product.name}-carousel`}
+                    px={{ base: 2, md: 2 }}
+                    py={2}
+                    width="100%"
+                  >
+                    <ProductCard product={product} />
+                  </Box>
+                ))}
+              </Carousel>
+            ) : (
+              <Box textAlign="center" py={10}>No products found.</Box>
+            )
+          )}
         </Box>
       </Box>
     </Box>

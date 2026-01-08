@@ -167,7 +167,7 @@ const LoginForm = observer(() => {
                   validationSchema={step === 1 ? phoneSchema : otpSchema}
                   onSubmit={step === 1 ? handleLoginSubmit : handleOtpSubmit}
                 >
-                  {({ values, isSubmitting, setFieldValue, errors } : any) => (
+                  {({ values, isSubmitting, setFieldValue, errors }: any) => (
                     <Form style={{ width: "100%" }}>
                       <VStack spacing={6} width="full">
                         <CustomInput
@@ -233,7 +233,7 @@ const LoginForm = observer(() => {
                         onClick={() => {
                           setStep(1);
                           setOtpTimer(60);
-                          handleLoginSubmit({ phone: loginInfo?.phone }, { setSubmitting: () => {} });
+                          handleLoginSubmit({ phone: loginInfo?.phone }, { setSubmitting: () => { } });
                         }}
                       >
                         Resend {otpTimer > 0 ? `in ${otpTimer}s` : "Now"}
