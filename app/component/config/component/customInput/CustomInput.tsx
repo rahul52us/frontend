@@ -35,9 +35,11 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import debounce from "lodash/debounce";
 import stores from "../../../../store/stores";
+import OtpInput from "./element/OtpInput";
 
 interface CustomInputProps {
   type?:
+    | "otp"
     | "editor"
     | "password"
     | "number"
@@ -86,7 +88,7 @@ interface CustomInputProps {
   isPortal?: boolean;
   params?: any;
   query?: any;
-  parentStyle?:any
+  parentStyle?: any;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -412,6 +414,25 @@ const CustomInput: React.FC<CustomInputProps> = ({
             </Button>
           </div>
         );
+      case "otp":
+  return (
+    <OtpInput
+      length={6}
+      value={value || ""}
+      onChange={(otpString: string) => {
+        // Clean: only digits, max 6
+        const cleaned = otpString.replace(/\D/g, "").slice(0, 6);
+        // Pass the clean string directly — matches your LoginForm logic
+        onChange(cleaned);
+      }}
+      label={label}
+      error={error}
+      showError={showError}
+      required={required}
+      disabled={disabled}
+      labelcolor={labelcolor}
+    />
+  );
       case "url":
         return (
           <Input

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Input, HStack, FormControl, FormLabel, FormErrorMessage } from "@chakra-ui/react";
+import { Input, HStack, FormControl } from "@chakra-ui/react";
 
 interface OtpInputProps {
   length?: number; // Number of OTP digits (default: 6)
@@ -83,11 +83,6 @@ const OtpInput: React.FC<OtpInputProps> = ({
 
   return (
     <FormControl id="otp" isInvalid={!!error && showError}>
-      {label && (
-        <FormLabel color={labelcolor}>
-          {label} {required && <span style={{ color: "red" }}>*</span>}
-        </FormLabel>
-      )}
       <HStack spacing={2}>
         {Array.from({ length }).map((_, index) => (
           <Input
@@ -112,7 +107,6 @@ const OtpInput: React.FC<OtpInputProps> = ({
           />
         ))}
       </HStack>
-      {showError && error && <FormErrorMessage>{error}</FormErrorMessage>}
     </FormControl>
   );
 };
