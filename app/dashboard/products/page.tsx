@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -10,13 +10,28 @@ import {
   Text,
   useToast,
   SimpleGrid,
-  useColorModeValue,
   Icon,
   Spinner,
   useDisclosure,
+  VStack,
+  HStack,
+  Badge,
+  Divider,
+  Center,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  Select,
+  Image,
+  Circle,
 } from "@chakra-ui/react";
 import * as Yup from "yup";
-import { FaBoxOpen, FaPlus, FaSearch } from "react-icons/fa";
+import {
+  FaBoxOpen,
+  FaPlus,
+  FaSearch,
+  FaFire,
+} from "react-icons/fa";
 import axios from "axios";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
@@ -25,6 +40,7 @@ import ProductForm from "./components/ProductForm";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 
 const activeCategories = [
+  "",
   "Electronics",
   "Clothing",
   "Home & Garden",
@@ -66,12 +82,14 @@ const ProductSchema = Yup.object().shape({
 const ProductsPage = observer(() => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  const cardBg = useColorModeValue("white", "gray.800");
 
   const [products, setProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState({ data: null, open: false });
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const { shopStore, auth } = stores;
 
@@ -85,7 +103,6 @@ const ProductsPage = observer(() => {
     setDeleteOpen({ open: false, data: null });
     try {
       const response = await shopStore.deleteProduct(selectedProduct?._id);
-      console.log(response);
       toast({
         title: "Product Deleted",
         description: "The product has been removed.",
@@ -112,7 +129,9 @@ const ProductsPage = observer(() => {
     setLoading(true);
     try {
       const res = await shopStore.getShopProducts({ company: auth.company });
-      setProducts(res.data || []);
+      const data = res.data || [];
+      setProducts(data);
+      setFilteredProducts(data);
     } catch (error) {
       console.error("Fetch Products Error:", error);
       toast({
@@ -129,6 +148,26 @@ const ProductsPage = observer(() => {
     fetchProducts();
   }, [auth.company]);
 
+  // Client-side filtering
+  useEffect(() => {
+    let filtered = products;
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.category === selectedCategory);
+    }
+
+    setFilteredProducts(filtered);
+  }, [products, searchTerm, selectedCategory]);
+
   const handleEdit = (product: any) => {
     setSelectedProduct(product._id);
     setDeleteOpen({ open: false, data: null });
@@ -140,17 +179,15 @@ const ProductsPage = observer(() => {
       ? {
           ...products.find((p) => p._id === selectedProduct),
           images: products.find((p) => p._id === selectedProduct).images || [],
-          productDetails: products.find((p) => p._id === selectedProduct)
-            .productDetails
-            ? Object.entries(
-                products.find((p) => p._id === selectedProduct).productDetails
-              ).map(([key, value]) => ({ key, value }))
+          productDetails: products.find((p) => p._id === selectedProduct).productDetails
+            ? Object.entries(products.find((p) => p._id === selectedProduct).productDetails).map(
+                ([key, value]) => ({ key, value })
+              )
             : [],
-          information: products.find((p) => p._id === selectedProduct)
-            .information
-            ? Object.entries(
-                products.find((p) => p._id === selectedProduct).information
-              ).map(([key, value]) => ({ key, value }))
+          information: products.find((p) => p._id === selectedProduct).information
+            ? Object.entries(products.find((p) => p._id === selectedProduct).information).map(
+                ([key, value]) => ({ key, value })
+              )
             : [],
         }
       : {
@@ -213,9 +250,7 @@ const ProductsPage = observer(() => {
     } catch (error: any) {
       console.error("Submission Error:", error);
       toast({
-        title: selectedProduct
-          ? "Error updating product."
-          : "Error creating product.",
+        title: selectedProduct ? "Error updating product." : "Error creating product.",
         description: error.response?.data?.message || "Something went wrong.",
         status: "error",
         duration: 5000,
@@ -227,55 +262,159 @@ const ProductsPage = observer(() => {
   };
 
   return (
-    <Box>
-      <Flex justifyContent="space-between" alignItems="center" mb={6}>
-        <Box>
-          <Heading size="lg" mb={2} display="flex" alignItems="center" gap={3}>
-            <Icon as={FaBoxOpen} color="blue.500" />
-            Products
-          </Heading>
-          <Text color="gray.500">Manage your shop's inventory</Text>
+    <Box minH="100vh" bgGradient="linear(to-br, gray.50, cyan.50)" py={{ base: 4, md: 6 }}>
+      <Container maxW="8xl">
+        {/* Refined Hero Header */}
+        <Box bg="white" borderRadius="2xl" shadow="md" overflow="hidden" mb={6}>
+          <Box bgGradient="linear(to-r, blue.500, cyan.500)" px={{ base: 6, md: 10 }} py={9}>
+            <Flex
+              justify="space-between"
+              align="center"
+              flexDirection={{ base: "column", lg: "row" }}
+              gap={6}
+              textAlign={{ base: "center", lg: "left" }}
+            >
+              <Box>
+                <HStack spacing={3} mb={3} justify={{ base: "center", lg: "flex-start" }}>
+                  <Circle bg="whiteAlpha.300" size="12" p={3}>
+                    <Icon as={FaBoxOpen} boxSize={6} color="white" />
+                  </Circle>
+                  <Badge colorScheme="cyan" px={3} py={1} fontSize="sm" variant="solid">
+                    LIVE INVENTORY
+                  </Badge>
+                </HStack>
+                <Heading size="2xl" color="white" fontWeight="extrabold" mb={1}>
+                  Your Products
+                </Heading>
+                <Text fontSize="lg" color="whiteAlpha.900">
+                  Managing {products.length} {products.length === 1 ? "item" : "items"}
+                </Text>
+              </Box>
+              <Button
+                size="lg"
+                px={9}
+                bg="white"
+                color="cyan.600"
+                leftIcon={<FaPlus />}
+                fontWeight="bold"
+                boxShadow="md"
+                _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
+                transition="all 0.2s"
+                onClick={onOpen}
+              >
+                Add Product
+              </Button>
+            </Flex>
+          </Box>
         </Box>
-        <Button leftIcon={<FaPlus />} colorScheme="blue" onClick={onOpen}>
-          Add Product
-        </Button>
-      </Flex>
 
-      {/* Product List */}
-      {loading ? (
-        <Flex justify="center" align="center" h="200px">
-          <Spinner size="xl" color="blue.500" />
-        </Flex>
-      ) : products.length === 0 ? (
-        <Box
-          textAlign="center"
-          py={10}
-          px={6}
-          bg={cardBg}
-          borderRadius="xl"
-          border="1px dashed"
-          borderColor="gray.300"
-        >
-          <Text fontSize="lg" color="gray.500" mb={4}>
-            No products found. Start by adding one!
-          </Text>
-          <Button colorScheme="blue" variant="outline" onClick={onOpen}>
-            Create First Product
-          </Button>
+        {/* Main Content */}
+        <Box bg="white" borderRadius="2xl" shadow="md" p={{ base: 5, md: 8 }}>
+          {loading ? (
+            <Center py={20}>
+              <VStack spacing={5}>
+                <Spinner size="xl" color="cyan.500" thickness="4px" speed="0.7s" />
+                <Text fontSize="lg" color="gray.600" fontWeight="medium">
+                  Loading products...
+                </Text>
+              </VStack>
+            </Center>
+          ) : products.length === 0 ? (
+            /* Clean & Minimal Empty State */
+            <Center py={14}>
+              <VStack spacing={6} textAlign="center" maxW="md">
+                <Image
+                  src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/8e427a83004519.5d2ef81a41825.png"
+                  alt="No products yet – your inventory is empty"
+                  borderRadius="lg"
+                  shadow="sm"
+                  maxH="280px"
+                  objectFit="contain"
+                  fallbackSrc="https://via.placeholder.com/600x400?text=Empty+Inventory"
+                />
+                <VStack spacing={3}>
+                  <Heading size="lg" color="gray.700">
+                    No products added yet
+                  </Heading>
+                  <Text fontSize="md" color="gray.500">
+                    Start building your store by adding your first product.
+                  </Text>
+                </VStack>
+                <Button
+                  colorScheme="cyan"
+                  size="lg"
+                  leftIcon={<FaPlus />}
+                  px={8}
+                  onClick={onOpen}
+                >
+                  Add Your First Product
+                </Button>
+              </VStack>
+            </Center>
+          ) : (
+            <Box>
+              {/* Search & Filter */}
+              <Flex
+                direction={{ base: "column", md: "row" }}
+                gap={4}
+                mb={6}
+                align="center"
+              >
+                <InputGroup maxW={{ base: "full", md: "360px" }}>
+                  <InputLeftElement>
+                    <Icon as={FaSearch} color="gray.400" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Search by name, SKU, or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    bg="gray.50"
+                    border="none"
+                    _focus={{ bg: "white", shadow: "outline", ringColor: "cyan.500" }}
+                  />
+                </InputGroup>
+
+                <Select
+                  maxW={{ base: "full", md: "240px" }}
+                  placeholder="All Categories"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  bg="gray.50"
+                  border="none"
+                >
+                  {activeCategories.slice(1).map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </Select>
+
+                <Badge ml="auto" colorScheme="cyan" variant="subtle" fontSize="sm" px={3} py={1.5}>
+                  {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+                </Badge>
+              </Flex>
+
+              <Divider my={5} />
+
+              <Heading size="lg" mb={6} color="gray.800" display="flex" alignItems="center" gap={2}>
+                <Icon as={FaFire} color="orange.500" />
+                Active Products
+              </Heading>
+
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                {filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    onEdit={handleEdit}
+                    onDelete={triggerDelete}
+                  />
+                ))}
+              </SimpleGrid>
+            </Box>
+          )}
         </Box>
-      ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              onEdit={handleEdit}
-              onDelete={triggerDelete}
-            />
-          ))}
-        </SimpleGrid>
-      )}
+      </Container>
 
+      {/* Modals */}
       <ProductForm
         isOpen={isOpen}
         onClose={() => {
@@ -285,7 +424,7 @@ const ProductsPage = observer(() => {
         initialValues={initialValues}
         validationSchema={ProductSchema}
         onSubmit={handleSubmit}
-        activeCategories={activeCategories}
+        activeCategories={activeCategories.filter(c => c !== "")}
         isEdit={!!selectedProduct}
       />
 
