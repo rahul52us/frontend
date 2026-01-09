@@ -50,7 +50,7 @@ class ShopStore {
 
   getAllShopProducts = async () => {
     try {
-      const response = await axios.get(`/allproducts`);
+      const response = await axios.get(`/product/allproducts`);
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
