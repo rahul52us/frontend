@@ -384,15 +384,6 @@ const ProductsPage = observer(() => {
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      // Debounce required ideally, but for now just resetting page might be tricky with backend search
-                      // Assuming client side search for loaded items or implement debounce + backend search later if requested.
-                      // For now, let's keep client side filtering on the fetched page or request backend search ?
-                      // The previous code had client side filtering on ALL products.
-                      // With pagination, we usually fetch everything or search backend.
-                      // Given the prompt "fetch 12 products from backend with pagination", client side filtering on 12 items is weird.
-                      // I will assume for now we just show the 12 items and Search is ideally backend, but the prompt didn't ask for backend search.
-                      // I'll keep the client side filter effect but it will only filter the current page's 12 items.
-                      // To do it properly, we should add search param to backend.
                     }}
                     bg="gray.50"
                     border="none"
