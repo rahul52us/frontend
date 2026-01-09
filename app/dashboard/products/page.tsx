@@ -90,6 +90,9 @@ const ProductsPage = observer(() => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const { shopStore, auth } = stores;
 
@@ -110,7 +113,7 @@ const ProductsPage = observer(() => {
         duration: 3000,
         isClosable: true,
       });
-      fetchProducts();
+      fetchProducts(currentPage);
     } catch (error: any) {
       toast({
         title: "Error deleting product",
@@ -124,14 +127,20 @@ const ProductsPage = observer(() => {
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     if (!auth.company) return;
     setLoading(true);
     try {
-      const res = await shopStore.getShopProducts({ company: auth.company });
-      const data = res.data || [];
+      const companyId = auth.company?._id || auth.company;
+      const res = await shopStore.getShopProducts({ company: companyId, page: page, limit: 12 });
+      const data = res.data?.products || [];
+      const { totalPages, total } = res.data || {};
+
       setProducts(data);
       setFilteredProducts(data);
+      setTotalPages(totalPages || 1);
+      setTotalCount(total || 0);
+      setCurrentPage(page);
     } catch (error) {
       console.error("Fetch Products Error:", error);
       toast({
@@ -144,8 +153,14 @@ const ProductsPage = observer(() => {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      fetchProducts(newPage);
+    }
+  }
+
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1);
   }, [auth.company]);
 
   // Client-side filtering
@@ -177,32 +192,32 @@ const ProductsPage = observer(() => {
   const initialValues =
     selectedProduct && products.find((p) => p._id === selectedProduct)
       ? {
-          ...products.find((p) => p._id === selectedProduct),
-          images: products.find((p) => p._id === selectedProduct).images || [],
-          productDetails: products.find((p) => p._id === selectedProduct).productDetails
-            ? Object.entries(products.find((p) => p._id === selectedProduct).productDetails).map(
-                ([key, value]) => ({ key, value })
-              )
-            : [],
-          information: products.find((p) => p._id === selectedProduct).information
-            ? Object.entries(products.find((p) => p._id === selectedProduct).information).map(
-                ([key, value]) => ({ key, value })
-              )
-            : [],
-        }
+        ...products.find((p) => p._id === selectedProduct),
+        images: products.find((p) => p._id === selectedProduct).images || [],
+        productDetails: products.find((p) => p._id === selectedProduct).productDetails
+          ? Object.entries(products.find((p) => p._id === selectedProduct).productDetails).map(
+            ([key, value]) => ({ key, value })
+          )
+          : [],
+        information: products.find((p) => p._id === selectedProduct).information
+          ? Object.entries(products.find((p) => p._id === selectedProduct).information).map(
+            ([key, value]) => ({ key, value })
+          )
+          : [],
+      }
       : {
-          name: "",
-          description: "",
-          sku: "",
-          category: "",
-          price: "",
-          stock: 0,
-          brand: "",
-          weight: "",
-          productDetails: [],
-          information: [],
-          images: [],
-        };
+        name: "",
+        description: "",
+        sku: "",
+        category: "",
+        price: "",
+        stock: 0,
+        brand: "",
+        weight: "",
+        productDetails: [],
+        information: [],
+        images: [],
+      };
 
   const handleSubmit = async (values: any, actions: any) => {
     console.log("Submitting product form with values:", values);
@@ -287,7 +302,7 @@ const ProductsPage = observer(() => {
                   Your Products
                 </Heading>
                 <Text fontSize="lg" color="whiteAlpha.900">
-                  Managing {products.length} {products.length === 1 ? "item" : "items"}
+                  Managing {totalCount} {totalCount === 1 ? "item" : "items"}
                 </Text>
               </Box>
               <Button
@@ -319,7 +334,7 @@ const ProductsPage = observer(() => {
                 </Text>
               </VStack>
             </Center>
-          ) : products.length === 0 ? (
+          ) : products.length === 0 && !searchTerm ? (
             /* Clean & Minimal Empty State */
             <Center py={14}>
               <VStack spacing={6} textAlign="center" maxW="md">
@@ -367,7 +382,18 @@ const ProductsPage = observer(() => {
                   <Input
                     placeholder="Search by name, SKU, or description..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      // Debounce required ideally, but for now just resetting page might be tricky with backend search
+                      // Assuming client side search for loaded items or implement debounce + backend search later if requested.
+                      // For now, let's keep client side filtering on the fetched page or request backend search ?
+                      // The previous code had client side filtering on ALL products.
+                      // With pagination, we usually fetch everything or search backend.
+                      // Given the prompt "fetch 12 products from backend with pagination", client side filtering on 12 items is weird.
+                      // I will assume for now we just show the 12 items and Search is ideally backend, but the prompt didn't ask for backend search.
+                      // I'll keep the client side filter effect but it will only filter the current page's 12 items.
+                      // To do it properly, we should add search param to backend.
+                    }}
                     bg="gray.50"
                     border="none"
                     _focus={{ bg: "white", shadow: "outline", ringColor: "cyan.500" }}
@@ -388,7 +414,7 @@ const ProductsPage = observer(() => {
                 </Select>
 
                 <Badge ml="auto" colorScheme="cyan" variant="subtle" fontSize="sm" px={3} py={1.5}>
-                  {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+                  {filteredProducts.length} visible
                 </Badge>
               </Flex>
 
@@ -409,6 +435,31 @@ const ProductsPage = observer(() => {
                   />
                 ))}
               </SimpleGrid>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <Flex justify="center" mt={10} gap={4} align="center">
+                  <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    isDisabled={currentPage === 1}
+                    colorScheme="cyan"
+                    variant="outline"
+                  >
+                    Previous
+                  </Button>
+                  <Text fontWeight="bold" color="gray.600">
+                    Page {currentPage} of {totalPages}
+                  </Text>
+                  <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    isDisabled={currentPage === totalPages}
+                    colorScheme="cyan"
+                    variant="outline"
+                  >
+                    Next
+                  </Button>
+                </Flex>
+              )}
             </Box>
           )}
         </Box>

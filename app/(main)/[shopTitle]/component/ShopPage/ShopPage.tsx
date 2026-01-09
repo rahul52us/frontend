@@ -29,8 +29,8 @@ const ShopPage = observer(({ shopData }: any) => {
 
   useEffect(() => {
     if (shopData?._id) {
-      getShopProducts({ company: shopData?._id }).then((res: any) => {
-        setProducts(res?.data || [])
+      getShopProducts({ company: shopData?._id, limit: 2 }).then((res: any) => {
+        setProducts(res?.data?.products || [])
       })
     }
   }, [shopData?._id])
