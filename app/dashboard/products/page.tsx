@@ -127,12 +127,12 @@ const ProductsPage = observer(() => {
     }
   };
 
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = async (page = 1, search = searchTerm, category = selectedCategory) => {
     if (!auth.company) return;
     setLoading(true);
     try {
       const companyId = auth.company?._id || auth.company;
-      const res = await shopStore.getShopProducts({ company: companyId, page: page, limit: 12 });
+      const res = await shopStore.getShopProducts({ company: companyId, page: page, limit: 12, search, category });
       const data = res.data?.products || [];
       const { totalPages, total } = res.data || {};
 
@@ -163,25 +163,18 @@ const ProductsPage = observer(() => {
     fetchProducts(1);
   }, [auth.company]);
 
-  // Client-side filtering
+  // Debounce Search
   useEffect(() => {
-    let filtered = products;
+    const delayDebounceFn = setTimeout(() => {
+      fetchProducts(1, searchTerm);
+    }, 2000); // 500ms delay
 
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
 
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
-    }
-
-    setFilteredProducts(filtered);
-  }, [products, searchTerm, selectedCategory]);
+  useEffect(() => {
+    fetchProducts(1, searchTerm, selectedCategory);
+  }, [selectedCategory]);
 
   const handleEdit = (product: any) => {
     setSelectedProduct(product._id);
@@ -382,9 +375,7 @@ const ProductsPage = observer(() => {
                   <Input
                     placeholder="Search by name, SKU, or description..."
                     value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                    }}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     bg="gray.50"
                     border="none"
                     _focus={{ bg: "white", shadow: "outline", ringColor: "cyan.500" }}
