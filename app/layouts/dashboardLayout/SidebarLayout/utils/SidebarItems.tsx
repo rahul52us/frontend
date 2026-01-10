@@ -22,7 +22,7 @@ const sidebarDatas: SidebarItem[] = [
     role: ["user","admin"],
   },
   {
-    id: 1,
+    id: 2,
     name: "Shops",
     icon: <FaChartPie />,
     url: "/dashboard/shop",
