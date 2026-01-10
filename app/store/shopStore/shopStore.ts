@@ -58,6 +58,15 @@ class ShopStore {
     }
   };
 
+  getProductById = async (id: string) => {
+    try {
+      const response = await axios.get(`/product/${id}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
   getShopProducts = async (sendData: any) => {
     try {
 

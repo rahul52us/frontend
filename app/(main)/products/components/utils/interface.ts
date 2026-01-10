@@ -6,4 +6,5 @@ export interface Product {
   price: string;
   rating: number;
   freeShipping: boolean;
+  _id?: string;
 }

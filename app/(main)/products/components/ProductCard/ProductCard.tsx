@@ -18,7 +18,7 @@ import { CheckCircleIcon } from "@chakra-ui/icons";
 
 const ProductCard = ({ product }: any) => {
   const router = useRouter();
-  const { image, images, category, name, price } = product;
+  const { image, images, category, name, price, _id } = product;
   const displayImage = image || (images && images.length > 0 ? images[0] : "");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -175,7 +175,7 @@ const ProductCard = ({ product }: any) => {
             fontWeight="semibold"
             minH="40px"
             cursor="pointer"
-            onClick={() => router.push("individual-product")}
+            onClick={() => router.push(`/product/${_id}`)}
             noOfLines={2}
             color="gray.900" // Darker for contrast
             _hover={{ color: "purple.700" }}
