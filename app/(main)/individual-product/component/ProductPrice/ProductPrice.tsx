@@ -5,7 +5,7 @@ const ProductPrice = ({ price, discount, mrp }) => {
   return (
     <Stat mt={4}>
       <StatNumber fontSize="32px">
-        {price}{" "}
+        ₹ {price}{" "}
         <Text as="span" color="green.600" fontSize="sm" fontWeight="medium">
           {discount}% off
         </Text>
