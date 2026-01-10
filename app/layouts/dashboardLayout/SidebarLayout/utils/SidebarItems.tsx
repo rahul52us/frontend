@@ -1,15 +1,8 @@
 import {
   FaChartPie,
-  FaUsers,
-  FaHandHoldingUsd,
-  FaBuilding,
   FaCog,
-  FaBookOpen,
-  FaFileAlt,
   FaBox,
 } from "react-icons/fa";
-import { CalendarIcon } from "@chakra-ui/icons";
-import { dashboard } from "../../../../config/utils/routes";
 
 interface SidebarItem {
   id: number;
@@ -26,67 +19,53 @@ const sidebarDatas: SidebarItem[] = [
     name: "Dashboard",
     icon: <FaChartPie />,
     url: "/dashboard",
-    role: ["user"],
+    role: ["user","admin"],
   },
   {
-    id: 2,
-    name: "Users",
-    icon: <FaUsers />,
-    url: "/dashboard/therapist",
-    role: ["user"],
+    id: 1,
+    name: "Shops",
+    icon: <FaChartPie />,
+    url: "/dashboard/shop",
+    role: ["user","admin"],
   },
-  {
-    id: 3,
-    name: "Contacts",
-    icon: <FaHandHoldingUsd />,
-    url: "/dashboard/contacts",
-    role: ["user"],
-  },
-  {
-    id: 4,
-    name: "Testimonials",
-    icon: <FaBuilding />,
-    url: "/dashboard/testimonials",
-    role: ["user"],
-  },
-  {
-    id: 5,
-    name: "Page Sections",
-    icon: <FaFileAlt />,
-    url: "/dashboard/content-section",
-    role: ["user"],
-  },
+  // {
+  //   id: 2,
+  //   name: "Users",
+  //   icon: <FaUsers />,
+  //   url: "/dashboard/therapist",
+  //   role: ["user"],
+  // },
   {
     id: 6,
     name: "Products",
     icon: <FaBox />,
     url: "/dashboard/products",
-    role: ["user"],
+    role: ["user","admin"],
   },
   // Blogs
-  {
-    id: 501,
-    name: "Blogs",
-    icon: <FaBookOpen />,
-    url: dashboard.blog.index,
-    role: ["user", "superadmin", "manager", "admin"],
-    children: [
-      {
-        id: 502,
-        name: "Index",
-        icon: <CalendarIcon />,
-        url: `${dashboard.blog.index}`,
-        role: ["user", "superadmin", "manager", "admin"],
-      },
-      {
-        id: 503,
-        name: "Create",
-        icon: <FaBuilding />,
-        url: `${dashboard.blog.create}`,
-        role: ["superadmin", "manager", "admin"],
-      },
-    ],
-  },
+  // {
+  //   id: 501,
+  //   name: "Blogs",
+  //   icon: <FaBookOpen />,
+  //   url: dashboard.blog.index,
+  //   role: ["user", "superadmin", "manager", "admin"],
+  //   children: [
+  //     {
+  //       id: 502,
+  //       name: "Index",
+  //       icon: <CalendarIcon />,
+  //       url: `${dashboard.blog.index}`,
+  //       role: ["user", "superadmin", "manager", "admin"],
+  //     },
+  //     {
+  //       id: 503,
+  //       name: "Create",
+  //       icon: <FaBuilding />,
+  //       url: `${dashboard.blog.create}`,
+  //       role: ["superadmin", "manager", "admin"],
+  //     },
+  //   ],
+  // },
 ];
 
 export const sidebarFooterData: SidebarItem[] = [
