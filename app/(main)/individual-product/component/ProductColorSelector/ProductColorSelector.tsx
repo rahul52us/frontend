@@ -2,24 +2,35 @@ import { Box, Flex, Image, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-const ProductColorSelector = ({ colors }) => {
-  const [selectedColor, setSelectedColor] = useState(colors[0]);
+const ProductColorSelector = ({ colors, selectedColor: propSelectedColor, onSelect }: any) => {
+  const [internalSelectedColor, setInternalSelectedColor] = useState(colors[0]);
+
+  const isControlled = propSelectedColor !== undefined && onSelect !== undefined;
+  const selectedColor = isControlled ? propSelectedColor : internalSelectedColor;
+
+  const handleSelect = (color: any) => {
+    if (isControlled) {
+      onSelect(color);
+    } else {
+      setInternalSelectedColor(color);
+    }
+  };
 
   return (
     <Box>
-      Color: <Text as={'span'} fontWeight={600}>{selectedColor.name}</Text>
+      Color: <Text as={'span'} fontWeight={600}>{selectedColor?.name}</Text>
       <Flex mt={2} gap={2}>
-        {colors.map((color) => (
+        {colors.map((color: any) => (
           <Box
             key={color.name}
             w={'90px'}
             h={"60px"}
             p={1}
             border={'2px solid'}
-            borderColor={selectedColor.name === color.name ? 'black' : 'gray.200'}
+            borderColor={selectedColor?.name === color.name ? 'black' : 'gray.200'}
             rounded={'lg'}
             cursor={'pointer'}
-            onClick={() => setSelectedColor(color)}
+            onClick={() => handleSelect(color)}
           >
             <Image objectFit={'contain'} src={color.image} alt={color.name} />
           </Box>

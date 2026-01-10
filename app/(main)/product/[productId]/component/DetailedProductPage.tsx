@@ -1,7 +1,8 @@
 "use client"
-import { Box, Flex, Spinner, Text } from "@chakra-ui/react";
+import { Box, Flex, Grid, Spinner, Text } from "@chakra-ui/react";
 import ProductImageViewer from "../../../../component/common/ProductImagesViewer/ProductImagesViewer";
 import ProductDetailsSection from "./ProductDetailsSection";
+import ProductBuyBox from "./ProductBuyBox";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import stores from "../../../../store/stores";
@@ -47,18 +48,34 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
         : (product.image ? [product.image] : []);
 
     return (
-        <Box maxW={"75%"} mx={"auto"} my={4}>
-            <Flex gap={6} align="flex-start" direction={{ base: "column", md: "row" }}>
-                {/* Left Section - Sticky */}
-                <Box position={{ md: "sticky" }} top={{ md: "9rem" }} alignSelf={{ md: "flex-start" }} w={{ base: "100%", md: "40%" }}>
+        <Box maxW={"90%"} mx={"auto"} my={4}>
+            <Grid templateColumns={{ base: "1fr", lg: "35% 1fr 300px" }} gap={6}>
+                {/* Column 1: Images - Sticky */}
+                <Box
+                    position={{ lg: "sticky" }}
+                    top={{ lg: "8rem" }}
+                    alignSelf="start"
+                    h="fit-content"
+                >
                     <ProductImageViewer images={images} />
                 </Box>
 
-                {/* Right Section - Scrollable */}
-                <Box flex={1}>
+                {/* Column 2: Details - Scrollable */}
+                <Box>
                     <ProductDetailsSection product={product} />
                 </Box>
-            </Flex>
+
+                {/* Column 3: Buy Box - Sticky */}
+                <Box
+                    position={{ lg: "sticky" }}
+                    top={{ lg: "8rem" }}
+                    minW={{ lg: "300px" }}
+                    alignSelf="start"
+                    h="fit-content"
+                >
+                    <ProductBuyBox product={product} />
+                </Box>
+            </Grid>
         </Box>
     );
 };
