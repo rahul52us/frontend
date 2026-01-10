@@ -171,12 +171,25 @@ const ShopPage = observer(({ shopData }: any) => {
           gap={{ base: 4, md: 3, lg: 4 }}
           justifyItems="center"
         >
-          {(Array.isArray(products) && products.length > 0 ? products : []).map((product) => (
-            <ProductCard
-              key={`${product._id || product.id}-${product.name}`}
-              product={product}
-            />
-          ))}
+          {products.length > 0 ? (
+            products.map((product) => (
+              <ProductCard
+                key={`${product._id || product.id}-${product.name}`}
+                product={product}
+              />
+            ))
+          ) : (
+            <GridItem colSpan={{ base: 1, md: 3, lg: 4 }}>
+              <Flex direction="column" align="center" justify="center" py={10}>
+                <Text fontSize="lg" color="gray.500" fontWeight="medium">
+                  No Products Found
+                </Text>
+                <Text fontSize="sm" color="gray.400">
+                  Check back later for new arrivals!
+                </Text>
+              </Flex>
+            </GridItem>
+          )}
         </Grid>
 
         {/* Pagination Controls */}
