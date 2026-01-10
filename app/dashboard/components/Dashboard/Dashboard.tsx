@@ -94,7 +94,7 @@ interface Order {
 
 /* ======================= Dummy Data Constants ======================= */
 const CATEGORIES = [
-  "Electronics", "Fashion", "Home Decor", "Mobiles", 
+  "Electronics", "Fashion", "Home Decor", "Mobiles",
   "Beauty", "Sports", "Books", "Toys", "Fitness"
 ];
 
@@ -118,7 +118,7 @@ const TOP_PRODUCTS = [
 /* ======================= Main Dashboard Component ======================= */
 const Dashboard: React.FC = () => {
   const toast = useToast();
-  
+
   // State for Filters
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -127,7 +127,7 @@ const Dashboard: React.FC = () => {
   // Handler for PDF Export
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    
+
     // Header
     doc.setFontSize(18);
     doc.text("Business Overview Report", 14, 20);
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
     doc.setFontSize(12);
     doc.setTextColor(0);
     doc.text("Order Summary", 14, 45);
-    
+
     const tableColumn = ["Order ID", "Customer", "Date", "Status", "Amount (INR)"];
     const tableRows = DUMMY_ORDERS.map(order => [
       order.id,
@@ -211,12 +211,12 @@ const Dashboard: React.FC = () => {
   return (
     <ChakraProvider theme={theme}>
       <Box bg="gray.50" minH="100vh" p={{ base: 4, md: 8 }}>
-        
+
         {/* --- HEADER SECTION --- */}
-        <Flex 
-          direction={{ base: "column", md: "row" }} 
-          justify="space-between" 
-          align={{ base: "flex-start", md: "center" }} 
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justify="space-between"
+          align={{ base: "flex-start", md: "center" }}
           mb={10}
           gap={4}
         >
@@ -225,15 +225,15 @@ const Dashboard: React.FC = () => {
               Business Overview
             </Heading>
             <Text color="gray.500" fontSize="sm">
-              Welcome back, Shopkeeper! Here's what's happening today.
+              {`Welcome back, Shopkeeper! Here's what's happening today.`}
             </Text>
           </Box>
-          
+
           <HStack spacing={3}>
-            <Button 
-              leftIcon={<FaDownload />} 
-              variant="solid" 
-              size="sm" 
+            <Button
+              leftIcon={<FaDownload />}
+              variant="solid"
+              size="sm"
               colorScheme="brand"
               onClick={handleExportPDF}
             >
@@ -244,41 +244,41 @@ const Dashboard: React.FC = () => {
         </Flex>
 
         {/* --- FILTER BAR --- */}
-        <Box 
-          bg="white" 
-          p={4} 
-          borderRadius="2xl" 
-          boxShadow="0 4px 6px -1px rgba(0, 0, 0, 0.1)" 
+        <Box
+          bg="white"
+          p={4}
+          borderRadius="2xl"
+          boxShadow="0 4px 6px -1px rgba(0, 0, 0, 0.1)"
           mb={8}
         >
           <Stack direction={{ base: "column", lg: "row" }} spacing={6} align="center">
             <HStack flex={1} spacing={4} w="full">
               <Icon as={FaFilter} color="brand.500" />
               <Text fontWeight="600" fontSize="sm" whiteSpace="nowrap">Advanced Filters:</Text>
-              
+
               <HStack spacing={2} flex={1}>
-                <Input 
-                  size="sm" 
-                  type="date" 
-                  borderRadius="md" 
-                  value={startDate} 
-                  onChange={(e) => setStartDate(e.target.value)} 
+                <Input
+                  size="sm"
+                  type="date"
+                  borderRadius="md"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
                 />
                 <Text fontSize="xs" color="gray.400">to</Text>
-                <Input 
-                  size="sm" 
-                  type="date" 
-                  borderRadius="md" 
-                  value={endDate} 
-                  onChange={(e) => setEndDate(e.target.value)} 
+                <Input
+                  size="sm"
+                  type="date"
+                  borderRadius="md"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                 />
               </HStack>
             </HStack>
 
             <HStack spacing={4} w={{ base: "full", lg: "auto" }}>
-              <Select 
-                size="sm" 
-                borderRadius="md" 
+              <Select
+                size="sm"
+                borderRadius="md"
                 w={{ base: "full", lg: "220px" }}
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -286,12 +286,12 @@ const Dashboard: React.FC = () => {
                 <option value="All Categories">All Categories</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </Select>
-              
-              <Button 
-                leftIcon={<FaUndo />} 
-                size="sm" 
-                variant="ghost" 
-                colorScheme="red" 
+
+              <Button
+                leftIcon={<FaUndo />}
+                size="sm"
+                variant="ghost"
+                colorScheme="red"
                 onClick={handleReset}
               >
                 Reset
@@ -311,13 +311,13 @@ const Dashboard: React.FC = () => {
             { label: "Total Stock", value: "860", icon: FaBoxes, color: "purple", growth: "-2.1%" },
             { label: "Low Stock", value: "32 Items", icon: FaExclamationTriangle, color: "red", growth: "Critical" },
           ].map((card, i) => (
-            <Box 
-              key={i} 
-              bg="white" 
-              p={6} 
-              borderRadius="2xl" 
-              boxShadow="sm" 
-              borderLeft="4px solid" 
+            <Box
+              key={i}
+              bg="white"
+              p={6}
+              borderRadius="2xl"
+              boxShadow="sm"
+              borderLeft="4px solid"
               borderColor={`${card.color}.400`}
               transition="transform 0.2s"
               _hover={{ transform: "translateY(-5px)", boxShadow: "md" }}
@@ -354,9 +354,9 @@ const Dashboard: React.FC = () => {
               <Badge colorScheme="purple" variant="outline">Live Data</Badge>
             </Flex>
             <Box h="300px">
-              <Bar 
-                data={barChartData} 
-                options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }} 
+              <Bar
+                data={barChartData}
+                options={{ maintainAspectRatio: false, plugins: { legend: { display: false } } }}
               />
             </Box>
           </GridItem>
@@ -364,9 +364,9 @@ const Dashboard: React.FC = () => {
           <GridItem bg="white" p={6} borderRadius="2xl" boxShadow="sm">
             <Text fontWeight="800" fontSize="md" mb={6}>Revenue Trends</Text>
             <Box h="300px">
-              <Line 
-                data={lineChartData} 
-                options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} 
+              <Line
+                data={lineChartData}
+                options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
               />
             </Box>
           </GridItem>
@@ -374,7 +374,7 @@ const Dashboard: React.FC = () => {
 
         {/* --- INVENTORY & ORDERS SECTION --- */}
         <Grid templateColumns={{ base: "1fr", xl: "1.5fr 1fr" }} gap={8}>
-          
+
           {/* STOCK TABLE */}
           <Box bg="white" p={6} borderRadius="2xl" boxShadow="sm" overflowX="auto">
             <Flex justify="space-between" align="center" mb={6}>
@@ -384,7 +384,7 @@ const Dashboard: React.FC = () => {
               </VStack>
               <Button size="sm" colorScheme="brand" variant="ghost">View Full Inventory</Button>
             </Flex>
-            
+
             <Table variant="simple" size="sm">
               <Thead bg="gray.50">
                 <Tr>
@@ -412,8 +412,8 @@ const Dashboard: React.FC = () => {
                           </Stack>
                         </Td>
                         <Td>
-                          <Badge 
-                            variant="subtle" 
+                          <Badge
+                            variant="subtle"
                             colorScheme={stock < 30 ? "red" : "green"}
                             px={3}
                             borderRadius="full"
@@ -444,10 +444,10 @@ const Dashboard: React.FC = () => {
                   </HStack>
                   <Box textAlign="right">
                     <Text fontWeight="800" fontSize="sm">₹{order.amount.toLocaleString()}</Text>
-                    <Badge 
-                      fontSize="9px" 
+                    <Badge
+                      fontSize="9px"
                       colorScheme={
-                        order.status === "Delivered" ? "green" : 
+                        order.status === "Delivered" ? "green" :
                         order.status === "Pending" ? "orange" : "blue"
                       }
                     >
@@ -467,13 +467,13 @@ const Dashboard: React.FC = () => {
         {/* --- TOP PRODUCTS FOOTER SECTION --- */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mt={8}>
           {TOP_PRODUCTS.map((product, i) => (
-            <Flex 
-              key={i} 
-              bg="brand.600" 
-              color="white" 
-              p={4} 
-              borderRadius="xl" 
-              align="center" 
+            <Flex
+              key={i}
+              bg="brand.600"
+              color="white"
+              p={4}
+              borderRadius="xl"
+              align="center"
               justify="space-between"
             >
               <VStack align="start" spacing={0}>

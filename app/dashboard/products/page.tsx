@@ -105,7 +105,7 @@ const ProductsPage = observer(() => {
     if (!selectedProduct) return;
     setDeleteOpen({ open: false, data: null });
     try {
-      const response = await shopStore.deleteProduct(selectedProduct?._id);
+      await shopStore.deleteProduct(selectedProduct?._id);
       toast({
         title: "Product Deleted",
         description: "The product has been removed.",
@@ -142,10 +142,10 @@ const ProductsPage = observer(() => {
       setTotalCount(total || 0);
       setCurrentPage(page);
     } catch (error) {
-      console.error("Fetch Products Error:", error);
       toast({
         title: "Error fetching products.",
         status: "error",
+        description:error?.message,
         duration: 3000,
       });
     } finally {
@@ -213,15 +213,25 @@ const ProductsPage = observer(() => {
       };
 
   const handleSubmit = async (values: any, actions: any) => {
-    console.log("Submitting product form with values:", values);
     try {
+      // const cleanImages = values.images.map((img: any) => {
+      //   if (img.buffer) {
+      //     const { preview, ...rest } = img;
+      //     return rest;
+      //   }
+      //   return img;
+      // });
+
       const cleanImages = values.images.map((img: any) => {
-        if (img.buffer) {
-          const { preview, ...rest } = img;
-          return rest;
-        }
-        return img;
-      });
+  if (!img?.buffer) return img;
+
+  const rest = Object.fromEntries(
+    Object.entries(img).filter(([key]) => key !== "preview")
+  );
+
+  return rest;
+});
+
 
       const payload = { ...values, images: cleanImages };
 
@@ -256,7 +266,6 @@ const ProductsPage = observer(() => {
         fetchProducts();
       }
     } catch (error: any) {
-      console.error("Submission Error:", error);
       toast({
         title: selectedProduct ? "Error updating product." : "Error creating product.",
         description: error.response?.data?.message || "Something went wrong.",

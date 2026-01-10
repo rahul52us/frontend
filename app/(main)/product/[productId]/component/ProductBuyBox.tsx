@@ -9,7 +9,7 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
     const { cartStore } = stores;
     const toast = useToast();
 
-    const { stock, brand, price, name, image, images } = product;
+    const { stock, brand, name, image, images } = product;
     const displayImage = image || (images && images.length > 0 ? images[0] : "");
 
     const handleAddToCart = async () => {

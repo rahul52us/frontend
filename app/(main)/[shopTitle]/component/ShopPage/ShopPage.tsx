@@ -7,8 +7,7 @@ import {
   Grid,
   GridItem,
   Heading,
-  Text,
-  useToast, // Added for error handling
+  Text
 } from "@chakra-ui/react";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import ProductCard from "../../../products/components/ProductCard/ProductCard";
@@ -45,7 +44,7 @@ const ShopPage = observer(({ shopData }: any) => {
       setTotalPages(totalPages || 1);
       setCurrentPage(page);
     } catch (error) {
-      console.error("Fetch Products Error:", error);
+      alert(error?.message);
     } finally {
       setLoading(false);
     }

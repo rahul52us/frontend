@@ -1,17 +1,13 @@
-import { Box, Divider, Text, VStack, useColorModeValue, Button, Flex, useToast, Image, Badge, Heading } from '@chakra-ui/react';
+import { Box, Divider, Text, VStack, useColorModeValue, Flex, Badge, Heading } from '@chakra-ui/react';
 import ProductTitle from '../../../individual-product/component/ProductTitle/ProductTitle';
 import ProductRating from '../../../individual-product/component/ProductRating/ProductRating';
 import ProductPrice from '../../../individual-product/component/ProductPrice/ProductPrice';
-import CouponOffers from '../../../individual-product/component/CouponOffers.tsx/CouponOffers';
 import ProductColorSelector from '../../../individual-product/component/ProductColorSelector/ProductColorSelector';
 import ProductSizeSelector from '../../../individual-product/component/ProductSizeSelector/ProductSizeSelector';
 import ProductSpecs from '../../../individual-product/component/ProductSpecs/ProductSpecs';
 import ReturnExchange from '../../../individual-product/component/ReturnExchange/ReturnExchange';
 import { observer } from 'mobx-react-lite';
 import { motion } from 'framer-motion';
-import { FiShoppingCart, FiCreditCard } from 'react-icons/fi';
-import stores from '../../../../store/stores';
-import { CheckCircleIcon } from "@chakra-ui/icons";
 import { useState } from 'react';
 
 // Define a proper interface for product to make it production-ready
@@ -44,16 +40,9 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
         information,
         stock,
         sku,
-        weight,
-        image,
-        images = [],
+        weight
     } = product;
 
-    const { cartStore } = stores;
-    const toast = useToast();
-    const displayImage = image || (images && images.length > 0 ? images[0] : "");
-    const initialImage = image || (images.length > 0 ? images[0] : '');
-    const [selectedImage, setSelectedImage] = useState(initialImage);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
@@ -92,7 +81,6 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
     const borderColor = useColorModeValue('gray.200', 'gray.700');
     const dividerColor = useColorModeValue('gray.300', 'gray.600');
     const textColor = useColorModeValue('gray.600', 'gray.400');
-    const accentColor = useColorModeValue('purple.500', 'purple.300');
 
     // Animation variants for subtle fade-in
     const fadeInVariants = {

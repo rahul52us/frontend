@@ -23,7 +23,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                     setProduct(res);
                 }
             } catch (error) {
-                console.error("Failed to fetch product", error);
+                alert(error?.message)
             } finally {
                 setLoading(false);
             }
@@ -32,7 +32,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
         if (productId) {
             fetchProduct();
         }
-    }, [productId]);
+    }, [productId,shopStore]);
 
     if (loading) {
         return <Flex justify="center" align="center" h="50vh"><Spinner size="xl" color="purple.500" /></Flex>;
