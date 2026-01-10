@@ -26,6 +26,8 @@ import { FiShoppingCart } from "react-icons/fi";
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
 import HeroNavButton from "./component/HeroNavButton";
+import UserMenu from "./component/UserMenu";
+
 import NavItemsLayout from "./component/NavItemsLayout";
 import SearchInput from "./element/SearchInput";
 
@@ -254,7 +256,7 @@ const Header = observer(() => {
                 </Badge>
               )}
             </Box>
-            <HeroNavButton />
+            {stores.auth.token ? <UserMenu /> : <HeroNavButton />}
           </Flex>
         </Flex>
       </Box>
