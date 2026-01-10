@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { SearchIcon, CloseIcon, ChevronDownIcon, StarIcon } from "@chakra-ui/icons";
 import {
   Input,
@@ -19,6 +19,9 @@ import {
 import { useState, useRef, useCallback, useEffect } from "react";
 import debounce from "lodash/debounce";
 import { keyframes } from "@emotion/react";
+import { observer } from "mobx-react-lite";
+import stores from "../../../../../store/stores";
+import { useRouter } from "next/navigation";
 
 // Animations
 const slideIn = keyframes`
@@ -38,15 +41,16 @@ const placeholderFade = keyframes`
   100% { opacity: 0.4; }
 `;
 
-const SearchInput = () => {
+const SearchInput = observer(() => {
   const [query, setQuery] = useState("");
-  const [filteredResults, setFilteredResults] = useState([]);
+  const [filteredResults, setFilteredResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const router = useRouter();
 
   const ref = useRef(null);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   const hoverBg = useColorModeValue("gray.50", "gray.700");
@@ -95,31 +99,22 @@ const SearchInput = () => {
 
       setIsLoading(true);
       try {
-        const mockApiCall = new Promise((resolve) => {
-          setTimeout(() => {
-            const results = [
-              { id: 1, name: "Apple iPhone 13", category: "electronics", price: 799, rating: 4.5 },
-              { id: 2, name: "Leather Jacket", category: "fashion", price: 199, rating: 4.2 },
-              { id: 3, name: "Smart TV", category: "electronics", price: 499, rating: 4.7 },
-              { id: 4, name: "Running Shoes", category: "fashion", price: 89, rating: 4.0 },
-            ].filter((item) =>
-              item.name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            resolve(results);
-          }, 300);
+        const response = await stores.shopStore.searchGlobalProducts({
+          search: searchQuery,
+          limit: 5,
         });
-
-        const results : any = await mockApiCall;
+        const results = response.data?.products || [];
         setFilteredResults(results);
-      } catch ({}) {
+      } catch (err) {
+        setFilteredResults([]);
       } finally {
         setIsLoading(false);
       }
-    }, 200),
+    }, 1000),
     []
   );
 
-  const handleSearch = (value) => {
+  const handleSearch = (value: string) => {
     setQuery(value);
     fetchSearchResults(value);
     setShowDropdown(true);
@@ -136,20 +131,35 @@ const SearchInput = () => {
   };
 
 
-  const handleSelect = (value) => {
-    setQuery(value);
-    saveSearch(value);
-    setShowDropdown(false);
-    inputRef.current.focus();
+  const handleSelect = (item: any) => {
+    // If item is a string (from recent/popular searches), set query and search
+    // If item is a product object, navigate to product page
+
+    if (typeof item === 'string') {
+      setQuery(item);
+      fetchSearchResults(item);
+      saveSearch(item);
+      // showDropdown remains true or re-opens to show results for the string
+    } else {
+      // Product selection
+      setQuery(item.name);
+      saveSearch(item.name);
+      setShowDropdown(false);
+      if (inputRef.current) inputRef.current.blur();
+      router.push(`/product/${item._id}`);
+    }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === "Enter" && query) {
+      // Perform search on Enter
       handleSelect(query);
+      setShowDropdown(false);
+      if (inputRef.current) inputRef.current.blur();
     }
     if (e.key === "Escape") {
       setShowDropdown(false);
-      inputRef.current.blur();
+      if (inputRef.current) inputRef.current.blur();
     }
   };
 
@@ -218,7 +228,7 @@ const SearchInput = () => {
                 onClick={() => {
                   setQuery("");
                   setFilteredResults([]);
-                  inputRef.current.focus();
+                  if (inputRef.current) inputRef.current.focus();
                 }}
               />
             )}
@@ -302,7 +312,7 @@ const SearchInput = () => {
               ) : filteredResults.length > 0 ? (
                 filteredResults.map((result) => (
                   <Flex
-                    key={result.id}
+                    key={result._id}
                     px={4}
                     py={3}
                     justify="space-between"
@@ -311,7 +321,7 @@ const SearchInput = () => {
                     cursor="pointer"
                     transition="all 0.2s ease"
                     bg="gray.50"
-                    onClick={() => handleSelect(result.name)}
+                    onClick={() => handleSelect(result)}
                   >
                     <Flex align="center" gap={4}>
                       <Box
@@ -321,28 +331,29 @@ const SearchInput = () => {
                         borderRadius="md"
                         flexShrink={0}
                         position="relative"
-                        _after={{
-                          content: '""',
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          bg: "gray.300",
-                          opacity: 0,
-                          transition: "all 0.2s",
-                          _hover: { opacity: 0.1 },
-                        }}
-                      />
+                      // actual image
+                      // backgroundImage={`url(${result.images?.[0]?.url || ''})`} 
+                      // backgroundSize="cover"
+                      >
+                        {result.images && result.images.length > 0 && (
+                          <img src={result.images[0]} alt={result.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                        )}
+                      </Box>
                       <VStack align="start" spacing={1}>
                         <Text fontWeight="semibold" fontSize="md" color="gray.800">
                           {result.name}
                         </Text>
                         <Flex align="center" gap={2}>
-                          <StarIcon color="yellow.400" boxSize={4} />
-                          <Text fontSize="sm" color="gray.600">
-                            {result.rating} • <Text as="span" fontWeight="medium">{result.category}</Text>
-                          </Text>
+                          {/* Rating might not be in the product object directly, adjust if needed */}
+                          {result.rating && (
+                            <>
+                              <StarIcon color="yellow.400" boxSize={4} />
+                              <Text fontSize="sm" color="gray.600">
+                                {result.rating}
+                              </Text>
+                            </>
+                          )}
+                          <Text as="span" fontSize="sm" color="gray.500" fontWeight="medium">{result.category}</Text>
                         </Flex>
                       </VStack>
                     </Flex>
@@ -356,7 +367,7 @@ const SearchInput = () => {
                       bg={`${accentColor}10`}
                       color={accentColor}
                     >
-                      ${result.price}
+                      ₹{result.price}
                     </Badge>
                   </Flex>
                 ))
@@ -417,6 +428,6 @@ const SearchInput = () => {
       )}
     </Box>
   );
-};
+});
 
 export default SearchInput;

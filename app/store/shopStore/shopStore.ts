@@ -96,6 +96,15 @@ class ShopStore {
     }
   };
 
+  searchGlobalProducts = async (sendData: any) => {
+    try {
+      const response = await axios.post(`/product/search`, sendData);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
 }
 
 export const shopStore = new ShopStore();
