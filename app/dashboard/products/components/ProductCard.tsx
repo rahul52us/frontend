@@ -16,8 +16,8 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 
 interface ProductCardProps {
   product: any;
-  onEdit: (product: any) => void;
-  onDelete: (product: any) => void;
+  onEdit: any;
+  onDelete: any;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({

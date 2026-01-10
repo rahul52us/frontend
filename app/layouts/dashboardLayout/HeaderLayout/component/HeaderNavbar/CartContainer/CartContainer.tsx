@@ -13,7 +13,6 @@ import stores from "../../../../../../store/stores";
 const CartContainer = observer(() => {
   const [isOpen, setIsOpen] = useState(false);
   const { cartStore } = stores;
-  console.log("CartContainer rendering. Items:", cartStore.cartItems.length, cartStore.cartItems);
 
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);

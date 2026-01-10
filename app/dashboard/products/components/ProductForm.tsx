@@ -26,7 +26,7 @@ interface ProductFormProps {
   onClose: () => void;
   initialValues: any;
   validationSchema: any;
-  onSubmit: (values: any, actions: any) => Promise<void>;
+  onSubmit:any;
   activeCategories: string[];
   isEdit: boolean;
 }
@@ -69,7 +69,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       const newImages = await Promise.all(fileReaders);
       setFieldValue("images", [...currentImages, ...newImages]);
     } catch (error) {
-      console.error("Error reading files:", error);
+      alert(error?.message)
     }
   };
 

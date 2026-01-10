@@ -7,7 +7,6 @@ import { useState } from 'react'
 import { FaLocationDot } from 'react-icons/fa6'
 import CartItem from '../CartItem/CartItem'
 import AddressModal from '../DeliveryAddressModal/DelivaryAddressModal'
-import CartItemSkeleton from '../CartItem/CartItemSkeleton/CartItemSkeleton'
 import { observer } from 'mobx-react-lite'
 import stores from '../../../../store/stores'
 import { useRouter } from 'next/navigation'
@@ -66,8 +65,6 @@ const CartDrawer = observer(({ isOpen, onClose }: { isOpen: boolean; onClose: ()
       onClose();
       router.push(authentication.login);
     } else {
-      // Proceed to order
-      console.log("Proceeding to checkout with user", auth.user);
       alert("Proceeding to checkout (Order flow pending)");
     }
   }

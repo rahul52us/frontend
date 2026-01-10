@@ -32,7 +32,7 @@ const ProductsListSection = observer(() => {
       const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
       setProducts(shuffled.slice(0, 10));
     } catch (error) {
-      console.error("Error fetching products:", error);
+      alert(error?.message)
     } finally {
       setLoading(false);
     }

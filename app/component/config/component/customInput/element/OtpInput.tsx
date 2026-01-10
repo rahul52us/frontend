@@ -19,12 +19,9 @@ const OtpInput: React.FC<OtpInputProps> = ({
   length = 6,
   value,
   onChange,
-  label,
   error,
   showError = true,
-  disabled = false,
-  required = false,
-  labelcolor,
+  disabled = false
 }) => {
   const [otp, setOtp] = useState<string[]>(Array(length).fill(""));
   const inputRefs = useRef<Array<HTMLInputElement | null>>(Array(length).fill(null));
