@@ -1,12 +1,14 @@
-"use client";
 import {
   Badge,
   Box,
+  Button,
   Container,
   Flex,
   Grid,
   GridItem,
   Heading,
+  Text,
+  useToast, // Added for error handling
 } from "@chakra-ui/react";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import ProductCard from "../../../products/components/ProductCard/ProductCard";
@@ -22,18 +24,50 @@ import LocationSection from "../LocationSection/LocationSection";
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useEffect, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 
 const ShopPage = observer(({ shopData }: any) => {
   const { shopStore: { getShopProducts } } = stores;
   const [products, setProducts] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchProducts = async (page = 1) => {
+    if (!shopData?._id) return;
+    setLoading(true);
+    try {
+      const res = await getShopProducts({ company: shopData?._id, page: page, limit: 8 });
+      const data = res.data?.products || [];
+      const { totalPages } = res.data || {};
+
+      setProducts(data);
+      setTotalPages(totalPages || 1);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Fetch Products Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (shopData?._id) {
-      getShopProducts({ company: shopData?._id, limit: 12 }).then((res: any) => {
-        setProducts(res?.data?.products || [])
-      })
+      fetchProducts(1);
     }
   }, [shopData?._id])
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      fetchProducts(newPage);
+
+      // Scroll to products section
+      const productsSection = document.getElementById("products");
+      if (productsSection) {
+        productsSection.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }
 
   const getCurrentDayHours = () => {
     const days = [
@@ -144,6 +178,33 @@ const ShopPage = observer(({ shopData }: any) => {
             />
           ))}
         </Grid>
+
+        {/* Pagination Controls */}
+        {products.length > 0 && (
+          <Flex justify="center" align="center" mt={8} gap={4}>
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              isDisabled={currentPage === 1 || loading}
+              leftIcon={<ChevronLeftIcon />}
+              variant="outline"
+              size="sm"
+            >
+              Previous
+            </Button>
+            <Text fontSize="sm" color="gray.600">
+              Page {currentPage} of {totalPages}
+            </Text>
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              isDisabled={currentPage === totalPages || loading}
+              rightIcon={<ChevronRightIcon />}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
+          </Flex>
+        )}
       </Container>
       <LocationSection shopData={shopData} />
       <NewsLetter />
