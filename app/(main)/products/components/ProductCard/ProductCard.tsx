@@ -196,7 +196,7 @@ const ProductCard = ({ product }: any) => {
               ₹{price}
             </Text>
             <Text fontSize="lg" fontWeight="extrabold" color="purple.700">
-              ₹{discountPrice}
+              ₹{price - discountPrice}
             </Text>
           </Box>
           <Button
