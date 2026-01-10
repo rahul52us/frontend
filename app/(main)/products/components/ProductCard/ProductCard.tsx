@@ -30,7 +30,9 @@ const ProductCard = ({ product }: any) => {
   const discountPercentage = Math.round(((price - discountPrice) / price) * 100);
 
   const handleImageClick = () => {
-    setSelectedImage([displayImage]);
+    const imagesToShow =
+      images && images.length > 0 ? images : [displayImage].filter(Boolean);
+    setSelectedImage(imagesToShow);
     onOpen();
   };
 
