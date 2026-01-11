@@ -31,11 +31,15 @@ import HeroNavButton from "./component/HeroNavButton";
 import UserMenu from "./component/UserMenu";
 import NavItemsLayout from "./component/NavItemsLayout";
 import SearchInput from "./element/SearchInput";
+import NotificationBell from "./Notification/NotificationBell";
+
+/* ✅ NEW: Notification Bell */
 
 const Header = observer(() => {
   const router = useRouter();
   const {
     auth: { user },
+    cartStore,
   } = stores;
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -53,11 +57,11 @@ const Header = observer(() => {
 
   return (
     <Box position="sticky" top="0" zIndex="1000">
-      {/* TOP BAR (unchanged height) */}
+      {/* TOP BAR */}
       <Box
         bg="blue.600"
         color="white"
-        py={1.5}                 // ⬅ slightly reduced
+        py={1.5}
         fontSize="sm"
         textAlign="center"
         fontWeight="500"
@@ -80,12 +84,12 @@ const Header = observer(() => {
           align="center"
           justify="space-between"
           px={4}
-          py={2}                  // ⬅ reduced from 3
+          py={2}
         >
           <Image
             src="/images/logo3.jpg"
             alt="Logo"
-            h="32px"               // ⬅ smaller & cleaner
+            h="32px"
             objectFit="contain"
             cursor="pointer"
             onClick={() => router.push("/")}
@@ -96,7 +100,7 @@ const Header = observer(() => {
               icon={<SearchIcon />}
               aria-label="Search"
               variant="ghost"
-              size="sm"            // ⬅ smaller icon button
+              size="sm"
               color="blue.600"
               onClick={() => router.push("/search")}
             />
@@ -157,8 +161,7 @@ const Header = observer(() => {
                   }}
                 >
                   View Cart
-                  {stores.cartStore.totalItems > 0 &&
-                    ` (${stores.cartStore.totalItems})`}
+                  {cartStore.totalItems > 0 && ` (${cartStore.totalItems})`}
                 </Text>
               </Center>
 
@@ -179,34 +182,32 @@ const Header = observer(() => {
           align="center"
           justify="space-between"
           px={{ md: 6, lg: 10 }}
-          py={2.5}                // ⬅ reduced from 4
+          py={2.5}
           gap={5}
         >
           {/* LEFT: LOGO */}
           <Image
             src="/images/logo3.jpg"
             alt="Logo"
-            h="32px"               // ⬅ consistent height
+            h="32px"
             objectFit="contain"
             cursor="pointer"
             onClick={() => router.push("/")}
           />
 
           {/* CENTER: SEARCH */}
-          <Flex
-            flex={1}
-            maxW="480px"           // ⬅ slightly narrower
-            bg="gray.50"
-            borderRadius="md"
-            px={2}
-          >
+          <Flex flex={1} maxW="480px" bg="gray.50" borderRadius="md" px={2}>
             <SearchInput />
           </Flex>
 
           {/* RIGHT: NAV + ACTIONS */}
-          <Flex align="center" gap={4}>
+          <Flex align="center" gap={3}>
             <NavItemsLayout />
 
+            {/* ✅ Notification (ONLY when logged in) */}
+            {user && <NotificationBell count={2} />}
+
+            {/* Cart */}
             <Box
               position="relative"
               px={1}
@@ -215,14 +216,14 @@ const Header = observer(() => {
               _hover={{ bg: "gray.50" }}
             >
               <IconButton
-                icon={<FiShoppingCart size={18} />}  // ⬅ slightly smaller
+                icon={<FiShoppingCart size={18} />}
                 aria-label="Cart"
                 size="sm"
                 variant="ghost"
                 color="blue.600"
                 onClick={onCartOpen}
               />
-              {stores.cartStore.totalItems > 0 && (
+              {cartStore.totalItems > 0 && (
                 <Badge
                   position="absolute"
                   top="-2px"
@@ -233,7 +234,7 @@ const Header = observer(() => {
                   fontSize="0.7em"
                   px={2}
                 >
-                  {stores.cartStore.totalItems}
+                  {cartStore.totalItems}
                 </Badge>
               )}
             </Box>
