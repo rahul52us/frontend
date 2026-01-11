@@ -30,7 +30,9 @@ const ProductCard = ({ product }: any) => {
   const discountPercentage = Math.round(((price - discountPrice) / price) * 100);
 
   const handleImageClick = () => {
-    setSelectedImage([displayImage]);
+    const imagesToShow =
+      images && images.length > 0 ? images : [displayImage].filter(Boolean);
+    setSelectedImage(imagesToShow);
     onOpen();
   };
 
@@ -194,7 +196,7 @@ const ProductCard = ({ product }: any) => {
               ₹{price}
             </Text>
             <Text fontSize="lg" fontWeight="extrabold" color="purple.700">
-              ₹{discountPrice}
+              ₹{price - discountPrice}
             </Text>
           </Box>
           <Button
