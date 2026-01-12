@@ -214,6 +214,15 @@ class AuthStore {
     }
   };
 
+  fetchWishlist = async () => {
+    try {
+      const { data } = await axios.get("/user/wishlist");
+      return data.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
   // Logout user
   logout = () => {
     this.token = null;

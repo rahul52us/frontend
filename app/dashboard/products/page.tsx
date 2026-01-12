@@ -145,7 +145,7 @@ const ProductsPage = observer(() => {
       toast({
         title: "Error fetching products.",
         status: "error",
-        description:error?.message,
+        description: error?.message,
         duration: 3000,
       });
     } finally {
@@ -161,6 +161,7 @@ const ProductsPage = observer(() => {
 
   useEffect(() => {
     fetchProducts(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.company]);
 
   // Debounce Search
@@ -170,10 +171,12 @@ const ProductsPage = observer(() => {
     }, 2000); // 500ms delay
 
     return () => clearTimeout(delayDebounceFn);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   useEffect(() => {
     fetchProducts(1, searchTerm, selectedCategory);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
   const handleEdit = (product: any) => {
@@ -223,14 +226,14 @@ const ProductsPage = observer(() => {
       // });
 
       const cleanImages = values.images.map((img: any) => {
-  if (!img?.buffer) return img;
+        if (!img?.buffer) return img;
 
-  const rest = Object.fromEntries(
-    Object.entries(img).filter(([key]) => key !== "preview")
-  );
+        const rest = Object.fromEntries(
+          Object.entries(img).filter(([key]) => key !== "preview")
+        );
 
-  return rest;
-});
+        return rest;
+      });
 
 
       const payload = { ...values, images: cleanImages };

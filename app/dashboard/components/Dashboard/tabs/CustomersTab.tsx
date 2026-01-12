@@ -1,18 +1,18 @@
 import React, { useState, useMemo } from "react";
 import {
-  VStack,SimpleGrid,Box,Text,Avatar,
-  HStack,Badge,Heading,Table,Thead,
-  Tbody,Tr,Th,Td,Flex,Input,InputGroup,InputLeftElement,
-  Button,Menu,MenuButton,MenuList,MenuItem,IconButton,Progress,Icon,Grid,GridItem,useColorModeValue,Select,Divider,Center,
+  VStack, SimpleGrid, Box, Text, Avatar,
+  HStack, Badge, Heading, Table, Thead,
+  Tbody, Tr, Th, Td, Flex, Input, InputGroup, InputLeftElement,
+  Button, Menu, MenuButton, MenuList, MenuItem, IconButton, Progress, Icon, Grid, GridItem, useColorModeValue, Select, Divider, Center,
   Tooltip as ChakraTooltip,
 } from "@chakra-ui/react";
 import { SearchIcon, InfoOutlineIcon, DownloadIcon } from "@chakra-ui/icons";
 import {
-  FaUserPlus,FaEnvelope,FaBan,FaArrowTrendUp,FaWallet,FaEllipsis,FaClock, FaFilePdf,FaFilter,
+  FaUserPlus, FaEnvelope, FaBan, FaArrowTrendUp, FaWallet, FaEllipsis, FaClock, FaFilePdf, FaFilter,
 } from "react-icons/fa6";
 import { Bar } from "react-chartjs-2";
 import {
-Chart as ChartJS,CategoryScale,LinearScale,BarElement,Title,Tooltip,Legend,
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 } from "chart.js";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
@@ -40,6 +40,7 @@ const CustomersTab: React.FC = () => {
   const bgCard = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.100", "gray.700");
   const tableHeadBg = useColorModeValue("gray.50", "gray.700");
+  const hoverBg = useColorModeValue("gray.50", "gray.700");
 
   const filteredUsers = useMemo(() => {
     return CUSTOMER_DATA.filter((user) => {
@@ -378,11 +379,9 @@ const CustomersTab: React.FC = () => {
 
                           initial={{ opacity: 0, y: 10 }}
 
-                          animate={{ opacity: 1, y: 0 }}
-
                           exit={{ opacity: 0, y: -10 }}
 
-                          _hover={{ bg: useColorModeValue("gray.50", "gray.700") }}
+                          _hover={{ bg: hoverBg }}
 
                           transition="background 0.2s"
 
@@ -556,7 +555,7 @@ const CustomersTab: React.FC = () => {
           </GridItem>
         </Grid>
       </VStack>
-    </Box>
+    </Box >
   );
 };
 

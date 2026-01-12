@@ -54,6 +54,7 @@ const ShopPage = observer(({ shopData }: any) => {
     if (shopData?._id) {
       fetchProducts(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopData?._id])
 
   const handlePageChange = (newPage: number) => {

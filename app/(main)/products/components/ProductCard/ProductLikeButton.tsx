@@ -110,8 +110,13 @@ const ProductLikeButton = observer(({ product }: { product: any }) => {
                 });
             }
 
-        } catch (error) {
-            console.error("Failed to toggle like", error);
+        } catch {
+            toast({
+                title: "Failed to toggle like",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         }
     };
 

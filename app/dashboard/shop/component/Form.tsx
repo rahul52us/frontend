@@ -168,7 +168,7 @@ const ShopForm = observer(() => {
             ? data.data.gallery.map((item) => ({ file: item.file?.url ? [item.file] : [], title: item.title || "" }))
             : [];
 
-          setInitialValues({ ...initialValues, ...data.data, coverImage, logo, gallery });
+          setInitialValues((prev) => ({ ...prev, ...data.data, coverImage, logo, gallery }));
         }
       } catch {
         setError("Failed to fetch shop data.");
@@ -178,7 +178,7 @@ const ShopForm = observer(() => {
     };
 
     fetchShopData();
-  }, [shopTitle, getSingleShop]);
+  }, [shopTitle, getSingleShop, user?.company?.name, user?.company?.shopStatus]);
 
   const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
@@ -240,52 +240,52 @@ const ShopForm = observer(() => {
         {/* Static Sidebar */}
         <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200">
           <VStack align="stretch" spacing={3} px={2}>
-  <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
-    Form Sections
-  </Text>
-  <Divider borderColor="gray.300" mb={2} />
+            <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
+              Form Sections
+            </Text>
+            <Divider borderColor="gray.300" mb={2} />
 
-  {sections.map((section, index) => {
-    const isActive = activeSection === index;
+            {sections.map((section, index) => {
+              const isActive = activeSection === index;
 
-    return (
-      <Button
-        key={index}
-        variant="ghost"
-        justifyContent="flex-start"
-        leftIcon={<Icon as={section.icon} boxSize={5} />}
-        fontWeight={isActive ? "bold" : "normal"}
-        color={isActive ? "blue.600" : "gray.700"}
-        bg={isActive ? "blue.50" : "transparent"}
-        _hover={{
-          bg: "blue.50",
-          transform: "translateX(2px)",
-        }}
-        _active={{
-          bg: "blue.100",
-        }}
-        size="md"
-        onClick={() => setActiveSection(index)}
-        borderRadius="md"
-        px={3}
-        py={2}
-        transition="all 0.2s ease"
-      >
-        {section.title}
-      </Button>
-    );
-  })}
+              return (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  leftIcon={<Icon as={section.icon} boxSize={5} />}
+                  fontWeight={isActive ? "bold" : "normal"}
+                  color={isActive ? "blue.600" : "gray.700"}
+                  bg={isActive ? "blue.50" : "transparent"}
+                  _hover={{
+                    bg: "blue.50",
+                    transform: "translateX(2px)",
+                  }}
+                  _active={{
+                    bg: "blue.100",
+                  }}
+                  size="md"
+                  onClick={() => setActiveSection(index)}
+                  borderRadius="md"
+                  px={3}
+                  py={2}
+                  transition="all 0.2s ease"
+                >
+                  {section.title}
+                </Button>
+              );
+            })}
 
-  <Progress
-    mt={3}
-    size="sm"
-    value={(activeSection + 1) * (100 / sections.length)}
-    borderRadius="full"
-    colorScheme="blue"
-    bg="gray.100"
-    hasStripe
-  />
-</VStack>
+            <Progress
+              mt={3}
+              size="sm"
+              value={(activeSection + 1) * (100 / sections.length)}
+              borderRadius="full"
+              colorScheme="blue"
+              bg="gray.100"
+              hasStripe
+            />
+          </VStack>
 
         </Box>
 

@@ -15,8 +15,9 @@ import {
   Divider,
   Badge,
   Spinner,
+  Image as ChakraImage,
 } from "@chakra-ui/react";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import debounce from "lodash/debounce";
 import { keyframes } from "@emotion/react";
 import { observer } from "mobx-react-lite";
@@ -40,6 +41,13 @@ const placeholderFade = keyframes`
   50% { opacity: 1; }
   100% { opacity: 0.4; }
 `;
+
+const placeholderSuggestions = [
+  "Search for products",
+  "Find your brands",
+  "Explore deals",
+  "Discover more",
+];
 
 const SearchInput = observer(() => {
   const [query, setQuery] = useState("");
@@ -74,12 +82,6 @@ const SearchInput = observer(() => {
     { term: "Vegetables", trending: false },
   ];
 
-  const placeholderSuggestions = [
-    "Search for products",
-    "Find your brands",
-    "Explore deals",
-    "Discover more",
-  ];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   // Rotate placeholder text
@@ -88,10 +90,10 @@ const SearchInput = observer(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholderSuggestions.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [placeholderSuggestions]);
+  }, []);
 
-  const fetchSearchResults = useCallback(
-    debounce(async (searchQuery) => {
+  const fetchSearchResults = useMemo(
+    () => debounce(async (searchQuery) => {
       if (searchQuery.length <= 1) {
         setFilteredResults([]);
         return;
@@ -105,7 +107,7 @@ const SearchInput = observer(() => {
         });
         const results = response.data?.products || [];
         setFilteredResults(results);
-      } catch (err) {
+      } catch {
         setFilteredResults([]);
       } finally {
         setIsLoading(false);
@@ -336,7 +338,7 @@ const SearchInput = observer(() => {
                       // backgroundSize="cover"
                       >
                         {result.images && result.images.length > 0 && (
-                          <img src={result.images[0]} alt={result.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                          <ChakraImage src={result.images[0]} alt={result.name} w="100%" h="100%" objectFit="cover" borderRadius="4px" />
                         )}
                       </Box>
                       <VStack align="start" spacing={1}>

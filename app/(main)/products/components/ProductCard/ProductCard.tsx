@@ -10,7 +10,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FiEye, FiHeart } from "react-icons/fi";
+import { FiEye } from "react-icons/fi";
 import ImageViewerWithModal from "../../../../component/config/component/viewer/ImageViewerWithModal";
 import { useRouter } from "next/navigation";
 import stores from "../../../../store/stores";
