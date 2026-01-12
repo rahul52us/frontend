@@ -15,6 +15,11 @@ export const navItems = [
         children: [
             { title: "Electronics", link: "/categories/electronics" },
             { title: "Clothing", link: "/categories/clothing" },
+            { title: "Home & Gardeen", link: "/homegardeen" },
+            { title: "Sports", link: "/categories/sports" },
+            { title: "Toys", link: "/categories/toys" },
+            { title: "Health & Beauty", link: "/categories/healthbeauty" },
+            { title: "Automotive", link: "/categories/automotive" },
         ],
     },
 ];
