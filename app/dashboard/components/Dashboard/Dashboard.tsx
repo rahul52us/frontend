@@ -24,6 +24,8 @@ const Dashboard: React.FC = () => {
   const tabBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const hoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
+  const activeColor = "blue.600";
+  const activeBg = useColorModeValue("blue.50", "blue.900");
 
   const tabs = [
     { id: "sales", label: "Analytics", icon: FaChartLine },
@@ -31,20 +33,43 @@ const Dashboard: React.FC = () => {
     { id: "inventory", label: "Inventory", icon: FaBoxes },
   ];
 
+  const hoverBgActive = useColorModeValue("blue.100", "blue.800");
+  const hoverBgInactive = hoverBg;
+  const activeBgHover = useColorModeValue("blue.100", "blue.800");
+
   return (
-    <Box>
-      {/* Top Tabs */}
+    <Box minH="100vh" bg={bg}>
+      {/* Sticky Tab Bar - Horizontal Scroll on Mobile */}
       <Box
         bg={tabBg}
         borderBottom="1px solid"
         borderColor={borderColor}
         position="sticky"
         top={0}
+        left={0}
+        right={0}
         zIndex={1000}
         boxShadow="sm"
+        overflowX="auto"
+        overscrollBehaviorX="contain"
+        sx={{
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" }, 
+        }}
       >
-        <Flex mx="auto" px={{ base: 4, md: 2 }} align="center" h="50px">
-          <HStack spacing={1}>
+        <Flex
+          justify={{ base: "flex-start", lg: "center" }}
+          align="center"
+          maxW="1600px"
+          mx="auto"
+          px={{ base: 2, sm: 4, md: 6 }}
+          py={3}
+        >
+          <HStack
+            spacing={{ base: 1, sm: 2, md: 4 }}
+            flexWrap="nowrap"
+            flexShrink={0}
+          >
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
 
@@ -53,29 +78,47 @@ const Dashboard: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   variant="ghost"
-                  px={{ base: 4, md: 6 }}
-                  h="44px"
+                  minW={{ base: "64px", sm: "100px", md: "140px" }}
+                  px={{ base: 2, sm: 4, md: 6 }}
+                  py={{ base: 2, md: 3 }}
+                  h="auto"
                   borderRadius="md"
-                  color={isActive ? "blue.600" : "gray.600"}
-                  fontWeight="600"
-                  bg={isActive ? "blue.50" : "transparent"}
-                  _hover={{ bg: isActive ? "blue.100" : hoverBg }}
+                  color={isActive ? activeColor : "gray.600"}
+                  fontWeight={isActive ? "bold" : "medium"}
+                  fontSize={{ base: "xs", sm: "sm", md: "md" }}
+                  bg={isActive ? activeBg : "transparent"}
+                  _hover={{
+                    bg: isActive ? hoverBgActive : hoverBgInactive,
+                  }}
+                  _active={{
+                    bg: activeBgHover,
+                  }}
                   position="relative"
+                  flexShrink={0}
+                  transition="all 0.2s"
                 >
-                  <HStack spacing={2}>
-                    <Icon as={tab.icon} boxSize={4} />
-                    <Text fontSize="sm">{tab.label}</Text>
+                  <HStack spacing={{ base: 1, sm: 2 }}>
+                    <Icon as={tab.icon} boxSize={{ base: 4, md: 5 }} />
+                    <Text
+                      display={{ base: "none", sm: "block" }}
+                      whiteSpace="nowrap"
+                    >
+                      {tab.label}
+                    </Text>
                   </HStack>
 
                   {isActive && (
                     <Box
+                      as={motion.div}
+                      layoutId="activeTabIndicator"
                       position="absolute"
-                      bottom="0"
-                      left="20%"
-                      right="20%"
-                      height="2px"
+                      bottom="-2px"
+                      left={{ base: "8%", sm: "12%" }}
+                      right={{ base: "8%", sm: "12%" }}
+                      height="3px"
                       bg="blue.500"
-                      borderRadius="full"
+                      borderTopRadius="full"
+                      initial={false}
                     />
                   )}
                 </Button>
@@ -85,15 +128,21 @@ const Dashboard: React.FC = () => {
         </Flex>
       </Box>
 
-      {/* Content */}
-      <Box maxW="1600px" mx="auto" px={{ base: 4, md: 2 }}>
+      {/* Main Content Area */}
+      <Box
+        as="main"
+        maxW="1600px"
+        mx="auto"
+        px={{ base: 3, sm: 5, md: 6, lg: 8 }}
+        py={{ base: 4, md: 6, lg: 8 }}
+      >
         <AnimatePresence mode="wait">
           <MotionBox
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
           >
             {activeTab === "sales" && <AnalyticsTab />}
             {activeTab === "customer" && <CustomersTab />}
