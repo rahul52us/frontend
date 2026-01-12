@@ -13,7 +13,6 @@ import {
     Text,
     VStack,
     Image,
-    useToast,
     IconButton
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -22,12 +21,13 @@ import { useRouter } from "next/navigation";
 import stores from "../../../../store/stores";
 import { FiShoppingCart, FiTrash2 } from "react-icons/fi";
 import { authentication } from "../../../../config/utils/routes";
+import { useCartToast } from "../../../../hooks/useCartToast";
 
 const WishlistDrawer = observer(
     ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
         const { cartStore, auth } = stores;
         const router = useRouter();
-        const toast = useToast();
+        const { showAddToCartToast } = useCartToast();
         const [wishlistItems, setWishlistItems] = useState<any[]>([]);
         const [loading, setLoading] = useState(false);
 
@@ -57,13 +57,7 @@ const WishlistDrawer = observer(
                 return;
             }
             await cartStore.addToCart(product);
-            toast({
-                title: "Added to Cart",
-                status: "success",
-                duration: 2000,
-                isClosable: true,
-                position: "bottom"
-            });
+            showAddToCartToast(product);
         };
 
         const handleRemoveFromWishlist = async (productId: string) => {
