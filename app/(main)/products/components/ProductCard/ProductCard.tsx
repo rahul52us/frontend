@@ -15,6 +15,7 @@ import ImageViewerWithModal from "../../../../component/config/component/viewer/
 import { useRouter } from "next/navigation";
 import stores from "../../../../store/stores";
 import { CheckCircleIcon } from "@chakra-ui/icons";
+import ProductLikeButton from "./ProductLikeButton";
 
 const ProductCard = ({ product }: any) => {
   const router = useRouter();
@@ -94,7 +95,7 @@ const ProductCard = ({ product }: any) => {
       overflow="hidden"
       transition="all 0.3s ease"
       _hover={{
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)", // Slightly deeper shadow
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
         borderColor: "gray.300",
       }}
       role="group"
@@ -109,25 +110,24 @@ const ProductCard = ({ product }: any) => {
           h="100%"
           transition="all 0.3s ease"
           _groupHover={{
-            filter: "brightness(1.1) contrast(1.03)", // Enhanced image pop
+            filter: "brightness(1.1) contrast(1.03)",
           }}
         />
-        {/* Stylish Gradient Discount Badge */}
         <Box
           position="absolute"
           top="0"
           left="0"
-          bgGradient="linear(to-r, purple.600, purple.800)" // Gradient for flair
+          bgGradient="linear(to-r, purple.600, purple.800)"
           color="white"
           fontSize="xs"
           fontWeight="bold"
           px={2.5}
           py={1}
-          borderRadius="0 0 6px 0" // Slightly larger curve
+          borderRadius="0 0 6px 0"
           transform="translate(-1px, -1px)"
-          boxShadow="0 2px 6px rgba(0, 0, 0, 0.25)" // Deeper shadow
+          boxShadow="0 2px 6px rgba(0, 0, 0, 0.25)"
           textTransform="uppercase"
-          letterSpacing="wide" // Stylish spacing
+          letterSpacing="wide"
         >
           {discountPercentage}% Off
         </Box>
@@ -146,25 +146,15 @@ const ProductCard = ({ product }: any) => {
             aria-label="Quick view"
             icon={<FiEye />}
             size="sm"
-            borderRadius="full" // Circular for a modern touch
-            bg="white"
-            color="gray.700"
-            border="1px solid"
-            borderColor="gray.200"
-            _hover={{ bg: "gray.50", color: "purple.600" }} // Tie to theme
-            onClick={handleImageClick}
-          />
-          <IconButton
-            aria-label="Add to wishlist"
-            icon={<FiHeart />}
-            size="sm"
             borderRadius="full"
             bg="white"
             color="gray.700"
             border="1px solid"
             borderColor="gray.200"
-            _hover={{ bg: "gray.50", color: "red.500" }}
+            _hover={{ bg: "gray.50", color: "purple.600" }}
+            onClick={handleImageClick}
           />
+          <ProductLikeButton product={product} />
         </Flex>
       </Box>
       <Box px={4} py={4} h="160px" display="flex" flexDir="column" justifyContent="space-between">
@@ -173,13 +163,13 @@ const ProductCard = ({ product }: any) => {
             {category}
           </Text>
           <Heading
-            fontSize={{ base: "md", md: "lg" }} // Responsive size
+            fontSize={{ base: "md", md: "lg" }}
             fontWeight="semibold"
             minH="40px"
             cursor="pointer"
             onClick={() => router.push(`/product/${_id}`)}
             noOfLines={2}
-            color="gray.900" // Darker for contrast
+            color="gray.900"
             _hover={{ color: "purple.700" }}
           >
             {name}
@@ -190,7 +180,7 @@ const ProductCard = ({ product }: any) => {
             <Text
               fontSize="sm"
               fontWeight="medium"
-              color="gray.500" // Slightly darker gray
+              color="gray.500"
               textDecoration="line-through"
             >
               ₹{price}
@@ -203,11 +193,11 @@ const ProductCard = ({ product }: any) => {
             size="sm"
             colorScheme="purple"
             variant="solid"
-            borderRadius="full" // Circular button
-            px={5} // Wider for balance
+            borderRadius="full"
+            px={5}
             bg="purple.600"
             fontWeight="semibold"
-            _hover={{ bg: "purple.700", transform: "scale(1.05)" }} // Subtle scale
+            _hover={{ bg: "purple.700", transform: "scale(1.05)" }}
             _active={{ bg: "purple.800" }}
             onClick={handleAddToCart}
           >

@@ -191,10 +191,24 @@ class AuthStore {
     }
   };
 
-  getCompanyUsers = async (sendData : any = {}) => {
+  getCompanyUsers = async (sendData: any = {}) => {
     try {
-      const { data } = await axios.post(`auth/get/users`,{},{params : {...sendData}});
-      return data.data?.map((item : any) => ({user : {...item}})) || [];
+      const { data } = await axios.post(`auth/get/users`, {}, { params: { ...sendData } });
+      return data.data?.map((item: any) => ({ user: { ...item } })) || [];
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  toggleLikeProduct = async (productId: string) => {
+    try {
+      const { data } = await axios.post("/user/like", { productId });
+
+      if (this.user) {
+        this.user.likedProducts = data.data.likedProducts;
+      }
+
+      return data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
     }
