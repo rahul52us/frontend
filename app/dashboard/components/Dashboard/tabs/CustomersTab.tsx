@@ -82,8 +82,8 @@ const CustomersTab: React.FC = () => {
   return (
     <Box
       w="100%"
-      px={{ base: 3, sm: 5, md: 6, lg: 8 }}
-      py={{ base: 4, md: 6, lg: 8 }}
+      px={{ base: 2, sm: 2, md: 4, lg: 4 }}
+      py={{ base: 2, md: 4, lg: 4 }}
       bg={useColorModeValue("gray.50", "gray.900")}
       minH="100vh"
     >
@@ -97,7 +97,7 @@ const CustomersTab: React.FC = () => {
         >
           <Box>
             <Heading
-              size={{ base: "xl", md: "2xl" }}
+              size={{ base: "xl", md: "xl" }}
               fontWeight="900"
               letterSpacing="tight"
               color={useColorModeValue("gray.800", "white")}

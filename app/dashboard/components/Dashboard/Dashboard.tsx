@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
   const activeBgHover = useColorModeValue("blue.100", "blue.800");
 
   return (
-    <Box minH="100vh" bg={bg}>
+    <Box bg={bg}>
       {/* Sticky Tab Bar - Horizontal Scroll on Mobile */}
       <Box
         bg={tabBg}
@@ -54,19 +54,17 @@ const Dashboard: React.FC = () => {
         overscrollBehaviorX="contain"
         sx={{
           scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" }, 
+          "&::-webkit-scrollbar": { display: "none" },
         }}
       >
         <Flex
-          justify={{ base: "flex-start", lg: "center" }}
-          align="center"
-          maxW="1600px"
+          justify={{ base: "flex-start" }}
           mx="auto"
-          px={{ base: 2, sm: 4, md: 6 }}
-          py={3}
+          px={{ base: 2, sm: 2, md: 2 }}
+          py={2}
         >
           <HStack
-            spacing={{ base: 1, sm: 2, md: 4 }}
+            spacing={{ base: 1, sm: 2, md: 2 }}
             flexWrap="nowrap"
             flexShrink={0}
           >
@@ -79,7 +77,7 @@ const Dashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   variant="ghost"
                   minW={{ base: "64px", sm: "100px", md: "140px" }}
-                  px={{ base: 2, sm: 4, md: 6 }}
+                  px={{ base: 2, sm: 2, md: 2 }}
                   py={{ base: 2, md: 3 }}
                   h="auto"
                   borderRadius="md"
@@ -131,10 +129,9 @@ const Dashboard: React.FC = () => {
       {/* Main Content Area */}
       <Box
         as="main"
-        maxW="1600px"
         mx="auto"
-        px={{ base: 3, sm: 5, md: 6, lg: 8 }}
-        py={{ base: 4, md: 6, lg: 8 }}
+        px={{ base: 2, sm: 2, md: 2, lg: 2 }}
+        py={{ base: 2, md: 3, lg: 2 }}
       >
         <AnimatePresence mode="wait">
           <MotionBox

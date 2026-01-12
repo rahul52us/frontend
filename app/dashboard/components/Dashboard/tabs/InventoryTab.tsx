@@ -122,8 +122,8 @@ const InventoryTab: React.FC = () => {
   return (
     <Box
       w="100%"
-      px={{ base: 3, sm: 5, md: 6, lg: 8 }}
-      py={{ base: 4, md: 6, lg: 8 }}
+      px={{ base: 3, sm: 2, md: 2, lg: 4 }}
+      py={{ base: 2, md: 2, lg: 4 }}
       bg={useColorModeValue("gray.50", "gray.900")}
       minH="100vh"
     >

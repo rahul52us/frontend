@@ -143,13 +143,13 @@ const AnalyticsTab: React.FC = () => {
   };
 
   return (
-    <Box 
-      p={{ base: 4, sm: 5, md: 6, lg: 8 }} 
+    <Box
+      p={{ base: 2, sm: 2, md: 6, lg: 4 }}
       w="100%"
       maxW="100%"
       mx="auto"
     >
-      <VStack spacing={{ base: 6, md: 8, lg: 10 }} align="stretch">
+      <VStack spacing={{ base: 2, md: 4, lg: 6 }} align="stretch">
         {/* Header Action Row */}
         <Flex
           direction={{ base: "column", md: "row" }}
@@ -170,8 +170,8 @@ const AnalyticsTab: React.FC = () => {
               Real-time performance ecosystem tracking
             </Text>
           </Box>
-          <HStack 
-            w={{ base: "full", md: "auto" }} 
+          <HStack
+            w={{ base: "full", md: "auto" }}
             spacing={3}
             justify={{ base: "space-between", sm: "flex-end" }}
           >
@@ -227,9 +227,9 @@ const AnalyticsTab: React.FC = () => {
                 />
               </InputGroup>
 
-              <SimpleGrid 
-                columns={{ base: 1, sm: 2, lg: 3 }} 
-                spacing={4} 
+              <SimpleGrid
+                columns={{ base: 1, sm: 2, lg: 3 }}
+                spacing={4}
                 w="100%"
                 flex={2}
               >
@@ -264,9 +264,9 @@ const AnalyticsTab: React.FC = () => {
               align="center"
               justify="space-between"
             >
-              <HStack 
-                spacing={3} 
-                flex={1} 
+              <HStack
+                spacing={3}
+                flex={1}
                 w="100%"
                 maxW={{ sm: "320px", md: "380px" }}
               >
@@ -311,10 +311,10 @@ const AnalyticsTab: React.FC = () => {
                 >
                   Clear All
                 </Button>
-                <Button 
-                  colorScheme="blue" 
-                  size="sm" 
-                  px={8} 
+                <Button
+                  colorScheme="blue"
+                  size="sm"
+                  px={8}
                   borderRadius="full"
                   w={{ base: "full", sm: "auto" }}
                 >
@@ -326,8 +326,8 @@ const AnalyticsTab: React.FC = () => {
         </MotionBox>
 
         {/* Stats Grid */}
-        <SimpleGrid 
-          columns={{ base: 1, sm: 2, lg: 4 }} 
+        <SimpleGrid
+          columns={{ base: 1, sm: 2, lg: 4 }}
           spacing={{ base: 4, md: 6 }}
         >
           <StatCard
@@ -374,7 +374,7 @@ const AnalyticsTab: React.FC = () => {
   gap={{ base: 6, md: 8 }}
   w="100%"
   maxW="100%"
-  overflow="hidden"           
+  overflow="hidden"
 >
   {/* Left Chart - Growth Velocity */}
   <GridItem
@@ -553,10 +553,10 @@ const AnalyticsTab: React.FC = () => {
           shadow="sm"
           overflow="hidden"
         >
-          <Flex 
-            p={{ base: 4, md: 6 }} 
+          <Flex
+            p={{ base: 4, md: 6 }}
             direction={{ base: "column", sm: "row" }}
-            justify="space-between" 
+            justify="space-between"
             align={{ base: "start", sm: "center" }}
             gap={4}
           >
@@ -707,8 +707,8 @@ const StatCard = ({
       bgGradient={gradient}
       opacity={0.04}
     />
-    <Flex 
-      justify="space-between" 
+    <Flex
+      justify="space-between"
       align="start"
       direction={{ base: "row", sm: "row" }}
     >
@@ -721,9 +721,9 @@ const StatCard = ({
         >
           {title}
         </Text>
-        <Heading 
-          size={{ base: "lg", md: "xl" }} 
-          fontWeight="900" 
+        <Heading
+          size={{ base: "lg", md: "xl" }}
+          fontWeight="900"
           color="gray.800"
         >
           {value}
