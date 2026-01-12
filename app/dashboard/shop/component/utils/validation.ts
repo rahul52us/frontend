@@ -3,6 +3,12 @@ import * as Yup from "yup";
 
 export const validationSchema = Yup.object({
   name: Yup.string().required("Name is required").trim(),
+  companyCode: Yup.string()
+    .required("Company Code is required")
+    .uppercase("Must be uppercase")
+    .min(2, "Min 2 characters")
+    .max(10, "Max 10 characters")
+    .matches(/^[A-Z0-9]+$/, "Alphanumeric only"),
   description: Yup.string().required("Description is required").trim(),
   about: Yup.string().required("Description is required").trim(),
   logo: Yup.mixed(),

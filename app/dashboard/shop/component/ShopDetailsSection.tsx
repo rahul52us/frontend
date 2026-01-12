@@ -139,6 +139,18 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
         </SimpleGrid>
         <Box mt={4}>
           <CustomInput
+            label="Company Code (Initials)"
+            name="companyCode"
+            placeholder="e.g. AMD, NIKE"
+            required
+            error={errors.companyCode}
+            value={values.companyCode}
+            onChange={(e) => setFieldValue("companyCode", e.target.value.toUpperCase())}
+            showError={showError}
+          />
+        </Box>
+        <Box mt={4}>
+          <CustomInput
             label="Categories"
             name="categories"
             placeholder="Add Category"
