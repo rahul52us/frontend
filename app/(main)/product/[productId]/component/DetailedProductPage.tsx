@@ -21,6 +21,12 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
     const bgColor = useColorModeValue("white", "gray.800");
     const textColor = useColorModeValue("gray.800", "white");
     const accentColor = "purple.500";
+    const spinnerBg = useColorModeValue("gray.50", "gray.900");
+    const borderColor = useColorModeValue("gray.200", "gray.700");
+    const imageBoxBg = useColorModeValue("gray.50", "gray.700");
+    const buyBoxBorder = useColorModeValue("gray.200", "gray.600");
+    const relatedBg = useColorModeValue("gray.50", "gray.700");
+    const dividerColor = useColorModeValue("gray.300", "gray.600");
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -59,7 +65,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
 
     if (loading) {
         return (
-            <Flex justify="center" align="center" h="100vh" bg={useColorModeValue("gray.50", "gray.900")}>
+            <Flex justify="center" align="center" h="100vh" bg={spinnerBg}>
                 <Spinner size="xl" color={accentColor} thickness="4px" speed="0.65s" emptyColor="gray.200" />
             </Flex>
         );
@@ -67,7 +73,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
 
     if (!product) {
         return (
-            <Flex justify="center" align="center" h="100vh" bg={useColorModeValue("gray.50", "gray.900")}>
+            <Flex justify="center" align="center" h="100vh" bg={spinnerBg}>
                 <Text fontSize="2xl" color={textColor} fontWeight="semibold">Product not found</Text>
             </Flex>
         );
@@ -91,7 +97,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
             rounded="2xl"
             shadow="xl"
             border="1px solid"
-            borderColor={useColorModeValue("gray.200", "gray.700")}
+            borderColor={borderColor}
         >
             <Grid
                 templateColumns={{ base: "1fr", lg: "35% 1fr 300px" }}
@@ -109,7 +115,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                     top={{ lg: "8rem" }}
                     alignSelf="start"
                     h="fit-content"
-                    bg={useColorModeValue("gray.50", "gray.700")}
+                    bg={imageBoxBg}
                     p={4}
                     rounded="xl"
                     shadow="md"
@@ -138,12 +144,12 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                     minW={{ lg: "300px" }}
                     alignSelf="start"
                     h="fit-content"
-                    bg={useColorModeValue("gray.50", "gray.700")}
+                    bg={imageBoxBg}
                     p={6}
                     rounded="xl"
                     shadow="md"
                     border="1px solid"
-                    borderColor={useColorModeValue("gray.200", "gray.600")}
+                    borderColor={buyBoxBorder}
                     _hover={{ borderColor: accentColor, transition: "all 0.3s ease" }}
                 >
                     <ProductBuyBox product={product} />
@@ -157,12 +163,12 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                     transition={{ duration: 0.6, delay: 0.6 }}
                     mt={16}
                     mb={8}
-                    bg={useColorModeValue("gray.50", "gray.700")}
+                    bg={relatedBg}
                     p={8}
                     rounded="2xl"
                     shadow="sm"
                 >
-                    <Divider mb={8} borderColor={useColorModeValue("gray.300", "gray.600")} />
+                    <Divider mb={8} borderColor={dividerColor} />
                     <Heading size="lg" mb={6} color={textColor} fontWeight="bold">You might also like</Heading>
                     <SimpleGrid columns={{ base: 2, md: 3, lg: 4, xl: 5 }} spacing={6}>
                         {relatedProducts.map((related, index) => (

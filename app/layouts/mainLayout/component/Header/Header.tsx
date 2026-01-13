@@ -12,20 +12,19 @@ import {
   Flex,
   IconButton,
   Image,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Text,
   useBreakpointValue,
   useDisclosure,
   Badge,
+  Icon,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
-import { FiShoppingCart } from "react-icons/fi";
+import { FiShoppingCart, FiHeart, FiShoppingBag, FiMapPin, FiCreditCard, FiUser, FiLogOut } from "react-icons/fi";
 
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
+import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
 import HeroNavButton from "./component/HeroNavButton";
 import UserMenu from "./component/UserMenu";
@@ -38,7 +37,7 @@ import NotificationBell from "./Notification/NotificationBell";
 const Header = observer(() => {
   const router = useRouter();
   const {
-    auth: { user },
+    auth: { user, logout },
     cartStore,
   } = stores;
 
@@ -48,6 +47,17 @@ const Header = observer(() => {
     onOpen: onCartOpen,
     onClose: onCartClose,
   } = useDisclosure();
+  const {
+    isOpen: isWishlistOpen,
+    onOpen: onWishlistOpen,
+    onClose: onWishlistClose
+  } = useDisclosure();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+    onClose();
+  };
 
   const drawerWidth = useBreakpointValue({
     base: "92%",
@@ -121,52 +131,54 @@ const Header = observer(() => {
           <DrawerContent maxW={drawerWidth}>
             <DrawerCloseButton mt={3} mr={3} />
             <DrawerBody pt={6} px={0}>
-              <Center mb={5}>
-                <Image
-                  src="/images/logo3.jpg"
-                  alt="Logo"
-                  h="42px"
-                  objectFit="contain"
-                  cursor="pointer"
-                  onClick={() => {
-                    router.push("/");
-                    onClose();
-                  }}
-                />
-              </Center>
-
-              <Box px={4} mb={5}>
-                <InputGroup size="sm">
-                  <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="Search products"
-                    borderRadius="md"
-                    _focus={{
-                      borderColor: "blue.500",
-                      boxShadow: "0 0 0 1px blue.500",
-                    }}
-                  />
-                </InputGroup>
-              </Box>
-
-              <Center mb={4}>
-                <Text
-                  fontWeight="600"
-                  cursor="pointer"
-                  onClick={() => {
-                    onClose();
-                    onCartOpen();
-                  }}
-                >
-                  View Cart
-                  {cartStore.totalItems > 0 && ` (${cartStore.totalItems})`}
-                </Text>
-              </Center>
 
               <Box px={4}>
-                <NavItemsLayout onClose={onClose} />
+
+                {user && (
+                  <Box mt={6} borderTop="1px solid" borderColor="gray.100" pt={2}>
+                    <Text fontSize="xs" fontWeight="bold" color="gray.400" mb={3} textTransform="uppercase" letterSpacing="wider">
+                      My Account
+                    </Text>
+
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); onWishlistOpen(); }}>
+                      <Icon as={FiHeart} color="red.500" />
+                      <Text fontWeight="500" fontSize="md">Your Wishlist</Text>
+                    </Flex>
+
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard/orders"); }}>
+                      <Icon as={FiShoppingBag} color="blue.500" />
+                      <Text fontWeight="500" fontSize="md">Your Orders</Text>
+                    </Flex>
+
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard/address"); }}>
+                      <Icon as={FiMapPin} color="green.500" />
+                      <Text fontWeight="500" fontSize="md">Address Book</Text>
+                    </Flex>
+
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard/payments"); }}>
+                      <Icon as={FiCreditCard} color="purple.500" />
+                      <Text fontWeight="500" fontSize="md">Payment Methods</Text>
+                    </Flex>
+
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard"); }}>
+                      <Icon as={FiUser} color="orange.500" />
+                      <Text fontWeight="500" fontSize="md">Seller Dashboard</Text>
+                    </Flex>
+
+                    <Box mt={2} pt={2} borderTop="1px dashed" borderColor="gray.200">
+                      <Flex align="center" gap={3} py={2} cursor="pointer" onClick={handleLogout}>
+                        <Icon as={FiLogOut} color="red.500" />
+                        <Text fontWeight="500" fontSize="md" color="red.500">Logout</Text>
+                      </Flex>
+                    </Box>
+                  </Box>
+                )}
+
+                {!user && (
+                  <Box mt={6}>
+                    <HeroNavButton />
+                  </Box>
+                )}
               </Box>
 
               <Center mt={8}>
@@ -245,6 +257,7 @@ const Header = observer(() => {
       </Box>
 
       <CartDrawer isOpen={isCartOpen} onClose={onCartClose} />
+      <WishlistDrawer isOpen={isWishlistOpen} onClose={onWishlistClose} />
     </Box>
   );
 });
