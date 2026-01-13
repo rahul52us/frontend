@@ -152,6 +152,37 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </Text>
           )}
         </Flex>
+
+
+        {/* ---------- SUBCATEGORIES (limit to 3) ---------- */}
+        {product.subCategories?.length > 0 && (() => {
+          const maxShow = 3;
+          const extraCount = product.subCategories.length - maxShow;
+
+          return (
+            <HStack spacing={1} mt={1}>
+              {product.subCategories.slice(0, maxShow).map(sub => (
+                <Badge
+                  key={sub}
+                  variant="outline"
+                  colorScheme="teal"
+                  fontSize="xx-small"
+                  px={2}
+                  py={0.5}
+                  borderRadius="md"
+                >
+                  {sub}
+                </Badge>
+              ))}
+              {extraCount > 0 && (
+                <Badge variant="outline" fontSize="xx-small" px={2} py={0.5} borderRadius="md">
+                  +{extraCount} more
+                </Badge>
+              )}
+            </HStack>
+          );
+        })()}
+
       </Box>
     </Box>
   );

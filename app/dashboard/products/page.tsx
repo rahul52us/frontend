@@ -57,6 +57,7 @@ const activeCategories = [
 const ProductSchema = Yup.object().shape({
   name: Yup.string().required("Product Name is required"),
   category: Yup.string().required("Category is required"),
+  subCategories: Yup.array().of(Yup.string().required("Subcategory is required")),
   price: Yup.number()
     .required("Price is required")
     .positive("Price must be positive"),
@@ -207,6 +208,7 @@ const ProductsPage = observer(() => {
             ([key, value]) => ({ key, value })
           )
           : [],
+        subCategories: products.find((p) => p._id === selectedProduct).subCategories || [],
         information: products.find((p) => p._id === selectedProduct).information
           ? Object.entries(products.find((p) => p._id === selectedProduct).information).map(
             ([key, value]) => ({ key, value })
@@ -225,6 +227,7 @@ const ProductsPage = observer(() => {
         productDetails: [],
         information: [],
         images: [],
+         subCategories: [],
       };
 
   const handleSubmit = async (values: any, actions: any) => {

@@ -26,7 +26,7 @@ interface ProductFormProps {
   onClose: () => void;
   initialValues: any;
   validationSchema: any;
-  onSubmit:any;
+  onSubmit: any;
   activeCategories: string[];
   isEdit: boolean;
 }
@@ -160,6 +160,52 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     </FormControl>
                   )}
                 </Field>
+                {/* ---------- Subcategories ---------- */}
+                <Box>
+                  <FormLabel>Subcategories</FormLabel>
+                  <FieldArray name="subCategories">
+                    {({ push, remove }) => (
+                      <VStack spacing={3} align="stretch">
+                        {props.values.subCategories.map((sub: string, index: number) => (
+                          <HStack key={index}>
+                            <Field name={`subCategories[${index}]`}>
+                              {({ field, form }: any) => (
+                                <FormControl
+                                  isInvalid={
+                                    form.errors.subCategories?.[index] &&
+                                    form.touched.subCategories?.[index]
+                                  }
+                                >
+                                  <Input {...field} placeholder="Subcategory" />
+                                  <FormErrorMessage>
+                                    {form.errors.subCategories?.[index]}
+                                  </FormErrorMessage>
+                                </FormControl>
+                              )}
+                            </Field>
+                            <IconButton
+                              aria-label="Remove"
+                              icon={<FaTrash />}
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => remove(index)}
+                            />
+                          </HStack>
+                        ))}
+                        <Button
+                          leftIcon={<FaPlus />}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => push("")}
+                          alignSelf="flex-start"
+                        >
+                          Add Subcategory
+                        </Button>
+                      </VStack>
+                    )}
+                  </FieldArray>
+                </Box>
+
               </SimpleGrid>
 
               <Field name="description">
