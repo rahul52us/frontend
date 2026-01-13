@@ -140,6 +140,13 @@ const Header = observer(() => {
                       My Account
                     </Text>
 
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); onCartOpen(); }}>
+                      <Icon as={FiShoppingCart} color="blue.500" />
+                      <Text fontWeight="500" fontSize="md">Your Cart
+                        {cartStore.totalItems > 0 && <span style={{ marginLeft: "4px", fontSize: "0.8em", color: "gray" }}>({cartStore.totalItems})</span>}
+                      </Text>
+                    </Flex>
+
                     <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); onWishlistOpen(); }}>
                       <Icon as={FiHeart} color="red.500" />
                       <Text fontWeight="500" fontSize="md">Your Wishlist</Text>
