@@ -24,6 +24,9 @@ import {
   Select,
   Image,
   Circle,
+  Tabs,
+  TabList,
+  Tab,
 } from "@chakra-ui/react";
 import * as Yup from "yup";
 import {
@@ -31,6 +34,7 @@ import {
   FaPlus,
   FaSearch,
   FaFire,
+  FaTrash,
 } from "react-icons/fa";
 import axios from "axios";
 import { observer } from "mobx-react-lite";
@@ -93,6 +97,7 @@ const ProductsPage = observer(() => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [showInactive, setShowInactive] = useState(false);
 
   const { shopStore, auth } = stores;
 
@@ -132,7 +137,14 @@ const ProductsPage = observer(() => {
     setLoading(true);
     try {
       const companyId = auth.company?._id || auth.company;
-      const res = await shopStore.getShopProducts({ company: companyId, page: page, limit: 12, search, category });
+      const res = await shopStore.getShopProducts({
+        company: companyId,
+        page: page,
+        limit: 12,
+        search,
+        category,
+        isDeleted: showInactive ? true : undefined
+      });
       const data = res.data?.products || [];
       const { totalPages, total } = res.data || {};
 
@@ -177,7 +189,7 @@ const ProductsPage = observer(() => {
   useEffect(() => {
     fetchProducts(1, searchTerm, selectedCategory);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory]);
+  }, [selectedCategory, showInactive]);
 
   const handleEdit = (product: any) => {
     setSelectedProduct(product._id);
@@ -414,10 +426,21 @@ const ProductsPage = observer(() => {
 
               <Divider my={5} />
 
-              <Heading size="lg" mb={6} color="gray.800" display="flex" alignItems="center" gap={2}>
-                <Icon as={FaFire} color="orange.500" />
-                Active Products
-              </Heading>
+
+
+              <Flex justify="space-between" align="center" mb={6}>
+                <Heading size="lg" color="gray.800" display="flex" alignItems="center" gap={2}>
+                  <Icon as={showInactive ? FaTrash : FaFire} color={showInactive ? "red.500" : "orange.500"} />
+                  {showInactive ? "Inactive Products" : "Active Products"}
+                </Heading>
+
+                <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)}>
+                  <TabList>
+                    <Tab>Active</Tab>
+                    <Tab>Trash</Tab>
+                  </TabList>
+                </Tabs>
+              </Flex>
 
               <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
                 {filteredProducts.map((product) => (
