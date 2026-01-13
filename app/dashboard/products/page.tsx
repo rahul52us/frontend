@@ -351,38 +351,6 @@ const ProductsPage = observer(() => {
                 </Text>
               </VStack>
             </Center>
-          ) : products.length === 0 && !searchTerm ? (
-            /* Clean & Minimal Empty State */
-            <Center py={14}>
-              <VStack spacing={6} textAlign="center" maxW="md">
-                <Image
-                  src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/8e427a83004519.5d2ef81a41825.png"
-                  alt="No products yet – your inventory is empty"
-                  borderRadius="lg"
-                  shadow="sm"
-                  maxH="280px"
-                  objectFit="contain"
-                  fallbackSrc="https://via.placeholder.com/600x400?text=Empty+Inventory"
-                />
-                <VStack spacing={3}>
-                  <Heading size="lg" color="gray.700">
-                    No products added yet
-                  </Heading>
-                  <Text fontSize="md" color="gray.500">
-                    Start building your store by adding your first product.
-                  </Text>
-                </VStack>
-                <Button
-                  colorScheme="cyan"
-                  size="lg"
-                  leftIcon={<FaPlus />}
-                  px={8}
-                  onClick={onOpen}
-                >
-                  Add Your First Product
-                </Button>
-              </VStack>
-            </Center>
           ) : (
             <Box>
               {/* Search & Filter */}
@@ -406,6 +374,13 @@ const ProductsPage = observer(() => {
                   />
                 </InputGroup>
 
+                <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)} size="sm">
+                  <TabList>
+                    <Tab>Active</Tab>
+                    <Tab>Trash</Tab>
+                  </TabList>
+                </Tabs>
+
                 <Select
                   maxW={{ base: "full", md: "240px" }}
                   placeholder="All Categories"
@@ -426,56 +401,100 @@ const ProductsPage = observer(() => {
 
               <Divider my={5} />
 
+              {filteredProducts.length === 0 ? (
+                /* Unified Empty State */
+                <Center py={14}>
+                  <VStack spacing={6} textAlign="center" maxW="md">
+                    <Image
+                      src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/8e427a83004519.5d2ef81a41825.png"
+                      alt="No products found"
+                      borderRadius="lg"
+                      shadow="sm"
+                      maxH="280px"
+                      objectFit="contain"
+                      fallbackSrc="https://via.placeholder.com/600x400?text=Empty+Inventory"
+                    />
+                    <VStack spacing={3}>
+                      <Heading size="lg" color="gray.700">
+                        {searchTerm || selectedCategory
+                          ? "No products found"
+                          : showInactive
+                            ? "Trash is empty"
+                            : "No products added yet"}
+                      </Heading>
+                      <Text fontSize="md" color="gray.500">
+                        {searchTerm || selectedCategory
+                          ? "We couldn't find any products matching your search or filters."
+                          : showInactive
+                            ? "There are no deleted products."
+                            : "Start building your store by adding your first product."}
+                      </Text>
+                    </VStack>
+                    {!searchTerm && !selectedCategory && !showInactive && (
+                      <Button
+                        colorScheme="cyan"
+                        size="lg"
+                        leftIcon={<FaPlus />}
+                        px={8}
+                        onClick={onOpen}
+                      >
+                        Add Your First Product
+                      </Button>
+                    )}
+                  </VStack>
+                </Center>
+              ) : (
+                <>
+                  <Flex justify="space-between" align="center" mb={6}>
+                    <Heading size="lg" color="gray.800" display="flex" alignItems="center" gap={2}>
+                      <Icon as={showInactive ? FaTrash : FaFire} color={showInactive ? "red.500" : "orange.500"} />
+                      {showInactive ? "Inactive Products" : "Active Products"}
+                    </Heading>
 
+                    <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)}>
+                      <TabList>
+                        <Tab>Active</Tab>
+                        <Tab>Trash</Tab>
+                      </TabList>
+                    </Tabs>
+                  </Flex>
 
-              <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg" color="gray.800" display="flex" alignItems="center" gap={2}>
-                  <Icon as={showInactive ? FaTrash : FaFire} color={showInactive ? "red.500" : "orange.500"} />
-                  {showInactive ? "Inactive Products" : "Active Products"}
-                </Heading>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
+                    {filteredProducts.map((product) => (
+                      <ProductCard
+                        key={product._id}
+                        product={product}
+                        onEdit={handleEdit}
+                        onDelete={triggerDelete}
+                      />
+                    ))}
+                  </SimpleGrid>
 
-                <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)}>
-                  <TabList>
-                    <Tab>Active</Tab>
-                    <Tab>Trash</Tab>
-                  </TabList>
-                </Tabs>
-              </Flex>
-
-              <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product._id}
-                    product={product}
-                    onEdit={handleEdit}
-                    onDelete={triggerDelete}
-                  />
-                ))}
-              </SimpleGrid>
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <Flex justify="center" mt={10} gap={4} align="center">
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    isDisabled={currentPage === 1}
-                    colorScheme="cyan"
-                    variant="outline"
-                  >
-                    Previous
-                  </Button>
-                  <Text fontWeight="bold" color="gray.600">
-                    Page {currentPage} of {totalPages}
-                  </Text>
-                  <Button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    isDisabled={currentPage === totalPages}
-                    colorScheme="cyan"
-                    variant="outline"
-                  >
-                    Next
-                  </Button>
-                </Flex>
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <Flex justify="center" mt={10} gap={4} align="center">
+                      <Button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        isDisabled={currentPage === 1}
+                        colorScheme="cyan"
+                        variant="outline"
+                      >
+                        Previous
+                      </Button>
+                      <Text fontWeight="bold" color="gray.600">
+                        Page {currentPage} of {totalPages}
+                      </Text>
+                      <Button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        isDisabled={currentPage === totalPages}
+                        colorScheme="cyan"
+                        variant="outline"
+                      >
+                        Next
+                      </Button>
+                    </Flex>
+                  )}
+                </>
               )}
             </Box>
           )}
