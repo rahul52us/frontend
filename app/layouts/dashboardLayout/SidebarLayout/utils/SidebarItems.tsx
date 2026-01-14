@@ -19,28 +19,49 @@ const sidebarDatas: SidebarItem[] = [
     name: "Dashboard",
     icon: <FaChartPie />,
     url: "/dashboard",
-    role: ["user","admin"],
+    role: ["user", "admin"],
+  },
+  {
+    id: 101,
+    name: "Dashboard",
+    icon: <FaChartPie />,
+    url: "/super-admin/dashboard",
+    role: ["superAdmin"],
+  },
+  {
+    id: 102,
+    name: "Categories",
+    icon: <FaBox />,
+    url: "/super-admin/categories",
+    role: ["superAdmin"],
+  },
+  {
+    id: 103,
+    name: "Shops",
+    icon: <FaChartPie />,
+    url: "/super-admin/shops",
+    role: ["superAdmin"],
+  },
+  {
+    id: 104,
+    name: "Products",
+    icon: <FaBox />,
+    url: "/super-admin/products",
+    role: ["superAdmin"],
   },
   {
     id: 2,
     name: "Shops",
     icon: <FaChartPie />,
     url: "/dashboard/shop",
-    role: ["user","admin"],
+    role: ["user", "admin"],
   },
-  // {
-  //   id: 2,
-  //   name: "Users",
-  //   icon: <FaUsers />,
-  //   url: "/dashboard/therapist",
-  //   role: ["user"],
-  // },
   {
     id: 6,
     name: "Products",
     icon: <FaBox />,
     url: "/dashboard/products",
-    role: ["user","admin"],
+    role: ["user", "admin"],
   },
   // Blogs
   // {
@@ -74,7 +95,7 @@ export const sidebarFooterData: SidebarItem[] = [
     name: "Settings",
     icon: <FaCog />,
     url: "/profile",
-    role: ["user", "admin", "superadmin", "manager"],
+    role: ["user", "admin", "superAdmin", "manager"],
   },
 ];
 

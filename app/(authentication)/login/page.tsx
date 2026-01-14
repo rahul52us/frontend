@@ -104,7 +104,12 @@ const LoginForm = observer(() => {
           type: "success",
         });
         sessionStorage.clear();
-        router.push("/dashboard/shop");
+
+        if (dt?.role === "superAdmin") {
+          router.push("/super-admin/dashboard");
+        } else {
+          router.push("/dashboard/shop");
+        }
       })
       .catch((err) => {
         openNotification({
@@ -115,6 +120,7 @@ const LoginForm = observer(() => {
       })
       .finally(() => actions.setSubmitting(false));
   };
+
 
   return (
     <Container maxW="container.sm" py={{ base: 8, md: 12 }}>

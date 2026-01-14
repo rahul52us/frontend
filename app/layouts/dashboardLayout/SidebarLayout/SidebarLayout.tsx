@@ -184,9 +184,9 @@ const SidebarPopover = observer(({
             color={
               itemIsActive
                 ? useColorModeValue(
-                    themeConfig.colors.custom.light.primary,
-                    themeConfig.colors.custom.dark.primary
-                  )
+                  themeConfig.colors.custom.light.primary,
+                  themeConfig.colors.custom.dark.primary
+                )
                 : "inherit"
             }
             fontWeight={itemIsActive ? "600" : "inherit"}
@@ -370,9 +370,9 @@ const SidebarAccordion = observer(({
                     color={
                       activeItemId === item.id
                         ? useColorModeValue(
-                            themeConfig.colors.custom.light.primary,
-                            themeConfig.colors.custom.dark.primary
-                          )
+                          themeConfig.colors.custom.light.primary,
+                          themeConfig.colors.custom.dark.primary
+                        )
                         : "inherit"
                     }
                     fontWeight={activeItemId === item.id ? "600" : "inherit"}
@@ -442,9 +442,12 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
     return 1;
   });
   const { colorMode } = useColorMode();
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    setSidebarData(getSidebarDataByRole(["user", user.role]));
+    const userRole = user.role || user.type;
+    const roles = userRole === "superAdmin" ? ["superAdmin"] : ["user", userRole];
+    setSidebarData(getSidebarDataByRole(roles));
   }, [user]);
 
   useEffect(() => {
@@ -469,6 +472,9 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
     activeItemId !== null
       ? findPathToActiveItem(sidebarData, activeItemId)
       : [];
+
+  // Determine if the sidebar should be visually collapsed
+  const effectiveCollapsed = isCollapsed && !isHovered;
 
   return (
     <>
@@ -502,11 +508,13 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
       </Drawer>
       {!isMobile && (
         <Box
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
           pos={"fixed"}
           top={0}
           bottom={0}
           left={0}
-          width={isCollapsed ? mediumSidebarWidth : sidebarWidth}
+          width={effectiveCollapsed ? mediumSidebarWidth : sidebarWidth}
           minH={"100vh"}
           transition="width 0.3s"
           color="gray.700"
@@ -534,7 +542,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
             className="customScrollBar"
             height="calc(100vh - 165px)"
           >
-            {isCollapsed ? (
+            {effectiveCollapsed ? (
               <VStack align="start" spacing={3}>
                 {sidebarData.map((item) => (
                   <SidebarPopover
@@ -543,7 +551,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
                     depth={0}
                     onClick={onItemClick}
                     onLeafClick={handleLeafItemClick}
-                    isCollapsed={isCollapsed}
+                    isCollapsed={effectiveCollapsed}
                     activeItemId={activeItemId}
                   />
                 ))}
@@ -562,13 +570,13 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
             position="fixed"
             bottom={0}
             left={0}
-            width={isCollapsed ? mediumSidebarWidth : sidebarWidth}
+            width={effectiveCollapsed ? mediumSidebarWidth : sidebarWidth}
             transition="width 0.3s"
             py={4}
             zIndex={11}
             overflowX={"hidden"}
           >
-            {isCollapsed ? (
+            {effectiveCollapsed ? (
               <VStack align="start" spacing={3}>
                 {sidebarFooterData.map((item) => (
                   <SidebarPopover
@@ -577,7 +585,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
                     depth={0}
                     onClick={onItemClick}
                     onLeafClick={handleLeafItemClick}
-                    isCollapsed={isCollapsed}
+                    isCollapsed={effectiveCollapsed}
                     activeItemId={activeItemId}
                   />
                 ))}

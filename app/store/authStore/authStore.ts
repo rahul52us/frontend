@@ -162,6 +162,7 @@ class AuthStore {
       if (this.token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN, this.token);
         stores.cartStore.syncCart();
+        await this.fetchUser();
       }
 
       return response?.data?.data
