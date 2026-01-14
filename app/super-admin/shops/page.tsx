@@ -1,104 +1,167 @@
 "use client";
 
-import React from "react";
-import {
-    Box,
-    Heading,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    HStack,
-    IconButton,
-    Card,
-    CardBody,
-    Avatar,
-    Text,
-    Badge,
-} from "@chakra-ui/react";
-import { FiEdit2, FiTrash2, FiExternalLink } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import { Box, HStack, Avatar, Text, Badge } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
+import stores from "../../store/stores";
+import CustomTable from "../../component/config/component/CustomTable/CustomTable";
 
-const ShopsPage = () => {
-    // Mock data
-    const shops = [
-        { id: 1, name: "Tech World", owner: "John Doe", status: "Active", products: 45 },
-        { id: 2, name: "Fashion Hub", owner: "Jane Smith", status: "Pending", products: 12 },
-        { id: 3, name: "Green Earth", owner: "Mike Ross", status: "Suspended", products: 0 },
-    ];
+const ShopsPage = observer(() => {
+    const { companyStore } = stores;
+    const [shops, setShops] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalShops, setTotalShops] = useState(0);
+
+    useEffect(() => {
+        fetchShops(currentPage);
+    }, [currentPage]);
+
+    const fetchShops = (page: number) => {
+        setLoading(true);
+        companyStore
+            .getAllShops({ limit: 10, page: page, shopStatus: "all", includeInactive: true })
+            .then((res: any) => {
+                if (res?.data?.data) {
+                    setShops(res.data.data);
+                    setTotalPages(res.data.totalPages || 1);
+                    setTotalShops(res.data.total || 0);
+                }
+            })
+            .catch((err: any) => {
+                console.error("Failed to fetch shops:", err);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case "Active": return "green";
-            case "Pending": return "orange";
-            case "Suspended": return "red";
-            default: return "gray";
+            case "active":
+                return "green";
+            case "pending":
+                return "orange";
+            case "suspended":
+                return "red";
+            default:
+                return "gray";
         }
     };
 
+    const columns = [
+        {
+            headerName: "Shop Name",
+            key: "name",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <HStack>
+                        <Avatar name={row.name} src={row.logo?.url} size="sm" />
+                        <Text fontWeight="medium">{row.name}</Text>
+                    </HStack>
+                ),
+            },
+        },
+        {
+            headerName: "Description",
+            key: "description",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <Text noOfLines={1} maxW="200px">
+                        {row.description || "N/A"}
+                    </Text>
+                )
+            }
+        },
+        {
+            headerName: "Status",
+            key: "shopStatus",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <Box>
+                        <Badge colorScheme={getStatusColor(row.shopStatus)}>
+                            {row.shopStatus}
+                        </Badge>
+                        {!row.isActive && (
+                            <Badge ml={2} colorScheme="red">
+                                Inactive
+                            </Badge>
+                        )}
+                    </Box>
+                ),
+            },
+        },
+        {
+            headerName: "Rating",
+            key: "rating",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <Text>{row.ratings?.averageRating?.toFixed(1) || 0} ({row.ratings?.count || 0})</Text>
+                )
+            }
+        },
+        {
+            headerName: "Action",
+            key: "action",
+            type: "table-actions",
+            props: {
+                isSticky: true,
+            }
+        }
+    ];
+
+    const tableActions = {
+        actionBtn: {
+            viewKey: {
+                showViewButton: true,
+                function: (row: any) => {
+                    // Handle view logic
+                    console.log("View shop", row)
+                }
+            },
+            editKey: {
+                showEditButton: true,
+                function: (row: any) => {
+                    // Handle edit logic
+                    console.log("Edit shop", row)
+                }
+            },
+            deleteKey: {
+                showDeleteButton: true,
+                function: (row: any) => {
+                    // Handle delete logic
+                    console.log("Delete shop", row)
+                }
+            }
+        },
+        pagination: {
+            show: true,
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onClick: (page: number) => setCurrentPage(page)
+        },
+        search: {
+            show: false // Can enable later
+        }
+    }
+
     return (
         <Box p={6}>
-            <Heading size="lg" mb={6}>All Shops</Heading>
-
-            <Card>
-                <CardBody>
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Shop Name</Th>
-                                <Th>Owner</Th>
-                                <Th>Status</Th>
-                                <Th isNumeric>Products</Th>
-                                <Th>Actions</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {shops.map((shop) => (
-                                <Tr key={shop.id}>
-                                    <Td>
-                                        <HStack>
-                                            <Avatar name={shop.name} size="sm" />
-                                            <Text fontWeight="medium">{shop.name}</Text>
-                                        </HStack>
-                                    </Td>
-                                    <Td>{shop.owner}</Td>
-                                    <Td>
-                                        <Badge colorScheme={getStatusColor(shop.status)}>{shop.status}</Badge>
-                                    </Td>
-                                    <Td isNumeric>{shop.products}</Td>
-                                    <Td>
-                                        <HStack spacing={2}>
-                                            <IconButton
-                                                aria-label="View"
-                                                icon={<FiExternalLink />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme="blue"
-                                            />
-                                            <IconButton
-                                                aria-label="Edit"
-                                                icon={<FiEdit2 />}
-                                                size="sm"
-                                                variant="ghost"
-                                            />
-                                            <IconButton
-                                                aria-label="Delete"
-                                                icon={<FiTrash2 />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme="red"
-                                            />
-                                        </HStack>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                </CardBody>
-            </Card>
+            <CustomTable
+                title={`All Shops (${totalShops})`}
+                columns={columns}
+                data={shops}
+                loading={loading}
+                actions={tableActions}
+                serial={{ show: true, text: "S.No." }}
+            />
         </Box>
     );
-};
+});
 
 export default ShopsPage;

@@ -1,86 +1,143 @@
 "use client";
 
-import React from "react";
-import {
-    Box,
-    Heading,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    HStack,
-    IconButton,
-    Card,
-    CardBody,
-    Text,
-} from "@chakra-ui/react";
-import { FiTrash2, FiEye } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import { Box, HStack, Text, Image } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
+import stores from "../../store/stores";
+import CustomTable from "../../component/config/component/CustomTable/CustomTable";
 
-const SuperAdminProductsPage = () => {
-    // Mock data
-    const products = [
-        { id: 1, name: "Wireless Headphones", shop: "Tech World", price: 99.99, image: "/images/product-placeholder.png" },
-        { id: 2, name: "Cotton T-Shirt", shop: "Fashion Hub", price: 29.99, image: "/images/product-placeholder.png" },
-        { id: 3, name: "Smartphone", shop: "Tech World", price: 699.99, image: "/images/product-placeholder.png" },
+const SuperAdminProductsPage = observer(() => {
+    const { shopStore } = stores;
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    // Pagination states (even if backend doesn't fully support it yet, we prep the UI)
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+
+    useEffect(() => {
+        fetchProducts(currentPage);
+    }, [currentPage]);
+
+    const fetchProducts = (page: number) => {
+        setLoading(true);
+        shopStore
+            .getAllProducts({ limit: 10, page, company: null })
+            .then((res: any) => {
+                if (res?.data) {
+                    setProducts(res.data.products || []);
+                    setTotalProducts(res.data.total || 0);
+                    setTotalPages(res.data.totalPages || 1);
+                }
+            })
+            .catch((err: any) => {
+                console.error("Failed to fetch products:", err);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    };
+
+    const columns = [
+        {
+            headerName: "Product",
+            key: "name",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <HStack>
+                        <Box boxSize="40px" borderRadius="md" overflow="hidden" flexShrink={0}>
+                            {row.images && row.images[0] ? (
+                                <Image src={row.images[0]} alt={row.name} w="100%" h="100%" objectFit="cover" />
+                            ) : (
+                                <Box w="100%" h="100%" bg="gray.200" />
+                            )}
+                        </Box>
+                        <Text fontWeight="medium" noOfLines={2} title={row.name}>{row.name}</Text>
+                    </HStack>
+                ),
+            },
+            props: {
+                column: { minW: "200px" }
+            }
+        },
+        {
+            headerName: "Category",
+            key: "category",
+            type: "text",
+        },
+        {
+            headerName: "Shop",
+            key: "company",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    // If company is populated, show name, else show ID or --
+                    <Text>{row.company?.name || row.company || "--"}</Text>
+                )
+            }
+        },
+        {
+            headerName: "Price",
+            key: "price",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <Text>₹{row.price}</Text>
+                )
+            }
+        },
+        {
+            headerName: "Action",
+            key: "action",
+            type: "table-actions",
+            props: {
+                isSticky: true,
+            }
+        }
     ];
+
+    const tableActions = {
+        actionBtn: {
+            viewKey: {
+                showViewButton: true,
+                function: (row: any) => {
+                    console.log("View product", row)
+                }
+            },
+            editKey: {
+                showEditButton: true,
+                function: (row: any) => {
+                    console.log("Edit product", row)
+                }
+            },
+            deleteKey: {
+                showDeleteButton: true,
+                function: (row: any) => {
+                    console.log("Delete product", row)
+                }
+            }
+        },
+        pagination: {
+            show: true, // Hidden until backend supports it for this endpoint
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onClick: (page: number) => setCurrentPage(page)
+        },
+    }
 
     return (
         <Box p={6}>
-            <Heading size="lg" mb={6}>All Products</Heading>
-
-            <Card>
-                <CardBody>
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Product</Th>
-                                <Th>Shop</Th>
-                                <Th isNumeric>Price</Th>
-                                <Th>Actions</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {products.map((product) => (
-                                <Tr key={product.id}>
-                                    <Td>
-                                        <HStack>
-                                            <Box boxSize="40px" bg="gray.100" borderRadius="md" overflow="hidden">
-                                                {/* Placeholder since we mock images */}
-                                                <Box w="100%" h="100%" bg="gray.200" />
-                                            </Box>
-                                            <Text fontWeight="medium">{product.name}</Text>
-                                        </HStack>
-                                    </Td>
-                                    <Td>{product.shop}</Td>
-                                    <Td isNumeric>${product.price}</Td>
-                                    <Td>
-                                        <HStack spacing={2}>
-                                            <IconButton
-                                                aria-label="View"
-                                                icon={<FiEye />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme="blue"
-                                            />
-                                            <IconButton
-                                                aria-label="Delete"
-                                                icon={<FiTrash2 />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme="red"
-                                            />
-                                        </HStack>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                </CardBody>
-            </Card>
+            <CustomTable
+                title={`All Products (${totalProducts})`}
+                columns={columns}
+                data={products}
+                loading={loading}
+                actions={tableActions}
+                serial={{ show: true, text: "S.No." }}
+            />
         </Box>
     );
-};
+});
 
 export default SuperAdminProductsPage;

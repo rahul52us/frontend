@@ -105,6 +105,18 @@ class ShopStore {
     }
   };
 
+  getAllProducts = async (sendData: any) => {
+    this.shop.loading = true;
+    try {
+      const response = await axios.post(`/product`, sendData);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.shop.loading = false;
+    }
+  };
+
 }
 
 export const shopStore = new ShopStore();

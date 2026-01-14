@@ -1,31 +1,78 @@
 "use client";
 
-import React from "react";
-import {
-    Box,
-    Button,
-    Heading,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    HStack,
-    IconButton,
-    Card,
-    CardBody,
-    Badge,
-} from "@chakra-ui/react";
-import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
+import React, { useState } from "react";
+import { Box, Button, Heading, HStack, Badge } from "@chakra-ui/react";
+import { FiPlus } from "react-icons/fi";
+import CustomTable from "../../component/config/component/CustomTable/CustomTable";
 
 const CategoriesPage = () => {
     // Mock data
-    const categories = [
+    const [categories] = useState([
         { id: 1, name: "Electronics", slug: "electronics", subCategories: 5 },
         { id: 2, name: "Fashion", slug: "fashion", subCategories: 12 },
         { id: 3, name: "Home & Garden", slug: "home-garden", subCategories: 8 },
+    ]);
+
+    const columns = [
+        {
+            headerName: "Name",
+            key: "name",
+            type: "text",
+            props: {
+                column: { minW: "200px" }
+            }
+        },
+        {
+            headerName: "Slug",
+            key: "slug",
+            type: "component",
+            metaData: {
+                component: (row: any) => (
+                    <Badge colorScheme="gray">{row.slug}</Badge>
+                )
+            }
+        },
+        {
+            headerName: "Sub-categories",
+            key: "subCategories",
+            type: "text",
+            props: {
+                column: { isNumeric: true },
+                row: { isNumeric: true, textAlign: 'right' }
+            }
+        },
+        {
+            headerName: "Action",
+            key: "action",
+            type: "table-actions",
+            props: {
+                isSticky: true,
+            }
+        }
     ];
+
+    const tableActions = {
+        actionBtn: {
+            editKey: {
+                showEditButton: true,
+                function: (row: any) => {
+                    console.log("Edit category", row);
+                }
+            },
+            deleteKey: {
+                showDeleteButton: true,
+                function: (row: any) => {
+                    console.log("Delete category", row);
+                }
+            }
+        },
+        pagination: {
+            show: true,
+            currentPage: 1,
+            totalPages: 1,
+            onClick: (page: number) => console.log("Page change", page)
+        }
+    };
 
     return (
         <Box p={6}>
@@ -36,48 +83,14 @@ const CategoriesPage = () => {
                 </Button>
             </HStack>
 
-            <Card>
-                <CardBody>
-                    <Table variant="simple">
-                        <Thead>
-                            <Tr>
-                                <Th>Name</Th>
-                                <Th>Slug</Th>
-                                <Th isNumeric>Sub-categories</Th>
-                                <Th>Actions</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {categories.map((cat) => (
-                                <Tr key={cat.id}>
-                                    <Td fontWeight="medium">{cat.name}</Td>
-                                    <Td>
-                                        <Badge colorScheme="gray">{cat.slug}</Badge>
-                                    </Td>
-                                    <Td isNumeric>{cat.subCategories}</Td>
-                                    <Td>
-                                        <HStack spacing={2}>
-                                            <IconButton
-                                                aria-label="Edit"
-                                                icon={<FiEdit2 />}
-                                                size="sm"
-                                                variant="ghost"
-                                            />
-                                            <IconButton
-                                                aria-label="Delete"
-                                                icon={<FiTrash2 />}
-                                                size="sm"
-                                                variant="ghost"
-                                                colorScheme="red"
-                                            />
-                                        </HStack>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                </CardBody>
-            </Card>
+            <CustomTable
+                title={`All Categories (${categories.length})`}
+                columns={columns}
+                data={categories}
+                loading={false}
+                actions={tableActions}
+                serial={{ show: true, text: "S.No." }}
+            />
         </Box>
     );
 };
