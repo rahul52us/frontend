@@ -83,6 +83,18 @@ class CompanyStores {
     }
   };
 
+  deleteShop = async (id: string) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.delete(`/company/${id}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
 }
 
 export const CompanyStore = new CompanyStores();
