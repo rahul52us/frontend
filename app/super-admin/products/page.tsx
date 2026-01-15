@@ -1,19 +1,25 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, HStack, Text, Image } from "@chakra-ui/react";
+import { Box, HStack, Text, Image, useDisclosure } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
 import CustomTable from "../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
 
 const SuperAdminProductsPage = observer(() => {
-    const { shopStore } = stores;
+    const { shopStore, auth } = stores;
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    // Pagination states (even if backend doesn't fully support it yet, we prep the UI)
+    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
+
+    // Delete Modal State
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [selectedProduct, setSelectedProduct] = useState<any>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchProducts = useCallback((page: number) => {
         setLoading(true);
@@ -27,7 +33,7 @@ const SuperAdminProductsPage = observer(() => {
                 }
             })
             .catch(() => {
-                // Error handling
+                // Error handling handled by store or ignored for now
             })
             .finally(() => {
                 setLoading(false);
@@ -37,6 +43,36 @@ const SuperAdminProductsPage = observer(() => {
     useEffect(() => {
         fetchProducts(currentPage);
     }, [fetchProducts, currentPage]);
+
+    const handleDeleteClick = (row: any) => {
+        setSelectedProduct(row);
+        onOpen();
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedProduct) return;
+        setIsDeleting(true);
+        try {
+            await shopStore.deleteProduct(selectedProduct._id);
+            auth.openNotification({
+                title: "Success",
+                message: "Product deleted successfully",
+                type: "success",
+                image: selectedProduct?.images?.[0]
+            });
+            fetchProducts(currentPage); // Refresh list
+            onClose();
+        } catch (error: any) {
+            auth.openNotification({
+                title: "Error",
+                message: error?.message || "Failed to delete product",
+                type: "error"
+            });
+        } finally {
+            setIsDeleting(false);
+            setSelectedProduct(null);
+        }
+    };
 
     const columns = [
         {
@@ -113,8 +149,8 @@ const SuperAdminProductsPage = observer(() => {
             },
             deleteKey: {
                 showDeleteButton: true,
-                function: () => {
-                    // Delete functionality
+                function: (row: any) => {
+                    handleDeleteClick(row);
                 }
             }
         },
@@ -135,6 +171,22 @@ const SuperAdminProductsPage = observer(() => {
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
+            />
+
+            <ConfirmationModal
+                isOpen={isOpen}
+                onClose={onClose}
+                onConfirm={confirmDelete}
+                title="Confirm Delete"
+                message={
+                    <Text>
+                        Are you sure you want to delete the product <strong>{selectedProduct?.name}</strong>? This action cannot be undone.
+                    </Text>
+                }
+                confirmText="Delete"
+                confirmButtonProps={{ colorScheme: "red" }}
+                isLoading={isDeleting}
+                image={selectedProduct?.images?.[0]}
             />
         </Box>
     );

@@ -10,7 +10,8 @@ interface Notification {
   type?: any;
   placement?: string;
   action?: any;
-  duration?: number
+  duration?: number;
+  image?: string;
 }
 
 class AuthStore {
@@ -94,7 +95,8 @@ class AuthStore {
     type?: string;
     placement?: string;
     action?: any;
-    duration?: number
+    duration?: number;
+    image?: string;
   }) => {
     this.notification = {
       title: data.title,
@@ -102,6 +104,7 @@ class AuthStore {
       type: data.type ? data.type : "success",
       placement: data.placement ? data.placement : "bottom",
       action: data.action ? data.action : null,
+      image: data.image,
     };
   };
 
