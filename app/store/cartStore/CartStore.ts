@@ -17,7 +17,9 @@ class CartStore {
     constructor() {
         makeAutoObservable(this);
         if (typeof window !== "undefined") {
-            this.fetchCart();
+            if (!this.isLoggedIn) {
+                this.fetchCart();
+            }
         }
     }
 
@@ -71,7 +73,7 @@ class CartStore {
                     }));
                 }
             });
-        } catch (err:any) {
+        } catch (err: any) {
             alert(err?.message)
         }
     };

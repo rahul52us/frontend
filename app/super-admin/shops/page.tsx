@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Box, HStack, Avatar, Text, Badge } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
@@ -14,11 +14,7 @@ const ShopsPage = observer(() => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalShops, setTotalShops] = useState(0);
 
-    useEffect(() => {
-        fetchShops(currentPage);
-    }, [currentPage]);
-
-    const fetchShops = (page: number) => {
+    const fetchShops = useCallback((page: number) => {
         setLoading(true);
         companyStore
             .getAllShops({ limit: 10, page: page, shopStatus: "all", includeInactive: true })
@@ -29,13 +25,17 @@ const ShopsPage = observer(() => {
                     setTotalShops(res.data.total || 0);
                 }
             })
-            .catch((err: any) => {
-                console.error("Failed to fetch shops:", err);
+            .catch(() => {
+                // Error handling
             })
             .finally(() => {
                 setLoading(false);
             });
-    };
+    }, [companyStore]);
+
+    useEffect(() => {
+        fetchShops(currentPage);
+    }, [fetchShops, currentPage]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -119,23 +119,20 @@ const ShopsPage = observer(() => {
         actionBtn: {
             viewKey: {
                 showViewButton: true,
-                function: (row: any) => {
+                function: () => {
                     // Handle view logic
-                    console.log("View shop", row)
                 }
             },
             editKey: {
                 showEditButton: true,
-                function: (row: any) => {
+                function: () => {
                     // Handle edit logic
-                    console.log("Edit shop", row)
                 }
             },
             deleteKey: {
                 showDeleteButton: true,
-                function: (row: any) => {
+                function: () => {
                     // Handle delete logic
-                    console.log("Delete shop", row)
                 }
             }
         },

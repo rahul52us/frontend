@@ -55,14 +55,14 @@ const CategoriesPage = () => {
         actionBtn: {
             editKey: {
                 showEditButton: true,
-                function: (row: any) => {
-                    console.log("Edit category", row);
+                function: () => {
+                    // Edit category logic
                 }
             },
             deleteKey: {
                 showDeleteButton: true,
-                function: (row: any) => {
-                    console.log("Delete category", row);
+                function: () => {
+                    // Delete category logic
                 }
             }
         },
@@ -70,7 +70,9 @@ const CategoriesPage = () => {
             show: true,
             currentPage: 1,
             totalPages: 1,
-            onClick: (page: number) => console.log("Page change", page)
+            onClick: () => {
+                // Page change logic
+            }
         }
     };
 

@@ -58,6 +58,7 @@ class CompanyStores {
   }
 
   getCompanyDetails = async () => {
+    if (!authStore.company) return;
     this.isLoading = true;
     try {
       const response = await axios.get(`/company/${authStore.company}`);

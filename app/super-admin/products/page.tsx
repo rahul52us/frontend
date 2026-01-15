@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Box, HStack, Text, Image } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
@@ -15,11 +15,7 @@ const SuperAdminProductsPage = observer(() => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
 
-    useEffect(() => {
-        fetchProducts(currentPage);
-    }, [currentPage]);
-
-    const fetchProducts = (page: number) => {
+    const fetchProducts = useCallback((page: number) => {
         setLoading(true);
         shopStore
             .getAllProducts({ limit: 10, page, company: null })
@@ -30,13 +26,17 @@ const SuperAdminProductsPage = observer(() => {
                     setTotalPages(res.data.totalPages || 1);
                 }
             })
-            .catch((err: any) => {
-                console.error("Failed to fetch products:", err);
+            .catch(() => {
+                // Error handling
             })
             .finally(() => {
                 setLoading(false);
             });
-    };
+    }, [shopStore]);
+
+    useEffect(() => {
+        fetchProducts(currentPage);
+    }, [fetchProducts, currentPage]);
 
     const columns = [
         {
@@ -101,25 +101,25 @@ const SuperAdminProductsPage = observer(() => {
         actionBtn: {
             viewKey: {
                 showViewButton: true,
-                function: (row: any) => {
-                    console.log("View product", row)
+                function: () => {
+                    // View functionality
                 }
             },
             editKey: {
                 showEditButton: true,
-                function: (row: any) => {
-                    console.log("Edit product", row)
+                function: () => {
+                    // Edit functionality
                 }
             },
             deleteKey: {
                 showDeleteButton: true,
-                function: (row: any) => {
-                    console.log("Delete product", row)
+                function: () => {
+                    // Delete functionality
                 }
             }
         },
         pagination: {
-            show: true, // Hidden until backend supports it for this endpoint
+            show: true,
             currentPage: currentPage,
             totalPages: totalPages,
             onClick: (page: number) => setCurrentPage(page)

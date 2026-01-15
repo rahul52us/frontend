@@ -187,6 +187,11 @@ class AuthStore {
 
       this.user = response.data?.data;
       this.company = this.user?.company
+
+      const isSuperAdmin = this.user?.type === "superAdmin" || this.user?.role === "superAdmin" || (Array.isArray(this.user?.role) && this.user.role.includes("superAdmin"));
+      if (!isSuperAdmin) {
+        stores.cartStore.fetchCart();
+      }
     } catch (err: any) {
       this.error = err?.response?.data?.message || "Failed to fetch user info.";
     }
