@@ -9,6 +9,7 @@ import { useShopList } from "./hooks/useShopList";
 import { useShopDelete } from "./hooks/useShopDelete";
 import { ShopColumns } from "./components/ShopColumns";
 import ShopForm from "./components/ShopForm";
+import ShopView from "./components/ShopView";
 import stores from "../../store/stores";
 import { useDisclosure, useToast } from "@chakra-ui/react";
 
@@ -37,7 +38,15 @@ const ShopsPage = observer(() => {
         onOpen: onEditOpen,
         onClose: onEditClose
     } = useDisclosure();
+
+    const {
+        isOpen: isViewOpen,
+        onOpen: onViewOpen,
+        onClose: onViewClose
+    } = useDisclosure();
+
     const [editingShop, setEditingShop] = React.useState<any>(null);
+    const [viewingShop, setViewingShop] = React.useState<any>(null);
     const [isUpdating, setIsUpdating] = React.useState(false);
     const toast = useToast();
     const { companyStore } = stores;
@@ -45,6 +54,11 @@ const ShopsPage = observer(() => {
     const handleEditClick = (shop: any) => {
         setEditingShop(shop);
         onEditOpen();
+    };
+
+    const handleViewClick = (shop: any) => {
+        setViewingShop(shop);
+        onViewOpen();
     };
 
     const handleUpdateShop = async (values: any) => {
@@ -78,8 +92,8 @@ const ShopsPage = observer(() => {
         actionBtn: {
             viewKey: {
                 showViewButton: true,
-                function: () => {
-                    // Handle view logic
+                function: (row: any) => {
+                    handleViewClick(row);
                 }
             },
             editKey: {
@@ -128,6 +142,12 @@ const ShopsPage = observer(() => {
                 onSubmit={handleUpdateShop}
                 isEdit={true}
                 isLoading={isUpdating}
+            />
+
+            <ShopView
+                isOpen={isViewOpen}
+                onClose={onViewClose}
+                shop={viewingShop}
             />
 
             <ConfirmationModal
