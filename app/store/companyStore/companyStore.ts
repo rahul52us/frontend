@@ -95,6 +95,17 @@ class CompanyStores {
     }
   };
 
+  updateShop = async (id: string, payload: any) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.put(`/company/${id}`, payload);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.isLoading = false;
+    }
+  };
 }
 
 export const CompanyStore = new CompanyStores();

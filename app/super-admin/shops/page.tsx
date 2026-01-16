@@ -8,6 +8,9 @@ import ConfirmationModal from "../../component/common/ConfirmationModal/Confirma
 import { useShopList } from "./hooks/useShopList";
 import { useShopDelete } from "./hooks/useShopDelete";
 import { ShopColumns } from "./components/ShopColumns";
+import ShopForm from "./components/ShopForm";
+import stores from "../../store/stores";
+import { useDisclosure, useToast } from "@chakra-ui/react";
 
 const ShopsPage = observer(() => {
     const {
@@ -29,6 +32,48 @@ const ShopsPage = observer(() => {
         confirmDelete
     } = useShopDelete(() => fetchShops(currentPage));
 
+    const {
+        isOpen: isEditOpen,
+        onOpen: onEditOpen,
+        onClose: onEditClose
+    } = useDisclosure();
+    const [editingShop, setEditingShop] = React.useState<any>(null);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const toast = useToast();
+    const { companyStore } = stores;
+
+    const handleEditClick = (shop: any) => {
+        setEditingShop(shop);
+        onEditOpen();
+    };
+
+    const handleUpdateShop = async (values: any) => {
+        if (!editingShop?._id) return;
+        values._id = editingShop._id;
+        setIsUpdating(true);
+        try {
+            await companyStore.updateShop(editingShop._id, values);
+            toast({
+                title: "Shop updated successfully",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            onEditClose();
+            fetchShops(currentPage);
+        } catch (error: any) {
+            toast({
+                title: "Error updating shop",
+                description: error.message || "Something went wrong",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     const tableActions = {
         actionBtn: {
             viewKey: {
@@ -39,8 +84,8 @@ const ShopsPage = observer(() => {
             },
             editKey: {
                 showEditButton: true,
-                function: () => {
-                    // Handle edit logic
+                function: (row: any) => {
+                    handleEditClick(row);
                 }
             },
             deleteKey: {
@@ -70,6 +115,19 @@ const ShopsPage = observer(() => {
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
+            />
+
+            <ShopForm
+                isOpen={isEditOpen}
+                onClose={onEditClose}
+                initialValues={{
+                    name: editingShop?.name || "",
+                    description: editingShop?.description || "",
+                    shopStatus: editingShop?.shopStatus || "active",
+                }}
+                onSubmit={handleUpdateShop}
+                isEdit={true}
+                isLoading={isUpdating}
             />
 
             <ConfirmationModal
