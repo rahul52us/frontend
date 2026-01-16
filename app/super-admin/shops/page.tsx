@@ -138,6 +138,20 @@ const ShopsPage = observer(() => {
                     name: editingShop?.name || "",
                     description: editingShop?.description || "",
                     shopStatus: editingShop?.shopStatus || "active",
+                    isActive: editingShop?.isActive || false,
+                    contactInfo: {
+                        phone: editingShop?.contactInfo?.phone || "",
+                        email: editingShop?.contactInfo?.email || "",
+                        website: editingShop?.contactInfo?.website || ""
+                    },
+                    location: {
+                        address: editingShop?.location?.address || "",
+                        city: editingShop?.location?.city || "",
+                        state: editingShop?.location?.state || "",
+                        postalCode: editingShop?.location?.postalCode || "",
+                        country: editingShop?.location?.country || ""
+                    },
+                    remarks: ""
                 }}
                 onSubmit={handleUpdateShop}
                 isEdit={true}
