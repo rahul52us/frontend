@@ -10,7 +10,6 @@ import {
     Textarea,
     Box,
     Select,
-    Heading,
     Divider,
     SimpleGrid,
     Stack,
@@ -25,7 +24,7 @@ interface ShopFormProps {
     isOpen: boolean;
     onClose: () => void;
     initialValues: any;
-    onSubmit: (values: any) => void;
+    onSubmit: (_values: any) => void;
     isEdit?: boolean;
     isLoading?: boolean;
 }

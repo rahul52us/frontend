@@ -25,7 +25,7 @@ import {
     Stepper,
     Container,
 } from "@chakra-ui/react";
-import { FaPhone, FaEnvelope, FaGlobe, FaMapMarkerAlt, FaStar, FaClock } from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaGlobe, FaMapMarkerAlt } from "react-icons/fa";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
 
 interface ShopViewProps {
@@ -246,7 +246,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                                             <StepDescription mt={2}>
                                                                 {step.remarks && (
                                                                     <Box bg="gray.50" p={3} borderLeft="3px solid" borderColor="gray.300" borderRadius="sm">
-                                                                        <Text fontSize="sm" fontStyle="italic" color="gray.600">"{step.remarks}"</Text>
+                                                                        <Text fontSize="sm" fontStyle="italic" color="gray.600">&quot;{step.remarks}&quot;</Text>
                                                                     </Box>
                                                                 )}
                                                             </StepDescription>
