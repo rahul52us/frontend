@@ -1,141 +1,111 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Box, HStack, Avatar, Text, Badge } from "@chakra-ui/react";
+import React from "react";
+import { Box, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
 import CustomTable from "../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import { useShopList } from "./hooks/useShopList";
+import { useShopDelete } from "./hooks/useShopDelete";
+import { ShopColumns } from "./components/ShopColumns";
+import ShopForm from "./components/ShopForm";
+import ShopView from "./components/ShopView";
+import stores from "../../store/stores";
+import { useDisclosure, useToast } from "@chakra-ui/react";
 
 const ShopsPage = observer(() => {
+    const {
+        shops,
+        loading,
+        currentPage,
+        totalPages,
+        totalShops,
+        setCurrentPage,
+        fetchShops
+    } = useShopList();
+
+    const {
+        isOpen,
+        onClose,
+        selectedShop,
+        isDeleting,
+        handleDeleteClick,
+        confirmDelete
+    } = useShopDelete(() => fetchShops(currentPage));
+
+    const {
+        isOpen: isEditOpen,
+        onOpen: onEditOpen,
+        onClose: onEditClose
+    } = useDisclosure();
+
+    const {
+        isOpen: isViewOpen,
+        onOpen: onViewOpen,
+        onClose: onViewClose
+    } = useDisclosure();
+
+    const [editingShop, setEditingShop] = React.useState<any>(null);
+    const [viewingShop, setViewingShop] = React.useState<any>(null);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const toast = useToast();
     const { companyStore } = stores;
-    const [shops, setShops] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalShops, setTotalShops] = useState(0);
 
-    useEffect(() => {
-        fetchShops(currentPage);
-    }, [currentPage]);
+    const handleEditClick = (shop: any) => {
+        setEditingShop(shop);
+        onEditOpen();
+    };
 
-    const fetchShops = (page: number) => {
-        setLoading(true);
-        companyStore
-            .getAllShops({ limit: 10, page: page, shopStatus: "all", includeInactive: true })
-            .then((res: any) => {
-                if (res?.data?.data) {
-                    setShops(res.data.data);
-                    setTotalPages(res.data.totalPages || 1);
-                    setTotalShops(res.data.total || 0);
-                }
-            })
-            .catch((err: any) => {
-                console.error("Failed to fetch shops:", err);
-            })
-            .finally(() => {
-                setLoading(false);
+    const handleViewClick = (shop: any) => {
+        setViewingShop(shop);
+        onViewOpen();
+    };
+
+    const handleUpdateShop = async (values: any) => {
+        if (!editingShop?._id) return;
+        values._id = editingShop._id;
+        setIsUpdating(true);
+        try {
+            await companyStore.updateShop(editingShop._id, values);
+            toast({
+                title: "Shop updated successfully",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
             });
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "active":
-                return "green";
-            case "pending":
-                return "orange";
-            case "suspended":
-                return "red";
-            default:
-                return "gray";
+            onEditClose();
+            fetchShops(currentPage);
+        } catch (error: any) {
+            toast({
+                title: "Error updating shop",
+                description: error.message || "Something went wrong",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsUpdating(false);
         }
     };
-
-    const columns = [
-        {
-            headerName: "Shop Name",
-            key: "name",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <HStack>
-                        <Avatar name={row.name} src={row.logo?.url} size="sm" />
-                        <Text fontWeight="medium">{row.name}</Text>
-                    </HStack>
-                ),
-            },
-        },
-        {
-            headerName: "Description",
-            key: "description",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <Text noOfLines={1} maxW="200px">
-                        {row.description || "N/A"}
-                    </Text>
-                )
-            }
-        },
-        {
-            headerName: "Status",
-            key: "shopStatus",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <Box>
-                        <Badge colorScheme={getStatusColor(row.shopStatus)}>
-                            {row.shopStatus}
-                        </Badge>
-                        {!row.isActive && (
-                            <Badge ml={2} colorScheme="red">
-                                Inactive
-                            </Badge>
-                        )}
-                    </Box>
-                ),
-            },
-        },
-        {
-            headerName: "Rating",
-            key: "rating",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <Text>{row.ratings?.averageRating?.toFixed(1) || 0} ({row.ratings?.count || 0})</Text>
-                )
-            }
-        },
-        {
-            headerName: "Action",
-            key: "action",
-            type: "table-actions",
-            props: {
-                isSticky: true,
-            }
-        }
-    ];
 
     const tableActions = {
         actionBtn: {
             viewKey: {
                 showViewButton: true,
                 function: (row: any) => {
-                    // Handle view logic
-                    console.log("View shop", row)
+                    handleViewClick(row);
                 }
             },
             editKey: {
                 showEditButton: true,
                 function: (row: any) => {
-                    // Handle edit logic
-                    console.log("Edit shop", row)
+                    handleEditClick(row);
                 }
             },
             deleteKey: {
                 showDeleteButton: true,
                 function: (row: any) => {
-                    // Handle delete logic
-                    console.log("Delete shop", row)
+                    handleDeleteClick(row);
                 }
             }
         },
@@ -154,11 +124,60 @@ const ShopsPage = observer(() => {
         <Box p={6}>
             <CustomTable
                 title={`All Shops (${totalShops})`}
-                columns={columns}
+                columns={ShopColumns}
                 data={shops}
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
+            />
+
+            <ShopForm
+                isOpen={isEditOpen}
+                onClose={onEditClose}
+                initialValues={{
+                    name: editingShop?.name || "",
+                    description: editingShop?.description || "",
+                    shopStatus: editingShop?.shopStatus || "active",
+                    isActive: editingShop?.isActive || false,
+                    contactInfo: {
+                        phone: editingShop?.contactInfo?.phone || "",
+                        email: editingShop?.contactInfo?.email || "",
+                        website: editingShop?.contactInfo?.website || ""
+                    },
+                    location: {
+                        address: editingShop?.location?.address || "",
+                        city: editingShop?.location?.city || "",
+                        state: editingShop?.location?.state || "",
+                        postalCode: editingShop?.location?.postalCode || "",
+                        country: editingShop?.location?.country || ""
+                    },
+                    remarks: ""
+                }}
+                onSubmit={handleUpdateShop}
+                isEdit={true}
+                isLoading={isUpdating}
+            />
+
+            <ShopView
+                isOpen={isViewOpen}
+                onClose={onViewClose}
+                shop={viewingShop}
+            />
+
+            <ConfirmationModal
+                isOpen={isOpen}
+                onClose={onClose}
+                onConfirm={confirmDelete}
+                title="Confirm Delete"
+                message={
+                    <Text>
+                        Are you sure you want to delete the shop <strong>{selectedShop?.name}</strong>? This action cannot be undone.
+                    </Text>
+                }
+                confirmText="Delete"
+                confirmButtonProps={{ colorScheme: "red" }}
+                isLoading={isDeleting}
+                image={selectedShop?.logo?.url}
             />
         </Box>
     );

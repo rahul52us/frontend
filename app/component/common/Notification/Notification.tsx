@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
-import { useToast, ToastPosition, Box, Text } from "@chakra-ui/react";
+import { useToast, ToastPosition, Box, Text, Image as ChakraImage } from "@chakra-ui/react";
 import { FiCheckCircle, FiAlertCircle, FiInfo } from "react-icons/fi";
 import stores from "../../../store/stores";
 
@@ -43,7 +43,19 @@ const Notification = observer(() => {
               boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
             }}
           >
-            {getNotificationIcon(notification.type)}
+            {notification.image && (
+              <Box mr={3} boxSize="40px" flexShrink={0}>
+                <ChakraImage
+                  src={notification.image}
+                  alt=""
+                  w="100%"
+                  h="100%"
+                  objectFit="cover"
+                  borderRadius="md"
+                />
+              </Box>
+            )}
+            {!notification.image && getNotificationIcon(notification.type)}
             <Box>
               <Text fontWeight="bold" fontSize="lg">
                 {notification.title}

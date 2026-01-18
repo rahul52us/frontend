@@ -120,7 +120,7 @@ const ProductCard = ({ product }: any) => {
       <Box px={4} py={4} h="160px" display="flex" flexDir="column" justifyContent="space-between">
         <Box>
           <Text fontSize="xs" color="gray.600" fontWeight="medium" textTransform="uppercase" mb={2}>
-            {category}
+            {typeof category === 'object' ? category?.name : category}
           </Text>
           <Heading
             fontSize={{ base: "md", md: "lg" }}

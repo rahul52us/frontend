@@ -1,125 +1,71 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Box, HStack, Text, Image } from "@chakra-ui/react";
+import React from "react";
+import { Box, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
 import CustomTable from "../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import ProductForm from "../../dashboard/products/components/ProductForm";
+
+import { useProductList } from "./hooks/useProductList";
+import { useProductDelete } from "./hooks/useProductDelete";
+import { useProductEdit } from "./hooks/useProductEdit";
+import { ProductColumns } from "./components/ProductColumns";
 
 const SuperAdminProductsPage = observer(() => {
-    const { shopStore } = stores;
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    // Pagination states (even if backend doesn't fully support it yet, we prep the UI)
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalProducts, setTotalProducts] = useState(0);
+    const {
+        products,
+        loading,
+        currentPage,
+        totalPages,
+        totalProducts,
+        setCurrentPage,
+        fetchProducts
+    } = useProductList();
 
-    useEffect(() => {
-        fetchProducts(currentPage);
-    }, [currentPage]);
+    const {
+        isOpen: isDeleteOpen,
+        onClose: onDeleteClose,
+        selectedProduct,
+        isDeleting,
+        handleDeleteClick,
+        confirmDelete
+    } = useProductDelete(() => fetchProducts(currentPage));
 
-    const fetchProducts = (page: number) => {
-        setLoading(true);
-        shopStore
-            .getAllProducts({ limit: 10, page, company: null })
-            .then((res: any) => {
-                if (res?.data) {
-                    setProducts(res.data.products || []);
-                    setTotalProducts(res.data.total || 0);
-                    setTotalPages(res.data.totalPages || 1);
-                }
-            })
-            .catch((err: any) => {
-                console.error("Failed to fetch products:", err);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
-
-    const columns = [
-        {
-            headerName: "Product",
-            key: "name",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <HStack>
-                        <Box boxSize="40px" borderRadius="md" overflow="hidden" flexShrink={0}>
-                            {row.images && row.images[0] ? (
-                                <Image src={row.images[0]} alt={row.name} w="100%" h="100%" objectFit="cover" />
-                            ) : (
-                                <Box w="100%" h="100%" bg="gray.200" />
-                            )}
-                        </Box>
-                        <Text fontWeight="medium" noOfLines={2} title={row.name}>{row.name}</Text>
-                    </HStack>
-                ),
-            },
-            props: {
-                column: { minW: "200px" }
-            }
-        },
-        {
-            headerName: "Category",
-            key: "category",
-            type: "text",
-        },
-        {
-            headerName: "Shop",
-            key: "company",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    // If company is populated, show name, else show ID or --
-                    <Text>{row.company?.name || row.company || "--"}</Text>
-                )
-            }
-        },
-        {
-            headerName: "Price",
-            key: "price",
-            type: "component",
-            metaData: {
-                component: (row: any) => (
-                    <Text>₹{row.price}</Text>
-                )
-            }
-        },
-        {
-            headerName: "Action",
-            key: "action",
-            type: "table-actions",
-            props: {
-                isSticky: true,
-            }
-        }
-    ];
+    const {
+        isEditOpen,
+        onEditClose,
+        editProduct, // logic determines if editing based on this or just flag
+        handleEditClick,
+        handleSubmit,
+        initialValues,
+        ProductSchema,
+        activeCategories
+    } = useProductEdit(() => fetchProducts(currentPage));
 
     const tableActions = {
         actionBtn: {
             viewKey: {
                 showViewButton: true,
-                function: (row: any) => {
-                    console.log("View product", row)
+                function: () => {
+                    // View functionality
                 }
             },
             editKey: {
                 showEditButton: true,
                 function: (row: any) => {
-                    console.log("Edit product", row)
+                    handleEditClick(row);
                 }
             },
             deleteKey: {
                 showDeleteButton: true,
                 function: (row: any) => {
-                    console.log("Delete product", row)
+                    handleDeleteClick(row);
                 }
             }
         },
         pagination: {
-            show: true, // Hidden until backend supports it for this endpoint
+            show: true,
             currentPage: currentPage,
             totalPages: totalPages,
             onClick: (page: number) => setCurrentPage(page)
@@ -130,11 +76,37 @@ const SuperAdminProductsPage = observer(() => {
         <Box p={6}>
             <CustomTable
                 title={`All Products (${totalProducts})`}
-                columns={columns}
+                columns={ProductColumns}
                 data={products}
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
+            />
+
+            <ConfirmationModal
+                isOpen={isDeleteOpen}
+                onClose={onDeleteClose}
+                onConfirm={confirmDelete}
+                title="Confirm Delete"
+                message={
+                    <Text>
+                        Are you sure you want to delete the product <strong>{selectedProduct?.name}</strong>? This action cannot be undone.
+                    </Text>
+                }
+                confirmText="Delete"
+                confirmButtonProps={{ colorScheme: "red" }}
+                isLoading={isDeleting}
+                image={selectedProduct?.images?.[0]}
+            />
+
+            <ProductForm
+                isOpen={isEditOpen}
+                onClose={onEditClose}
+                initialValues={initialValues}
+                validationSchema={ProductSchema}
+                onSubmit={handleSubmit}
+                categories={activeCategories.filter(c => c !== "")}
+                isEdit={!!editProduct}
             />
         </Box>
     );

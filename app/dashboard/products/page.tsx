@@ -43,16 +43,7 @@ import ProductCard from "./components/ProductCard";
 import ProductForm from "./components/ProductForm";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 
-const activeCategories = [
-  "",
-  "Electronics",
-  "Clothing",
-  "Home & Garden",
-  "Sports",
-  "Toys",
-  "Health & Beauty",
-  "Automotive",
-];
+
 
 const ProductSchema = Yup.object().shape({
   name: Yup.string().required("Product Name is required"),
@@ -100,7 +91,7 @@ const ProductsPage = observer(() => {
   const [totalCount, setTotalCount] = useState(0);
   const [showInactive, setShowInactive] = useState(false);
 
-  const { shopStore, auth } = stores;
+  const { shopStore, auth, categoryStore } = stores;
 
   const triggerDelete = (product: any) => {
     setSelectedProduct(product);
@@ -174,6 +165,7 @@ const ProductsPage = observer(() => {
 
   useEffect(() => {
     fetchProducts(1);
+    categoryStore.getAllCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.company]);
 
@@ -202,13 +194,20 @@ const ProductsPage = observer(() => {
     selectedProduct && products.find((p) => p._id === selectedProduct)
       ? {
         ...products.find((p) => p._id === selectedProduct),
+        category: typeof products.find((p) => p._id === selectedProduct).category === 'object'
+          ? products.find((p) => p._id === selectedProduct).category?._id
+          : products.find((p) => p._id === selectedProduct).category,
+        subCategories: products.find((p) => p._id === selectedProduct).subCategories
+          ? products.find((p) => p._id === selectedProduct).subCategories.map((sub: any) =>
+            typeof sub === 'object' ? sub._id : sub
+          )
+          : [],
         images: products.find((p) => p._id === selectedProduct).images || [],
         productDetails: products.find((p) => p._id === selectedProduct).productDetails
           ? Object.entries(products.find((p) => p._id === selectedProduct).productDetails).map(
             ([key, value]) => ({ key, value })
           )
           : [],
-        subCategories: products.find((p) => p._id === selectedProduct).subCategories || [],
         information: products.find((p) => p._id === selectedProduct).information
           ? Object.entries(products.find((p) => p._id === selectedProduct).information).map(
             ([key, value]) => ({ key, value })
@@ -227,19 +226,11 @@ const ProductsPage = observer(() => {
         productDetails: [],
         information: [],
         images: [],
-         subCategories: [],
+        subCategories: [],
       };
 
   const handleSubmit = async (values: any, actions: any) => {
     try {
-      // const cleanImages = values.images.map((img: any) => {
-      //   if (img.buffer) {
-      //     const { preview, ...rest } = img;
-      //     return rest;
-      //   }
-      //   return img;
-      // });
-
       const cleanImages = values.images.map((img: any) => {
         if (!img?.buffer) return img;
 
@@ -392,9 +383,11 @@ const ProductsPage = observer(() => {
                   bg="gray.50"
                   border="none"
                 >
-                  {activeCategories.slice(1).map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  {categoryStore.categories
+                    .filter((cat: any) => !cat.parent)
+                    .map((cat: any) => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
                 </Select>
 
                 <Badge ml="auto" colorScheme="cyan" variant="subtle" fontSize="sm" px={3} py={1.5}>
@@ -514,7 +507,7 @@ const ProductsPage = observer(() => {
         initialValues={initialValues}
         validationSchema={ProductSchema}
         onSubmit={handleSubmit}
-        activeCategories={activeCategories.filter(c => c !== "")}
+        categories={categoryStore.categories}
         isEdit={!!selectedProduct}
       />
 

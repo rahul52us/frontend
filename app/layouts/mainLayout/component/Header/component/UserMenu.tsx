@@ -27,7 +27,9 @@ import {
   FiCreditCard,
   FiUser,
   FiLogOut,
+  FiGrid
 } from "react-icons/fi";
+
 
 const MotionMenuItem = motion(MenuItem);
 
@@ -44,6 +46,8 @@ const UserMenu = observer(() => {
     logout();
     router.push("/");
   };
+
+  const isSuperAdmin = user?.type === "superAdmin" || user?.role === "superAdmin" || (Array.isArray(user?.role) && user.role.includes("superAdmin"));
 
   const bg = useColorModeValue(
     "rgba(255,255,255,0.85)",
@@ -150,18 +154,29 @@ const UserMenu = observer(() => {
           </Box>
 
           {/* Menu Items */}
-          {renderItem("Your Wishlist", FiHeart, "red", onWishlistOpen)}
-          {renderItem("Your Orders", FiShoppingBag, "blue", () =>
+          {!isSuperAdmin && renderItem("Your Wishlist", FiHeart, "red", onWishlistOpen)}
+          {!isSuperAdmin && renderItem("Your Orders", FiShoppingBag, "blue", () =>
             router.push("/dashboard/orders")
           )}
-          {renderItem("Address Book", FiMapPin, "green", () =>
+          {!isSuperAdmin && renderItem("Address Book", FiMapPin, "green", () =>
             router.push("/dashboard/address")
           )}
-          {renderItem("Payment Methods", FiCreditCard, "purple", () =>
+          {!isSuperAdmin && renderItem("Payment Methods", FiCreditCard, "purple", () =>
             router.push("/dashboard/payments")
           )}
-          {renderItem("Seller Dashboard", FiUser, "orange", () =>
-            router.push("/dashboard")
+
+          {isSuperAdmin ? (
+            renderItem("Admin Dashboard", FiGrid, "orange", () =>
+              router.push("/super-admin/dashboard")
+            )
+          ) : (
+            renderItem("Seller Dashboard", FiUser, "orange", () =>
+              router.push("/dashboard")
+            )
+          )}
+
+          {isSuperAdmin && renderItem("Account Settings", FiUser, "red", () =>
+            router.push("/super-admin/account")
           )}
 
           <MenuDivider m={0} />
