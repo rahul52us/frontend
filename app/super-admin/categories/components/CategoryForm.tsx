@@ -28,6 +28,7 @@ const CategoryValidationSchema = Yup.object().shape({
     description: Yup.string(),
     parent: Yup.string().nullable(),
     isActive: Yup.boolean(),
+    isFeatured: Yup.boolean(),
 });
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -42,6 +43,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         formData.append("name", values.name);
         formData.append("description", values.description || "");
         formData.append("isActive", values.isActive);
+        formData.append("isFeatured", values.isFeatured);
         if (values.parent) {
             formData.append("parent", values.parent);
         }
@@ -68,6 +70,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         description: "",
         parent: "",
         isActive: true,
+        isFeatured: false,
         image: null,
     };
 
@@ -164,6 +167,21 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                                         </FormLabel>
                                         <Switch
                                             id="isActive"
+                                            {...field}
+                                            isChecked={field.value}
+                                        />
+                                    </FormControl>
+                                )}
+                            </Field>
+
+                            <Field name="isFeatured">
+                                {({ field }: any) => (
+                                    <FormControl display="flex" alignItems="center">
+                                        <FormLabel htmlFor="isFeatured" mb="0">
+                                            Show on Home Page?
+                                        </FormLabel>
+                                        <Switch
+                                            id="isFeatured"
                                             {...field}
                                             isChecked={field.value}
                                         />

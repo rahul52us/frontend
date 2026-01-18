@@ -20,7 +20,7 @@ const CategoryFilter = observer(() => {
 
   useEffect(() => {
     // Fetch all active categories (including subcategories)
-    categoryStore.getAllCategories({ isActive: true });
+    categoryStore.getAllCategories({ isActive: true, isFeatured: true });
   }, []);
 
   const handleCategoryClick = (category: any) => {
@@ -44,10 +44,6 @@ const CategoryFilter = observer(() => {
 
   // Fallback for empty categories if loading finishes but nothing is there
   if (!loading && (!categories || categories.length === 0)) return null;
-
-  // Function to determine if we should render. 
-  // If we only want to limit the display to 6, we slice here.
-  const displayCategories = categories.slice(0, 6);
 
   return (
     <Box
@@ -73,7 +69,7 @@ const CategoryFilter = observer(() => {
           '&::-webkit-scrollbar-thumb': { bg: 'gray.300', borderRadius: 'full' },
         }}
       >
-        {displayCategories.map((category) => (
+        {categories.map((category) => (
           <Box
             key={category._id}
             onClick={() => handleCategoryClick(category)}
