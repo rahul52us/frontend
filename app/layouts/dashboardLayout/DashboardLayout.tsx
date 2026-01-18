@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
 import styled from 'styled-components';
@@ -35,6 +35,16 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
       localStorage.setItem('activeComponentName', item.id);
     }
   };
+  const headerBackgroundColor = useColorModeValue(
+    themeConfig.colors.custom.light.primary,
+    themeConfig.colors.custom.dark.primary
+  );
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,10 +59,18 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     };
   }, [isCallapse, openDashSidebarFun]);
 
+  if (!isMounted) {
+    return (
+      <PageLoader loading={true}>
+        <Spinner />
+      </PageLoader>
+    );
+  }
+
   return user ? (
     <Box
     >
-      <MainContainer isMobile={isMobile}>
+      <MainContainer $isMobile={isMobile}>
         <Box ref={sidebarRef}>
           <SidebarLayout
             onItemClick={handleSidebarItemClick}
@@ -62,27 +80,24 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             setOpenMobileSideDrawer={closeDrawerModel}
           />
         </Box>
-        <Container fullScreenMode={fullScreenMode}>
+        <Container $fullScreenMode={fullScreenMode}>
           <HeaderContainer
-            isMobile={isMobile}
-            sizeStatus={sizeStatus}
-            mediumScreenMode={mediumScreenMode}
-            fullScreenMode={fullScreenMode}
-            backgroundColor={useColorModeValue(
-              themeConfig.colors.custom.light.primary,
-              themeConfig.colors.custom.dark.primary
-            )}
+            $isMobile={isMobile}
+            $sizeStatus={sizeStatus}
+            $mediumScreenMode={mediumScreenMode}
+            $fullScreenMode={fullScreenMode}
+            $backgroundColor={headerBackgroundColor}
           >
             <HeaderLayout />
           </HeaderContainer>
           <ContentContainer
-            isMobile={isMobile}
-            mediumScreenMode={mediumScreenMode}
+            $isMobile={isMobile}
+            $mediumScreenMode={mediumScreenMode}
             className={
               fullScreenMode ? 'fullscreen' : mediumScreenMode ? 'mediumScreen' : ''
             }
-            fullScreenMode={fullScreenMode}
-            sizeStatus={sizeStatus}
+            $fullScreenMode={fullScreenMode}
+            $sizeStatus={sizeStatus}
           >
             {children}
           </ContentContainer>
@@ -92,7 +107,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     </Box>
   ) : (
     <PageLoader loading={true}>
-    <Spinner />
+      <Spinner />
     </PageLoader>
     // <RedirectComponent />
   );
@@ -100,46 +115,46 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
 
 export default DashboardLayout;
 
-const MainContainer = styled.div<{ isMobile: boolean }>`
+const MainContainer = styled.div<{ $isMobile: boolean }>`
   display: flex;
   transition: all 0.3s ease-in-out;
   overflow: hidden;
-  margin-left: ${(props) => (props.isMobile ? '0px' : mediumSidebarWidth)};
+  margin-left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
 `;
 
-const Container = styled.div<{ fullScreenMode: boolean }>`
+const Container = styled.div<{ $fullScreenMode: boolean }>`
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease-in-out;
 `;
 
 const HeaderContainer = styled.div<{
-  fullScreenMode: boolean;
-  sizeStatus: boolean;
-  mediumScreenMode: boolean;
-  backgroundColor: string;
-  isMobile: boolean;
+  $fullScreenMode: boolean;
+  $sizeStatus: boolean;
+  $mediumScreenMode: boolean;
+  $backgroundColor: string;
+  $isMobile: boolean;
 }>`
   z-index: 99;
   height: ${headerHeight};
   position: fixed;
   top: 0;
   right: 0;
-  background-color: ${(props) => props.backgroundColor};
-  left: ${(props) => (props.isMobile ? '0px' : mediumSidebarWidth)};
+  background-color: ${(props) => props.$backgroundColor};
+  left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
   transition: all 0.3s ease-in-out;
 `;
 
 const ContentContainer = styled.div<{
-  sizeStatus: boolean;
-  fullScreenMode: boolean;
-  mediumScreenMode: boolean;
-  isMobile: boolean;
+  $sizeStatus: boolean;
+  $fullScreenMode: boolean;
+  $mediumScreenMode: boolean;
+  $isMobile: boolean;
 }>`
-  padding: ${({ isMobile }) =>
-    isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
-  width: ${({ isMobile }) =>
-    isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
+  padding: ${({ $isMobile }) =>
+    $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
+  width: ${({ $isMobile }) =>
+    $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
   overflow-x: hidden;
   height: calc(100vh - ${headerHeight});
   transition: all 0.3s ease-in-out;

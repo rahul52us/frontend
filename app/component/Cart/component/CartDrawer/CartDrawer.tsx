@@ -72,7 +72,10 @@ const CartDrawer = observer(
     };
 
     const totalAmount = cartStore.cartItems.reduce(
-      (sum, item) => sum + Number(item.product.price) * item.quantity,
+      (sum, item) => {
+        if (!item.product || !item.product.price) return sum;
+        return sum + Number(item.product.price) * item.quantity;
+      },
       0
     );
 
@@ -148,29 +151,31 @@ const CartDrawer = observer(
                 </Flex>
               ) : (
                 <VStack spacing={3} align="stretch">
-                  {cartStore.cartItems.map((item) => (
-                    <Box
-                      key={item.product._id || item.product.id}
-                      bg="white"
-                      rounded="lg"
-                      p={3}
-                      boxShadow="sm"
-                    >
-                      <CartItem
-                        item={{
-                          id: item.product._id || item.product.id,
-                          name: item.product.name,
-                          image:
-                            item.product.image ||
-                            item.product.images?.[0] ||
-                            "",
-                          price: item.product.price,
-                          quantity: item.quantity,
-                        }}
-                        updateQuantity={cartStore.updateQuantity}
-                      />
-                    </Box>
-                  ))}
+                  {cartStore.cartItems
+                    .filter(item => item.product) // Filter out items with deleted products
+                    .map((item) => (
+                      <Box
+                        key={item.product._id || item.product.id}
+                        bg="white"
+                        rounded="lg"
+                        p={3}
+                        boxShadow="sm"
+                      >
+                        <CartItem
+                          item={{
+                            id: item.product._id || item.product.id,
+                            name: item.product.name,
+                            image:
+                              item.product.image ||
+                              item.product.images?.[0] ||
+                              "",
+                            price: item.product.price,
+                            quantity: item.quantity,
+                          }}
+                          updateQuantity={cartStore.updateQuantity}
+                        />
+                      </Box>
+                    ))}
                 </VStack>
               )}
             </DrawerBody>

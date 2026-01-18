@@ -22,6 +22,7 @@ import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
 import { FiShoppingCart, FiHeart, FiShoppingBag, FiMapPin, FiCreditCard, FiUser, FiLogOut } from "react-icons/fi";
+import { useEffect, useState } from "react";
 
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
@@ -40,6 +41,12 @@ const Header = observer(() => {
     auth: { user, logout },
     cartStore,
   } = stores;
+
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -134,7 +141,7 @@ const Header = observer(() => {
 
               <Box px={4}>
 
-                {user && (
+                {isMounted && user && (
                   <Box mt={6} borderTop="1px solid" borderColor="gray.100" pt={2}>
                     <Text fontSize="xs" fontWeight="bold" color="gray.400" mb={3} textTransform="uppercase" letterSpacing="wider">
                       My Account
@@ -181,7 +188,7 @@ const Header = observer(() => {
                   </Box>
                 )}
 
-                {!user && (
+                {(!isMounted || !user) && (
                   <Box mt={6}>
                     <HeroNavButton />
                   </Box>
@@ -224,7 +231,7 @@ const Header = observer(() => {
             <NavItemsLayout />
 
             {/* ✅ Notification (ONLY when logged in) */}
-            {user && <NotificationBell count={2} />}
+            {isMounted && user && <NotificationBell count={2} />}
 
             {/* Cart */}
             <Box
@@ -258,7 +265,7 @@ const Header = observer(() => {
               )}
             </Box>
 
-            {user ? <UserMenu /> : <HeroNavButton />}
+            {isMounted && user ? <UserMenu /> : <HeroNavButton />}
           </Flex>
         </Flex>
       </Box>

@@ -143,7 +143,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             borderRadius="md"
             textTransform="uppercase"
           >
-            {product.category}
+            {typeof product.category === 'object' ? product.category.name : product.category}
           </Badge>
 
           {product.brand && (
@@ -161,9 +161,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           return (
             <HStack spacing={1} mt={1}>
-              {product.subCategories.slice(0, maxShow).map(sub => (
+              {product.subCategories.slice(0, maxShow).map((sub: any) => (
                 <Badge
-                  key={sub}
+                  key={typeof sub === 'object' ? sub._id : sub}
                   variant="outline"
                   colorScheme="teal"
                   fontSize="xx-small"
@@ -171,7 +171,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   py={0.5}
                   borderRadius="md"
                 >
-                  {sub}
+                  {typeof sub === 'object' ? sub.name : sub}
                 </Badge>
               ))}
               {extraCount > 0 && (
