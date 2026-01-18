@@ -355,7 +355,9 @@ const SearchInput = observer(() => {
                               </Text>
                             </>
                           )}
-                          <Text as="span" fontSize="sm" color="gray.500" fontWeight="medium">{result.category}</Text>
+                          <Text as="span" fontSize="sm" color="gray.500" fontWeight="medium">
+                            {typeof result.category === 'object' ? result.category?.name : result.category}
+                          </Text>
                         </Flex>
                       </VStack>
                     </Flex>
