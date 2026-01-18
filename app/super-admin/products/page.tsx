@@ -105,7 +105,7 @@ const SuperAdminProductsPage = observer(() => {
                 initialValues={initialValues}
                 validationSchema={ProductSchema}
                 onSubmit={handleSubmit}
-                activeCategories={activeCategories.filter(c => c !== "")}
+                categories={activeCategories.filter(c => c !== "")}
                 isEdit={!!editProduct}
             />
         </Box>
