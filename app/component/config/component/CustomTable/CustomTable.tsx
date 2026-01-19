@@ -262,6 +262,7 @@ const GenerateRows: React.FC<{
         </Td>
       );
     default:
+      const cellValue = row[column.key];
       return (
         <Td
           whiteSpace="normal"
@@ -271,7 +272,11 @@ const GenerateRows: React.FC<{
           {...cellProps}
           isTruncated={true}
         >
-          {row[column.key] || "--"}
+          {React.isValidElement(cellValue)
+            ? cellValue
+            : (typeof cellValue === 'object' && cellValue !== null)
+              ? JSON.stringify(cellValue)
+              : (cellValue || "--")}
         </Td>
       );
   }
@@ -509,7 +514,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       row={row}
                       action={actions}
                       cells={cells}
-                      // border="none" // No border on cells
+                    // border="none" // No border on cells
                     />
                   ))}
                 </Tr>

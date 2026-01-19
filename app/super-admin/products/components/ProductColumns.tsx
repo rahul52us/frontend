@@ -26,7 +26,19 @@ export const ProductColumns = [
     {
         headerName: "Category",
         key: "category",
-        type: "text",
+        type: "component",
+        metaData: {
+            component: (row: any) => (
+                <Box>
+                    <Text fontWeight="bold">{row.category?.name || "--"}</Text>
+                    {row.subCategories && row.subCategories.length > 0 && (
+                        <Text fontSize="xs" color="gray.500">
+                            {row.subCategories.map((sub: any) => sub.name).join(", ")}
+                        </Text>
+                    )}
+                </Box>
+            )
+        }
     },
     {
         headerName: "Shop",

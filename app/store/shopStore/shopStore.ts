@@ -6,6 +6,8 @@ class ShopStore {
     data: [],
     totalPages: 1
   }
+  productsCache: any = null;
+  lastProductsPayload: string | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -81,6 +83,8 @@ class ShopStore {
   deleteProduct = async (id: string) => {
     try {
       const response = await axios.delete(`/product/delete/${id}`);
+      this.productsCache = null; // Invalidate cache
+      this.lastProductsPayload = null;
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
@@ -90,6 +94,8 @@ class ShopStore {
   updateProduct = async (id: string, sendData: any) => {
     try {
       const response = await axios.put(`/product/update/${id}`, sendData);
+      this.productsCache = null; // Invalidate cache
+      this.lastProductsPayload = null;
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
@@ -105,10 +111,18 @@ class ShopStore {
     }
   };
 
-  getAllProducts = async (sendData: any) => {
+  getAllProducts = async (sendData: any, forceRefresh: boolean = false) => {
+    const currentPayload = JSON.stringify(sendData);
+
+    if (!forceRefresh && this.productsCache && this.lastProductsPayload === currentPayload) {
+      return this.productsCache;
+    }
+
     this.shop.loading = true;
     try {
       const response = await axios.post(`/product`, sendData);
+      this.productsCache = response.data;
+      this.lastProductsPayload = currentPayload;
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);

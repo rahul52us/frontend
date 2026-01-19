@@ -5,12 +5,24 @@ class CategoryStore {
     categories: any[] = [];
     loading: boolean = false;
     totalCategories: number = 0;
+    categoriesCache: any = null;
+    lastCategoriesPayload: string | null = null;
 
     constructor() {
         makeAutoObservable(this);
     }
 
-    getAllCategories = async (params: any = {}) => {
+    getAllCategories = async (params: any = {}, forceRefresh: boolean = false) => {
+        const currentPayload = JSON.stringify(params);
+
+        if (!forceRefresh && this.categoriesCache && this.lastCategoriesPayload === currentPayload) {
+            runInAction(() => {
+                this.categories = this.categoriesCache.data;
+                this.totalCategories = this.categoriesCache.data.length;
+            });
+            return this.categoriesCache;
+        }
+
         this.loading = true;
         try {
             const response = await axios.get("/category", { params });
@@ -18,6 +30,8 @@ class CategoryStore {
                 if (response.data.status === "success") {
                     this.categories = response.data.data;
                     this.totalCategories = response.data.data.length;
+                    this.categoriesCache = response.data;
+                    this.lastCategoriesPayload = currentPayload;
                 }
             });
             return response.data;
@@ -42,6 +56,8 @@ class CategoryStore {
             });
             runInAction(() => {
                 if (response.data.status === "success") {
+                    this.categoriesCache = null; // Invalidate cache
+                    this.lastCategoriesPayload = null;
                     this.getAllCategories();
                 }
             });
@@ -67,6 +83,8 @@ class CategoryStore {
             });
             runInAction(() => {
                 if (response.data.status === "success") {
+                    this.categoriesCache = null; // Invalidate cache
+                    this.lastCategoriesPayload = null;
                     this.getAllCategories();
                 }
             });
@@ -89,6 +107,8 @@ class CategoryStore {
             runInAction(() => {
                 if (response.data.status === "success") {
                     this.categories = this.categories.filter((c) => c._id !== id);
+                    this.categoriesCache = null; // Invalidate cache
+                    this.lastCategoriesPayload = null;
                 }
             });
             return response.data;
