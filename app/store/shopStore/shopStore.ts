@@ -8,13 +8,23 @@ class ShopStore {
   }
   productsCache: any = null;
   lastProductsPayload: string | null = null;
+  shopsCache: any = null;
+  lastShopsPayload: string | null = null;
+  allShopProductsCache: any = null;
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  getAllShops = async (sendData: any) => {
+  getAllShops = async (sendData: any, forceRefresh: boolean = false) => {
     const { page = 1 } = sendData;
+    const currentPayload = JSON.stringify(sendData);
+
+    if (!forceRefresh && this.shopsCache && this.lastShopsPayload === currentPayload) {
+      const response = this.shopsCache;
+      return response;
+    }
+
     this.shop.loading = true;
 
     try {
@@ -30,6 +40,10 @@ class ShopStore {
       this.shop.totalPages = response?.data?.data?.totalPages || 1;
       this.shop.totalCount = response?.data?.data?.total || 0;
       this.shop.currentPage = page;
+
+      // Update Cache
+      this.shopsCache = response;
+      this.lastShopsPayload = currentPayload;
 
       return response;
     } catch (err: any) {
@@ -50,9 +64,13 @@ class ShopStore {
     }
   };
 
-  getAllShopProducts = async () => {
+  getAllShopProducts = async (forceRefresh: boolean = false) => {
+    if (!forceRefresh && this.allShopProductsCache) {
+      return this.allShopProductsCache;
+    }
     try {
       const response = await axios.get(`/product/allproducts`);
+      this.allShopProductsCache = response.data;
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
@@ -83,8 +101,9 @@ class ShopStore {
   deleteProduct = async (id: string) => {
     try {
       const response = await axios.delete(`/product/delete/${id}`);
-      this.productsCache = null; // Invalidate cache
+      this.productsCache = null; // Invalidate list cache
       this.lastProductsPayload = null;
+      this.allShopProductsCache = null; // Invalidate home page products cache
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
@@ -94,8 +113,9 @@ class ShopStore {
   updateProduct = async (id: string, sendData: any) => {
     try {
       const response = await axios.put(`/product/update/${id}`, sendData);
-      this.productsCache = null; // Invalidate cache
+      this.productsCache = null; // Invalidate list cache
       this.lastProductsPayload = null;
+      this.allShopProductsCache = null; // Invalidate home page products cache
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
