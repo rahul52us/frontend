@@ -10,6 +10,7 @@ import {
     Box,
     Select,
     Switch,
+    useToast,
 } from "@chakra-ui/react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -37,6 +38,16 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     initialValues,
 }) => {
     const { categoryStore } = stores;
+    const toast = useToast();
+    const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [previewUrl]);
 
     const handleSubmit = async (values: any, { setSubmitting }: any) => {
         const formData = new FormData();
@@ -60,18 +71,35 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         }
 
         if (res.status === "success") {
+            toast({
+                title: initialValues?._id ? "Category Updated" : "Category Created",
+                description: initialValues?._id
+                    ? "The category has been successfully updated."
+                    : "The new category has been successfully created.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
             onClose();
+        } else {
+            toast({
+                title: "Error",
+                description: res.message || "Something went wrong",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         }
         setSubmitting(false);
     };
 
-    const formValues = initialValues || {
-        name: "",
-        description: "",
-        parent: "",
-        isActive: true,
-        isFeatured: false,
-        image: null,
+    const formValues = {
+        name: initialValues?.name || "",
+        description: initialValues?.description || "",
+        parent: initialValues?.parent?._id || initialValues?.parent || "",
+        isActive: initialValues?.isActive ?? true,
+        isFeatured: initialValues?.isFeatured ?? false,
+        image: initialValues?.image || null,
     };
 
     // Ensure parents are loaded for the dropdown
@@ -147,16 +175,25 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                                     type="file"
                                     accept="image/*"
                                     onChange={(event: any) => {
-                                        props.setFieldValue("image", event.currentTarget.files[0]);
+                                        const file = event.currentTarget.files[0];
+                                        props.setFieldValue("image", file);
+                                        if (file) {
+                                            setPreviewUrl(URL.createObjectURL(file));
+                                        }
                                     }}
                                     pt={1}
                                 />
-                                {initialValues?.image?.url && (
-                                    <Box mt={2} w="100px">
+                                {previewUrl ? (
+                                    <Box mt={2} w="100px" h="100px" borderRadius="md" overflow="hidden">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={initialValues.image.url} alt="Current" />
+                                        <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     </Box>
-                                )}
+                                ) : initialValues?.image?.url ? (
+                                    <Box mt={2} w="100px" h="100px" borderRadius="md" overflow="hidden">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={initialValues.image.url} alt="Current" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </Box>
+                                ) : null}
                             </FormControl>
 
                             <Field name="isActive">
