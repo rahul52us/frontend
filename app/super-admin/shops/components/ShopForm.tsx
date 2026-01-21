@@ -62,7 +62,8 @@ const ShopForm: React.FC<ShopFormProps> = ({
             title={isEdit ? "Edit Shop" : "Add New Shop"}
             open={isOpen}
             close={onClose}
-            width="50vw" // Changed size to width
+            // width="50vw" // Changed size to width
+            width="80%"
         >
             <Formik
                 initialValues={initialValues}
