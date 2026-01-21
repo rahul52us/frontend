@@ -19,7 +19,7 @@ import { useCartToast } from "../../../../hooks/useCartToast";
 
 const ProductCard = ({ product }: any) => {
   const router = useRouter();
-  const { image, images, category, name, price, _id } = product;
+  const { image, images, category, name, price, _id, productId } = product;
   const displayImage = image || (images && images.length > 0 ? images[0] : "");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedImage, setSelectedImage] = useState<any>([]);
@@ -127,7 +127,7 @@ const ProductCard = ({ product }: any) => {
             fontWeight="semibold"
             minH="40px"
             cursor="pointer"
-            onClick={() => router.push(`/product/${_id}`)}
+            onClick={() => router.push(`/product/${productId || _id}`)}
             noOfLines={2}
             color="gray.900"
             _hover={{ color: "purple.700" }}

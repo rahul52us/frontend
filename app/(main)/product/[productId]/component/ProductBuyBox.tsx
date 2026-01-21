@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import stores from '../../../../store/stores';
 import CouponOffers from '../../../individual-product/component/CouponOffers.tsx/CouponOffers';
 import { CheckCircleIcon } from '@chakra-ui/icons';
+import ProductLikeButton from '../../../products/components/ProductCard/ProductLikeButton';
 
 const ProductBuyBox = observer(({ product }: { product: any }) => {
     const { cartStore } = stores;
@@ -133,6 +134,10 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
                 >
                     Buy Now
                 </Button>
+                <Flex w="full" justify="center" align="center" gap={2} pt={2}>
+                    <ProductLikeButton product={product} />
+                    <Text fontSize="sm" fontWeight="medium" color="gray.600">Add to Wishlist</Text>
+                </Flex>
             </VStack>
             <Flex align="center" gap={2} mt={4} fontSize="xs" color="gray.500" justify="center">
                 <Text>Secure Transaction</Text>

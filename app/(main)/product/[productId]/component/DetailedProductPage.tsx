@@ -20,7 +20,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
 
     const bgColor = useColorModeValue("white", "gray.800");
     const textColor = useColorModeValue("gray.800", "white");
-    const accentColor = "purple.500";
+    const accentColor = "grey.500";
     const spinnerBg = useColorModeValue("gray.50", "gray.900");
     const borderColor = useColorModeValue("gray.200", "gray.700");
     const imageBoxBg = useColorModeValue("gray.50", "gray.700");
@@ -38,8 +38,14 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
 
                     // Fetch related products after product load
                     if (res.data?.category) {
+                        const subCategories = res.data.subCategories;
+                        const subCategory = Array.isArray(subCategories) && subCategories.length > 0
+                            ? (subCategories[0]._id || subCategories[0])
+                            : undefined;
+
                         const relatedRes = await shopStore.searchGlobalProducts({
-                            category: res.data.category,
+                            category: res.data.category?._id || res.data.category,
+                            subCategory,
                             excludeId: res.data._id,
                             limit: 5
                         });
