@@ -23,7 +23,7 @@ const CategoriesPage = observer(() => {
     const { categories, loading } = categoryStore;
 
     useEffect(() => {
-        categoryStore.getAllCategories({ isActive: true, parent: 'null' }); // Fetch only root categories
+        categoryStore.getAllCategories({ isActive: true }); // Fetch all categories including subcategories
     }, []);
 
     if (loading && categories.length === 0) {

@@ -20,6 +20,7 @@ export const navItems = [
             { title: "Toys", link: "/categories/toys" },
             { title: "Health & Beauty", link: "/categories/healthbeauty" },
             { title: "Automotive", link: "/categories/automotive" },
+            { title: "Show All", link: "/categories" },
         ],
     },
 ];
