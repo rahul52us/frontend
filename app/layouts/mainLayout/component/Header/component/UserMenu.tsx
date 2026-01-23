@@ -169,9 +169,13 @@ const UserMenu = observer(() => {
             renderItem("Admin Dashboard", FiGrid, "orange", () =>
               router.push("/super-admin/dashboard")
             )
-          ) : (
+          ) : user?.type === "seller" ? (
             renderItem("Seller Dashboard", FiUser, "orange", () =>
               router.push("/dashboard")
+            )
+          ) : (
+            renderItem("Become a Seller", FiUser, "green", () =>
+              router.push("/become-seller")
             )
           )}
 

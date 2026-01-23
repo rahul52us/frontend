@@ -19,6 +19,42 @@ import {
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import { removeDataByIndex } from "../../../config/utils/utils";
+import { useEffect, useState } from "react";
+import { observer } from "mobx-react-lite";
+import stores from "../../../store/stores";
+import { Checkbox, CheckboxGroup, Stack, Spinner } from "@chakra-ui/react";
+
+const CategorySelector = observer(({ values, setFieldValue, errors, showError }) => {
+  const { categoryStore } = stores;
+  const { categories, loading, getAllCategories } = categoryStore;
+
+  useEffect(() => {
+    getAllCategories();
+  }, []);
+
+  const handleChange = (selected) => {
+    setFieldValue("categories", selected);
+  };
+
+  if (loading && categories.length === 0) return <Spinner size="sm" />;
+
+  return (
+    <Box>
+      <CheckboxGroup colorScheme="blue" value={values.categories || []} onChange={handleChange}>
+        <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
+          {categories.map((cat) => (
+            <Checkbox key={cat._id} value={cat.name}>
+              {cat.name}
+            </Checkbox>
+          ))}
+        </SimpleGrid>
+      </CheckboxGroup>
+      {showError && errors.categories && (
+        <Text color="red.500" fontSize="xs" mt={1}>{errors.categories}</Text>
+      )}
+    </Box>
+  );
+});
 
 // Card layout with header and clean solid colors
 const SectionCard = ({ icon, title, description, children }) => {
@@ -150,15 +186,13 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
           />
         </Box>
         <Box mt={4}>
-          <CustomInput
-            label="Categories"
-            name="categories"
-            placeholder="Add Category"
-            required
-            type="tags"
-            error={errors.categories}
-            value={values.categories}
-            onChange={(e) => setFieldValue("categories", e)}
+          <Text mb={2} fontWeight="medium" fontSize="sm">
+            Categories
+          </Text>
+          <CategorySelector
+            values={values}
+            setFieldValue={setFieldValue}
+            errors={errors}
             showError={showError}
           />
         </Box>

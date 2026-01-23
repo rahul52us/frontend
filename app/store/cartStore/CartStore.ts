@@ -16,11 +16,8 @@ class CartStore {
 
     constructor() {
         makeAutoObservable(this);
-        if (typeof window !== "undefined") {
-            if (!this.isLoggedIn) {
-                this.fetchCart();
-            }
-        }
+        // Cart will be fetched explicitly when needed (Header, Cart page, Checkout)
+        // Removed auto-fetch to prevent unnecessary API calls on every page load
     }
 
     get isLoggedIn() {
@@ -34,7 +31,12 @@ class CartStore {
         return this.cartItems.reduce((total, item) => total + item.quantity, 0);
     }
 
-    fetchCart = async () => {
+    fetchCart = async (forceRefresh: boolean = false) => {
+        // Skip if cart already loaded and user hasn't changed (prevent double fetch)
+        if (!forceRefresh && this.cartItems.length > 0 && this.isLoggedIn) {
+            return;
+        }
+
         this.loading = true;
         try {
             if (this.isLoggedIn) {
@@ -71,10 +73,14 @@ class CartStore {
                         product: item.product,
                         quantity: item.quantity
                     }));
+                } else {
+                    this.cartItems = [];
                 }
             });
         } catch (err: any) {
-            alert(err?.message)
+            // alert(err?.message)
+            // Silently fail or log, don't alert on every page load if cart fails
+            console.error(err);
         }
     };
 

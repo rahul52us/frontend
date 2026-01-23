@@ -241,6 +241,9 @@ class AuthStore {
     if (typeof window !== "undefined") {
       localStorage.removeItem(AUTH_TOKEN);
     }
+
+    // Clear cart to prevent next user seeing previous user's items
+    stores.cartStore.clearCart();
   };
 }
 

@@ -2,6 +2,7 @@
 // - Static sidebar on all screens
 // - Save Section button per step
 // - Clean buttons
+// - Supports both CREATE (POST) and UPDATE (PUT)
 
 "use client";
 
@@ -33,7 +34,7 @@ import ContactInfoSection from "./ContactInfoSection";
 import OperatingHoursSection from "./OperatingHoursSection";
 import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { dummyData } from "./utils/constant";
 import {
   FaStore,
@@ -102,10 +103,10 @@ const SectionHeader = ({ activeSection, sections }) => {
               fontWeight="bold"
               color="gray.800"
             >
-              Build Your Shop
+              Building Your Shop
             </Heading>
             <Text fontSize="sm" color="gray.500">
-              Section {activeSection + 1} — {sections[activeSection]?.title}
+              {sections[activeSection]?.title}
             </Text>
           </VStack>
         </HStack>
@@ -134,14 +135,16 @@ const ShopForm = observer(() => {
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isUpdateMode, setIsUpdateMode] = useState(false); // Track mode
 
   const {
-    companyStore: { updateCompanyDetails },
+    companyStore: { updateCompanyDetails, createCompany },
     auth: { openNotification, user },
     shopStore: { getSingleShop },
   } = stores;
 
   const { shopTitle } = useParams();
+  const router = useRouter();
 
   const sections = [
     { title: "Shop Details", icon: FaStore, component: ShopDetailsSection },
@@ -154,14 +157,25 @@ const ShopForm = observer(() => {
 
   useEffect(() => {
     const fetchShopData = async () => {
+      // If user has no company linked, assume creation mode
+      if (!user?.company) {
+        setIsUpdateMode(false);
+        setLoading(false);
+        return;
+      }
+
+      // If user has company, fetch data and switch to update mode
       try {
         const data = await getSingleShop({
           title: user?.company?.name,
           status: user?.company?.shopStatus,
         });
 
-        if (!data?.data) setError("Shop not found");
-        else {
+        if (!data?.data) {
+          // Fallback to creation mode if not found (shouldn't happen if user.company exists, but safe fallback)
+          setIsUpdateMode(false);
+        } else {
+          setIsUpdateMode(true);
           const coverImage = data.data.coverImage?.url ? { file: [data.data.coverImage] } : { file: [] };
           const logo = data.data.logo?.url ? { file: [data.data.logo] } : { file: [] };
           const gallery = Array.isArray(data.data.gallery)
@@ -171,14 +185,18 @@ const ShopForm = observer(() => {
           setInitialValues((prev) => ({ ...prev, ...data.data, coverImage, logo, gallery }));
         }
       } catch {
-        setError("Failed to fetch shop data.");
+        // If error (e.g. 404), assume creation mode is safer than blocking
+        setIsUpdateMode(false);
+        // setError("Failed to fetch shop data."); 
       } finally {
         setLoading(false);
       }
     };
 
-    fetchShopData();
-  }, [shopTitle, getSingleShop, user?.company?.name, user?.company?.shopStatus]);
+    if (user) {
+      fetchShopData();
+    }
+  }, [shopTitle, getSingleShop, user, user?.company]);
 
   const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
@@ -218,11 +236,21 @@ const ShopForm = observer(() => {
 
       formData.gallery = updatedGallery.filter(Boolean);
 
-      await updateCompanyDetails({ ...formData, _id: user?.company?._id, shopStatus: "active" });
-      openNotification({ title: "Success", message: "Shop saved", type: "success" });
+      if (isUpdateMode) {
+        await updateCompanyDetails({ ...formData, _id: user?.company?._id, shopStatus: "active" });
+        openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
+      } else {
+        // CREATE MODE - Remove _id from dummy data
+        const { _id, ...createData } = formData;
+        await createCompany({ ...createData, userId: user?._id });
+        openNotification({ title: "Congratulations!", message: "Shop created successfully!", type: "success" });
+        // Hard reload or redirect to ensure user state is refreshed
+        window.location.reload();
+      }
+
     } catch (err) {
       openNotification({
-        title: "Update Failed",
+        title: isUpdateMode ? "Update Failed" : "Creation Failed",
         message: err?.data?.message || "Something went wrong",
         type: getStatusType(err.status || 500),
       });
@@ -241,12 +269,14 @@ const ShopForm = observer(() => {
         <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200">
           <VStack align="stretch" spacing={3} px={2}>
             <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
-              Form Sections
+              {isUpdateMode ? "Edit Sections" : "Creation Steps"}
             </Text>
             <Divider borderColor="gray.300" mb={2} />
 
             {sections.map((section, index) => {
               const isActive = activeSection === index;
+              // Disable navigation in creation mode to force linear flow
+              const isDisabled = !isUpdateMode && index > activeSection;
 
               return (
                 <Button
@@ -265,10 +295,11 @@ const ShopForm = observer(() => {
                     bg: "blue.100",
                   }}
                   size="md"
-                  onClick={() => setActiveSection(index)}
+                  onClick={() => !isDisabled && setActiveSection(index)}
                   borderRadius="md"
                   px={3}
                   py={2}
+                  isDisabled={isDisabled}
                   transition="all 0.2s ease"
                 >
                   {section.title}
@@ -297,58 +328,65 @@ const ShopForm = observer(() => {
             enableReinitialize
             onSubmit={onSubmit}
           >
-            {({ values, errors, setFieldValue, isSubmitting, submitForm }) => (
-              <Form>
-                <VStack spacing={4} align="stretch">
-                  <SectionHeader activeSection={activeSection} sections={sections} />
-                  {sections[activeSection].component({ values, errors, setFieldValue, showError })}
+            {({ values, errors, setFieldValue, isSubmitting, submitForm }) => {
+              // Debug validation errors
+              if (Object.keys(errors).length > 0 && showError) {
+                console.log("Validation Errors:", errors);
+              }
 
-                  {/* Inline Save Section */}
-                  <Flex justify="flex-end">
-                    <Button
-                      size="sm"
-                      colorScheme="teal"
-                      variant="outline"
-                      isLoading={isSubmitting}
-                      onClick={() => {
-                        setShowError(true);
-                        submitForm();
-                      }}
-                    >
-                      Save Section
-                    </Button>
-                  </Flex>
+              return (
+                <Form>
+                  <VStack spacing={4} align="stretch">
+                    <SectionHeader activeSection={activeSection} sections={sections} />
+                    {sections[activeSection].component({ values, errors, setFieldValue, showError })}
 
-                  {/* Navigation */}
-                  <Flex justify="space-between" pt={4}>
-                    <Button
-                      onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
-                      isDisabled={activeSection === 0}
-                      variant="outline"
-                    >
-                      Previous
-                    </Button>
-                    {activeSection < sections.length - 1 ? (
+                    {/* Inline Save Section */}
+                    <Flex justify="flex-end">
                       <Button
-                        onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
-                        colorScheme="blue"
-                      >
-                        Next
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
+                        size="sm"
+                        colorScheme="teal"
+                        variant="outline"
                         isLoading={isSubmitting}
-                        colorScheme="blue"
-                        onClick={() => setShowError(true)}
+                        onClick={() => {
+                          setShowError(true);
+                          submitForm();
+                        }}
                       >
-                        Save Shop
+                        Save Section
                       </Button>
-                    )}
-                  </Flex>
-                </VStack>
-              </Form>
-            )}
+                    </Flex>
+
+                    {/* Navigation */}
+                    <Flex justify="space-between" pt={4}>
+                      <Button
+                        onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
+                        isDisabled={activeSection === 0}
+                        variant="outline"
+                      >
+                        Previous
+                      </Button>
+                      {activeSection < sections.length - 1 ? (
+                        <Button
+                          onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
+                          colorScheme="blue"
+                        >
+                          Next
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          isLoading={isSubmitting}
+                          colorScheme="blue"
+                          onClick={() => setShowError(true)}
+                        >
+                          {isUpdateMode ? "Save Shop" : "Create Shop"}
+                        </Button>
+                      )}
+                    </Flex>
+                  </VStack>
+                </Form>
+              );
+            }}
           </Formik>
         </Box>
       </Flex>

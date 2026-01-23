@@ -107,8 +107,10 @@ const LoginForm = observer(() => {
 
         if (dt?.role === "superAdmin") {
           router.push("/super-admin/dashboard");
-        } else {
+        } else if (dt?.role === "seller") {
           router.push("/dashboard/shop");
+        } else {
+          router.push("/");
         }
       })
       .catch((err) => {

@@ -10,11 +10,8 @@ export const dummyData = {
     "",
   categories: ["Home Decor", "Furniture", "Textiles", "Ceramics"],
   tags: ["handmade", "sustainable", "eco-friendly", "fair-trade", "artisanal"],
-  images: {
-    logo: "https://images.unsplash.com/photo-1557053964-937650b63311?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGxvZ298ZW58MHx8MHx8fDA%3D/placeholder.svg?height=200&width=200",
-    cover:
-      "https://images.unsplash.com/photo-1572611932849-7f0f116fb2f1?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
+  logo: { file: [], isAdd: 0, isDeleted: 0 },
+  coverImage: { file: [], isAdd: 0, isDeleted: 0 },
   ratings: {
     average: 4.8,
     total: 256,
@@ -26,32 +23,26 @@ export const dummyData = {
     state: "",
     postalCode: "",
     country: "",
-    coordinates: {
-      latitude: 0,
-      longitude: -0,
-    },
-    additionalLocations: [
-      {
-        address: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: "",
-        coordinates: {
-          latitude: 0,
-          longitude: -0,
-        },
-      },
-    ],
+    coordinates: [0, 0],
   },
-  contact: {
+  multipleLocations: [
+    {
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+      coordinates: [0, 0],
+    },
+  ],
+  contactInfo: {
     phone: "+1 (503) 555-1234",
     email: "hello@artisancrafts.co",
     website: "https://artisancrafts.co",
     socialMedia: {
-      instagram: "artisancraftsco",
-      facebook: "ArtisanCraftsCo",
-      twitter: "ArtisanCraftsCo",
+      instagram: "",
+      facebook: "",
+      twitter: "",
     },
   },
   operatingHours: [

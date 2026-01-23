@@ -48,6 +48,23 @@ class CompanyStores {
     }
   };
 
+  createCompany = async (payload: any) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.post("/company/create", payload);
+      // Update local user type immediately if successful so UI reflects it
+      if (authStore.user) {
+        authStore.user.type = 'seller';
+        authStore.user.company = response.data?.data?._id;
+      }
+      return response;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
   getPageContent = (name: string) => {
     if (Object.keys(this.companyDetails || {}).length) {
       const dt = this.companyDetails.details?.filter((it: any) => it.name === name)

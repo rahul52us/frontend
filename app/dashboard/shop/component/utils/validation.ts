@@ -9,6 +9,7 @@ export const validationSchema = Yup.object({
     .min(2, "Min 2 characters")
     .max(10, "Max 10 characters")
     .matches(/^[A-Z0-9]+$/, "Alphanumeric only"),
+  tags: Yup.array().of(Yup.string()).min(1, "Add at least one tag").required("Tags are required"),
   description: Yup.string().required("Description is required").trim(),
   about: Yup.string().required("Description is required").trim(),
   logo: Yup.mixed(),

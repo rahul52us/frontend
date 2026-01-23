@@ -48,6 +48,13 @@ const Header = observer(() => {
     setIsMounted(true);
   }, []);
 
+  // Fetch cart data when user is logged in
+  useEffect(() => {
+    if (isMounted && user) {
+      cartStore.fetchCart();
+    }
+  }, [isMounted, user, cartStore]);
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isCartOpen,

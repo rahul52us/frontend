@@ -73,7 +73,7 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
     <FieldArray name="multipleLocations">
       {({ push, remove }) => (
         <VStack spacing={6} align="stretch">
-          {values.multipleLocations.map((location, index) => (
+          {values.multipleLocations && values.multipleLocations.length > 0 && values.multipleLocations.map((location, index) => (
             <Box
               key={index}
               p={4}
