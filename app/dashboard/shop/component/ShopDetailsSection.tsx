@@ -24,7 +24,7 @@ import { observer } from "mobx-react-lite";
 import stores from "../../../store/stores";
 import { Checkbox, CheckboxGroup, Stack, Spinner } from "@chakra-ui/react";
 
-const CategorySelector = observer(({ values, setFieldValue, errors, showError }) => {
+const CategorySelector = observer(({ values, setFieldValue, errors, showError }: any) => {
   const { categoryStore } = stores;
   const { categories, loading, getAllCategories } = categoryStore;
 
