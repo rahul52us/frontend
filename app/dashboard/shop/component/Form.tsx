@@ -34,7 +34,7 @@ import ContactInfoSection from "./ContactInfoSection";
 import OperatingHoursSection from "./OperatingHoursSection";
 import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { dummyData } from "./utils/constant";
 import {
   FaStore,
@@ -134,7 +134,6 @@ const ShopForm = observer(() => {
   const [activeSection, setActiveSection] = useState(0);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isUpdateMode, setIsUpdateMode] = useState(false); // Track mode
 
   const {
@@ -144,7 +143,6 @@ const ShopForm = observer(() => {
   } = stores;
 
   const { shopTitle } = useParams();
-  const router = useRouter();
 
   const sections = [
     { title: "Shop Details", icon: FaStore, component: ShopDetailsSection },
@@ -241,7 +239,8 @@ const ShopForm = observer(() => {
         openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
       } else {
         // CREATE MODE - Remove _id from dummy data
-        const { _id, ...createData } = formData;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _id: _, ...createData } = formData;
         await createCompany({ ...createData, userId: user?._id });
         openNotification({ title: "Congratulations!", message: "Shop created successfully!", type: "success" });
         // Hard reload or redirect to ensure user state is refreshed
@@ -260,7 +259,6 @@ const ShopForm = observer(() => {
   };
 
   if (loading) return <Center minH="80vh"><SpinnerLoader size="xl" /></Center>;
-  if (error) return <Center minH="80vh"><Text color="red.500">{error}</Text></Center>;
 
   return (
     <Container maxW="container.2xl" py={4}>
@@ -331,6 +329,7 @@ const ShopForm = observer(() => {
             {({ values, errors, setFieldValue, isSubmitting, submitForm }) => {
               // Debug validation errors
               if (Object.keys(errors).length > 0 && showError) {
+                // eslint-disable-next-line no-console
                 console.log("Validation Errors:", errors);
               }
 

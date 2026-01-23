@@ -19,10 +19,10 @@ import {
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import { removeDataByIndex } from "../../../config/utils/utils";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import stores from "../../../store/stores";
-import { Checkbox, CheckboxGroup, Stack, Spinner } from "@chakra-ui/react";
+import { Checkbox, CheckboxGroup, Spinner } from "@chakra-ui/react";
 
 const CategorySelector = observer(({ values, setFieldValue, errors, showError }: any) => {
   const { categoryStore } = stores;
@@ -30,6 +30,7 @@ const CategorySelector = observer(({ values, setFieldValue, errors, showError }:
 
   useEffect(() => {
     getAllCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (selected) => {

@@ -78,8 +78,8 @@ class CartStore {
                 }
             });
         } catch (err: any) {
-            // alert(err?.message)
             // Silently fail or log, don't alert on every page load if cart fails
+            // eslint-disable-next-line no-console
             console.error(err);
         }
     };
