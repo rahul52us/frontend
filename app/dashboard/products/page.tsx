@@ -72,6 +72,16 @@ const ProductSchema = Yup.object().shape({
       value: Yup.string().required("Value is required"),
     })
   ),
+  discountPrice: Yup.number().min(0, "Cannot be negative").optional(),
+  isFeatured: Yup.boolean(),
+  tags: Yup.array().of(Yup.string()),
+  variants: Yup.array().of(
+    Yup.object().shape({
+      name: Yup.string().required("Variant name is required"),
+      options: Yup.array().of(Yup.string()).min(1, "At least one option is required")
+    })
+  ),
+
   images: Yup.array().min(1, "At least one image is required"),
 });
 
@@ -151,6 +161,7 @@ const ProductsPage = observer(() => {
         status: "error",
         description: error?.message,
         duration: 3000,
+        isClosable: true,
       });
     } finally {
       setLoading(false);
@@ -213,6 +224,11 @@ const ProductsPage = observer(() => {
             ([key, value]) => ({ key, value })
           )
           : [],
+        // New Fields Initialization
+        discountPrice: products.find((p) => p._id === selectedProduct).discountPrice || "",
+        isFeatured: products.find((p) => p._id === selectedProduct).isFeatured || false,
+        tags: products.find((p) => p._id === selectedProduct).tags || [],
+        variants: products.find((p) => p._id === selectedProduct).variants || [],
       }
       : {
         name: "",
@@ -227,6 +243,11 @@ const ProductsPage = observer(() => {
         information: [],
         images: [],
         subCategories: [],
+        // New Fields Defaults
+        discountPrice: "",
+        isFeatured: false,
+        tags: [],
+        variants: [],
       };
 
   const handleSubmit = async (values: any, actions: any) => {

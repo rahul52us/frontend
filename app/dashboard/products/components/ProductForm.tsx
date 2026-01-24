@@ -7,18 +7,27 @@ import {
   Input,
   NumberInput,
   NumberInputField,
-  Select,
   Textarea,
   VStack,
   FormErrorMessage,
-  SimpleGrid,
-  Icon,
-  IconButton,
+  useToast,
+  Select,
   HStack,
+  Text,
+  SimpleGrid,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  IconButton,
   Image,
+  Icon,
 } from "@chakra-ui/react";
-import { Formik, Form, Field, FieldArray } from "formik";
+import { Formik, Field, Form, FieldArray } from "formik";
 import { FaPlus, FaTrash, FaUpload } from "react-icons/fa";
+import { observer } from "mobx-react-lite";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
 
 interface ProductFormProps {
@@ -280,13 +289,33 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       </FormControl>
                     )}
                   </Field>
+                  <Field name="discountPrice">
+                    {({ field, form }: any) => (
+                      <FormControl
+                        isInvalid={form.errors.discountPrice && form.touched.discountPrice}
+                      >
+                        <FormLabel>Discount Price (₹)</FormLabel>
+                        <NumberInput
+                          min={0}
+                          onChange={(val) => form.setFieldValue(field.name, val)}
+                          value={field.value}
+                        >
+                          <NumberInputField placeholder="0.00" />
+                        </NumberInput>
+                        <FormErrorMessage>{form.errors.discountPrice}</FormErrorMessage>
+                      </FormControl>
+                    )}
+                  </Field>
+                </SimpleGrid>
+
+                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
                   <Field name="stock">
                     {({ field, form }: any) => (
                       <FormControl
                         isInvalid={form.errors.stock && form.touched.stock}
                         isRequired
                       >
-                        <FormLabel>Stock Quantity</FormLabel>
+                        <FormLabel>Stock</FormLabel>
                         <NumberInput
                           min={0}
                           onChange={(val) => form.setFieldValue(field.name, val)}
@@ -299,6 +328,81 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     )}
                   </Field>
                 </SimpleGrid>
+                <Field name="tags">
+                  {({ field, form }: any) => (
+                    <FormControl>
+                      <FormLabel>Tags (Comma separated)</FormLabel>
+                      <Input
+                        placeholder="e.g. summer, sale, new"
+                        value={form.values.tags ? form.values.tags.join(', ') : ''}
+                        onChange={(e) => {
+                          const tags = e.target.value.split(',').map((tag: string) => tag.trim());
+                          form.setFieldValue('tags', tags);
+                        }}
+                      />
+                    </FormControl>
+                  )}
+                </Field>
+
+                {/* Variants Section */}
+                <Box>
+                  <FormLabel>Variants</FormLabel>
+                  <FieldArray name="variants">
+                    {({ push, remove, form }: any) => (
+                      <VStack spacing={4} align="stretch" width="100%">
+                        {form.values.variants && form.values.variants.length > 0 && form.values.variants.map((variant: any, index: number) => (
+                          <Box key={index} p={4} borderWidth="1px" borderRadius="lg" bg="whiteAlpha.100">
+                            <HStack justify="space-between" mb={2}>
+                              <Text fontWeight="bold">Variant #{index + 1}</Text>
+                              <IconButton
+                                aria-label="Remove variant"
+                                icon={<FaTrash />}
+                                size="sm"
+                                colorScheme="red"
+                                onClick={() => remove(index)}
+                              />
+                            </HStack>
+
+                            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                              <Field name={`variants.${index}.name`}>
+                                {({ field, form }: any) => (
+                                  <FormControl isRequired>
+                                    <FormLabel fontSize="sm">Variant Name</FormLabel>
+                                    <Input {...field} placeholder="e.g. Size, Color" />
+                                  </FormControl>
+                                )}
+                              </Field>
+                              <Field name={`variants.${index}.options`}>
+                                {({ field, form }: any) => (
+                                  <FormControl isRequired>
+                                    <FormLabel fontSize="sm">Options (Comma separated)</FormLabel>
+                                    <Input
+                                      placeholder="e.g. S, M, L or Red, Blue"
+                                      value={form.values.variants[index].options ? form.values.variants[index].options.join(', ') : ''}
+                                      onChange={(e) => {
+                                        const options = e.target.value.split(',').map((opt: string) => opt.trim());
+                                        form.setFieldValue(`variants.${index}.options`, options);
+                                      }}
+                                    />
+                                  </FormControl>
+                                )}
+                              </Field>
+                            </SimpleGrid>
+                          </Box>
+                        ))}
+
+                        <Button
+                          leftIcon={<FaPlus />}
+                          onClick={() => push({ name: '', options: [] })}
+                          size="sm"
+                          alignSelf="flex-start"
+                        >
+                          Add Variant
+                        </Button>
+                      </VStack>
+                    )}
+                  </FieldArray>
+                </Box>
 
                 {/* Images Section */}
                 <FormControl

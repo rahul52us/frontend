@@ -1,18 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import stores from "../../../store/stores";
 import * as Yup from "yup";
 
-const activeCategories = [
-    "",
-    "Electronics",
-    "Clothing",
-    "Home & Garden",
-    "Sports",
-    "Toys",
-    "Health & Beauty",
-    "Automotive",
-];
+
 
 const ProductSchema = Yup.object().shape({
     name: Yup.string().required("Product Name is required"),
@@ -45,9 +36,22 @@ const ProductSchema = Yup.object().shape({
 });
 
 export const useProductEdit = (onRefresh: () => void) => {
-    const { shopStore, auth } = stores;
+    const { shopStore, auth, categoryStore } = stores;
     const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
     const [editProduct, setEditProduct] = useState<any>(null);
+
+    // Fetch categories on mount
+    const [categories, setCategories] = useState<any[]>([]);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            const res = await categoryStore.getAllCategories();
+            if (res?.data) {
+                setCategories(res.data);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handleEditClick = (row: any) => {
         setEditProduct(row);
@@ -63,12 +67,17 @@ export const useProductEdit = (onRefresh: () => void) => {
                     ([key, value]) => ({ key, value })
                 )
                 : [],
-            subCategories: editProduct.subCategories || [],
+            category: typeof editProduct.category === 'object' ? editProduct.category?._id : editProduct.category,
+            subCategories: Array.isArray(editProduct.subCategories)
+                ? editProduct.subCategories.map((sub: any) => typeof sub === 'object' ? sub._id : sub)
+                : [],
             information: editProduct.information
                 ? Object.entries(editProduct.information).map(
                     ([key, value]) => ({ key, value })
                 )
                 : [],
+            isAdmin: true, // Super Admin is always admin
+            variants: editProduct ? editProduct.variants : []
         }
         : {
             name: "",
@@ -83,6 +92,8 @@ export const useProductEdit = (onRefresh: () => void) => {
             information: [],
             images: [],
             subCategories: [],
+            isAdmin: true, // Super Admin is always admin
+            variants: []
         };
 
     const handleSubmit = async (values: any, actions: any) => {
@@ -134,6 +145,6 @@ export const useProductEdit = (onRefresh: () => void) => {
         handleSubmit,
         initialValues,
         ProductSchema,
-        activeCategories
+        activeCategories: categories
     };
 };
