@@ -54,5 +54,14 @@ export const dummyData = {
     { day: "Saturday", open: "11:00", close: "13:00" },
     { day: "Sunday", open: "12:00", close: "16:00" },
   ],
-  status: "active"
+  status: "active",
+  gstNumber: "",
+  bankDetails: {
+    accountHolderName: "",
+    accountNumber: "",
+    ifscCode: "",
+    bankName: ""
+  },
+  returnPolicy: "",
+  paymentMethods: []
 };

@@ -15,6 +15,8 @@ import {
   FiInfo,
   FiTag,
   FiUploadCloud,
+  FiDollarSign,
+  FiFileText,
 } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
@@ -265,6 +267,82 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             error={errors.about}
             value={values.about}
             onChange={(e) => setFieldValue("about", e.target.value)}
+            showError={showError}
+          />
+        </VStack>
+      </SectionCard>
+
+      {/* Bank Details */}
+      <SectionCard
+        icon={FiDollarSign}
+        title="Bank Details"
+        description="For financial transactions"
+      >
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <CustomInput
+            label="Account Holder Name"
+            name="bankDetails.accountHolderName"
+            value={values.bankDetails?.accountHolderName}
+            onChange={(e) => setFieldValue("bankDetails.accountHolderName", e.target.value)}
+            showError={showError}
+          />
+          <CustomInput
+            label="Account Number"
+            name="bankDetails.accountNumber"
+            value={values.bankDetails?.accountNumber}
+            onChange={(e) => setFieldValue("bankDetails.accountNumber", e.target.value)}
+            showError={showError}
+          />
+          <CustomInput
+            label="Bank Name"
+            name="bankDetails.bankName"
+            value={values.bankDetails?.bankName}
+            onChange={(e) => setFieldValue("bankDetails.bankName", e.target.value)}
+            showError={showError}
+          />
+          <CustomInput
+            label="IFSC Code"
+            name="bankDetails.ifscCode"
+            value={values.bankDetails?.ifscCode}
+            onChange={(e) => setFieldValue("bankDetails.ifscCode", e.target.value)}
+            showError={showError}
+          />
+          <CustomInput
+            label="GST Number"
+            name="gstNumber"
+            value={values.gstNumber}
+            onChange={(e) => setFieldValue("gstNumber", e.target.value)}
+            showError={showError}
+          />
+        </SimpleGrid>
+      </SectionCard>
+
+      {/* Policies */}
+      <SectionCard
+        icon={FiFileText}
+        title="Business Policies"
+        description="Return policy and payment methods"
+      >
+        <VStack spacing={4}>
+          <CustomInput
+            label="Return Policy"
+            name="returnPolicy"
+            type="textarea"
+            rows={4}
+            value={values.returnPolicy}
+            onChange={(e) => setFieldValue("returnPolicy", e.target.value)}
+            showError={showError}
+          />
+          {/* Simple payment methods input for now, could be tags input later */}
+          <CustomInput
+            label="Payment Methods (Comma separated)"
+            name="paymentMethods"
+            placeholder="e.g. UPI, Credit Card, COD"
+            value={values.paymentMethods ? values.paymentMethods.join(', ') : ''}
+            onChange={(e) => {
+              const methods = e.target.value.split(',').map((m) => m.trim());
+              setFieldValue("paymentMethods", methods);
+            }}
             showError={showError}
           />
         </VStack>

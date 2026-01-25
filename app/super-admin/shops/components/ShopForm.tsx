@@ -47,6 +47,15 @@ const ShopValidationSchema = Yup.object().shape({
         postalCode: Yup.string().optional(),
         country: Yup.string().optional(),
     }),
+    gstNumber: Yup.string().optional(),
+    bankDetails: Yup.object().shape({
+        accountHolderName: Yup.string().optional(),
+        accountNumber: Yup.string().optional(),
+        ifscCode: Yup.string().optional(),
+        bankName: Yup.string().optional(),
+    }),
+    returnPolicy: Yup.string().optional(),
+    paymentMethods: Yup.array().of(Yup.string()).optional(),
 });
 
 const ShopForm: React.FC<ShopFormProps> = ({
@@ -210,6 +219,72 @@ const ShopForm: React.FC<ShopFormProps> = ({
                                         )}
                                     </Field>
                                 </SimpleGrid>
+                            </Box>
+
+                            <Divider />
+
+                            {/* Bank & Tax Information */}
+                            <Box>
+                                <Text fontWeight="bold" fontSize="lg" mb={4}>Bank & Tax Details</Text>
+                                <SimpleGrid columns={2} spacing={4}>
+                                    <Field name="gstNumber">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>GST Number</FormLabel>
+                                                <Input {...field} placeholder="GST Number" />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                    <Field name="bankDetails.accountHolderName">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>Account Holder</FormLabel>
+                                                <Input {...field} placeholder="Name" />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                    <Field name="bankDetails.accountNumber">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>Account Number</FormLabel>
+                                                <Input {...field} placeholder="Account Number" />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                    <Field name="bankDetails.ifscCode">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>IFSC Code</FormLabel>
+                                                <Input {...field} placeholder="IFSC" />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                    <Field name="bankDetails.bankName">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>Bank Name</FormLabel>
+                                                <Input {...field} placeholder="Bank Name" />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                </SimpleGrid>
+                            </Box>
+
+                            <Divider />
+
+                            {/* Policy Information */}
+                            <Box>
+                                <Text fontWeight="bold" fontSize="lg" mb={4}>Business Policies</Text>
+                                <VStack spacing={4}>
+                                    <Field name="returnPolicy">
+                                        {({ field }: any) => (
+                                            <FormControl>
+                                                <FormLabel>Return Policy</FormLabel>
+                                                <Textarea {...field} placeholder="Enter return policy" rows={3} />
+                                            </FormControl>
+                                        )}
+                                    </Field>
+                                </VStack>
                             </Box>
 
                             <Divider />

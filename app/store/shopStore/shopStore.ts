@@ -87,10 +87,19 @@ class ShopStore {
     }
   };
 
-  getShopProducts = async (sendData: any) => {
-    try {
+  getShopProducts = async (sendData: any, forceRefresh: boolean = false) => {
+    const currentPayload = JSON.stringify(sendData);
 
+    if (!forceRefresh && this.productsCache && this.lastProductsPayload === currentPayload) {
+      return this.productsCache;
+    }
+
+    try {
       const response = await axios.post(`/product`, sendData);
+
+      this.productsCache = response.data;
+      this.lastProductsPayload = currentPayload;
+
       return response.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);

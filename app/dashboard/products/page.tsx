@@ -174,26 +174,21 @@ const ProductsPage = observer(() => {
     }
   }
 
+  // Combined Effect for Fetching
   useEffect(() => {
-    fetchProducts(1);
-    categoryStore.getAllCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (auth.company) {
+      categoryStore.getAllCategories();
+    }
   }, [auth.company]);
 
-  // Debounce Search
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchProducts(1, searchTerm);
-    }, 2000); // 500ms delay
+      fetchProducts(1, searchTerm, selectedCategory);
+    }, 500); // 500ms delay
 
     return () => clearTimeout(delayDebounceFn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm]);
-
-  useEffect(() => {
-    fetchProducts(1, searchTerm, selectedCategory);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, showInactive]);
+  }, [searchTerm, selectedCategory, showInactive, auth.company]);
 
   const handleEdit = (product: any) => {
     setSelectedProduct(product._id);
