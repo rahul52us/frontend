@@ -41,15 +41,15 @@ const CategoryPage = observer(() => {
                     setProducts(response.data.products);
                     setCategoryName(String(slug));
                 }
-            } catch (error) {
-                console.error("Failed to fetch products for category", error);
+            } catch {
+                // Ignore error locally or use a toast if needed
             } finally {
                 setLoading(false);
             }
         };
 
         fetchProducts();
-    }, [slug]);
+    }, [slug, shopStore]);
 
     if (loading) {
         return (

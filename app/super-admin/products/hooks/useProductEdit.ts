@@ -51,7 +51,7 @@ export const useProductEdit = (onRefresh: () => void) => {
             }
         };
         loadCategories();
-    }, []);
+    }, [categoryStore]);
 
     const handleEditClick = (row: any) => {
         setEditProduct(row);

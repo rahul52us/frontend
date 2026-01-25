@@ -10,24 +10,16 @@ import {
   Textarea,
   VStack,
   FormErrorMessage,
-  useToast,
   Select,
   HStack,
   Text,
   SimpleGrid,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
   IconButton,
   Image,
   Icon,
 } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
 import { FaPlus, FaTrash, FaUpload } from "react-icons/fa";
-import { observer } from "mobx-react-lite";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
 
 interface ProductFormProps {
@@ -329,7 +321,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   </Field>
                 </SimpleGrid>
                 <Field name="tags">
-                  {({ field, form }: any) => (
+                  {({ form }: any) => (
                     <FormControl>
                       <FormLabel>Tags (Comma separated)</FormLabel>
                       <Input
@@ -365,7 +357,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                             <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                               <Field name={`variants.${index}.name`}>
-                                {({ field, form }: any) => (
+                                {({ field }: any) => (
                                   <FormControl isRequired>
                                     <FormLabel fontSize="sm">Variant Name</FormLabel>
                                     <Input {...field} placeholder="e.g. Size, Color" />
@@ -373,7 +365,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 )}
                               </Field>
                               <Field name={`variants.${index}.options`}>
-                                {({ field, form }: any) => (
+                                {({ form }: any) => (
                                   <FormControl isRequired>
                                     <FormLabel fontSize="sm">Options (Comma separated)</FormLabel>
                                     <Input

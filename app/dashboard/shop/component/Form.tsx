@@ -239,8 +239,8 @@ const ShopForm = observer(() => {
         openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
       } else {
         // CREATE MODE - Remove _id from dummy data
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _id: _, ...createData } = formData;
+        const createData = { ...formData };
+        delete createData._id;
         await createCompany({ ...createData, userId: user?._id });
         openNotification({ title: "Congratulations!", message: "Shop created successfully!", type: "success" });
         // Hard reload or redirect to ensure user state is refreshed

@@ -155,7 +155,7 @@ const ProductsPage = observer(() => {
       setTotalPages(totalPages || 1);
       setTotalCount(total || 0);
       setCurrentPage(page);
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error fetching products.",
         status: "error",
@@ -176,10 +176,12 @@ const ProductsPage = observer(() => {
 
   // Combined Effect for Fetching
   useEffect(() => {
+    fetchProducts(1);
     if (auth.company) {
       categoryStore.getAllCategories();
     }
-  }, [auth.company]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.company, categoryStore]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
