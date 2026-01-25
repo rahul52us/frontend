@@ -63,11 +63,11 @@ const CartDrawer = observer(
     } = useDisclosure();
 
     const handleCheckout = () => {
-      if (!auth.user) {
-        onClose();
-        router.push(authentication.login);
+      onClose();
+      if (!auth.token) {
+        router.push(authentication.login + "?redirect=/checkout");
       } else {
-        alert("Checkout flow pending");
+        router.push("/checkout");
       }
     };
 

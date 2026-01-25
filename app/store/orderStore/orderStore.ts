@@ -11,43 +11,43 @@ class OrderStore {
     makeAutoObservable(this, {
       userAddedItems: observable,
       setUserAddedItems: action,
-      fetchUserOrders:action
+      fetchUserOrders: action
     });
   }
 
-  fetchUserOrders = async(sendData : any) => {
+  fetchUserOrders = async (sendData: any) => {
     try {
       const { data } = await axios.post(`/order/get`, {
         ...sendData,
         // company: stores.auth.getCurrentCompany(),
         // type : stores.auth.user?.role
       });
-      const transformedData : any = {};
+      const transformedData: any = {};
 
-      data.data.forEach((book : any) => {
+      data.data.forEach((book: any) => {
         const user = book.user[0]; // Assuming there's only one user per book
         const userEmail = user.username; // Extracting email from user object
 
         // Check if the user email already exists in the result object
         if (!transformedData[userEmail]) {
-            transformedData[userEmail] = {}; // Create new entry if it doesn't exist
+          transformedData[userEmail] = {}; // Create new entry if it doesn't exist
         }
 
         // Add the book to the user's entry
         transformedData[userEmail][book.orderReferenceId] = {
-            _id: book.orderReferenceId,
-            orderId : book.orderReferenceId,
-            title: book.title,
-            user: {
-                username: user.username,
-                _id: user._id,
-            },
-            company: book.company,
-            description: book.description,
-            image : book.image,
-            TotalNoOfQuantities: book.quantity || 1
+          _id: book.orderReferenceId,
+          orderId: book.orderReferenceId,
+          title: book.title,
+          user: {
+            username: user.username,
+            _id: user._id,
+          },
+          company: book.company,
+          description: book.description,
+          image: book.image,
+          TotalNoOfQuantities: book.quantity || 1
         };
-    });
+      });
 
       this.userAddedItems.users = transformedData
       this.getTotalCounts(this.userAddedItems.users)
@@ -113,7 +113,7 @@ class OrderStore {
               quantity: TotalNoOfQuantities,
               type: type,
             })
-              .then(() => {})
+              .then(() => { })
               .catch(() => {
               });
           } else {
@@ -131,7 +131,7 @@ class OrderStore {
                 .TotalNoOfQuantities, // Just set the updated quantity
               type: type,
             })
-              .then(() => {})
+              .then(() => { })
               .catch(() => {
                 alert("Error while updating item");
               });
@@ -159,7 +159,7 @@ class OrderStore {
                   .TotalNoOfQuantities, // Set updated quantity
                 type: type,
               })
-                .then(() => {})
+                .then(() => { })
                 .catch(() => {
                   alert("Error while updating item");
                 });
@@ -183,7 +183,16 @@ class OrderStore {
           }
         }
       }
-    } catch ({}) {
+    } catch ({ }) {
+    }
+  };
+
+  createOrder = async (payload: any) => {
+    try {
+      const { data } = await axios.post("/order/create", payload);
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
     }
   };
 

@@ -1,4 +1,5 @@
 import { Box, Button, Flex, Text, VStack, useColorModeValue, useToast, Image } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { FiShoppingCart, FiCreditCard } from 'react-icons/fi';
 import { observer } from 'mobx-react-lite';
 import stores from '../../../../store/stores';
@@ -9,6 +10,7 @@ import ProductLikeButton from '../../../products/components/ProductCard/ProductL
 const ProductBuyBox = observer(({ product }: { product: any }) => {
     const { cartStore } = stores;
     const toast = useToast();
+    const router = useRouter();
 
     const { stock, brand, name, image, images } = product;
     const displayImage = image || (images && images.length > 0 ? images[0] : "");
@@ -70,6 +72,24 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
         });
     };
 
+    const handleBuyNow = async () => {
+        if (stock && stock <= 0) {
+            toast({
+                title: 'Out of Stock',
+                description: 'This product is currently unavailable.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+                position: 'bottom',
+            });
+            return;
+        }
+
+        // await cartStore.addToCart(product); // Don't add to cart for direct buy now? 
+        // User requested separate flow. Often Buy Now implies bypassing cart.
+        router.push(`/checkout?buyNow=true&productId=${product._id || product.id}`);
+    };
+
     const bgColor = useColorModeValue('white', 'gray.800');
     const borderColor = useColorModeValue('gray.200', 'gray.700');
 
@@ -128,6 +148,8 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
                     color="white"
                     size="lg"
                     w="full"
+                    onClick={handleBuyNow}
+                    isLoading={cartStore.loading}
                     isDisabled={(stock ?? 0) <= 0}
                     transition="all 0.2s"
                     rounded="full"
