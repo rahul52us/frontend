@@ -17,7 +17,8 @@ interface Notification {
 class AuthStore {
   user: any = null;
   token: string | null = null;
-  isLoading: boolean = false;
+  addresses: any[] = [];
+  isLoading: boolean = false; // Top level addresses
   error: string | null = null;
   notification: Notification | null = null;
   company: any = "67c7380f5e373d64c5b56fbe"
@@ -244,6 +245,52 @@ class AuthStore {
 
     // Clear cart to prevent next user seeing previous user's items
     stores.cartStore.clearCart();
+  };
+  // Address Management
+  addAddress = async (addressData: any) => {
+    try {
+      const { data } = await axios.post("/user/address/add", addressData);
+      this.addresses.push(data.data);
+      if (this.user) {
+        if (!this.user.addresses) this.user.addresses = [];
+        this.user.addresses.push(data.data);
+      }
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  fetchAddresses = async () => {
+    try {
+      const { data } = await axios.get("/user/address");
+      this.addresses = data.data;
+      if (this.user) {
+        this.user.addresses = data.data;
+      }
+      return data.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+  updateAddress = async (addressId: string, addressData: any) => {
+    try {
+      const { data } = await axios.put(`/user/address/${addressId}`, addressData);
+      await this.fetchAddresses(); // Refresh
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  deleteAddress = async (addressId: string) => {
+    try {
+      const { data } = await axios.delete(`/user/address/${addressId}`);
+      await this.fetchAddresses(); // Refresh
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
   };
 }
 

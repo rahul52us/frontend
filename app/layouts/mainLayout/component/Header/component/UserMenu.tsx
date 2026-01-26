@@ -159,7 +159,7 @@ const UserMenu = observer(() => {
             router.push("/dashboard/orders")
           )}
           {!isSuperAdmin && renderItem("Address Book", FiMapPin, "green", () =>
-            router.push("/dashboard/address")
+            router.push("/account?tab=addresses")
           )}
           {!isSuperAdmin && renderItem("Payment Methods", FiCreditCard, "purple", () =>
             router.push("/dashboard/payments")

@@ -8,17 +8,22 @@ import OrdersSection from "./OrderSection/OrderSection";
 import { ProfileSection } from "./ProfileSection/ProfileSection";
 import SidebarButton from "./SidebarButton/SidebarButton";
 import { WalletSection } from "./WalletSection/WalletSection";
+import stores from "../../../store/stores";
 
 const AccountPage = observer(() => {
-  const [activeTab, setActiveTab] = useState("profile");
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialTab = searchParams?.get('tab') || "profile";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const accentColor = useColorModeValue("purple.500", "purple.200");
   const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
 
+  const { user: authUser, logout } = stores.auth;
+
   const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    avatar: "/placeholder.svg?height=80&width=80",
+    name: authUser?.name || "User",
+    email: authUser?.email || "",
+    phone: authUser?.phone || "",
+    avatar: authUser?.avatar || "/placeholder.svg?height=80&width=80",
   };
 
   const menuItems = [
@@ -36,9 +41,9 @@ const AccountPage = observer(() => {
           <Card borderRadius="2xl" boxShadow="md">
             <CardBody>
               <Flex align="center" gap={4}>
-                <Avatar 
-                  name={user.name} 
-                  src={user.avatar || "/placeholder.svg"} 
+                <Avatar
+                  name={user.name}
+                  src={user.avatar || "/placeholder.svg"}
                   size="lg"
                   border={activeBorder}
                   p={0.5}
@@ -57,33 +62,37 @@ const AccountPage = observer(() => {
           </Card>
 
           <Card borderRadius="2xl" boxShadow="lg" py={2}>
-          <VStack spacing={1} align="stretch" p={2}>
-        {menuItems.map(({ label, icon, tab }) => (
-          <SidebarButton
-            key={tab}
-            label={label}
-            icon={icon}
-            isActive={activeTab === tab}
-            onClick={() => setActiveTab(tab)}
-            color={accentColor}
-          />
-        ))}
+            <VStack spacing={1} align="stretch" p={2}>
+              {menuItems.map(({ label, icon, tab }) => (
+                <SidebarButton
+                  key={tab}
+                  label={label}
+                  icon={icon}
+                  isActive={activeTab === tab}
+                  onClick={() => setActiveTab(tab)}
+                  color={accentColor}
+                />
+              ))}
 
-        {/* Logout button without a divider */}
-        <Button
-          variant="ghost"
-          justifyContent="flex-start"
-          h={14}
-          borderRadius="lg"
-          color="red.500"
-          _hover={{ color: "red.600", bg: "red.50" }}
-          leftIcon={<FaSignOutAlt size="18px" />}
-          fontWeight={600}
-          transition="all 0.2s"
-        >
-          Logout
-        </Button>
-      </VStack>
+              {/* Logout button without a divider */}
+              <Button
+                variant="ghost"
+                justifyContent="flex-start"
+                h={14}
+                borderRadius="lg"
+                color="red.500"
+                _hover={{ color: "red.600", bg: "red.50" }}
+                leftIcon={<FaSignOutAlt size="18px" />}
+                fontWeight={600}
+                transition="all 0.2s"
+                onClick={() => {
+                  logout();
+                  window.location.href = "/";
+                }}
+              >
+                Logout
+              </Button>
+            </VStack>
           </Card>
         </VStack>
 

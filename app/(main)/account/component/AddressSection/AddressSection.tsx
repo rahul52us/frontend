@@ -9,22 +9,34 @@ import {
   Text,
   useDisclosure,
   useToast,
-  VStack
+  VStack,
+  Spinner,
+  Center
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaPlusCircle } from "react-icons/fa";
 import AddressCard from "./AddressCard/AddressCard";
 import AddressModal from "./AddressModal/AddressModal";
-import { initialAddresses } from "./utils/constant";
 import GetCurrentLocation from "../../../../component/common/Locations/GetCurrentLocation";
+import stores from "../../../../store/stores";
+import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 
 export const AddressesSection = observer(() => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [addresses, setAddresses] = useState(initialAddresses);
-  const [currentAddress, setCurrentAddress] = useState(null);
+  const { auth } = stores;
+
+  // Local state for modal management
+  const [currentAddress, setCurrentAddress] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deletingAddress, setDeletingAddress] = useState<any>(null);
+
+  useEffect(() => {
+    if (auth.token && auth.addresses.length === 0) {
+      auth.fetchAddresses();
+    }
+  }, [auth.token, auth.addresses.length, auth]);
 
   const handleAddNew = () => {
     setCurrentAddress(null);
@@ -32,88 +44,99 @@ export const AddressesSection = observer(() => {
     onOpen();
   };
 
-  const handleEdit = (address) => {
+  const handleEdit = (address: any) => {
     setCurrentAddress(address);
     setIsEditing(true);
     onOpen();
   };
 
-  const handleDelete = (id) => {
-    setAddresses((prev) => prev.filter((addr) => addr.id !== id));
-    toast({
-      title: "Address removed",
-      description: "The address has been removed from your account.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+  const handleDeleteClick = (address: any) => {
+    setDeletingAddress(address);
   };
 
-  const handleSetDefault = (id) => {
-    setAddresses((prev) =>
-      prev.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
-    toast({
-      title: "Default address updated",
-      description: "Your default address has been updated.",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
+  const confirmDelete = async () => {
+    if (!deletingAddress) return;
+    try {
+      await auth.deleteAddress(deletingAddress._id || deletingAddress.id);
+      toast({
+        title: "Address removed",
+        description: "The address has been removed from your account.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch {
+      toast({ title: "Failed to delete address", status: "error" });
+    } finally {
+      setDeletingAddress(null);
+    }
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSetDefault = async (id: string) => {
+    const address = auth.addresses.find((a: any) => (a._id || a.id) === id);
+    if (address) {
+      try {
+        await auth.updateAddress(id, { ...address, isDefault: true });
+        toast({
+          title: "Default address updated",
+          description: "Your default address has been updated.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch {
+        // console.error(e); // Removed
+        toast({ title: "Failed to set default", status: "error" });
+      }
+    }
+  };
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data: any = Object.fromEntries(formData.entries());
-    data.isDefault = data.isDefault === "on";
 
-    if (isEditing && currentAddress) {
-      // Update existing address
-      setAddresses((prev) =>
-        prev.map((addr) =>
-          addr.id === currentAddress.id
-            ? { ...data, id: currentAddress.id }
-            : data.isDefault
-            ? { ...addr, isDefault: false }
-            : addr
-        )
-      );
-      toast({
-        title: "Address updated",
-        description: "Your address has been updated successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } else {
-      // Add new address
-      const newAddress = {
-        ...data,
-        id: Date.now(),
-      };
+    const addressData = {
+      name: data.name,
+      phone: data.phone,
+      addressLine1: data.line1,
+      line1: data.line1,
+      addressLine2: data.line2,
+      line2: data.line2,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
+      country: data.country,
+      isDefault: data.isDefault === "on"
+    };
 
-      setAddresses((prev) => {
-        const updatedAddresses = data.isDefault
-          ? prev.map((addr) => ({ ...addr, isDefault: false }))
-          : [...prev];
-        return [...updatedAddresses, newAddress];
-      });
-
-      toast({
-        title: "Address added",
-        description: "Your new address has been added successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+    try {
+      if (isEditing && currentAddress) {
+        await auth.updateAddress(currentAddress._id || currentAddress.id, addressData);
+        toast({
+          title: "Address updated",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        await auth.addAddress(addressData);
+        toast({
+          title: "Address added",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+      onClose();
+    } catch {
+      toast({ title: "Operation failed", description: "Could not save address", status: "error" });
     }
-
-    onClose();
   };
+
+  if (auth.isLoading && auth.addresses.length === 0) {
+    return <Center py={10}><Spinner /></Center>;
+  }
 
   return (
     <Box>
@@ -137,13 +160,13 @@ export const AddressesSection = observer(() => {
         }}
         gap={6}
       >
-        {addresses.map((address) => (
+        {auth.addresses.map((address: any) => (
           <AddressCard
-            key={address.id}
+            key={address._id || address.id}
             address={address}
             handleEdit={handleEdit}
             handleSetDefault={handleSetDefault}
-            handleDelete={handleDelete}
+            handleDelete={handleDeleteClick}
           />
         ))}
 
@@ -181,6 +204,19 @@ export const AddressesSection = observer(() => {
         isEditing={isEditing}
         handleSubmit={handleSubmit}
       />
+
+      {deletingAddress && (
+        <ConfirmationModal
+          isOpen={!!deletingAddress}
+          onClose={() => setDeletingAddress(null)}
+          onConfirm={confirmDelete}
+          title="Delete Address"
+          message={`Are you sure you want to delete ${deletingAddress.name}?`}
+          confirmText="Delete"
+          confirmButtonProps={{ colorScheme: "red" }}
+          cancelText="Cancel"
+        />
+      )}
     </Box>
   );
 });

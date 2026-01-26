@@ -18,11 +18,9 @@ import {
     Badge,
     Grid,
     GridItem,
-    Image,
-    Input,
-    FormControl,
-    FormLabel,
+    useDisclosure,
 } from "@chakra-ui/react";
+import AddressModal from "../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
 import { useRouter } from "next/navigation";
@@ -37,8 +35,45 @@ const CheckoutPage = observer(() => {
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Addresses mock (replace with auth.user.addresses when available)
-    const addresses = auth.user?.addresses || []; // Warning: Ensure authStore populates this
+    // Addresses
+    const addresses = auth.addresses || []; // Use top-level addresses
+
+    useEffect(() => {
+        if (auth.token && auth.addresses.length === 0) {
+            auth.fetchAddresses();
+        }
+    }, [auth.token, auth.addresses.length, auth]);
+
+    const {
+        isOpen: isAddressModalOpen,
+        onOpen: onAddressModalOpen,
+        onClose: onAddressModalClose,
+    } = useDisclosure();
+
+    const handleAddNewAddress = async (newAddress: any) => {
+        try {
+            await auth.addAddress(newAddress);
+            auth.fetchAddresses();
+        } catch {
+            toast({ title: "Failed to add address", status: "error" });
+        }
+    };
+
+    const handleUpdateAddress = async (id: string, data: any) => {
+        try {
+            await auth.updateAddress(id, data);
+        } catch {
+            toast({ title: "Failed to update address", status: "error" });
+        }
+    };
+
+    const handleDeleteAddress = async (id: string) => {
+        try {
+            await auth.deleteAddress(id);
+        } catch {
+            toast({ title: "Failed to delete address", status: "error" });
+        }
+    };
 
     // Buy Now Logic
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -60,7 +95,7 @@ const CheckoutPage = observer(() => {
                             quantity: 1
                         });
                     }
-                } catch (error) {
+                } catch {
                     toast({ title: "Failed to load product", status: "error" });
                 } finally {
                     setLoadingBuyNow(false);
@@ -77,6 +112,8 @@ const CheckoutPage = observer(() => {
             router.push("/products");
         }
     }, [cartStore.totalItems, router, toast, isBuyNow, buyNowId]);
+
+    // ... calculateTotal 
 
     const calculateTotal = () => {
         let itemsToCalc = cartStore.cartItems;
@@ -143,10 +180,10 @@ const CheckoutPage = observer(() => {
             }
             router.push("/account/orders");
 
-        } catch (error: any) {
+        } catch {
             toast({
                 title: "Order Failed",
-                description: error.message || "Something went wrong.",
+                description: "Something went wrong.",
                 status: "error",
             });
         } finally {
@@ -175,39 +212,50 @@ const CheckoutPage = observer(() => {
                                     Delivery Address
                                 </Heading>
 
-                                {addresses.length === 0 ? (
+                                {!selectedAddress ? (
                                     <Box p={4} border="1px dashed" borderColor="gray.300" borderRadius="md" textAlign="center">
-                                        <Text color="gray.500" mb={4}>No addresses found.</Text>
-                                        <Button size="sm" colorScheme="blue" onClick={() => router.push("/account/addresses")}>
-                                            Add New Address
+                                        <Text color="gray.500" mb={4}>Please select a delivery address.</Text>
+                                        <Button size="sm" colorScheme="blue" onClick={onAddressModalOpen}>
+                                            Select Address
                                         </Button>
                                     </Box>
                                 ) : (
-                                    <RadioGroup onChange={setSelectedAddress} value={selectedAddress}>
-                                        <VStack align="stretch" spacing={4}>
-                                            {addresses.map((addr: any, idx: number) => (
-                                                <Box
-                                                    key={idx}
-                                                    borderWidth="1px"
-                                                    borderColor={selectedAddress === addr._id ? "blue.500" : "gray.200"}
-                                                    p={4}
-                                                    borderRadius="lg"
-                                                    cursor="pointer"
-                                                    bg={selectedAddress === addr._id ? "blue.50" : "white"}
-                                                    onClick={() => setSelectedAddress(addr._id)}
-                                                    transition="all 0.2s"
-                                                >
-                                                    <Radio value={addr._id} isChecked={selectedAddress === addr._id}>
-                                                        <VStack align="start" spacing={1} ml={2}>
-                                                            <Text fontWeight="bold">{addr.name} <Badge ml={2}>{addr.type}</Badge></Text>
-                                                            <Text fontSize="sm">{addr.addressLine1}, {addr.city}, {addr.state} - {addr.postalCode}</Text>
-                                                            <Text fontSize="sm" color="gray.600">Mobile: {addr.phone}</Text>
-                                                        </VStack>
-                                                    </Radio>
-                                                </Box>
-                                            ))}
-                                        </VStack>
-                                    </RadioGroup>
+                                    <Box
+                                        borderWidth="1px"
+                                        borderColor="blue.500"
+                                        p={4}
+                                        borderRadius="lg"
+                                        bg="blue.50"
+                                    >
+                                        {addresses.find((a: any) => a._id === selectedAddress) ? (
+                                            <Flex justify="space-between" align="start">
+                                                <VStack align="start" spacing={1}>
+                                                    <Text fontWeight="bold">
+                                                        {addresses.find((a: any) => a._id === selectedAddress)?.name}
+                                                        <Badge ml={2} colorScheme="blue">Selected</Badge>
+                                                    </Text>
+                                                    <Text fontSize="sm">
+                                                        {[
+                                                            addresses.find((a: any) => a._id === selectedAddress)?.addressLine1 || addresses.find((a: any) => a._id === selectedAddress)?.line1,
+                                                            addresses.find((a: any) => a._id === selectedAddress)?.city,
+                                                            addresses.find((a: any) => a._id === selectedAddress)?.state,
+                                                            addresses.find((a: any) => a._id === selectedAddress)?.postalCode
+                                                        ].filter(Boolean).join(", ")}
+                                                    </Text>
+                                                    <Text fontSize="sm" color="gray.600">
+                                                        Mobile: {addresses.find((a: any) => a._id === selectedAddress)?.phone}
+                                                    </Text>
+                                                </VStack>
+                                                <Button size="sm" variant="outline" colorScheme="blue" onClick={onAddressModalOpen}>
+                                                    Change
+                                                </Button>
+                                            </Flex>
+                                        ) : (
+                                            <Button size="sm" colorScheme="blue" onClick={onAddressModalOpen}>
+                                                Select Address
+                                            </Button>
+                                        )}
+                                    </Box>
                                 )}
                             </Box>
 
@@ -321,6 +369,17 @@ const CheckoutPage = observer(() => {
                     </GridItem>
 
                 </Grid>
+
+                <AddressModal
+                    isOpen={isAddressModalOpen}
+                    onClose={onAddressModalClose}
+                    addresses={addresses}
+                    selectedAddress={selectedAddress}
+                    onSelectAddress={setSelectedAddress}
+                    onAddNewAddress={handleAddNewAddress}
+                    onUpdateAddress={handleUpdateAddress}
+                    onDeleteAddress={handleDeleteAddress}
+                />
             </Container>
         </Box>
     );

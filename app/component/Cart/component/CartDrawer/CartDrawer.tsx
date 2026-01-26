@@ -16,8 +16,8 @@ import {
   Divider,
   Image,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import { FaLocationDot } from "react-icons/fa6";
+import { useEffect, useState, useMemo } from "react";
+import { FaLocationDot, FaPlus } from "react-icons/fa6";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
 
@@ -26,36 +26,39 @@ import AddressModal from "../DeliveryAddressModal/DelivaryAddressModal";
 import stores from "../../../../store/stores";
 import { authentication } from "../../../../config/utils/routes";
 
-interface Address {
-  id: number;
-  name: string;
-  line1: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  isDefault: boolean;
-}
+
 
 const CartDrawer = observer(
   ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
     const { cartStore, auth } = stores;
     const router = useRouter();
 
-    const [addresses, setAddresses] = useState<Address[]>([
-      {
-        id: 1,
-        name: "Home",
-        line1: "123 Main Street",
-        city: "New York",
-        state: "NY",
-        postalCode: "10001",
-        country: "USA",
-        isDefault: true,
-      },
-    ]);
+    useEffect(() => {
+      if (isOpen && auth.token && auth.addresses.length === 0) {
+        auth.fetchAddresses();
+      }
+    }, [isOpen, auth.token, auth.addresses.length, auth]);
 
-    const [selectedAddress, setSelectedAddress] = useState(1);
+    const addresses = useMemo(() => auth.addresses || [], [auth.addresses]);
+    const [selectedAddress, setSelectedAddress] = useState<string>("");
+
+    // Sync selected address with default
+    useEffect(() => {
+      if (addresses.length > 0 && !selectedAddress) {
+        const defaultAddr = addresses.find((a: any) => a.isDefault);
+        setSelectedAddress(defaultAddr ? defaultAddr._id : addresses[0]._id);
+      }
+    }, [addresses, selectedAddress]);
+
+    // Handle Adding New Address
+    const handleAddNewAddress = async (newAddress: any) => {
+      try {
+        await auth.addAddress(newAddress);
+        auth.fetchAddresses(); // Refresh list
+      } catch {
+        // console.error("Failed to add address", error);
+      }
+    };
     const {
       isOpen: isAddressModalOpen,
       onOpen: onAddressModalOpen,
@@ -74,13 +77,13 @@ const CartDrawer = observer(
     const totalAmount = cartStore.cartItems.reduce(
       (sum, item) => {
         if (!item.product || !item.product.price) return sum;
-        return sum + Number(item.product.price) * item.quantity;
+        return sum + (Number(item.product.discountPrice || item.product.price) || 0) * (item.quantity || 1);
       },
       0
     );
 
     const currentAddress =
-      addresses.find((a) => a.id === selectedAddress) ||
+      addresses.find((a: any) => a._id === selectedAddress) ||
       addresses[0];
 
     const isEmpty = cartStore.cartItems.length === 0;
@@ -208,17 +211,30 @@ const CartDrawer = observer(
                       mt={1}
                     />
                     <Box flex="1">
-                      <Flex justify="space-between">
-                        <Text fontWeight={600}>
-                          Delivering to {currentAddress.name}
-                        </Text>
-                        <Text fontSize="sm" color="purple.500">
-                          Change
-                        </Text>
-                      </Flex>
-                      <Text fontSize="sm" color="gray.600">
-                        {currentAddress.line1}, {currentAddress.city}
-                      </Text>
+                      {currentAddress && (currentAddress.addressLine1 || currentAddress.line1) ? (
+                        <>
+                          <Flex justify="space-between">
+                            <Text fontWeight={600}>
+                              Delivering to {currentAddress.name}
+                            </Text>
+                            <Text fontSize="sm" color="purple.500">
+                              Change
+                            </Text>
+                          </Flex>
+                          <Text fontSize="sm" color="gray.600">
+                            {[currentAddress.addressLine1, currentAddress.city, currentAddress.state]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </Text>
+                        </>
+                      ) : (
+                        <Flex justify="space-between" align="center" h="100%">
+                          <Text fontWeight={600} color="gray.600">
+                            Add a delivery address
+                          </Text>
+                          <Icon as={FaPlus} color="purple.500" />
+                        </Flex>
+                      )}
                     </Box>
                   </Flex>
                 </Box>
@@ -248,10 +264,16 @@ const CartDrawer = observer(
           addresses={addresses}
           selectedAddress={selectedAddress}
           onSelectAddress={setSelectedAddress}
-          onAddNewAddress={(addr) => {
-            const id = addresses.length + 1;
-            setAddresses([...addresses, { ...addr, id }]);
-            setSelectedAddress(id);
+          onAddNewAddress={handleAddNewAddress}
+          onUpdateAddress={async (id: string, data: any) => {
+            try {
+              await auth.updateAddress(id, data);
+            } catch { }
+          }}
+          onDeleteAddress={async (id: string) => {
+            try {
+              await auth.deleteAddress(id);
+            } catch { }
           }}
         />
       </>
