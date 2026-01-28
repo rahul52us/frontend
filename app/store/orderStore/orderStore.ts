@@ -196,6 +196,23 @@ class OrderStore {
     }
   };
 
+  initializeOrder = async (payload: any) => {
+    try {
+      const { data } = await axios.post("/order/initialize", payload);
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  confirmOrder = async (payload: any) => {
+    try {
+      const { data } = await axios.post("/order/confirm", payload);
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
 }
 
 export const orderStore = new OrderStore()
