@@ -42,6 +42,7 @@ import stores from "../../store/stores";
 import ProductCard from "./components/ProductCard";
 import ProductForm from "./components/ProductForm";
 import DeleteProductDialog from "./components/DeleteProductDialog";
+import { useCartToast } from "../../hooks/useCartToast";
 
 
 
@@ -88,6 +89,7 @@ const ProductSchema = Yup.object().shape({
 const ProductsPage = observer(() => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { showAddToCartToast } = useCartToast();
 
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -278,19 +280,30 @@ const ProductsPage = observer(() => {
         response.statusCode === 200 ||
         response.statusCode === 201
       ) {
-        toast({
-          title: selectedProduct ? "Product Updated." : "Product Created.",
-          description: selectedProduct
-            ? "Product updated successfully."
-            : "Product created successfully.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
+        // Use custom image toast
+        // selectedProduct is the ID or object during edit? In this scope, selectedProduct is state ID.
+        // We need the image object/url for the toast.
+        // payload.images is 'cleanImages'. array of objects or strings.
+
+        const isEdit = !!selectedProduct;
+        const toastTitle = isEdit ? "Product Updated" : "Product Created";
+        const toastMsg = isEdit ? "Product updated successfully." : "Product created successfully.";
+
+        // Construct a temp product object for the toast to consume
+        const toastProduct = {
+          name: payload.name,
+          // No image for product creation/update as requested
+          image: "",
+          images: []
+        };
+
+        showAddToCartToast(toastProduct, toastTitle, toastMsg);
+
         actions.resetForm();
         onClose();
         setSelectedProduct(null);
-        fetchProducts();
+        // Force refresh
+        await fetchProducts(currentPage);
       }
     } catch (error: any) {
       toast({

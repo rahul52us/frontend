@@ -262,7 +262,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   )}
                 </Field>
 
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
                   <Field name="price">
                     {({ field, form }: any) => (
                       <FormControl
@@ -295,6 +295,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           <NumberInputField placeholder="0.00" />
                         </NumberInput>
                         <FormErrorMessage>{form.errors.discountPrice}</FormErrorMessage>
+                      </FormControl>
+                    )}
+                  </Field>
+                  <Field name="taxRate">
+                    {({ field, form }: any) => (
+                      <FormControl
+                        isInvalid={form.errors.taxRate && form.touched.taxRate}
+                      >
+                        <FormLabel>Tax Rate (%)</FormLabel>
+                        <NumberInput
+                          min={0}
+                          max={100}
+                          onChange={(val) => form.setFieldValue(field.name, val)}
+                          value={field.value ?? 18}
+                        >
+                          <NumberInputField placeholder="18" />
+                        </NumberInput>
+                        <FormErrorMessage>{form.errors.taxRate}</FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>

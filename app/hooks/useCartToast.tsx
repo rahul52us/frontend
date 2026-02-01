@@ -5,7 +5,7 @@ import { CheckCircleIcon } from "@chakra-ui/icons";
 export const useCartToast = () => {
     const toast = useToast();
 
-    const showAddToCartToast = (product: any) => {
+    const showAddToCartToast = (product: any, title = "Added to Cart", message?: string) => {
         const displayImage = product.image || (product.images && product.images.length > 0 ? product.images[0] : "");
 
         toast({
@@ -29,21 +29,23 @@ export const useCartToast = () => {
                     transition="box-shadow 0.2s ease-in-out"
                 >
                     <CheckCircleIcon color="green.500" boxSize={6} />
-                    <Image
-                        src={displayImage}
-                        alt={product.name}
-                        boxSize="60px"
-                        objectFit="cover"
-                        borderRadius="lg"
-                        border="1px solid"
-                        borderColor="green.100"
-                    />
+                    {displayImage && (
+                        <Image
+                            src={displayImage}
+                            alt={product.name}
+                            boxSize="60px"
+                            objectFit="cover"
+                            borderRadius="lg"
+                            border="1px solid"
+                            borderColor="green.100"
+                        />
+                    )}
                     <Box>
                         <Text color="green.800" fontWeight="semibold" fontSize="md">
-                            Added to Cart
+                            {title}
                         </Text>
                         <Text color="gray.700" fontSize="sm" noOfLines={1} maxW="240px">
-                            {product.name}
+                            {message || product.name}
                         </Text>
                     </Box>
                 </Box>

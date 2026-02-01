@@ -24,7 +24,7 @@ import {
 import AddressModal from "../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
 import { observer } from "mobx-react-lite";
 import stores from "../../store/stores";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaLock } from "react-icons/fa";
 
 const CheckoutPage = observer(() => {
@@ -81,9 +81,9 @@ const CheckoutPage = observer(() => {
     };
 
     // Buy Now Logic & Initialization
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const buyNowId = searchParams?.get('productId');
-    const isBuyNow = searchParams?.get('buyNow') === 'true';
+    const searchParams = useSearchParams();
+    const buyNowId = searchParams.get('productId');
+    const isBuyNow = searchParams.get('buyNow') === 'true';
 
     useEffect(() => {
         const initOrder = async () => {

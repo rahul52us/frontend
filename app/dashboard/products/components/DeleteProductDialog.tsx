@@ -63,7 +63,7 @@ const DeleteProductDialog: React.FC<DeleteProductDialogProps> = ({
             </Text>
 
             <Flex gap={2} mt={1} wrap="wrap">
-              <Badge colorScheme="purple">{category}</Badge>
+              <Badge colorScheme="purple">{category?.name || category}</Badge>
               <Badge colorScheme="blue">{brand}</Badge>
               <Badge colorScheme={stock > 0 ? "green" : "red"}>
                 Stock: {stock}

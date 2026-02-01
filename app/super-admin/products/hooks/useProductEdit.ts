@@ -77,7 +77,11 @@ export const useProductEdit = (onRefresh: () => void) => {
                 )
                 : [],
             isAdmin: true, // Super Admin is always admin
-            variants: editProduct ? editProduct.variants : []
+            variants: editProduct ? editProduct.variants : [],
+            discountPrice: editProduct.discountPrice ?? "",
+            price: editProduct.price ?? "",
+            stock: editProduct.stock ?? 0,
+            taxRate: editProduct.taxRate ?? 18
         }
         : {
             name: "",
