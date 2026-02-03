@@ -60,6 +60,7 @@ interface CustomTableProps {
   actions?: any;
   cells?: boolean;
   tableProps?: any;
+  onRowClick?: (row: RowData) => void;
 }
 
 interface TableActionsProps {
@@ -291,6 +292,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
   actions,
   cells = false,
   tableProps = {},
+  onRowClick,
   // isActions = false,
 }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
@@ -489,6 +491,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
               {data.map((row, rowIndex) => (
                 <Tr
                   key={rowIndex}
+                  onClick={() => onRowClick && onRowClick(row)}
                   _hover={{
                     bg: hoverBg,
                     cursor: "pointer",

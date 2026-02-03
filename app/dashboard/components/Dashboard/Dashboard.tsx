@@ -15,6 +15,7 @@ import AnalyticsTab from "./tabs/AnalyticsTab";
 import CustomersTab from "./tabs/CustomersTab";
 import InventoryTab from "./tabs/InventoryTab";
 
+
 const MotionBox = motion(Box);
 
 const Dashboard: React.FC = () => {
@@ -144,6 +145,7 @@ const Dashboard: React.FC = () => {
             {activeTab === "sales" && <AnalyticsTab />}
             {activeTab === "customer" && <CustomersTab />}
             {activeTab === "inventory" && <InventoryTab />}
+
           </MotionBox>
         </AnimatePresence>
       </Box>

@@ -63,6 +63,13 @@ const sidebarDatas: SidebarItem[] = [
     url: "/dashboard/products",
     role: ["user", "admin"],
   },
+  {
+    id: 7,
+    name: "Orders",
+    icon: <FaChartPie />,
+    url: "/dashboard/orders",
+    role: ["user", "admin"],
+  },
   // Blogs
   // {
   //   id: 501,

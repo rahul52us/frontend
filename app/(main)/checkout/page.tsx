@@ -80,6 +80,45 @@ const CheckoutPage = observer(() => {
         }
     };
 
+    const handleSelectAddress = async (addressId: string) => {
+        setSelectedAddress(addressId);
+
+        if (!initializedOrder) return;
+
+        try {
+            const address = addresses.find((a: any) => a._id === addressId);
+            if (!address) return;
+
+            // Use cart items for re-initialization payload as initializedOrder structure is now complex
+            // or extract from current orders
+            const currentItems = cartStore.cartItems.length > 0
+                ? cartStore.cartItems.map(item => ({
+                    product: item.product._id || item.product.id,
+                    quantity: item.quantity,
+                    variant: item.product.variant
+                }))
+                : (initializedOrder.orders ? initializedOrder.orders.flatMap((o: any) => o.items.map((i: any) => ({
+                    product: i.product._id || i.product, // Schema specific
+                    quantity: i.quantity,
+                    variant: i.variant
+                }))) : []);
+
+            const payload = {
+                items: currentItems,
+                // company: null, // Let backend split by company
+                shippingAddress: address
+            };
+
+            const res = await orderStore.initializeOrder(payload);
+            if (res?.success) {
+                setInitializedOrder(res.data);
+                toast({ title: "Delivery address updated", status: "success", duration: 2000 });
+            }
+        } catch (error) {
+            console.error("Failed to update order address", error);
+        }
+    };
+
     // Buy Now Logic & Initialization
     const searchParams = useSearchParams();
     const buyNowId = searchParams.get('productId');
@@ -87,21 +126,14 @@ const CheckoutPage = observer(() => {
 
     useEffect(() => {
         const initOrder = async () => {
-            if (!auth.token) {
-                // If not logged in, we can't initialize backend order yet.
-                // Redirect user purely on Place Order attempt, or here?
-                // Better to let them browse but force login to see final price if critical,
-                // but standard flow is: Login required for checkout.
-                return;
-            }
+            if (!auth.token) return;
 
             setIsInitializing(true);
             try {
                 let itemsPayload = [];
-                let companyId = null;
+                // let companyId = null;
 
                 if (isBuyNow && buyNowId) {
-                    // Fetch product details just to get company, or trust backend to find it by ID
                     const res = await shopStore.getProductById(buyNowId);
                     if (res?.data) {
                         const product = res.data;
@@ -110,7 +142,7 @@ const CheckoutPage = observer(() => {
                             quantity: 1,
                             variant: product.variant
                         });
-                        companyId = typeof product.company === 'object' ? product.company._id : product.company;
+                        // companyId = ...
                     }
                 } else {
                     if (cartStore.cartItems.length === 0) {
@@ -122,18 +154,20 @@ const CheckoutPage = observer(() => {
                         quantity: item.quantity,
                         variant: item.product.variant
                     }));
-                    const firstProd = cartStore.cartItems[0]?.product;
-                    companyId = typeof firstProd?.company === 'object' ? firstProd?.company?._id : firstProd?.company;
                 }
 
                 if (itemsPayload.length > 0) {
                     const payload = {
                         items: itemsPayload,
-                        company: companyId
+                        // company: companyId // Removed to allow backend split
                     };
                     const res = await orderStore.initializeOrder(payload);
                     if (res?.success) {
                         setInitializedOrder(res.data);
+                        // Access shippingAddress from top level of response data (we added it there)
+                        if (res.data.shippingAddress && res.data.shippingAddress._id) {
+                            setSelectedAddress(res.data.shippingAddress._id);
+                        }
                     }
                 }
 
@@ -148,18 +182,13 @@ const CheckoutPage = observer(() => {
             }
         };
 
-        initOrder();
+        if (auth.token) {
+            initOrder();
+        }
     }, [auth.token, isBuyNow, buyNowId, cartStore.cartItems, orderStore, shopStore, toast]);
 
 
-    // Validation for empty cart / redirect
-    useEffect(() => {
-        if (!isBuyNow && cartStore.totalItems === 0 && !isInitializing) {
-            // Delay redirect slightly or check if init failed?
-            // Actually if cart is empty, we shouldn't be here unless initializing finished empty
-        }
-    }, [isBuyNow, cartStore.totalItems, isInitializing]);
-
+    // ... (Validation useEffect) ...
 
     const handlePlaceOrder = async () => {
         if (!auth.token) {
@@ -179,36 +208,17 @@ const CheckoutPage = observer(() => {
         setIsProcessing(true);
         try {
             const payload = {
-                orderId: initializedOrder._id, // Pass ID of initialized order
+                // orderId: initializedOrder._id, // Not needed given backend confirms ALL initialized
                 shippingAddress: addresses.find((a: any) => a._id === selectedAddress),
                 paymentMethod
             };
 
-            const response = await stores.orderStore.createOrder(payload);
-            // WAIT! store.createOrder calls /create. We need confirmOrder.
-            // I need to update store to have confirmOrder action first? 
-            // Or I can use axios directly here if store update is pending, but better to use store.
-            // Assuming I added confirmOrder to store in previous step (I actually only added initializeOrder, missed confirmOrder in store)
-            // I will use axios directly for now or update store in next step if this fails TS check.
-            // Actually, I missed updating orderStore with confirmOrder. 
-            // I'll assume I'll fix it. For now, let's use a placeholder `confirmOrder` on store (I need to add it).
-
-            // Temporary direct call if store method missing
-            // const { data } = await axios.post("/order/confirm", payload);
-
-            // Let's rely on store having it (I will add it next if I missed it, checking previous steps... 
-            // I added initializeOrder, but did I add confirmOrder? No I didn't add confirmOrder to store file. 
-            // I only added backend service and route.
-            // I will add it using multi_replace in next step.
-
-            // For now, I'll write the code assuming it exists, and fix store immediately after.
-
-            // @ts-ignore
+            // Confim the initialized order(s)
             const responseConfirm = await stores.orderStore.confirmOrder(payload);
 
             toast({
                 title: "Order Placed Successfully!",
-                description: `Order #${responseConfirm.data?.orderId || "Confirmed"} has been placed.`,
+                description: `Orders have been confirmed.`,
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -217,7 +227,7 @@ const CheckoutPage = observer(() => {
             if (!isBuyNow) {
                 cartStore.clearCart();
             }
-            router.push("/account/orders");
+            router.push("/account?tab=orders");
 
         } catch (error: any) {
             toast({
@@ -232,20 +242,21 @@ const CheckoutPage = observer(() => {
 
     if (isInitializing) return <Box p={10} textAlign="center"><Spinner size="xl" /><Text mt={4}>Preparing your order...</Text></Box>;
     if (!isBuyNow && cartStore.totalItems === 0) {
-        // Simple redirect could be here
         return <Box p={10} textAlign="center"><Text>Your cart is empty.</Text><Button mt={4} onClick={() => router.push('/products')}>Browse Products</Button></Box>;
     }
 
-    // Use Initialized Order Data or Fallback (Logic: if initialized, usage it. if not, show spinner or nothing?)
-    // We should fallback to local calc only if init fails? No, strict backend.
     if (!initializedOrder) return <Box p={10} textAlign="center"><Text>Failed to load order details.</Text></Box>;
 
-    const { items, quote } = initializedOrder;
+    // Flatten items from all orders for display
+    const items = initializedOrder.orders ? initializedOrder.orders.flatMap((o: any) => o.items) : (initializedOrder.items || []);
+    const quote = initializedOrder.quote;
 
     // Calculate pricing from quote breakup
     const subtotal = quote?.breakup
         ?.filter((b: any) => b.title_type === 'item')
         .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
+
+    // ... rest of render ...
 
     const tax = quote?.breakup
         ?.filter((b: any) => b.title_type === 'tax')
@@ -439,7 +450,7 @@ const CheckoutPage = observer(() => {
                     onClose={onAddressModalClose}
                     addresses={addresses}
                     selectedAddress={selectedAddress}
-                    onSelectAddress={setSelectedAddress}
+                    onSelectAddress={handleSelectAddress}
                     onAddNewAddress={handleAddNewAddress}
                     onUpdateAddress={handleUpdateAddress}
                     onDeleteAddress={handleDeleteAddress}

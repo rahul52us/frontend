@@ -213,6 +213,14 @@ class OrderStore {
       return Promise.reject(err?.response?.data || err);
     }
   };
+  fetchMyOrders = async () => {
+    try {
+      const { data } = await axios.get("/order/my-orders");
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
 }
 
 export const orderStore = new OrderStore()

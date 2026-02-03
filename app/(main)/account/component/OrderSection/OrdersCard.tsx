@@ -1,16 +1,16 @@
 import {
-    Card,
-    CardBody,
-    Divider,
-    Flex,
-    HStack,
-    Heading,
-    Icon,
-    Image,
-    SimpleGrid,
-    Text,
-    VStack,
-    useColorModeValue,
+  Card,
+  CardBody,
+  Divider,
+  Flex,
+  HStack,
+  Heading,
+  Icon,
+  Image,
+  SimpleGrid,
+  Text,
+  VStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { FaRupeeSign } from "react-icons/fa";
@@ -20,14 +20,15 @@ const OrderCard = ({ order }) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
+  const orderItems = order.items || [];
+  const orderTotal = order.quote?.price?.value || order.total || 0;
+
   return (
     <Card
       variant="outline"
       borderWidth="1px"
       borderColor={borderColor}
       borderRadius="xl"
-    
-      // mb={6}
       bg={cardBg}
     >
       <CardBody>
@@ -35,48 +36,45 @@ const OrderCard = ({ order }) => {
           {/* Order Header */}
           <HStack justify="space-between">
             <VStack align="start" spacing={1}>
-              <Heading fontSize={"lg"}>Order {order?.id}</Heading>
+              <Heading fontSize={"lg"}>Order #{order?.orderId}</Heading>
               <Text fontSize="sm" color="gray.500">
                 Ordered on{" "}
-                {new Date(order?.date).toLocaleDateString("en-IN", {
+                {order?.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
-                })}
+                }) : "N/A"}
               </Text>
             </VStack>
-            <OrderStatusBadge status={order?.status} />
+            <OrderStatusBadge status={order?.orderStatus || "pending"} />
           </HStack>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 1 }} spacing={4}>
-            {order.products.map((product) => (
+            {orderItems.map((item, index) => (
               <Flex
-                key={product.id}
+                key={item.item_id || index}
                 align="center"
                 p={3}
                 borderWidth="1px"
                 borderRadius="lg"
-                // shadow={"sm"}
               >
                 <Image
-                  src={product?.image}
-                  alt={product?.name}
-                  // boxSize="80px"
-                  w={"120px"}
-                  h={"100%"}
+                  src={item.productImage || "/placeholder.png"}
+                  alt={item.productName}
+                  w={"80px"}
+                  h={"80px"}
                   objectFit="contain"
                   mr={4}
+                  fallbackSrc="https://via.placeholder.com/80"
                 />
-                <VStack align="start" spacing={1}>
-                  <Text fontWeight="medium">{product?.name}</Text>
+                <VStack align="start" spacing={1} flex={1}>
+                  <Text fontWeight="medium" noOfLines={2}>{item.productName}</Text>
                   <Text fontSize="sm" color="gray.500">
-                    Qty: {product?.quantity}
+                    Qty: {item.quantity}
                   </Text>
                   <HStack>
                     <Icon as={FaRupeeSign} color="green.500" boxSize={3} />
                     <Text>
-                      {(product?.price * product?.quantity).toLocaleString(
-                        "en-IN"
-                      )}
+                      {(item.unitPrice * item.quantity).toLocaleString("en-IN")}
                     </Text>
                   </HStack>
                 </VStack>
@@ -94,20 +92,14 @@ const OrderCard = ({ order }) => {
             <HStack>
               <Icon as={FaRupeeSign} color="green.500" boxSize={5} />
               <Text fontSize="xl" fontWeight="bold">
-                {order?.total.toLocaleString("en-IN", {
-                  maximumFractionDigits: 0,
+                {parseFloat(orderTotal.toString()).toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
                 })}
               </Text>
             </HStack>
           </HStack>
         </VStack>
       </CardBody>
-
-      {/* <CardFooter pt={0}>
-          <Text fontSize="sm" color="gray.500">
-            {order.products.length} item{order.products.length > 1 ? 's' : ''} in this order
-          </Text>
-        </CardFooter> */}
     </Card>
   );
 };
