@@ -9,7 +9,6 @@ import {
     Select,
     Image,
     Divider,
-    Button,
     useToast,
     Grid,
     GridItem,
@@ -17,54 +16,37 @@ import {
     Heading
 } from "@chakra-ui/react";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
-// Actually, this component will likely be in OrdersTab folder or verify path
-// If I put it in app/dashboard/components/Dashboard/tabs/OrderDrawer.tsx
-import { FaBox, FaUser, FaMapMarkerAlt, FaPhone } from "react-icons/fa";
+
+import { FaUser, FaMapMarkerAlt } from "react-icons/fa";
 import stores from "../../../../store/stores";
 
 interface OrderDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     order: any;
-    onUpdate: () => void; // Callback to refresh list
 }
 
 
-const OrderDrawer: React.FC<OrderDrawerProps> = ({ isOpen, onClose, order, onUpdate }) => {
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [currentOrder, setCurrentOrder] = useState<any>(null);
-    const toast = useToast();
-    const { auth } = stores;
+import { observer } from "mobx-react-lite";
 
-    React.useEffect(() => {
-        if (order) {
-            setCurrentOrder(order);
-        }
-    }, [order]);
+const OrderDrawer: React.FC<OrderDrawerProps> = observer(({ isOpen, onClose, order }) => {
+    const [isUpdating, setIsUpdating] = useState(false);
+    const toast = useToast();
+    const { orderStore } = stores;
 
     if (!order) return null;
 
     const handleStatusUpdate = async (newStatus: string) => {
         setIsUpdating(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8500/api'}/order/update-status`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${auth.token}`
-                },
-                body: JSON.stringify({ orderId: currentOrder._id, status: newStatus })
-            });
-            const data = await response.json();
+            const data = await orderStore.updateOrderStatus(order._id, newStatus);
             if (data.success) {
                 toast({ title: "Status updated", status: "success" });
-                setCurrentOrder({ ...currentOrder, orderStatus: newStatus });
-                onUpdate();
             } else {
                 toast({ title: "Failed update", description: data.message, status: "error" });
             }
-        } catch (error) {
-            toast({ title: "Error", status: "error" });
+        } catch (error: any) {
+            toast({ title: "Error", description: error?.response?.data?.message || "Something went wrong", status: "error" });
         } finally {
             setIsUpdating(false);
         }
@@ -73,37 +55,20 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ isOpen, onClose, order, onUpd
     const handleItemStatusUpdate = async (itemId: string, newStatus: string) => {
         setIsUpdating(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8500/api'}/order/update-item-status`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${auth.token}`
-                },
-                body: JSON.stringify({ orderId: currentOrder._id, itemId: itemId, status: newStatus })
-            });
-            const data = await response.json();
+            const data = await orderStore.updateOrderItemStatus(order._id, itemId, newStatus);
             if (data.success) {
                 toast({ title: "Item Status updated", status: "success" });
-
-                // Update local state for immediate feedback
-                const updatedFulfillments = currentOrder.fulfillments.map((f: any) => {
-                    if (f.id === itemId) {
-                        return { ...f, status: newStatus };
-                    }
-                    return f;
-                });
-                setCurrentOrder({ ...currentOrder, fulfillments: updatedFulfillments });
-
-                onUpdate();
             } else {
                 toast({ title: "Failed update", description: data.message, status: "error" });
             }
-        } catch (error) {
-            toast({ title: "Error", status: "error" });
+        } catch (error: any) {
+            toast({ title: "Error", description: error?.response?.data?.message || "Something went wrong", status: "error" });
         } finally {
             setIsUpdating(false);
         }
     };
+
+    const currentOrder = order;
 
     return (
         <CustomDrawer
@@ -245,6 +210,6 @@ const OrderDrawer: React.FC<OrderDrawerProps> = ({ isOpen, onClose, order, onUpd
             </VStack>
         </CustomDrawer>
     );
-};
+});
 
 export default OrderDrawer;

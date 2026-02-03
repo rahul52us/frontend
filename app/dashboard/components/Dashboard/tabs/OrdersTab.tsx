@@ -14,41 +14,23 @@ import CustomTable from "../../../../component/config/component/CustomTable/Cust
 import OrderDrawer from "./OrderDrawer";
 
 const OrdersTab = observer(() => {
-    const [orders, setOrders] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const { orderStore, auth } = stores;
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
-    const { auth } = stores;
 
     const companyId = auth.user?.company?._id || auth.user?.company;
 
     const fetchOrders = useCallback(async () => {
         if (!companyId) return;
 
-        setIsLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8500/api'}/order/company/${companyId}`, {
-                headers: {
-                    'Authorization': `Bearer ${auth.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                setOrders(data.data);
-            } else {
-                toast({ title: "Failed to fetch orders", description: data.message, status: "error" });
-            }
-
-        } catch (error) {
+            await orderStore.fetchCompanyOrders(companyId);
+        } catch (error: any) {
             console.error("Error fetching orders:", error);
-            toast({ title: "Error fetching orders", status: "error" });
-        } finally {
-            setIsLoading(false);
+            toast({ title: "Error fetching orders", description: error?.message, status: "error" });
         }
-    }, [auth.token, companyId, toast]);
+    }, [companyId, toast, orderStore]);
 
     useEffect(() => {
         if (auth.token && companyId) {
@@ -57,17 +39,17 @@ const OrdersTab = observer(() => {
     }, [fetchOrders, auth.token, companyId]);
 
     const handleRowClick = (row: any) => {
-        setSelectedOrder(row);
+        setSelectedOrderId(row._id || row.orderId); // ensure unique ID usage
         onOpen();
     };
 
-    const handleDrawerUpdate = () => {
-        fetchOrders(); // Refresh list
-        // Update selected order details? 
-        // Ideally fetch single order again or iterate local list. 
-        // For simplicity, just refetch list and update selected if possible, or close drawer.
-        // Let's refetch list.
-    };
+    const handleCloseDrawer = () => {
+        onClose();
+        setSelectedOrderId(null);
+    }
+
+    // Derive selected order from store to ensure reactivity
+    const selectedOrder = orderStore.companyOrders.find((o: any) => (o._id === selectedOrderId || o.orderId === selectedOrderId));
 
     const columns = [
         {
@@ -118,7 +100,7 @@ const OrdersTab = observer(() => {
         }
     ];
 
-    if (isLoading && orders.length === 0) {
+    if (orderStore.isLoading && orderStore.companyOrders.length === 0) {
         return (
             <Box p={6} textAlign="center">
                 <Spinner size="xl" />
@@ -136,17 +118,16 @@ const OrdersTab = observer(() => {
             <CustomTable
                 title="All Orders"
                 columns={columns}
-                data={orders}
-                loading={isLoading}
+                data={orderStore.companyOrders}
+                loading={orderStore.isLoading}
                 serial={{ show: true, text: "S.No", width: "10%" }}
                 onRowClick={handleRowClick}
             />
             {selectedOrder && (
                 <OrderDrawer
                     isOpen={isOpen}
-                    onClose={onClose}
+                    onClose={handleCloseDrawer}
                     order={selectedOrder}
-                    onUpdate={handleDrawerUpdate}
                 />
             )}
         </Box>
