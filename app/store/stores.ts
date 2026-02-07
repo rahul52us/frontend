@@ -11,6 +11,7 @@ import { layoutStore } from './layoutStore/LayoutStore'
 import { orderStore } from "./orderStore/orderStore";
 import { shopStore } from "./shopStore/shopStore";
 import categoryStore from "./categoryStore/categoryStore";
+import offerStore from "./offerStore/offerStore";
 
 const stores = {
   auth: authStore,
@@ -24,7 +25,8 @@ const stores = {
   orderStore: orderStore,
   testimonialStore: testimonialStore,
   cartStore: cartStore,
-  categoryStore: categoryStore
+  categoryStore: categoryStore,
+  offerStore: offerStore
 };
 
 export default stores;
