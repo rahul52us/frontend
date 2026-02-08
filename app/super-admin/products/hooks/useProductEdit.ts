@@ -33,6 +33,7 @@ const ProductSchema = Yup.object().shape({
         })
     ),
     images: Yup.array().min(1, "At least one image is required"),
+    offers: Yup.array().of(Yup.object()).optional(),
 });
 
 export const useProductEdit = (onRefresh: () => void) => {
@@ -81,7 +82,8 @@ export const useProductEdit = (onRefresh: () => void) => {
             discountPrice: editProduct.discountPrice ?? "",
             price: editProduct.price ?? "",
             stock: editProduct.stock ?? 0,
-            taxRate: editProduct.taxRate ?? 18
+            taxRate: editProduct.taxRate ?? 18,
+            offers: editProduct.offers || []
         }
         : {
             name: "",
@@ -97,7 +99,8 @@ export const useProductEdit = (onRefresh: () => void) => {
             images: [],
             subCategories: [],
             isAdmin: true, // Super Admin is always admin
-            variants: []
+            variants: [],
+            offers: []
         };
 
     const handleSubmit = async (values: any, actions: any) => {

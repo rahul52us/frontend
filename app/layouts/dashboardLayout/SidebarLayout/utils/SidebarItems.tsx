@@ -2,6 +2,7 @@ import {
   FaChartPie,
   FaCog,
   FaBox,
+  FaTag,
 } from "react-icons/fa";
 
 interface SidebarItem {
@@ -47,6 +48,13 @@ const sidebarDatas: SidebarItem[] = [
     name: "Products",
     icon: <FaBox />,
     url: "/super-admin/products",
+    role: ["superAdmin"],
+  },
+  {
+    id: 105,
+    name: "Offers",
+    icon: <FaTag />,
+    url: "/super-admin/offers",
     role: ["superAdmin"],
   },
   {

@@ -292,6 +292,20 @@ class AuthStore {
       return Promise.reject(err?.response?.data || err);
     }
   };
+
+  updateProfile = async (profileData: { phone?: string; email?: string }) => {
+    try {
+      const { data } = await axios.put("/user/profile", profileData);
+      // Update local user data
+      if (this.user) {
+        if (profileData.phone) this.user.phone = profileData.phone;
+        if (profileData.email) this.user.email = profileData.email;
+      }
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
 }
 
 export const authStore = new AuthStore();

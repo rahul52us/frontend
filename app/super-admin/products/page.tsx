@@ -11,8 +11,10 @@ import { useProductList } from "./hooks/useProductList";
 import { useProductDelete } from "./hooks/useProductDelete";
 import { useProductEdit } from "./hooks/useProductEdit";
 import { ProductColumns } from "./components/ProductColumns";
+import stores from "../../store/stores";
 
 const SuperAdminProductsPage = observer(() => {
+    const { offerStore } = stores;
     const {
         products,
         loading,
@@ -42,6 +44,10 @@ const SuperAdminProductsPage = observer(() => {
         ProductSchema,
         activeCategories
     } = useProductEdit(() => fetchProducts(currentPage));
+
+    React.useEffect(() => {
+        offerStore.getAllOffers({ isActive: true });
+    }, [offerStore]);
 
     const tableActions = {
         actionBtn: {
@@ -106,6 +112,7 @@ const SuperAdminProductsPage = observer(() => {
                 validationSchema={ProductSchema}
                 onSubmit={handleSubmit}
                 categories={activeCategories.filter(c => c !== "")}
+                offersList={offerStore.offers}
                 isEdit={!!editProduct}
             />
         </Box>

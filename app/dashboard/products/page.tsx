@@ -83,6 +83,7 @@ const ProductSchema = Yup.object().shape({
     })
   ),
 
+  offers: Yup.array().of(Yup.object()).optional(),
   images: Yup.array().min(1, "At least one image is required"),
 });
 
@@ -103,7 +104,7 @@ const ProductsPage = observer(() => {
   const [totalCount, setTotalCount] = useState(0);
   const [showInactive, setShowInactive] = useState(false);
 
-  const { shopStore, auth, categoryStore } = stores;
+  const { shopStore, auth, categoryStore, offerStore } = stores;
 
   const triggerDelete = (product: any) => {
     setSelectedProduct(product);
@@ -181,9 +182,10 @@ const ProductsPage = observer(() => {
     fetchProducts(1);
     if (auth.company) {
       categoryStore.getAllCategories();
+      offerStore.getAllOffers({ isActive: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.company, categoryStore]);
+  }, [auth.company, categoryStore, offerStore]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -228,6 +230,7 @@ const ProductsPage = observer(() => {
         isFeatured: products.find((p) => p._id === selectedProduct).isFeatured || false,
         tags: products.find((p) => p._id === selectedProduct).tags || [],
         variants: products.find((p) => p._id === selectedProduct).variants || [],
+        offers: products.find((p) => p._id === selectedProduct).offers || [],
       }
       : {
         name: "",
@@ -247,6 +250,7 @@ const ProductsPage = observer(() => {
         isFeatured: false,
         tags: [],
         variants: [],
+        offers: [],
       };
 
   const handleSubmit = async (values: any, actions: any) => {
@@ -539,6 +543,8 @@ const ProductsPage = observer(() => {
         validationSchema={ProductSchema}
         onSubmit={handleSubmit}
         categories={categoryStore.categories}
+        offersList={offerStore.offers}
+        products={products}
         isEdit={!!selectedProduct}
       />
 

@@ -12,7 +12,7 @@ import stores from "../../../store/stores";
 
 const AccountPage = observer(() => {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const initialTab = searchParams?.get('tab') || "profile";
+  const initialTab = searchParams?.get('tab') || "details";
   const [activeTab, setActiveTab] = useState(initialTab);
   const accentColor = useColorModeValue("purple.500", "purple.200");
   const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
@@ -23,15 +23,25 @@ const AccountPage = observer(() => {
     name: authUser?.name || "User",
     email: authUser?.email || "",
     phone: authUser?.phone || "",
-    avatar: authUser?.avatar || "/placeholder.svg?height=80&width=80",
+    avatar: authUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.name || 'User')}&background=6B46C1&color=fff&size=128`,
+  };
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      const newUrl = `/account?tab=${tab}`;
+      window.history.pushState({}, '', newUrl);
+    }
   };
 
   const menuItems = [
-    { label: "Profile Details", icon: <FaUser size="18px" />, tab: "profile" },
+    { label: "Profile Details", icon: <FaUser size="18px" />, tab: "details" },
     { label: "Orders", icon: <FaBox size="18px" />, tab: "orders" },
     { label: "Addresses", icon: <FaHome size="18px" />, tab: "addresses" },
     { label: "Wallet", icon: <FaWallet size="18px" />, tab: "wallet" },
   ];
+
 
   return (
     <Box maxW="container.xl" mx="auto" py={12} px={4} bg={useColorModeValue("gray.50", "gray.800")}>
@@ -69,7 +79,7 @@ const AccountPage = observer(() => {
                   label={label}
                   icon={icon}
                   isActive={activeTab === tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                   color={accentColor}
                 />
               ))}
@@ -99,7 +109,7 @@ const AccountPage = observer(() => {
         {/* Main Content */}
         <Card borderRadius="2xl" boxShadow="lg" bg={useColorModeValue("white", "gray.700")}>
           <CardBody p={8}>
-            {activeTab === "profile" && <ProfileSection user={user} />}
+            {activeTab === "details" && <ProfileSection user={user} />}
             {activeTab === "orders" && <OrdersSection />}
             {activeTab === "addresses" && <AddressesSection />}
             {activeTab === "wallet" && <WalletSection />}

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -17,10 +17,14 @@ import {
   IconButton,
   Image,
   Icon,
+  Checkbox,
+  Switch,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { Formik, Field, Form, FieldArray } from "formik";
-import { FaPlus, FaTrash, FaUpload } from "react-icons/fa";
+import { FaPlus, FaTrash, FaUpload, FaGift } from "react-icons/fa";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
+import FreebieProductModal from "./FreebieProductModal";
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -29,6 +33,8 @@ interface ProductFormProps {
   validationSchema: any;
   onSubmit: any;
   categories: any[];
+  offersList?: any[];
+  products?: any[];
   isEdit: boolean;
 }
 
@@ -39,9 +45,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
   validationSchema,
   onSubmit,
   categories,
+  offersList = [],
+  products = [],
   isEdit,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const freebieModal = useDisclosure();
+  const [currentFreebieOfferId, setCurrentFreebieOfferId] = useState<string | null>(null);
 
   const handleImageUpload = async (
     event: any,
@@ -94,6 +104,45 @@ const ProductForm: React.FC<ProductFormProps> = ({
           const availableSubCategories = categories.filter(
             cat => cat.parent && (cat.parent._id === props.values.category || cat.parent === props.values.category)
           );
+
+          const selectedOffers = Array.isArray(props.values.offers) ? props.values.offers : [];
+
+          const toggleOffer = (offer: any) => {
+            const idx = selectedOffers.findIndex((o: any) => o.offerId === offer.offerId);
+            if (idx >= 0) {
+              const updated = selectedOffers.filter((o: any) => o.offerId !== offer.offerId);
+              props.setFieldValue("offers", updated);
+            } else {
+              const defaultConfig =
+                offer.type === "discount"
+                  ? { discountPercentage: "", maxDiscountAmount: "", minCartValue: "" }
+                  : offer.type === "buyXgetY"
+                    ? { buyQuantity: "", getQuantity: "" }
+                    : { freebieTitle: "" };
+
+              props.setFieldValue("offers", [
+                ...selectedOffers,
+                {
+                  offerId: offer.offerId,
+                  type: offer.type,
+                  isEnabled: true,
+                  config: defaultConfig,
+                },
+              ]);
+            }
+          };
+
+          const updateOfferConfig = (offerId: string, key: string, value: any) => {
+            const idx = selectedOffers.findIndex((o: any) => o.offerId === offerId);
+            if (idx < 0) return;
+            props.setFieldValue(`offers[${idx}].config.${key}`, value);
+          };
+
+          const updateOfferEnabled = (offerId: string, enabled: boolean) => {
+            const idx = selectedOffers.findIndex((o: any) => o.offerId === offerId);
+            if (idx < 0) return;
+            props.setFieldValue(`offers[${idx}].isEnabled`, enabled);
+          };
 
           return (
             <Form>
@@ -262,7 +311,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   )}
                 </Field>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                   <Field name="price">
                     {({ field, form }: any) => (
                       <FormControl
@@ -278,23 +327,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           <NumberInputField placeholder="0.00" />
                         </NumberInput>
                         <FormErrorMessage>{form.errors.price}</FormErrorMessage>
-                      </FormControl>
-                    )}
-                  </Field>
-                  <Field name="discountPrice">
-                    {({ field, form }: any) => (
-                      <FormControl
-                        isInvalid={form.errors.discountPrice && form.touched.discountPrice}
-                      >
-                        <FormLabel>Discount Price (₹)</FormLabel>
-                        <NumberInput
-                          min={0}
-                          onChange={(val) => form.setFieldValue(field.name, val)}
-                          value={field.value}
-                        >
-                          <NumberInputField placeholder="0.00" />
-                        </NumberInput>
-                        <FormErrorMessage>{form.errors.discountPrice}</FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
@@ -338,6 +370,183 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     )}
                   </Field>
                 </SimpleGrid>
+
+                {/* Offers Section */}
+                <Box>
+                  <FormLabel>Offers</FormLabel>
+                  {offersList.length === 0 ? (
+                    <Text color="gray.500" fontSize="sm">
+                      No offers available.
+                    </Text>
+                  ) : (
+                    <VStack spacing={4} align="stretch">
+                      {offersList.map((offer: any) => {
+                        const selected = selectedOffers.find((o: any) => o.offerId === offer.offerId);
+                        return (
+                          <Box key={offer.offerId} p={4} borderWidth="1px" borderRadius="lg">
+                            <HStack justify="space-between">
+                              <Checkbox
+                                isChecked={!!selected}
+                                onChange={() => toggleOffer(offer)}
+                              >
+                                {offer.name} ({offer.type})
+                              </Checkbox>
+                              {selected && (
+                                <HStack>
+                                  <Text fontSize="sm" color="gray.500">
+                                    Enabled
+                                  </Text>
+                                  <Switch
+                                    isChecked={selected.isEnabled !== false}
+                                    onChange={(e) => updateOfferEnabled(offer.offerId, e.target.checked)}
+                                  />
+                                </HStack>
+                              )}
+                            </HStack>
+
+                            {selected && offer.type === "discount" && (
+                              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mt={4}>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Discount %</FormLabel>
+                                  <NumberInput
+                                    min={0}
+                                    max={100}
+                                    onChange={(val) => updateOfferConfig(offer.offerId, "discountPercentage", val)}
+                                    value={selected.config?.discountPercentage ?? ""}
+                                  >
+                                    <NumberInputField placeholder="e.g. 60" />
+                                  </NumberInput>
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Max Discount (₹)</FormLabel>
+                                  <NumberInput
+                                    min={0}
+                                    onChange={(val) => updateOfferConfig(offer.offerId, "maxDiscountAmount", val)}
+                                    value={selected.config?.maxDiscountAmount ?? ""}
+                                  >
+                                    <NumberInputField placeholder="e.g. 120" />
+                                  </NumberInput>
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Min Cart Value (₹)</FormLabel>
+                                  <NumberInput
+                                    min={0}
+                                    onChange={(val) => updateOfferConfig(offer.offerId, "minCartValue", val)}
+                                    value={selected.config?.minCartValue ?? ""}
+                                  >
+                                    <NumberInputField placeholder="e.g. 159" />
+                                  </NumberInput>
+                                </FormControl>
+                              </SimpleGrid>
+                            )}
+
+                            {selected && offer.type === "buyXgetY" && (
+                              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4}>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Buy Quantity (X)</FormLabel>
+                                  <NumberInput
+                                    min={1}
+                                    onChange={(val) => updateOfferConfig(offer.offerId, "buyQuantity", val)}
+                                    value={selected.config?.buyQuantity ?? ""}
+                                  >
+                                    <NumberInputField placeholder="e.g. 2" />
+                                  </NumberInput>
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Get Quantity (Y)</FormLabel>
+                                  <NumberInput
+                                    min={1}
+                                    onChange={(val) => updateOfferConfig(offer.offerId, "getQuantity", val)}
+                                    value={selected.config?.getQuantity ?? ""}
+                                  >
+                                    <NumberInputField placeholder="e.g. 1" />
+                                  </NumberInput>
+                                </FormControl>
+                              </SimpleGrid>
+                            )}
+
+                            {selected && offer.type === "freebie" && (
+                              <Box mt={4}>
+                                <FormControl>
+                                  <FormLabel fontSize="sm">Select Freebie Product</FormLabel>
+                                  {selected.config?.freebieProductId ? (
+                                    <HStack
+                                      p={3}
+                                      borderWidth="1px"
+                                      borderRadius="md"
+                                      borderColor="green.300"
+                                      bg="green.50"
+                                      justify="space-between"
+                                    >
+                                      <HStack spacing={3}>
+                                        <Image
+                                          src={
+                                            products.find((p) => p._id === selected.config?.freebieProductId)?.images?.[0]?.preview ||
+                                            products.find((p) => p._id === selected.config?.freebieProductId)?.images?.[0] ||
+                                            "https://via.placeholder.com/40x40?text=?"
+                                          }
+                                          alt="Freebie"
+                                          boxSize="40px"
+                                          objectFit="cover"
+                                          borderRadius="md"
+                                        />
+                                        <Box>
+                                          <Text fontWeight="medium" fontSize="sm">
+                                            {products.find((p) => p._id === selected.config?.freebieProductId)?.name || "Selected Product"}
+                                          </Text>
+                                          <Text fontSize="xs" color="gray.500">
+                                            ₹{products.find((p) => p._id === selected.config?.freebieProductId)?.price || "--"}
+                                          </Text>
+                                        </Box>
+                                      </HStack>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        colorScheme="blue"
+                                        onClick={() => {
+                                          setCurrentFreebieOfferId(offer.offerId);
+                                          freebieModal.onOpen();
+                                        }}
+                                      >
+                                        Change
+                                      </Button>
+                                    </HStack>
+                                  ) : (
+                                    <Button
+                                      leftIcon={<Icon as={FaGift} />}
+                                      variant="outline"
+                                      colorScheme="blue"
+                                      size="md"
+                                      w="full"
+                                      onClick={() => {
+                                        setCurrentFreebieOfferId(offer.offerId);
+                                        freebieModal.onOpen();
+                                      }}
+                                    >
+                                      Select Freebie Product
+                                    </Button>
+                                  )}
+                                </FormControl>
+
+                                {/* Freebie Product Modal */}
+                                <FreebieProductModal
+                                  isOpen={freebieModal.isOpen && currentFreebieOfferId === offer.offerId}
+                                  onClose={freebieModal.onClose}
+                                  products={products.filter((p) => p._id !== props.values._id)}
+                                  selectedProductId={selected.config?.freebieProductId}
+                                  onSelect={(product) => {
+                                    updateOfferConfig(offer.offerId, "freebieProductId", product._id);
+                                    updateOfferConfig(offer.offerId, "freebieProductName", product.name);
+                                  }}
+                                />
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </VStack>
+                  )}
+                </Box>
                 <Field name="tags">
                   {({ form }: any) => (
                     <FormControl>
