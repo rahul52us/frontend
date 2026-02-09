@@ -19,7 +19,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FaEnvelope, FaExclamationCircle, FaInfoCircle, FaPhoneAlt, FaSave, FaUser, FaUserEdit } from "react-icons/fa";
+import { FaEnvelope, FaExclamationCircle, FaInfoCircle, FaPhoneAlt, FaSave, FaUser, FaUserEdit, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaGlobe } from "react-icons/fa";
 import stores from "../../../../store/stores";
 
 export function ProfileSection({ user }: { user: any }) {
@@ -28,15 +28,24 @@ export function ProfileSection({ user }: { user: any }) {
   const [formData, setFormData] = useState({
     email: user.email || "",
     phone: user.phone || "",
+    alternatePhone: user.alternatePhone || "",
+    alternateEmail: user.alternateEmail || "",
+    facebook: user.socialLinks?.facebook || "",
+    instagram: user.socialLinks?.instagram || "",
+    twitter: user.socialLinks?.twitter || "",
+    linkedin: user.socialLinks?.linkedin || "",
+    website: user.socialLinks?.website || "",
   });
   const [errors, setErrors] = useState({
     email: "",
     phone: "",
+    alternatePhone: "",
+    alternateEmail: "",
   });
 
   // Validation function
   const validateForm = () => {
-    const newErrors = { email: "", phone: "" };
+    const newErrors = { email: "", phone: "", alternatePhone: "", alternateEmail: "" };
     let isValid = true;
 
     // Email validation
@@ -48,6 +57,18 @@ export function ProfileSection({ user }: { user: any }) {
     // Phone validation
     if (formData.phone && formData.phone.length < 10) {
       newErrors.phone = "Phone number must be at least 10 characters.";
+      isValid = false;
+    }
+
+    // Alternate Phone validation
+    if (formData.alternatePhone && formData.alternatePhone.length < 10) {
+      newErrors.alternatePhone = "Alternate phone number must be at least 10 characters.";
+      isValid = false;
+    }
+
+    // Alternate Email validation
+    if (formData.alternateEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.alternateEmail)) {
+      newErrors.alternateEmail = "Please enter a valid alternate email address.";
       isValid = false;
     }
 
@@ -69,6 +90,26 @@ export function ProfileSection({ user }: { user: any }) {
         }
         if (formData.email && formData.email !== user.email) {
           updateData.email = formData.email;
+        }
+
+        // Alternate contacts
+        if (formData.alternatePhone !== (user.alternatePhone || "")) {
+          (updateData as any).alternatePhone = formData.alternatePhone;
+        }
+        if (formData.alternateEmail !== (user.alternateEmail || "")) {
+          (updateData as any).alternateEmail = formData.alternateEmail;
+        }
+
+        // Social Links
+        const socialLinks: any = {};
+        if (formData.facebook !== (user.socialLinks?.facebook || "")) socialLinks.facebook = formData.facebook;
+        if (formData.instagram !== (user.socialLinks?.instagram || "")) socialLinks.instagram = formData.instagram;
+        if (formData.twitter !== (user.socialLinks?.twitter || "")) socialLinks.twitter = formData.twitter;
+        if (formData.linkedin !== (user.socialLinks?.linkedin || "")) socialLinks.linkedin = formData.linkedin;
+        if (formData.website !== (user.socialLinks?.website || "")) socialLinks.website = formData.website;
+
+        if (Object.keys(socialLinks).length > 0) {
+          (updateData as any).socialLinks = socialLinks;
         }
 
         if (Object.keys(updateData).length === 0) {
@@ -199,6 +240,144 @@ export function ProfileSection({ user }: { user: any }) {
                     <Icon as={FaExclamationCircle} mr={2} />
                     {errors.phone}
                   </FormErrorMessage>
+                </FormControl>
+              </Card>
+            </SimpleGrid>
+
+            {/* Alternate Contact Section */}
+            <Box pb={2} borderBottomWidth="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
+              <Text fontSize="md" fontWeight="bold" color={useColorModeValue('gray.700', 'gray.300')}>
+                Alternate Contact Information
+              </Text>
+            </Box>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              {/* Alternate Email Field */}
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl isInvalid={!!errors.alternateEmail}>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaEnvelope} mr={2} />
+                    Alternate Email
+                  </FormLabel>
+                  <Input
+                    type="email"
+                    placeholder="alternate@example.com"
+                    name="alternateEmail"
+                    value={formData.alternateEmail}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                  <FormErrorMessage fontSize="sm" mt={1}>
+                    <Icon as={FaExclamationCircle} mr={2} />
+                    {errors.alternateEmail}
+                  </FormErrorMessage>
+                </FormControl>
+              </Card>
+
+              {/* Alternate Phone Field */}
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl isInvalid={!!errors.alternatePhone}>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaPhoneAlt} mr={2} />
+                    Alternate Phone
+                  </FormLabel>
+                  <Input
+                    type="tel"
+                    placeholder="9876543210"
+                    name="alternatePhone"
+                    value={formData.alternatePhone}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                  <FormErrorMessage fontSize="sm" mt={1}>
+                    <Icon as={FaExclamationCircle} mr={2} />
+                    {errors.alternatePhone}
+                  </FormErrorMessage>
+                </FormControl>
+              </Card>
+            </SimpleGrid>
+
+            {/* Social Media Section */}
+            <Box pb={2} borderBottomWidth="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
+              <Text fontSize="md" fontWeight="bold" color={useColorModeValue('gray.700', 'gray.300')}>
+                Social Media Links
+              </Text>
+            </Box>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaFacebook} mr={2} /> Facebook
+                  </FormLabel>
+                  <Input
+                    placeholder="https://facebook.com/username"
+                    name="facebook"
+                    value={formData.facebook}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                </FormControl>
+              </Card>
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaInstagram} mr={2} /> Instagram
+                  </FormLabel>
+                  <Input
+                    placeholder="https://instagram.com/username"
+                    name="instagram"
+                    value={formData.instagram}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                </FormControl>
+              </Card>
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaTwitter} mr={2} /> Twitter (X)
+                  </FormLabel>
+                  <Input
+                    placeholder="https://twitter.com/username"
+                    name="twitter"
+                    value={formData.twitter}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                </FormControl>
+              </Card>
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaLinkedin} mr={2} /> LinkedIn
+                  </FormLabel>
+                  <Input
+                    placeholder="https://linkedin.com/in/username"
+                    name="linkedin"
+                    value={formData.linkedin}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
+                </FormControl>
+              </Card>
+              <Card variant="elevated" p={6} borderRadius="xl">
+                <FormControl>
+                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
+                    <Icon as={FaGlobe} mr={2} /> Website
+                  </FormLabel>
+                  <Input
+                    placeholder="https://yourwebsite.com"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                    focusBorderColor="blue.400"
+                    variant="flushed"
+                  />
                 </FormControl>
               </Card>
             </SimpleGrid>

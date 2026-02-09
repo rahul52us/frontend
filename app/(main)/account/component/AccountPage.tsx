@@ -20,6 +20,7 @@ const AccountPage = observer(() => {
   const { user: authUser, logout } = stores.auth;
 
   const user = {
+    ...authUser,
     name: authUser?.name || "User",
     email: authUser?.email || "",
     phone: authUser?.phone || "",

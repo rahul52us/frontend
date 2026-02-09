@@ -22,6 +22,8 @@ class AuthStore {
   error: string | null = null;
   notification: Notification | null = null;
   company: any = "67c7380f5e373d64c5b56fbe"
+  wishlist: any[] = [];
+
 
   constructor() {
     makeAutoObservable(this);
@@ -195,6 +197,7 @@ class AuthStore {
       const isSuperAdmin = this.user?.type === "superAdmin" || this.user?.role === "superAdmin" || (Array.isArray(this.user?.role) && this.user.role.includes("superAdmin"));
       if (!isSuperAdmin) {
         stores.cartStore.fetchCart();
+        this.fetchWishlist();
       }
     } catch (err: any) {
       this.error = err?.response?.data?.message || "Failed to fetch user info.";
@@ -213,10 +216,7 @@ class AuthStore {
   toggleLikeProduct = async (productId: string) => {
     try {
       const { data } = await axios.post("/user/like", { productId });
-
-      if (this.user) {
-        this.user.likedProducts = data.data.likedProducts;
-      }
+      await this.fetchWishlist();
 
       return data;
     } catch (err: any) {
@@ -227,6 +227,7 @@ class AuthStore {
   fetchWishlist = async () => {
     try {
       const { data } = await axios.get("/user/wishlist");
+      this.wishlist = data.data;
       return data.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);

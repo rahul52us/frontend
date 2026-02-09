@@ -10,7 +10,7 @@ const ProductLikeButton = observer(({ product }: { product: any }) => {
     const { _id, name, image, images } = product;
     const displayImage = image || (images && images.length > 0 ? images[0] : "");
 
-    const isLiked = authStore.user?.likedProducts?.includes(_id);
+    const isLiked = authStore.wishlist?.some((p: any) => p._id === _id);
 
     const handleLike = async (e: React.MouseEvent) => {
         e.stopPropagation();
