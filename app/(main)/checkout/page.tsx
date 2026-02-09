@@ -1,3 +1,4 @@
+"use client";
 import { Suspense } from "react";
 import CheckoutClient from "./CheckoutClient";
 
@@ -28,7 +29,7 @@ import stores from "../../store/stores";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaLock } from "react-icons/fa";
 
-const CheckoutPage = observer(() => {
+const CheckoutContent = observer(() => {
     const { cartStore, auth, orderStore, shopStore } = stores;
     const router = useRouter();
     const toast = useToast();
@@ -408,8 +409,8 @@ const CheckoutPage = observer(() => {
                                             </VStack>
                                         </HStack>
                                         <Text fontWeight="medium" flexShrink={0} minW="70px" textAlign="right">
-  ₹{item.total ?? (item.unitPrice * item.quantity)}
-</Text>
+                                            ₹{item.total ?? (item.unitPrice * item.quantity)}
+                                        </Text>
 
                                     </Flex>
                                 ))}
@@ -480,5 +481,13 @@ const CheckoutPage = observer(() => {
         </Box>
     );
 });
+
+const CheckoutPage = () => {
+    return (
+        <Suspense fallback={<Box p={10} textAlign="center"><Spinner size="xl" /><Text mt={4}>Loading checkout...</Text></Box>}>
+            <CheckoutContent />
+        </Suspense>
+    );
+};
 
 export default CheckoutPage;
