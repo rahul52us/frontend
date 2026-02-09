@@ -1,6 +1,8 @@
-import { Avatar, Box, Button, Card, CardBody, Flex, Grid, Text, VStack, useColorModeValue } from "@chakra-ui/react";
+import { Avatar, Box, Button, Card, CardBody, Flex, Grid, Text, VStack, useColorModeValue, useDisclosure } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { FaBox, FaHome, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
 import { AddressesSection } from "./AddressSection/AddressSection";
 // import { OrdersSection } from "./OrderSection/OrderSection";
@@ -11,15 +13,28 @@ import { WalletSection } from "./WalletSection/WalletSection";
 import stores from "../../../store/stores";
 
 const AccountPage = observer(() => {
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const initialTab = searchParams?.get('tab') || "details";
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams?.get('tab') || "details";
+    setActiveTab(tab);
+  }, [searchParams]);
   const accentColor = useColorModeValue("purple.500", "purple.200");
   const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
+  const { isOpen: isLogoutOpen, onOpen: onLogoutOpen, onClose: onLogoutClose } = useDisclosure();
 
   const { user: authUser, logout } = stores.auth;
 
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
   const user = {
+    ...authUser,
     name: authUser?.name || "User",
     email: authUser?.email || "",
     phone: authUser?.phone || "",
@@ -29,10 +44,7 @@ const AccountPage = observer(() => {
   // Update URL when tab changes
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      const newUrl = `/account?tab=${tab}`;
-      window.history.pushState({}, '', newUrl);
-    }
+    router.push(`/account?tab=${tab}`);
   };
 
   const menuItems = [
@@ -95,10 +107,7 @@ const AccountPage = observer(() => {
                 leftIcon={<FaSignOutAlt size="18px" />}
                 fontWeight={600}
                 transition="all 0.2s"
-                onClick={() => {
-                  logout();
-                  window.location.href = "/";
-                }}
+                onClick={onLogoutOpen}
               >
                 Logout
               </Button>
@@ -116,6 +125,17 @@ const AccountPage = observer(() => {
           </CardBody>
         </Card>
       </Grid>
+
+      <ConfirmationModal
+        isOpen={isLogoutOpen}
+        onClose={onLogoutClose}
+        onConfirm={handleLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmButtonProps={{ colorScheme: "red" }}
+      />
     </Box>
   );
 });
