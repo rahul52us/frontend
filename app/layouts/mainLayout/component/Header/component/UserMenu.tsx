@@ -156,7 +156,7 @@ const UserMenu = observer(() => {
           {/* Menu Items */}
           {!isSuperAdmin && renderItem("Your Wishlist", FiHeart, "red", onWishlistOpen)}
           {!isSuperAdmin && renderItem("Your Orders", FiShoppingBag, "blue", () =>
-            router.push("/dashboard/orders")
+            router.push("/account?tab=orders")
           )}
           {!isSuperAdmin && renderItem("Address Book", FiMapPin, "green", () =>
             router.push("/account?tab=addresses")
