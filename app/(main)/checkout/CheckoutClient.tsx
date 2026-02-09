@@ -1,5 +1,4 @@
-import { Suspense } from "react";
-import CheckoutClient from "./CheckoutClient";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -255,21 +254,12 @@ const CheckoutPage = observer(() => {
     // Calculate pricing from quote breakup
     const subtotal = quote?.breakup
         ?.filter((b: any) => b.title_type === 'item')
-        .reduce((sum: number, b: any) => {
-            // Use item.price (unit price) × quantity for subtotal, excluding freebie items
-            const unitPrice = parseFloat(b.item?.price?.value || '0');
-            const qty = b.item_quantity?.count || 1;
-            return sum + (unitPrice * qty);
-        }, 0) || 0;
+        .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
 
     // ... rest of render ...
 
     const tax = quote?.breakup
         ?.filter((b: any) => b.title_type === 'tax')
-        .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
-
-    const discount = quote?.breakup
-        ?.filter((b: any) => b.title_type === 'discount')
         .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
 
     const deliveryCharges = quote?.breakup
@@ -284,7 +274,7 @@ const CheckoutPage = observer(() => {
             <Container maxW="container.xl">
                 <Heading mb={6} fontSize="2xl" color="gray.800">Checkout</Heading>
 
-                <Grid templateColumns={{ base: "1fr", lg: "1fr 1.2fr" }} gap={8}>
+                <Grid templateColumns={{ base: "1fr", lg: "1.5fr 1fr" }} gap={8}>
 
                     {/* Left Column: Address & Payment */}
                     <GridItem>
@@ -399,18 +389,15 @@ const CheckoutPage = observer(() => {
 
                             <VStack spacing={4} align="stretch">
                                 {items.map((item: any, idx: number) => (
-                                    <Flex key={idx} justify="space-between" align="flex-start" gap={3}>
-                                        <HStack spacing={3} flex={1} minW={0} maxW="calc(100% - 80px)">
-                                            <Badge borderRadius="md" px={2} flexShrink={0}>{item.quantity}x</Badge>
-                                            <VStack align="start" spacing={0} flex={1} minW={0}>
-                                                <Text fontWeight="medium" noOfLines={2} title={item.productName}>{item.productName}</Text>
+                                    <Flex key={idx} justify="space-between" align="center">
+                                        <HStack spacing={3}>
+                                            <Badge borderRadius="md" px={2}>{item.quantity}x</Badge>
+                                            <VStack align="start" spacing={0}>
+                                                <Text fontWeight="medium" noOfLines={1} title={item.productName}>{item.productName}</Text>
                                                 {item.variant && <Text fontSize="xs" color="gray.500">{JSON.stringify(item.variant)}</Text>}
                                             </VStack>
                                         </HStack>
-                                        <Text fontWeight="medium" flexShrink={0} minW="70px" textAlign="right">
-  ₹{item.total ?? (item.unitPrice * item.quantity)}
-</Text>
-
+                                        <Text fontWeight="medium">₹{item.total}</Text>
                                     </Flex>
                                 ))}
                             </VStack>
@@ -426,14 +413,6 @@ const CheckoutPage = observer(() => {
                                     <Text color="gray.600">Tax</Text>
                                     <Text fontWeight="medium">₹{tax.toFixed(2)}</Text>
                                 </Flex>
-                                {discount !== 0 && (
-                                    <Flex justify="space-between" width="100%">
-                                        <Text color="green.600">Discount</Text>
-                                        <Text fontWeight="medium" color="green.600">
-                                            -₹{Math.abs(discount).toFixed(2)}
-                                        </Text>
-                                    </Flex>
-                                )}
                                 <Flex justify="space-between" width="100%">
                                     <Text color="gray.600">Shipping</Text>
                                     <Text fontWeight="medium" color={deliveryCharges === 0 ? "green.500" : "black"}>
