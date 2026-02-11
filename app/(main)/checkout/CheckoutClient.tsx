@@ -35,6 +35,14 @@ const CheckoutPage = observer(() => {
     const [selectedAddress, setSelectedAddress] = useState<string>("");
     const [paymentMethod, setPaymentMethod] = useState<string>("cod");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+    useEffect(() => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => setIsScriptLoaded(true);
+        document.body.appendChild(script);
+    }, []);
 
     // Initialized Order State
     const [initializedOrder, setInitializedOrder] = useState<any>(null);
@@ -207,27 +215,101 @@ const CheckoutPage = observer(() => {
 
         setIsProcessing(true);
         try {
-            const payload = {
-                // orderId: initializedOrder._id, // Not needed given backend confirms ALL initialized
-                shippingAddress: addresses.find((a: any) => a._id === selectedAddress),
-                paymentMethod
-            };
+            const address = addresses.find((a: any) => a._id === selectedAddress);
 
-            // Confim the initialized order(s)
-            const responseConfirm = await stores.orderStore.confirmOrder(payload);
+            if (paymentMethod === "cod") {
+                const payload = {
+                    shippingAddress: address,
+                    paymentMethod: "cod"
+                };
 
-            toast({
-                title: "Order Placed Successfully!",
-                description: `Orders have been confirmed.`,
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-            });
+                // Confirm the initialized order(s)
+                await stores.orderStore.confirmOrder(payload);
 
-            if (!isBuyNow) {
-                cartStore.clearCart();
+                toast({
+                    title: "Order Placed Successfully!",
+                    description: `Orders have been confirmed.`,
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                });
+
+                if (!isBuyNow) {
+                    cartStore.clearCart();
+                }
+                router.push("/account?tab=orders");
+
+            } else if (paymentMethod === "online") {
+                if (!isScriptLoaded) {
+                    toast({ title: "Payment SDK not loaded", status: "warning" });
+                    return;
+                }
+
+                const orderIds = initializedOrder.orders
+                    ? initializedOrder.orders.map((o: any) => o._id)
+                    : [initializedOrder._id];
+
+                // 1. Create Payment Order
+                const paymentOrder = await stores.orderStore.createPaymentOrder({ orderIds });
+
+                if (!paymentOrder || !paymentOrder.success) {
+                    throw new Error(paymentOrder?.message || "Failed to initiate payment");
+                }
+
+                const { data: rzpOrder } = paymentOrder;
+
+                // 2. Open Razorpay
+                const options = {
+                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_0XDl7Od4MRUktB", // Fallback for dev
+                    amount: rzpOrder.amount,
+                    currency: rzpOrder.currency,
+                    name: "Business Sahayata", // Or store name
+                    description: "Order Payment",
+                    order_id: rzpOrder.id,
+                    handler: async (response: any) => {
+                        try {
+                            // 3. Verify Payment
+                            const verifyRes = await stores.orderStore.verifyPayment({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            });
+
+                            if (verifyRes.success) {
+                                toast({
+                                    title: "Payment Successful!",
+                                    description: "Order placed successfully.",
+                                    status: "success",
+                                    duration: 5000,
+                                    isClosable: true,
+                                });
+                                if (!isBuyNow) {
+                                    cartStore.clearCart();
+                                }
+                                router.push("/account?tab=orders");
+                            } else {
+                                toast({ title: "Payment Verification Failed", description: verifyRes.message, status: "error" });
+                            }
+                        } catch (err: any) {
+                            toast({ title: "Payment Verification Failed", description: err.message, status: "error" });
+                        }
+                    },
+                    prefill: {
+                        name: auth.user?.name || "",
+                        email: auth.user?.email || "",
+                        contact: auth.user?.phone || ""
+                    },
+                    theme: {
+                        color: "#3182ce"
+                    }
+                };
+
+                const rzp = new (window as any).Razorpay(options);
+                rzp.on('payment.failed', function (response: any) {
+                    toast({ title: "Payment Failed", description: response.error.description, status: "error" });
+                });
+                rzp.open();
             }
-            router.push("/account?tab=orders");
 
         } catch (error: any) {
             toast({
@@ -364,14 +446,15 @@ const CheckoutPage = observer(() => {
                                             p={4}
                                             borderWidth="1px"
                                             borderRadius="lg"
-                                            borderColor="gray.200"
-                                            opacity={0.6}
-                                            cursor="not-allowed"
+                                            borderColor={paymentMethod === "online" ? "blue.500" : "gray.200"}
+                                            bg={paymentMethod === "online" ? "blue.50" : "white"}
+                                            cursor="pointer"
+                                            onClick={() => setPaymentMethod("online")}
                                         >
-                                            <Radio value="online" isDisabled>
+                                            <Radio value="online" colorScheme="blue" isChecked={paymentMethod === "online"}>
                                                 <HStack>
-                                                    <Icon as={FaLock} color="gray.400" />
-                                                    <Text fontWeight="medium">Online Payment (Coming Soon)</Text>
+                                                    <Icon as={FaLock} color="blue.500" />
+                                                    <Text fontWeight="medium">Online Payment (Razorpay)</Text>
                                                 </HStack>
                                             </Radio>
                                         </Box>

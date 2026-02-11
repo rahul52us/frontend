@@ -43,11 +43,10 @@ class OrderStore {
     try {
       const { data } = await axios.post(`/order/update-status`, { orderId, status });
       if (data.success) {
-        // Optimistic update
         const orderIndex = this.companyOrders.findIndex((o) => o._id === orderId);
         if (orderIndex > -1) {
           this.companyOrders[orderIndex].orderStatus = status;
-          this.companyOrders = [...this.companyOrders]; // Trigger observer
+          this.companyOrders = [...this.companyOrders];
         }
       }
       return data;
@@ -60,7 +59,6 @@ class OrderStore {
     try {
       const { data } = await axios.post(`/order/update-item-status`, { orderId, itemId, status });
       if (data.success) {
-        // Optimistic update
         const orderIndex = this.companyOrders.findIndex((o) => o._id === orderId);
         if (orderIndex > -1) {
           const order = this.companyOrders[orderIndex];
@@ -68,13 +66,6 @@ class OrderStore {
             if (f.id === itemId) return { ...f, status };
             return f;
           });
-          // Mutate the existing object if possible to keep references? 
-          // MobX encourages mutating observables.
-          // If companyOrders is deep observable, we can just do:
-          // this.companyOrders[orderIndex].fulfillments = updatedFulfillments;
-          // But let's stick to the shallow ref placement if we want to be safe,
-          // BUT replacing the object breaks the reference held by `selectedOrder` in component state.
-          // So relying on ID in component is better.
           this.companyOrders[orderIndex] = { ...order, fulfillments: updatedFulfillments };
           this.companyOrders = [...this.companyOrders];
         }
@@ -94,17 +85,14 @@ class OrderStore {
         // type : stores.auth.user?.role
       });
       const transformedData: any = {};
-      console.log(data.data, "-------data");
       data.data.forEach((book: any) => {
-        const user = book.user[0]; // Assuming there's only one user per book
-        const userEmail = user.username; // Extracting email from user object
+        const user = book.user[0];
+        const userEmail = user.username;
 
-        // Check if the user email already exists in the result object
         if (!transformedData[userEmail]) {
-          transformedData[userEmail] = {}; // Create new entry if it doesn't exist
+          transformedData[userEmail] = {};
         }
 
-        // Add the book to the user's entry
         transformedData[userEmail][book.orderReferenceId] = {
           _id: book.orderReferenceId,
           orderId: book.orderReferenceId,
@@ -287,6 +275,24 @@ class OrderStore {
   fetchMyOrders = async () => {
     try {
       const { data } = await axios.get("/order/my-orders");
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  createPaymentOrder = async (payload: any) => {
+    try {
+      const { data } = await axios.post("/order/create-payment", payload);
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  verifyPayment = async (payload: any) => {
+    try {
+      const { data } = await axios.post("/order/verify-payment", payload);
       return data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
