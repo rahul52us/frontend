@@ -9,7 +9,7 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
 
   // if (pathname === '/register') {
   //   return <>{children}</>;
-  // }
+  // // }
 
   return (
     <Flex
