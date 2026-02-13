@@ -9,6 +9,21 @@ class OrderStore {
 
   companyOrders: any[] = [];
   isLoading: boolean = false;
+  filters: any = {
+    search: "",
+    status: "",
+    date: { startDate: null, endDate: null },
+    minAmount: "",
+    maxAmount: "",
+    paymentMethod: ""
+  };
+
+  pagination: any = {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  };
 
   constructor() {
     makeAutoObservable(this, {
@@ -19,23 +34,82 @@ class OrderStore {
       fetchCompanyOrders: action,
       updateOrderStatus: action,
       updateOrderItemStatus: action,
+      filters: observable,
+      pagination: observable,
+      setFilter: action,
+      setPage: action,
+      resetFilters: action
     });
   }
 
-  // ... (existing fetchUserOrders, getTotalCounts, addAndUpdateOrder, setUserAddedItems, createOrder, initializeOrder, confirmOrder, fetchMyOrders)
+  setFilter = (key: string, value: any) => {
+    this.filters[key] = value;
+    this.pagination.page = 1;
+  };
+
+  setPage = (page: number) => {
+    this.pagination.page = page;
+  };
+
+  resetFilters = () => {
+    this.filters = {
+      search: "",
+      status: "",
+      date: { startDate: null, endDate: null },
+      minAmount: "",
+      maxAmount: "",
+      paymentMethod: ""
+    };
+    this.pagination.page = 1;
+  };
+
+  private abortController: AbortController | null = null;
 
   fetchCompanyOrders = async (companyId: string) => {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    this.abortController = new AbortController();
+
     this.isLoading = true;
     try {
-      const { data } = await axios.get(`/order/company/${companyId}`);
+      const params = {
+        ...this.filters,
+        startDate: this.filters.date?.startDate ? new Date(this.filters.date.startDate).toISOString() : undefined,
+        endDate: this.filters.date?.endDate ? new Date(this.filters.date.endDate).toISOString() : undefined,
+        page: this.pagination.page,
+        limit: this.pagination.limit
+      };
+
+      // Remove complex objects from params to avoid serialization issues if any
+      delete params.date;
+
+      const { data } = await axios.get(`/order/company/${companyId}`, {
+        params,
+        signal: this.abortController.signal
+      });
+
       if (data.success) {
-        this.companyOrders = data.data;
+        if (data.data.orders) {
+          this.companyOrders = data.data.orders;
+          this.pagination.total = data.data.total;
+          this.pagination.totalPages = data.data.totalPages;
+          this.pagination.page = data.data.page;
+        } else {
+          this.companyOrders = data.data;
+        }
       }
       return data;
     } catch (err: any) {
+      if (axios.isCancel(err)) {
+        return; // Ignore cancellation errors
+      }
       return Promise.reject(err?.response?.data || err);
     } finally {
-      this.isLoading = false;
+      if (this.abortController?.signal.aborted === false) {
+        this.isLoading = false;
+        this.abortController = null;
+      }
     }
   };
 

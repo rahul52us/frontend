@@ -507,7 +507,9 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       fontSize="sm"
                       border="none" // No border on cells
                     >
-                      {rowIndex + 1}
+                      {(actions?.pagination?.currentPage && actions?.pagination?.limit)
+                        ? ((actions.pagination.currentPage - 1) * actions.pagination.limit + rowIndex + 1)
+                        : (rowIndex + 1)}
                     </Td>
                   )}
                   {columns.map((column, colIndex) => (

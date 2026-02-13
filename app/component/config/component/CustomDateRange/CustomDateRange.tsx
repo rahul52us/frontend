@@ -4,7 +4,7 @@ import "react-date-range/dist/theme/default.css"; // theme css file
 // import "./CustomDateRangeMobile.css";
 // import "./CustomDateRangePicker.css";
 import { DateRange, DateRangePicker } from "react-date-range";
-import {format} from "date-fns";
+import { format } from "date-fns";
 import { IoMdCalendar } from "react-icons/io";
 import {
   Input,
@@ -36,8 +36,8 @@ export default function CustomDateRange({
   months = 2,
 }: CustomDateRangeProps): any {
   const LargerThanMd = useBreakpointValue({ md: true });
-  const formattedStartDate = format(startDate, "d MMM yyyy");
-  const formattedEndDate = format(endDate, "d MMM yyyy");
+  const formattedStartDate = startDate ? format(startDate, "d MMM yyyy") : "";
+  const formattedEndDate = endDate ? format(endDate, "d MMM yyyy") : "";
 
   const textColor = useColorModeValue("gray.700", "gray.300");
 
@@ -46,10 +46,10 @@ export default function CustomDateRange({
       <PopoverTrigger>
         {/* <Input
           name="datePicker"
-          value={`${format(startDate, "d MMM yyyy")} to ${format(
+          value={startDate && endDate ? `${format(startDate, "d MMM yyyy")} to ${format(
             endDate,
             "d MMM yyyy"
-          )}`}
+          )}` : ""}
           width={{ base: "14rem", lg: "14rem" }}
           textAlign="center"
         /> */}
@@ -59,6 +59,7 @@ export default function CustomDateRange({
             value=""
             // width={{ base: "14rem", lg: "14rem" }}
             textAlign="center"
+            readOnly
           />
           <Box
             position="absolute"
@@ -68,17 +69,27 @@ export default function CustomDateRange({
             bottom="0"
             display="flex"
             alignItems="center"
-            justifyContent="center"
           >
-            <Text as="span" fontWeight="600" color={textColor}>
-              {formattedStartDate}
-            </Text>
-            <Text as="span" fontWeight="500" color="gray.500" mx={1}>
-              to
-            </Text>
-            <Text as="span" fontWeight="600" color={textColor} mr={1}>
-              {formattedEndDate}
-            </Text>
+            {startDate && (
+              <Text as="span" fontWeight="600" color={textColor}>
+                {formattedStartDate}
+              </Text>
+            )}
+            {startDate && endDate && (
+              <Text as="span" fontWeight="500" color="gray.500" mx={1}>
+                to
+              </Text>
+            )}
+            {endDate && (
+              <Text as="span" fontWeight="600" color={textColor} mr={1}>
+                {formattedEndDate}
+              </Text>
+            )}
+            {!startDate && !endDate && (
+              <Text as="span" fontWeight="500" color="gray.500" mr={1}>
+                Select Date Range
+              </Text>
+            )}
             <IoMdCalendar fontSize={"20px"} color={"gray"} />
           </Box>
         </Box>
@@ -95,8 +106,8 @@ export default function CustomDateRange({
             moveRangeOnFirstSelection={false}
             ranges={[
               {
-                startDate: startDate,
-                endDate: endDate,
+                startDate: startDate || new Date(),
+                endDate: endDate || new Date(),
                 key: "selection",
               },
             ]}
@@ -107,18 +118,20 @@ export default function CustomDateRange({
           />
         </PopoverBody>
       </PopoverContent>
-    </Popover>
+    </Popover >
   ) : (
     <Popover placement="bottom-start">
       <PopoverTrigger>
         <Input
           name="datePicker"
-          value={`${format(startDate, "d MMM yyyy")} to ${format(
+          value={startDate && endDate ? `${format(startDate, "d MMM yyyy")} to ${format(
             endDate,
             "d MMM yyyy"
-          )}`}
+          )}` : ""}
+          placeholder="Select Date Range"
           width={{ lg: "18rem" }}
           textAlign="center"
+          readOnly
         />
       </PopoverTrigger>
       <PopoverContent width="auto">
@@ -133,8 +146,8 @@ export default function CustomDateRange({
             showPreview={true}
             ranges={[
               {
-                startDate: startDate,
-                endDate: endDate,
+                startDate: startDate || new Date(),
+                endDate: endDate || new Date(),
                 key: "selection",
               },
             ]}

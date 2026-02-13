@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
     Box,
     Badge,
@@ -27,8 +27,12 @@ const OrdersTab = observer(() => {
         try {
             await orderStore.fetchCompanyOrders(companyId);
         } catch (error: any) {
-            console.error("Error fetching orders:", error);
-            toast({ title: "Error fetching orders", description: error?.message, status: "error" });
+            console.error("Error fetching orders:", JSON.stringify(error, null, 2));
+            toast({
+                title: "Error fetching orders",
+                description: typeof error?.message === 'string' ? error.message : "An unknown error occurred",
+                status: "error"
+            });
         }
     }, [companyId, toast, orderStore]);
 
@@ -38,20 +42,56 @@ const OrdersTab = observer(() => {
         }
     }, [fetchOrders, auth.token, companyId]);
 
-    const handleRowClick = (row: any) => {
-        setSelectedOrderId(row._id || row.orderId); // ensure unique ID usage
-        onOpen();
-    };
+    const handleSearchChange = useCallback((e: any) => {
+        orderStore.setFilter("search", e.target.value);
+    }, [orderStore]);
 
-    const handleCloseDrawer = () => {
+    // Debounce search effect (unchanged)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (companyId) fetchOrders();
+        }, 800);
+        return () => clearTimeout(timer);
+    }, [orderStore.filters.search, companyId, fetchOrders]);
+
+    const handleDateChange = useCallback((date: any, type: string) => {
+        const newDate = { ...orderStore.filters.date, [type]: date };
+        orderStore.setFilter("date", newDate);
+        fetchOrders();
+    }, [orderStore, fetchOrders]);
+
+    const handleStatusChange = useCallback((selectedOptions: any) => {
+        orderStore.setFilter("status", selectedOptions.join(','));
+        fetchOrders();
+    }, [orderStore, fetchOrders]);
+
+    const handleApplyFilter = useCallback(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
+    const handleReset = useCallback(() => {
+        orderStore.resetFilters();
+        fetchOrders();
+    }, [orderStore, fetchOrders]);
+
+    const handlePageChange = useCallback((page: number) => {
+        orderStore.setPage(page);
+        fetchOrders();
+    }, [orderStore, fetchOrders]);
+
+    const handleRowClick = useCallback((row: any) => {
+        setSelectedOrderId(row._id || row.orderId);
+        onOpen();
+    }, [onOpen]);
+
+    const handleCloseDrawer = useCallback(() => {
         onClose();
         setSelectedOrderId(null);
-    }
+    }, [onClose]);
 
-    // Derive selected order from store to ensure reactivity
     const selectedOrder = orderStore.companyOrders.find((o: any) => (o._id === selectedOrderId || o.orderId === selectedOrderId));
 
-    const columns = [
+    const columns = useMemo(() => [
         {
             headerName: "Order ID",
             key: "orderId",
@@ -98,7 +138,68 @@ const OrdersTab = observer(() => {
                 component: (row: any) => <Text>{row.items?.length} Items</Text>
             }
         }
-    ];
+    ], []);
+
+    const actions = useMemo(() => ({
+        search: {
+            show: true,
+            placeholder: "Search by Order ID or Customer Name",
+            searchValue: orderStore.filters.search,
+            onSearchChange: handleSearchChange
+        },
+        datePicker: {
+            show: true,
+            date: orderStore.filters.date,
+            onDateChange: handleDateChange
+        },
+        multidropdown: {
+            show: true,
+            title: "Status",
+            dropdowns: [
+                {
+                    name: "Status",
+                    options: [
+                        { label: "Pending", value: "pending" },
+                        { label: "Confirmed", value: "confirmed" },
+                        { label: "Processing", value: "processing" },
+                        { label: "Shipped", value: "shipped" },
+                        { label: "Delivered", value: "delivered" },
+                        { label: "Cancelled", value: "cancelled" }
+                    ]
+                }
+            ],
+            selectedOptions: orderStore.filters.status ? { [0]: orderStore.filters.status.split(',') } : {},
+            onDropdownChange: (val: any) => {
+                const statusArr = val[0] || [];
+                handleStatusChange(statusArr);
+            },
+            onApply: handleApplyFilter
+        },
+        resetData: {
+            show: true,
+            text: "Reset Filters",
+            function: handleReset
+        },
+        pagination: {
+            show: true,
+            currentPage: orderStore.pagination.page,
+            totalPages: orderStore.pagination.totalPages,
+            limit: orderStore.pagination.limit,
+            onClick: handlePageChange
+        }
+    }), [
+        orderStore.filters.search,
+        orderStore.filters.date,
+        orderStore.filters.status,
+        orderStore.pagination.page,
+        orderStore.pagination.totalPages,
+        handleSearchChange,
+        handleDateChange,
+        handleStatusChange,
+        handleApplyFilter,
+        handleReset,
+        handlePageChange
+    ]);
 
     if (orderStore.isLoading && orderStore.companyOrders.length === 0) {
         return (
@@ -116,12 +217,13 @@ const OrdersTab = observer(() => {
     return (
         <Box p={6}>
             <CustomTable
-                title="All Orders"
+                title={`All Orders (${orderStore.pagination.total || 0})`}
                 columns={columns}
                 data={orderStore.companyOrders}
                 loading={orderStore.isLoading}
                 serial={{ show: true, text: "S.No", width: "10%" }}
                 onRowClick={handleRowClick}
+                actions={actions}
             />
             {selectedOrder && (
                 <OrderDrawer

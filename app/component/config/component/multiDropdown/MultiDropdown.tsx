@@ -59,21 +59,25 @@ const MultiDropdown = ({
   const buttonTextColor = useColorModeValue("teal.400", "teal.200");
   const focusBorderColor = useColorModeValue("blue.500", "blue.300");
 
+  const isMounted = React.useRef(false);
+
   useEffect(() => {
-    const debouncedHandler = debounce((value: string) => {
-      if (search?.onSearchChange) {
-        search?.onSearchChange(value);
-      }
-    }, 1000);
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
 
     const timeoutId = setTimeout(() => {
-      debouncedHandler(inputValue);
+      if (search?.onSearchChange) {
+        search.onSearchChange(inputValue);
+      }
     }, 1000);
 
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [inputValue, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue]);
 
   const handlePopoverClose = () => {
     setIsPopoverOpen(false);
@@ -127,8 +131,8 @@ const MultiDropdown = ({
             >
               <CustomDateRange
                 isMobile={actions?.datePicker?.isMobile}
-                startDate={actions?.datePicker?.date.startDate}
-                endDate={actions?.datePicker?.date.endDate}
+                startDate={actions?.datePicker?.date?.startDate}
+                endDate={actions?.datePicker?.date?.endDate}
                 onStartDateChange={(e) => {
                   if (actions?.datePicker?.onDateChange) {
                     actions?.datePicker?.onDateChange(e, "startDate");
