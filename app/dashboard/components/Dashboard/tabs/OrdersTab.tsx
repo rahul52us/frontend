@@ -46,8 +46,14 @@ const OrdersTab = observer(() => {
         orderStore.setFilter("search", e.target.value);
     }, [orderStore]);
 
+    const isMounted = React.useRef(false);
+
     // Debounce search effect (unchanged)
     useEffect(() => {
+        if (!isMounted.current) {
+            isMounted.current = true;
+            return;
+        }
         const timer = setTimeout(() => {
             if (companyId) fetchOrders();
         }, 800);
