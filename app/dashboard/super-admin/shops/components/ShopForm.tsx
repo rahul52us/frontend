@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
+import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 
 interface ShopFormProps {
     isOpen: boolean;

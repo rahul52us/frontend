@@ -33,7 +33,7 @@ const CategoryFilter = observer(() => {
   if (isLoading) {
     return (
       <Box py={4} px={{ base: 4, md: 8 }} bg="white" mt={2} overflowX="auto">
-        <Flex gap={4} maxW="1400px" mx="auto" justify="center">
+        <Flex gap={4} mx="auto" justify="center">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <Skeleton key={i} h="80px" w="120px" borderRadius="lg" />
           ))}
@@ -48,79 +48,69 @@ const CategoryFilter = observer(() => {
   return (
     <Box
       as="nav"
-      py={4} // Comfortable padding
-      px={{ base: 4, md: 8 }} // Responsive padding
-      bg="white" // Clean white background
-      boxShadow="0 2px 10px rgba(0, 0, 0, 0.1)" // Subtle shadow
+      py={3}
+      bg="white"
+      borderBottom="1px solid"
+      borderColor="gray.100"
       position="sticky"
       top="0"
-      zIndex="10"
-      mt={2}
-      overflowX="auto" // Scrollable on small screens
+      zIndex="100"
+      overflowX="auto"
+      css={{
+        '&::-webkit-scrollbar': { display: 'none' },
+        '-ms-overflow-style': 'none',
+        'scrollbar-width': 'none',
+      }}
     >
       <Flex
-        align="center"
-        justify="center"
-        maxW="1400px"
-        mx="auto"
-        gap={{ base: 2, md: 4 }} // Responsive gap
-        css={{
-          '&::-webkit-scrollbar': { height: '6px' }, // Slim scrollbar
-          '&::-webkit-scrollbar-thumb': { bg: 'gray.300', borderRadius: 'full' },
-        }}
+        px={{ base: 4, md: 6 }}
+        gap={{ base: 6, md: 6 }}
+        justifyContent="center"
       >
         {categories.map((category) => (
-          <Box
+          <Flex
             key={category._id}
+            direction="column"
+            align="center"
             onClick={() => handleCategoryClick(category)}
             cursor="pointer"
-            flex="0 0 auto" // Don't stretch, maintain width
-            minW={{ base: '100px', md: '120px' }} // Minimum width
-            maxW="150px" // Cap width for consistency
-            w={{ base: '100px', md: '120px' }}
-            borderRadius="lg"
-            overflow="hidden"
-            bg={activeCategory === category._id ? `purple.50` : 'gray.50'} // Simplified color logic as dynamic color might not be on DB object yet
-            border="2px solid"
-            borderColor={activeCategory === category._id ? 'purple.500' : 'gray.200'}
-            transition="all 0.3s ease"
-            _hover={{
-              bg: `purple.50`,
-              borderColor: 'purple.400',
-              transform: "scale(1.05)",
-              boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)", // Shadow on hover
-            }}
-            animation={activeCategory === category._id ? `${bounce} 1.5s infinite` : undefined}
-            position="relative"
+            flex="0 0 auto"
+            transition="all 0.2s"
+            _active={{ transform: "scale(0.9)" }}
           >
-            <Image
-              src={category.image?.url || 'https://via.placeholder.com/150'} // Fallback image
-              alt={category.name}
-              height={{ base: '60px', md: '80px' }}
-              width="100%"
-              objectFit="cover"
-              borderRadius="md"
-              opacity={activeCategory === category._id ? 1 : 0.9}
-              transition="opacity 0.3s ease"
-              _hover={{ opacity: 1 }}
-            />
+            <Box
+              p="2px"
+              borderRadius="full"
+              border="2px solid"
+              borderColor={activeCategory === category._id ? 'purple.500' : 'transparent'}
+              mb={1}
+            >
+              <Box
+                borderRadius="full"
+                overflow="hidden"
+                boxSize={{ base: '50px', md: '60px' }}
+                bg="gray.100"
+              >
+                <Image
+                  src={category.image?.url || 'https://via.placeholder.com/150'}
+                  alt={category.name}
+                  objectFit="cover"
+                  w="100%"
+                  h="100%"
+                />
+              </Box>
+            </Box>
             <Text
-              py={2}
-              fontSize={{ base: 'xs', md: 'sm' }}
-              fontWeight="bold"
-              color={activeCategory === category._id ? 'purple.600' : 'gray.800'}
+              fontSize="xs"
+              fontWeight={activeCategory === category._id ? "bold" : "medium"}
+              color={activeCategory === category._id ? 'purple.600' : 'gray.600'}
               textAlign="center"
-              textTransform="capitalize"
-              letterSpacing="0.5px"
-              overflowWrap="break-word"
-              overflow="hidden"
-              whiteSpace="nowrap"
-              textOverflow="ellipsis"
-              px={1}
+              maxW="70px"
+              noOfLines={1}
             >
               {category.name}
             </Text>
-          </Box>
+          </Flex>
         ))}
       </Flex>
     </Box>

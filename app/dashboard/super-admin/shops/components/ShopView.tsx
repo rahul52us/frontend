@@ -26,7 +26,7 @@ import {
     Container,
 } from "@chakra-ui/react";
 import { FaPhone, FaEnvelope, FaGlobe, FaMapMarkerAlt } from "react-icons/fa";
-import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
+import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 
 interface ShopViewProps {
     isOpen: boolean;

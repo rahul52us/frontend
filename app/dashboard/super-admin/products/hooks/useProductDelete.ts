@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDisclosure } from "@chakra-ui/react";
-import stores from "../../../store/stores";
+import stores from "../../../../store/stores";
 
 export const useProductDelete = (onRefresh: () => void) => {
     const { shopStore, auth } = stores;

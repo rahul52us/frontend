@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import stores from "../../../store/stores";
+import stores from "../../../../store/stores";
 
 export const useShopList = () => {
     const { companyStore } = stores;

@@ -45,23 +45,24 @@ const ShopsPage = () => {
   const categories = ['Grocery', 'Clothing', 'Electronics', 'Restaurants']
 
   return (
-    <Box bg={bg} py={{ base: 10, md: 16 }} minH="100vh" position="relative">
-      <Container maxW="7xl">
+    <Box bg={bg} py={{ base: 6, md: 16 }} minH="100vh" position="relative">
+      <Container maxW="7xl" px={{ base: 4, md: 8 }}>
         {/* Header */}
-        <Stack spacing={4} textAlign="center" mb={10}>
+        <Stack spacing={2} textAlign="center" mb={10}>
           <MotionHeading
-            fontSize={{ base: '2xl', md: '4xl' }}
-            fontWeight="extrabold"
-            bgGradient="linear(to-r, teal.400, green.400)"
+            fontSize={{ base: '3xl', md: '5xl' }}
+            fontWeight="900"
+            bgGradient="linear(to-r, teal.500, green.400)"
             bgClip="text"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            letterSpacing="tight"
           >
-            🛍️ Explore Nearby Shops
+            Explore Nearby Shops
           </MotionHeading>
-          <Text color="gray.600" fontSize={{ base: 'md', md: 'lg' }}>
-            Discover local businesses near you and support your community like a local hero.
+          <Text color="gray.500" fontSize={{ base: 'sm', md: 'lg' }} fontWeight="medium">
+            Discover local businesses and support your community.
           </Text>
         </Stack>
 

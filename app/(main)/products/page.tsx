@@ -1,29 +1,61 @@
 "use client";
-import { Box, Flex, Grid } from "@chakra-ui/react";
+import { Box, Flex, Grid, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
 import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
+import BentoGridSection from "./components/BentoGridSection/BentoGridSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
-import SpecificCategorySection from "./components/SpecificCategorySection/SpecificCategorySection";
-import ShopByValues from "./components/ValueCard";
+import VideoStories from "./components/VideoStories/VideoStories";
 
 const banners = [
-'/images/banners/blackFriday.jpg' ,
-  '/images/banners/shoes.jpg' ,
-  '/images/banners/summerSale.jpg' ,
-'/images/banners/cyberMonday.jpg' ,
+  '/images/banners/blackFriday.jpg',
+  '/images/banners/shoes.jpg',
+  '/images/banners/summerSale.jpg',
+  '/images/banners/cyberMonday.jpg',
   '/images/banners/sofa.jpg'
 ];
 
 const Page = observer(() => {
   return (
-    <Box maxW="95%" mx="auto" py={{ base: 2, md: 2 }} overflowX="hidden">
+    <Box maxW={{ base: "100%", md: "95%" }} mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
+      {/* Sticky Mobile Search Header */}
+      <Box
+        display={{ base: 'block', md: 'none' }}
+        position="sticky"
+        top="0"
+        zIndex="100"
+        bg="white"
+        px={4}
+        py={3}
+        borderBottom="1px solid"
+        borderColor="gray.100"
+      >
+        <Flex
+          bg="gray.100"
+          borderRadius="full"
+          px={4}
+          py={2}
+          align="center"
+          gap={3}
+          onClick={() => {/* Open search */ }}
+        >
+          <Box color="gray.500">🔍</Box>
+          <Text color="gray.500" fontSize="sm">Search products, shops...</Text>
+        </Flex>
+      </Box>
+
       <CategoryFilter />
-      <HeroSection/>
+      <VideoStories />
+      <HeroSection />
+
+      <Box p={4}>
+        <Box h="1px" bg="gray.100" w="100%" />
+      </Box>
+
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -41,21 +73,18 @@ const Page = observer(() => {
           <ProductsListSection />
         </Box>
       </Flex>
-      <SpecificCategorySection/>
+
       <Box>
         <ProductCarousel />
       </Box>
-      <CategoryTabs/>
-      <IndianStateFilter/>
-        <Grid gridTemplateColumns={{base : '1fr', md : '1fr 1fr'}} gap={4} mb={5}>
-          {/* <BenefitSection/> */}
-          <ShopByValues images={banners} />
-          <ShopByValues images={banners} />
+      <CategoryTabs />
+      <IndianStateFilter />
 
-          </Grid>
       <Box mb={{ base: 4, md: 6 }}>
         <ProductBanner />
       </Box>
+      <BentoGridSection />
+
     </Box>
   );
 });

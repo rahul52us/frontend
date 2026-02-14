@@ -11,11 +11,11 @@ import {
     Badge,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
+import stores from "../../../store/stores";
 import CategoryForm from "./components/CategoryForm";
 // import CustomTable from "../../../component/common/Table/CustomTable";
-import CustomTable from "../../component/config/component/CustomTable/CustomTable";
-import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 
 const CategoryPage = () => {
     const { categoryStore } = stores;

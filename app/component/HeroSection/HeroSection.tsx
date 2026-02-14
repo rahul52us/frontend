@@ -16,29 +16,31 @@ const HeroSection = () => {
   return (
     <Box
       position="relative"
-      height={{ base: "400px", md: "480px" }} // Adjusted for mobile height
-      mb={2}
-      mt={4}
-      borderWidth={2}
+      height={{ base: "480px", md: "520px" }}
+      mb={6}
+      mt={0}
+      mx={{ base: 0, md: 4 }}
+      borderWidth={0}
+      rounded={{ base: '0', md: '3xl' }}
       overflow="hidden"
-      borderColor={'gray.200'}
-      rounded={'2xl'}
+      boxShadow="none"
+      transition="transform 0.4s ease-out"
+      _active={{ transform: 'scale(0.99)' }}
     >
       {/* Background Slideshow */}
       {slides.map((slide, index) => (
         <Box
           key={index}
           position="absolute"
-          top={0}
-          left={0}
-          shadow={'base'}
-          right={0}
-          bottom={0}
+          inset={0}
           opacity={activeIndex === index ? 1 : 0}
           bgGradient={slide.bgGradient}
-          transition="opacity 1s ease-in-out"
+          transition="opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)"
           zIndex={0}
-        ></Box>
+        >
+          {/* Subtle overlay for better text readability */}
+          <Box position="absolute" inset={0} bg="blackAlpha.300" />
+        </Box>
       ))}
 
       <Container
@@ -77,24 +79,28 @@ const HeroSection = () => {
               </Badge>
 
               <Heading
-                size="2xl"
-                lineHeight="1.2"
+                size="3xl"
+                lineHeight="shot"
+                fontWeight="900"
                 maxW={{ base: "100%", md: "80%" }}
-                fontSize={{ base: "xl", md: "2xl" }} // Adjusted for mobile font size
+                fontSize={{ base: "4xl", md: "6xl" }}
+                color="white"
+                letterSpacing="tight"
               >
                 {slides[activeIndex].title}
               </Heading>
 
               <Text
-                fontSize="lg"
+                fontSize={{ base: "md", md: "xl" }}
                 maxW={{ base: "100%", md: "80%" }}
-                color="blackAlpha.900"
+                color="whiteAlpha.900"
+                fontWeight="medium"
               >
                 {slides[activeIndex].text}
               </Text>
 
               <HStack
-                spacing={{base : 2, md : 4}}
+                spacing={{ base: 2, md: 4 }}
                 pt={4}
                 direction={{ base: 'column', md: 'row' }} // Stack buttons on mobile
                 align="center" // Center buttons on mobile
@@ -103,27 +109,30 @@ const HeroSection = () => {
                 <Button
                   size="lg"
                   bg="white"
-                  color={`${slides[activeIndex].buttonColor}.600`}
-                  _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
+                  colorScheme="whiteAlpha"
+                  color="gray.900"
+                  _hover={{ transform: 'translateY(-2px)', boxShadow: '2xl' }}
                   borderRadius="full"
-                  px={8}
-                  w={{ base: '100%', md: 'auto' }} // Full width on mobile
-                  transition="all 0.2s"
+                  px={10}
+                  fontSize="md"
+                  fontWeight="bold"
+                  w={{ base: '100%', md: 'auto' }}
+                  transition="all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+                  shadow="xl"
                 >
-                  Shop Now
+                  Explore Collection
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
-                  color="black"
-                  borderColor="blackAlpha.400"
-                  _hover={{ bg: 'whiteAlpha.100' }}
+                  variant="ghost"
+                  color="white"
+                  display={{ base: 'none', md: 'flex' }}
+                  _hover={{ bg: 'whiteAlpha.200' }}
                   borderRadius="full"
                   px={8}
-                  w={{ base: '100%', md: 'auto' }} // Full width on mobile
                   rightIcon={<FiPlayCircle />}
                 >
-                  Watch Video
+                  Watch Story
                 </Button>
               </HStack>
             </VStack>

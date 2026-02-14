@@ -67,54 +67,55 @@ const ProductsListSection = observer(() => {
 
   return (
     <Box
-      // maxW="container.xl"
       mx="auto"
       px={{ base: 3, md: 4, lg: 6 }}
-      py={{ base: 6, md: 8 }}
+      py={{ base: 4, md: 8 }}
       overflow="hidden"
     >
       {/* Trending Products Section */}
-      <Box mb={{ base: 8, md: 8 }}>
+      <Box mb={{ base: 6, md: 8 }}>
         <CommonHeading
-          heading="New Shops Added"
-          subheading="Discover the latest shops and explore their offerings"
-          mb={{ base: 6, md: 8 }}
+          heading="Top Picks For You"
+          subheading="Handpicked favorites based on current trends"
+          mb={{ base: 4, md: 6 }}
           color={headingColor}
-          align={{ base: "center", md: "center" }}
+          align="left"
         />
         <ShopSection />
       </Box>
 
-      {/* Recently Added Section */}
+      {/* Grid Based Product Section (2 Columns for Mobile) */}
       <Box>
         <CommonHeading
-          heading="Recently Added"
-          subheading="Check out the latest arrivals"
-          mb={{ base: 6, md: 6 }}
+          heading="Deals You'll Love"
+          subheading="Check out our latest arrivals"
+          mb={{ base: 4, md: 6 }}
           color={headingColor}
-          align={{ base: "center", md: "center" }}
+          align="left"
         />
         <Box>
           {loading ? (
-            <Grid templateColumns={{ base: "repeat(1, 1fr)", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }} gap={4} my={2}>
-              {[...Array(5)].map((_, index) => (
+            <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }} gap={3} my={2}>
+              {[...Array(6)].map((_, index) => (
                 <ProductCardSkeleton key={index} />
               ))}
             </Grid>
           ) : (
             products.length > 0 ? (
-              <Carousel {...carouselSettings}>
+              <Grid
+                templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }}
+                gap={{ base: 2, md: 4 }}
+                my={2}
+              >
                 {products.map((product) => (
                   <Box
-                    key={`${product._id}-${product.name}-carousel`}
-                    px={{ base: 2, md: 2 }}
-                    py={2}
+                    key={`${product._id}-${product.name}-grid`}
                     width="100%"
                   >
                     <ProductCard product={product} />
                   </Box>
                 ))}
-              </Carousel>
+              </Grid>
             ) : (
               <Box textAlign="center" py={10}>No products found.</Box>
             )

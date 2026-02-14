@@ -46,20 +46,18 @@ const ProductCard = ({ product }: any) => {
 
   return (
     <Box
-      h="340px"
-      maxW="100%"
+      h="350px"
       bg="white"
-      border="1px solid"
-      borderColor="gray.200"
-      borderRadius="lg"
+      borderRadius="2xl"
       overflow="hidden"
-      transition="all 0.3s ease"
+      boxShadow="sm"
+      transition="all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
       _hover={{
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-        borderColor: "gray.300",
+        boxShadow: "2xl",
+        transform: "translateY(-6px)",
       }}
       role="group"
-      w="100%"
+      position="relative"
     >
       <Box position="relative" h="180px">
         <Image

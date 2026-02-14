@@ -12,9 +12,9 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
-import CustomTable from "../../component/config/component/CustomTable/CustomTable";
-import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import stores from "../../../store/stores";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import OfferForm from "./components/OfferForm";
 
 const OffersPage = () => {
@@ -146,7 +146,7 @@ const OffersPage = () => {
       show: true,
       currentPage: 1,
       totalPages: 1,
-      onClick: () => {},
+      onClick: () => { },
     },
   };
 

@@ -167,7 +167,7 @@ const UserMenu = observer(() => {
 
           {isSuperAdmin ? (
             renderItem("Admin Dashboard", FiGrid, "orange", () =>
-              router.push("/super-admin/dashboard")
+              router.push("/dashboard/super-admin/index")
             )
           ) : user?.type === "seller" ? (
             renderItem("Seller Dashboard", FiUser, "orange", () =>

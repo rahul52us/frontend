@@ -14,7 +14,7 @@ const SuperAdminDashboard = () => {
     ];
 
     return (
-        <Box p={6}>
+        <Box>
             <Heading mb={2}>Super Admin Dashboard</Heading>
             <Text color="gray.500" mb={8}>Welcome back, Super Admin. Here is an overview of the platform.</Text>
 

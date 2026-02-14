@@ -3,15 +3,15 @@
 import React from "react";
 import { Box, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import CustomTable from "../../component/config/component/CustomTable/CustomTable";
-import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
-import ProductForm from "../../dashboard/products/components/ProductForm";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
+import ProductForm from "../../products/components/ProductForm";
 
 import { useProductList } from "./hooks/useProductList";
 import { useProductDelete } from "./hooks/useProductDelete";
 import { useProductEdit } from "./hooks/useProductEdit";
 import { ProductColumns } from "./components/ProductColumns";
-import stores from "../../store/stores";
+import stores from "../../../store/stores";
 
 const SuperAdminProductsPage = observer(() => {
     const { offerStore } = stores;

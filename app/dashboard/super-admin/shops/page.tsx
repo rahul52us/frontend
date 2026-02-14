@@ -3,14 +3,14 @@
 import React from "react";
 import { Box, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import CustomTable from "../../component/config/component/CustomTable/CustomTable";
-import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import { useShopList } from "./hooks/useShopList";
 import { useShopDelete } from "./hooks/useShopDelete";
 import { ShopColumns } from "./components/ShopColumns";
 import ShopForm from "./components/ShopForm";
 import ShopView from "./components/ShopView";
-import stores from "../../store/stores";
+import stores from "../../../store/stores";
 import { useDisclosure, useToast } from "@chakra-ui/react";
 
 const ShopsPage = observer(() => {

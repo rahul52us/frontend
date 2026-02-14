@@ -15,8 +15,8 @@ import {
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { observer } from "mobx-react-lite";
-import stores from "../../../store/stores";
-import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
+import stores from "../../../../store/stores";
+import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 
 interface CategoryFormProps {
     isOpen: boolean;

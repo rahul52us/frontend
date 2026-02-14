@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
-import stores from "../../../store/stores";
+import stores from "../../../../store/stores";
 import * as Yup from "yup";
 
 
