@@ -10,6 +10,7 @@ import BentoGridSection from "./components/BentoGridSection/BentoGridSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 import VideoStories from "./components/VideoStories/VideoStories";
+import MapComponent from "../../component/maps/MapMarker";
 
 const banners = [
   '/images/banners/blackFriday.jpg',
@@ -77,6 +78,7 @@ const Page = observer(() => {
       <Box>
         <ProductCarousel />
       </Box>
+      <MapComponent />
       <CategoryTabs />
       <IndianStateFilter />
 

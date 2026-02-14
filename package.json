@@ -15,6 +15,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fontsource/montserrat": "^5.1.1",
+    "@react-google-maps/api": "^2.20.8",
     "axios": "^1.7.9",
     "chakra-dayzed-datepicker": "^0.3.0",
     "chart.js": "^4.4.7",
