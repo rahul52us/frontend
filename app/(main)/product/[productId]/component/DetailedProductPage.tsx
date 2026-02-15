@@ -1,5 +1,5 @@
 "use client"
-import { Box, Flex, Grid, Spinner, Text, useColorModeValue } from "@chakra-ui/react";
+import { Box, Flex, Grid, Spinner, Text, useColorModeValue, Button } from "@chakra-ui/react";
 import ProductImageViewer from "../../../../component/common/ProductImagesViewer/ProductImagesViewer";
 import ProductDetailsSection from "./ProductDetailsSection";
 import ProductBuyBox from "./ProductBuyBox";
@@ -92,111 +92,96 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
 
     return (
         <MotionBox
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            maxW="90%"
+            maxW="container.xl"
             mx="auto"
-            my={8}
-            bg={bgColor}
-            p={{ base: 4, md: 8 }}
-            rounded="2xl"
-            shadow="xl"
-            border="1px solid"
-            borderColor={borderColor}
+            py={{ base: 2, md: 6 }}
+            px={{ base: 4, md: 8 }}
+            pb={{ base: 24, lg: 8 }} // Added bottom padding for mobile sticky bar
         >
             <Grid
-                templateColumns={{ base: "1fr", lg: "35% 1fr 300px" }}
-                gap={8}
-                bg={bgColor}
-                rounded="lg"
-                overflow="hidden"
+                templateColumns={{ base: "1fr", lg: "1.2fr 1fr" }}
+                gap={{ base: 4, lg: 8 }} // Reduced gap further
+                alignItems="start"
             >
-                {/* Column 1: Images - Sticky */}
-                <MotionBox
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6 }}
+                {/* Column 1: Images - Sticky on Desktop */}
+                <Box
                     position={{ lg: "sticky" }}
-                    top={{ lg: "8rem" }}
-                    alignSelf="start"
+                    top={{ lg: "24px" }}
                     h="fit-content"
-                    bg={imageBoxBg}
-                    p={4}
-                    rounded="xl"
-                    shadow="md"
-                    _hover={{ shadow: "lg" }}
                 >
                     <ProductImageViewer images={images} />
-                </MotionBox>
+                </Box>
 
-                {/* Column 2: Details - Scrollable */}
-                <MotionBox
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    p={{ base: 0, md: 4 }}
-                >
+                {/* Column 2: Details & Actions */}
+                <Box>
                     <ProductDetailsSection product={product} />
-                </MotionBox>
 
-                {/* Column 3: Buy Box - Sticky */}
-                <MotionBox
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    position={{ lg: "sticky" }}
-                    top={{ lg: "8rem" }}
-                    minW={{ lg: "300px" }}
-                    alignSelf="start"
-                    h="fit-content"
-                    bg={imageBoxBg}
-                    p={6}
-                    rounded="xl"
-                    shadow="md"
-                    border="1px solid"
-                    borderColor={buyBoxBorder}
-                    _hover={{ borderColor: accentColor, transition: "all 0.3s ease" }}
-                >
-                    <ProductBuyBox product={product} />
-                </MotionBox>
+                    {/* Integrated Buy Box - visually separated but part of the flow */}
+                    <Box mt={4}>
+                        <ProductBuyBox product={product} />
+                    </Box>
+                </Box>
             </Grid>
 
+            {/* Related Products Section */}
             {relatedProducts.length > 0 && (
-                <MotionBox
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.6 }}
-                    mt={16}
-                    mb={8}
-                    bg={relatedBg}
-                    p={8}
-                    rounded="2xl"
-                    shadow="sm"
-                >
-                    <Divider mb={8} borderColor={dividerColor} />
-                    <Heading size="lg" mb={6} color={textColor} fontWeight="bold">You might also like</Heading>
-                    <SimpleGrid columns={{ base: 2, md: 3, lg: 4, xl: 5 }} spacing={6}>
+                <Box mt={20}>
+                    <Heading size="lg" mb={8} color={textColor}>You might also like</Heading>
+                    <SimpleGrid columns={{ base: 2, md: 3, lg: 4, xl: 5 }} spacing={{ base: 4, md: 6 }}>
                         {relatedProducts.map((related, index) => (
                             <MotionBox
                                 key={related._id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.5, delay: 0.1 * index }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.05 * index }}
                             >
-                                <ProductCard
-                                    product={related}
-                                    _hover={{
-                                        transform: "scale(1.05)",
-                                        transition: "all 0.3s ease",
-                                        shadow: "lg"
-                                    }}
-                                />
+                                <ProductCard product={related} />
                             </MotionBox>
                         ))}
                     </SimpleGrid>
-                </MotionBox>
+                </Box>
             )}
+
+            {/* Mobile Sticky Action Bar */}
+            <Box
+                display={{ base: "block", lg: "none" }}
+                position="fixed"
+                bottom={0}
+                left={0}
+                right={0}
+                bg={bgColor}
+                p={3}
+                borderTop="1px solid"
+                borderColor={borderColor}
+                zIndex={100}
+                boxShadow="0 -2px 10px rgba(0,0,0,0.05)"
+            >
+                <Flex gap={3}>
+                    <Button
+                        flex={1}
+                        size="lg"
+                        variant="outline"
+                        colorScheme="gray"
+                        rounded="xl"
+                        onClick={() => stores.cartStore.addToCart(product)}
+                    >
+                        Add to Cart
+                    </Button>
+                    <Button
+                        flex={1}
+                        size="lg"
+                        colorScheme="blackAlpha"
+                        bg="black"
+                        color="white"
+                        rounded="xl"
+                    >
+                        Buy Now
+                    </Button>
+                </Flex>
+            </Box>
         </MotionBox>
     );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Grid, useBreakpointValue } from "@chakra-ui/react";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import Carousel from "../../../../component/common/CommonCarousel/CommonCarousel";
@@ -43,32 +43,12 @@ const ProductsListSection = observer(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const slidesToShow = useBreakpointValue({
-    base: 1,
-    sm: 2,
-    md: 3,
-    lg: 4,
-    xl: 5,
-  });
 
-  const carouselSettings = {
-    slidesToShow,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    speed: 600,
-    dots: true,
-    infinite: true,
-    arrows: slidesToShow > 1, // Show arrows only if more than 1 slide visible
-    centerMode: false,
-    centerPadding: "20px",
-    pauseOnHover: true,
-  };
 
   return (
     <Box
       mx="auto"
-      px={{ base: 3, md: 4, lg: 6 }}
+      px={{ base: 2, md: 4, lg: 6 }}
       py={{ base: 4, md: 8 }}
       overflow="hidden"
     >
@@ -77,7 +57,7 @@ const ProductsListSection = observer(() => {
         <CommonHeading
           heading="Top Picks For You"
           subheading="Handpicked favorites based on current trends"
-          mb={{ base: 4, md: 6 }}
+          mb={{ base: 3, md: 6 }}
           color={headingColor}
           align="left"
         />
@@ -89,33 +69,39 @@ const ProductsListSection = observer(() => {
         <CommonHeading
           heading="Deals You'll Love"
           subheading="Check out our latest arrivals"
-          mb={{ base: 4, md: 6 }}
+          mb={{ base: 3, md: 6 }}
           color={headingColor}
           align="left"
         />
         <Box>
           {loading ? (
-            <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }} gap={3} my={2}>
+            <Carousel slidesToShow={5} dots={false} autoplay={false}>
               {[...Array(6)].map((_, index) => (
-                <ProductCardSkeleton key={index} />
+                <Box key={index} px={2}>
+                  <ProductCardSkeleton />
+                </Box>
               ))}
-            </Grid>
+            </Carousel>
           ) : (
             products.length > 0 ? (
-              <Grid
-                templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)", xl: "repeat(5, 1fr)" }}
-                gap={{ base: 2, md: 4 }}
-                my={2}
-              >
-                {products.map((product) => (
-                  <Box
-                    key={`${product._id}-${product.name}-grid`}
-                    width="100%"
-                  >
-                    <ProductCard product={product} />
-                  </Box>
-                ))}
-              </Grid>
+              <Box mx="-8px"> {/* Negative margin to offset carousel padding if needed */}
+                <Carousel
+                  slidesToShow={5}
+                  dots={false}
+                  autoplay={false}
+                  buttonColor={headingColor}
+                >
+                  {products.map((product) => (
+                    <Box
+                      key={`${product._id}-${product.name}-carousel`}
+                      px={2} // Gap between slides
+                      py={2} // Padding for shadow/hover effects
+                    >
+                      <ProductCard product={product} />
+                    </Box>
+                  ))}
+                </Carousel>
+              </Box>
             ) : (
               <Box textAlign="center" py={10}>No products found.</Box>
             )

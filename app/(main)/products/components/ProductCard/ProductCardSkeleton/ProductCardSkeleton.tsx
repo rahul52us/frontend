@@ -1,66 +1,70 @@
-import { Box, Flex, Skeleton, SkeletonText } from "@chakra-ui/react";
-import { endColor, startColor } from "../../../../../component/common/utils/skeletonColors";
+import { Box, Flex, Skeleton, SkeletonText, AspectRatio } from "@chakra-ui/react";
+import { startColor, endColor } from "../../../../../component/common/utils/skeletonColors";
 
 const ProductCardSkeleton = () => {
- 
   return (
     <Box
-      h="330px" // Fixed height to match the ProductCard
-      shadow="base"
       bg="white"
-      borderRadius="xl"
+      borderRadius="2xl"
+      overflow="hidden"
+      borderWidth="1px"
+      borderColor="gray.100"
       w="100%"
+      h="100%"
+      display="flex"
+      flexDirection="column"
     >
-      {/* Image Skeleton */}
-      <Skeleton
-        width="100%"
-        height={{ base: "180px", md: "200px" }}
-        rounded={"xl"}
-        startColor={startColor}
-        endColor={endColor}
-      />
+      {/* Image Skeleton with Aspect Ratio 1/1 */}
+      <Box p={{ base: 2, md: 3 }}>
+        <AspectRatio ratio={1 / 1}>
+          <Skeleton
+            width="100%"
+            height="100%"
+            startColor={startColor}
+            endColor={endColor}
+            borderRadius="lg"
+          />
+        </AspectRatio>
+      </Box>
 
       {/* Content Skeleton */}
-      <Box px={4} py={3}>
-        <Flex justifyContent="space-between" alignItems="flex-start">
-          <Box w="100%">
-            {/* Category Skeleton */}
-            <Skeleton
-              height="14px"
-              width="40%"
-              mb={2}
-              startColor={startColor}
-              endColor={endColor}
-            />
+      <Flex direction="column" px={{ base: 2, md: 3 }} pb={{ base: 2, md: 3 }} flex="1" justify="space-between">
+        <Box>
+          {/* Category Skeleton */}
+          <Skeleton
+            height="12px"
+            width="40%"
+            mb={2}
+            startColor={startColor}
+            endColor={endColor}
+            borderRadius="sm"
+          />
 
-            {/* Title Skeleton */}
-            <SkeletonText
-              noOfLines={2}
-              spacing="2"
-              mb={4}
+          {/* Title Skeleton */}
+          <SkeletonText
+            noOfLines={2}
+            spacing="2"
+            skeletonHeight="16px"
+            mb={3}
+            startColor={startColor}
+            endColor={endColor}
+          />
+        </Box>
+
+        {/* Price Area */}
+        <Flex align="center" justify="space-between" mt={3}>
+          <Box>
+            <Skeleton
+              height="20px"
+              width="80px"
+              mb={1}
+              borderRadius="sm"
               startColor={startColor}
               endColor={endColor}
             />
           </Box>
         </Flex>
-
-        {/* Price and Button Skeleton */}
-        <Flex mt={1} justifyContent="space-between" alignItems="center  ">
-          <Skeleton
-            height="20px"
-            width="30%"
-            startColor={startColor}
-            endColor={endColor}
-          />
-          <Skeleton
-            height="32px"
-            width="60px"
-            borderRadius="md"
-            startColor={startColor}
-            endColor={endColor}
-          />
-        </Flex>
-      </Box>
+      </Flex>
     </Box>
   );
 };

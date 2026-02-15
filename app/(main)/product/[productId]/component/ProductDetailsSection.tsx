@@ -1,14 +1,14 @@
-import { Box, Divider, Text, VStack, useColorModeValue, Flex, Badge, Heading } from '@chakra-ui/react';
+import { Box, Divider, Text, SimpleGrid, VStack, useColorModeValue, Flex, Badge, Heading, HStack, Icon } from '@chakra-ui/react';
 import ProductTitle from '../../../individual-product/component/ProductTitle/ProductTitle';
 import ProductRating from '../../../individual-product/component/ProductRating/ProductRating';
 import ProductPrice from '../../../individual-product/component/ProductPrice/ProductPrice';
 import ProductColorSelector from '../../../individual-product/component/ProductColorSelector/ProductColorSelector';
 import ProductSizeSelector from '../../../individual-product/component/ProductSizeSelector/ProductSizeSelector';
-import ProductSpecs from '../../../individual-product/component/ProductSpecs/ProductSpecs';
 import ReturnExchange from '../../../individual-product/component/ReturnExchange/ReturnExchange';
 import { observer } from 'mobx-react-lite';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { FiCheckCircle } from 'react-icons/fi';
 
 // Define a proper interface for product to make it production-ready
 interface Product {
@@ -50,19 +50,11 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
     const mrp = currentPrice + currentPrice * 0.2; // Fake MRP for display
     const discount = Math.round(((mrp - currentPrice) / mrp) * 100);
 
-    const highlights = [
-        { label: 'Brand', value: brand },
-        { label: 'SKU', value: sku },
-        { label: 'Stock', value: stock && stock > 0 ? 'In Stock' : 'Out of Stock' },
-        { label: 'Weight', value: weight },
-        ...(productDetails
-            ? Object.entries(productDetails).map(([key, value]) => ({ label: key, value: String(value) }))
-            : []),
-    ].filter((item) => item.value);
-
-    const infoSpecs = information
-        ? Object.entries(information).map(([key, value]) => ({ label: key, value: String(value) }))
-        : [];
+    // Combine Highlights, Details, and Info for a dynamic specs section
+    const dynamicSpecs = [
+        ...Object.entries(productDetails || {}),
+        ...Object.entries(information || {})
+    ].filter(([key, value]) => key !== 'color' && key !== 'size' && key !== 'ssd' && value);
 
     const colors = productDetails?.color ? [productDetails.color] : [];
     const sizes = productDetails?.size
@@ -76,69 +68,111 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
         { label: 'Cash on Delivery', icon: 'cod' },
     ];
 
-    // Theme-aware colors for better attractiveness in light/dark modes
-    const bgColor = useColorModeValue('white', 'gray.800');
-    const borderColor = useColorModeValue('gray.200', 'gray.700');
-    const dividerColor = useColorModeValue('gray.300', 'gray.600');
+    // Theme-aware colors
     const textColor = useColorModeValue('gray.600', 'gray.400');
+    const labelColor = useColorModeValue('gray.500', 'gray.500');
+    const valueColor = useColorModeValue('gray.800', 'gray.200');
+    const dividerColor = useColorModeValue('gray.200', 'gray.700');
 
-    // Animation variants for subtle fade-in
+    // Animation variants
     const fadeInVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
     };
 
     return (
-        <VStack spacing={6} align="stretch" as={motion.div} initial="hidden" animate="visible" variants={fadeInVariants}>
-            <Box
-                p={{ base: 4, md: 6 }}
-                borderWidth={1}
-                borderColor={borderColor}
-                rounded="2xl"
-                shadow="sm"
-                bg={bgColor}
-            >
-                <Flex align="center" justify="space-between" mb={2}>
-                    <ProductTitle brand={brand || category || 'Generic'} title={name} />
-                    {discount > 0 && (
-                        <Badge colorScheme="green" fontSize="md" px={3} py={1} rounded="full">
-                            {discount}% OFF
-                        </Badge>
-                    )}
+        <VStack spacing={4} align="stretch" as={motion.div} initial="hidden" animate="visible" variants={fadeInVariants}>
+            {/* Header Section - Clean & Big */}
+            <Box>
+                <Text fontSize="xs" fontWeight="bold" color="blue.500" textTransform="uppercase" letterSpacing="wide" mb={1}>
+                    {brand || category || 'Brand'}
+                </Text>
+                <Heading as="h1" size="lg" lineHeight="shorter" fontWeight="800" mb={2}>
+                    {name}
+                </Heading>
+
+                <Flex align="center" gap={4} mb={4}>
+                    <ProductRating rating={rating} reviews={120} />
+                    <HStack spacing={1}>
+                        <Icon as={FiCheckCircle} color="green.500" />
+                        <Text fontSize="sm" color="green.600" fontWeight="medium">
+                            {(stock && stock > 0) ? "In Stock" : "Out of Stock"}
+                        </Text>
+                    </HStack>
                 </Flex>
 
-                <ProductRating rating={rating} reviews={120} />
                 <ProductPrice price={currentPrice} discount={discount} mrp={mrp} />
-                <Divider borderColor={dividerColor} maxW="90%" mx="auto" my={4} />
-
-                {colors.length > 0 && (
-                    <motion.div variants={fadeInVariants}>
-                        <ProductColorSelector colors={colors} selectedColor={selectedColor} onSelect={setSelectedColor} />
-                    </motion.div>
-                )}
-                {sizes.length > 0 && (
-                    <motion.div variants={fadeInVariants}>
-                        <ProductSizeSelector sizes={sizes} selectedSize={selectedSize} onSelect={setSelectedSize} />
-                    </motion.div>
-                )}
-
-                <Divider borderColor={dividerColor} maxW="90%" mx="auto" my={6} />
-                <ReturnExchange services={services} />
-
-                {description && (
-                    <Box mt={6}>
-                        <Heading fontSize="md" fontWeight="bold" mb={2}>
-                            Description
-                        </Heading>
-                        <Text color={textColor} fontSize="sm" whiteSpace="pre-wrap" lineHeight="tall">
-                            {description}
-                        </Text>
-                    </Box>
-                )}
             </Box>
 
-            <ProductSpecs specs={highlights} title="Highlights" />
-            {infoSpecs.length > 0 && <ProductSpecs specs={infoSpecs} title="Information" />}
+            {/* Selectors */}
+            {(colors.length > 0 || sizes.length > 0) && (
+                <Box>
+                    {colors.length > 0 && (
+                        <Box mb={4}>
+                            <ProductColorSelector colors={colors} selectedColor={selectedColor} onSelect={setSelectedColor} />
+                        </Box>
+                    )}
+                    {sizes.length > 0 && (
+                        <ProductSizeSelector sizes={sizes} selectedSize={selectedSize} onSelect={setSelectedSize} />
+                    )}
+                </Box>
+            )}
+
+            {/* Dynamic Specifications Grid - Polished */}
+            {dynamicSpecs.length > 0 && (
+                <Box mt={4}>
+                    <Heading fontSize="md" fontWeight="bold" mb={4}>Specifications</Heading>
+                    <Box
+                        border="1px solid"
+                        borderColor={dividerColor}
+                        rounded="xl"
+                        overflow="hidden"
+                    >
+                        {dynamicSpecs.map(([key, value], idx) => (
+                            <Flex
+                                key={idx}
+                                borderBottom={idx === dynamicSpecs.length - 1 ? "none" : "1px solid"}
+                                borderColor={dividerColor}
+                                bg={idx % 2 === 0 ? useColorModeValue("gray.50", "whiteAlpha.50") : "transparent"}
+                                p={3}
+                                align="center"
+                            >
+                                <Text
+                                    flex="1"
+                                    fontSize="sm"
+                                    color={labelColor}
+                                    fontWeight="medium"
+                                    textTransform="capitalize"
+                                >
+                                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                                </Text>
+                                <Text
+                                    flex="1"
+                                    fontSize="sm"
+                                    color={valueColor}
+                                    fontWeight="semibold"
+                                >
+                                    {String(value)}
+                                </Text>
+                            </Flex>
+                        ))}
+                    </Box>
+                </Box>
+            )}
+
+            {/* Description */}
+            {description && (
+                <Box>
+                    <Heading fontSize="md" fontWeight="bold" mb={3}>About this item</Heading>
+                    <Text color={textColor} fontSize="md" lineHeight="1.8">
+                        {description}
+                    </Text>
+                </Box>
+            )}
+
+            <Divider borderColor={dividerColor} />
+            <ReturnExchange services={services} />
+
         </VStack>
     );
 });

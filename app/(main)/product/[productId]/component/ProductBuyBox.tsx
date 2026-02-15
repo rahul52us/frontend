@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Text, VStack, useColorModeValue, useToast, Image } from '@chakra-ui/react';
+import { Box, Button, Flex, Text, VStack, useColorModeValue, useToast, Image, HStack } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { FiShoppingCart, FiCreditCard } from 'react-icons/fi';
 import { observer } from 'mobx-react-lite';
@@ -85,7 +85,7 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
             return;
         }
 
-        // await cartStore.addToCart(product); // Don't add to cart for direct buy now? 
+        // await cartStore.addToCart(product); // Don't add to cart for direct buy now?
         // User requested separate flow. Often Buy Now implies bypassing cart.
         router.push(`/checkout?buyNow=true&productId=${product._id || product.id}`);
     };
@@ -100,70 +100,68 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
     ];
 
     return (
-        <Box
-            w="100%"
-            minH="550px"
-            p={4}
-            borderWidth={1}
-            borderColor={borderColor}
-            rounded="xl"
-            shadow="md"
-            bg={bgColor}
-            display="flex"
-            flexDirection="column"
-            justifyContent="space-between"
-        >
-            <CouponOffers offers={offers} />
-
-            <Box mt={4}>
-                <Text fontSize="xl" fontWeight="bold" color="green.600" mb={2}>
-                    {(stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock'}
-                </Text>
-                <Text fontSize="sm" mb={4}>
-                    Sold by <Text as="span" color="blue.500" cursor="pointer">{brand || 'Retailer'}</Text> and fulfilled by App.
-                </Text>
-            </Box>
-
-            <VStack spacing={3} mt={6}>
-                <Button
-                    leftIcon={<FiShoppingCart />}
-                    colorScheme="purple"
-                    size="lg"
-                    w="full"
-                    onClick={handleAddToCart}
-                    isLoading={cartStore.loading}
-                    loadingText="Adding..."
-                    isDisabled={(stock ?? 0) <= 0}
-                    _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
-                    transition="all 0.2s"
-                    rounded="full"
-                >
-                    {(stock ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
-                </Button>
-                <Button
-                    leftIcon={<FiCreditCard />}
-                    variant="solid"
-                    bg="orange.400"
-                    _hover={{ bg: 'orange.500', transform: 'translateY(-2px)', shadow: 'md' }}
-                    color="white"
-                    size="lg"
-                    w="full"
-                    onClick={handleBuyNow}
-                    isLoading={cartStore.loading}
-                    isDisabled={(stock ?? 0) <= 0}
-                    transition="all 0.2s"
-                    rounded="full"
-                >
-                    Buy Now
-                </Button>
-                <Flex w="full" justify="center" align="center" gap={2} pt={2}>
-                    <ProductLikeButton product={product} />
-                    <Text fontSize="sm" fontWeight="medium" color="gray.600">Add to Wishlist</Text>
-                </Flex>
-            </VStack>
-            <Flex align="center" gap={2} mt={4} fontSize="xs" color="gray.500" justify="center">
-                <Text>Secure Transaction</Text>
+        <Box w="100%">
+            {/* Stock & Seller Info */}
+            <Flex justify="space-between" align="center" mb={6}>
+                <HStack spacing={2}>
+                    <Text fontWeight="bold" color={(stock ?? 0) > 0 ? 'green.600' : 'red.500'}>
+                        {(stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock'}
+                    </Text>
+                    <Text color="gray.400">|</Text>
+                    <Text fontSize="sm" color="gray.600">
+                        Sold by <Text as="span" color="blue.500" fontWeight="medium" cursor="pointer">{brand || 'Retailer'}</Text>
+                    </Text>
+                </HStack>
             </Flex>
+
+            {/* Action Buttons */}
+            <VStack spacing={4} align="stretch">
+                <Flex gap={4} direction={{ base: "column", sm: "row" }}>
+                    <Button
+                        leftIcon={<FiShoppingCart />}
+                        colorScheme="gray"
+                        variant="outline"
+                        size="lg"
+                        flex={1}
+                        h="56px" // Taller buttons
+                        onClick={handleAddToCart}
+                        isLoading={cartStore.loading}
+                        loadingText="Adding..."
+                        isDisabled={(stock ?? 0) <= 0}
+                        rounded="xl"
+                        borderWidth="2px"
+                    >
+                        {(stock ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    </Button>
+                    <Button
+                        leftIcon={<FiCreditCard />}
+                        colorScheme="blackAlpha"
+                        bg="black"
+                        _hover={{ bg: "gray.800" }}
+                        color="white"
+                        size="lg"
+                        flex={1}
+                        h="56px"
+                        onClick={handleBuyNow}
+                        isLoading={cartStore.loading}
+                        isDisabled={(stock ?? 0) <= 0}
+                        rounded="xl"
+                    >
+                        Buy Now
+                    </Button>
+                </Flex>
+
+                <HStack justify="center" spacing={6} pt={2}>
+                    <Flex align="center" gap={2} cursor="pointer" color="gray.600" _hover={{ color: "black" }}>
+                        <ProductLikeButton product={product} />
+                        <Text fontSize="sm" fontWeight="medium">Add to Wishlist</Text>
+                    </Flex>
+                </HStack>
+            </VStack>
+
+            <Box mt={6}>
+                <CouponOffers offers={offers} />
+            </Box>
         </Box>
     );
 });
