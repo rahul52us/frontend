@@ -3,6 +3,7 @@ import {
   FaCog,
   FaBox,
   FaTag,
+  FaUsers,
 } from "react-icons/fa";
 
 interface SidebarItem {
@@ -76,6 +77,13 @@ const sidebarDatas: SidebarItem[] = [
     name: "Orders",
     icon: <FaChartPie />,
     url: "/dashboard/orders",
+    role: ["user", "admin"],
+  },
+  {
+    id: 8,
+    name: "Buyers",
+    icon: <FaUsers />,
+    url: "/dashboard/customers",
     role: ["user", "admin"],
   },
   // Blogs

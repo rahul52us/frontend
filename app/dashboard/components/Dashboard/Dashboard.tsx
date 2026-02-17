@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
 
   const tabs = [
     { id: "sales", label: "Analytics", icon: FaChartLine },
-    { id: "customer", label: "Customers", icon: FaUsers },
+    { id: "customer", label: "Buyers", icon: FaUsers },
     { id: "inventory", label: "Inventory", icon: FaBoxes },
   ];
 

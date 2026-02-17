@@ -1,605 +1,968 @@
-import React, { useState, useMemo } from "react";
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
+import { observer } from "mobx-react-lite";
 import {
-  VStack, SimpleGrid, Box, Text, Avatar,
-  HStack, Badge, Heading, Table, Thead,
-  Tbody, Tr, Th, Td, Flex, Input, InputGroup, InputLeftElement,
-  Button, Menu, MenuButton, MenuList, MenuItem, IconButton, Progress, Icon, Grid, GridItem, useColorModeValue, Select, Divider, Center,
-  Tooltip as ChakraTooltip,
+  Badge,
+  Box,
+  Button,
+  Flex,
+  FormControl,
+  FormLabel,
+  Heading,
+  HStack,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Select,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  Text,
+  useDisclosure,
+  useToast,
+  VStack,
 } from "@chakra-ui/react";
-import { SearchIcon, InfoOutlineIcon, DownloadIcon } from "@chakra-ui/icons";
-import {
-  FaUserPlus, FaEnvelope, FaBan, FaArrowTrendUp, FaWallet, FaEllipsis, FaClock, FaFilePdf, FaFilter,
-} from "react-icons/fa6";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
-} from "chart.js";
-import { motion, AnimatePresence } from "framer-motion";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
+import stores from "../../../../store/stores";
+import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
+import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-const MotionBox = motion(Box);
-
-const CUSTOMER_DATA = [
-  { id: "1", name: "Alex Johnson", email: "alex@sky.com", spent: 4200, orders: 12, status: "VIP", loyalty: 95, lastSeen: "2 hours ago", type: "Corporate" },
-  { id: "2", name: "Sarah Chen", email: "sarah@sky.com", spent: 2850, orders: 8, status: "Active", loyalty: 70, lastSeen: "5 mins ago", type: "Individual" },
-  { id: "3", name: "Michael Bell", email: "mike@sky.com", spent: 1100, orders: 3, status: "Active", loyalty: 40, lastSeen: "Yesterday", type: "Individual" },
-  { id: "4", name: "Emma Wilson", email: "emma@sky.com", spent: 450, orders: 2, status: "Inactive", loyalty: 15, lastSeen: "2 weeks ago", type: "Corporate" },
-  { id: "5", name: "David Miller", email: "d.miller@web.com", spent: 5400, orders: 15, status: "VIP", loyalty: 98, lastSeen: "Just now", type: "Corporate" },
-];
-
-const CustomersTab: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [spentFilter, setSpentFilter] = useState("All");
-  const [loyaltyFilter, setLoyaltyFilter] = useState("All");
-  const [isExporting, setIsExporting] = useState(false);
-
-  const bgCard = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.100", "gray.700");
-  const tableHeadBg = useColorModeValue("gray.50", "gray.700");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-
-  const filteredUsers = useMemo(() => {
-    return CUSTOMER_DATA.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "All" || user.status === statusFilter;
-      const matchesSpent = spentFilter === "All" || (spentFilter === "High" ? user.spent > 3000 : user.spent <= 3000);
-      const matchesLoyalty = loyaltyFilter === "All" || (loyaltyFilter === "Premium" ? user.loyalty >= 80 : user.loyalty < 80);
-      return matchesSearch && matchesStatus && matchesSpent && matchesLoyalty;
-    });
-  }, [searchQuery, statusFilter, spentFilter, loyaltyFilter]);
-
-  const downloadReport = () => {
-    setIsExporting(true);
-    const doc = new jsPDF();
-
-    doc.setFillColor(107, 70, 193);
-    doc.rect(0, 0, 210, 40, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.text("Customer Insights Report", 15, 25);
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleString()} | Total Records: ${filteredUsers.length}`, 15, 33);
-
-    const tableRows = filteredUsers.map((u) => [u.name, u.email, u.status, `$${u.spent}`, `${u.loyalty}%`]);
-
-    autoTable(doc, {
-      head: [["Name", "Email", "Status", "Total Spent", "Loyalty"]],
-      body: tableRows,
-      startY: 45,
-      headStyles: { fillColor: [107, 70, 193] },
-      alternateRowStyles: { fillColor: [245, 245, 255] },
-    });
-
-    doc.save(`Customer_Report_${Date.now()}.pdf`);
-    setTimeout(() => setIsExporting(false), 1000);
+type BuyerProfile = {
+  _id: string;
+  displayName?: string;
+  tags?: string[];
+  outstandingBalance?: number;
+  isBlocked?: boolean;
+  source?: "manual" | "import" | "order";
+  buyerId?: {
+    fullName?: string;
+    phoneE164?: string;
+    emailNormalized?: string;
   };
-
-  return (
-    <Box
-      w="100%"
-      px={{ base: 2, sm: 2, md: 4, lg: 4 }}
-      py={{ base: 2, md: 4, lg: 4 }}
-      bg={useColorModeValue("gray.50", "gray.900")}
-      minH="100vh"
-    >
-      <VStack spacing={{ base: 6, lg: 8 }} align="stretch" maxW="1400px" mx="auto">
-        {/* Header */}
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          justify="space-between"
-          align={{ base: "start", md: "center" }}
-          gap={5}
-        >
-          <Box>
-            <Heading
-              size={{ base: "xl", md: "xl" }}
-              fontWeight="900"
-              letterSpacing="tight"
-              color={useColorModeValue("gray.800", "white")}
-            >
-              CRM Directory
-            </Heading>
-            <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} mt={1}>
-              Manage relationships and track customer lifecycle
-            </Text>
-          </Box>
-          <Button
-            leftIcon={<DownloadIcon />}
-            colorScheme="purple"
-            variant="solid"
-            borderRadius="xl"
-            size={{ base: "md", md: "lg" }}
-            isLoading={isExporting}
-            onClick={downloadReport}
-            shadow="lg"
-            w={{ base: "full", md: "auto" }}
-          >
-            Download PDF
-          </Button>
-        </Flex>
-
-        {/* Stats */}
-        <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={{ base: 4, md: 6 }}>
-          <StatSummary title="Active Base" value="8,420" growth="+12%" color="blue.500" icon={FaUserPlus} />
-          <StatSummary title="Avg. Ticket" value="$142.50" growth="+5.2%" color="purple.500" icon={FaWallet} />
-          <StatSummary title="Retention" value="64%" growth="+2.1%" color="teal.500" icon={FaClock} />
-          <StatSummary title="Risk Level" value="Low" growth="Safe" color="green.500" icon={FaArrowTrendUp} />
-        </SimpleGrid>
-
-        {/* Filters */}
-        <Box
-          bg={bgCard}
-          p={{ base: 4, md: 5, lg: 6 }}
-          borderRadius="2xl"
-          shadow="sm"
-          border="1px solid"
-          borderColor={borderColor}
-        >
-          <Flex direction={{ base: "column", lg: "row" }} gap={4} align="stretch">
-            <InputGroup size="md" flex="1">
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="gray.400" />
-              </InputLeftElement>
-              <Input
-                placeholder="Search name, email or ID..."
-                borderRadius="xl"
-                variant="filled"
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </InputGroup>
-
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3} flex="2">
-              <Select
-                borderRadius="xl"
-                variant="filled"
-                icon={<FaFilter />}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="All">All Statuses</option>
-                <option value="VIP">VIP Members</option>
-                <option value="Active">Active Users</option>
-                <option value="Inactive">Inactive</option>
-              </Select>
-
-              <Select borderRadius="xl" variant="filled" onChange={(e) => setSpentFilter(e.target.value)}>
-                <option value="All">All Spending</option>
-                <option value="High">High Spenders ({`>`}$3k)</option>
-                <option value="Low">Regular Spenders</option>
-              </Select>
-
-              <Select borderRadius="xl" variant="filled" onChange={(e) => setLoyaltyFilter(e.target.value)}>
-                <option value="All">All Loyalty</option>
-                <option value="Premium">Premium (80%+)</option>
-                <option value="Standard">Standard</option>
-              </Select>
-            </SimpleGrid>
-          </Flex>
-        </Box>
-
-        {/* Main Content */}
-        <Grid
-          templateColumns={{ base: "100%", xl: "minmax(350px, 1fr) 2.5fr" }}
-          gap={{ base: 6, md: 8 }}
-          w="100%"
-          maxW="100%"
-        >
-          {/* Left side - Chart + Promo */}
-          <VStack spacing={6} align="stretch" w="100%" maxW="100vw">
-            {/* Purchase Frequency Chart */}
-            <MotionBox
-              bg={bgCard}
-              p={{ base: 4, md: 6 }}
-              borderRadius="2xl"
-              shadow="sm"
-              border="1px solid"
-              borderColor={borderColor}
-              w="100%"
-              overflow="hidden" // Prevents the chart from leaking out
-            >
-              <Heading
-                size="xs"
-                mb={6}
-                textTransform="uppercase"
-                letterSpacing="widest"
-                color="gray.500"
-              >
-                Purchase Frequency
-              </Heading>
-
-              <Box
-                position="relative"
-                height={{ base: "200px", md: "260px" }}
-                w="100%"
-              >
-                <Bar
-                  data={{
-                    labels: ["1-2", "3-5", "6-10", "10+"],
-                    datasets: [
-                      {
-                        label: "Users",
-                        data: [450, 230, 120, 85],
-                        backgroundColor: ["#E2E8F0", "#CBD5E0", "#9F7AEA", "#6B46C1"],
-                        borderRadius: 10,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                      y: { beginAtZero: true },
-                    },
-                  }}
-                />
-              </Box>
-            </MotionBox>
-
-            {/* Promo Card */}
-            <Box
-              bgGradient="linear(to-br, purple.600, blue.600)"
-              p={{ base: 5, md: 6 }}
-              borderRadius="2xl"
-              color="white"
-              shadow="xl"
-              position="relative"
-              overflow="hidden"
-              w="100%" // Explicitly full width
-            >
-              <VStack
-                align="start"
-                spacing={4}
-                position="relative"
-                zIndex={1}
-                w="full"
-              >
-                <Badge colorScheme="whiteAlpha" px={3} py={1} borderRadius="full">
-                  Campaign Live
-                </Badge>
-
-                <Box w="full">
-                  <Heading size={{ base: "md", md: "lg" }}>
-                    VIP Retention
-                  </Heading>
-                  <Text
-                    fontSize="sm"
-                    mt={1}
-                    opacity={0.9}
-                    whiteSpace="normal" // Ensures text wraps on small screens
-                  >
-                    Automated outreach for high-value churn risks.
-                  </Text>
-                </Box>
-
-                <Button
-                  size="md"
-                  w="full"
-                  bg="white"
-                  color="purple.600"
-                  _hover={{ bg: "gray.100" }}
-                  borderRadius="xl"
-                >
-                  Configure Workflow
-                </Button>
-              </VStack>
-              <Icon
-                as={FaFilePdf}
-                position="absolute"
-                right="-10%"
-                bottom="-10%"
-                boxSize={{ base: "80px", md: "140px" }}
-                opacity={0.1}
-                transform="rotate(-15deg)"
-              />
-            </Box>
-          </VStack>
-
-          {/* Right side - Table (Keep as is since you liked it) */}
-          <GridItem
-            bg={bgCard}
-            p={{ base: 4, md: 6 }}
-            borderRadius="2xl"
-            shadow="sm"
-            border="1px solid"
-            borderColor={borderColor}
-            w="100%"
-            overflow="hidden"
-          >
-            <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={4}>
-
-              <Box>
-
-                <Heading size={{ base: "lg", md: "xl" }} fontWeight="900">
-
-                  User Directory
-
-                </Heading>
-
-                <Text fontSize="sm" color="gray.500" fontWeight="medium">
-
-                  SHOWING {filteredUsers.length} MEMBERS
-
-                </Text>
-
-              </Box>
-
-              <ChakraTooltip label="Table Settings">
-
-                <IconButton aria-label="Settings" icon={<InfoOutlineIcon />} size="md" variant="ghost" />
-
-              </ChakraTooltip>
-
-            </Flex>
-
-
-
-            <Box overflowX="auto" w="100%">
-
-              <Table variant="simple" size={{ base: "sm", md: "md" }} minW="600px">
-
-                <Thead bg={tableHeadBg}>
-
-                  <Tr>
-
-                    <Th border="none" minW="180px">Member</Th>
-
-                    <Th border="none" display={{ base: "none", md: "table-cell" }}>Volume</Th>
-
-                    <Th border="none">Status</Th>
-
-                    <Th border="none" minW="120px">Loyalty</Th>
-
-                    <Th border="none" w="60px"></Th>
-
-                  </Tr>
-
-                </Thead>
-
-                <Tbody>
-
-                  <AnimatePresence mode="popLayout">
-
-                    {filteredUsers.length > 0 ? (
-
-                      filteredUsers.map((user) => (
-
-                        <Tr
-
-                          key={user.id}
-
-                          as={motion.tr}
-
-                          layout
-
-                          initial={{ opacity: 0, y: 10 }}
-
-                          exit={{ opacity: 0, y: -10 }}
-
-                          _hover={{ bg: hoverBg }}
-
-                          transition="background 0.2s"
-
-                        >
-
-                          <Td py={4}>
-
-                            <HStack spacing={3}>
-
-                              <Avatar size="sm" src={`https://i.pravatar.cc/150?u=${user.id}`} />
-
-                              <Box>
-
-                                <Text fontWeight="700" fontSize="sm">
-
-                                  {user.name}
-
-                                </Text>
-
-                                <Text fontSize="xs" color="gray.500" mt={0.5}>
-
-                                  {user.email}
-
-                                </Text>
-
-                              </Box>
-
-                            </HStack>
-
-                          </Td>
-
-                          <Td display={{ base: "none", md: "table-cell" }}>
-
-                            <Text fontWeight="bold" fontSize="sm">
-
-                              ${user.spent.toLocaleString()}
-
-                            </Text>
-
-                          </Td>
-
-                          <Td>
-
-                            <Badge
-
-                              fontSize="xs"
-
-                              px={3}
-
-                              py={1}
-
-                              borderRadius="md"
-
-                              colorScheme={user.status === "VIP" ? "purple" : "blue"}
-
-                            >
-
-                              {user.status}
-
-                            </Badge>
-
-                          </Td>
-
-                          <Td>
-
-                            <VStack align="stretch" spacing={1}>
-
-                              <Progress
-
-                                value={user.loyalty}
-
-                                size="sm"
-
-                                colorScheme={user.loyalty > 80 ? "purple" : "blue"}
-
-                                borderRadius="full"
-
-                              />
-
-                              <Text fontSize="xs" fontWeight="bold" color="gray.600">
-
-                                {user.loyalty}% Score
-
-                              </Text>
-
-                            </VStack>
-
-                          </Td>
-
-                          <Td textAlign="right">
-
-                            <Menu isLazy>
-
-                              <MenuButton
-
-                                as={IconButton}
-
-                                icon={<FaEllipsis />}
-
-                                variant="ghost"
-
-                                size="sm"
-
-                                borderRadius="full"
-
-                              />
-
-                              <MenuList fontSize="sm" borderRadius="xl" shadow="xl" p={2}>
-
-                                <MenuItem icon={<FaEnvelope />} borderRadius="lg">
-
-                                  Send Message
-
-                                </MenuItem>
-
-                                <MenuItem icon={<FaClock />} borderRadius="lg">
-
-                                  View History
-
-                                </MenuItem>
-
-                                <Divider my={2} />
-
-                                <MenuItem icon={<FaBan />} color="red.500" borderRadius="lg">
-
-                                  Flag Account
-
-                                </MenuItem>
-
-                              </MenuList>
-
-                            </Menu>
-
-                          </Td>
-
-                        </Tr>
-
-                      ))
-
-                    ) : (
-
-                      <Tr>
-
-                        <Td colSpan={5}>
-
-                          <Center py={12} flexDirection="column">
-
-                            <Icon as={SearchIcon} boxSize={10} color="gray.200" mb={4} />
-
-                            <Text color="gray.400" fontSize="md" fontWeight="medium">
-
-                              No matching customers found
-
-                            </Text>
-
-                          </Center>
-
-                        </Td>
-
-                      </Tr>
-
-                    )}
-
-                  </AnimatePresence>
-
-                </Tbody>
-
-              </Table>
-
-            </Box>
-          </GridItem>
-        </Grid>
-      </VStack>
-    </Box >
-  );
 };
 
-const StatSummary = ({ title, value, growth, color, icon: StatIcon }: any) => (
-  <MotionBox
-    whileHover={{ y: -4, shadow: "xl" }}
-    bg="white"
-    p={{ base: 5, md: 6 }}
-    borderRadius="2xl"
-    shadow="sm"
-    border="1px solid"
-    borderColor="gray.100"
-    position="relative"
-    overflow="hidden"
-    transition={{ duration: 0.2 }}
-  >
-    <VStack align="start" spacing={2}>
-      <Text
-        color="gray.500"
-        fontSize="xs"
-        fontWeight="extrabold"
-        textTransform="uppercase"
-        letterSpacing="wide"
-      >
-        {title}
-      </Text>
-      <Heading size={{ base: "xl", md: "2xl" }} fontWeight="900">
-        {value}
-      </Heading>
-      <Badge colorScheme="green" fontSize="xs" borderRadius="md" px={2} variant="subtle">
-        {growth}
-      </Badge>
-    </VStack>
-    <Icon
-      as={StatIcon}
-      position="absolute"
-      right={-2}
-      bottom={-2}
-      boxSize={20}
-      color={color}
-      opacity={0.06}
-      transform="rotate(-15deg)"
-    />
-  </MotionBox>
-);
+type LedgerEntryType = "sale" | "payment" | "adjustment";
+type LedgerDirection = "debit" | "credit";
+type LedgerReferenceType = "order" | "manual" | "refund" | "import";
+
+type BuyerLedgerEntry = {
+  _id: string;
+  entryType: LedgerEntryType;
+  amount: number;
+  direction: LedgerDirection;
+  referenceType?: LedgerReferenceType;
+  referenceId?: string;
+  notes?: string;
+  entryDate?: string;
+  balanceAfter?: number;
+  status?: "active" | "reversed";
+};
+
+type LedgerSummary = {
+  totalDebit: number;
+  totalCredit: number;
+  outstandingBalance: number;
+  creditLimit: number;
+  isBlocked: boolean;
+};
+
+const defaultLedgerSummary: LedgerSummary = {
+  totalDebit: 0,
+  totalCredit: 0,
+  outstandingBalance: 0,
+  creditLimit: 0,
+  isBlocked: false,
+};
+
+const CustomersTab: React.FC = observer(() => {
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isLedgerEntryOpen,
+    onOpen: onLedgerEntryOpen,
+    onClose: onLedgerEntryClose,
+  } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const {
+    isOpen: isReverseOpen,
+    onOpen: onReverseOpen,
+    onClose: onReverseClose,
+  } = useDisclosure();
+  const { auth, buyerStore } = stores;
+
+  const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
+  const [selectedLedgerBuyer, setSelectedLedgerBuyer] = useState<BuyerProfile | null>(null);
+  const [ledgerEntries, setLedgerEntries] = useState<BuyerLedgerEntry[]>([]);
+  const [ledgerSummary, setLedgerSummary] = useState<LedgerSummary>(defaultLedgerSummary);
+
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [ledgerSubmitting, setLedgerSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isReversing, setIsReversing] = useState(false);
+
+  const [selectedBuyer, setSelectedBuyer] = useState<BuyerProfile | null>(null);
+  const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<BuyerLedgerEntry | null>(null);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const [ledgerPage, setLedgerPage] = useState(1);
+  const [ledgerTotalPages, setLedgerTotalPages] = useState(1);
+  const [ledgerTotal, setLedgerTotal] = useState(0);
+
+  const limit = 10;
+  const ledgerLimit = 10;
+
+  const [formValues, setFormValues] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    displayName: "",
+    tags: "",
+  });
+
+  const [ledgerFormValues, setLedgerFormValues] = useState({
+    entryType: "sale" as LedgerEntryType,
+    amount: "",
+    direction: "debit" as LedgerDirection,
+    referenceType: "manual" as LedgerReferenceType,
+    referenceId: "",
+    entryDate: "",
+    notes: "",
+  });
+
+  const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
+
+  const getBuyerDisplayName = (buyer: BuyerProfile) => {
+    return buyer.displayName || buyer.buyerId?.fullName || "-";
+  };
+
+  const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
+
+  const fetchBuyers = async (pageToLoad = 1, query = search) => {
+    if (!companyId) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await buyerStore.listBuyerProfiles({
+        companyId,
+        page: pageToLoad,
+        limit,
+        search: query?.trim() || undefined,
+      });
+
+      const list = response?.data?.buyers || [];
+      const nextPage = response?.data?.page || pageToLoad;
+      const nextTotalPages = response?.data?.totalPages || 1;
+      const totalCount = response?.data?.total || 0;
+
+      setBuyers(list);
+      setPage(nextPage);
+      setTotalPages(nextTotalPages);
+      setTotal(totalCount);
+    } catch (error: any) {
+      toast({
+        title: "Failed to load buyers",
+        description: error?.message || "Unable to fetch buyer list",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLedgerEntries = async (profileId: string, pageToLoad = 1) => {
+    if (!profileId) {
+      return;
+    }
+
+    setLedgerLoading(true);
+    try {
+      const response = await buyerStore.listBuyerLedgerEntries(profileId, {
+        page: pageToLoad,
+        limit: ledgerLimit,
+      });
+
+      const list = response?.data?.entries || [];
+      const nextPage = response?.data?.page || pageToLoad;
+      const nextTotalPages = response?.data?.totalPages || 1;
+      const nextTotal = response?.data?.total || 0;
+      const nextSummary = response?.data?.summary || defaultLedgerSummary;
+
+      setLedgerEntries(list);
+      setLedgerPage(nextPage);
+      setLedgerTotalPages(nextTotalPages);
+      setLedgerTotal(nextTotal);
+      setLedgerSummary({
+        totalDebit: Number(nextSummary.totalDebit || 0),
+        totalCredit: Number(nextSummary.totalCredit || 0),
+        outstandingBalance: Number(nextSummary.outstandingBalance || 0),
+        creditLimit: Number(nextSummary.creditLimit || 0),
+        isBlocked: Boolean(nextSummary.isBlocked),
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to load ledger",
+        description: error?.message || "Unable to fetch ledger entries",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLedgerLoading(false);
+    }
+  };
+
+  const openLedgerView = async (buyer: BuyerProfile) => {
+    setSelectedLedgerBuyer(buyer);
+    setLedgerPage(1);
+    await fetchLedgerEntries(buyer._id, 1);
+  };
+
+  const closeLedgerView = () => {
+    setSelectedLedgerBuyer(null);
+    setLedgerEntries([]);
+    setLedgerSummary(defaultLedgerSummary);
+    setLedgerPage(1);
+    setLedgerTotalPages(1);
+    setLedgerTotal(0);
+  };
+
+  const openDeleteModal = (buyer: BuyerProfile) => {
+    setSelectedBuyer(buyer);
+    onDeleteOpen();
+  };
+
+  const resetForm = () => {
+    setFormValues({
+      fullName: "",
+      phone: "",
+      email: "",
+      displayName: "",
+      tags: "",
+    });
+  };
+
+  const resetLedgerForm = () => {
+    setLedgerFormValues({
+      entryType: "sale",
+      amount: "",
+      direction: "debit",
+      referenceType: "manual",
+      referenceId: "",
+      entryDate: "",
+      notes: "",
+    });
+  };
+
+  const handleCreateBuyer = async () => {
+    if (!companyId) {
+      toast({
+        title: "Company not found",
+        description: "Please create/select your shop first.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formValues.phone.trim() && !formValues.email.trim()) {
+      toast({
+        title: "Validation failed",
+        description: "Provide at least phone or email.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const tagsArray = formValues.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      await buyerStore.upsertBuyer({
+        companyId,
+        fullName: formValues.fullName.trim() || undefined,
+        phone: formValues.phone.trim() || undefined,
+        email: formValues.email.trim() || undefined,
+        displayName: formValues.displayName.trim() || undefined,
+        tags: tagsArray.length ? tagsArray : undefined,
+        source: "manual",
+      });
+
+      toast({
+        title: "Buyer saved",
+        description: "Buyer profile has been created/updated.",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      resetForm();
+      onClose();
+      fetchBuyers(1);
+    } catch (error: any) {
+      toast({
+        title: "Failed to save buyer",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateLedgerEntry = async () => {
+    if (!selectedLedgerBuyer?._id) {
+      return;
+    }
+
+    const parsedAmount = Number(ledgerFormValues.amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      toast({
+        title: "Validation failed",
+        description: "Amount must be greater than 0.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (ledgerFormValues.entryType === "adjustment" && !ledgerFormValues.direction) {
+      toast({
+        title: "Validation failed",
+        description: "Direction is required for adjustment entries.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setLedgerSubmitting(true);
+    try {
+      const payload: any = {
+        entryType: ledgerFormValues.entryType,
+        amount: parsedAmount,
+        referenceType: ledgerFormValues.referenceType || undefined,
+        referenceId: ledgerFormValues.referenceId.trim() || undefined,
+        notes: ledgerFormValues.notes.trim() || undefined,
+        entryDate: ledgerFormValues.entryDate
+          ? new Date(ledgerFormValues.entryDate).toISOString()
+          : undefined,
+      };
+
+      if (ledgerFormValues.entryType === "adjustment") {
+        payload.direction = ledgerFormValues.direction;
+      }
+
+      await buyerStore.createBuyerLedgerEntry(selectedLedgerBuyer._id, payload);
+
+      toast({
+        title: "Ledger entry saved",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      resetLedgerForm();
+      onLedgerEntryClose();
+      setLedgerPage(1);
+      await fetchLedgerEntries(selectedLedgerBuyer._id, 1);
+      await fetchBuyers(page, search);
+    } catch (error: any) {
+      toast({
+        title: "Failed to save ledger entry",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLedgerSubmitting(false);
+    }
+  };
+
+  const openReverseModal = (entry: BuyerLedgerEntry) => {
+    setSelectedLedgerEntry(entry);
+    onReverseOpen();
+  };
+
+  const confirmReverse = async () => {
+    if (!selectedLedgerBuyer?._id || !selectedLedgerEntry?._id) {
+      return;
+    }
+
+    setIsReversing(true);
+    try {
+      await buyerStore.reverseBuyerLedgerEntry(selectedLedgerBuyer._id, selectedLedgerEntry._id, {});
+
+      toast({
+        title: "Ledger entry reversed",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      onReverseClose();
+      const nextPage = ledgerEntries.length === 1 && ledgerPage > 1 ? ledgerPage - 1 : ledgerPage;
+      await fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
+      await fetchBuyers(page, search);
+    } catch (error: any) {
+      toast({
+        title: "Failed to reverse entry",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsReversing(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedBuyer?._id) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await buyerStore.deleteBuyerProfile(selectedBuyer._id);
+      toast({
+        title: "Buyer deleted",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+      onDeleteClose();
+      const nextPage = buyers.length === 1 && page > 1 ? page - 1 : page;
+      fetchBuyers(nextPage, search);
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete buyer",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!companyId || selectedLedgerBuyer) return;
+    const timer = setTimeout(() => fetchBuyers(1, search), 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId, search, selectedLedgerBuyer]);
+
+  const buyerTableData = useMemo(() => {
+    return buyers.map((buyer) => ({
+      ...buyer,
+      name: getBuyerDisplayName(buyer),
+      phone: buyer.buyerId?.phoneE164 || "-",
+      email: buyer.buyerId?.emailNormalized || "-",
+      sourceBadge: (
+        <Badge colorScheme="purple" textTransform="capitalize">
+          {buyer.source || "manual"}
+        </Badge>
+      ),
+      outstandingText: formatCurrency(Number(buyer.outstandingBalance || 0)),
+      statusBadge: (
+        <Badge colorScheme={buyer.isBlocked ? "red" : "green"}>
+          {buyer.isBlocked ? "Blocked" : "Active"}
+        </Badge>
+      ),
+      tagsDisplay:
+        buyer.tags && buyer.tags.length ? (
+          <HStack spacing={1} wrap="wrap">
+            {buyer.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={`${buyer._id}-${tag}-${idx}`} colorScheme="gray">
+                {tag}
+              </Badge>
+            ))}
+          </HStack>
+        ) : (
+          "-"
+        ),
+    }));
+  }, [buyers]);
+
+  const buyerColumns = [
+    { headerName: "Name", key: "name" },
+    { headerName: "Phone", key: "phone" },
+    { headerName: "Email", key: "email" },
+    {
+      headerName: "Source",
+      key: "sourceBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.sourceBadge },
+    },
+    { headerName: "Outstanding", key: "outstandingText" },
+    {
+      headerName: "Status",
+      key: "statusBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.statusBadge },
+    },
+    {
+      headerName: "Tags",
+      key: "tagsDisplay",
+      type: "component",
+      metaData: { component: (row: any) => row.tagsDisplay },
+    },
+    { headerName: "Action", key: "action", type: "table-actions", props: { isSticky: true } },
+  ];
+
+  const buyerTableActions = {
+    actionBtn: {
+      viewKey: {
+        showViewButton: true,
+        title: "View Ledger",
+        function: (row: BuyerProfile) => openLedgerView(row),
+      },
+      deleteKey: {
+        showDeleteButton: true,
+        title: "Delete Buyer",
+        function: (row: BuyerProfile) => openDeleteModal(row),
+      },
+    },
+    pagination: {
+      show: true,
+      currentPage: page,
+      totalPages: totalPages || 1,
+      limit,
+      onClick: (nextPage: number) => {
+        setPage(nextPage);
+        fetchBuyers(nextPage, search);
+      },
+    },
+    search: {
+      show: true,
+      placeholder: "Search by name, phone or email",
+      searchValue: search,
+      onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    },
+  };
+
+  const ledgerTableData = useMemo(() => {
+    return ledgerEntries.map((entry) => ({
+      ...entry,
+      entryDate: entry.entryDate,
+      typeBadge: (
+        <Badge
+          colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"}
+          textTransform="capitalize"
+        >
+          {entry.entryType}
+        </Badge>
+      ),
+      directionBadge: (
+        <Badge colorScheme={entry.direction === "debit" ? "orange" : "green"} textTransform="capitalize">
+          {entry.direction}
+        </Badge>
+      ),
+      amountText: `${entry.direction === "debit" ? "+" : "-"} ${formatCurrency(entry.amount || 0)}`,
+      balanceText: formatCurrency(entry.balanceAfter || 0),
+      referenceText: entry.referenceId
+        ? `${entry.referenceType || "manual"}: ${entry.referenceId}`
+        : entry.referenceType || "manual",
+      statusBadge: (
+        <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
+          {entry.status || "active"}
+        </Badge>
+      ),
+      reverseAction:
+        entry.status === "reversed" ? (
+          <Text color="gray.500">-</Text>
+        ) : (
+          <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
+            Reverse
+          </Button>
+        ),
+    }));
+  }, [ledgerEntries]);
+
+  const ledgerColumns = [
+    { headerName: "Date", key: "entryDate", type: "date" },
+    {
+      headerName: "Type",
+      key: "typeBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.typeBadge },
+    },
+    {
+      headerName: "Direction",
+      key: "directionBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.directionBadge },
+    },
+    { headerName: "Amount", key: "amountText" },
+    { headerName: "Balance", key: "balanceText" },
+    { headerName: "Reference", key: "referenceText" },
+    { headerName: "Notes", key: "notes" },
+    {
+      headerName: "Status",
+      key: "statusBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.statusBadge },
+    },
+    {
+      headerName: "Action",
+      key: "reverseAction",
+      type: "component",
+      metaData: { component: (row: any) => row.reverseAction },
+    },
+  ];
+
+  const ledgerTableActions = {
+    pagination: {
+      show: true,
+      currentPage: ledgerPage,
+      totalPages: ledgerTotalPages || 1,
+      limit: ledgerLimit,
+      onClick: (nextPage: number) => {
+        if (!selectedLedgerBuyer?._id) {
+          return;
+        }
+        setLedgerPage(nextPage);
+        fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
+      },
+    },
+  };
+
+  const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
+
+  return (
+    <Box px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }}>
+      <VStack align="stretch" spacing={4}>
+        <Flex
+          justify="space-between"
+          align={{ base: "stretch", md: "center" }}
+          direction={{ base: "column", md: "row" }}
+          gap={3}
+        >
+          <Box>
+            <Heading size="md">
+              {selectedLedgerBuyer ? `Buyer Ledger - ${selectedBuyerName}` : "Buyer Management"}
+            </Heading>
+            <Text fontSize="sm" color="gray.500">
+              {selectedLedgerBuyer
+                ? "Track sale, payment and adjustment entries"
+                : "Manage offline buyers for your company"}
+            </Text>
+          </Box>
+          {selectedLedgerBuyer ? (
+            <HStack>
+              <Button leftIcon={<ArrowBackIcon />} variant="outline" onClick={closeLedgerView}>
+                Back to Buyers
+              </Button>
+              <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onLedgerEntryOpen}>
+                Add Ledger Entry
+              </Button>
+            </HStack>
+          ) : (
+            <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
+              Add Buyer
+            </Button>
+          )}
+        </Flex>
+
+        {!selectedLedgerBuyer ? (
+          <CustomTable
+            title={`Buyers (${total})`}
+            columns={buyerColumns}
+            data={buyerTableData}
+            loading={loading}
+            actions={buyerTableActions}
+            serial={{ show: true, text: "S.No." }}
+          />
+        ) : (
+          <VStack align="stretch" spacing={4}>
+            <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
+              <Box p={3} borderWidth="1px" borderRadius="md">
+                <Stat>
+                  <StatLabel>Total Sale (Debit)</StatLabel>
+                  <StatNumber>{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
+                </Stat>
+              </Box>
+              <Box p={3} borderWidth="1px" borderRadius="md">
+                <Stat>
+                  <StatLabel>Total Payment (Credit)</StatLabel>
+                  <StatNumber>{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
+                </Stat>
+              </Box>
+              <Box p={3} borderWidth="1px" borderRadius="md">
+                <Stat>
+                  <StatLabel>Outstanding</StatLabel>
+                  <StatNumber>{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
+                </Stat>
+              </Box>
+              <Box p={3} borderWidth="1px" borderRadius="md">
+                <Stat>
+                  <StatLabel>Credit Limit</StatLabel>
+                  <StatNumber>{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
+                </Stat>
+              </Box>
+            </SimpleGrid>
+
+            <CustomTable
+              title={`Ledger Entries (${ledgerTotal})`}
+              columns={ledgerColumns}
+              data={ledgerTableData}
+              loading={ledgerLoading}
+              actions={ledgerTableActions}
+              serial={{ show: true, text: "S.No." }}
+            />
+          </VStack>
+        )}
+      </VStack>
+
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add Buyer</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={3}>
+              <FormControl>
+                <FormLabel>Full Name</FormLabel>
+                <Input
+                  value={formValues.fullName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Buyer full name"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Phone</FormLabel>
+                <Input
+                  value={formValues.phone}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
+                  placeholder="10-digit or +country code"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  value={formValues.email}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
+                  placeholder="buyer@example.com"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Display Name (optional)</FormLabel>
+                <Input
+                  value={formValues.displayName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
+                  placeholder="How you want this buyer to appear"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Tags (comma-separated)</FormLabel>
+                <Input
+                  value={formValues.tags}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
+                  placeholder="wholesale, repeat, priority"
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting}>
+              Save Buyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isLedgerEntryOpen} onClose={onLedgerEntryClose} isCentered size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add Ledger Entry</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={3}>
+              <FormControl>
+                <FormLabel>Entry Type</FormLabel>
+                <Select
+                  value={ledgerFormValues.entryType}
+                  onChange={(e) => {
+                    const nextType = e.target.value as LedgerEntryType;
+                    setLedgerFormValues((prev) => ({
+                      ...prev,
+                      entryType: nextType,
+                      direction: nextType === "payment" ? "credit" : nextType === "sale" ? "debit" : prev.direction,
+                    }));
+                  }}
+                >
+                  <option value="sale">Sale</option>
+                  <option value="payment">Payment</option>
+                  <option value="adjustment">Adjustment</option>
+                </Select>
+              </FormControl>
+
+              <FormControl isDisabled={ledgerFormValues.entryType !== "adjustment"}>
+                <FormLabel>Direction</FormLabel>
+                <Select
+                  value={
+                    ledgerFormValues.entryType === "adjustment"
+                      ? ledgerFormValues.direction
+                      : ledgerFormValues.entryType === "payment"
+                        ? "credit"
+                        : "debit"
+                  }
+                  onChange={(e) =>
+                    setLedgerFormValues((prev) => ({
+                      ...prev,
+                      direction: e.target.value as LedgerDirection,
+                    }))
+                  }
+                >
+                  <option value="debit">Debit (increase due)</option>
+                  <option value="credit">Credit (decrease due)</option>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Amount</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={ledgerFormValues.amount}
+                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
+                  placeholder="Enter amount"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Reference Type</FormLabel>
+                <Select
+                  value={ledgerFormValues.referenceType}
+                  onChange={(e) =>
+                    setLedgerFormValues((prev) => ({
+                      ...prev,
+                      referenceType: e.target.value as LedgerReferenceType,
+                    }))
+                  }
+                >
+                  <option value="manual">Manual</option>
+                  <option value="order">Order</option>
+                  <option value="refund">Refund</option>
+                  <option value="import">Import</option>
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Reference ID (optional)</FormLabel>
+                <Input
+                  value={ledgerFormValues.referenceId}
+                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, referenceId: e.target.value }))}
+                  placeholder="orderId / refundId / rowId"
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Entry Date (optional)</FormLabel>
+                <Input
+                  type="datetime-local"
+                  value={ledgerFormValues.entryDate}
+                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Notes (optional)</FormLabel>
+                <Input
+                  value={ledgerFormValues.notes}
+                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Optional remarks"
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onLedgerEntryClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
+              Save Entry
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <ConfirmationModal
+        isOpen={isDeleteOpen}
+        onClose={onDeleteClose}
+        onConfirm={confirmDelete}
+        title="Delete Buyer"
+        message={
+          <Text>
+            Are you sure you want to delete buyer{" "}
+            <strong>{selectedBuyer?.displayName || selectedBuyer?.buyerId?.fullName || "-"}</strong>?
+            This action cannot be undone.
+          </Text>
+        }
+        confirmText="Delete"
+        confirmButtonProps={{ colorScheme: "red" }}
+        isLoading={isDeleting}
+      />
+
+      <ConfirmationModal
+        isOpen={isReverseOpen}
+        onClose={onReverseClose}
+        onConfirm={confirmReverse}
+        title="Reverse Ledger Entry"
+        message={
+          <Text>
+            Reverse this entry of <strong>{formatCurrency(selectedLedgerEntry?.amount || 0)}</strong>? This will
+            create a compensating adjustment entry.
+          </Text>
+        }
+        confirmText="Reverse"
+        confirmButtonProps={{ colorScheme: "red" }}
+        isLoading={isReversing}
+      />
+    </Box>
+  );
+});
 
 export default CustomersTab;
