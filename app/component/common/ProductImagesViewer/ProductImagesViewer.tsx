@@ -27,7 +27,9 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-const ProductImageViewer = ({ images }) => {
+const ProductImageViewer = ({ images: rawImages }) => {
+  const images = Array.from(new Set(rawImages || [])).filter(Boolean); // Deduplicate and remove empty
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isHovered, setIsHovered] = useState(false);
@@ -40,6 +42,16 @@ const ProductImageViewer = ({ images }) => {
   const thumbnailSize = useBreakpointValue({ base: '40px', sm: '50px', md: '60px' });
   const controlSize = "sm"
   const isMobile = useBreakpointValue({ base: true, lg: false }); // Switch to desktop layout only on lg screens
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <Box h={imageHeight} w="full" bg="gray.50" borderRadius="2xl" />;
+  }
+
 
   const handleMouseMove = (e) => {
     if (!containerRef.current) return;
