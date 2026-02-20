@@ -15,7 +15,7 @@ import {
   AspectRatio
 } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -28,7 +28,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const ProductImageViewer = ({ images: rawImages }) => {
-  const images = Array.from(new Set(rawImages || [])).filter(Boolean); // Deduplicate and remove empty
+  const images : any = Array.from(new Set(rawImages || [])).filter(Boolean); // Deduplicate and remove empty
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -110,7 +110,7 @@ const ProductImageViewer = ({ images: rawImages }) => {
           }}
         >
           <Slider {...mobileSettings}>
-            {images.map((img, index) => (
+            {images.map((img : any, index) => (
               <Box key={index} px={0} outline="none">
                 <AspectRatio ratio={1} bg="white" borderRadius="xl" overflow="hidden">
                   <Image
@@ -134,7 +134,7 @@ const ProductImageViewer = ({ images: rawImages }) => {
             <ModalBody display="flex" alignItems="center" justifyContent="center" p={0} position="relative">
               <Box w="full" h="full">
                 <Slider {...modalSettings}>
-                  {images.map((img, idx) => (
+                  {images.map((img : any, idx) => (
                     <Box key={idx} h="100vh" display="flex !important" alignItems="center" justifyContent="center" outline="none">
                       <Image
                         src={img}
@@ -173,7 +173,7 @@ const ProductImageViewer = ({ images: rawImages }) => {
       {/* Desktop Layout - Main Image + Thumbnails */}
       <Flex gap={4} align={'start'}>
         <Flex direction="column" py={2} gap={3} maxH={imageHeight} overflowY="auto" sx={{ scrollbarWidth: 'none', '::-webkit-scrollbar': { display: 'none' } }}>
-          {images.map((img, index) => (
+          {images.map((img : any, index) => (
             <Circle
               key={index}
               size={thumbnailSize}
