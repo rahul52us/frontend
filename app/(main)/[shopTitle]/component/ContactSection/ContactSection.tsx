@@ -33,8 +33,8 @@ const ContactSection = ({ shopData }: any) => {
     <Box position="relative" py={12} bg="white" id="contact">
       <Container maxW="container.xl">
         <Stack
-          direction={{ base: "column", lg: "row" }}
-          spacing={{ base: 12, lg: 20 }}
+          direction={{ base: "column", md: "row" }}
+          spacing={{ base: 12, md: 20 }}
           align="start"
         >
           {/* Left: Contact Info */}

@@ -16,78 +16,78 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiSend, FiSmartphone } from 'react-icons/fi';
-
-const MotionBox = motion(Box);
+import { FiSend, FiMail } from 'react-icons/fi';
 
 const NewsLetter = () => {
   return (
-    <Box position="relative" py={12} bg="gray.50" borderY="1px solid" borderColor="gray.100">
+    <Box position="relative" py={{ base: 6, md: 10 }} bg="gray.50" borderY="1px solid" borderColor="gray.100">
       <Container maxW="container.xl">
         <Stack
           direction={{ base: "column", lg: "row" }}
-          spacing={{ base: 8, lg: 12 }}
+          spacing={{ base: 4, lg: 8 }}
           align="center"
           justify="space-between"
+          textAlign={{ base: "center", lg: "left" }}
         >
-          {/* Left: Heading & Context */}
-          <HStack spacing={6} flex={1} align="center">
+          {/* Left: Heading */}
+          <HStack spacing={4} align="center">
             <Box
-              p={3}
+              p={2.5}
               bg="gray.900"
-              borderRadius="xl"
+              borderRadius="lg"
               color="white"
               display={{ base: "none", md: "block" }}
             >
-              <Icon as={FiSend} boxSize={5} />
+              <Icon as={FiSend} boxSize={4} />
             </Box>
-            <VStack align="flex-start" spacing={1}>
-              <Heading size="md" fontWeight="800" color="gray.900" letterSpacing="-0.02em">
+            <VStack align={{ base: "center", lg: "flex-start" }} spacing={0}>
+              <Heading size="sm" fontWeight="800" color="gray.900" letterSpacing="-0.02em">
                 Stay in the Circle
               </Heading>
-              <Text color="gray.500" fontSize="sm" fontWeight="500">
-                Early access to collections and private events.
+              <Text color="gray.500" fontSize="xs" fontWeight="600" display={{ base: "none", sm: "block" }}>
+                Curated collections and private events.
               </Text>
             </VStack>
           </HStack>
 
-          {/* Right: Input Strip */}
+          {/* Right: Ultra-Compact Input Row */}
           <Flex
             as="form"
-            direction={{ base: "column", sm: "row" }}
-            gap={3}
             w={{ base: "full", lg: "auto" }}
-            maxW={{ lg: "500px" }}
-            flex={1}
+            maxW={{ base: "full", sm: "400px", lg: "450px" }}
+            bg="white"
+            p={1}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor="gray.200"
+            boxShadow="sm"
+            align="center"
           >
-            <InputGroup size="lg">
-              <InputLeftElement pointerEvents="none" color="gray.400" h="full">
-                <FiSmartphone size={18} />
+            <InputGroup size="md">
+              <InputLeftElement pointerEvents="none" color="gray.400">
+                <FiMail size={16} />
               </InputLeftElement>
               <Input
-                type="tel"
-                placeholder="Mobile Number"
-                borderRadius="xl"
-                bg="white"
-                border="1px solid"
-                borderColor="gray.200"
+                type="email"
+                placeholder="Email address"
+                variant="unstyled"
+                px={2}
                 fontSize="sm"
-                _focus={{
-                  borderColor: "gray.900",
-                  boxShadow: "none"
-                }}
                 fontWeight="600"
+                _placeholder={{ color: "gray.400" }}
               />
             </InputGroup>
             <Button
               bg="gray.900"
               color="white"
-              size="lg"
-              px={8}
-              borderRadius="xl"
+              size="sm"
+              px={6}
+              h="36px"
+              borderRadius="lg"
               fontWeight="800"
-              fontSize="sm"
+              fontSize="xs"
               _hover={{ bg: "black" }}
+              flexShrink={0}
             >
               JOIN
             </Button>

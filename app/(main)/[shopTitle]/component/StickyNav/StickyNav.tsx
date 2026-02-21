@@ -43,17 +43,16 @@ const StickyNav = ({ shopData }: any) => {
   return (
     <Box
       position="sticky"
-      top="81px"
+      top={{ base: "80px", md: "84px" }}
       zIndex="90"
       w="full"
-      display="none"
-      bg="rgba(255, 255, 255, 0.8)"
-      backdropFilter="blur(16px)"
+      bg="white"
       borderBottom="1px solid"
       borderColor="gray.100"
+      boxShadow="sm"
     >
-      <Container maxW="container.md">
-        <Flex h="16" alignItems="center" px={4} overflowX="auto" css={{ '&::-webkit-scrollbar': { display: 'none' } }}>
+      <Container maxW="container.xl">
+        <Flex h="14" alignItems="center" px={4} overflowX="auto" css={{ '&::-webkit-scrollbar': { display: 'none' } }}>
           <HStack spacing={4}>
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;

@@ -67,7 +67,7 @@ const ShopAbout = ({ shopData }: ShopAboutProps) => {
               OUR STORY
             </Badge>
             <Heading
-              fontSize={{ base: "4rem", md: "5rem", xl: "6rem" }}
+              fontSize={{ base: "3.2rem", md: "5rem", xl: "6rem" }}
               fontWeight="900"
               color="gray.900"
               lineHeight="0.9"

@@ -121,9 +121,9 @@ const ShopHeroSection = ({ shopData }: { shopData: ShopData }) => {
               borderColor="gray.100"
             >
               <Stack
-                direction={{ base: "column", lg: "row" }}
-                spacing={{ base: 6, md: 8, xl: 12 }}
-                align="center"
+                direction={{ base: "column", md: "row" }}
+                spacing={{ base: 6, md: 8, lg: 12 }}
+                align={{ base: "center", md: "start", lg: "center" }}
                 justify="space-between"
               >
                 {/* 1. Left: Logo Avatar */}

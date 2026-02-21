@@ -114,27 +114,6 @@ const ShopPage = observer(({ shopData }: any) => {
 
   return (
     <Box position="relative">
-      {/* Refined Atelier Atmosphere */}
-      <Box position="fixed" inset={0} zIndex={0} pointerEvents="none" bg="white">
-        <Box
-          position="absolute"
-          top="-10%"
-          right="-10%"
-          w="60%"
-          h="60%"
-          bgGradient="radial(circle, blue.50 0%, transparent 70%)"
-          opacity={0.5}
-        />
-        <Box
-          position="absolute"
-          bottom="-10%"
-          left="-10%"
-          w="60%"
-          h="60%"
-          bgGradient="radial(circle, blue.100 0%, transparent 70%)"
-          opacity={0.3}
-        />
-      </Box>
 
       <MotionBox
         initial={{ opacity: 0 }}
@@ -148,11 +127,11 @@ const ShopPage = observer(({ shopData }: any) => {
         <Box position="relative" bg="white" py={{ base: 12, md: 24 }}>
           <Container maxW="container.xl" position="relative" zIndex={1}>
             <Grid
-              templateColumns={{ base: "1fr", lg: "repeat(12, 1fr)" }}
-              gap={{ base: 16, lg: 24 }}
+              templateColumns={{ base: "1fr", md: "repeat(12, 1fr)" }}
+              gap={{ base: 12, md: 16, lg: 24 }}
               alignItems="start"
             >
-              <GridItem colSpan={{ base: 1, lg: 7 }}>
+              <GridItem colSpan={{ base: 1, md: 7 }}>
                 <MotionBox
                   initial={{ opacity: 0, x: -30 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -162,7 +141,7 @@ const ShopPage = observer(({ shopData }: any) => {
                   <ShopAbout shopData={shopData} />
                 </MotionBox>
               </GridItem>
-              <GridItem colSpan={{ base: 1, lg: 5 }} position="sticky" top="120px">
+              <GridItem colSpan={{ base: 1, md: 5 }} position="sticky" top="120px">
                 <MotionBox
                   initial={{ opacity: 0, x: 30 }}
                   whileInView={{ opacity: 1, x: 0 }}
