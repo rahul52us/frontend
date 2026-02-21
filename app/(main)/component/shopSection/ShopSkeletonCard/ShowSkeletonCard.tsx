@@ -4,27 +4,26 @@ import { endColor, startColor } from "../../../../component/common/utils/skeleto
 const ShopCardSkeleton = () => {
   return (
     <Box
-      maxW="340px"
-      m={4}
+      w="full"
       bg="white"
-      shadow={'base'}
-      borderRadius="xl"
+      borderRadius="3xl"
+      overflow="hidden"
+      boxShadow="0 4px 20px rgba(0, 0, 0, 0.05)"
     >
       {/* Image Section Skeleton */}
-      <Box position="relative" h="180px">
+      <Box position="relative" h={{ base: "160px", md: "200px" }}>
         <Skeleton
           w="100%"
           h="100%"
           startColor={startColor}
           endColor={endColor}
-          borderTopRadius="xl"
         />
         {/* Status Badge Skeleton */}
         <Skeleton
           position="absolute"
-          top={3}
-          left={3}
-          w="80px"
+          top="16px"
+          right="16px"
+          w="70px"
           h="24px"
           borderRadius="full"
           startColor={startColor}
@@ -33,43 +32,50 @@ const ShopCardSkeleton = () => {
       </Box>
 
       {/* Content Section Skeleton */}
-      <VStack p={4} spacing={4} align="start">
-        {/* Name and Logo Skeleton */}
-        <HStack spacing={3} w="full" align="center">
-          <SkeletonCircle
-            size="50px"
+      <VStack px={5} pt={8} pb={6} spacing={4} align="start" position="relative">
+        {/* Logo Overlap Skeleton */}
+        <Box
+          position="absolute"
+          top="-40px"
+          left="20px"
+          zIndex={2}
+        >
+          <Skeleton
+            boxSize="64px"
+            borderRadius="2xl"
+            startColor={startColor}
+            endColor={endColor}
+          />
+        </Box>
+
+        {/* Name and Location Skeleton */}
+        <Box w="full">
+          <Skeleton
+            h="28px"
+            w="80%"
+            mb={2}
             startColor={startColor}
             endColor={endColor}
           />
           <Skeleton
-            h="24px"
-            w="70%"
+            h="12px"
+            w="40%"
             startColor={startColor}
             endColor={endColor}
           />
-        </HStack>
+        </Box>
 
-        {/* Categories Skeleton */}
-        <Flex wrap="wrap" gap={2}>
-          {[1, 2].map((_, index) => (
-            <Skeleton
-              key={index}
-              h="20px"
-              w="80px"
-              borderRadius="full"
-              startColor={startColor}
-              endColor={endColor}
-            />
-          ))}
-        </Flex>
         {/* Description Skeleton */}
-        <Skeleton h="30px" w="100%" startColor={startColor} endColor={endColor} />
+        <VStack w="full" align="start" spacing={2}>
+          <Skeleton h="12px" w="100%" startColor={startColor} endColor={endColor} />
+          <Skeleton h="12px" w="90%" startColor={startColor} endColor={endColor} />
+        </VStack>
 
-        {/* Contact Skeleton */}
-        <HStack spacing={3} w="full">
-          {/* <SkeletonCircle size="16px" startColor={startColor} endColor={endColor} /> */}
-          <Skeleton h="16px" w="50%" startColor={startColor} endColor={endColor} />
-        </HStack>
+        {/* Footer Skeleton */}
+        <Flex justify="space-between" align="center" w="full" pt={2} borderTop="1px solid" borderColor="gray.50">
+          <Skeleton h="12px" w="40%" startColor={startColor} endColor={endColor} />
+          <Skeleton h="12px" w="20%" startColor={startColor} endColor={endColor} />
+        </Flex>
       </VStack>
     </Box>
   );

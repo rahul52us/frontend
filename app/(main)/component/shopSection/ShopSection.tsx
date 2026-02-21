@@ -7,19 +7,18 @@ import {
   Center,
   Text,
   VStack,
-  Circle,
+  Container,
+  Spinner,
 } from "@chakra-ui/react";
+import { motion, AnimatePresence } from "framer-motion";
 import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
 import ShopCard from "./element/ShopCard";
 import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
-import { keyframes } from "@emotion/react";
 import { tablePageLimit } from "../../../component/config/utils/variable";
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
+const MotionSimpleGrid = motion(SimpleGrid);
+const MotionBox = motion(Box);
 
 const ShopSection = observer(() => {
   const {
@@ -56,7 +55,7 @@ const ShopSection = observer(() => {
     setCurrentPage(1);
     applyGetAllShops({
       page: 1,
-      limit : tablePageLimit,
+      limit: tablePageLimit,
       search: debouncedSearchQuery,
       append: false,
     });
@@ -86,7 +85,7 @@ const ShopSection = observer(() => {
           handleLoadMore();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     );
 
     if (currentLoadMoreRef) {
@@ -102,92 +101,91 @@ const ShopSection = observer(() => {
 
   const shops = shop?.data || [];
   const totalPages = shop?.totalPages || 1;
-  const totalShops = shop?.totalPages || 0;
   const loading = shop?.loading && currentPage === 1;
   const loadingMore = shop?.loading && currentPage > 1;
   const allLoaded = currentPage >= totalPages;
 
-  const progress = totalShops > 0 ? (shops.length / totalShops) * 100 : 0;
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.215, 0.61, 0.355, 1] } }
+  };
 
   return (
-    <Box position="relative">
-      {/* Shop Cards */}
-      <SimpleGrid columns={[1, 1, 2, 3]} gap={8} spacing={2}>
-        {shops.map((shop: any, index: number) => (
-          <Box
-            key={index}
-            animation={`${fadeIn} 0.5s ease-out ${index * 0.1}s`}
-          >
-            <ShopCard shop={shop} onClick={() => {}} />
-          </Box>
-        ))}
-      </SimpleGrid>
-
-      {/* Initial Skeleton */}
-      {loading && (
-        <SimpleGrid columns={[1, 2, 3, 4]} spacing={4} mt={4}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <ShopCardSkeleton key={index} />
-          ))}
-        </SimpleGrid>
-      )}
-
-      {/* Dynamic Load More Indicator */}
-      {!loading && !allLoaded && (
-        <Center mt={12} flexDirection="column" gap={4}>
-          <VStack ref={loadMoreRef}>
-            <Circle
-              size="80px"
-              bg="gray.100"
-              position="relative"
-              overflow="hidden"
+    <Box position="relative" pb={10}>
+      <Container maxW="container.xl" px={0}>
+        {/* Shop Cards Grid */}
+        <AnimatePresence>
+          {!loading && (
+            <MotionSimpleGrid
+              columns={{ base: 1, sm: 2, lg: 3 }}
+              spacing={{ base: 6, md: 8 }}
+              variants={container}
+              initial="hidden"
+              animate="show"
             >
-              <Circle
-                size="80px"
-                border="4px solid"
-                borderColor="teal.400"
-                borderTopColor="transparent"
-                borderRightColor="transparent"
-                position="absolute"
-                transform={`rotate(${(progress / 100) * 360}deg)`}
-                transition="transform 0.5s ease-in-out"
-              />
-              <Text fontSize="lg" fontWeight="bold" color="teal.600">
-                {shops.length}/{totalShops}
-              </Text>
-            </Circle>
-            <Text fontSize="sm" color="gray.600">
-              {loadingMore ? "Discovering more shops..." : "Scroll for more"}
-            </Text>
-          </VStack>
-        </Center>
-      )}
+              {shops.map((shop: any, index: number) => (
+                <MotionBox key={shop._id || index} variants={item}>
+                  <ShopCard shop={shop} />
+                </MotionBox>
+              ))}
+            </MotionSimpleGrid>
+          )}
+        </AnimatePresence>
 
-      {/* Completion Celebration */}
-      {!loading && allLoaded && shops.length > 0 && (
-        <Center mt={12} flexDirection="column" gap={3}>
-          <Circle size="60px" bg="teal.100">
-            <Text fontSize="xl" fontWeight="bold" color="teal.600">
-              ✓
-            </Text>
-          </Circle>
-          <Text fontSize="lg" fontWeight="medium" color="gray.700">
-            All {shops.length} Shops Unlocked!
-          </Text>
-          <Text fontSize="sm" color="gray.500" fontStyle="italic">
-            Explore every corner of our collection 🌟
-          </Text>
-        </Center>
-      )}
+        {/* Initial Skeleton */}
+        {loading && (
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 6, md: 8 }}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <ShopCardSkeleton key={index} />
+            ))}
+          </SimpleGrid>
+        )}
 
-      {/* Empty State */}
-      {!loading && shops.length === 0 && (
-        <Center mt={12}>
-          <Text fontSize="lg" color="gray.500">
-            No shops found yet - check back soon!
-          </Text>
-        </Center>
-      )}
+        {/* Empty State */}
+        {!loading && shops.length === 0 && (
+          <Center py={20} flexDirection="column">
+            <Text fontSize="2xl" fontWeight="black" color="gray.300" mb={2}>
+              No Shops Found
+            </Text>
+            <Text color="gray.500">Check back later for new arrivals! 🌟</Text>
+          </Center>
+        )}
+
+        {/* Load More Indicator */}
+        <Box ref={loadMoreRef} py={10}>
+          {loadingMore && (
+            <Center w="full">
+              <VStack spacing={4}>
+                <Spinner size="md" color="purple.500" thickness="3px" />
+                <Text fontSize="xs" fontWeight="black" color="gray.400" letterSpacing="widest">
+                  DISCOVERING MORE
+                </Text>
+              </VStack>
+            </Center>
+          )}
+
+          {!loading && allLoaded && shops.length > 0 && (
+            <Center py={10}>
+              <VStack spacing={2}>
+                <Box h="1px" w="40px" bg="gray.100" />
+                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider">
+                  END OF EXPLORATION
+                </Text>
+              </VStack>
+            </Center>
+          )}
+        </Box>
+      </Container>
     </Box>
   );
 });

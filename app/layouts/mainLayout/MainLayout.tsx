@@ -6,19 +6,24 @@ import Header from "./component/Header/Header";
 import { Footer } from "./component/Footer/Footer";
 import MobileBottomNav from "./component/MobileBottomNav/MobileBottomNav";
 
+import { useParams } from "next/navigation";
+
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const params = useParams();
+  const isShopPage = !!params?.shopTitle;
+
   return (
     <Box>
       <Header />
-      <Box pb={{ base: '60px', md: 0 }}>
+      <Box pb={isShopPage ? 0 : { base: '60px', md: 0 }}>
         {children}
       </Box>
-      <Footer />
-      <MobileBottomNav />
+      {!isShopPage && <Footer />}
+      {!isShopPage && <MobileBottomNav />}
     </Box>
   );
 };

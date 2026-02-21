@@ -1,258 +1,274 @@
+"use client";
 import {
   Badge,
   Box,
   Button,
   Container,
-  Divider,
   Flex,
   Heading,
   Image,
   Text,
-} from '@chakra-ui/react'
-import { FaMapMarkerAlt, FaStar } from 'react-icons/fa'
+  Icon,
+  HStack,
+  VStack,
+  Stack,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
+import { useState } from 'react';
+import { FiMessageCircle, FiUserPlus } from 'react-icons/fi';
 
 interface ShopData {
-  name: string
-  coverImage?: { url: string }
-  logo?: { url: string }
+  name: string;
+  coverImage?: { url: string };
+  logo?: { url: string };
   ratings?: {
-    average?: number
-    total?: number
-  }
+    average?: number;
+    total?: number;
+  };
   location?: {
-    city?: string
-    state?: string
-  }
-  categories?: string[]
-  operatingHours?: {
-    day: string
-    open: string
-    close: string
-  }[]
+    city?: string;
+    state?: string;
+  };
+  categories?: string[];
+  about?: string;
 }
+
+const MotionBox = motion(Box);
+const MotionStack = motion(Stack);
 
 const ShopHeroSection = ({ shopData }: { shopData: ShopData }) => {
-  const getCurrentDayHours = () => {
-    if (!shopData?.operatingHours) return null
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-    const today = days[new Date().getDay()]
-    return shopData.operatingHours.find((day) => day.day === today) || null
-  }
+  const { scrollY } = useScroll();
+  const yParallax = useTransform(scrollY, [0, 500], [0, 150]);
+  const bgColor = useColorModeValue("white", "gray.900");
+  const borderColor = useColorModeValue("gray.100", "gray.800");
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const todayHours = getCurrentDayHours()
+  // Status Logic
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const today = days[new Date().getDay()];
+  const operatingHours = (shopData as any)?.operatingHours || [];
+  const todayHours = operatingHours.find((h: any) => h.day === today);
 
   const isOpenNow = () => {
-    if (!todayHours) return false
-    const now = new Date()
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
+    if (!todayHours) return false;
+    try {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const [openHour, openMinute] = todayHours.open.split(":").map(Number);
+      const [closeHour, closeMinute] = todayHours.close.split(":").map(Number);
+      return currentMinutes >= (openHour * 60 + openMinute) && currentMinutes < (closeHour * 60 + closeMinute);
+    } catch { return false; }
+  };
 
-    const [openHour, openMinute] = todayHours.open.split(":").map(Number)
-    const [closeHour, closeMinute] = todayHours.close.split(":").map(Number)
+  const isLive = isOpenNow();
 
-    const openMinutes = openHour * 60 + openMinute
-    const closeMinutes = closeHour * 60 + closeMinute
-
-    return currentMinutes >= openMinutes && currentMinutes < closeMinutes
-  }
+  const aboutText = shopData?.about || "Experience the finest craftsmanship and curated collections designed for modern lifestyles.";
+  const previewText = aboutText.slice(0, 120);
+  const showReadMore = aboutText.length > 120;
 
   return (
-    <Box>
-      <Box position="relative">
-        <Box
-          position="relative"
-          h={{ base: "300px", md: "400px", lg: "500px" }}
+    <Box position="relative" minH={{ base: "80vh", md: "70vh" }} overflow="hidden" bg="white">
+      {/* Background Parallax Image */}
+      <MotionBox
+        style={{ y: yParallax }}
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        zIndex={0}
+      >
+        <Image
+          src={shopData?.coverImage?.url || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&h=900&fit=crop"}
+          alt="Shop Cover"
           w="full"
+          h="full"
+          objectFit="cover"
+          filter="contrast(1.05) brightness(0.95)"
+        />
+        <Box
+          position="absolute"
+          inset={0}
+          bgGradient="linear(to-b, transparent, white)"
+        />
+      </MotionBox>
+
+      {/* Main Content */}
+      <Container maxW="container.xl" h="full" position="relative" zIndex={2}>
+        <Flex
+          direction="column"
+          justify="center"
+          align="center"
+          h="full"
+          pt={{ base: 24, md: 32 }}
+          pb={{ base: 12, md: 24 }}
         >
-          <Image
-            src={shopData?.coverImage?.url || "/fallback-cover.jpg"}
-            alt={`${shopData?.name || "Shop"} cover`}
+          {/* Horizontal Profile Strip - Solid Luxury */}
+          <MotionBox
+            initial={{ opacity: 0, scale: 0.98, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             w="full"
-            h="full"
-            objectFit="cover"
-          />
-          <Box
-            position="absolute"
-            inset="0"
-            bgGradient={{
-              base: "linear(to-t, blackAlpha.800, blackAlpha.400)",
-              md: "linear(to-t, black, 20%,transparent)",
-            }}
-          />
-        </Box>
-
-        <Container
-          maxW="container.xl"
-          position="relative"
-          mt={{ base: "-240px", md: "-36" }}
-          zIndex="10"
-          px={{ base: 3, md: 4 }}
-          pb={{ base: 4, md: 8 }}
-        >
-          <Flex
-            flexDir={{ base: "column", md: "row" }}
-            alignItems={{ base: "center", md: "flex-end" }}
-            gap={{ base: 3, md: 6 }}
-            // justifyContent="space-between"
-            flexWrap={{ base: "wrap", md: "nowrap" }}
           >
-            {/* Shop Logo */}
             <Box
-              position="relative"
-              w={{ base: "80px", md: "100px" }}
-              h={{ base: "80px", md: "100px" }}
-              borderRadius="xl"
-              border="3px"
-              borderColor="white"
-              overflow="hidden"
               bg="white"
-              mb={{ base: 2, md: 0 }}
+              borderRadius={{ base: "24px", md: "32px", xl: "full" }}
+              p={{ base: 6, md: 10 }}
+              boxShadow="0 30px 60px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1)"
+              border="1px solid"
+              borderColor="gray.100"
             >
-              <Image
-                src={shopData?.logo?.url || "/fallback-logo.jpg"}
-                alt={shopData?.name || "Shop Logo"}
-                h="full"
-                w="full"
-                objectFit="cover"
-              />
-            </Box>
-
-            {/* Shop Info */}
-            <Box
-              flex="1"
-              color="white"
-              textAlign={{ base: "center", md: "left" }}
-              maxW={{ base: "100%", md: "60%" }}
-            >
-              <Heading
-                as="h2"
-                size={{ base: "lg", md: "lg" }}
-                fontWeight="bold"
-                lineHeight="tight"
+              <Stack
+                direction={{ base: "column", lg: "row" }}
+                spacing={{ base: 6, md: 8, xl: 12 }}
+                align="center"
+                justify="space-between"
               >
-                {shopData?.name || "Unnamed Shop"}
-              </Heading>
+                {/* 1. Left: Logo Avatar */}
+                <Box
+                  w={{ base: "90px", md: "110px", xl: "140px" }}
+                  h={{ base: "90px", md: "110px", xl: "140px" }}
+                  borderRadius="full"
+                  bg="white"
+                  p={1}
+                  position="relative"
+                  boxShadow="lg"
+                  zIndex={1}
+                  overflow="hidden"
+                  border="4px solid"
+                  borderColor="gray.50"
+                >
+                  <Image
+                    src={shopData?.logo?.url || "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&h=500&fit=crop"}
+                    alt="Logo"
+                    w="full"
+                    h="full"
+                    objectFit="cover"
+                  />
+                </Box>
 
-              <Flex
-                alignItems="center"
-                mt={2}
-                gap={2}
-                flexDir={{ base: "column", md: "row" }}
-                justify={{ base: "center", md: "flex-start" }}
-              >
-                <Flex alignItems="center" gap={2}>
-                  <Flex alignItems="center" gap={1}>
-                    <Box as={FaStar} color="orange.400" boxSize={{ base: 4, md: 5 }} />
-                    <Text fontWeight="medium" fontSize={{ base: "sm", md: "md" }}>
-                      {shopData?.ratings?.average?.toFixed(1) || "0.0"}
-                    </Text>
-                    <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
-                      ({shopData?.ratings?.total || 0} reviews)
-                    </Text>
-                  </Flex>
+                {/* 2. Center: Info & Tags */}
+                <VStack align={{ base: "center", lg: "flex-start" }} spacing={4} flex={1}>
+                  <VStack align={{ base: "center", lg: "flex-start" }} spacing={1}>
+                    <HStack spacing={4} wrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
+                      <Heading
+                        fontSize={{ base: "xl", md: "2xl", xl: "3xl" }}
+                        fontWeight="800"
+                        color="gray.900"
+                        letterSpacing="-0.02em"
+                      >
+                        {shopData?.name}
+                      </Heading>
+                      <HStack
+                        spacing={1.5}
+                        bg={isLive ? "green.50" : "red.50"}
+                        px={3}
+                        py={1}
+                        borderRadius="full"
+                        border="1px solid"
+                        borderColor={isLive ? "green.100" : "red.100"}
+                        display={{ base: "none", md: "flex" }}
+                      >
+                        <Box
+                          w="6px"
+                          h="6px"
+                          bg={isLive ? "green.500" : "red.500"}
+                          borderRadius="full"
+                        />
+                        <Text fontSize="2xs" fontWeight="800" color={isLive ? "green.700" : "red.700"}>
+                          {isLive ? "OPEN NOW" : "CLOSED"}
+                        </Text>
+                      </HStack>
+                    </HStack>
+                    <HStack spacing={3} color="gray.400">
+                      <HStack spacing={1}>
+                        <Icon as={FaStar} boxSize={3} color="orange.400" />
+                        <Text fontWeight="800" fontSize="xs" color="gray.800">
+                          {shopData?.ratings?.average?.toFixed(1) || "5.0"}
+                        </Text>
+                        <Text fontSize="xs" fontWeight="bold">
+                          ({shopData?.ratings?.total || 0})
+                        </Text>
+                      </HStack>
+                      <Box w="3px" h="3px" bg="gray.200" borderRadius="full" />
+                      <Text color="blue.600" fontSize="xs" fontWeight="800" letterSpacing="0.02em">
+                        {shopData?.categories?.[0]?.toUpperCase() || "RETAIL"}
+                      </Text>
+                    </HStack>
+                  </VStack>
 
-                  <Box display={{ base: "block", md: "none" }}>
-                    <Divider orientation="horizontal" w="20px" bg="gray.300" />
-                  </Box>
-                  <Box display={{ base: "none", md: "block" }}>
-                    <Divider orientation="vertical" h="4" bg="gray.300" />
-                  </Box>
-
-                  <Flex alignItems="center" fontSize={{ base: "xs", md: "sm" }}>
-                    <Box as={FaMapMarkerAlt} mr={1} color="gray.300" boxSize={{ base: 3, md: 4 }} />
-                    <Text>
-                      {shopData?.location?.city || "Unknown City"},{" "}
-                      {shopData?.location?.state || "Unknown State"}
-                    </Text>
-                  </Flex>
-                </Flex>
-              </Flex>
-
-              <Flex
-                flexWrap="wrap"
-                gap={2}
-                mt={2}
-                justify={{ base: "center", md: "flex-start" }}
-              >
-                {shopData?.categories?.length ? (
-                  shopData.categories.map((category, index) => (
-                    <Badge
-                      key={index}
-                      colorScheme="whiteAlpha"
-                      variant="subtle"
-                      rounded="full"
-                      py={0.5}
-                      px={2}
-                      fontSize={{ base: "xs", md: "sm" }}
+                  {/* Bio Description Center/Left */}
+                  <VStack align={{ base: "center", md: "flex-start" }} spacing={2} maxW="xl">
+                    <Text
+                      color="gray.500"
+                      fontSize="sm"
+                      lineHeight="1.5"
+                      textAlign={{ base: "center", md: "left" }}
+                      fontWeight="500"
                     >
-                      {category}
-                    </Badge>
-                  ))
-                ) : (
-                  <Text fontSize="xs" color="gray.300">
-                    No categories listed
-                  </Text>
-                )}
-              </Flex>
+                      {isExpanded ? aboutText : `${previewText}${showReadMore ? '...' : ''}`}
+                    </Text>
+                    {showReadMore && (
+                      <Button
+                        variant="link"
+                        color="blue.600"
+                        fontSize="2xs"
+                        fontWeight="800"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? "SHOW LESS" : "READ MORE"}
+                      </Button>
+                    )}
+                  </VStack>
+                </VStack>
 
-              {/* Mobile status and button */}
-              <Flex
-                alignItems="center"
-                justifyContent="center"
-                gap={2}
-                mt={2}
-                display={{ base: "flex", md: "none" }}
-                flexWrap="wrap"
-              >
-                <Badge
-                  colorScheme={isOpenNow() ? "green" : "orange"}
-                  variant={isOpenNow() ? "solid" : "outline"}
-                  fontSize="xs"
-                  py={1}
-                  px={2}
-                  rounded="full"
+                {/* 3. Right: Action Buttons */}
+                <Stack
+                  direction={{ base: "row", md: "column" }}
+                  spacing={3}
+                  align={{ base: "center", md: "stretch" }}
+                  w={{ base: "full", md: "200px" }}
                 >
-                  {isOpenNow() ? "Open" : "Closed"}
-                </Badge>
-                <Button
-                  colorScheme="blue"
-                  size="sm"
-                  variant="outline"
-                  borderColor="whiteAlpha.800"
-                  color="white"
-                  _hover={{ bg: "blue.500", borderColor: "blue.500" }}
-                  px={4}
-                >
-                  Contact
-                </Button>
-              </Flex>
+                  <Button
+                    leftIcon={<FiMessageCircle />}
+                    bg="gray.900"
+                    color="white"
+                    size="lg"
+                    borderRadius="xl"
+                    fontWeight="800"
+                    fontSize="sm"
+                    _hover={{ bg: "black", transform: "translateY(-1px)" }}
+                    transition="all 0.2s"
+                  >
+                    CONTACT
+                  </Button>
+                  <Button
+                    leftIcon={<FiUserPlus />}
+                    variant="outline"
+                    size="lg"
+                    borderRadius="xl"
+                    fontWeight="800"
+                    fontSize="sm"
+                    borderColor="gray.200"
+                    color="gray.700"
+                    _hover={{ bg: "gray.50", transform: "translateY(-1px)" }}
+                    transition="all 0.2s"
+                  >
+                    Share
+                  </Button>
+                </Stack>
+              </Stack>
             </Box>
-
-            {/* Desktop status and button */}
-            <Flex
-              alignItems="center"
-              gap={3}
-              mt={{ base: 4, md: 0 }}
-              display={{ base: "none", md: "flex" }}
-              flexShrink={0}
-            >
-              <Badge
-                colorScheme={isOpenNow() ? "green" : "orange"}
-                variant={isOpenNow() ? "solid" : "outline"}
-                fontSize="sm"
-                py={2}
-                px={3}
-              >
-                {isOpenNow() ? "Open Now" : "Closed"}
-              </Badge>
-              <Button colorScheme="blue" size="md">
-                Contact Shop
-              </Button>
-            </Flex>
-          </Flex>
-        </Container>
-      </Box>
+          </MotionBox>
+        </Flex>
+      </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default ShopHeroSection
+
+
+
+export default ShopHeroSection;

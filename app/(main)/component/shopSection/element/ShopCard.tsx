@@ -5,13 +5,13 @@ import {
   Text,
   Flex,
   Badge,
-  Link,
   VStack,
   HStack,
-  Tooltip,
+  Icon,
 } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { FaMapMarkerAlt, FaPhoneAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPhoneAlt, FaExternalLinkAlt } from "react-icons/fa";
 
 interface ShopCardProps {
   shop: {
@@ -57,142 +57,162 @@ interface ShopCardProps {
     shopStatus: string;
     categories: string[];
   };
-  onClick: () => void;
+  onClick?: () => void;
 }
 
-const ShopCard: React.FC<ShopCardProps> = ({ shop, onClick }) => {
+const MotionBox = motion(Box);
+
+const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
   const router = useRouter();
+  const shopSlug = shop.name?.replace(/\s+/g, "-").toLowerCase();
+
+  const handleNavigate = () => {
+    router.push(`/${shopSlug}`);
+  };
 
   return (
-    <Box
-      maxW="100%"
+    <MotionBox
+      w="full"
       bg="white"
       borderRadius="3xl"
       overflow="hidden"
-      boxShadow="lg"
-      transition="all 0.3s ease"
+      boxShadow="0 4px 20px rgba(0, 0, 0, 0.05)"
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      whileHover={{ y: -8, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.1)" }}
+      whileTap={{ scale: 0.98 }}
+      cursor="pointer"
+      onClick={handleNavigate}
       border="1px solid"
-      borderColor="gray.100"
+      borderColor="gray.50"
+      position="relative"
     >
-      {/* Cover Image */}
-      <Box position="relative" h={{ base: "140px", md: "180px" }}>
+      {/* Cover Image Section */}
+      <Box position="relative" h={{ base: "160px", md: "200px" }} overflow="hidden">
         <Image
           src={shop?.coverImage?.url}
           alt={shop?.coverImage?.name}
           w="100%"
           h="100%"
           objectFit="cover"
+          transition="transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"
+          _groupHover={{ transform: "scale(1.08)" }}
         />
-        {/* Status Badge */}
+
+        {/* Overlay for better text readability if needed */}
+        <Box
+          position="absolute"
+          inset={0}
+          bgGradient="linear(to-t, blackAlpha.400, transparent)"
+          opacity={0.6}
+        />
+
+        {/* Status Badge - Glassmorphism */}
         <Badge
           position="absolute"
-          top="12px"
-          right="12px"
-          colorScheme={shop?.shopStatus === "active" ? "green" : "red"}
+          top="16px"
+          right="16px"
+          bg="whiteAlpha.400"
+          backdropFilter="blur(10px)"
+          color="white"
+          border="1px solid"
+          borderColor="whiteAlpha.500"
           px={3}
-          py={1}
+          py={1.5}
           borderRadius="full"
           fontSize="xs"
-          boxShadow="sm"
+          fontWeight="bold"
+          textTransform="capitalize"
+          letterSpacing="wider"
         >
-          {shop?.shopStatus?.charAt(0).toUpperCase() + shop?.shopStatus?.slice(1)}
+          {shop?.shopStatus}
         </Badge>
+
+        {/* Categories on Image */}
+        <Flex position="absolute" bottom="16px" left="80px" gap={2}>
+          {shop?.categories?.slice(0, 2).map((category, index) => (
+            <Badge
+              key={index}
+              bg="blackAlpha.600"
+              backdropFilter="blur(4px)"
+              color="white"
+              px={2.5}
+              py={0.5}
+              borderRadius="lg"
+              fontSize="2xs"
+              fontWeight="medium"
+              textTransform="none"
+            >
+              {category}
+            </Badge>
+          ))}
+        </Flex>
       </Box>
 
-      {/* Content */}
-      <VStack p={{ base: 3, md: 5 }} spacing={3} align="start">
-        {/* Shop Name & Logo */}
-        <HStack w="full" align="center" spacing={3}>
+      {/* Info Section */}
+      <VStack px={5} pt={8} pb={6} spacing={4} align="start" position="relative">
+        {/* Logo Overlap */}
+        <Box
+          position="absolute"
+          top="-40px"
+          left="20px"
+          boxSize="64px"
+          borderRadius="2xl"
+          bg="white"
+          p={1}
+          boxShadow="0 8px 16px rgba(0,0,0,0.1)"
+          zIndex={2}
+        >
           <Image
             src={shop?.logo?.url}
             alt={shop?.logo?.name}
-            boxSize="40px"
-            borderRadius="full"
-            border="2px solid white"
-            boxShadow="md"
-            objectFit="contain"
-            bg="white"
+            w="full"
+            h="full"
+            borderRadius="xl"
+            objectFit="cover"
           />
+        </Box>
+
+        {/* Name and Location */}
+        <Box w="full">
           <Text
-            fontSize={{ base: "md", md: "lg" }}
-            fontWeight="bold"
+            fontSize="xl"
+            fontWeight="900"
             color="gray.800"
             noOfLines={1}
+            mb={1}
+            letterSpacing="tight"
           >
             {shop?.name}
           </Text>
-        </HStack>
-
-        {/* Categories */}
-        {Array.isArray(shop?.categories) && (
-          <Flex wrap="wrap" gap={2}>
-            {shop?.categories?.slice(0, 2).map((category, index) => (
-              <Badge
-                key={index}
-                variant="subtle"
-                colorScheme="teal"
-                px={2}
-                py={0.5}
-                borderRadius="md"
-                fontSize="2xs"
-                textTransform="none"
-              >
-                {category}
-              </Badge>
-            ))}
-          </Flex>
-        )}
-
-        {/* Location */}
-        <HStack spacing={2} color="gray.600" fontSize="sm">
-          <FaMapMarkerAlt color="teal" />
-          <Text fontWeight="medium">
-            {`${shop?.location?.city}, ${shop?.location?.state}`}
-          </Text>
-        </HStack>
+          <HStack spacing={1.5} color="gray.500">
+            <Icon as={FaMapMarkerAlt} boxSize={3} color="purple.500" />
+            <Text fontSize="xs" fontWeight="bold">
+              {`${shop?.location?.city}, ${shop?.location?.state}`}
+            </Text>
+          </HStack>
+        </Box>
 
         {/* Description */}
-        <Text fontSize="sm" color="gray.500" noOfLines={2}>
-          {shop?.description}
+        <Text fontSize="sm" color="gray.500" noOfLines={2} lineHeight="tall">
+          {shop?.description || "Experience the best quality products at our shop. Visit us for an exclusive collection."}
         </Text>
 
-        {/* Contact & Action */}
-        <Flex justify="space-between" align="center" w="full" mt={2}>
-          <Tooltip label="Call Shop">
-            <Link
-              href={`tel:${shop?.contactInfo?.phone}`}
-              display="flex"
-              alignItems="center"
-              color="teal.600"
-              fontWeight="semibold"
-              fontSize="xs"
-              _hover={{ color: "teal.700" }}
-            >
-              <FaPhoneAlt />
-              <Text ml={1}>{shop?.contactInfo?.phone}</Text>
-            </Link>
-          </Tooltip>
-          <Box
-            as="button"
-            px={4}
-            py={1.5}
-            bg="teal.500"
-            color="white"
-            borderRadius="full"
-            fontSize="xs"
-            fontWeight="bold"
-            transition="all 0.2s"
-            _active={{ transform: "scale(0.95)" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/${shop.name?.replace(/\s+/g, "-").toLowerCase()}`);
-            }}
-          >
-            Visit Shop
-          </Box>
+        {/* Footer Actions */}
+        <Flex justify="space-between" align="center" w="full" pt={2} borderTop="1px solid" borderColor="gray.50">
+          <HStack spacing={4}>
+            <HStack spacing={1} color="purple.600">
+              <Icon as={FaPhoneAlt} boxSize={3} />
+              <Text fontSize="xs" fontWeight="black">{shop?.contactInfo?.phone}</Text>
+            </HStack>
+          </HStack>
+
+          <HStack spacing={1} color="gray.400" _hover={{ color: "purple.500" }} transition="all 0.2s">
+            <Text fontSize="xs" fontWeight="bold">VISIT</Text>
+            <Icon as={FaExternalLinkAlt} boxSize={2.5} />
+          </HStack>
         </Flex>
       </VStack>
-    </Box>
+    </MotionBox>
   );
 };
 

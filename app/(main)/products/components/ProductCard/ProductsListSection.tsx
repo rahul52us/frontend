@@ -1,6 +1,5 @@
-"use client";
-
-import { Box, useBreakpointValue } from "@chakra-ui/react";
+import { Box, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import Carousel from "../../../../component/common/CommonCarousel/CommonCarousel";
@@ -9,6 +8,8 @@ import stores from "../../../../store/stores";
 import ShopSection from "../../../component/shopSection/ShopSection";
 import ProductCard from "./ProductCard";
 import ProductCardSkeleton from "./ProductCardSkeleton/ProductCardSkeleton";
+
+const MotionBox = motion(Box);
 
 const ProductsListSection = observer(() => {
   const {
@@ -28,11 +29,10 @@ const ProductsListSection = observer(() => {
       setLoading(true);
       const res = await shopStore.getAllShopProducts();
       const allProducts = res.data || [];
-      // Shuffle and take 10
       const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
       setProducts(shuffled.slice(0, 10));
     } catch (error) {
-      alert(error?.message)
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -40,36 +40,44 @@ const ProductsListSection = observer(() => {
 
   useEffect(() => {
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
 
   return (
     <Box
       mx="auto"
-      px={{ base: 2, md: 4, lg: 6 }}
-      py={{ base: 4, md: 8 }}
+      px={{ base: 4, md: 8, lg: 12 }}
+      py={{ base: 6, md: 10 }}
       overflow="hidden"
     >
       {/* Trending Products Section */}
-      <Box mb={{ base: 6, md: 8 }}>
+      <MotionBox
+        mb={{ base: 10, md: 16 }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
         <CommonHeading
           heading="Top Picks For You"
           subheading="Handpicked favorites based on current trends"
-          mb={{ base: 3, md: 6 }}
+          mb={{ base: 6, md: 10 }}
           color={headingColor}
           align="left"
         />
         <ShopSection />
-      </Box>
+      </MotionBox>
 
-      {/* Grid Based Product Section (2 Columns for Mobile) */}
-      <Box>
+      {/* Grid Based Product Section */}
+      <MotionBox
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
         <CommonHeading
           heading="Deals You'll Love"
           subheading="Check out our latest arrivals"
-          mb={{ base: 3, md: 6 }}
+          mb={{ base: 6, md: 10 }}
           color={headingColor}
           align="left"
         />
@@ -77,25 +85,25 @@ const ProductsListSection = observer(() => {
           {loading ? (
             <Carousel slidesToShow={5} dots={false} autoplay={false}>
               {[...Array(6)].map((_, index) => (
-                <Box key={index} px={2}>
+                <Box key={index} px={3}>
                   <ProductCardSkeleton />
                 </Box>
               ))}
             </Carousel>
           ) : (
             products.length > 0 ? (
-              <Box mx="-8px"> {/* Negative margin to offset carousel padding if needed */}
+              <Box mx="-12px">
                 <Carousel
                   slidesToShow={5}
                   dots={false}
                   autoplay={false}
                   buttonColor={headingColor}
                 >
-                  {products.map((product) => (
+                  {products.map((product, idx) => (
                     <Box
                       key={`${product._id}-${product.name}-carousel`}
-                      px={2} // Gap between slides
-                      py={2} // Padding for shadow/hover effects
+                      px={3}
+                      py={4}
                     >
                       <ProductCard product={product} />
                     </Box>
@@ -103,11 +111,11 @@ const ProductsListSection = observer(() => {
                 </Carousel>
               </Box>
             ) : (
-              <Box textAlign="center" py={10}>No products found.</Box>
+              <Box textAlign="center" py={10} fontSize="lg" color="gray.500">No products found.</Box>
             )
           )}
         </Box>
-      </Box>
+      </MotionBox>
     </Box>
   );
 });

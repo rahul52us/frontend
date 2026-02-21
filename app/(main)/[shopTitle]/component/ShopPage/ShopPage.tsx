@@ -1,3 +1,4 @@
+"use client";
 import {
   Badge,
   Box,
@@ -7,8 +8,13 @@ import {
   Grid,
   GridItem,
   Heading,
-  Text
+  Text,
+  Spinner,
+  Center,
+  HStack,
+  VStack,
 } from "@chakra-ui/react";
+import { motion, AnimatePresence } from "framer-motion";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import ProductCard from "../../../products/components/ProductCard/ProductCard";
 import ContactSection from "../ContactSection/ContactSection";
@@ -24,6 +30,9 @@ import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useEffect, useState } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+
+const MotionBox = motion(Box);
+const MotionGrid = motion(Grid);
 
 const ShopPage = observer(({ shopData }: any) => {
   const { shopStore: { getShopProducts } } = stores;
@@ -43,8 +52,8 @@ const ShopPage = observer(({ shopData }: any) => {
       setProducts(data);
       setTotalPages(totalPages || 1);
       setCurrentPage(page);
-    } catch (error) {
-      alert(error?.message);
+    } catch (error: any) {
+      console.error(error?.message);
     } finally {
       setLoading(false);
     }
@@ -70,15 +79,7 @@ const ShopPage = observer(({ shopData }: any) => {
   }
 
   const getCurrentDayHours = () => {
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const today = days[new Date().getDay()];
     return shopData?.operatingHours?.find((day: any) => day.day === today) ?? null;
   };
@@ -92,7 +93,7 @@ const ShopPage = observer(({ shopData }: any) => {
 
   const todayHours = getCurrentDayHours();
 
-  const isOpen24Hours = () => {
+  const isOpenNow = () => {
     if (isShopClosed()) return false;
     if (!todayHours?.open || !todayHours?.close) return false;
 
@@ -112,119 +113,206 @@ const ShopPage = observer(({ shopData }: any) => {
   };
 
   return (
-    <Box>
-      <Box
-        position="sticky"
-        top="0"
-        zIndex="50"
-        w="full"
-        bg="white"
-        boxShadow="sm"
-        borderBottom="1px"
-        borderColor="gray.200"
-        display={{ base: "block", md: "none" }}
-      >
-        <Flex h="14" alignItems="center" px="4">
-          <Flex flex="1" justify="center">
-            <Heading as="h1" size="md" fontWeight="semibold">
-              {shopData?.name ?? "Shop"}
-            </Heading>
-          </Flex>
-          <Badge
-            colorScheme={isOpen24Hours() ? "green" : "gray"}
-            variant={isOpen24Hours() ? "solid" : "outline"}
-          >
-            {isOpen24Hours() ? "Open Now" : "Closed"}
-          </Badge>
-        </Flex>
-      </Box>
-      <ShopHeroSection shopData={shopData} />
-      <StickyNav shopData={shopData} />
-      <Container maxW="container.xl" px="4" py="8" id="about">
-        <Grid templateColumns={{ base: "1fr", md: "2fr 1fr" }} gap="8">
-          <GridItem>
-            <ShopAbout shopData={shopData} />
-          </GridItem>
-          <GridItem>
-            <OperatingHours
-              shopData={shopData}
-              getCurrentDayHours={getCurrentDayHours}
-            />
-          </GridItem>
-        </Grid>
-      </Container>
-      <Box id="gallery">
-        <ShopImages shopData={shopData} />
-      </Box>
-      <Container maxW="container.xl" id="products">
-        <CommonHeading
-          heading="Our Products"
-          subheading="Discover Our most popular products"
-          mb={{ base: 4, md: 8 }}
+    <Box position="relative">
+      {/* Refined Atelier Atmosphere */}
+      <Box position="fixed" inset={0} zIndex={0} pointerEvents="none" bg="white">
+        <Box
+          position="absolute"
+          top="-10%"
+          right="-10%"
+          w="60%"
+          h="60%"
+          bgGradient="radial(circle, blue.50 0%, transparent 70%)"
+          opacity={0.5}
         />
-        <Grid
-          templateColumns={{
-            base: "repeat(1, 1fr)",
-            md: "repeat(3, 1fr)",
-            lg: "repeat(4, 1fr)",
-          }}
-          gap={{ base: 4, md: 3, lg: 4 }}
-          justifyItems="center"
-        >
-          {products.length > 0 ? (
-            products.map((product) => (
-              <ProductCard
-                key={`${product._id || product.id}-${product.name}`}
-                product={product}
-              />
-            ))
-          ) : (
-            <GridItem colSpan={{ base: 1, md: 3, lg: 4 }}>
-              <Flex direction="column" align="center" justify="center" py={10}>
-                <Text fontSize="lg" color="gray.500" fontWeight="medium">
-                  No Products Found
-                </Text>
-                <Text fontSize="sm" color="gray.400">
-                  Check back later for new arrivals!
-                </Text>
-              </Flex>
-            </GridItem>
-          )}
-        </Grid>
+        <Box
+          position="absolute"
+          bottom="-10%"
+          left="-10%"
+          w="60%"
+          h="60%"
+          bgGradient="radial(circle, blue.100 0%, transparent 70%)"
+          opacity={0.3}
+        />
+      </Box>
 
-        {/* Pagination Controls */}
-        {products.length > 0 && (
-          <Flex justify="center" align="center" mt={8} gap={4}>
-            <Button
-              onClick={() => handlePageChange(currentPage - 1)}
-              isDisabled={currentPage === 1 || loading}
-              leftIcon={<ChevronLeftIcon />}
-              variant="outline"
-              size="sm"
+      <MotionBox
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <ShopHeroSection shopData={shopData} />
+        <StickyNav shopData={shopData} />
+
+        {/* Integrated Balanced Grid */}
+        <Box position="relative" bg="white" py={{ base: 12, md: 24 }}>
+          <Container maxW="container.xl" position="relative" zIndex={1}>
+            <Grid
+              templateColumns={{ base: "1fr", lg: "repeat(12, 1fr)" }}
+              gap={{ base: 16, lg: 24 }}
+              alignItems="start"
             >
-              Previous
-            </Button>
-            <Text fontSize="sm" color="gray.600">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <Button
-              onClick={() => handlePageChange(currentPage + 1)}
-              isDisabled={currentPage === totalPages || loading}
-              rightIcon={<ChevronRightIcon />}
-              variant="outline"
-              size="sm"
-            >
-              Next
-            </Button>
-          </Flex>
-        )}
-      </Container>
-      <LocationSection shopData={shopData} />
-      <NewsLetter />
-      <Container my={16} maxW="container.xl">
+              <GridItem colSpan={{ base: 1, lg: 7 }}>
+                <MotionBox
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <ShopAbout shopData={shopData} />
+                </MotionBox>
+              </GridItem>
+              <GridItem colSpan={{ base: 1, lg: 5 }} position="sticky" top="120px">
+                <MotionBox
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <OperatingHours shopData={shopData} />
+                </MotionBox>
+              </GridItem>
+            </Grid>
+          </Container>
+        </Box>
+
+        <MotionBox
+          id="gallery"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          bg="gray.50"
+        >
+          <ShopImages shopData={shopData} />
+        </MotionBox>
+
+        <MotionBox
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          id="products"
+          py={{ base: 12, md: 16 }}
+        >
+          <Container maxW="container.xl">
+            <VStack spacing={12} align="stretch">
+              <VStack spacing={4} align="center" textAlign="center">
+                <Badge
+                  bgGradient="linear(to-r, blue.400, blue.600)"
+                  color="white"
+                  px={4}
+                  py={1}
+                  borderRadius="full"
+                  fontSize="xs"
+                  letterSpacing="0.1em"
+                >
+                  COLLECTION
+                </Badge>
+                <Heading
+                  fontSize={{ base: "3xl", md: "5xl" }}
+                  fontWeight="900"
+                  color="gray.900"
+                  letterSpacing="-0.04em"
+                  lineHeight="1"
+                >
+                  Featured Arrivals
+                </Heading>
+                <Text color="gray.500" fontSize="lg" maxW="2xl" fontWeight="medium">
+                  Discover our curated selection of premium products, each chosen for its exceptional quality and unique design.
+                </Text>
+              </VStack>
+
+              <Box position="relative">
+                <AnimatePresence mode="wait">
+                  {loading ? (
+                    <Center key="loading" py={20}>
+                      <Spinner size="xl" color="blue.600" thickness="4px" />
+                    </Center>
+                  ) : (
+                    <MotionGrid
+                      key="grid"
+                      templateColumns={{
+                        base: "repeat(1, 1fr)",
+                        sm: "repeat(2, 1fr)",
+                        md: "repeat(3, 1fr)",
+                        lg: "repeat(4, 1fr)",
+                      }}
+                      gap={{ base: 6, md: 8 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {products.length > 0 ? (
+                        products.map((product) => (
+                          <ProductCard
+                            key={`${product._id || product.id}-${product.name}`}
+                            product={product}
+                          />
+                        ))
+                      ) : (
+                        <GridItem colSpan={{ base: 1, sm: 2, md: 3, lg: 4 }}>
+                          <Center py={20} flexDirection="column">
+                            <Text fontSize="xl" fontWeight="black" color="gray.300" mb={2}>
+                              NO PRODUCTS YET
+                            </Text>
+                            <Text color="gray.500">Check back later for exciting new arrivals!</Text>
+                          </Center>
+                        </GridItem>
+                      )}
+                    </MotionGrid>
+                  )}
+                </AnimatePresence>
+              </Box>
+
+              {products.length > 0 && totalPages > 1 && (
+                <Flex justify="center" align="center" mt={16} gap={6}>
+                  <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    isDisabled={currentPage === 1 || loading}
+                    leftIcon={<ChevronLeftIcon />}
+                    variant="ghost"
+                    borderRadius="2xl"
+                    _hover={{ bg: "gray.100" }}
+                  >
+                    Prev
+                  </Button>
+                  <HStack spacing={2}>
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <Box
+                        key={i}
+                        w={currentPage === i + 1 ? "12px" : "8px"}
+                        h={currentPage === i + 1 ? "12px" : "8px"}
+                        bg={currentPage === i + 1 ? "blue.600" : "gray.200"}
+                        borderRadius="full"
+                        transition="all 0.3s"
+                        cursor="pointer"
+                        onClick={() => handlePageChange(i + 1)}
+                      />
+                    ))}
+                  </HStack>
+                  <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    isDisabled={currentPage === totalPages || loading}
+                    rightIcon={<ChevronRightIcon />}
+                    variant="ghost"
+                    borderRadius="2xl"
+                    _hover={{ bg: "gray.100" }}
+                  >
+                    Next
+                  </Button>
+                </Flex>
+              )}
+            </VStack>
+          </Container>
+        </MotionBox>
+
+        <LocationSection shopData={shopData} />
+        <NewsLetter />
         <ContactSection shopData={shopData} />
-      </Container>
-      <ShopFooterSection shopData={shopData} />
+        <ShopFooterSection shopData={shopData} />
+      </MotionBox>
     </Box>
   );
 });
