@@ -13,14 +13,23 @@ import {
   Flex,
   Button,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiClock, FiCalendar, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { useBreakpointValue } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 const OperatingHours = ({ shopData }: any) => {
+  const isDesktop = useBreakpointValue({ base: false, md: true });
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Sync expanded state with desktop mode on initial load
+  useEffect(() => {
+    if (isDesktop) {
+      setIsExpanded(true);
+    }
+  }, [isDesktop]);
   const operatingHours = Array.isArray(shopData?.operatingHours)
     ? shopData.operatingHours
     : [];

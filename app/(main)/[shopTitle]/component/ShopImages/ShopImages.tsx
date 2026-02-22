@@ -34,7 +34,7 @@ const ShopImages = ({ shopData }: { shopData: any }) => {
   if (gallery.length === 0) return null;
 
   return (
-    <Box py={{ base: 12, md: 24 }} id="gallery" position="relative">
+    <Box py={{ base: 12, md: 24 }} p={10} id="gallery" position="relative">
       <VStack spacing={16} align="stretch" position="relative" zIndex={1}>
         <VStack spacing={4} align="center" textAlign="center">
           <Badge
@@ -71,7 +71,7 @@ const ShopImages = ({ shopData }: { shopData: any }) => {
           gap={6}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true }}
           variants={{
             visible: {
               transition: {
