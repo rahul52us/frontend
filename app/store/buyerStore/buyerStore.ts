@@ -77,6 +77,33 @@ class BuyerStore {
       return Promise.reject(err?.response?.data || err);
     }
   };
+
+  createBuyerSaleRecord = async (profileId: string, payload: any) => {
+    try {
+      const response = await axios.post(`/buyer/${profileId}/sales`, payload);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  listBuyerSaleRecords = async (profileId: string, payload: any) => {
+    try {
+      const response = await axios.post(`/buyer/${profileId}/sales/list`, payload);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  postBuyerSaleRecordToLedger = async (profileId: string, saleId: string, payload?: any) => {
+    try {
+      const response = await axios.post(`/buyer/${profileId}/sales/${saleId}/post-ledger`, payload || {});
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
 }
 
 const buyerStore = new BuyerStore();
