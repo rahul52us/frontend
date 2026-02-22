@@ -6,6 +6,8 @@ import {
   Badge,
   Box,
   Button,
+  Checkbox,
+  Divider,
   Flex,
   FormControl,
   FormLabel,
@@ -50,7 +52,7 @@ type BuyerProfile = {
 
 type LedgerEntryType = "sale" | "payment" | "adjustment";
 type LedgerDirection = "debit" | "credit";
-type LedgerReferenceType = "order" | "manual" | "refund" | "import";
+type LedgerReferenceType = "order" | "manual" | "refund" | "import" | "saleRecord";
 
 type BuyerLedgerEntry = {
   _id: string;
@@ -63,6 +65,35 @@ type BuyerLedgerEntry = {
   entryDate?: string;
   balanceAfter?: number;
   status?: "active" | "reversed";
+};
+
+type BuyerSaleRecordStatus = "draft" | "posted" | "void";
+
+type BuyerSaleItem = {
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  tax?: number;
+  lineTotal?: number;
+};
+
+type BuyerSaleRecord = {
+  _id: string;
+  saleDate?: string;
+  items: BuyerSaleItem[];
+  grandTotal: number;
+  notes?: string;
+  status: BuyerSaleRecordStatus;
+  ledgerEntryId?: string;
+};
+
+type SaleFormItem = {
+  itemName: string;
+  quantity: string;
+  unitPrice: string;
+  discount: string;
+  tax: string;
 };
 
 type LedgerSummary = {
@@ -80,6 +111,14 @@ const defaultLedgerSummary: LedgerSummary = {
   creditLimit: 0,
   isBlocked: false,
 };
+
+const defaultSaleFormItem = (): SaleFormItem => ({
+  itemName: "",
+  quantity: "1",
+  unitPrice: "",
+  discount: "0",
+  tax: "0",
+});
 
 const CustomersTab: React.FC = observer(() => {
   const toast = useToast();
@@ -99,21 +138,30 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onReverseOpen,
     onClose: onReverseClose,
   } = useDisclosure();
+  const {
+    isOpen: isSaleRecordOpen,
+    onOpen: onSaleRecordOpen,
+    onClose: onSaleRecordClose,
+  } = useDisclosure();
   const { auth, buyerStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
   const [selectedLedgerBuyer, setSelectedLedgerBuyer] = useState<BuyerProfile | null>(null);
   const [ledgerEntries, setLedgerEntries] = useState<BuyerLedgerEntry[]>([]);
+  const [saleRecords, setSaleRecords] = useState<BuyerSaleRecord[]>([]);
   const [ledgerSummary, setLedgerSummary] = useState<LedgerSummary>(defaultLedgerSummary);
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [saleLoading, setSaleLoading] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [ledgerSubmitting, setLedgerSubmitting] = useState(false);
+  const [saleSubmitting, setSaleSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
+  const [postingSaleId, setPostingSaleId] = useState("");
 
   const [selectedBuyer, setSelectedBuyer] = useState<BuyerProfile | null>(null);
   const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<BuyerLedgerEntry | null>(null);
@@ -125,9 +173,13 @@ const CustomersTab: React.FC = observer(() => {
   const [ledgerPage, setLedgerPage] = useState(1);
   const [ledgerTotalPages, setLedgerTotalPages] = useState(1);
   const [ledgerTotal, setLedgerTotal] = useState(0);
+  const [salePage, setSalePage] = useState(1);
+  const [saleTotalPages, setSaleTotalPages] = useState(1);
+  const [saleTotal, setSaleTotal] = useState(0);
 
   const limit = 10;
   const ledgerLimit = 10;
+  const saleLimit = 10;
 
   const [formValues, setFormValues] = useState({
     fullName: "",
@@ -145,6 +197,12 @@ const CustomersTab: React.FC = observer(() => {
     referenceId: "",
     entryDate: "",
     notes: "",
+  });
+  const [saleFormValues, setSaleFormValues] = useState({
+    saleDate: "",
+    notes: "",
+    postToLedger: true,
+    items: [defaultSaleFormItem()],
   });
 
   const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
@@ -233,19 +291,59 @@ const CustomersTab: React.FC = observer(() => {
     }
   };
 
+  const fetchSaleRecords = async (profileId: string, pageToLoad = 1) => {
+    if (!profileId) {
+      return;
+    }
+
+    setSaleLoading(true);
+    try {
+      const response = await buyerStore.listBuyerSaleRecords(profileId, {
+        page: pageToLoad,
+        limit: saleLimit,
+      });
+
+      const list = response?.data?.records || [];
+      const nextPage = response?.data?.page || pageToLoad;
+      const nextTotalPages = response?.data?.totalPages || 1;
+      const nextTotal = response?.data?.total || 0;
+
+      setSaleRecords(list);
+      setSalePage(nextPage);
+      setSaleTotalPages(nextTotalPages);
+      setSaleTotal(nextTotal);
+    } catch (error: any) {
+      toast({
+        title: "Failed to load sale records",
+        description: error?.message || "Unable to fetch buyer sale records",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setSaleLoading(false);
+    }
+  };
+
   const openLedgerView = async (buyer: BuyerProfile) => {
     setSelectedLedgerBuyer(buyer);
     setLedgerPage(1);
-    await fetchLedgerEntries(buyer._id, 1);
+    setSalePage(1);
+    await Promise.all([fetchLedgerEntries(buyer._id, 1), fetchSaleRecords(buyer._id, 1)]);
   };
 
   const closeLedgerView = () => {
     setSelectedLedgerBuyer(null);
     setLedgerEntries([]);
+    setSaleRecords([]);
     setLedgerSummary(defaultLedgerSummary);
     setLedgerPage(1);
     setLedgerTotalPages(1);
     setLedgerTotal(0);
+    setSalePage(1);
+    setSaleTotalPages(1);
+    setSaleTotal(0);
+    resetSaleForm();
   };
 
   const openDeleteModal = (buyer: BuyerProfile) => {
@@ -273,6 +371,20 @@ const CustomersTab: React.FC = observer(() => {
       entryDate: "",
       notes: "",
     });
+  };
+
+  const resetSaleForm = () => {
+    setSaleFormValues({
+      saleDate: "",
+      notes: "",
+      postToLedger: true,
+      items: [defaultSaleFormItem()],
+    });
+  };
+
+  const closeSaleRecordModal = () => {
+    onSaleRecordClose();
+    resetSaleForm();
   };
 
   const handleCreateBuyer = async () => {
@@ -408,6 +520,169 @@ const CustomersTab: React.FC = observer(() => {
       });
     } finally {
       setLedgerSubmitting(false);
+    }
+  };
+
+  const updateSaleItem = (index: number, key: keyof SaleFormItem, value: string) => {
+    setSaleFormValues((prev) => ({
+      ...prev,
+      items: prev.items.map((item, idx) => (idx === index ? { ...item, [key]: value } : item)),
+    }));
+  };
+
+  const addSaleItem = () => {
+    setSaleFormValues((prev) => ({
+      ...prev,
+      items: [...prev.items, defaultSaleFormItem()],
+    }));
+  };
+
+  const removeSaleItem = (index: number) => {
+    setSaleFormValues((prev) => {
+      if (prev.items.length <= 1) {
+        return prev;
+      }
+      return {
+        ...prev,
+        items: prev.items.filter((_, idx) => idx !== index),
+      };
+    });
+  };
+
+  const calculateSaleLineTotal = (item: SaleFormItem) => {
+    const quantity = Number(item.quantity || 0);
+    const unitPrice = Number(item.unitPrice || 0);
+    const discount = Math.max(Number(item.discount || 0), 0);
+    const tax = Math.max(Number(item.tax || 0), 0);
+    const subtotal = Math.max(quantity * unitPrice, 0);
+    const cappedDiscount = Math.min(discount, subtotal);
+    return Math.max(subtotal - cappedDiscount + tax, 0);
+  };
+
+  const handleCreateSaleRecord = async () => {
+    if (!selectedLedgerBuyer?._id) {
+      return;
+    }
+
+    const sanitizedItems: any[] = [];
+
+    for (const item of saleFormValues.items) {
+      const itemName = item.itemName.trim();
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = Number(item.unitPrice || 0);
+      const discount = Math.max(Number(item.discount || 0), 0);
+      const tax = Math.max(Number(item.tax || 0), 0);
+
+      if (!itemName) {
+        toast({
+          title: "Validation failed",
+          description: "Item name is required for each row.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        toast({
+          title: "Validation failed",
+          description: "Quantity must be greater than 0.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+        toast({
+          title: "Validation failed",
+          description: "Unit price must be 0 or more.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      sanitizedItems.push({
+        itemName,
+        quantity,
+        unitPrice,
+        discount,
+        tax,
+      });
+    }
+
+    setSaleSubmitting(true);
+    try {
+      await buyerStore.createBuyerSaleRecord(selectedLedgerBuyer._id, {
+        saleDate: saleFormValues.saleDate ? new Date(saleFormValues.saleDate).toISOString() : undefined,
+        notes: saleFormValues.notes.trim() || undefined,
+        postToLedger: Boolean(saleFormValues.postToLedger),
+        source: "manual",
+        items: sanitizedItems,
+      });
+
+      toast({
+        title: "Sale record saved",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      closeSaleRecordModal();
+      setSalePage(1);
+      await fetchSaleRecords(selectedLedgerBuyer._id, 1);
+
+      if (saleFormValues.postToLedger) {
+        setLedgerPage(1);
+        await fetchLedgerEntries(selectedLedgerBuyer._id, 1);
+        await fetchBuyers(page, search);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to save sale record",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setSaleSubmitting(false);
+    }
+  };
+
+  const handlePostSaleRecordToLedger = async (saleId: string) => {
+    if (!selectedLedgerBuyer?._id || !saleId) {
+      return;
+    }
+
+    setPostingSaleId(saleId);
+    try {
+      await buyerStore.postBuyerSaleRecordToLedger(selectedLedgerBuyer._id, saleId, {});
+      toast({
+        title: "Sale posted to ledger",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      setLedgerPage(1);
+      await Promise.all([
+        fetchSaleRecords(selectedLedgerBuyer._id, salePage),
+        fetchLedgerEntries(selectedLedgerBuyer._id, 1),
+        fetchBuyers(page, search),
+      ]);
+    } catch (error: any) {
+      toast({
+        title: "Failed to post sale",
+        description: error?.message || "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setPostingSaleId("");
     }
   };
 
@@ -575,8 +850,7 @@ const CustomersTab: React.FC = observer(() => {
     },
   };
 
-  const ledgerTableData = useMemo(() => {
-    return ledgerEntries.map((entry) => ({
+  const ledgerTableData = ledgerEntries.map((entry) => ({
       ...entry,
       entryDate: entry.entryDate,
       typeBadge: (
@@ -611,7 +885,6 @@ const CustomersTab: React.FC = observer(() => {
           </Button>
         ),
     }));
-  }, [ledgerEntries]);
 
   const ledgerColumns = [
     { headerName: "Date", key: "entryDate", type: "date" },
@@ -661,6 +934,84 @@ const CustomersTab: React.FC = observer(() => {
     },
   };
 
+  const saleTableData = saleRecords.map((record) => {
+      const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
+      const itemPreview =
+        itemsCount > 0
+          ? record.items
+              .slice(0, 2)
+              .map((item) => `${item.itemName} x ${item.quantity}`)
+              .join(", ")
+          : "-";
+
+      return {
+        ...record,
+        saleDate: record.saleDate,
+        itemsCount,
+        itemPreview: itemsCount > 2 ? `${itemPreview} +${itemsCount - 2} more` : itemPreview,
+        grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
+        statusBadge: (
+          <Badge
+            colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
+            textTransform="capitalize"
+          >
+            {record.status}
+          </Badge>
+        ),
+        postAction:
+          record.status === "draft" && !record.ledgerEntryId ? (
+            <Button
+              size="xs"
+              colorScheme="blue"
+              variant="outline"
+              isLoading={postingSaleId === record._id}
+              onClick={() => handlePostSaleRecordToLedger(record._id)}
+            >
+              Post to Ledger
+            </Button>
+          ) : (
+            <Text color="gray.500">-</Text>
+          ),
+      };
+    });
+  
+
+  const saleColumns = [
+    { headerName: "Date", key: "saleDate", type: "date" },
+    { headerName: "Items", key: "itemPreview" },
+    { headerName: "Item Count", key: "itemsCount" },
+    { headerName: "Total", key: "grandTotalText" },
+    { headerName: "Notes", key: "notes" },
+    {
+      headerName: "Status",
+      key: "statusBadge",
+      type: "component",
+      metaData: { component: (row: any) => row.statusBadge },
+    },
+    {
+      headerName: "Action",
+      key: "postAction",
+      type: "component",
+      metaData: { component: (row: any) => row.postAction },
+    },
+  ];
+
+  const saleTableActions = {
+    pagination: {
+      show: true,
+      currentPage: salePage,
+      totalPages: saleTotalPages || 1,
+      limit: saleLimit,
+      onClick: (nextPage: number) => {
+        if (!selectedLedgerBuyer?._id) {
+          return;
+        }
+        setSalePage(nextPage);
+        fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
+      },
+    },
+  };
+
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
 
   return (
@@ -686,6 +1037,9 @@ const CustomersTab: React.FC = observer(() => {
             <HStack>
               <Button leftIcon={<ArrowBackIcon />} variant="outline" onClick={closeLedgerView}>
                 Back to Buyers
+              </Button>
+              <Button leftIcon={<AddIcon />} colorScheme="teal" onClick={onSaleRecordOpen}>
+                Add Sale Record
               </Button>
               <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onLedgerEntryOpen}>
                 Add Ledger Entry
@@ -742,6 +1096,17 @@ const CustomersTab: React.FC = observer(() => {
               data={ledgerTableData}
               loading={ledgerLoading}
               actions={ledgerTableActions}
+              serial={{ show: true, text: "S.No." }}
+            />
+
+            <Divider />
+
+            <CustomTable
+              title={`Sale Records (${saleTotal})`}
+              columns={saleColumns}
+              data={saleTableData}
+              loading={saleLoading}
+              actions={saleTableActions}
               serial={{ show: true, text: "S.No." }}
             />
           </VStack>
@@ -924,6 +1289,134 @@ const CustomersTab: React.FC = observer(() => {
             </Button>
             <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
               Save Entry
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isSaleRecordOpen} onClose={closeSaleRecordModal} isCentered size="4xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add Buyer Sale Record</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                <FormControl>
+                  <FormLabel>Sale Date (optional)</FormLabel>
+                  <Input
+                    type="datetime-local"
+                    value={saleFormValues.saleDate}
+                    onChange={(e) => setSaleFormValues((prev) => ({ ...prev, saleDate: e.target.value }))}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Notes (optional)</FormLabel>
+                  <Input
+                    value={saleFormValues.notes}
+                    onChange={(e) => setSaleFormValues((prev) => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Sale remarks"
+                  />
+                </FormControl>
+              </SimpleGrid>
+
+              <Checkbox
+                isChecked={saleFormValues.postToLedger}
+                onChange={(e) => setSaleFormValues((prev) => ({ ...prev, postToLedger: e.target.checked }))}
+              >
+                Post to ledger now
+              </Checkbox>
+
+              <Divider />
+
+              <VStack align="stretch" spacing={4}>
+                {saleFormValues.items.map((item, index) => (
+                  <Box key={`sale-item-${index}`} borderWidth="1px" borderRadius="md" p={3}>
+                    <SimpleGrid columns={{ base: 1, md: 5 }} spacing={3}>
+                      <FormControl>
+                        <FormLabel>Item Name</FormLabel>
+                        <Input
+                          value={item.itemName}
+                          onChange={(e) => updateSaleItem(index, "itemName", e.target.value)}
+                          placeholder="e.g. Cement Bag"
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>Quantity</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) => updateSaleItem(index, "quantity", e.target.value)}
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>Unit Price</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={(e) => updateSaleItem(index, "unitPrice", e.target.value)}
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>Discount</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.discount}
+                          onChange={(e) => updateSaleItem(index, "discount", e.target.value)}
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>Tax</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.tax}
+                          onChange={(e) => updateSaleItem(index, "tax", e.target.value)}
+                        />
+                      </FormControl>
+                    </SimpleGrid>
+
+                    <Flex mt={3} justify="space-between" align="center">
+                      <Text fontSize="sm" color="gray.600">
+                        Line Total: {formatCurrency(calculateSaleLineTotal(item))}
+                      </Text>
+                      <Button
+                        size="xs"
+                        colorScheme="red"
+                        variant="ghost"
+                        onClick={() => removeSaleItem(index)}
+                        isDisabled={saleFormValues.items.length <= 1}
+                      >
+                        Remove
+                      </Button>
+                    </Flex>
+                  </Box>
+                ))}
+              </VStack>
+
+              <Button size="sm" variant="outline" leftIcon={<AddIcon />} alignSelf="flex-start" onClick={addSaleItem}>
+                Add Item Row
+              </Button>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={closeSaleRecordModal}>
+              Cancel
+            </Button>
+            <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
+              Save Sale Record
             </Button>
           </ModalFooter>
         </ModalContent>
