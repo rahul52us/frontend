@@ -1,157 +1,146 @@
 import {
-  Box, Container, Image, Text, Grid, GridItem, Tooltip, AspectRatio, Heading,
-  Badge,
+  Box,
+  Container,
+  Image,
+  Text,
+  AspectRatio,
+  Heading,
   HStack,
   VStack,
   Icon,
   useColorModeValue,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiInfo } from "react-icons/fi";
 import { motion } from "framer-motion";
-import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 
-const MotionGrid = motion(Grid);
 const MotionBox = motion(Box);
 
-// Helper function for Box styles
-const imageContainerStyles = {
-  borderRadius: "lg",
-  overflow: "hidden",
-  boxShadow: "md",
-  _hover: {
-    transform: "scale(1.05)",
-    boxShadow: "xl",
-    transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
-  },
-  cursor: "pointer",
-};
-
 const ShopImages = ({ shopData }: { shopData: any }) => {
-  const gallery = shopData?.gallery || [];
-  const bgColor = useColorModeValue("white", "gray.900");
-  const overlayBg = useColorModeValue("blackAlpha.700", "blackAlpha.800");
+  // Enhanced detail-oriented data fetching
+  const gallery = shopData?.gallery || shopData?.images || shopData?.photos || shopData?.data?.gallery || [];
+  const stageBg = useColorModeValue("white", "gray.900");
+  const textColor = useColorModeValue("gray.900", "white");
+  const accentColor = "purple.500";
 
-  if (gallery.length === 0) return null;
-
-  return (
-    <Box py={{ base: 12, md: 24 }} p={10} id="gallery" position="relative">
-      <VStack spacing={16} align="stretch" position="relative" zIndex={1}>
-        <VStack spacing={4} align="center" textAlign="center">
-          <Badge
-            bgGradient="linear(to-r, blue.400, blue.600)"
-            color="white"
-            px={4}
-            py={1}
-            borderRadius="full"
-            fontSize="xs"
-            letterSpacing="0.1em"
-          >
-            PORTFOLIO
-          </Badge>
-          <Heading
-            fontSize={{ base: "3xl", md: "5xl" }}
-            fontWeight="900"
-            color="gray.900"
-            letterSpacing="-0.04em"
-            lineHeight="1"
-          >
-            Insights & Highlights
-          </Heading>
-          <Text color="gray.500" fontSize="lg" maxW="2xl" fontWeight="medium">
-            A curated look into our craftsmanship, workspace, and the signature projects that define our excellence.
+  // Data verification block
+  if (gallery.length === 0) {
+    return (
+      <Box py={10} textAlign="center" border="1px dashed" borderColor="gray.200" borderRadius="xl" m={8}>
+        <VStack spacing={4}>
+          <Icon as={FiInfo} color="gray.300" boxSize={8} />
+          <Text color="gray.400" fontWeight="800" fontSize="xs" letterSpacing="0.2em">
+            CURATING THE COLLECTION...
           </Text>
         </VStack>
+      </Box>
+    );
+  }
 
-        <MotionGrid
-          templateColumns={{
-            base: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)",
-          }}
-          gap={6}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={{
-            visible: {
-              transition: {
-                staggerChildren: 0.1,
-              },
-            },
-          }}
-        >
-          {gallery.map((image, index) => (
-            <GridItem key={index}>
-              <MotionBox
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } },
-                }}
-                whileHover="hover"
-                position="relative"
-                borderRadius="2xl"
-                overflow="hidden"
-                cursor="pointer"
-                role="group"
-                bg="gray.100"
+  return (
+    <Box py={{ base: 20, md: 32 }} bg={stageBg} id="gallery" position="relative">
+      <Container maxW="7xl">
+        <VStack spacing={16} align="stretch">
+          {/* Elite Editorial Header */}
+          <VStack spacing={6} align="center" textAlign="center">
+            <VStack spacing={3}>
+              <Text
+                fontSize="xs"
+                fontWeight="900"
+                letterSpacing="0.5em"
+                color={accentColor}
+                textTransform="uppercase"
               >
-                <AspectRatio ratio={1}>
-                  <Image
-                    src={image?.file?.url}
-                    alt={image?.title || `Gallery image ${index + 1}`}
-                    objectFit="cover"
-                    loading="lazy"
-                    transition="transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)"
-                    _groupHover={{ transform: "scale(1.05)" }}
-                  />
-                </AspectRatio>
+                Visual Story
+              </Text>
+              <Heading
+                fontSize={{ base: "4xl", md: "5xl", lg: "70px" }}
+                fontWeight="900"
+                color="gray.900"
+                letterSpacing="-0.04em"
+                lineHeight="1"
+              >
+                Atmosphere & <Text as="span" color="gray.300" fontStyle="italic" fontWeight="400">Soul</Text>
+              </Heading>
+            </VStack>
+            <Box w="80px" h="1px" bg="purple.500" />
+          </VStack>
 
-                {/* Modern Minimal Overlay */}
-                <MotionBox
-                  variants={{
-                    hover: { opacity: 1 },
-                    initial: { opacity: 0 }
-                  }}
-                  transition={{ duration: 0.3 }}
-                  position="absolute"
-                  inset="0"
-                  bg={overlayBg}
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="flex-end"
-                  p={6}
+          {/* Mosaic Grid - Performance Optimized & High Visibility */}
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "repeat(3, 1fr)",
+            }}
+            gap={10}
+          >
+            {gallery.map((image, index) => {
+              const isFeatured = index === 0;
+              const imageUrl = image?.file?.url || image?.url || image;
+
+              return (
+                <GridItem
+                  key={index}
+                  colSpan={{ base: 1, md: isFeatured ? 2 : 1 }}
                 >
-                  <MotionBox
-                    variants={{
-                      hover: { y: 0, opacity: 1 },
-                      initial: { y: 10, opacity: 0 }
+                  <Box
+                    role="group"
+                    position="relative"
+                    borderRadius="0" // Sharp Boutique Edge
+                    overflow="hidden"
+                    bg="gray.50"
+                    shadow="xl"
+                    transition="all 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
+                    _hover={{
+                      shadow: "2xl",
+                      transform: "scale(1.01)"
                     }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
                   >
-                    <Text
-                      color="white"
-                      fontSize="lg"
-                      fontWeight="800"
-                      mb={1}
+                    <AspectRatio ratio={isFeatured ? 1.6 : 1}>
+                      <Image
+                        src={imageUrl}
+                        alt={image?.title || `Boutique Detail ${index + 1}`}
+                        objectFit="cover"
+                        transition="transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                        _groupHover={{ transform: "scale(1.08)" }}
+                        fallbackSrc="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
+                      />
+                    </AspectRatio>
+
+                    {/* Minimalist Overlay Label */}
+                    <Box
+                      position="absolute"
+                      bottom={0}
+                      left={0}
+                      right={0}
+                      p={8}
+                      bgGradient="linear(to-t, blackAlpha.700, transparent)"
+                      opacity={0}
+                      _groupHover={{ opacity: 1 }}
+                      transition="all 0.4s ease"
                     >
-                      {image?.title || "Portfolio Work"}
-                    </Text>
-                    <HStack spacing={2}>
-                      <Text color="blue.300" fontSize="xs" fontWeight="bold" letterSpacing="widest">
-                        VIEW PROJECT
-                      </Text>
-                      <Icon as={FiArrowRight} color="blue.300" boxSize={3} />
-                    </HStack>
-                  </MotionBox>
-                </MotionBox>
-              </MotionBox>
-            </GridItem>
-          ))}
-        </MotionGrid>
-      </VStack>
+                      <VStack align="flex-start" spacing={1}>
+                        <Text color="white" fontSize="xs" fontWeight="900" letterSpacing="0.2em">
+                          PIECE {String(index + 1).padStart(2, '0')}
+                        </Text>
+                        <HStack justify="space-between" w="full">
+                          <Heading color="white" fontSize="xl" fontWeight="900">
+                            {image?.title || "Boutique Study"}
+                          </Heading>
+                          <Icon as={FiArrowRight} color="white" />
+                        </HStack>
+                      </VStack>
+                    </Box>
+                  </Box>
+                </GridItem>
+              );
+            })}
+          </Grid>
+        </VStack>
+      </Container>
     </Box>
   );
 };
-
 
 export default ShopImages;

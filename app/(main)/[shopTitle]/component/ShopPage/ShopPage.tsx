@@ -158,8 +158,7 @@ const ShopPage = observer(({ shopData }: any) => {
         <MotionBox
           id="gallery"
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           bg="gray.50"
         >
@@ -167,9 +166,8 @@ const ShopPage = observer(({ shopData }: any) => {
         </MotionBox>
 
         <MotionBox
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           id="products"
           py={{ base: 12, md: 16 }}
@@ -217,7 +215,7 @@ const ShopPage = observer(({ shopData }: any) => {
                         md: "repeat(3, 1fr)",
                         lg: "repeat(4, 1fr)",
                       }}
-                      gap={{ base: 6, md: 8 }}
+                      gap={{ base: 12, md: 16 }} // Airier grid for gallery look
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}

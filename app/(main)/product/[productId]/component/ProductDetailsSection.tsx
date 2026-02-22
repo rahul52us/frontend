@@ -118,58 +118,6 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
                 </Box>
             )}
 
-            {/* Dynamic Specifications Grid - Polished */}
-            {dynamicSpecs.length > 0 && (
-                <Box mt={4}>
-                    <Heading fontSize="md" fontWeight="bold" mb={4}>Specifications</Heading>
-                    <Box
-                        border="1px solid"
-                        borderColor={dividerColor}
-                        rounded="xl"
-                        overflow="hidden"
-                    >
-                        {dynamicSpecs.map(([key, value], idx) => (
-                            <Flex
-                                key={idx}
-                                borderBottom={idx === dynamicSpecs.length - 1 ? "none" : "1px solid"}
-                                borderColor={dividerColor}
-                                bg={idx % 2 === 0 ? useColorModeValue("gray.50", "whiteAlpha.50") : "transparent"}
-                                p={3}
-                                align="center"
-                            >
-                                <Text
-                                    flex="1"
-                                    fontSize="sm"
-                                    color={labelColor}
-                                    fontWeight="medium"
-                                    textTransform="capitalize"
-                                >
-                                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                                </Text>
-                                <Text
-                                    flex="1"
-                                    fontSize="sm"
-                                    color={valueColor}
-                                    fontWeight="semibold"
-                                >
-                                    {String(value)}
-                                </Text>
-                            </Flex>
-                        ))}
-                    </Box>
-                </Box>
-            )}
-
-            {/* Description */}
-            {description && (
-                <Box>
-                    <Heading fontSize="md" fontWeight="bold" mb={3}>About this item</Heading>
-                    <Text color={textColor} fontSize="md" lineHeight="1.8">
-                        {description}
-                    </Text>
-                </Box>
-            )}
-
             <Divider borderColor={dividerColor} />
             <ReturnExchange services={services} />
 

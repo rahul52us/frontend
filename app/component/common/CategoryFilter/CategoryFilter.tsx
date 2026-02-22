@@ -39,7 +39,7 @@ const CategoryFilter = observer(() => {
     )
   }
 
-  if (!loading && (!categories || categories.length === 0)) return null;
+  if (!loading && (!categories || categories?.length === 0)) return null;
 
   return (
     <Box

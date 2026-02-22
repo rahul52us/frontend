@@ -2,6 +2,7 @@
 import { Box, Flex, Grid, Spinner, Text, useColorModeValue, Button } from "@chakra-ui/react";
 import ProductImageViewer from "../../../../component/common/ProductImagesViewer/ProductImagesViewer";
 import ProductDetailsSection from "./ProductDetailsSection";
+import ProductAboutSection from "./ProductAboutSection";
 import ProductBuyBox from "./ProductBuyBox";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
@@ -125,6 +126,9 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                     </Box>
                 </Box>
             </Grid>
+
+            {/* Full-width Product About Section (Description & Specs) */}
+            <ProductAboutSection product={product} />
 
             {/* Related Products Section */}
             {relatedProducts.length > 0 && (
