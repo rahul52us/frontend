@@ -58,7 +58,7 @@ const MapComponent = () => {
           });
         },
         (error) => {
-          console.error('Location error:', error);
+          console.warn('Geolocation denied or unavailable, using default location:', error.message);
           setUserLocation({ lat: 18.6290, lng: 73.7997 });
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }

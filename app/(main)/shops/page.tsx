@@ -10,10 +10,11 @@ import {
   InputLeftElement,
   Input,
   Button,
-  SimpleGrid,
   useColorModeValue,
   IconButton,
   Fade,
+  HStack,
+  VStack
 } from '@chakra-ui/react'
 import { SearchIcon, AddIcon, ArrowUpIcon } from '@chakra-ui/icons'
 import React, { useEffect, useState } from 'react'
@@ -22,15 +23,19 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { authentication } from '../../config/utils/routes'
 
-const MotionHeading = motion(Heading)
 const MotionBox = motion(Box)
 
 const ShopsPage = () => {
   const router = useRouter()
-  const bg = useColorModeValue('gray.50', 'gray.900')
+  const bg = useColorModeValue('white', 'gray.950')
+  const textColor = useColorModeValue('gray.900', 'white')
+  const subTextColor = useColorModeValue('gray.600', 'gray.400')
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+
+  const inputBg = useColorModeValue('gray.50', 'whiteAlpha.50')
+  const inputBorder = useColorModeValue('gray.200', 'whiteAlpha.200')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,138 +47,150 @@ const ShopsPage = () => {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
-  const categories = ['Grocery', 'Clothing', 'Electronics', 'Restaurants']
+  const categories = ['All Shops', 'Grocery', 'Clothing', 'Electronics', 'Restaurants', 'Beauty', 'Home', 'Pharmacy']
 
   return (
-    <Box bg={bg} py={{ base: 6, md: 16 }} minH="100vh" position="relative">
-      <Container maxW="7xl" px={{ base: 4, md: 8 }}>
-        {/* Header */}
-        <Stack spacing={2} textAlign="center" mb={10}>
-          <MotionHeading
-            fontSize={{ base: '3xl', md: '5xl' }}
-            fontWeight="900"
-            bgGradient="linear(to-r, teal.500, green.400)"
-            bgClip="text"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            letterSpacing="tight"
-          >
-            Explore Nearby Shops
-          </MotionHeading>
-          <Text color="gray.500" fontSize={{ base: 'sm', md: 'lg' }} fontWeight="medium">
-            Discover local businesses and support your community.
-          </Text>
-        </Stack>
+    <Box bg={bg} minH="100vh" position="relative" pb={10}>
+      <Container maxW="7xl" px={{ base: 4, md: 6 }} pt={{ base: 8, md: 10 }}>
+        {/* Editorial Header */}
+        <VStack spacing={8} align="center" textAlign="center" mb={20}>
 
-        {/* Search Bar */}
-        <InputGroup maxW="lg" mx="auto" mb={6}>
-          <InputLeftElement pointerEvents="none">
-            <SearchIcon color="gray.400" />
-          </InputLeftElement>
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a shop, product, or location..."
-            borderRadius="xl"
-            bg="white"
-            shadow="md"
-            _focus={{ borderColor: 'teal.400', boxShadow: '0 0 0 1px teal' }}
-          />
-        </InputGroup>
-
-        {/* Categories */}
-        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} mb={8}>
-          {categories.map((category) => (
-            <Button
-              key={category}
-              onClick={() =>
-                setActiveCategory((prev) => (prev === category ? null : category))
-              }
-              variant={activeCategory === category ? 'solid' : 'outline'}
-              colorScheme="teal"
-              borderRadius="full"
-              fontWeight="medium"
-              _hover={{ bg: 'teal.50' }}
-              transition="all 0.2s"
+          <Stack spacing={4} maxW="3xl">
+            <Heading
+              fontSize={{ base: '4xl', md: '64px' }}
+              fontWeight="800"
+              color={textColor}
+              lineHeight="1.1"
+              letterSpacing="-0.03em"
             >
-              {category}
-            </Button>
-          ))}
-        </SimpleGrid>
+              The Boutique <Text as="span" color="purple.500">Collection</Text>
+            </Heading>
+            <Text color={subTextColor} fontSize={{ base: 'lg', md: 'xl' }} fontWeight="500" lineHeight="1.6" opacity={0.8}>
+              Discover a curated selection of premium local businesses dedicated to quality, service, and community excellence.
+            </Text>
+          </Stack>
 
-        {/* Shops Section */}
-        <MotionBox
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-        >
-          <ShopSection />
-        </MotionBox>
+          {/* Centered Search Bar */}
+          <InputGroup size="lg" maxW="xl" shadow="sm">
+            <InputLeftElement pointerEvents="none" h="full" pl={4}>
+              <SearchIcon color="gray.400" boxSize={4} />
+            </InputLeftElement>
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name or category..."
+              borderRadius="full"
+              bg={inputBg}
+              border="1px solid"
+              borderColor={inputBorder}
+              fontSize="md"
+              h="64px"
+              pl={12}
+              _placeholder={{ color: 'gray.400' }}
+              _focus={{
+                borderColor: 'purple.500',
+                bg: 'white',
+                shadow: 'xl'
+              }}
+              transition="all 0.3s"
+            />
+          </InputGroup>
+        </VStack>
 
-        {/* Call to Action */}
+        {/* Category Pill Navigation */}
         <Box
-          mt={16}
-          bg="teal.500"
-          color="white"
-          py={10}
-          px={6}
-          textAlign="center"
-          borderRadius="2xl"
-          shadow="md"
+          mb={12}
+          overflowX="auto"
+          display="flex"
+          justifyContent={{ base: 'flex-start', md: 'center' }}
+          css={{
+            '&::-webkit-scrollbar': { display: 'none' },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
         >
-          <Heading fontSize={{ base: 'xl', md: '2xl' }} mb={2}>
-            Are you a shop owner?
-          </Heading>
-          <Text mb={4}>List your shop for free and reach more local customers.</Text>
-          <Button
-            colorScheme="whiteAlpha"
-            leftIcon={<AddIcon />}
-            variant="outline"
-            size="lg"
-            borderRadius="full"
-            _hover={{ bg: 'whiteAlpha.300' }}
-            onClick={() => router.push(authentication.register)}
-          >
-            Register Your Shop
-          </Button>
+          <HStack spacing={3} px={4}>
+            {categories.map((category) => {
+              const isActive = activeCategory === category || (category === 'All Shops' && !activeCategory);
+              return (
+                <Button
+                  key={category}
+                  onClick={() => setActiveCategory(category === 'All Shops' ? null : category)}
+                  variant={isActive ? 'solid' : 'ghost'}
+                  colorScheme={isActive ? 'purple' : 'gray'}
+                  h="auto"
+                  px={6}
+                  py={2.5}
+                  borderRadius="full"
+                  fontSize="sm"
+                  fontWeight="700"
+                  whiteSpace="nowrap"
+                  transition="all 0.2s"
+                >
+                  {category}
+                </Button>
+              )
+            })}
+          </HStack>
+        </Box>
+
+        {/* Shops Section Content */}
+        <ShopSection searchQuery={searchQuery} activeCategory={activeCategory} />
+
+        {/* Premium Call to Action */}
+        <Box
+          mt={32}
+          bgGradient="linear(to-br, gray.900, black)"
+          color="white"
+          p={{ base: 10, md: 20 }}
+          textAlign="center"
+          borderRadius="3xl"
+          shadow="2xl"
+        >
+          <VStack spacing={6}>
+            <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800">
+              Grow Your Business With Us
+            </Heading>
+            <Text fontSize="lg" color="gray.400" maxW="xl" mx="auto">
+              Join our network of elite vendors and showcase your brand to a discerning local audience.
+            </Text>
+            <Button
+              bg="white"
+              color="gray.900"
+              leftIcon={<AddIcon boxSize={3} />}
+              size="lg"
+              h="56px"
+              px={10}
+              borderRadius="full"
+              fontSize="md"
+              fontWeight="bold"
+              _hover={{ transform: 'translateY(-2px)', shadow: 'xl', bg: 'purple.50' }}
+              onClick={() => router.push(authentication.register)}
+            >
+              Partner With Us
+            </Button>
+          </VStack>
         </Box>
       </Container>
 
-      {/* Scroll to Top */}
+      {/* Floating Scroll to Top */}
       <Fade in={showScrollBtn}>
         <IconButton
           icon={<ArrowUpIcon />}
           onClick={scrollToTop}
           position="fixed"
-          bottom="30px"
-          right="30px"
-          colorScheme="teal"
+          bottom="40px"
+          right="40px"
+          bg="purple.500"
+          color="white"
+          _hover={{ bg: 'purple.600', transform: 'scale(1.1)' }}
           aria-label="Scroll to top"
           borderRadius="full"
+          size="lg"
           zIndex={1000}
-          boxShadow="lg"
+          shadow="xl"
         />
       </Fade>
-
-      {/* Mobile Register Button */}
-      <Box
-        display={{ base: 'block', md: 'none' }}
-        position="fixed"
-        bottom="90px"
-        right="20px"
-        zIndex={999}
-      >
-        <IconButton
-          icon={<AddIcon />}
-          colorScheme="teal"
-          aria-label="Register Shop"
-          size="lg"
-          borderRadius="full"
-          shadow="lg"
-          onClick={() => router.push(authentication.register)}
-        />
-      </Box>
     </Box>
   )
 }

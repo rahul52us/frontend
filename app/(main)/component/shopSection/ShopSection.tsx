@@ -1,33 +1,34 @@
-"use client";
-import { observer } from "mobx-react-lite";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Box,
   SimpleGrid,
-  Center,
-  Text,
-  VStack,
   Container,
-  Spinner,
+  Text,
 } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
+import ShopCard from "./element/ShopCard";
+import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
 import { motion, AnimatePresence } from "framer-motion";
 import stores from "../../../store/stores";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
-import ShopCard from "./element/ShopCard";
-import ShopCardSkeleton from "./ShopSkeletonCard/ShowSkeletonCard";
-import { tablePageLimit } from "../../../component/config/utils/variable";
 
 const MotionSimpleGrid = motion(SimpleGrid);
 const MotionBox = motion(Box);
 
-const ShopSection = observer(() => {
+const tablePageLimit = 8;
+
+interface ShopSectionProps {
+  searchQuery?: string;
+  activeCategory?: string | null;
+}
+
+const ShopSection = observer(({ searchQuery = "", activeCategory = null }: ShopSectionProps) => {
   const {
     shopStore: { getAllShops, shop },
     auth: { openNotification },
   } = stores;
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [searchQuery] = useState<string>("");
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -36,10 +37,11 @@ const ShopSection = observer(() => {
       page = 1,
       limit = tablePageLimit,
       search = "",
+      category = null,
       append = false,
-    }) => {
+    }: { page?: number, limit?: number, search?: string, category?: string | null, append?: boolean }) => {
       try {
-        await getAllShops({ page, limit, search, append });
+        await getAllShops({ page, limit, search, category: category === 'All Shops' ? null : category, append });
       } catch (err: any) {
         openNotification({
           title: "Failed to get Shops",
@@ -57,9 +59,10 @@ const ShopSection = observer(() => {
       page: 1,
       limit: tablePageLimit,
       search: debouncedSearchQuery,
+      category: activeCategory,
       append: false,
     });
-  }, [debouncedSearchQuery, applyGetAllShops]);
+  }, [debouncedSearchQuery, activeCategory, applyGetAllShops]);
 
   const handleLoadMore = useCallback(() => {
     const nextPage = currentPage + 1;
@@ -69,66 +72,61 @@ const ShopSection = observer(() => {
     applyGetAllShops({
       page: nextPage,
       search: debouncedSearchQuery,
+      category: activeCategory,
       append: true,
     });
-  }, [currentPage, shop.totalPages, applyGetAllShops, debouncedSearchQuery]);
+  }, [currentPage, shop.totalPages, applyGetAllShops, debouncedSearchQuery, activeCategory]);
 
   useEffect(() => {
     const currentLoadMoreRef = loadMoreRef.current;
+    if (!currentLoadMoreRef) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !shop.loading &&
-          currentPage < (shop.totalPages || 1)
-        ) {
+        if (entries[0].isIntersecting && !shop.loading) {
           handleLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 1.0 }
     );
 
-    if (currentLoadMoreRef) {
-      observer.observe(currentLoadMoreRef);
-    }
-
-    return () => {
-      if (currentLoadMoreRef) {
-        observer.unobserve(currentLoadMoreRef);
-      }
-    };
-  }, [shop.loading, currentPage, shop.totalPages, handleLoadMore]);
+    observer.observe(currentLoadMoreRef);
+    return () => observer.disconnect();
+  }, [handleLoadMore, shop.loading]);
 
   const shops = shop?.data || [];
-  const totalPages = shop?.totalPages || 1;
   const loading = shop?.loading && currentPage === 1;
-  const loadingMore = shop?.loading && currentPage > 1;
-  const allLoaded = currentPage >= totalPages;
 
   const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.1,
       }
     }
   };
 
   const item = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.215, 0.61, 0.355, 1] } }
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
   };
 
   return (
-    <Box position="relative" pb={10}>
-      <Container maxW="container.xl" px={0}>
-        {/* Shop Cards Grid */}
+    <Box position="relative">
+      <Container maxW="7xl" px={0}>
         <AnimatePresence>
           {!loading && (
             <MotionSimpleGrid
-              columns={{ base: 1, sm: 2, lg: 3 }}
-              spacing={{ base: 6, md: 8 }}
+              columns={{ base: 1, sm: 2, md: 3 }}
+              spacing={{ base: 6, md: 10 }}
               variants={container}
               initial="hidden"
               animate="show"
@@ -142,49 +140,37 @@ const ShopSection = observer(() => {
           )}
         </AnimatePresence>
 
-        {/* Initial Skeleton */}
         {loading && (
-          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 6, md: 8 }}>
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={{ base: 6, md: 10 }}>
             {Array.from({ length: 6 }).map((_, index) => (
               <ShopCardSkeleton key={index} />
             ))}
           </SimpleGrid>
         )}
 
-        {/* Empty State */}
-        {!loading && shops.length === 0 && (
-          <Center py={20} flexDirection="column">
-            <Text fontSize="2xl" fontWeight="black" color="gray.300" mb={2}>
-              No Shops Found
-            </Text>
-            <Text color="gray.500">Check back later for new arrivals! 🌟</Text>
-          </Center>
+        {shops.length === 0 && !loading && (
+          <Box py={20} textAlign="center">
+            <Text fontSize="lg" color="gray.500" fontWeight="500">No shops found matching your criteria.</Text>
+          </Box>
         )}
 
-        {/* Load More Indicator */}
-        <Box ref={loadMoreRef} py={10}>
-          {loadingMore && (
-            <Center w="full">
-              <VStack spacing={4}>
-                <Spinner size="md" color="purple.500" thickness="3px" />
-                <Text fontSize="xs" fontWeight="black" color="gray.400" letterSpacing="widest">
-                  DISCOVERING MORE
-                </Text>
-              </VStack>
-            </Center>
-          )}
+        <Box ref={loadMoreRef} h="10px" />
 
-          {!loading && allLoaded && shops.length > 0 && (
-            <Center py={10}>
-              <VStack spacing={2}>
-                <Box h="1px" w="40px" bg="gray.100" />
-                <Text fontSize="xs" fontWeight="bold" color="gray.400" letterSpacing="wider">
-                  END OF EXPLORATION
-                </Text>
-              </VStack>
-            </Center>
-          )}
-        </Box>
+        {shop.loading && currentPage > 1 && (
+          <Box py={8} textAlign="center">
+            <MotionBox
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              display="inline-block"
+              w="24px"
+              h="24px"
+              border="2px solid"
+              borderColor="purple.500"
+              borderTopColor="transparent"
+              borderRadius="full"
+            />
+          </Box>
+        )}
       </Container>
     </Box>
   );
