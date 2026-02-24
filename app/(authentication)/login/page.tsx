@@ -105,9 +105,14 @@ const LoginForm = observer(() => {
         });
         sessionStorage.clear();
 
+        const nextAction = dt?.nextAction;
+        const onboardingState = dt?.onboarding?.state;
+
         if (dt?.role === "superAdmin") {
           router.push("/super-admin/dashboard");
         } else if (dt?.role === "seller") {
+          router.push("/dashboard/shop");
+        } else if (nextAction === "complete_seller_shop" || onboardingState === "seller_pending_shop") {
           router.push("/dashboard/shop");
         } else {
           router.push("/");

@@ -10,15 +10,19 @@ const ShopPage = dynamic(() => import("./component/Form"), { ssr: false });
 const Page = observer(() => {
     const router = useRouter();
     const { user } = stores.auth;
+    const canAccessShopOnboarding =
+        user?.type === 'seller' ||
+        user?.type === 'superAdmin' ||
+        user?.onboarding?.state === 'seller_pending_shop';
 
     useEffect(() => {
-        if (user && user.type !== 'seller' && user.type !== 'superAdmin') {
+        if (user && !canAccessShopOnboarding) {
             // Basic permission check: only sellers/admins allowed on shop dashboard
             router.push('/');
         }
-    }, [user, router]);
+    }, [user, canAccessShopOnboarding, router]);
 
-    if (user && user.type !== 'seller' && user.type !== 'superAdmin') {
+    if (user && !canAccessShopOnboarding) {
         return null; // Avoid flashing content before redirect
     }
 

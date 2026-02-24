@@ -34,6 +34,7 @@ const SignUpForm = observer(() => {
   const [step, setStep] = useState<'details' | 'otp'>('details');
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState('');
+  const [onboardingIntent, setOnboardingIntent] = useState<'user' | 'seller'>('user');
 
   const [userData, setUserData] = useState({
     name: '',
@@ -59,6 +60,7 @@ const SignUpForm = observer(() => {
         name: userData.name,
         phone: userData.phone,
         email: userData.email,
+        onboardingIntent,
       });
 
       if (data?.token) {
@@ -97,7 +99,7 @@ const SignUpForm = observer(() => {
         throw new Error("Token missing. Please try registering again.");
       }
 
-      await auth.verifyRegisterOtp({
+      const verifyData = await auth.verifyRegisterOtp({
         token: token,
         otp: otp,
       });
@@ -107,7 +109,14 @@ const SignUpForm = observer(() => {
         description: 'Account verified successfully!',
         status: 'success',
       });
-      router.push('/login');
+
+      const nextAction = verifyData?.nextAction;
+      const onboardingState = verifyData?.onboarding?.state;
+      if (nextAction === 'complete_seller_shop' || onboardingState === 'seller_pending_shop') {
+        router.push('/dashboard/shop');
+      } else {
+        router.push('/login');
+      }
 
     } catch (error: any) {
       toast({
@@ -174,6 +183,27 @@ const SignUpForm = observer(() => {
                       value={userData.email}
                       onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                     />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel fontSize={"sm"}>I want to join as</FormLabel>
+                    <HStack spacing={3}>
+                      <Button
+                        variant={onboardingIntent === 'user' ? 'solid' : 'outline'}
+                        colorScheme="blue"
+                        onClick={() => setOnboardingIntent('user')}
+                        flex={1}
+                      >
+                        User
+                      </Button>
+                      <Button
+                        variant={onboardingIntent === 'seller' ? 'solid' : 'outline'}
+                        colorScheme="teal"
+                        onClick={() => setOnboardingIntent('seller')}
+                        flex={1}
+                      >
+                        Seller
+                      </Button>
+                    </HStack>
                   </FormControl>
                   <Button
                     colorScheme="blue"

@@ -43,6 +43,7 @@ import ProductCard from "./components/ProductCard";
 import ProductForm from "./components/ProductForm";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 import { useCartToast } from "../../hooks/useCartToast";
+import CompanyRequiredState from "../components/common/CompanyRequiredState";
 
 
 
@@ -105,6 +106,12 @@ const ProductsPage = observer(() => {
   const [showInactive, setShowInactive] = useState(false);
 
   const { shopStore, auth, categoryStore, offerStore } = stores;
+  const hasCompany = Boolean(auth.user?.company?._id || auth.user?.company);
+  const isSuperAdmin = auth.user?.type === "superAdmin" || auth.user?.role === "superAdmin";
+
+  if (!isSuperAdmin && !hasCompany) {
+    return <CompanyRequiredState />;
+  }
 
   const triggerDelete = (product: any) => {
     setSelectedProduct(product);
