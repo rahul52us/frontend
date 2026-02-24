@@ -57,6 +57,8 @@ interface ShopCardProps {
     isActive: boolean;
     shopStatus: string;
     categories: string[];
+    distanceMeters?: number;
+    distanceKm?: number;
   };
 }
 
@@ -67,6 +69,12 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
   const shopSlug = shop.name?.replace(/\s+/g, "-").toLowerCase();
   const cardBg = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.100", "whiteAlpha.100");
+  const distanceKm =
+    typeof shop?.distanceKm === "number"
+      ? shop.distanceKm
+      : typeof shop?.distanceMeters === "number"
+      ? Number((shop.distanceMeters / 1000).toFixed(2))
+      : null;
 
   const handleNavigate = () => {
     router.push(`/${shopSlug}`);
@@ -166,6 +174,11 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             <Text fontSize="xs" fontWeight="700">
               {(shop?.location?.city || 'Local').toUpperCase()}
             </Text>
+            {distanceKm !== null && (
+              <Text fontSize="xs" fontWeight="700" color="green.600">
+                • {distanceKm} KM
+              </Text>
+            )}
           </HStack>
         </Box>
 

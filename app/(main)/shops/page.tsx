@@ -10,6 +10,7 @@ import {
   InputLeftElement,
   Input,
   Button,
+  Select,
   useColorModeValue,
   IconButton,
   Fade,
@@ -19,11 +20,8 @@ import {
 import { SearchIcon, AddIcon, ArrowUpIcon } from '@chakra-ui/icons'
 import React, { useEffect, useState } from 'react'
 import ShopSection from '../component/shopSection/ShopSection'
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { authentication } from '../../config/utils/routes'
-
-const MotionBox = motion(Box)
 
 const ShopsPage = () => {
   const router = useRouter()
@@ -33,6 +31,21 @@ const ShopsPage = () => {
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [geoError, setGeoError] = useState('')
+  const [latitudeInput, setLatitudeInput] = useState('')
+  const [longitudeInput, setLongitudeInput] = useState('')
+  const [radiusKm, setRadiusKm] = useState(5)
+  const [sortBy, setSortBy] = useState<'distance' | 'latest'>('distance')
+  const [geoFilter, setGeoFilter] = useState<{
+    lat: number | null
+    lng: number | null
+    radiusKm: number
+  }>({
+    lat: null,
+    lng: null,
+    radiusKm: 5,
+  })
 
   const inputBg = useColorModeValue('gray.50', 'whiteAlpha.50')
   const inputBorder = useColorModeValue('gray.200', 'whiteAlpha.200')
@@ -45,7 +58,77 @@ const ShopsPage = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    setGeoFilter((prev) => ({
+      ...prev,
+      radiusKm,
+    }))
+  }, [radiusKm])
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const clearGeoFilter = () => {
+    setLatitudeInput('')
+    setLongitudeInput('')
+    setGeoError('')
+    setGeoFilter((prev) => ({
+      lat: null,
+      lng: null,
+      radiusKm: prev.radiusKm,
+    }))
+  }
+
+  const applyManualLocation = () => {
+    const lat = Number(latitudeInput)
+    const lng = Number(longitudeInput)
+    const validLat = Number.isFinite(lat) && lat >= -90 && lat <= 90
+    const validLng = Number.isFinite(lng) && lng >= -180 && lng <= 180
+
+    if (!validLat || !validLng) {
+      setGeoError('Please enter valid latitude (-90 to 90) and longitude (-180 to 180).')
+      return
+    }
+
+    setGeoError('')
+    setGeoFilter({
+      lat,
+      lng,
+      radiusKm,
+    })
+  }
+
+  const useCurrentLocation = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeoError('Geolocation is not supported on this browser.')
+      return
+    }
+
+    setGeoLoading(true)
+    setGeoError('')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = Number(position.coords.latitude.toFixed(6))
+        const lng = Number(position.coords.longitude.toFixed(6))
+        setLatitudeInput(String(lat))
+        setLongitudeInput(String(lng))
+        setGeoFilter({
+          lat,
+          lng,
+          radiusKm,
+        })
+        setGeoLoading(false)
+      },
+      (error) => {
+        setGeoLoading(false)
+        setGeoError(error.message || 'Unable to fetch current location.')
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    )
+  }
 
   const categories = ['All Shops', 'Grocery', 'Clothing', 'Electronics', 'Restaurants', 'Beauty', 'Home', 'Pharmacy']
 
@@ -95,6 +178,85 @@ const ShopsPage = () => {
               transition="all 0.3s"
             />
           </InputGroup>
+
+          <Box
+            w="full"
+            maxW="6xl"
+            p={{ base: 4, md: 5 }}
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={inputBorder}
+            bg={inputBg}
+          >
+            <VStack spacing={4} align="stretch">
+              <Stack direction={{ base: 'column', lg: 'row' }} spacing={3}>
+                <Button
+                  colorScheme="purple"
+                  onClick={useCurrentLocation}
+                  isLoading={geoLoading}
+                  loadingText="Detecting..."
+                  minW={{ lg: '180px' }}
+                >
+                  Use My Location
+                </Button>
+                <Input
+                  value={latitudeInput}
+                  onChange={(e) => setLatitudeInput(e.target.value)}
+                  placeholder="Latitude"
+                  type="number"
+                  step="any"
+                />
+                <Input
+                  value={longitudeInput}
+                  onChange={(e) => setLongitudeInput(e.target.value)}
+                  placeholder="Longitude"
+                  type="number"
+                  step="any"
+                />
+              </Stack>
+
+              <Stack direction={{ base: 'column', lg: 'row' }} spacing={3}>
+                <Select
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  maxW={{ lg: '220px' }}
+                >
+                  <option value={2}>2 km radius</option>
+                  <option value={5}>5 km radius</option>
+                  <option value={10}>10 km radius</option>
+                  <option value={20}>20 km radius</option>
+                  <option value={50}>50 km radius</option>
+                </Select>
+                <Select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'distance' | 'latest')}
+                  maxW={{ lg: '220px' }}
+                >
+                  <option value="distance">Sort by distance</option>
+                  <option value="latest">Sort by latest</option>
+                </Select>
+                <HStack spacing={3}>
+                  <Button colorScheme="purple" variant="outline" onClick={applyManualLocation}>
+                    Apply Location
+                  </Button>
+                  <Button variant="ghost" onClick={clearGeoFilter}>
+                    Clear
+                  </Button>
+                </HStack>
+              </Stack>
+
+              {geoFilter.lat !== null && geoFilter.lng !== null && (
+                <Text fontSize="sm" color="gray.500">
+                  Showing shops near ({geoFilter.lat}, {geoFilter.lng}) within {geoFilter.radiusKm} km.
+                </Text>
+              )}
+              {geoError ? (
+                <Text fontSize="sm" color="red.500">
+                  {geoError}
+                </Text>
+              ) : null}
+            </VStack>
+          </Box>
         </VStack>
 
         {/* Category Pill Navigation */}
@@ -135,7 +297,12 @@ const ShopsPage = () => {
         </Box>
 
         {/* Shops Section Content */}
-        <ShopSection searchQuery={searchQuery} activeCategory={activeCategory} />
+        <ShopSection
+          searchQuery={searchQuery}
+          activeCategory={activeCategory}
+          geoFilter={geoFilter}
+          sortBy={sortBy}
+        />
 
         {/* Premium Call to Action */}
         <Box

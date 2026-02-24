@@ -17,12 +17,26 @@ const MotionBox = motion(Box);
 
 const tablePageLimit = 8;
 
+interface GeoFilter {
+  lat: number | null;
+  lng: number | null;
+  radiusKm: number;
+}
+
 interface ShopSectionProps {
   searchQuery?: string;
   activeCategory?: string | null;
+  geoFilter?: GeoFilter;
+  sortBy?: "distance" | "latest";
 }
 
-const ShopSection = observer(({ searchQuery = "", activeCategory = null }: ShopSectionProps) => {
+const ShopSection = observer(
+  ({
+    searchQuery = "",
+    activeCategory = null,
+    geoFilter = { lat: null, lng: null, radiusKm: 5 },
+    sortBy = "distance",
+  }: ShopSectionProps) => {
   const {
     shopStore: { getAllShops, shop },
     auth: { openNotification },
@@ -36,12 +50,38 @@ const ShopSection = observer(({ searchQuery = "", activeCategory = null }: ShopS
     async ({
       page = 1,
       limit = tablePageLimit,
-      search = "",
-      category = null,
-      append = false,
-    }: { page?: number, limit?: number, search?: string, category?: string | null, append?: boolean }) => {
+      name = "",
+      categories = null,
+      lat = null,
+      lng = null,
+      radiusKm = 5,
+      sortBy = "distance",
+    }: {
+      page?: number;
+      limit?: number;
+      name?: string;
+      categories?: string | null;
+      lat?: number | null;
+      lng?: number | null;
+      radiusKm?: number;
+      sortBy?: "distance" | "latest";
+    }) => {
       try {
-        await getAllShops({ page, limit, search, category: category === 'All Shops' ? null : category, append });
+        const payload: any = {
+          page,
+          limit,
+          name: name?.trim() || "",
+          categories: categories === "All Shops" ? null : categories,
+          sortBy,
+        };
+
+        if (lat !== null && lng !== null) {
+          payload.lat = lat;
+          payload.lng = lng;
+          payload.radiusKm = radiusKm;
+        }
+
+        await getAllShops(payload);
       } catch (err: any) {
         openNotification({
           title: "Failed to get Shops",
@@ -58,11 +98,14 @@ const ShopSection = observer(({ searchQuery = "", activeCategory = null }: ShopS
     applyGetAllShops({
       page: 1,
       limit: tablePageLimit,
-      search: debouncedSearchQuery,
-      category: activeCategory,
-      append: false,
+      name: debouncedSearchQuery,
+      categories: activeCategory,
+      lat: geoFilter.lat,
+      lng: geoFilter.lng,
+      radiusKm: geoFilter.radiusKm,
+      sortBy,
     });
-  }, [debouncedSearchQuery, activeCategory, applyGetAllShops]);
+  }, [debouncedSearchQuery, activeCategory, geoFilter, sortBy, applyGetAllShops]);
 
   const handleLoadMore = useCallback(() => {
     const nextPage = currentPage + 1;
@@ -71,11 +114,22 @@ const ShopSection = observer(({ searchQuery = "", activeCategory = null }: ShopS
     setCurrentPage(nextPage);
     applyGetAllShops({
       page: nextPage,
-      search: debouncedSearchQuery,
-      category: activeCategory,
-      append: true,
+      name: debouncedSearchQuery,
+      categories: activeCategory,
+      lat: geoFilter.lat,
+      lng: geoFilter.lng,
+      radiusKm: geoFilter.radiusKm,
+      sortBy,
     });
-  }, [currentPage, shop.totalPages, applyGetAllShops, debouncedSearchQuery, activeCategory]);
+  }, [
+    currentPage,
+    shop.totalPages,
+    applyGetAllShops,
+    debouncedSearchQuery,
+    activeCategory,
+    geoFilter,
+    sortBy,
+  ]);
 
   useEffect(() => {
     const currentLoadMoreRef = loadMoreRef.current;
