@@ -18,7 +18,7 @@ import {
   VStack
 } from '@chakra-ui/react'
 import { SearchIcon, AddIcon, ArrowUpIcon } from '@chakra-ui/icons'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import ShopSection from '../component/shopSection/ShopSection'
 import { useRouter } from 'next/navigation'
 import { authentication } from '../../config/utils/routes'
@@ -33,8 +33,6 @@ const ShopsPage = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [geoError, setGeoError] = useState('')
-  const [latitudeInput, setLatitudeInput] = useState('')
-  const [longitudeInput, setLongitudeInput] = useState('')
   const [radiusKm, setRadiusKm] = useState(5)
   const [sortBy, setSortBy] = useState<'distance' | 'latest'>('distance')
   const [geoFilter, setGeoFilter] = useState<{
@@ -67,8 +65,6 @@ const ShopsPage = () => {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   const clearGeoFilter = () => {
-    setLatitudeInput('')
-    setLongitudeInput('')
     setGeoError('')
     setGeoFilter((prev) => ({
       lat: null,
@@ -77,26 +73,7 @@ const ShopsPage = () => {
     }))
   }
 
-  const applyManualLocation = () => {
-    const lat = Number(latitudeInput)
-    const lng = Number(longitudeInput)
-    const validLat = Number.isFinite(lat) && lat >= -90 && lat <= 90
-    const validLng = Number.isFinite(lng) && lng >= -180 && lng <= 180
-
-    if (!validLat || !validLng) {
-      setGeoError('Please enter valid latitude (-90 to 90) and longitude (-180 to 180).')
-      return
-    }
-
-    setGeoError('')
-    setGeoFilter({
-      lat,
-      lng,
-      radiusKm,
-    })
-  }
-
-  const useCurrentLocation = () => {
+  const useCurrentLocation = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setGeoError('Geolocation is not supported on this browser.')
       return
@@ -109,13 +86,11 @@ const ShopsPage = () => {
       (position) => {
         const lat = Number(position.coords.latitude.toFixed(6))
         const lng = Number(position.coords.longitude.toFixed(6))
-        setLatitudeInput(String(lat))
-        setLongitudeInput(String(lng))
-        setGeoFilter({
+        setGeoFilter((prev) => ({
           lat,
           lng,
-          radiusKm,
-        })
+          radiusKm: prev.radiusKm,
+        }))
         setGeoLoading(false)
       },
       (error) => {
@@ -128,7 +103,11 @@ const ShopsPage = () => {
         maximumAge: 0,
       }
     )
-  }
+  }, [])
+
+  useEffect(() => {
+    useCurrentLocation()
+  }, [useCurrentLocation])
 
   const categories = ['All Shops', 'Grocery', 'Clothing', 'Electronics', 'Restaurants', 'Beauty', 'Home', 'Pharmacy']
 
@@ -197,22 +176,11 @@ const ShopsPage = () => {
                   loadingText="Detecting..."
                   minW={{ lg: '180px' }}
                 >
-                  Use My Location
+                  Use Current Location
                 </Button>
-                <Input
-                  value={latitudeInput}
-                  onChange={(e) => setLatitudeInput(e.target.value)}
-                  placeholder="Latitude"
-                  type="number"
-                  step="any"
-                />
-                <Input
-                  value={longitudeInput}
-                  onChange={(e) => setLongitudeInput(e.target.value)}
-                  placeholder="Longitude"
-                  type="number"
-                  step="any"
-                />
+                <Text fontSize="sm" color="gray.500" alignSelf="center">
+                  We will ask browser permission and use your current coordinates.
+                </Text>
               </Stack>
 
               <Stack direction={{ base: 'column', lg: 'row' }} spacing={3}>
@@ -236,8 +204,8 @@ const ShopsPage = () => {
                   <option value="latest">Sort by latest</option>
                 </Select>
                 <HStack spacing={3}>
-                  <Button colorScheme="purple" variant="outline" onClick={applyManualLocation}>
-                    Apply Location
+                  <Button colorScheme="purple" variant="outline" onClick={useCurrentLocation}>
+                    Refresh Location
                   </Button>
                   <Button variant="ghost" onClick={clearGeoFilter}>
                     Clear
