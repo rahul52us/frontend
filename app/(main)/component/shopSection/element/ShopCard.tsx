@@ -16,6 +16,7 @@ import { FaMapMarkerAlt, FaPhoneAlt, FaExternalLinkAlt } from "react-icons/fa";
 
 interface ShopCardProps {
   shop: {
+    _id?: string;
     name: string;
     description: string;
     location: {
@@ -77,6 +78,10 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
       : null;
 
   const handleNavigate = () => {
+    if (shop?._id) {
+      router.push(`/shop/${shop._id}/${shopSlug}`);
+      return;
+    }
     router.push(`/${shopSlug}`);
   };
 

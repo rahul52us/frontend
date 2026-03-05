@@ -14,7 +14,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const params = useParams();
-  const isShopPage = !!params?.shopTitle;
+  const isShopPage = !!params?.shopTitle || !!params?.shopId;
 
   return (
     <Box>

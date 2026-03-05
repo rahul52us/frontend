@@ -64,6 +64,16 @@ class ShopStore {
     }
   };
 
+  getSingleShopById = async (id: string) => {
+    try {
+      const response = await axios.get(`/company/id/${id}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+    }
+  };
+
   getAllShopProducts = async (forceRefresh: boolean = false) => {
     if (!forceRefresh && this.allShopProductsCache) {
       return this.allShopProductsCache;
