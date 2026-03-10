@@ -74,15 +74,15 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
     typeof shop?.distanceKm === "number"
       ? shop.distanceKm
       : typeof shop?.distanceMeters === "number"
-      ? Number((shop.distanceMeters / 1000).toFixed(2))
-      : null;
+        ? Number((shop.distanceMeters / 1000).toFixed(2))
+        : null;
 
   const handleNavigate = () => {
     if (shop?._id) {
-      router.push(`/shop/${shop._id}/${shopSlug}`);
+      router.push(`/shop?id=${shop._id}&slug=${shopSlug}`);
       return;
     }
-    router.push(`/${shopSlug}`);
+    router.push(`/shop-details?title=${shopSlug}`);
   };
 
   return (

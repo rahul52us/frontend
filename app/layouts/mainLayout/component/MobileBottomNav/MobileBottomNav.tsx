@@ -3,6 +3,7 @@
 import { Box, Flex, Icon, Text, useColorModeValue } from '@chakra-ui/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { FiHome, FiGrid, FiShoppingBag, FiShoppingCart, FiUser } from 'react-icons/fi';
+import stores from '../../../../store/stores';
 
 const MobileBottomNav = () => {
     const router = useRouter();
@@ -47,7 +48,13 @@ const MobileBottomNav = () => {
                             flex="1"
                             h="100%"
                             cursor="pointer"
-                            onClick={() => router.push(item.path)}
+                            onClick={() => {
+                                if (item.path === '/cart') {
+                                    stores.cartStore.openCart();
+                                } else {
+                                    router.push(item.path);
+                                }
+                            }}
                             color={isActive ? activeColor : inactiveColor}
                             transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
                             position="relative"

@@ -54,7 +54,7 @@ const ProductCard = ({ product }: any) => {
   };
 
   const navigateToProduct = () => {
-    router.push(`/product/${productId || _id}`);
+    router.push(`/product?productId=${productId || _id}`);
   };
 
   const categoryName = typeof category === "object" ? category?.name : category || "COLLECTION";

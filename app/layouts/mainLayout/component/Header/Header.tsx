@@ -56,11 +56,9 @@ const Header = observer(() => {
   }, [isMounted, user, cartStore]);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isCartOpen,
-    onOpen: onCartOpen,
-    onClose: onCartClose,
-  } = useDisclosure();
+  const isCartOpen = cartStore.isCartOpen;
+  const onCartOpen = cartStore.openCart;
+  const onCartClose = cartStore.closeCart;
   const {
     isOpen: isWishlistOpen,
     onOpen: onWishlistOpen,

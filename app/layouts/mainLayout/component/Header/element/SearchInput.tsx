@@ -148,7 +148,7 @@ const SearchInput = observer(() => {
       saveSearch(item.name);
       setShowDropdown(false);
       if (inputRef.current) inputRef.current.blur();
-      router.push(`/product/${item.productId || item._id}`);
+      router.push(`/product?productId=${item.productId || item._id}`);
     }
   };
 

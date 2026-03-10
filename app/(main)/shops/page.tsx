@@ -105,9 +105,8 @@ const ShopsPage = () => {
     )
   }, [])
 
-  useEffect(() => {
-    useCurrentLocation()
-  }, [useCurrentLocation])
+  // Removed automatic useCurrentLocation on mount to prevent "User denied geolocation" errors on Android/iOS when permissions are not yet granted.
+  // Users must explicitly click "Use Current Location".
 
   const categories = ['All Shops', 'Grocery', 'Clothing', 'Electronics', 'Restaurants', 'Beauty', 'Home', 'Pharmacy']
 

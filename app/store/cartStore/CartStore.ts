@@ -13,12 +13,21 @@ class CartStore {
     loading: boolean = false;
     error: string | null = null;
     localStorageKey = "guest_cart";
+    isCartOpen: boolean = false;
 
     constructor() {
         makeAutoObservable(this);
         // Cart will be fetched explicitly when needed (Header, Cart page, Checkout)
         // Removed auto-fetch to prevent unnecessary API calls on every page load
     }
+
+    openCart = () => {
+        this.isCartOpen = true;
+    };
+
+    closeCart = () => {
+        this.isCartOpen = false;
+    };
 
     get isLoggedIn() {
         if (typeof window !== "undefined") {

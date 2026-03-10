@@ -19,7 +19,7 @@ const CategoryFilter = observer(() => {
 
   const handleCategoryClick = (category: any) => {
     setActiveCategory(category._id);
-    router.push(`/categories/${category.slug || category.name.toLowerCase()}`);
+    router.push(`/categories?slug=${category.slug || category.name.toLowerCase()}`);
   };
 
   const bgColor = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(26, 32, 44, 0.8)');
