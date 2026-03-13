@@ -5,9 +5,9 @@ import { AUTH_TOKEN, BACKEND_URL, USER_SESSION_DATA } from "../../config/utils/v
 import stores from "../stores";
 
 interface Notification {
-  title?: any;
+  title?: string;
   message: string;
-  type?: any;
+  type?: "success" | "error" | "info" | "warning";
   placement?: string;
   action?: any;
   duration?: number;
@@ -93,22 +93,63 @@ class AuthStore {
   };
 
   openNotification = (data: {
-    title: any;
+    title?: string;
     message: string;
-    type?: string;
+    type?: "success" | "error" | "info" | "warning";
     placement?: string;
     action?: any;
     duration?: number;
     image?: string;
   }) => {
+    const type = data.type || "success";
+    const defaultTitleMap: Record<string, string> = {
+      success: "Success",
+      error: "Error",
+      info: "Info",
+      warning: "Warning",
+    };
+
     this.notification = {
-      title: data.title,
+      title: data.title || defaultTitleMap[type] || "Notification",
       message: data.message,
-      type: data.type ? data.type : "success",
+      type,
       placement: data.placement ? data.placement : "bottom",
       action: data.action ? data.action : null,
+      duration: data.duration,
       image: data.image,
     };
+  };
+
+  notifySuccess = (message: string, options: Partial<Notification> = {}) => {
+    this.openNotification({
+      ...options,
+      message,
+      type: "success",
+    });
+  };
+
+  notifyError = (message: string, options: Partial<Notification> = {}) => {
+    this.openNotification({
+      ...options,
+      message,
+      type: "error",
+    });
+  };
+
+  notifyInfo = (message: string, options: Partial<Notification> = {}) => {
+    this.openNotification({
+      ...options,
+      message,
+      type: "info",
+    });
+  };
+
+  notifyWarning = (message: string, options: Partial<Notification> = {}) => {
+    this.openNotification({
+      ...options,
+      message,
+      type: "warning",
+    });
   };
 
   closeNotication = () => {

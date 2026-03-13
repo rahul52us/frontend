@@ -1,14 +1,25 @@
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import { useToast, ToastPosition, Box, Text, Image as ChakraImage } from "@chakra-ui/react";
-import { FiCheckCircle, FiAlertCircle, FiInfo } from "react-icons/fi";
+import { FiAlertCircle, FiAlertTriangle, FiCheckCircle, FiInfo } from "react-icons/fi";
 import stores from "../../../store/stores";
 
 const Notification = observer(() => {
   const {
-    auth: { notification, closeNotication },
+    auth: { notification, closeNotication, user },
+    notificationStore,
   } = stores;
   const toast = useToast();
+
+  useEffect(() => {
+    const userId = user?._id || user?.id;
+    if (userId) {
+      notificationStore.init(userId);
+      return;
+    }
+
+    notificationStore.dispose();
+  }, [user?._id, user?.id, notificationStore]);
 
   useEffect(() => {
     if (notification) {
@@ -83,6 +94,8 @@ const Notification = observer(() => {
         return <FiAlertCircle size={24} color="white" />;
       case "info":
         return <FiInfo size={24} color="white" />;
+      case "warning":
+        return <FiAlertTriangle size={24} color="white" />;
       default:
         return null;
     }
@@ -96,6 +109,8 @@ const Notification = observer(() => {
         return "red.500";
       case "info":
         return "blue.500";
+      case "warning":
+        return "orange.500";
       default:
         return "gray.500";
     }

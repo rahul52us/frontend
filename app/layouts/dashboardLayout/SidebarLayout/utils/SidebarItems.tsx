@@ -4,6 +4,7 @@ import {
   FaBox,
   FaTag,
   FaUsers,
+  FaBell,
 } from "react-icons/fa";
 
 interface SidebarItem {
@@ -56,6 +57,13 @@ const sidebarDatas: SidebarItem[] = [
     name: "Offers",
     icon: <FaTag />,
     url: "/dashboard/super-admin/offers",
+    role: ["superAdmin"],
+  },
+  {
+    id: 106,
+    name: "Notifications",
+    icon: <FaBell />,
+    url: "/dashboard/super-admin/notifications",
     role: ["superAdmin"],
   },
   {

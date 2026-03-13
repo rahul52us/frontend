@@ -9,6 +9,7 @@ import HeaderThemeSwitch from "./HeaderThemeSwitch/HeaderThemeSwitch";
 // import HeaderChatMessage from "./HeaderChatMessage/HeaderChatMessage";
 // import CartContainer from "./CartContainer/CartContainer";
 import stores from "../../../../../store/stores";
+import NotificationBell from "../../../../../layouts/mainLayout/component/Header/Notification/NotificationBell";
 
 const HeaderNavbar = observer(() => {
   const {
@@ -21,12 +22,14 @@ const HeaderNavbar = observer(() => {
       display="flex"
       justifyContent="space-around"
       alignItems="center"
-      width={isLargerThan1020 ? "8%" : "10%"}
+      width={isLargerThan1020 ? "auto" : "10%"}
+      gap={2}
     >
       {isLargerThan1020 ? (
         <>
           {/* <HeaderLanguageSwitch /> */}
           <HeaderThemeSwitch />
+          <NotificationBell />
           {/* <HeaderChatMessage />
           <HeaderNotification />
           <CartContainer /> */}

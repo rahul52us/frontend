@@ -236,7 +236,7 @@ const Header = observer(() => {
             <NavItemsLayout />
 
             {/* ✅ Notification (ONLY when logged in) */}
-            {isMounted && user && <NotificationBell count={2} />}
+            {isMounted && user && <NotificationBell />}
 
             {/* Cart */}
             <Box

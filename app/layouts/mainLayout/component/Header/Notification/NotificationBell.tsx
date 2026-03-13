@@ -3,12 +3,17 @@
 import { Box, IconButton, Badge } from "@chakra-ui/react";
 import { FiBell } from "react-icons/fi";
 import NotificationPopover from "./NotificationPopover";
+import { observer } from "mobx-react-lite";
+import stores from "../../../../../store/stores";
 
 interface NotificationBellProps {
   count?: number;
 }
 
-const NotificationBell = ({ count = 0 }: NotificationBellProps) => {
+const NotificationBell = ({ count }: NotificationBellProps) => {
+  const unreadCount = stores.notificationStore.unreadCount;
+  const badgeCount = typeof count === "number" ? count : unreadCount;
+
   return (
     <NotificationPopover>
       <Box
@@ -26,7 +31,7 @@ const NotificationBell = ({ count = 0 }: NotificationBellProps) => {
           color="blue.600"              // ✅ SAME color
         />
 
-        {count > 0 && (
+        {badgeCount > 0 && (
           <Badge
             position="absolute"
             top="-2px"
@@ -37,7 +42,7 @@ const NotificationBell = ({ count = 0 }: NotificationBellProps) => {
             fontSize="0.7em"             // ✅ SAME scale as cart badge
             px={2}
           >
-            {count}
+            {badgeCount}
           </Badge>
         )}
       </Box>
@@ -45,4 +50,4 @@ const NotificationBell = ({ count = 0 }: NotificationBellProps) => {
   );
 };
 
-export default NotificationBell;
+export default observer(NotificationBell);

@@ -13,6 +13,7 @@ import { shopStore } from "./shopStore/shopStore";
 import categoryStore from "./categoryStore/categoryStore";
 import offerStore from "./offerStore/offerStore";
 import buyerStore from "./buyerStore/buyerStore";
+import notificationStore from "./notificationStore/notificationStore";
 
 const stores = {
   auth: authStore,
@@ -28,7 +29,8 @@ const stores = {
   cartStore: cartStore,
   categoryStore: categoryStore,
   offerStore: offerStore,
-  buyerStore: buyerStore
+  buyerStore: buyerStore,
+  notificationStore: notificationStore,
 };
 
 export default stores;
