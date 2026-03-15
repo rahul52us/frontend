@@ -4,8 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Checkbox,
-  CheckboxGroup,
+  Badge,
   FormControl,
   FormHelperText,
   FormLabel,
@@ -24,12 +23,20 @@ import { notifyError, notifySuccess } from "../../../config/utils/notification";
 
 const roleOptions = ["user", "seller", "admin", "superAdmin"];
 
+type RecipientOption = {
+  recipientId: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  type?: string;
+};
+
 const NotificationComposerPage = () => {
   const [targetMode, setTargetMode] = useState<"user" | "role" | "broadcast">("broadcast");
   const [roles, setRoles] = useState<string[]>([]);
 
   const [recipientSearch, setRecipientSearch] = useState("");
-  const [recipientOptions, setRecipientOptions] = useState<any[]>([]);
+  const [recipientOptions, setRecipientOptions] = useState<RecipientOption[]>([]);
   const [recipientLoading, setRecipientLoading] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [manualUserIdsInput, setManualUserIdsInput] = useState("");
@@ -45,6 +52,19 @@ const NotificationComposerPage = () => {
   const [expiresAt, setExpiresAt] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+  const recipientPickerVersion = "Recipient Picker v4";
+
+  const toggleArrayValue = (current: string[], value: string, checked: boolean) => {
+    if (!value) {
+      return current;
+    }
+
+    if (checked) {
+      return Array.from(new Set([...current, value]));
+    }
+
+    return current.filter((item) => item !== value);
+  };
 
   const parsedManualUserIds = useMemo(() => {
     return manualUserIdsInput
@@ -77,7 +97,31 @@ const NotificationComposerPage = () => {
         });
 
         if (!isCancelled) {
-          setRecipientOptions(Array.isArray(data?.data?.items) ? data.data.items : []);
+          const rawItems = Array.isArray(data?.data?.items) ? data.data.items : [];
+          const normalized = rawItems
+            .map((item: any) => {
+              const rawId = item?._id ?? item?.id ?? item?.userId ?? item?.recipientUserId;
+              const recipientId =
+                typeof rawId === "string"
+                  ? rawId
+                  : rawId && typeof rawId?.toString === "function"
+                  ? rawId.toString()
+                  : "";
+
+              return {
+                recipientId: recipientId.trim(),
+                name: item?.name,
+                phone: item?.phone,
+                email: item?.email,
+                type: item?.type,
+              } satisfies RecipientOption;
+            })
+            .filter((item: RecipientOption) => Boolean(item.recipientId));
+
+          const dedupedById = Array.from(
+            new Map<string, RecipientOption>(normalized.map((item) => [item.recipientId, item])).values()
+          );
+          setRecipientOptions(dedupedById);
         }
       } catch {
         if (!isCancelled) {
@@ -153,7 +197,8 @@ const NotificationComposerPage = () => {
     setSubmitting(true);
     try {
       const { data } = await axios.post("/notifications/send", payload);
-      notifySuccess(data?.message || "Notification dispatched successfully.", {
+      const sentCount = Number(data?.data?.insertedCount || 0);
+      notifySuccess(`${data?.message || "Notification sent successfully."} Recipients: ${sentCount}.`, {
         title: "Notification sent",
         duration: 3000,
       });
@@ -169,7 +214,9 @@ const NotificationComposerPage = () => {
         setManualUserIdsInput("");
       }
     } catch (error: any) {
-      notifyError(error?.response?.data?.message || "Failed to send notification.", {
+      const backendData = error?.response?.data?.data;
+      const validationMessage = Array.isArray(backendData) ? backendData.join(", ") : undefined;
+      notifyError(validationMessage || error?.response?.data?.message || "Failed to send notification.", {
         title: "Failed to send",
         duration: 3000,
       });
@@ -211,6 +258,9 @@ const NotificationComposerPage = () => {
 
               <FormControl>
                 <FormLabel>Select Recipients</FormLabel>
+                <Text fontSize="xs" color="gray.500" mb={2}>
+                  {recipientPickerVersion}
+                </Text>
                 <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={3} maxH="220px" overflowY="auto">
                   {recipientLoading ? (
                     <HStack py={4} justify="center">
@@ -224,17 +274,36 @@ const NotificationComposerPage = () => {
                       No recipients found.
                     </Text>
                   ) : (
-                    <CheckboxGroup value={selectedUserIds} onChange={(value) => setSelectedUserIds(value as string[])}>
-                      <VStack align="start" spacing={2}>
-                        {recipientOptions.map((item) => (
-                          <Checkbox key={item._id} value={item._id}>
-                            <Text fontSize="sm">
-                              {item.name || "Unnamed"} ({item.type}) - {item.phone}
-                            </Text>
-                          </Checkbox>
-                        ))}
-                      </VStack>
-                    </CheckboxGroup>
+                    <VStack align="stretch" spacing={2}>
+                      {recipientOptions.map((item, index) => {
+                        const isSelected = selectedUserIds.includes(item.recipientId);
+                        return (
+                          <Box
+                            key={`${item.recipientId}-${index}`}
+                            border="1px solid"
+                            borderColor={isSelected ? "blue.400" : "gray.200"}
+                            bg={isSelected ? "blue.50" : "white"}
+                            borderRadius="md"
+                            px={3}
+                            py={2}
+                            cursor="pointer"
+                            width="100%"
+                            onClick={() =>
+                              setSelectedUserIds((prev) =>
+                                toggleArrayValue(prev, item.recipientId, !prev.includes(item.recipientId))
+                              )
+                            }
+                          >
+                            <HStack justify="space-between" align="center">
+                              <Text fontSize="sm" textAlign="left" noOfLines={1}>
+                                {item.name || "Unnamed"} ({item.type || "user"}) - {item.phone || item.email || "N/A"}
+                              </Text>
+                              {isSelected ? <Badge colorScheme="blue">Selected</Badge> : <Badge>Pick</Badge>}
+                            </HStack>
+                          </Box>
+                        );
+                      })}
+                    </VStack>
                   )}
                 </Box>
               </FormControl>
@@ -248,6 +317,9 @@ const NotificationComposerPage = () => {
                   rows={2}
                 />
                 <FormHelperText>{resolvedUserIds.length} recipient(s) selected.</FormHelperText>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Selected IDs: {selectedUserIds.join(", ") || "none"}
+                </Text>
               </FormControl>
             </>
           )}
@@ -255,15 +327,26 @@ const NotificationComposerPage = () => {
           {targetMode === "role" && (
             <FormControl isRequired>
               <FormLabel>Roles</FormLabel>
-              <CheckboxGroup value={roles} onChange={(value) => setRoles(value as string[])}>
-                <HStack spacing={4} align="start" flexWrap="wrap">
-                  {roleOptions.map((role) => (
-                    <Checkbox key={role} value={role} textTransform="capitalize">
-                      {role}
-                    </Checkbox>
-                  ))}
-                </HStack>
-              </CheckboxGroup>
+              <HStack spacing={3} align="start" flexWrap="wrap">
+                {roleOptions.map((role) => (
+                  <Box
+                    key={role}
+                    border="1px solid"
+                    borderColor={roles.includes(role) ? "blue.400" : "gray.200"}
+                    bg={roles.includes(role) ? "blue.50" : "white"}
+                    borderRadius="md"
+                    px={3}
+                    py={2}
+                    cursor="pointer"
+                    onClick={() => setRoles((prev) => toggleArrayValue(prev, role, !prev.includes(role)))}
+                  >
+                    <HStack spacing={2}>
+                      {roles.includes(role) ? <Badge colorScheme="blue">Selected</Badge> : <Badge>Pick</Badge>}
+                      <Text textTransform="capitalize">{role}</Text>
+                    </HStack>
+                  </Box>
+                ))}
+              </HStack>
             </FormControl>
           )}
 
