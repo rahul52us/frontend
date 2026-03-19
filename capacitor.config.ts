@@ -9,6 +9,13 @@ const config: CapacitorConfig = {
     allowNavigation: ['bussinesssahayata-backend.vercel.app', '10.0.2.2'],
     cleartext: true,
   },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+      style: 'DARK',
+      backgroundColor: '#ffffff',
+    },
+  },
 };
 
 export default config;

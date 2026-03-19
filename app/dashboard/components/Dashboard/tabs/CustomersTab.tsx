@@ -23,10 +23,18 @@ import {
   ModalOverlay,
   Select,
   SimpleGrid,
+  Stack,
   Stat,
   StatLabel,
   StatNumber,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Textarea,
   Text,
+  useBreakpointValue,
   useDisclosure,
   useToast,
   VStack,
@@ -104,6 +112,54 @@ type LedgerSummary = {
   isBlocked: boolean;
 };
 
+type BuyerImportContact = {
+  fullName?: string;
+  phone?: string;
+  email?: string;
+};
+
+const isValidImportEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email);
+const isValidImportPhone = (phone: string) => /^[0-9+\-\s()]{7,20}$/.test(phone);
+
+const getReadableErrorMessage = (error: any, fallback = "Please try again.") => {
+  if (!error) {
+    return fallback;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error?.data) && error.data.length > 0) {
+    return String(error.data[0]);
+  }
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  if (typeof error?.response?.data === "string" && error.response.data.trim()) {
+    return error.response.data;
+  }
+
+  if (typeof error?.response?.data?.message === "string" && error.response.data.message.trim()) {
+    return error.response.data.message;
+  }
+
+  return fallback;
+};
+
+const isMissingImportEndpointError = (error: any) => {
+  const text = getReadableErrorMessage(error, "").toLowerCase();
+  return (
+    text.includes("cannot post /api/buyer/import-contacts") ||
+    text.includes("cannot post /buyer/import-contacts") ||
+    text.includes("not found") ||
+    error?.statusCode === 404 ||
+    error?.response?.status === 404
+  );
+};
+
 const defaultLedgerSummary: LedgerSummary = {
   totalDebit: 0,
   totalCredit: 0,
@@ -143,6 +199,11 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onSaleRecordOpen,
     onClose: onSaleRecordClose,
   } = useDisclosure();
+  const {
+    isOpen: isImportOpen,
+    onOpen: onImportOpen,
+    onClose: onImportClose,
+  } = useDisclosure();
   const { auth, buyerStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
@@ -159,6 +220,7 @@ const CustomersTab: React.FC = observer(() => {
   const [submitting, setSubmitting] = useState(false);
   const [ledgerSubmitting, setLedgerSubmitting] = useState(false);
   const [saleSubmitting, setSaleSubmitting] = useState(false);
+  const [isImportingContacts, setIsImportingContacts] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
   const [postingSaleId, setPostingSaleId] = useState("");
@@ -176,6 +238,7 @@ const CustomersTab: React.FC = observer(() => {
   const [salePage, setSalePage] = useState(1);
   const [saleTotalPages, setSaleTotalPages] = useState(1);
   const [saleTotal, setSaleTotal] = useState(0);
+  const [ledgerTabIndex, setLedgerTabIndex] = useState(0);
 
   const limit = 10;
   const ledgerLimit = 10;
@@ -204,14 +267,24 @@ const CustomersTab: React.FC = observer(() => {
     postToLedger: true,
     items: [defaultSaleFormItem()],
   });
+  const [importDefaultTags, setImportDefaultTags] = useState("");
+  const [pasteContactsInput, setPasteContactsInput] = useState("");
 
   const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
+  const isMobileLedgerView = useBreakpointValue({ base: true, md: false }) ?? false;
+  const isAndroidRuntime = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const platform = (window as any)?.Capacitor?.getPlatform?.();
+    return platform === "android";
+  }, []);
+  const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime;
 
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
     return buyer.displayName || buyer.buyerId?.fullName || "-";
   };
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
+  const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
 
   const fetchBuyers = async (pageToLoad = 1, query = search) => {
     if (!companyId) {
@@ -329,6 +402,7 @@ const CustomersTab: React.FC = observer(() => {
     setSelectedLedgerBuyer(buyer);
     setLedgerPage(1);
     setSalePage(1);
+    setLedgerTabIndex(0);
     await Promise.all([fetchLedgerEntries(buyer._id, 1), fetchSaleRecords(buyer._id, 1)]);
   };
 
@@ -343,6 +417,7 @@ const CustomersTab: React.FC = observer(() => {
     setSalePage(1);
     setSaleTotalPages(1);
     setSaleTotal(0);
+    setLedgerTabIndex(0);
     resetSaleForm();
   };
 
@@ -382,9 +457,318 @@ const CustomersTab: React.FC = observer(() => {
     });
   };
 
+  const closeImportModal = () => {
+    onImportClose();
+    setImportDefaultTags("");
+    setPasteContactsInput("");
+  };
+
   const closeSaleRecordModal = () => {
     onSaleRecordClose();
     resetSaleForm();
+  };
+
+  const parseContactRowsFromText = (raw: string): BuyerImportContact[] => {
+    const lines = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+
+    return lines
+      .map((line) => {
+        const parts = line
+          .split(/[,\t|;]/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+
+        let fullName = "";
+        let phone = "";
+        let email = "";
+
+        parts.forEach((part, idx) => {
+          if (!email && emailRegex.test(part)) {
+            email = part.toLowerCase();
+            return;
+          }
+
+          if (!phone && part.replace(/\D/g, "").length >= 7) {
+            phone = part;
+            return;
+          }
+
+          if (!fullName && idx === 0) {
+            fullName = part;
+          }
+        });
+
+        return {
+          fullName: fullName || undefined,
+          phone: phone || undefined,
+          email: email || undefined,
+        };
+      })
+      .filter((item) => item.phone || item.email);
+  };
+
+  const normalizeImportContacts = (contacts: BuyerImportContact[]): BuyerImportContact[] => {
+    const unique = new Map<string, BuyerImportContact>();
+
+    contacts.forEach((contact) => {
+      const fullNameRaw = String(contact.fullName || "").trim();
+      const phoneRaw = String(contact.phone || "").trim();
+      const emailRaw = String(contact.email || "")
+        .trim()
+        .toLowerCase();
+
+      const fullName = fullNameRaw ? fullNameRaw.slice(0, 120) : undefined;
+      const phone = phoneRaw && isValidImportPhone(phoneRaw) ? phoneRaw : undefined;
+      const email = emailRaw && isValidImportEmail(emailRaw) ? emailRaw : undefined;
+
+      if (!phone && !email) {
+        return;
+      }
+
+      const key = `${phone || ""}|${email || ""}`;
+      if (!unique.has(key)) {
+        unique.set(key, { fullName, phone, email });
+      }
+    });
+
+    return Array.from(unique.values());
+  };
+
+  const submitImportedContacts = async (contacts: BuyerImportContact[]) => {
+    if (!companyId) {
+      toast({
+        title: "Company not found",
+        description: "Please create/select your shop first.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const normalizedContacts = normalizeImportContacts(contacts);
+    if (!normalizedContacts.length) {
+      toast({
+        title: "No valid contacts",
+        description: "At least one contact must contain phone or email.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const defaultTags = importDefaultTags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+    const batchSize = 200;
+    const batches: BuyerImportContact[][] = [];
+    for (let index = 0; index < normalizedContacts.length; index += batchSize) {
+      batches.push(normalizedContacts.slice(index, index + batchSize));
+    }
+
+    setIsImportingContacts(true);
+    try {
+      const importViaUpsertFallback = async () => {
+        const fallbackSummary = {
+          totalReceived: normalizedContacts.length,
+          processed: 0,
+          created: 0,
+          updated: 0,
+          skipped: 0,
+          failed: 0,
+        };
+
+        for (const contact of normalizedContacts) {
+          try {
+            await buyerStore.upsertBuyer({
+              companyId,
+              fullName: contact.fullName || undefined,
+              phone: contact.phone || undefined,
+              email: contact.email || undefined,
+              tags: defaultTags.length ? defaultTags : undefined,
+              source: "import",
+            });
+            fallbackSummary.processed += 1;
+            fallbackSummary.updated += 1;
+          } catch (_upsertError: any) {
+            fallbackSummary.failed += 1;
+          }
+        }
+
+        return fallbackSummary;
+      };
+
+      const combinedSummary = {
+        totalReceived: 0,
+        processed: 0,
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        failed: 0,
+      };
+      let lastBatchError: any = null;
+      let usedUpsertFallback = false;
+
+      for (const batch of batches) {
+        try {
+          const response = await buyerStore.importBuyerContacts({
+            companyId,
+            contacts: batch,
+            defaultTags: defaultTags.length ? defaultTags : undefined,
+          });
+
+          const summary = response?.data?.summary || {};
+          combinedSummary.totalReceived += Number(summary.totalReceived || batch.length);
+          combinedSummary.processed += Number(summary.processed || 0);
+          combinedSummary.created += Number(summary.created || 0);
+          combinedSummary.updated += Number(summary.updated || 0);
+          combinedSummary.skipped += Number(summary.skipped || 0);
+          combinedSummary.failed += Number(summary.failed || 0);
+        } catch (batchError: any) {
+          if (isMissingImportEndpointError(batchError)) {
+            usedUpsertFallback = true;
+            break;
+          }
+          lastBatchError = batchError;
+          combinedSummary.totalReceived += batch.length;
+          combinedSummary.failed += batch.length;
+        }
+      }
+
+      if (usedUpsertFallback) {
+        const fallbackSummary = await importViaUpsertFallback();
+        combinedSummary.totalReceived = fallbackSummary.totalReceived;
+        combinedSummary.processed = fallbackSummary.processed;
+        combinedSummary.created = fallbackSummary.created;
+        combinedSummary.updated = fallbackSummary.updated;
+        combinedSummary.skipped = fallbackSummary.skipped;
+        combinedSummary.failed = fallbackSummary.failed;
+      }
+
+      if (combinedSummary.processed === 0 && combinedSummary.created === 0 && combinedSummary.updated === 0) {
+        throw lastBatchError || new Error("No contacts were imported");
+      }
+
+      toast({
+        title: "Contacts import completed",
+        description: `${combinedSummary.processed} processed (${combinedSummary.created} created, ${combinedSummary.updated} updated, ${combinedSummary.skipped} skipped, ${combinedSummary.failed} failed)${usedUpsertFallback ? " via legacy fallback" : ""}`,
+        status: combinedSummary.failed > 0 ? "warning" : "success",
+        duration: 4500,
+        isClosable: true,
+      });
+
+      closeImportModal();
+      await fetchBuyers(1, search);
+    } catch (error: any) {
+      toast({
+        title: "Failed to import contacts",
+        description: getReadableErrorMessage(error),
+        status: "error",
+        duration: 3500,
+        isClosable: true,
+      });
+    } finally {
+      setIsImportingContacts(false);
+    }
+  };
+
+  const fetchContactsFromDevice = async (): Promise<BuyerImportContact[]> => {
+    const windowObj: any = window as any;
+    const capacitorContacts = windowObj?.Capacitor?.Plugins?.Contacts;
+
+    if (capacitorContacts?.getContacts) {
+      if (capacitorContacts.checkPermissions) {
+        const currentPermission = await capacitorContacts.checkPermissions();
+        if (currentPermission?.contacts !== "granted" && capacitorContacts.requestPermissions) {
+          await capacitorContacts.requestPermissions();
+        }
+      }
+
+      const response = await capacitorContacts.getContacts({
+        projection: {
+          name: true,
+          phones: true,
+          emails: true,
+        },
+      });
+      const contacts = Array.isArray(response?.contacts) ? response.contacts : [];
+
+      return contacts
+        .map((contact: any) => {
+          const givenName = contact?.name?.given || contact?.givenName || "";
+          const familyName = contact?.name?.family || contact?.familyName || "";
+          const displayName =
+            contact?.displayName ||
+            contact?.name?.display ||
+            [givenName, familyName].filter(Boolean).join(" ");
+          const phone =
+            contact?.phones?.[0]?.number ||
+            contact?.phoneNumbers?.[0]?.number ||
+            contact?.phone ||
+            "";
+          const email =
+            contact?.emails?.[0]?.address ||
+            contact?.emailAddresses?.[0]?.address ||
+            contact?.email ||
+            "";
+
+          return {
+            fullName: String(displayName || "").trim() || undefined,
+            phone: String(phone || "").trim() || undefined,
+            email: String(email || "").trim().toLowerCase() || undefined,
+          };
+        })
+        .filter((item: BuyerImportContact) => item.phone || item.email);
+    }
+
+    const navigatorContacts: any = (navigator as any)?.contacts;
+    if (navigatorContacts?.select) {
+      const picked = await navigatorContacts.select(["name", "tel", "email"], { multiple: true });
+      return (Array.isArray(picked) ? picked : [])
+        .map((item: any) => ({
+          fullName: Array.isArray(item?.name) ? item.name[0] : item?.name,
+          phone: Array.isArray(item?.tel) ? item.tel[0] : item?.tel,
+          email: Array.isArray(item?.email) ? item.email[0] : item?.email,
+        }))
+        .filter((entry: BuyerImportContact) => entry.phone || entry.email);
+    }
+
+    throw new Error("Device contacts access is not available on this device/browser");
+  };
+
+  const handleImportFromDevice = async () => {
+    try {
+      setIsImportingContacts(true);
+      const contacts = await fetchContactsFromDevice();
+      setIsImportingContacts(false);
+      await submitImportedContacts(contacts);
+    } catch (error: any) {
+      setIsImportingContacts(false);
+      toast({
+        title: "Unable to read device contacts",
+        description:
+          getReadableErrorMessage(
+            error,
+          "Grant contacts permission in app settings, or use pasted contacts below.",
+          ),
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleImportFromPaste = async () => {
+    const rows = parseContactRowsFromText(pasteContactsInput);
+    await submitImportedContacts(rows);
   };
 
   const handleCreateBuyer = async () => {
@@ -1012,6 +1396,312 @@ const CustomersTab: React.FC = observer(() => {
     },
   };
 
+  const renderLedgerMobile = () => (
+    <VStack align="stretch" spacing={4}>
+      {ledgerLoading ? (
+        <Text fontSize="sm" color="gray.500">
+          Loading ledger entries...
+        </Text>
+      ) : ledgerEntries.length === 0 ? (
+        <Text fontSize="sm" color="gray.500">
+          No ledger entries found.
+        </Text>
+      ) : (
+        ledgerEntries.map((entry) => (
+          <Box
+            key={entry._id}
+            borderWidth="1px"
+            borderColor="gray.200"
+            borderRadius="xl"
+            bg="white"
+            shadow="sm"
+            overflow="hidden"
+          >
+            <Box
+              px={4}
+              py={3}
+              bg={
+                entry.entryType === "sale"
+                  ? "orange.50"
+                  : entry.entryType === "payment"
+                    ? "green.50"
+                    : "blue.50"
+              }
+              borderBottomWidth="1px"
+              borderBottomColor="gray.200"
+            >
+              <HStack justify="space-between" align="center">
+                <HStack spacing={2}>
+                  <Badge
+                    colorScheme={
+                      entry.entryType === "sale"
+                        ? "orange"
+                        : entry.entryType === "payment"
+                          ? "green"
+                          : "blue"
+                    }
+                    textTransform="capitalize"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {entry.entryType}
+                  </Badge>
+                  <Badge
+                    colorScheme={entry.direction === "debit" ? "orange" : "green"}
+                    textTransform="capitalize"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {entry.direction}
+                  </Badge>
+                </HStack>
+                <Text
+                  fontWeight="800"
+                  fontSize="sm"
+                  color={entry.direction === "debit" ? "orange.700" : "green.700"}
+                >
+                  {entry.direction === "debit" ? "+" : "-"} {formatCurrency(entry.amount || 0)}
+                </Text>
+              </HStack>
+            </Box>
+            <VStack align="stretch" spacing={3} p={4}>
+              <SimpleGrid columns={2} spacing={2}>
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Date
+                  </Text>
+                  <Text fontSize="sm" color="gray.800">
+                    {formatDateTime(entry.entryDate)}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Balance
+                  </Text>
+                  <Text fontSize="sm" color="gray.800" fontWeight="700">
+                    {formatCurrency(entry.balanceAfter || 0)}
+                  </Text>
+                </Box>
+              </SimpleGrid>
+              <Box>
+                <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  Reference
+                </Text>
+                <Text fontSize="sm" color="gray.700">
+                  {entry.referenceId
+                    ? `${entry.referenceType || "manual"}: ${entry.referenceId}`
+                    : entry.referenceType || "manual"}
+                </Text>
+              </Box>
+              {entry.notes ? (
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Notes
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    {entry.notes}
+                  </Text>
+                </Box>
+              ) : null}
+              <HStack justify="space-between">
+                <Badge
+                  alignSelf="flex-start"
+                  colorScheme={entry.status === "reversed" ? "red" : "green"}
+                  textTransform="capitalize"
+                  borderRadius="full"
+                  px={2}
+                >
+                  {entry.status || "active"}
+                </Badge>
+                {entry.status !== "reversed" ? (
+                  <Button
+                    size="xs"
+                    colorScheme="red"
+                    variant="outline"
+                    borderRadius="full"
+                    onClick={() => openReverseModal(entry)}
+                  >
+                    Reverse
+                  </Button>
+                ) : null}
+              </HStack>
+            </VStack>
+          </Box>
+        ))
+      )}
+
+      <HStack justify="space-between" pt={1}>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={ledgerPage <= 1 || ledgerLoading}
+          onClick={() => {
+            if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
+            const nextPage = ledgerPage - 1;
+            setLedgerPage(nextPage);
+            fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
+          }}
+        >
+          Previous
+        </Button>
+        <Text fontSize="sm" color="gray.600">
+          Page {ledgerPage} of {ledgerTotalPages || 1}
+        </Text>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
+          onClick={() => {
+            if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;
+            const nextPage = ledgerPage + 1;
+            setLedgerPage(nextPage);
+            fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
+          }}
+        >
+          Next
+        </Button>
+      </HStack>
+    </VStack>
+  );
+
+  const renderSaleRecordsMobile = () => (
+    <VStack align="stretch" spacing={4}>
+      {saleLoading ? (
+        <Text fontSize="sm" color="gray.500">
+          Loading sale records...
+        </Text>
+      ) : saleRecords.length === 0 ? (
+        <Text fontSize="sm" color="gray.500">
+          No sale records found.
+        </Text>
+      ) : (
+        saleRecords.map((record) => {
+          const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
+          const preview = itemsCount
+            ? record.items
+                .slice(0, 2)
+                .map((item) => `${item.itemName} x ${item.quantity}`)
+                .join(", ")
+            : "-";
+
+          return (
+            <Box
+              key={record._id}
+              borderWidth="1px"
+              borderColor="gray.200"
+              borderRadius="xl"
+              bg="white"
+              shadow="sm"
+              overflow="hidden"
+            >
+              <Box px={4} py={3} bg="blue.50" borderBottomWidth="1px" borderBottomColor="gray.200">
+                <HStack justify="space-between" align="center">
+                  <Badge
+                    colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
+                    textTransform="capitalize"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {record.status}
+                  </Badge>
+                  <Text fontWeight="800" color="blue.800" fontSize="sm">
+                    {formatCurrency(Number(record.grandTotal || 0))}
+                  </Text>
+                </HStack>
+              </Box>
+              <VStack align="stretch" spacing={3} p={4}>
+                <SimpleGrid columns={2} spacing={2}>
+                  <Box>
+                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                      Date
+                    </Text>
+                    <Text fontSize="sm" color="gray.800">
+                      {formatDateTime(record.saleDate)}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                      Item Count
+                    </Text>
+                    <Text fontSize="sm" color="gray.800" fontWeight="700">
+                      {itemsCount}
+                    </Text>
+                  </Box>
+                </SimpleGrid>
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Items
+                  </Text>
+                  <Text fontSize="sm" color="gray.700">
+                    {itemsCount > 2 ? `${preview} +${itemsCount - 2} more` : preview}
+                  </Text>
+                </Box>
+                {record.notes ? (
+                  <Box>
+                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                      Notes
+                    </Text>
+                    <Text fontSize="sm" color="gray.700">
+                      {record.notes}
+                    </Text>
+                  </Box>
+                ) : null}
+                {record.status === "draft" && !record.ledgerEntryId ? (
+                  <Button
+                    size="xs"
+                    colorScheme="blue"
+                    variant="outline"
+                    borderRadius="full"
+                    isLoading={postingSaleId === record._id}
+                    onClick={() => handlePostSaleRecordToLedger(record._id)}
+                  >
+                    Post to Ledger
+                  </Button>
+                ) : null}
+              </VStack>
+            </Box>
+          );
+        })
+      )}
+
+      <HStack justify="space-between" pt={1}>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={salePage <= 1 || saleLoading}
+          onClick={() => {
+            if (!selectedLedgerBuyer?._id || salePage <= 1) return;
+            const nextPage = salePage - 1;
+            setSalePage(nextPage);
+            fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
+          }}
+        >
+          Previous
+        </Button>
+        <Text fontSize="sm" color="gray.600">
+          Page {salePage} of {saleTotalPages || 1}
+        </Text>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={salePage >= (saleTotalPages || 1) || saleLoading}
+          onClick={() => {
+            if (!selectedLedgerBuyer?._id || salePage >= (saleTotalPages || 1)) return;
+            const nextPage = salePage + 1;
+            setSalePage(nextPage);
+            fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
+          }}
+        >
+          Next
+        </Button>
+      </HStack>
+    </VStack>
+  );
+
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
 
   return (
@@ -1034,21 +1724,65 @@ const CustomersTab: React.FC = observer(() => {
             </Text>
           </Box>
           {selectedLedgerBuyer ? (
-            <HStack>
-              <Button leftIcon={<ArrowBackIcon />} variant="outline" onClick={closeLedgerView}>
+            <Stack
+              direction={{ base: "column", sm: "row" }}
+              spacing={2}
+              w={{ base: "full", md: "auto" }}
+              align={{ base: "stretch", sm: "center" }}
+            >
+              <Button
+                leftIcon={<ArrowBackIcon />}
+                variant="outline"
+                onClick={closeLedgerView}
+                size={{ base: "sm", md: "md" }}
+                w={{ base: "full", sm: "auto" }}
+              >
                 Back to Buyers
               </Button>
-              <Button leftIcon={<AddIcon />} colorScheme="teal" onClick={onSaleRecordOpen}>
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="teal"
+                onClick={onSaleRecordOpen}
+                size={{ base: "sm", md: "md" }}
+                w={{ base: "full", sm: "auto" }}
+              >
                 Add Sale Record
               </Button>
-              <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onLedgerEntryOpen}>
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="blue"
+                onClick={onLedgerEntryOpen}
+                size={{ base: "sm", md: "md" }}
+                w={{ base: "full", sm: "auto" }}
+              >
                 Add Ledger Entry
               </Button>
-            </HStack>
+            </Stack>
           ) : (
-            <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
-              Add Buyer
-            </Button>
+            <Stack
+              direction={{ base: "column", sm: "row" }}
+              spacing={2}
+              w={{ base: "full", md: "auto" }}
+              align={{ base: "stretch", sm: "center" }}
+            >
+              <Button
+                variant="outline"
+                onClick={onImportOpen}
+                size={{ base: "sm", md: "md" }}
+                w={{ base: "full", sm: "auto" }}
+              >
+                Import Contacts
+              </Button>
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="blue"
+                onClick={onOpen}
+                size={{ base: "sm", md: "md" }}
+                w={{ base: "full", sm: "auto" }}
+              >
+                Add Buyer
+              </Button>
+            </Stack>
           )}
         </Flex>
 
@@ -1064,54 +1798,205 @@ const CustomersTab: React.FC = observer(() => {
         ) : (
           <VStack align="stretch" spacing={4}>
             <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
-              <Box p={3} borderWidth="1px" borderRadius="md">
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderColor="orange.200"
+                bg="orange.50"
+                borderRadius="xl"
+                shadow="sm"
+              >
                 <Stat>
-                  <StatLabel>Total Sale (Debit)</StatLabel>
-                  <StatNumber>{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
+                  <StatLabel color="orange.700" fontWeight="700">
+                    Total Sale (Debit)
+                  </StatLabel>
+                  <StatNumber color="orange.800">{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
                 </Stat>
               </Box>
-              <Box p={3} borderWidth="1px" borderRadius="md">
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderColor="green.200"
+                bg="green.50"
+                borderRadius="xl"
+                shadow="sm"
+              >
                 <Stat>
-                  <StatLabel>Total Payment (Credit)</StatLabel>
-                  <StatNumber>{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
+                  <StatLabel color="green.700" fontWeight="700">
+                    Total Payment (Credit)
+                  </StatLabel>
+                  <StatNumber color="green.800">{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
                 </Stat>
               </Box>
-              <Box p={3} borderWidth="1px" borderRadius="md">
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderColor="blue.200"
+                bg="blue.50"
+                borderRadius="xl"
+                shadow="sm"
+              >
                 <Stat>
-                  <StatLabel>Outstanding</StatLabel>
-                  <StatNumber>{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
+                  <StatLabel color="blue.700" fontWeight="700">
+                    Outstanding
+                  </StatLabel>
+                  <StatNumber color="blue.800">{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
                 </Stat>
               </Box>
-              <Box p={3} borderWidth="1px" borderRadius="md">
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderColor="purple.200"
+                bg="purple.50"
+                borderRadius="xl"
+                shadow="sm"
+              >
                 <Stat>
-                  <StatLabel>Credit Limit</StatLabel>
-                  <StatNumber>{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
+                  <StatLabel color="purple.700" fontWeight="700">
+                    Credit Limit
+                  </StatLabel>
+                  <StatNumber color="purple.800">{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
                 </Stat>
               </Box>
             </SimpleGrid>
 
-            <CustomTable
-              title={`Ledger Entries (${ledgerTotal})`}
-              columns={ledgerColumns}
-              data={ledgerTableData}
-              loading={ledgerLoading}
-              actions={ledgerTableActions}
-              serial={{ show: true, text: "S.No." }}
-            />
-
-            <Divider />
-
-            <CustomTable
-              title={`Sale Records (${saleTotal})`}
-              columns={saleColumns}
-              data={saleTableData}
-              loading={saleLoading}
-              actions={saleTableActions}
-              serial={{ show: true, text: "S.No." }}
-            />
+            <Tabs
+              index={ledgerTabIndex}
+              onChange={(index) => setLedgerTabIndex(index)}
+              variant="unstyled"
+              colorScheme="blue"
+            >
+              <TabList
+                overflowX="auto"
+                bg="gray.100"
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="xl"
+                p={1}
+                gap={1}
+              >
+                <Tab
+                  whiteSpace="nowrap"
+                  borderRadius="lg"
+                  fontWeight="700"
+                  color="gray.600"
+                  _selected={{
+                    bg: "white",
+                    color: "blue.700",
+                    shadow: "sm",
+                    borderWidth: "1px",
+                    borderColor: "blue.200",
+                  }}
+                >
+                  Ledger Entries ({ledgerTotal})
+                </Tab>
+                <Tab
+                  whiteSpace="nowrap"
+                  borderRadius="lg"
+                  fontWeight="700"
+                  color="gray.600"
+                  _selected={{
+                    bg: "white",
+                    color: "blue.700",
+                    shadow: "sm",
+                    borderWidth: "1px",
+                    borderColor: "blue.200",
+                  }}
+                >
+                  Sale Records ({saleTotal})
+                </Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel px={0} pt={4}>
+                  {useCompactLedgerView ? (
+                    renderLedgerMobile()
+                  ) : (
+                    <CustomTable
+                      title={`Ledger Entries (${ledgerTotal})`}
+                      columns={ledgerColumns}
+                      data={ledgerTableData}
+                      loading={ledgerLoading}
+                      actions={ledgerTableActions}
+                      serial={{ show: true, text: "S.No." }}
+                    />
+                  )}
+                </TabPanel>
+                <TabPanel px={0} pt={4}>
+                  {useCompactLedgerView ? (
+                    renderSaleRecordsMobile()
+                  ) : (
+                    <CustomTable
+                      title={`Sale Records (${saleTotal})`}
+                      columns={saleColumns}
+                      data={saleTableData}
+                      loading={saleLoading}
+                      actions={saleTableActions}
+                      serial={{ show: true, text: "S.No." }}
+                    />
+                  )}
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </VStack>
         )}
       </VStack>
+
+      <Modal isOpen={isImportOpen} onClose={closeImportModal} isCentered size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Import Buyers From Contacts</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="gray.600">
+                Use device contacts on mobile, or paste rows in format:
+                {" "}Name, Phone, Email
+              </Text>
+
+              <FormControl>
+                <FormLabel>Default Tags (comma-separated)</FormLabel>
+                <Input
+                  value={importDefaultTags}
+                  onChange={(e) => setImportDefaultTags(e.target.value)}
+                  placeholder="retail, repeat"
+                />
+              </FormControl>
+
+              <Button
+                colorScheme="blue"
+                onClick={handleImportFromDevice}
+                isLoading={isImportingContacts}
+              >
+                Import From Device Contacts
+              </Button>
+
+              <Divider />
+
+              <FormControl>
+                <FormLabel>Paste Contacts</FormLabel>
+                <Textarea
+                  rows={7}
+                  value={pasteContactsInput}
+                  onChange={(e) => setPasteContactsInput(e.target.value)}
+                  placeholder={`Amit Sharma, +919999999999, amit@example.com\nNeha, 9876543210`}
+                />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={closeImportModal}>
+              Cancel
+            </Button>
+            <Button
+              colorScheme="teal"
+              onClick={handleImportFromPaste}
+              isLoading={isImportingContacts}
+            >
+              Import Pasted Contacts
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
         <ModalOverlay />

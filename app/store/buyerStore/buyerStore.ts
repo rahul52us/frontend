@@ -24,6 +24,15 @@ class BuyerStore {
     }
   };
 
+  importBuyerContacts = async (payload: any) => {
+    try {
+      const response = await axios.post("/buyer/import-contacts", payload);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
   getBuyerProfile = async (id: string) => {
     try {
       const response = await axios.get(`/buyer/${id}`);
