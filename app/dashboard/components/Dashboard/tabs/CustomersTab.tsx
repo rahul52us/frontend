@@ -1075,6 +1075,19 @@ const CustomersTab: React.FC = observer(() => {
     onReverseOpen();
   };
 
+  const openPayModal = (entry: BuyerLedgerEntry) => {
+    setLedgerFormValues({
+      entryType: "payment",
+      amount: String(entry.amount),
+      direction: "credit",
+      referenceType: entry.referenceType || "manual",
+      referenceId: entry.referenceId || entry._id || "",
+      entryDate: new Date().toISOString().split("T")[0],
+      notes: `Payment for ${entry.referenceType || 'entry'} ${entry.referenceId || entry._id}`,
+    });
+    onLedgerEntryOpen();
+  };
+
   const confirmReverse = async () => {
     if (!selectedLedgerBuyer?._id || !selectedLedgerEntry?._id) {
       return;
@@ -1264,9 +1277,16 @@ const CustomersTab: React.FC = observer(() => {
         entry.status === "reversed" ? (
           <Text color="gray.500">-</Text>
         ) : (
-          <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
-            Reverse
-          </Button>
+          <HStack spacing={2}>
+            {entry.direction === "debit" && (
+              <Button size="xs" colorScheme="green" variant="outline" onClick={() => openPayModal(entry)}>
+                Pay
+              </Button>
+            )}
+            <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
+              Reverse
+            </Button>
+          </HStack>
         ),
     }));
 
@@ -1514,15 +1534,28 @@ const CustomersTab: React.FC = observer(() => {
                   {entry.status || "active"}
                 </Badge>
                 {entry.status !== "reversed" ? (
-                  <Button
-                    size="xs"
-                    colorScheme="red"
-                    variant="outline"
-                    borderRadius="full"
-                    onClick={() => openReverseModal(entry)}
-                  >
-                    Reverse
-                  </Button>
+                  <HStack spacing={2}>
+                    {entry.direction === "debit" && (
+                      <Button
+                        size="xs"
+                        colorScheme="green"
+                        variant="outline"
+                        borderRadius="full"
+                        onClick={() => openPayModal(entry)}
+                      >
+                        Pay
+                      </Button>
+                    )}
+                    <Button
+                      size="xs"
+                      colorScheme="red"
+                      variant="outline"
+                      borderRadius="full"
+                      onClick={() => openReverseModal(entry)}
+                    >
+                      Reverse
+                    </Button>
+                  </HStack>
                 ) : null}
               </HStack>
             </VStack>
