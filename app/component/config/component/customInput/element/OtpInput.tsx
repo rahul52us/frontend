@@ -87,7 +87,10 @@ const OtpInput: React.FC<OtpInputProps> = ({
             ref={(el: HTMLInputElement | null) => {
               inputRefs.current[index] = el;
             }}
-            type="text"
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete={index === 0 ? "one-time-code" : undefined}
             maxLength={1}
             value={otp[index]} // Directly use otp[index] without fallback to avoid rerender issues
             onChange={(e) => handleChange(index, e.target.value)}

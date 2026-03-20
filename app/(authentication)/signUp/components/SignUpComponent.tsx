@@ -224,13 +224,13 @@ const SignUpForm = observer(() => {
                     Enter the OTP sent to {userData.phone}
                   </Text>
                   <HStack>
-                    <PinInput otp value={otp} onChange={setOtp} size="lg" focusBorderColor="blue.500">
-                      <PinInputField />
-                      <PinInputField />
-                      <PinInputField />
-                      <PinInputField />
-                      <PinInputField />
-                      <PinInputField />
+                    <PinInput otp type="number" value={otp} onChange={setOtp} size="lg" focusBorderColor="blue.500">
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" />
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" />
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" />
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" />
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" />
+                      <PinInputField inputMode="numeric" pattern="[0-9]*" />
                     </PinInput>
                   </HStack>
                   <Button
