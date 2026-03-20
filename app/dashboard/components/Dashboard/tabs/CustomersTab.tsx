@@ -278,6 +278,7 @@ const CustomersTab: React.FC = observer(() => {
     return platform === "android";
   }, []);
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime;
+  const canUseDeviceContactImport = isAndroidRuntime;
 
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
     return buyer.displayName || buyer.buyerId?.fullName || "-";
@@ -539,6 +540,51 @@ const CustomersTab: React.FC = observer(() => {
     return Array.from(unique.values());
   };
 
+  const mapDeviceContactToImportRow = (contact: any): BuyerImportContact => {
+    const givenName = contact?.name?.given || contact?.givenName || "";
+    const familyName = contact?.name?.family || contact?.familyName || "";
+    const displayName =
+      contact?.displayName ||
+      contact?.name?.display ||
+      [givenName, familyName].filter(Boolean).join(" ");
+    const phone =
+      contact?.phones?.[0]?.number ||
+      contact?.phoneNumbers?.[0]?.number ||
+      contact?.phone ||
+      "";
+    const email =
+      contact?.emails?.[0]?.address ||
+      contact?.emailAddresses?.[0]?.address ||
+      contact?.email ||
+      "";
+
+    return {
+      fullName: String(displayName || "").trim() || undefined,
+      phone: String(phone || "").trim() || undefined,
+      email: String(email || "").trim().toLowerCase() || undefined,
+    };
+  };
+
+  const ensureDeviceContactsPermission = async (capacitorContacts: any) => {
+    if (!capacitorContacts?.checkPermissions) {
+      return;
+    }
+
+    const currentPermission = await capacitorContacts.checkPermissions();
+    if (currentPermission?.contacts === "granted") {
+      return;
+    }
+
+    if (!capacitorContacts.requestPermissions) {
+      throw new Error("Contacts permission is not available on this device");
+    }
+
+    const requestedPermission = await capacitorContacts.requestPermissions();
+    if (requestedPermission?.contacts !== "granted") {
+      throw new Error("Contacts permission was denied");
+    }
+  };
+
   const submitImportedContacts = async (contacts: BuyerImportContact[]) => {
     if (!companyId) {
       toast({
@@ -685,12 +731,7 @@ const CustomersTab: React.FC = observer(() => {
     const capacitorContacts = windowObj?.Capacitor?.Plugins?.Contacts;
 
     if (capacitorContacts?.getContacts) {
-      if (capacitorContacts.checkPermissions) {
-        const currentPermission = await capacitorContacts.checkPermissions();
-        if (currentPermission?.contacts !== "granted" && capacitorContacts.requestPermissions) {
-          await capacitorContacts.requestPermissions();
-        }
-      }
+      await ensureDeviceContactsPermission(capacitorContacts);
 
       const response = await capacitorContacts.getContacts({
         projection: {
@@ -702,69 +743,79 @@ const CustomersTab: React.FC = observer(() => {
       const contacts = Array.isArray(response?.contacts) ? response.contacts : [];
 
       return contacts
-        .map((contact: any) => {
-          const givenName = contact?.name?.given || contact?.givenName || "";
-          const familyName = contact?.name?.family || contact?.familyName || "";
-          const displayName =
-            contact?.displayName ||
-            contact?.name?.display ||
-            [givenName, familyName].filter(Boolean).join(" ");
-          const phone =
-            contact?.phones?.[0]?.number ||
-            contact?.phoneNumbers?.[0]?.number ||
-            contact?.phone ||
-            "";
-          const email =
-            contact?.emails?.[0]?.address ||
-            contact?.emailAddresses?.[0]?.address ||
-            contact?.email ||
-            "";
-
-          return {
-            fullName: String(displayName || "").trim() || undefined,
-            phone: String(phone || "").trim() || undefined,
-            email: String(email || "").trim().toLowerCase() || undefined,
-          };
-        })
+        .map((contact: any) => mapDeviceContactToImportRow(contact))
         .filter((item: BuyerImportContact) => item.phone || item.email);
-    }
-
-    const navigatorContacts: any = (navigator as any)?.contacts;
-    if (navigatorContacts?.select) {
-      const picked = await navigatorContacts.select(["name", "tel", "email"], { multiple: true });
-      return (Array.isArray(picked) ? picked : [])
-        .map((item: any) => ({
-          fullName: Array.isArray(item?.name) ? item.name[0] : item?.name,
-          phone: Array.isArray(item?.tel) ? item.tel[0] : item?.tel,
-          email: Array.isArray(item?.email) ? item.email[0] : item?.email,
-        }))
-        .filter((entry: BuyerImportContact) => entry.phone || entry.email);
     }
 
     throw new Error("Device contacts access is not available on this device/browser");
   };
 
-  const handleImportFromDevice = async () => {
+  const pickSingleContactFromDevice = async (): Promise<BuyerImportContact[]> => {
+    const windowObj: any = window as any;
+    const capacitorContacts = windowObj?.Capacitor?.Plugins?.Contacts;
+
+    if (!capacitorContacts?.pickContact) {
+      throw new Error("Contact picker is not available on this device");
+    }
+
+    await ensureDeviceContactsPermission(capacitorContacts);
+
+    const response = await capacitorContacts.pickContact({
+      projection: {
+        name: true,
+        phones: true,
+        emails: true,
+      },
+    });
+    const selectedContact = response?.contact ? mapDeviceContactToImportRow(response.contact) : null;
+
+    if (!selectedContact || (!selectedContact.phone && !selectedContact.email)) {
+      throw new Error("Selected contact does not have a phone number or email");
+    }
+
+    return [selectedContact];
+  };
+
+  const importContactsWith = async (
+    importFn: () => Promise<BuyerImportContact[]>,
+    emptySelectionMessage: string,
+  ) => {
     try {
       setIsImportingContacts(true);
-      const contacts = await fetchContactsFromDevice();
-      setIsImportingContacts(false);
+      const contacts = await importFn();
+      if (!contacts.length) {
+        toast({
+          title: "No contacts selected",
+          description: emptySelectionMessage,
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       await submitImportedContacts(contacts);
     } catch (error: any) {
-      setIsImportingContacts(false);
       toast({
         title: "Unable to read device contacts",
-        description:
-          getReadableErrorMessage(
-            error,
-          "Grant contacts permission in app settings, or use pasted contacts below.",
-          ),
+        description: getReadableErrorMessage(
+          error,
+          "Grant contacts permission in app settings, or add the buyer manually.",
+        ),
         status: "warning",
         duration: 4000,
         isClosable: true,
       });
+    } finally {
+      setIsImportingContacts(false);
     }
   };
+
+  const handlePickSingleContact = async () =>
+    importContactsWith(pickSingleContactFromDevice, "Choose one contact to continue.");
+
+  const handleImportFromDevice = async () =>
+    importContactsWith(fetchContactsFromDevice, "No contacts were returned from the device.");
 
   const handleImportFromPaste = async () => {
     const rows = parseContactRowsFromText(pasteContactsInput);
@@ -1263,11 +1314,25 @@ const CustomersTab: React.FC = observer(() => {
           {entry.direction}
         </Badge>
       ),
-      amountText: `${entry.direction === "debit" ? "+" : "-"} ${formatCurrency(entry.amount || 0)}`,
+      amountDisplay: (
+        <Text color={entry.direction === "debit" ? "orange.600" : "green.600"} fontWeight="bold">
+          {formatCurrency(entry.amount || 0)} {entry.direction === "debit" ? "(Dr)" : "(Cr)"}
+        </Text>
+      ),
       balanceText: formatCurrency(entry.balanceAfter || 0),
-      referenceText: entry.referenceId
-        ? `${entry.referenceType || "manual"}: ${entry.referenceId}`
-        : entry.referenceType || "manual",
+      referenceText: entry.referenceId ? (
+        <HStack spacing={1}>
+          <Text>{entry.referenceType || "manual"}: </Text>
+          <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
+              navigator.clipboard.writeText(entry.referenceId || '');
+              toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
+            }}>
+            {entry.referenceId.slice(-6)}
+          </Text>
+        </HStack>
+      ) : (
+        <Text>{entry.referenceType || "manual"}</Text>
+      ),
       statusBadge: (
         <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
           {entry.status || "active"}
@@ -1304,7 +1369,12 @@ const CustomersTab: React.FC = observer(() => {
       type: "component",
       metaData: { component: (row: any) => row.directionBadge },
     },
-    { headerName: "Amount", key: "amountText" },
+    {
+      headerName: "Amount",
+      key: "amountDisplay",
+      type: "component",
+      metaData: { component: (row: any) => row.amountDisplay },
+    },
     { headerName: "Balance", key: "balanceText" },
     { headerName: "Reference", key: "referenceText" },
     { headerName: "Notes", key: "notes" },
@@ -1352,6 +1422,14 @@ const CustomersTab: React.FC = observer(() => {
         ...record,
         saleDate: record.saleDate,
         itemsCount,
+        idDisplay: (
+          <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
+            navigator.clipboard.writeText(record._id || '');
+            toast({ title: 'Sale ID Copied', status: 'success', duration: 1000, isClosable: true });
+          }}>
+            {record._id.slice(-6)}
+          </Text>
+        ),
         itemPreview: itemsCount > 2 ? `${itemPreview} +${itemsCount - 2} more` : itemPreview,
         grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
         statusBadge: (
@@ -1382,6 +1460,12 @@ const CustomersTab: React.FC = observer(() => {
 
   const saleColumns = [
     { headerName: "Date", key: "saleDate", type: "date" },
+    {
+      headerName: "ID",
+      key: "idDisplay",
+      type: "component",
+      metaData: { component: (row: any) => row.idDisplay },
+    },
     { headerName: "Items", key: "itemPreview" },
     { headerName: "Item Count", key: "itemsCount" },
     { headerName: "Total", key: "grandTotalText" },
@@ -1480,7 +1564,7 @@ const CustomersTab: React.FC = observer(() => {
                   fontSize="sm"
                   color={entry.direction === "debit" ? "orange.700" : "green.700"}
                 >
-                  {entry.direction === "debit" ? "+" : "-"} {formatCurrency(entry.amount || 0)}
+                  {formatCurrency(entry.amount || 0)} {entry.direction === "debit" ? "(Dr)" : "(Cr)"}
                 </Text>
               </HStack>
             </Box>
@@ -1648,6 +1732,17 @@ const CustomersTab: React.FC = observer(() => {
                 <SimpleGrid columns={2} spacing={2}>
                   <Box>
                     <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                      ID
+                    </Text>
+                    <Text fontSize="sm" color="blue.600" fontWeight="600" cursor="pointer" onClick={() => {
+                        navigator.clipboard.writeText(record._id || '');
+                        toast({ title: 'Sale ID Copied', status: 'success', duration: 1000, isClosable: true });
+                      }}>
+                      {record._id.slice(-6)}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
                       Date
                     </Text>
                     <Text fontSize="sm" color="gray.800">
@@ -1798,14 +1893,16 @@ const CustomersTab: React.FC = observer(() => {
               w={{ base: "full", md: "auto" }}
               align={{ base: "stretch", sm: "center" }}
             >
-              <Button
-                variant="outline"
-                onClick={onImportOpen}
-                size={{ base: "sm", md: "md" }}
-                w={{ base: "full", sm: "auto" }}
-              >
-                Import Contacts
-              </Button>
+              {canUseDeviceContactImport ? (
+                <Button
+                  variant="outline"
+                  onClick={onImportOpen}
+                  size={{ base: "sm", md: "md" }}
+                  w={{ base: "full", sm: "auto" }}
+                >
+                  Import Contacts
+                </Button>
+              ) : null}
               <Button
                 leftIcon={<AddIcon />}
                 colorScheme="blue"
@@ -1982,8 +2079,9 @@ const CustomersTab: React.FC = observer(() => {
           <ModalBody>
             <VStack spacing={4} align="stretch">
               <Text fontSize="sm" color="gray.600">
-                Use device contacts on mobile, or paste rows in format:
-                {" "}Name, Phone, Email
+                {canUseDeviceContactImport
+                  ? "Choose one contact from the device, import the full contact list, or paste rows in format: Name, Phone, Email"
+                  : "Paste rows in format: Name, Phone, Email"}
               </Text>
 
               <FormControl>
@@ -1995,15 +2093,32 @@ const CustomersTab: React.FC = observer(() => {
                 />
               </FormControl>
 
-              <Button
-                colorScheme="blue"
-                onClick={handleImportFromDevice}
-                isLoading={isImportingContacts}
-              >
-                Import From Device Contacts
-              </Button>
+              {canUseDeviceContactImport ? (
+                <>
+                  <Stack direction={{ base: "column", sm: "row" }} spacing={3}>
+                    <Button
+                      colorScheme="blue"
+                      variant="solid"
+                      onClick={handlePickSingleContact}
+                      isLoading={isImportingContacts}
+                      flex={1}
+                    >
+                      Pick Contact
+                    </Button>
+                    <Button
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={handleImportFromDevice}
+                      isLoading={isImportingContacts}
+                      flex={1}
+                    >
+                      Import All Contacts
+                    </Button>
+                  </Stack>
 
-              <Divider />
+                  <Divider />
+                </>
+              ) : null}
 
               <FormControl>
                 <FormLabel>Paste Contacts</FormLabel>
