@@ -286,6 +286,11 @@ const CustomersTab: React.FC = observer(() => {
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
+  const formatShortId = (value?: string) => (value ? value.slice(-6) : "");
+  const formatLedgerReference = (entry: BuyerLedgerEntry) =>
+    entry.referenceId
+      ? `${entry.referenceType || "manual"}: ${formatShortId(entry.referenceId)}`
+      : entry.referenceType || "manual";
 
   const fetchBuyers = async (pageToLoad = 1, query = search) => {
     if (!companyId) {
@@ -1327,7 +1332,7 @@ const CustomersTab: React.FC = observer(() => {
               navigator.clipboard.writeText(entry.referenceId || '');
               toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
             }}>
-            {entry.referenceId.slice(-6)}
+            {formatShortId(entry.referenceId)}
           </Text>
         </HStack>
       ) : (
@@ -1592,9 +1597,7 @@ const CustomersTab: React.FC = observer(() => {
                   Reference
                 </Text>
                 <Text fontSize="sm" color="gray.700">
-                  {entry.referenceId
-                    ? `${entry.referenceType || "manual"}: ${entry.referenceId}`
-                    : entry.referenceType || "manual"}
+                  {formatLedgerReference(entry)}
                 </Text>
               </Box>
               {entry.notes ? (
@@ -2095,13 +2098,24 @@ const CustomersTab: React.FC = observer(() => {
 
               {canUseDeviceContactImport ? (
                 <>
-                  <Stack direction={{ base: "column", sm: "row" }} spacing={3}>
+                  <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
                     <Button
                       colorScheme="blue"
                       variant="solid"
                       onClick={handlePickSingleContact}
                       isLoading={isImportingContacts}
                       flex={1}
+                      size="lg"
+                      minH={{ base: "60px", sm: "64px" }}
+                      borderRadius="xl"
+                      fontWeight="semibold"
+                      fontSize="md"
+                      whiteSpace="normal"
+                      textAlign="center"
+                      px={6}
+                      boxShadow="sm"
+                      _hover={{ transform: "translateY(-1px)", boxShadow: "md" }}
+                      _active={{ transform: "translateY(0)" }}
                     >
                       Pick Contact
                     </Button>
@@ -2111,6 +2125,18 @@ const CustomersTab: React.FC = observer(() => {
                       onClick={handleImportFromDevice}
                       isLoading={isImportingContacts}
                       flex={1}
+                      size="lg"
+                      minH={{ base: "60px", sm: "64px" }}
+                      borderRadius="xl"
+                      fontWeight="semibold"
+                      fontSize="md"
+                      whiteSpace="normal"
+                      textAlign="center"
+                      px={6}
+                      borderWidth="1.5px"
+                      bg="blue.50"
+                      _hover={{ bg: "blue.100", transform: "translateY(-1px)" }}
+                      _active={{ transform: "translateY(0)" }}
                     >
                       Import All Contacts
                     </Button>
