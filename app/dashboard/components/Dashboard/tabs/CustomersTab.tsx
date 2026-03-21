@@ -14,6 +14,7 @@ import {
   Heading,
   HStack,
   Input,
+  IconButton,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -32,17 +33,18 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
-  Textarea,
   Text,
+  Spinner,
   useBreakpointValue,
   useDisclosure,
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
+import { AddIcon, ArrowBackIcon, CopyIcon } from "@chakra-ui/icons";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 
 type BuyerProfile = {
   _id: string;
@@ -73,6 +75,10 @@ type BuyerLedgerEntry = {
   entryDate?: string;
   balanceAfter?: number;
   status?: "active" | "reversed";
+  createdAt?: string;
+  reversedAt?: string;
+  relationType?: "direct" | "reversal";
+  isPrimarySaleLedgerEntry?: boolean;
 };
 
 type BuyerSaleRecordStatus = "draft" | "posted" | "void";
@@ -90,10 +96,17 @@ type BuyerSaleRecord = {
   _id: string;
   saleDate?: string;
   items: BuyerSaleItem[];
+  subtotal?: number;
+  discountTotal?: number;
+  taxTotal?: number;
   grandTotal: number;
   notes?: string;
   status: BuyerSaleRecordStatus;
+  source?: "manual" | "import" | "order";
   ledgerEntryId?: string;
+  postedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 type SaleFormItem = {
@@ -116,6 +129,22 @@ type BuyerImportContact = {
   fullName?: string;
   phone?: string;
   email?: string;
+};
+
+type SaleRecordDetailsSummary = {
+  saleAmount: number;
+  paidAmount: number;
+  adjustmentDebitAmount: number;
+  adjustmentCreditAmount: number;
+  remainingDue: number;
+  isPosted: boolean;
+  eventCount: number;
+};
+
+type BuyerSaleRecordDetails = {
+  saleRecord: BuyerSaleRecord;
+  timeline: BuyerLedgerEntry[];
+  summary: SaleRecordDetailsSummary;
 };
 
 const isValidImportEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email);
@@ -154,6 +183,18 @@ const isMissingImportEndpointError = (error: any) => {
   return (
     text.includes("cannot post /api/buyer/import-contacts") ||
     text.includes("cannot post /buyer/import-contacts") ||
+    text.includes("not found") ||
+    error?.statusCode === 404 ||
+    error?.response?.status === 404
+  );
+};
+
+const isMissingSaleDetailsEndpointError = (error: any) => {
+  const text = getReadableErrorMessage(error, "").toLowerCase();
+  return (
+    text.includes("cannot get /api/buyer/") ||
+    text.includes("cannot get /buyer/") ||
+    text.includes("/sales/") ||
     text.includes("not found") ||
     error?.statusCode === 404 ||
     error?.response?.status === 404
@@ -204,6 +245,11 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onImportOpen,
     onClose: onImportClose,
   } = useDisclosure();
+  const {
+    isOpen: isSaleDetailsOpen,
+    onOpen: onSaleDetailsOpen,
+    onClose: onSaleDetailsClose,
+  } = useDisclosure();
   const { auth, buyerStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
@@ -227,6 +273,9 @@ const CustomersTab: React.FC = observer(() => {
 
   const [selectedBuyer, setSelectedBuyer] = useState<BuyerProfile | null>(null);
   const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<BuyerLedgerEntry | null>(null);
+  const [selectedSaleRecord, setSelectedSaleRecord] = useState<BuyerSaleRecord | null>(null);
+  const [saleRecordDetails, setSaleRecordDetails] = useState<BuyerSaleRecordDetails | null>(null);
+  const [saleDetailsLoading, setSaleDetailsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -268,7 +317,6 @@ const CustomersTab: React.FC = observer(() => {
     items: [defaultSaleFormItem()],
   });
   const [importDefaultTags, setImportDefaultTags] = useState("");
-  const [pasteContactsInput, setPasteContactsInput] = useState("");
 
   const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
   const isMobileLedgerView = useBreakpointValue({ base: true, md: false }) ?? false;
@@ -278,6 +326,7 @@ const CustomersTab: React.FC = observer(() => {
     return platform === "android";
   }, []);
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime;
+  const useCompactBuyerView = isAndroidRuntime;
   const canUseDeviceContactImport = isAndroidRuntime;
 
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
@@ -291,6 +340,23 @@ const CustomersTab: React.FC = observer(() => {
     entry.referenceId
       ? `${entry.referenceType || "manual"}: ${formatShortId(entry.referenceId)}`
       : entry.referenceType || "manual";
+  const formatSignedAmount = (entry: BuyerLedgerEntry) =>
+    `${entry.direction === "credit" ? "-" : "+"}${formatCurrency(Number(entry.amount || 0))}`;
+  const getTimelineTitle = (entry: BuyerLedgerEntry) => {
+    if (entry.relationType === "reversal") {
+      return "Reversal Adjustment";
+    }
+    if (entry.isPrimarySaleLedgerEntry) {
+      return "Posted To Ledger";
+    }
+    if (entry.entryType === "payment") {
+      return "Payment Received";
+    }
+    if (entry.entryType === "adjustment") {
+      return "Manual Adjustment";
+    }
+    return "Sale Ledger Entry";
+  };
 
   const fetchBuyers = async (pageToLoad = 1, query = search) => {
     if (!companyId) {
@@ -424,7 +490,120 @@ const CustomersTab: React.FC = observer(() => {
     setSaleTotalPages(1);
     setSaleTotal(0);
     setLedgerTabIndex(0);
+    setSelectedSaleRecord(null);
+    setSaleRecordDetails(null);
+    onSaleDetailsClose();
     resetSaleForm();
+  };
+
+  const closeSaleDetails = () => {
+    setSelectedSaleRecord(null);
+    setSaleRecordDetails(null);
+    onSaleDetailsClose();
+  };
+
+  const buildLocalSaleRecordDetails = (record: BuyerSaleRecord): BuyerSaleRecordDetails => {
+    const directEntries = ledgerEntries.filter(
+      (entry) =>
+        (entry.referenceType === "saleRecord" && entry.referenceId === record._id) ||
+        (record.ledgerEntryId ? String(entry._id) === String(record.ledgerEntryId) : false)
+    );
+    const directEntryIds = directEntries.map((entry) => String(entry._id));
+    const reversalEntries = ledgerEntries.filter(
+      (entry) => entry.referenceId && directEntryIds.includes(String(entry.referenceId))
+    );
+    const timeline = [...directEntries, ...reversalEntries]
+      .filter((entry, index, allEntries) => allEntries.findIndex((candidate) => candidate._id === entry._id) === index)
+      .sort((a, b) => {
+        const aTime = new Date(a.entryDate || a.createdAt || 0).getTime();
+        const bTime = new Date(b.entryDate || b.createdAt || 0).getTime();
+        return aTime - bTime;
+      })
+      .map((entry) => ({
+        ...entry,
+        relationType: directEntryIds.includes(String(entry._id))
+          ? ("direct" as const)
+          : ("reversal" as const),
+        isPrimarySaleLedgerEntry:
+          record.ledgerEntryId && String(entry._id) === String(record.ledgerEntryId),
+      }));
+
+    const activeTimelineEntries = timeline.filter((entry) => entry.status !== "reversed");
+    const paidAmount = activeTimelineEntries.reduce((sum, entry) => {
+      if (entry.entryType !== "payment" || entry.direction !== "credit") {
+        return sum;
+      }
+      return sum + Number(entry.amount || 0);
+    }, 0);
+    const adjustmentDebitAmount = activeTimelineEntries.reduce((sum, entry) => {
+      if (entry.entryType !== "adjustment" || entry.direction !== "debit") {
+        return sum;
+      }
+      return sum + Number(entry.amount || 0);
+    }, 0);
+    const adjustmentCreditAmount = activeTimelineEntries.reduce((sum, entry) => {
+      if (entry.entryType !== "adjustment" || entry.direction !== "credit") {
+        return sum;
+      }
+      return sum + Number(entry.amount || 0);
+    }, 0);
+
+    return {
+      saleRecord: record,
+      timeline,
+      summary: {
+        saleAmount: Number(record.grandTotal || 0),
+        paidAmount,
+        adjustmentDebitAmount,
+        adjustmentCreditAmount,
+        remainingDue: Math.max(
+          Number(record.grandTotal || 0) + adjustmentDebitAmount - paidAmount - adjustmentCreditAmount,
+          0
+        ),
+        isPosted: Boolean(record.ledgerEntryId),
+        eventCount: timeline.length,
+      },
+    };
+  };
+
+  const openSaleDetails = async (record: BuyerSaleRecord) => {
+    if (!selectedLedgerBuyer?._id) {
+      return;
+    }
+
+    setSelectedSaleRecord(record);
+    setSaleRecordDetails(null);
+    setSaleDetailsLoading(true);
+    onSaleDetailsOpen();
+
+    try {
+      const response = await buyerStore.getBuyerSaleRecordDetails(selectedLedgerBuyer._id, record._id);
+      setSaleRecordDetails(response?.data || null);
+    } catch (error: any) {
+      if (isMissingSaleDetailsEndpointError(error)) {
+        const localDetails = buildLocalSaleRecordDetails(record);
+        setSaleRecordDetails(localDetails);
+        toast({
+          title: "Showing local sale history",
+          description: "Detailed sale history endpoint is not deployed yet, so this view is using available local data.",
+          status: "info",
+          duration: 3500,
+          isClosable: true,
+        });
+        return;
+      }
+
+      toast({
+        title: "Failed to load sale details",
+        description: getReadableErrorMessage(error),
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      closeSaleDetails();
+    } finally {
+      setSaleDetailsLoading(false);
+    }
   };
 
   const openDeleteModal = (buyer: BuyerProfile) => {
@@ -466,56 +645,11 @@ const CustomersTab: React.FC = observer(() => {
   const closeImportModal = () => {
     onImportClose();
     setImportDefaultTags("");
-    setPasteContactsInput("");
   };
 
   const closeSaleRecordModal = () => {
     onSaleRecordClose();
     resetSaleForm();
-  };
-
-  const parseContactRowsFromText = (raw: string): BuyerImportContact[] => {
-    const lines = raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
-
-    return lines
-      .map((line) => {
-        const parts = line
-          .split(/[,\t|;]/)
-          .map((part) => part.trim())
-          .filter(Boolean);
-
-        let fullName = "";
-        let phone = "";
-        let email = "";
-
-        parts.forEach((part, idx) => {
-          if (!email && emailRegex.test(part)) {
-            email = part.toLowerCase();
-            return;
-          }
-
-          if (!phone && part.replace(/\D/g, "").length >= 7) {
-            phone = part;
-            return;
-          }
-
-          if (!fullName && idx === 0) {
-            fullName = part;
-          }
-        });
-
-        return {
-          fullName: fullName || undefined,
-          phone: phone || undefined,
-          email: email || undefined,
-        };
-      })
-      .filter((item) => item.phone || item.email);
   };
 
   const normalizeImportContacts = (contacts: BuyerImportContact[]): BuyerImportContact[] => {
@@ -821,11 +955,6 @@ const CustomersTab: React.FC = observer(() => {
 
   const handleImportFromDevice = async () =>
     importContactsWith(fetchContactsFromDevice, "No contacts were returned from the device.");
-
-  const handleImportFromPaste = async () => {
-    const rows = parseContactRowsFromText(pasteContactsInput);
-    await submitImportedContacts(rows);
-  };
 
   const handleCreateBuyer = async () => {
     if (!companyId) {
@@ -1303,6 +1432,161 @@ const CustomersTab: React.FC = observer(() => {
     },
   };
 
+  const renderBuyerProfilesMobile = () => (
+    <VStack align="stretch" spacing={4}>
+      <Box>
+        <Text fontSize="sm" color="gray.500" mb={2}>
+          Buyers ({total})
+        </Text>
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, phone or email"
+          bg="white"
+          borderRadius="xl"
+        />
+      </Box>
+
+      {loading ? (
+        <Text fontSize="sm" color="gray.500">
+          Loading buyers...
+        </Text>
+      ) : buyers.length === 0 ? (
+        <Text fontSize="sm" color="gray.500">
+          No buyers found.
+        </Text>
+      ) : (
+        buyers.map((buyer) => (
+          <Box
+            key={buyer._id}
+            borderWidth="1px"
+            borderColor="gray.200"
+            borderRadius="xl"
+            bg="white"
+            shadow="sm"
+            overflow="hidden"
+          >
+            <Box
+              px={4}
+              py={3}
+              bg={buyer.isBlocked ? "red.50" : "blue.50"}
+              borderBottomWidth="1px"
+              borderBottomColor="gray.200"
+            >
+              <HStack justify="space-between" align="start" spacing={3}>
+                <Box>
+                  <Text fontSize="md" fontWeight="800" color="gray.900">
+                    {getBuyerDisplayName(buyer)}
+                  </Text>
+                  <HStack spacing={2} mt={2} wrap="wrap">
+                    <Badge colorScheme="purple" textTransform="capitalize">
+                      {buyer.source || "manual"}
+                    </Badge>
+                    <Badge colorScheme={buyer.isBlocked ? "red" : "green"}>
+                      {buyer.isBlocked ? "Blocked" : "Active"}
+                    </Badge>
+                  </HStack>
+                </Box>
+                <Text fontSize="sm" fontWeight="800" color="blue.700" textAlign="right">
+                  {formatCurrency(Number(buyer.outstandingBalance || 0))}
+                </Text>
+              </HStack>
+            </Box>
+
+            <VStack align="stretch" spacing={3} p={4}>
+              <SimpleGrid columns={2} spacing={3}>
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Phone
+                  </Text>
+                  <Text fontSize="sm" color="gray.800">
+                    {buyer.buyerId?.phoneE164 || "-"}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    Email
+                  </Text>
+                  <Text fontSize="sm" color="gray.800" wordBreak="break-word">
+                    {buyer.buyerId?.emailNormalized || "-"}
+                  </Text>
+                </Box>
+              </SimpleGrid>
+
+              <Box>
+                <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700" mb={2}>
+                  Tags
+                </Text>
+                {buyer.tags && buyer.tags.length ? (
+                  <HStack spacing={2} wrap="wrap">
+                    {buyer.tags.slice(0, 4).map((tag, idx) => (
+                      <Badge key={`${buyer._id}-${tag}-${idx}`} colorScheme="gray">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </HStack>
+                ) : (
+                  <Text fontSize="sm" color="gray.500">
+                    No tags
+                  </Text>
+                )}
+              </Box>
+
+              <HStack justify="space-between" pt={1}>
+                <Button size="sm" colorScheme="blue" borderRadius="full" onClick={() => openLedgerView(buyer)}>
+                  View Ledger
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  colorScheme="red"
+                  borderRadius="full"
+                  onClick={() => openDeleteModal(buyer)}
+                >
+                  Delete
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        ))
+      )}
+
+      <HStack justify="space-between" pt={1}>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={page <= 1 || loading}
+          onClick={() => {
+            if (page <= 1) return;
+            const nextPage = page - 1;
+            setPage(nextPage);
+            fetchBuyers(nextPage, search);
+          }}
+        >
+          Previous
+        </Button>
+        <Text fontSize="sm" color="gray.600">
+          Page {page} of {totalPages || 1}
+        </Text>
+        <Button
+          size="sm"
+          variant="outline"
+          borderRadius="full"
+          isDisabled={page >= (totalPages || 1) || loading}
+          onClick={() => {
+            if (page >= (totalPages || 1)) return;
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchBuyers(nextPage, search);
+          }}
+        >
+          Next
+        </Button>
+      </HStack>
+    </VStack>
+  );
+
   const ledgerTableData = ledgerEntries.map((entry) => ({
       ...entry,
       entryDate: entry.entryDate,
@@ -1428,10 +1712,13 @@ const CustomersTab: React.FC = observer(() => {
         saleDate: record.saleDate,
         itemsCount,
         idDisplay: (
-          <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
-            navigator.clipboard.writeText(record._id || '');
-            toast({ title: 'Sale ID Copied', status: 'success', duration: 1000, isClosable: true });
-          }}>
+          <Text
+            fontWeight="600"
+            color="blue.600"
+            cursor="pointer"
+            textDecoration="underline"
+            onClick={() => openSaleDetails(record)}
+          >
             {record._id.slice(-6)}
           </Text>
         ),
@@ -1737,10 +2024,14 @@ const CustomersTab: React.FC = observer(() => {
                     <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
                       ID
                     </Text>
-                    <Text fontSize="sm" color="blue.600" fontWeight="600" cursor="pointer" onClick={() => {
-                        navigator.clipboard.writeText(record._id || '');
-                        toast({ title: 'Sale ID Copied', status: 'success', duration: 1000, isClosable: true });
-                      }}>
+                    <Text
+                      fontSize="sm"
+                      color="blue.600"
+                      fontWeight="600"
+                      cursor="pointer"
+                      textDecoration="underline"
+                      onClick={() => openSaleDetails(record)}
+                    >
                       {record._id.slice(-6)}
                     </Text>
                   </Box>
@@ -1833,6 +2124,322 @@ const CustomersTab: React.FC = observer(() => {
     </VStack>
   );
 
+  const renderSaleDetailsContent = () => {
+    const activeSaleRecord = saleRecordDetails?.saleRecord || selectedSaleRecord;
+
+    if (saleDetailsLoading) {
+      return (
+        <Flex minH="240px" align="center" justify="center" direction="column" gap={3}>
+          <Spinner color="blue.500" thickness="3px" size="lg" />
+          <Text fontSize="sm" color="gray.500">
+            Loading sale history{activeSaleRecord? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
+          </Text>
+        </Flex>
+      );
+    }
+
+    if (!saleRecordDetails) {
+      return (
+        <Flex minH="200px" align="center" justify="center">
+          <Text fontSize="sm" color="gray.500">
+            Sale details are not available{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}.
+          </Text>
+        </Flex>
+      );
+    }
+
+    const { saleRecord, summary, timeline } = saleRecordDetails;
+    const totalItems = Array.isArray(saleRecord.items)
+      ? saleRecord.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+      : 0;
+
+    return (
+      <VStack align="stretch" spacing={5}>
+        <Box borderWidth="1px" borderColor="blue.100" bg="blue.50" borderRadius="xl" p={4}>
+          <HStack justify="space-between" align="start" spacing={3}>
+            <Box>
+              <Text fontSize="xs" textTransform="uppercase" color="blue.700" fontWeight="700">
+                Sale ID
+              </Text>
+              <Text fontSize="lg" fontWeight="800" color="blue.900" wordBreak="break-all">
+                {saleRecord._id}
+              </Text>
+              <HStack spacing={2} mt={2} wrap="wrap">
+                <Badge colorScheme={saleRecord.status === "posted" ? "green" : saleRecord.status === "void" ? "red" : "orange"} textTransform="capitalize">
+                  {saleRecord.status}
+                </Badge>
+                <Badge colorScheme={summary.isPosted ? "blue" : "gray"}>
+                  {summary.isPosted ? "Ledger Linked" : "Not Posted"}
+                </Badge>
+                {saleRecord.source ? (
+                  <Badge colorScheme="purple" textTransform="capitalize">
+                    {saleRecord.source}
+                  </Badge>
+                ) : null}
+              </HStack>
+            </Box>
+            <IconButton
+              aria-label="Copy sale ID"
+              icon={<CopyIcon />}
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(saleRecord._id || "");
+                toast({ title: "Sale ID Copied", status: "success", duration: 1000, isClosable: true });
+              }}
+            />
+          </HStack>
+        </Box>
+
+        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+          <Box p={3} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
+            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+              Sale Total
+            </Text>
+            <Text fontSize="lg" fontWeight="800" color="gray.900">
+              {formatCurrency(summary.saleAmount)}
+            </Text>
+          </Box>
+          <Box p={3} borderWidth="1px" borderColor="green.200" borderRadius="xl" bg="green.50">
+            <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
+              Paid
+            </Text>
+            <Text fontSize="lg" fontWeight="800" color="green.800">
+              {formatCurrency(summary.paidAmount)}
+            </Text>
+          </Box>
+          <Box p={3} borderWidth="1px" borderColor="orange.200" borderRadius="xl" bg="orange.50">
+            <Text fontSize="xs" color="orange.700" textTransform="uppercase" fontWeight="700">
+              Debit Adjustments
+            </Text>
+            <Text fontSize="lg" fontWeight="800" color="orange.800">
+              {formatCurrency(summary.adjustmentDebitAmount)}
+            </Text>
+          </Box>
+          <Box p={3} borderWidth="1px" borderColor="blue.200" borderRadius="xl" bg="blue.50">
+            <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
+              Remaining Due
+            </Text>
+            <Text fontSize="lg" fontWeight="800" color="blue.800">
+              {formatCurrency(summary.remainingDue)}
+            </Text>
+          </Box>
+        </SimpleGrid>
+
+        <SimpleGrid columns={1} spacing={3}>
+          <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
+            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+              Sale Meta
+            </Text>
+            <VStack align="stretch" spacing={2} mt={3}>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Sale Date
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
+                  {formatDateTime(saleRecord.saleDate)}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Created
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
+                  {formatDateTime(saleRecord.createdAt)}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Posted At
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
+                  {formatDateTime(saleRecord.postedAt)}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Items
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
+                  {saleRecord.items?.length || 0} lines / {totalItems} qty
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Ledger Entry
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
+                  {saleRecord.ledgerEntryId ? formatShortId(saleRecord.ledgerEntryId) : "-"}
+                </Text>
+              </Flex>
+              {saleRecord.notes ? (
+                <Box pt={1}>
+                  <Text fontSize="sm" color="gray.600" mb={1}>
+                    Notes
+                  </Text>
+                  <Text fontSize="sm" color="gray.800">
+                    {saleRecord.notes}
+                  </Text>
+                </Box>
+              ) : null}
+            </VStack>
+          </Box>
+
+          <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
+            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+              Sale Totals
+            </Text>
+            <VStack align="stretch" spacing={2} mt={3}>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Subtotal
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
+                  {formatCurrency(Number(saleRecord.subtotal || 0))}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Discount
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
+                  {formatCurrency(Number(saleRecord.discountTotal || 0))}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Tax
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
+                  {formatCurrency(Number(saleRecord.taxTotal || 0))}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  Credit Adjustments
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
+                  {formatCurrency(summary.adjustmentCreditAmount)}
+                </Text>
+              </Flex>
+              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
+                <Text fontSize="sm" color="gray.600">
+                  History Events
+                </Text>
+                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
+                  {summary.eventCount}
+                </Text>
+              </Flex>
+            </VStack>
+          </Box>
+        </SimpleGrid>
+
+        <Box>
+          <Text fontSize="sm" color="gray.500" textTransform="uppercase" fontWeight="700" mb={3}>
+            Items
+          </Text>
+          <VStack align="stretch" spacing={3}>
+            {saleRecord.items?.map((item, index) => (
+              <Box key={`${saleRecord._id}-item-${index}`} p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
+                <HStack justify="space-between" align="start">
+                  <Box>
+                    <Text fontSize="sm" fontWeight="700" color="gray.900">
+                      {item.itemName}
+                    </Text>
+                    <Text fontSize="sm" color="gray.500">
+                      Qty {item.quantity} x {formatCurrency(Number(item.unitPrice || 0))}
+                    </Text>
+                  </Box>
+                  <Text fontSize="sm" fontWeight="800" color="blue.700">
+                    {formatCurrency(Number(item.lineTotal || 0))}
+                  </Text>
+                </HStack>
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+
+        <Box>
+          <Text fontSize="sm" color="gray.500" textTransform="uppercase" fontWeight="700" mb={3}>
+            History
+          </Text>
+          <VStack align="stretch" spacing={3}>
+            <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="gray.50">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" fontWeight="700" color="gray.900">
+                    Sale Record Created
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
+                  </Text>
+                </Box>
+                <Text fontSize="sm" fontWeight="800" color="blue.700">
+                  {formatCurrency(summary.saleAmount)}
+                </Text>
+              </HStack>
+            </Box>
+
+            {timeline.length === 0 ? (
+              <Text fontSize="sm" color="gray.500">
+                No ledger activity linked to this sale yet.
+              </Text>
+            ) : (
+              timeline.map((entry) => (
+                <Box key={entry._id} p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
+                  <HStack justify="space-between" align="start" spacing={3}>
+                    <Box>
+                      <HStack spacing={2} wrap="wrap">
+                        <Text fontSize="sm" fontWeight="700" color="gray.900">
+                          {getTimelineTitle(entry)}
+                        </Text>
+                        <Badge colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"} textTransform="capitalize">
+                          {entry.entryType}
+                        </Badge>
+                        <Badge colorScheme={entry.direction === "debit" ? "orange" : "green"} textTransform="capitalize">
+                          {entry.direction}
+                        </Badge>
+                        {entry.status ? (
+                          <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
+                            {entry.status}
+                          </Badge>
+                        ) : null}
+                        {entry.relationType === "reversal" ? <Badge colorScheme="purple">Linked Reversal</Badge> : null}
+                      </HStack>
+                      <Text fontSize="sm" color="gray.500" mt={1}>
+                        {formatDateTime(entry.entryDate || entry.createdAt)}
+                      </Text>
+                      <Text fontSize="sm" color="gray.700" mt={2}>
+                        {entry.notes || formatLedgerReference(entry)}
+                      </Text>
+                      {entry.referenceId ? (
+                        <Text fontSize="xs" color="gray.500" mt={1}>
+                          Ref: {formatLedgerReference(entry)}
+                        </Text>
+                      ) : null}
+                    </Box>
+                    <Box textAlign="right">
+                      <Text
+                        fontSize="sm"
+                        fontWeight="800"
+                        color={entry.direction === "debit" ? "orange.700" : "green.700"}
+                      >
+                        {formatSignedAmount(entry)}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500" mt={1}>
+                        Balance {formatCurrency(Number(entry.balanceAfter || 0))}
+                      </Text>
+                    </Box>
+                  </HStack>
+                </Box>
+              ))
+            )}
+          </VStack>
+        </Box>
+      </VStack>
+    );
+  };
+
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
 
   return (
@@ -1920,14 +2527,18 @@ const CustomersTab: React.FC = observer(() => {
         </Flex>
 
         {!selectedLedgerBuyer ? (
-          <CustomTable
-            title={`Buyers (${total})`}
-            columns={buyerColumns}
-            data={buyerTableData}
-            loading={loading}
-            actions={buyerTableActions}
-            serial={{ show: true, text: "S.No." }}
-          />
+          useCompactBuyerView ? (
+            renderBuyerProfilesMobile()
+          ) : (
+            <CustomTable
+              title={`Buyers (${total})`}
+              columns={buyerColumns}
+              data={buyerTableData}
+              loading={loading}
+              actions={buyerTableActions}
+              serial={{ show: true, text: "S.No." }}
+            />
+          )
         ) : (
           <VStack align="stretch" spacing={4}>
             <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
@@ -2074,6 +2685,27 @@ const CustomersTab: React.FC = observer(() => {
         )}
       </VStack>
 
+      {useCompactLedgerView ? (
+        <Modal isOpen={isSaleDetailsOpen} onClose={closeSaleDetails} size="full" scrollBehavior="inside">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Sale Details</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>{renderSaleDetailsContent()}</ModalBody>
+          </ModalContent>
+        </Modal>
+      ) : (
+        <CustomDrawer
+          open={isSaleDetailsOpen}
+          close={closeSaleDetails}
+          title="Sale Details"
+          size="md"
+          loading={saleDetailsLoading && !saleRecordDetails}
+        >
+          {renderSaleDetailsContent()}
+        </CustomDrawer>
+      )}
+
       <Modal isOpen={isImportOpen} onClose={closeImportModal} isCentered size="xl">
         <ModalOverlay />
         <ModalContent>
@@ -2082,9 +2714,7 @@ const CustomersTab: React.FC = observer(() => {
           <ModalBody>
             <VStack spacing={4} align="stretch">
               <Text fontSize="sm" color="gray.600">
-                {canUseDeviceContactImport
-                  ? "Choose one contact from the device, import the full contact list, or paste rows in format: Name, Phone, Email"
-                  : "Paste rows in format: Name, Phone, Email"}
+                Import buyers directly from device contacts.
               </Text>
 
               <FormControl>
@@ -2145,28 +2775,11 @@ const CustomersTab: React.FC = observer(() => {
                   <Divider />
                 </>
               ) : null}
-
-              <FormControl>
-                <FormLabel>Paste Contacts</FormLabel>
-                <Textarea
-                  rows={7}
-                  value={pasteContactsInput}
-                  onChange={(e) => setPasteContactsInput(e.target.value)}
-                  placeholder={`Amit Sharma, +919999999999, amit@example.com\nNeha, 9876543210`}
-                />
-              </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={closeImportModal}>
               Cancel
-            </Button>
-            <Button
-              colorScheme="teal"
-              onClick={handleImportFromPaste}
-              isLoading={isImportingContacts}
-            >
-              Import Pasted Contacts
             </Button>
           </ModalFooter>
         </ModalContent>

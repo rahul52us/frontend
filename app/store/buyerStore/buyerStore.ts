@@ -105,6 +105,15 @@ class BuyerStore {
     }
   };
 
+  getBuyerSaleRecordDetails = async (profileId: string, saleId: string) => {
+    try {
+      const response = await axios.get(`/buyer/${profileId}/sales/${saleId}`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
   postBuyerSaleRecordToLedger = async (profileId: string, saleId: string, payload?: any) => {
     try {
       const response = await axios.post(`/buyer/${profileId}/sales/${saleId}/post-ledger`, payload || {});
