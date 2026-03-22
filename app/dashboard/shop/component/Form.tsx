@@ -35,7 +35,7 @@ import OperatingHoursSection from "./OperatingHoursSection";
 import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
 import { useParams } from "next/navigation";
-import { dummyData } from "./utils/constant";
+import { createEmptyShopFormData } from "./utils/constant";
 import {
   FaStore,
   FaMapMarkerAlt,
@@ -47,6 +47,8 @@ import {
 import { FiLayers } from "react-icons/fi";
 import { validationSchema } from "./utils/validation";
 import { readFileAsBase64 } from "../../../config/utils/utils";
+import SellerOnboardingWizard from "./SellerOnboardingWizard";
+import { createCompanyCode } from "./utils/companyCode";
 
 const SectionHeader = ({ activeSection, sections }) => {
   const progress = ((activeSection + 1) / sections.length) * 100;
@@ -130,7 +132,7 @@ const SectionHeader = ({ activeSection, sections }) => {
 };
 
 const ShopForm = observer(() => {
-  const [initialValues, setInitialValues] = useState(dummyData);
+  const [initialValues, setInitialValues] = useState(() => createEmptyShopFormData());
   const [activeSection, setActiveSection] = useState(0);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -157,7 +159,16 @@ const ShopForm = observer(() => {
     const fetchShopData = async () => {
       // If user has no company linked, assume creation mode
       if (!user?.company) {
+        const emptyData = createEmptyShopFormData();
         setIsUpdateMode(false);
+        setInitialValues({
+          ...emptyData,
+          contactInfo: {
+            ...emptyData.contactInfo,
+            phone: user?.phone || "",
+            email: user?.email || "",
+          },
+        });
         setLoading(false);
         return;
       }
@@ -211,34 +222,70 @@ const ShopForm = observer(() => {
     return null;
   };
 
+  const buildCompanyPayload = async (values) => {
+    const formData = { ...values };
+
+    const logoData = await handleImageProcessing(formData.logo?.file, formData.logo?.isAdd, formData.logo?.isDeleted);
+    const coverImageData = await handleImageProcessing(formData.coverImage?.file, formData.coverImage?.isAdd, formData.coverImage?.isDeleted);
+
+    if (logoData) formData.logo = logoData;
+    if (coverImageData) formData.coverImage = coverImageData;
+
+    const updatedGallery = await Promise.all(
+      (formData.gallery || []).map(async (item) => {
+        if (item.isAdd) {
+          const processed = await handleImageProcessing(item.file, true, false);
+          return processed ? { file: processed, title: item.title } : null;
+        }
+        return { file: Array.isArray(item.file) ? item.file[0] : item.file, title: item.title };
+      })
+    );
+
+    formData.gallery = updatedGallery.filter(Boolean);
+    formData.about = formData.about || formData.description || "";
+    formData.gstNumber = formData.gstNumber?.trim?.() || undefined;
+
+    return formData;
+  };
+
+  const createCompanyFromOnboarding = async (values) => {
+    const createData = await buildCompanyPayload(values);
+    delete createData._id;
+
+    const contactPhone = createData?.contactInfo?.phone || user?.phone || "";
+    let lastError: any = null;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const payload = {
+          ...createData,
+          companyCode: createCompanyCode(createData.name || "", contactPhone, attempt),
+          userId: user?._id,
+        };
+        await createCompany(payload);
+        return;
+      } catch (err: any) {
+        const message = err?.message || err?.data?.message || "";
+        lastError = err;
+        if (/company code already exists/i.test(message)) {
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    throw lastError;
+  };
+
   const onSubmit = async (values, { setSubmitting }) => {
     try {
       setSubmitting(true);
-      const formData = { ...values };
-
-      const logoData = await handleImageProcessing(formData.logo?.file, formData.logo?.isAdd, formData.logo?.isDeleted);
-      const coverImageData = await handleImageProcessing(formData.coverImage?.file, formData.coverImage?.isAdd, formData.coverImage?.isDeleted);
-
-      if (logoData) formData.logo = logoData;
-      if (coverImageData) formData.coverImage = coverImageData;
-
-      const updatedGallery = await Promise.all(
-        formData.gallery.map(async (item) => {
-          if (item.isAdd) {
-            const processed = await handleImageProcessing(item.file, true, false);
-            return processed ? { file: processed, title: item.title } : null;
-          }
-          return { file: Array.isArray(item.file) ? item.file[0] : item.file, title: item.title };
-        })
-      );
-
-      formData.gallery = updatedGallery.filter(Boolean);
+      const formData = await buildCompanyPayload(values);
 
       if (isUpdateMode) {
         await updateCompanyDetails({ ...formData, _id: user?.company?._id, shopStatus: "active" });
         openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
       } else {
-        // CREATE MODE - Remove _id from dummy data
         const createData = { ...formData };
         delete createData._id;
         await createCompany({ ...createData, userId: user?._id });
@@ -259,6 +306,17 @@ const ShopForm = observer(() => {
   };
 
   if (loading) return <Center minH="80vh"><SpinnerLoader size="xl" /></Center>;
+
+  if (!isUpdateMode) {
+    return (
+      <SellerOnboardingWizard
+        initialValues={initialValues}
+        accountPhone={user?.phone}
+        accountEmail={user?.email}
+        onSubmit={createCompanyFromOnboarding}
+      />
+    );
+  }
 
   return (
     <Container maxW="container.2xl" py={4}>

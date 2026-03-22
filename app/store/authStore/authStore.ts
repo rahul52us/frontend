@@ -21,7 +21,7 @@ class AuthStore {
   isLoading: boolean = false; // Top level addresses
   error: string | null = null;
   notification: Notification | null = null;
-  company: any = "67c7380f5e373d64c5b56fbe"
+  company: any = null
   wishlist: any[] = [];
 
 

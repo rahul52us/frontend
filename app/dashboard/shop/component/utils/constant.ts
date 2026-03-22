@@ -1,20 +1,18 @@
-export const dummyData = {
-  _id: "shop123",
-  name: "Artisan Crafts & Co.",
+export const createEmptyShopFormData = () => ({
+  _id: "",
+  name: "",
   companyCode: "",
   deletedFiles: [],
   closedDates: [],
-  description:
-    "",
-  about:
-    "",
-  categories: ["Home Decor", "Furniture", "Textiles", "Ceramics"],
-  tags: ["handmade", "sustainable", "eco-friendly", "fair-trade", "artisanal"],
+  description: "",
+  about: "",
+  categories: [],
+  tags: [],
   logo: { file: [], isAdd: 0, isDeleted: 0 },
   coverImage: { file: [], isAdd: 0, isDeleted: 0 },
   ratings: {
-    average: 4.8,
-    total: 256,
+    average: 0,
+    total: 0,
   },
   gallery: [],
   location: {
@@ -36,23 +34,25 @@ export const dummyData = {
     },
   ],
   contactInfo: {
-    phone: "+1 (503) 555-1234",
-    email: "hello@artisancrafts.co",
-    website: "https://artisancrafts.co",
+    phone: "",
+    email: "",
+    website: "",
     socialMedia: {
       instagram: "",
       facebook: "",
       twitter: "",
+      linkedin: "",
+      youtube: "",
     },
   },
   operatingHours: [
-    { day: "Monday", open: "10:00", close: "18:00" },
-    { day: "Tuesday", open: "10:00", close: "18:00" },
-    { day: "Wednesday", open: "10:00", close: "18:00" },
-    { day: "Thursday", open: "10:00", close: "20:00" },
-    { day: "Friday", open: "10:00", close: "20:00" },
-    { day: "Saturday", open: "11:00", close: "13:00" },
-    { day: "Sunday", open: "12:00", close: "16:00" },
+    { day: "Monday", open: "09:00", close: "18:00" },
+    { day: "Tuesday", open: "09:00", close: "18:00" },
+    { day: "Wednesday", open: "09:00", close: "18:00" },
+    { day: "Thursday", open: "09:00", close: "18:00" },
+    { day: "Friday", open: "09:00", close: "18:00" },
+    { day: "Saturday", open: "", close: "" },
+    { day: "Sunday", open: "", close: "" },
   ],
   status: "active",
   gstNumber: "",
@@ -60,8 +60,10 @@ export const dummyData = {
     accountHolderName: "",
     accountNumber: "",
     ifscCode: "",
-    bankName: ""
+    bankName: "",
   },
   returnPolicy: "",
-  paymentMethods: []
-};
+  paymentMethods: [],
+});
+
+export const dummyData = createEmptyShopFormData();

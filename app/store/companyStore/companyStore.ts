@@ -52,11 +52,15 @@ class CompanyStores {
     this.isLoading = true;
     try {
       const response = await axios.post("/company/create", payload);
-      // Update local user type immediately if successful so UI reflects it
+      const createdCompany = response.data?.data || null;
+      // Update local auth state immediately so seller-only dashboard tabs use the new shop.
       if (authStore.user) {
         authStore.user.type = 'seller';
-        authStore.user.company = response.data?.data?._id;
+        authStore.user.company = createdCompany;
       }
+      authStore.company = createdCompany;
+      // Refresh full auth payload so all consumers get the same shape from the server.
+      await authStore.fetchUser();
       return response;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err.message);
