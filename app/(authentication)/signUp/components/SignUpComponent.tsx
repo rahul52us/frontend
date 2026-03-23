@@ -197,6 +197,16 @@ const FieldError = ({ message }: { message?: string }) =>
     </Text>
   ) : null;
 
+const getErrorText = (error: any) =>
+  String(
+    error?.message ||
+      error?.data?.message ||
+      error?.response?.data?.message ||
+      error?.response?.data ||
+      error ||
+      "",
+  ).toLowerCase();
+
 const UploadCard = ({
   title,
   helper,
@@ -547,6 +557,17 @@ const SignUpForm = observer(() => {
         });
       }
     } catch (error: any) {
+      const errorText = getErrorText(error);
+      if (errorText.includes("user with this mobile number already exists")) {
+        setErrors({ phone: "This mobile number is already registered. Please sign in instead." });
+        setStepIndex(0);
+        toast({
+          title: "Number already exists",
+          description: "Please use a different mobile number or sign in.",
+          status: "warning",
+        });
+        return;
+      }
       toast({
         title: "Registration Failed",
         description: error?.message || "Something went wrong.",
@@ -561,6 +582,31 @@ const SignUpForm = observer(() => {
     const nextErrors = validateCurrentStep();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+
+    if (stepIndex === 0) {
+      setLoading(true);
+      try {
+        const availability = await auth.checkSignupPhoneAvailability(userData.phone.trim());
+        if (!availability?.available) {
+          setErrors({ phone: "This mobile number is already registered. Please sign in instead." });
+          toast({
+            title: "Number already exists",
+            description: "Please use a different mobile number or sign in.",
+            status: "warning",
+          });
+          return;
+        }
+      } catch (error: any) {
+        toast({
+          title: "Unable to verify phone number",
+          description: error?.message || "Please try again.",
+          status: "error",
+        });
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
 
     const isLastPreOtpStep = stepIndex === steps.length - 2;
     if (isLastPreOtpStep) {

@@ -157,6 +157,22 @@ class AuthStore {
   };
 
   // Register user
+  checkSignupPhoneAvailability = async (phone: string) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.post("/auth/admin/signup/check-phone", { phone });
+      return response?.data?.data;
+    } catch (err: any) {
+      const text = String(err?.response?.data || err?.message || "").toLowerCase();
+      if (text.includes("cannot post /api/auth/admin/signup/check-phone")) {
+        return { available: true, unsupported: true };
+      }
+      return Promise.reject(err?.response?.data || err);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
   register = async (payload: any) => {
     this.isLoading = true;
     try {
