@@ -155,6 +155,7 @@ const UploadCard = ({
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hasFiles = Boolean(files && ((Array.isArray(files) && files.length) || !Array.isArray(files)));
+  const openPicker = () => inputRef.current?.click();
 
   return (
     <Box p={5} {...getFieldShellStyles()}>
@@ -172,6 +173,8 @@ const UploadCard = ({
           <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
         ) : (
           <Box
+            role="button"
+            tabIndex={0}
             borderWidth="1px"
             borderStyle="dashed"
             borderColor="teal.200"
@@ -180,9 +183,23 @@ const UploadCard = ({
             px={6}
             textAlign="center"
             bg="teal.50"
+            cursor="pointer"
+            transition="all 0.2s ease"
+            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+            _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+            onClick={openPicker}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openPicker();
+              }
+            }}
           >
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" fontWeight="600" color="gray.700">
               Tap to upload image
+            </Text>
+            <Text mt={1} fontSize="xs" color="gray.500">
+              JPG, PNG or WEBP
             </Text>
           </Box>
         )}
@@ -200,7 +217,7 @@ const UploadCard = ({
         />
 
         <HStack spacing={3}>
-          <Button variant="outline" borderRadius="full" onClick={() => inputRef.current?.click()}>
+          <Button variant="outline" borderRadius="full" onClick={openPicker}>
             {hasFiles ? "Replace" : "Upload"}
           </Button>
           {hasFiles ? (
@@ -234,6 +251,7 @@ const SellerOnboardingWizard = ({
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -443,6 +461,18 @@ const SellerOnboardingWizard = ({
     }
   };
 
+  const handleGalleryFilesSelected = (files: File[]) => {
+    if (!files.length) return;
+
+    const nextItems = files.map((file) => ({
+      file,
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      isAdd: 1,
+    }));
+
+    setFieldValue("gallery", [...(formValues.gallery || []), ...nextItems]);
+  };
+
   return (
     <Box
       minH="100vh"
@@ -591,8 +621,8 @@ const SellerOnboardingWizard = ({
                 <Box p={5} {...getFieldShellStyles()}>
                   <Flex
                     justify="space-between"
-                    align={{ base: "start", md: "center" }}
-                    direction={{ base: "column", md: "row" }}
+                    align={{ base: "start", lg: "center" }}
+                    direction={{ base: "column", lg: "row" }}
                     gap={3}
                   >
                     <Box>
@@ -607,6 +637,14 @@ const SellerOnboardingWizard = ({
                       leftIcon={<FiNavigation />}
                       variant="outline"
                       borderRadius="full"
+                      w={{ base: "full", lg: "auto" }}
+                      minH="48px"
+                      px={5}
+                      justifyContent="center"
+                      textAlign="center"
+                      whiteSpace="nowrap"
+                      flexShrink={0}
+                      alignSelf={{ base: "stretch", lg: "center" }}
                       onClick={detectCurrentLocation}
                       isLoading={geocoding}
                     >
@@ -895,35 +933,62 @@ const SellerOnboardingWizard = ({
                     </Box>
 
                     <Input
+                      ref={galleryInputRef}
                       type="file"
                       accept="image/*"
                       multiple
+                      display="none"
                       onChange={(event) => {
-                        const files = Array.from(event.target.files || []);
-                        const nextItems = files.map((file) => ({
-                          file,
-                          title: file.name.replace(/\.[^/.]+$/, ""),
-                          isAdd: 1,
-                        }));
-                        setFieldValue("gallery", [...(formValues.gallery || []), ...nextItems]);
+                        handleGalleryFilesSelected(Array.from(event.target.files || []));
                         event.target.value = "";
                       }}
-                      border="none"
-                      p={0}
-                      sx={{
-                        "::file-selector-button": {
-                          background: "linear-gradient(90deg, #f472b6, #ec4899)",
-                          color: "#ffffff",
-                          borderRadius: "9999px",
-                          height: "48px",
-                          fontWeight: 700,
-                          border: "none",
-                          padding: "0 18px",
-                          marginRight: "12px",
-                          cursor: "pointer",
-                        },
-                      }}
                     />
+
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      borderWidth="1px"
+                      borderStyle="dashed"
+                      borderColor="teal.200"
+                      borderRadius="2xl"
+                      py={7}
+                      px={6}
+                      bg="teal.50"
+                      textAlign="center"
+                      cursor="pointer"
+                      transition="all 0.2s ease"
+                      _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+                      _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+                      onClick={() => galleryInputRef.current?.click()}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          galleryInputRef.current?.click();
+                        }
+                      }}
+                    >
+                      <Text fontSize="sm" fontWeight="600" color="gray.700">
+                        Tap to choose gallery images
+                      </Text>
+                      <Text mt={1} fontSize="xs" color="gray.500">
+                        Upload multiple storefront or product photos
+                      </Text>
+                    </Box>
+
+                    <HStack spacing={3} flexWrap="wrap">
+                      <Button
+                        colorScheme="teal"
+                        borderRadius="full"
+                        onClick={() => galleryInputRef.current?.click()}
+                      >
+                        Add Photos
+                      </Button>
+                      <Text fontSize="sm" color="gray.500">
+                        {(formValues.gallery || []).length
+                          ? `${formValues.gallery.length} photo${formValues.gallery.length > 1 ? "s" : ""} selected`
+                          : "No gallery images selected yet."}
+                      </Text>
+                    </HStack>
 
                     {(formValues.gallery || []).length ? (
                       <VStack spacing={3} align="stretch">
@@ -968,11 +1033,7 @@ const SellerOnboardingWizard = ({
                           </Box>
                         ))}
                       </VStack>
-                    ) : (
-                      <Text fontSize="sm" color="gray.500">
-                        No gallery images selected yet.
-                      </Text>
-                    )}
+                    ) : null}
                   </VStack>
                 </Box>
               </VStack>

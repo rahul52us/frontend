@@ -226,6 +226,7 @@ const UploadCard = ({
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hasFiles = Boolean(files && ((Array.isArray(files) && files.length) || !Array.isArray(files)));
+  const openPicker = () => inputRef.current?.click();
 
   return (
     <Box {...fieldCardStyles}>
@@ -243,6 +244,8 @@ const UploadCard = ({
           <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
         ) : (
           <Box
+            role="button"
+            tabIndex={0}
             borderWidth="1px"
             borderStyle="dashed"
             borderColor="teal.200"
@@ -251,9 +254,23 @@ const UploadCard = ({
             px={6}
             textAlign="center"
             bg="teal.50"
+            cursor="pointer"
+            transition="all 0.2s ease"
+            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+            _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+            onClick={openPicker}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openPicker();
+              }
+            }}
           >
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" fontWeight="600" color="gray.700">
               Tap to upload image
+            </Text>
+            <Text mt={1} fontSize="xs" color="gray.500">
+              JPG, PNG or WEBP
             </Text>
           </Box>
         )}
@@ -271,7 +288,7 @@ const UploadCard = ({
         />
 
         <HStack spacing={3}>
-          <Button variant="outline" borderRadius="full" onClick={() => inputRef.current?.click()}>
+          <Button variant="outline" borderRadius="full" onClick={openPicker}>
             {hasFiles ? "Replace" : "Upload"}
           </Button>
           {hasFiles ? (
@@ -305,6 +322,8 @@ const SignUpForm = observer(() => {
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [geocoding, setGeocoding] = useState(false);
+  const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const [userData, setUserData] = useState({
     phone: "",
@@ -347,11 +366,21 @@ const SignUpForm = observer(() => {
   }, [selectedPoint]);
 
   useEffect(() => {
-    setSellerData((prev) => ({
-      ...prev,
-      contactPhone: prev.contactPhone || userData.phone,
-    }));
-  }, [userData.phone]);
+    if (intent !== "seller" || isContactPhoneCustomized) {
+      return;
+    }
+
+    setSellerData((prev) => {
+      if (prev.contactPhone === userData.phone) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        contactPhone: userData.phone,
+      };
+    });
+  }, [intent, isContactPhoneCustomized, userData.phone]);
 
   const setIntentSelection = (nextIntent: Intent) => {
     setIntent(nextIntent);
@@ -359,6 +388,7 @@ const SignUpForm = observer(() => {
     setToken("");
     setOtp("");
     setErrors({});
+    setIsContactPhoneCustomized(false);
   };
 
   const setSellerFieldValue = (path: string, value: any) => {
@@ -687,6 +717,21 @@ const SignUpForm = observer(() => {
     setStepIndex((prev) => Math.max(0, prev - 1));
   };
 
+  const handleGalleryFilesSelected = (files: File[]) => {
+    if (!files.length) return;
+
+    const nextItems = files.map((file) => ({
+      file,
+      title: file.name.replace(/\.[^/.]+$/, ""),
+      isAdd: 1,
+    }));
+
+    setSellerData((prev) => ({
+      ...prev,
+      gallery: [...prev.gallery, ...nextItems],
+    }));
+  };
+
   const renderPhoneStep = () => (
     <VStack align="stretch" spacing={6}>
       <Box {...fieldCardStyles}>
@@ -848,8 +893,8 @@ const SignUpForm = observer(() => {
       <Box {...fieldCardStyles}>
         <Flex
           justify="space-between"
-          align={{ base: "start", md: "center" }}
-          direction={{ base: "column", md: "row" }}
+          align={{ base: "start", lg: "center" }}
+          direction={{ base: "column", lg: "row" }}
           gap={3}
         >
           <Box>
@@ -864,6 +909,14 @@ const SignUpForm = observer(() => {
             leftIcon={<FiNavigation />}
             variant="outline"
             borderRadius="full"
+            w={{ base: "full", lg: "auto" }}
+            minH="48px"
+            px={5}
+            justifyContent="center"
+            textAlign="center"
+            whiteSpace="nowrap"
+            flexShrink={0}
+            alignSelf={{ base: "stretch", lg: "center" }}
             onClick={detectCurrentLocation}
             isLoading={geocoding}
           >
@@ -1014,12 +1067,14 @@ const SignUpForm = observer(() => {
             inputMode="numeric"
             pattern="[0-9]*"
             value={sellerData.contactPhone}
-            onChange={(event) =>
+            onChange={(event) => {
+              const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
               setSellerData((prev) => ({
                 ...prev,
-                contactPhone: event.target.value.replace(/\D/g, "").slice(0, 10),
-              }))
-            }
+                contactPhone: nextPhone,
+              }));
+              setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
+            }}
             placeholder="Public shop phone"
             {...inputStyles}
           />
@@ -1095,38 +1150,62 @@ const SignUpForm = observer(() => {
           </Box>
 
           <Input
+            ref={galleryInputRef}
             type="file"
             accept="image/*"
             multiple
+            display="none"
             onChange={(event) => {
-              const files = Array.from(event.target.files || []);
-              const nextItems = files.map((file) => ({
-                file,
-                title: file.name.replace(/\.[^/.]+$/, ""),
-                isAdd: 1,
-              }));
-              setSellerData((prev) => ({
-                ...prev,
-                gallery: [...prev.gallery, ...nextItems],
-              }));
+              handleGalleryFilesSelected(Array.from(event.target.files || []));
               event.target.value = "";
             }}
-            border="none"
-            p={0}
-            sx={{
-              "::file-selector-button": {
-                background: "linear-gradient(90deg, #14b8a6, #06b6d4)",
-                color: "#ffffff",
-                borderRadius: "9999px",
-                height: "48px",
-                fontWeight: 700,
-                border: "none",
-                padding: "0 18px",
-                marginRight: "12px",
-                cursor: "pointer",
-              },
-            }}
           />
+
+          <Box
+            role="button"
+            tabIndex={0}
+            borderWidth="1px"
+            borderStyle="dashed"
+            borderColor="teal.200"
+            borderRadius="2xl"
+            py={7}
+            px={6}
+            bg="teal.50"
+            textAlign="center"
+            cursor="pointer"
+            transition="all 0.2s ease"
+            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+            _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+            onClick={() => galleryInputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                galleryInputRef.current?.click();
+              }
+            }}
+          >
+            <Text fontSize="sm" fontWeight="600" color="gray.700">
+              Tap to choose gallery images
+            </Text>
+            <Text mt={1} fontSize="xs" color="gray.500">
+              Upload multiple storefront or product photos
+            </Text>
+          </Box>
+
+          <HStack spacing={3} flexWrap="wrap">
+            <Button
+              colorScheme="teal"
+              borderRadius="full"
+              onClick={() => galleryInputRef.current?.click()}
+            >
+              Add Photos
+            </Button>
+            <Text fontSize="sm" color="gray.500">
+              {sellerData.gallery.length
+                ? `${sellerData.gallery.length} photo${sellerData.gallery.length > 1 ? "s" : ""} selected`
+                : "No gallery images selected yet."}
+            </Text>
+          </HStack>
 
           {sellerData.gallery.length ? (
             <VStack spacing={3} align="stretch">
@@ -1171,11 +1250,7 @@ const SignUpForm = observer(() => {
                 </Box>
               ))}
             </VStack>
-          ) : (
-            <Text fontSize="sm" color="gray.500">
-              No gallery images selected yet.
-            </Text>
-          )}
+          ) : null}
         </VStack>
       </Box>
     </VStack>
@@ -1214,11 +1289,22 @@ const SignUpForm = observer(() => {
   };
 
   return (
-    <Box minH="100vh" bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)" py={{ base: 6, md: 10 }}>
-      <Container maxW="container.md">
-        <Box {...panelStyles} px={{ base: 5, md: 8 }} py={{ base: 6, md: 8 }}>
+    <Box
+      minH={{ base: "100vh", md: "auto" }}
+      bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
+      py={{ base: 0, md: 2, xl: 4 }}
+    >
+      <Container maxW={{ base: "full", md: "container.lg", xl: "760px" }} px={0}>
+        <Box
+          {...panelStyles}
+          borderRadius={{ base: "none", md: "3xl" }}
+          boxShadow={{ base: "none", md: panelStyles.boxShadow }}
+          borderWidth={{ base: "0px", md: panelStyles.borderWidth }}
+          px={{ base: 5, md: 8, xl: 9 }}
+          py={{ base: 6, md: 8, xl: 9 }}
+        >
           <VStack align="stretch" spacing={8}>
-            <Flex justify="space-between" align="center">
+            <Flex justify="space-between" align={{ base: "start", sm: "center" }} direction={{ base: "column", sm: "row" }} gap={3}>
               <Circle size="42px" bg="white" borderWidth="1px" borderColor="gray.200" boxShadow="sm">
                 <IconButton
                   aria-label="Go back"
@@ -1244,19 +1330,19 @@ const SignUpForm = observer(() => {
 
             <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
 
-            <HStack spacing={3} align="center">
+            <Stack direction={{ base: "column", sm: "row" }} spacing={4} align={{ base: "flex-start", sm: "center" }}>
               <Circle size="50px" bg="teal.50" color="teal.600">
                 <Icon as={activeStep.icon as any} boxSize={5} />
               </Circle>
-              <Box>
-                <Heading fontSize={{ base: "3xl", md: "4xl" }} color="gray.900" lineHeight="1.1">
+              <Box flex="1" minW={0}>
+                <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
                   {activeStep.title}
                 </Heading>
                 <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
                   {activeStep.subtitle}
                 </Text>
               </Box>
-            </HStack>
+            </Stack>
 
             <AnimatePresence mode="wait">
               <MotionBox
