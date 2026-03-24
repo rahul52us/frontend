@@ -30,6 +30,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiCamera, FiMail, FiMapPin, FiNavigation, FiPhone, FiShoppingBag } from "react-icons/fi";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
+import {
+  getOptionalGstError,
+  normalizeGstNumber,
+} from "../../../config/utils/gstValidation";
 import { createCompanyCode } from "./utils/companyCode";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -349,6 +353,12 @@ const SellerOnboardingWizard = ({
     if (stepIndex === 0 && !formValues.name?.trim()) {
       errors.name = "Store name is required.";
     }
+    if (stepIndex === 0) {
+      const gstError = getOptionalGstError(formValues.gstNumber);
+      if (gstError) {
+        errors.gstNumber = gstError;
+      }
+    }
 
     if (stepIndex === 1) {
       if (!hasPickedCoordinates(formValues.location?.coordinates)) {
@@ -528,13 +538,14 @@ const SellerOnboardingWizard = ({
                       </FormLabel>
                       <Input
                         value={formValues.gstNumber || ""}
-                        onChange={(event) => setFieldValue("gstNumber", event.target.value.toUpperCase())}
+                        onChange={(event) => setFieldValue("gstNumber", normalizeGstNumber(event.target.value))}
                         placeholder="Optional"
                         h="58px"
                         borderRadius="2xl"
                         borderColor="gray.200"
                         _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
                       />
+                      <FieldError message={stepErrors.gstNumber} />
                     </FormControl>
                   </Box>
 

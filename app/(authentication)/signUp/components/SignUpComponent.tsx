@@ -42,6 +42,10 @@ import {
 } from "react-icons/fi";
 import stores from "../../../store/stores";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
+import {
+  getOptionalGstError,
+  normalizeGstNumber,
+} from "../../../config/utils/gstValidation";
 import { readFileAsBase64 } from "../../../config/utils/utils";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
 
@@ -450,6 +454,8 @@ const SignUpForm = observer(() => {
     if (intent === "seller" && stepIndex === 1) {
       if (!userData.name.trim()) nextErrors.name = "Owner name is required.";
       if (!sellerData.storeName.trim()) nextErrors.storeName = "Store name is required.";
+      const gstError = getOptionalGstError(sellerData.gstNumber);
+      if (gstError) nextErrors.gstNumber = gstError;
     }
 
     if (intent === "seller" && stepIndex === 2) {
@@ -489,7 +495,7 @@ const SignUpForm = observer(() => {
       name: sellerData.storeName.trim(),
       description: sellerData.description.trim(),
       about: sellerData.description.trim(),
-      gstNumber: sellerData.gstNumber.trim() || undefined,
+      gstNumber: normalizeGstNumber(sellerData.gstNumber) || undefined,
       location: sellerData.location,
       contactInfo: {
         phone: sellerData.contactPhone.trim() || userData.phone.trim(),
@@ -804,10 +810,16 @@ const SignUpForm = observer(() => {
             </FormLabel>
             <Input
               value={sellerData.gstNumber}
-              onChange={(event) => setSellerData((prev) => ({ ...prev, gstNumber: event.target.value.toUpperCase() }))}
+              onChange={(event) =>
+                setSellerData((prev) => ({
+                  ...prev,
+                  gstNumber: normalizeGstNumber(event.target.value),
+                }))
+              }
               placeholder="Optional"
               {...inputStyles}
             />
+            <FieldError message={errors.gstNumber} />
           </FormControl>
         </Box>
       </SimpleGrid>

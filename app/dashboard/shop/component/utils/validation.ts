@@ -1,5 +1,6 @@
 // Validation Schema (unchanged)
 import * as Yup from "yup";
+import { GSTIN_REGEX, normalizeGstNumber } from "../../../../config/utils/gstValidation";
 
 export const validationSchema = Yup.object({
   name: Yup.string().required("Name is required").trim(),
@@ -12,6 +13,13 @@ export const validationSchema = Yup.object({
   tags: Yup.array().of(Yup.string()).min(1, "Add at least one tag").required("Tags are required"),
   description: Yup.string().required("Description is required").trim(),
   about: Yup.string().required("Description is required").trim(),
+  gstNumber: Yup.string()
+    .transform((value) => normalizeGstNumber(value))
+    .matches(GSTIN_REGEX, {
+      message: "Enter a valid GST number",
+      excludeEmptyString: true,
+    })
+    .optional(),
   logo: Yup.mixed(),
   coverImage: Yup.mixed(),
   location: Yup.object({

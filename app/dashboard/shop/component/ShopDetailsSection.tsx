@@ -20,6 +20,7 @@ import {
 } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
+import { normalizeGstNumber } from "../../../config/utils/gstValidation";
 import { removeDataByIndex } from "../../../config/utils/utils";
 import { useEffect } from "react";
 import { observer } from "mobx-react-lite";
@@ -311,7 +312,7 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             label="GST Number"
             name="gstNumber"
             value={values.gstNumber}
-            onChange={(e) => setFieldValue("gstNumber", e.target.value)}
+            onChange={(e) => setFieldValue("gstNumber", normalizeGstNumber(e.target.value))}
             showError={showError}
           />
         </SimpleGrid>

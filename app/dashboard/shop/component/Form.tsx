@@ -34,6 +34,7 @@ import ContactInfoSection from "./ContactInfoSection";
 import OperatingHoursSection from "./OperatingHoursSection";
 import GallerySection from "./GallerySection";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
+import { normalizeGstNumber } from "../../../config/utils/gstValidation";
 import { useParams } from "next/navigation";
 import { createEmptyShopFormData } from "./utils/constant";
 import {
@@ -243,7 +244,7 @@ const ShopForm = observer(() => {
 
     formData.gallery = updatedGallery.filter(Boolean);
     formData.about = formData.about || formData.description || "";
-    formData.gstNumber = formData.gstNumber?.trim?.() || undefined;
+    formData.gstNumber = normalizeGstNumber(formData.gstNumber) || undefined;
 
     return formData;
   };
