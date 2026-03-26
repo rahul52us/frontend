@@ -6,7 +6,8 @@ import React from 'react';
 
 const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const isSignUpPage = pathname === '/signUp';
+  const isRegistrationPage = pathname === '/register' || pathname === '/signUp';
+  const isImmersiveAuthPage = pathname === '/login' || isRegistrationPage;
 
   return (
     <Flex
@@ -14,9 +15,9 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
       direction={{ base: 'column', xl: 'row' }}
       justifyContent="center"
       alignItems="stretch"
-      bg="gray.50"
-      px={{ base: 0, md: 4, xl: 6 }}
-      py={{ base: 0, md: 4, xl: 6 }}
+      bg={isImmersiveAuthPage ? 'transparent' : 'gray.50'}
+      px={isImmersiveAuthPage ? 0 : { base: 0, md: 4, xl: 6 }}
+      py={isImmersiveAuthPage ? 0 : { base: 0, md: 4, xl: 6 }}
       gap={{ base: 0, xl: 8, '2xl': 10 }}
     >
       {/* Left Section - Background Image */}
@@ -29,7 +30,7 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
         bgSize="cover"
         bgPosition="center"
         rounded="xl"
-        display={isSignUpPage ? { base: 'none', '2xl': 'flex' } : { base: 'none', xl: 'flex' }}
+        display={isImmersiveAuthPage ? 'none' : { base: 'none', xl: 'flex' }}
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
@@ -54,11 +55,11 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Right Section - Form Content */}
       <Box
-        bg={isSignUpPage ? 'transparent' : 'white'}
-        p={isSignUpPage ? 0 : { base: 6, md: 8 }}
-        borderRadius={isSignUpPage ? 'none' : 'md'}
+        bg={isImmersiveAuthPage ? 'transparent' : 'white'}
+        p={isImmersiveAuthPage ? 0 : { base: 6, md: 8 }}
+        borderRadius={isImmersiveAuthPage ? 'none' : 'md'}
         width="100%"
-        maxW={isSignUpPage ? { base: '100%', md: '860px', xl: '780px' } : { base: '100%', md: '620px' }}
+        maxW={isImmersiveAuthPage ? '100%' : { base: '100%', md: '620px' }}
         display="flex"
         flexDirection="column"
         justifyContent="center"

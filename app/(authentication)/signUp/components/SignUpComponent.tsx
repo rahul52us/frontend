@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
   Box,
@@ -33,11 +33,14 @@ import { useRouter } from "next/navigation";
 import { observer } from "mobx-react-lite";
 import {
   FiCamera,
+  FiCheckCircle,
+  FiImage,
   FiMail,
   FiMapPin,
   FiNavigation,
   FiPhone,
   FiShoppingBag,
+  FiUploadCloud,
   FiUser,
 } from "react-icons/fi";
 import stores from "../../../store/stores";
@@ -217,46 +220,76 @@ const UploadCard = ({
   files,
   onFileChange,
   onRemove,
+  icon,
+  badgeText,
+  formatHint,
+  accentColor,
 }: {
   title: string;
   helper: string;
   files: any;
   onFileChange: (file: File | null) => void;
   onRemove: () => void;
+  icon: any;
+  badgeText: string;
+  formatHint: string;
+  accentColor: "teal" | "blue";
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hasFiles = Boolean(files && ((Array.isArray(files) && files.length) || !Array.isArray(files)));
   const openPicker = () => inputRef.current?.click();
+  const accentScheme = accentColor === "blue" ? "blue" : "teal";
 
   return (
-    <Box {...fieldCardStyles}>
+    <Box
+      {...fieldCardStyles}
+      borderColor={hasFiles ? `${accentColor}.200` : fieldCardStyles.borderColor}
+      bg={hasFiles ? "white" : `${accentColor}.50`}
+    >
       <VStack align="stretch" spacing={4}>
-        <Box>
-          <Text fontSize="md" fontWeight="700" color="gray.900">
-            {title}
-          </Text>
-          <Text fontSize="sm" color="gray.500">
-            {helper}
-          </Text>
-        </Box>
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          justify="space-between"
+          align={{ base: "flex-start", sm: "center" }}
+          spacing={3}
+        >
+          <HStack align="flex-start" spacing={4}>
+            <Circle size="46px" bg="white" color={`${accentColor}.600`} boxShadow="sm" flexShrink={0}>
+              <Icon as={icon} boxSize={5} />
+            </Circle>
+            <Box>
+              <Text fontSize="md" fontWeight="700" color="gray.900">
+                {title}
+              </Text>
+              <Text fontSize="sm" color="gray.500">
+                {helper}
+              </Text>
+            </Box>
+          </HStack>
+          <Badge colorScheme={hasFiles ? "green" : accentScheme} borderRadius="full" px={3} py={1}>
+            {hasFiles ? "Added" : badgeText}
+          </Badge>
+        </Stack>
 
         {hasFiles ? (
-          <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
+          <Box borderWidth="1px" borderColor={`${accentColor}.100`} borderRadius="2xl" bg="white" px={4} py={1}>
+            <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
+          </Box>
         ) : (
           <Box
             role="button"
             tabIndex={0}
             borderWidth="1px"
             borderStyle="dashed"
-            borderColor="teal.200"
+            borderColor={`${accentColor}.200`}
             borderRadius="2xl"
             py={8}
             px={6}
             textAlign="center"
-            bg="teal.50"
+            bg="white"
             cursor="pointer"
             transition="all 0.2s ease"
-            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+            _hover={{ borderColor: `${accentColor}.400`, bg: `${accentColor}.50` }}
             _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
             onClick={openPicker}
             onKeyDown={(event) => {
@@ -266,12 +299,19 @@ const UploadCard = ({
               }
             }}
           >
-            <Text fontSize="sm" fontWeight="600" color="gray.700">
-              Tap to upload image
-            </Text>
-            <Text mt={1} fontSize="xs" color="gray.500">
-              JPG, PNG or WEBP
-            </Text>
+            <VStack spacing={3}>
+              <Circle size="50px" bg={`${accentColor}.50`} color={`${accentColor}.600`}>
+                <Icon as={icon} boxSize={5} />
+              </Circle>
+              <Box>
+                <Text fontSize="sm" fontWeight="700" color="gray.800">
+                  Upload an image
+                </Text>
+                <Text mt={1} fontSize="sm" color="gray.500">
+                  {formatHint}
+                </Text>
+              </Box>
+            </VStack>
           </Box>
         )}
 
@@ -287,16 +327,16 @@ const UploadCard = ({
           }}
         />
 
-        <HStack spacing={3}>
-          <Button variant="outline" borderRadius="full" onClick={openPicker}>
-            {hasFiles ? "Replace" : "Upload"}
+        <Stack direction={{ base: "column", sm: "row" }} spacing={3}>
+          <Button colorScheme="teal" variant={hasFiles ? "outline" : "solid"} borderRadius="full" onClick={openPicker}>
+            {hasFiles ? "Replace image" : "Choose image"}
           </Button>
           {hasFiles ? (
             <Button variant="ghost" colorScheme="red" borderRadius="full" onClick={onRemove}>
               Remove
             </Button>
           ) : null}
-        </HStack>
+        </Stack>
       </VStack>
     </Box>
   );
@@ -322,8 +362,12 @@ const SignUpForm = observer(() => {
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [geocoding, setGeocoding] = useState(false);
+  const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const navigationTimeoutRef = useRef<number | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
 
   const [userData, setUserData] = useState({
     phone: "",
@@ -353,6 +397,7 @@ const SignUpForm = observer(() => {
   const activeStep = steps[stepIndex];
   const progress = ((stepIndex + 1) / steps.length) * 100;
   const isOtpStep = stepIndex === steps.length - 1;
+  const isSellerPhotosStep = intent === "seller" && stepIndex === 4;
   const selectedCoordinates = sellerData.location.coordinates;
   const selectedPoint = hasPickedCoordinates(selectedCoordinates)
     ? { lng: Number(selectedCoordinates[0]), lat: Number(selectedCoordinates[1]) }
@@ -382,6 +427,53 @@ const SignUpForm = observer(() => {
     });
   }, [intent, isContactPhoneCustomized, userData.phone]);
 
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        window.clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const focusPhoneInput = (delay = 0) => {
+    const runFocus = () => {
+      phoneInputRef.current?.focus();
+      phoneInputRef.current?.select?.();
+    };
+
+    if (delay > 0) {
+      window.setTimeout(runFocus, delay);
+      return;
+    }
+
+    window.requestAnimationFrame(runFocus);
+  };
+
+  const focusOtpInput = (delay = 0) => {
+    const runFocus = () => {
+      otpInputRef.current?.focus();
+      otpInputRef.current?.select?.();
+    };
+
+    if (delay > 0) {
+      window.setTimeout(runFocus, delay);
+      return;
+    }
+
+    window.requestAnimationFrame(runFocus);
+  };
+
+  useEffect(() => {
+    if (stepIndex === 0) {
+      focusPhoneInput(180);
+      return;
+    }
+
+    if (isOtpStep) {
+      focusOtpInput(220);
+    }
+  }, [intent, isOtpStep, stepIndex]);
+
   const setIntentSelection = (nextIntent: Intent) => {
     setIntent(nextIntent);
     setStepIndex(0);
@@ -389,6 +481,23 @@ const SignUpForm = observer(() => {
     setOtp("");
     setErrors({});
     setIsContactPhoneCustomized(false);
+    focusPhoneInput();
+  };
+
+  const navigateWithAnimation = (href: string) => {
+    if (isRouteTransitioning) return;
+
+    setIsRouteTransitioning(true);
+
+    if (navigationTimeoutRef.current) {
+      window.clearTimeout(navigationTimeoutRef.current);
+    }
+
+    navigationTimeoutRef.current = window.setTimeout(() => {
+      startTransition(() => {
+        router.push(href);
+      });
+    }, 220);
   };
 
   const setSellerFieldValue = (path: string, value: any) => {
@@ -586,6 +695,7 @@ const SignUpForm = observer(() => {
       if (data?.token) {
         setToken(data.token);
         setStepIndex(steps.length - 1);
+        focusOtpInput(260);
         toast({
           title: "OTP Sent",
           description: "Please check your phone for the OTP.",
@@ -740,6 +850,7 @@ const SignUpForm = observer(() => {
         </Text>
         <SimpleGrid columns={2} spacing={3}>
           <Button
+            type="button"
             variant={intent === "user" ? "solid" : "outline"}
             colorScheme="teal"
             borderRadius="2xl"
@@ -749,6 +860,7 @@ const SignUpForm = observer(() => {
             Buyer / User
           </Button>
           <Button
+            type="button"
             variant={intent === "seller" ? "solid" : "outline"}
             colorScheme="blue"
             borderRadius="2xl"
@@ -766,6 +878,7 @@ const SignUpForm = observer(() => {
             Phone Number
           </FormLabel>
           <Input
+            ref={phoneInputRef}
             type="tel"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -832,7 +945,7 @@ const SignUpForm = observer(() => {
         </FormControl>
       </Box>
 
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
+      <VStack align="stretch" spacing={5}>
         <Box {...fieldCardStyles}>
           <FormControl isRequired>
             <FormLabel color="gray.700" fontWeight="600">
@@ -867,7 +980,7 @@ const SignUpForm = observer(() => {
             <FieldError message={errors.gstNumber} />
           </FormControl>
         </Box>
-      </SimpleGrid>
+      </VStack>
 
       <Box {...fieldCardStyles}>
         <FormControl>
@@ -1100,161 +1213,267 @@ const SignUpForm = observer(() => {
     </VStack>
   );
 
-  const renderSellerPhotosStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <UploadCard
-        title="Shop logo"
-        helper="This appears across the dashboard and your shop listing."
-        files={sellerData.logo.file}
-        onFileChange={(file) =>
-          setSellerData((prev) => ({
-            ...prev,
-            logo: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
-          }))
-        }
-        onRemove={() =>
-          setSellerData((prev) => ({
-            ...prev,
-            logo: { file: [], isAdd: 0, isDeleted: 1 },
-          }))
-        }
-      />
+  const renderSellerPhotosStep = () => {
+    const completedMediaCount =
+      Number(Boolean(sellerData.logo.file.length)) +
+      Number(Boolean(sellerData.coverImage.file.length)) +
+      Number(Boolean(sellerData.gallery.length));
 
-      <UploadCard
-        title="Cover image"
-        helper="A wide banner image for your shop profile."
-        files={sellerData.coverImage.file}
-        onFileChange={(file) =>
-          setSellerData((prev) => ({
-            ...prev,
-            coverImage: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
-          }))
-        }
-        onRemove={() =>
-          setSellerData((prev) => ({
-            ...prev,
-            coverImage: { file: [], isAdd: 0, isDeleted: 1 },
-          }))
-        }
-      />
+    return (
+      <VStack align="stretch" spacing={5}>
+        <Box
+          borderWidth="1px"
+          borderColor="teal.100"
+          borderRadius="3xl"
+          bgGradient="linear(to-br, teal.50, blue.50)"
+          px={{ base: 5, md: 6 }}
+          py={{ base: 5, md: 6 }}
+        >
+          <VStack align="stretch" spacing={5}>
+            <Stack
+              direction={{ base: "column", md: "row" }}
+              justify="space-between"
+              align={{ base: "flex-start", md: "center" }}
+              spacing={4}
+            >
+              <Box maxW="2xl">
+                <Badge colorScheme="teal" borderRadius="full" px={3} py={1}>
+                  Final touch
+                </Badge>
+                <Heading mt={3} fontSize={{ base: "xl", md: "2xl" }} color="gray.900">
+                  Show buyers what your shop looks like
+                </Heading>
+                <Text mt={2} color="gray.600">
+                  A clear logo, a wide cover image, and a few real photos help people trust your shop faster. You can update any of these later.
+                </Text>
+              </Box>
+              <Badge colorScheme={completedMediaCount >= 2 ? "green" : "blue"} borderRadius="full" px={4} py={2}>
+                {completedMediaCount}/3 sections added
+              </Badge>
+            </Stack>
 
-      <Box {...fieldCardStyles}>
-        <VStack align="stretch" spacing={4}>
-          <Box>
-            <Text fontSize="md" fontWeight="700" color="gray.900">
-              Gallery photos
-            </Text>
-            <Text fontSize="sm" color="gray.500">
-              Optional storefront or product images.
-            </Text>
-          </Box>
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
+              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
+                <Text fontSize="sm" fontWeight="700" color="gray.800">
+                  Logo
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  Best for your listing image and brand identity.
+                </Text>
+              </Box>
+              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
+                <Text fontSize="sm" fontWeight="700" color="gray.800">
+                  Cover image
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  Great for storefronts, shelves, or your signature setup.
+                </Text>
+              </Box>
+              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
+                <Text fontSize="sm" fontWeight="700" color="gray.800">
+                  Gallery
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  Add 2-4 extra photos so buyers can quickly understand your shop.
+                </Text>
+              </Box>
+            </SimpleGrid>
+          </VStack>
+        </Box>
 
-          <Input
-            ref={galleryInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            display="none"
-            onChange={(event) => {
-              handleGalleryFilesSelected(Array.from(event.target.files || []));
-              event.target.value = "";
-            }}
+        <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={5}>
+          <UploadCard
+            title="Shop logo"
+            helper="This appears across the dashboard and your shop listing."
+            files={sellerData.logo.file}
+            icon={FiShoppingBag}
+            badgeText="Recommended"
+            formatHint="Square logos with clean backgrounds look best. JPG, PNG or WEBP."
+            accentColor="teal"
+            onFileChange={(file) =>
+              setSellerData((prev) => ({
+                ...prev,
+                logo: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
+              }))
+            }
+            onRemove={() =>
+              setSellerData((prev) => ({
+                ...prev,
+                logo: { file: [], isAdd: 0, isDeleted: 1 },
+              }))
+            }
           />
 
-          <Box
-            role="button"
-            tabIndex={0}
-            borderWidth="1px"
-            borderStyle="dashed"
-            borderColor="teal.200"
-            borderRadius="2xl"
-            py={7}
-            px={6}
-            bg="teal.50"
-            textAlign="center"
-            cursor="pointer"
-            transition="all 0.2s ease"
-            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
-            _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
-            onClick={() => galleryInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                galleryInputRef.current?.click();
-              }
-            }}
-          >
-            <Text fontSize="sm" fontWeight="600" color="gray.700">
-              Tap to choose gallery images
-            </Text>
-            <Text mt={1} fontSize="xs" color="gray.500">
-              Upload multiple storefront or product photos
-            </Text>
-          </Box>
+          <UploadCard
+            title="Cover image"
+            helper="A wide banner image for your shop profile."
+            files={sellerData.coverImage.file}
+            icon={FiImage}
+            badgeText="Recommended"
+            formatHint="Use a wide photo of your storefront, shelves, or key products."
+            accentColor="blue"
+            onFileChange={(file) =>
+              setSellerData((prev) => ({
+                ...prev,
+                coverImage: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
+              }))
+            }
+            onRemove={() =>
+              setSellerData((prev) => ({
+                ...prev,
+                coverImage: { file: [], isAdd: 0, isDeleted: 1 },
+              }))
+            }
+          />
+        </SimpleGrid>
 
-          <HStack spacing={3} flexWrap="wrap">
-            <Button
-              colorScheme="teal"
-              borderRadius="full"
-              onClick={() => galleryInputRef.current?.click()}
+        <Box {...fieldCardStyles} borderColor="teal.100">
+          <VStack align="stretch" spacing={4}>
+            <Stack
+              direction={{ base: "column", sm: "row" }}
+              justify="space-between"
+              align={{ base: "flex-start", sm: "center" }}
+              spacing={3}
             >
-              Add Photos
-            </Button>
-            <Text fontSize="sm" color="gray.500">
-              {sellerData.gallery.length
-                ? `${sellerData.gallery.length} photo${sellerData.gallery.length > 1 ? "s" : ""} selected`
-                : "No gallery images selected yet."}
-            </Text>
-          </HStack>
-
-          {sellerData.gallery.length ? (
-            <VStack spacing={3} align="stretch">
-              {sellerData.gallery.map((item, index) => (
-                <Box
-                  key={`${item.title}-${index}`}
-                  borderWidth="1px"
-                  borderColor="teal.100"
-                  bg="teal.50"
-                  borderRadius="2xl"
-                  px={4}
-                  py={3}
-                >
-                  <Flex
-                    justify="space-between"
-                    align={{ base: "start", md: "center" }}
-                    direction={{ base: "column", md: "row" }}
-                    gap={3}
-                  >
-                    <Box>
-                      <Text fontWeight="600" color="gray.800">
-                        {item.title || item.file?.name || `Photo ${index + 1}`}
-                      </Text>
-                      <Text fontSize="sm" color="gray.500">
-                        {item.file?.name || "Selected image"}
-                      </Text>
-                    </Box>
-                    <Button
-                      variant="ghost"
-                      colorScheme="red"
-                      borderRadius="full"
-                      onClick={() =>
-                        setSellerData((prev) => ({
-                          ...prev,
-                          gallery: prev.gallery.filter((_, currentIndex) => currentIndex !== index),
-                        }))
-                      }
-                    >
-                      Remove
-                    </Button>
-                  </Flex>
+              <HStack align="flex-start" spacing={4}>
+                <Circle size="46px" bg="teal.50" color="teal.600" flexShrink={0}>
+                  <Icon as={FiUploadCloud} boxSize={5} />
+                </Circle>
+                <Box>
+                  <Text fontSize="md" fontWeight="700" color="gray.900">
+                    Gallery photos
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    Add real storefront or product shots to make your listing feel trustworthy and complete.
+                  </Text>
                 </Box>
-              ))}
-            </VStack>
-          ) : null}
-        </VStack>
-      </Box>
-    </VStack>
-  );
+              </HStack>
+              <Badge colorScheme={sellerData.gallery.length ? "green" : "teal"} borderRadius="full" px={3} py={1}>
+                {sellerData.gallery.length ? `${sellerData.gallery.length} selected` : "Optional"}
+              </Badge>
+            </Stack>
+
+            <Input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              display="none"
+              onChange={(event) => {
+                handleGalleryFilesSelected(Array.from(event.target.files || []));
+                event.target.value = "";
+              }}
+            />
+
+            <Box
+              role="button"
+              tabIndex={0}
+              borderWidth="1px"
+              borderStyle="dashed"
+              borderColor="teal.200"
+              borderRadius="2xl"
+              py={8}
+              px={6}
+              bgGradient="linear(to-br, teal.50, blue.50)"
+              textAlign="center"
+              cursor="pointer"
+              transition="all 0.2s ease"
+              _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+              _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+              onClick={() => galleryInputRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  galleryInputRef.current?.click();
+                }
+              }}
+            >
+              <VStack spacing={3}>
+                <Circle size="50px" bg="white" color="teal.600" boxShadow="sm">
+                  <Icon as={FiCamera} boxSize={5} />
+                </Circle>
+                <Box>
+                  <Text fontSize="sm" fontWeight="700" color="gray.800">
+                    Add storefront or product photos
+                  </Text>
+                  <Text mt={1} fontSize="sm" color="gray.500">
+                    Upload multiple JPG, PNG, or WEBP images. Real photos usually work better than posters or flyers.
+                  </Text>
+                </Box>
+              </VStack>
+            </Box>
+
+            <Stack
+              direction={{ base: "column", md: "row" }}
+              justify="space-between"
+              align={{ base: "flex-start", md: "center" }}
+              spacing={3}
+            >
+              <Button colorScheme="teal" borderRadius="full" onClick={() => galleryInputRef.current?.click()}>
+                {sellerData.gallery.length ? "Add more photos" : "Choose photos"}
+              </Button>
+              <Text fontSize="sm" color="gray.500">
+                Best results: 2-4 photos covering your storefront, shelves, team, or best-selling products.
+              </Text>
+            </Stack>
+
+            {sellerData.gallery.length ? (
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+                {sellerData.gallery.map((item, index) => (
+                  <Box
+                    key={`${item.title}-${index}`}
+                    borderWidth="1px"
+                    borderColor="teal.100"
+                    bg="teal.50"
+                    borderRadius="2xl"
+                    px={4}
+                    py={4}
+                  >
+                    <VStack align="stretch" spacing={3}>
+                      <HStack justify="space-between" align="center">
+                        <Badge colorScheme="teal" borderRadius="full" px={3} py={1}>
+                          Photo {index + 1}
+                        </Badge>
+                        <Icon as={FiCheckCircle} color="teal.600" boxSize={5} />
+                      </HStack>
+                      <Box>
+                        <Text fontWeight="600" color="gray.800">
+                          {item.title || item.file?.name || `Photo ${index + 1}`}
+                        </Text>
+                        <Text fontSize="sm" color="gray.500" noOfLines={2}>
+                          {item.file?.name || "Selected image"}
+                        </Text>
+                      </Box>
+                      <Button
+                        variant="ghost"
+                        colorScheme="red"
+                        borderRadius="full"
+                        alignSelf="flex-start"
+                        onClick={() =>
+                          setSellerData((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.filter((_, currentIndex) => currentIndex !== index),
+                          }))
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </VStack>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            ) : (
+              <Box borderWidth="1px" borderColor="gray.100" borderRadius="2xl" bg="gray.50" px={4} py={4}>
+                <Text fontSize="sm" color="gray.500">
+                  No gallery photos added yet. Even a couple of real shop photos can make your listing feel much stronger.
+                </Text>
+              </Box>
+            )}
+          </VStack>
+        </Box>
+      </VStack>
+    );
+  };
 
   const renderOtpStep = () => (
     <VStack spacing={8} align="center">
@@ -1262,8 +1481,16 @@ const SignUpForm = observer(() => {
         Enter the OTP sent to {userData.phone}
       </Text>
       <HStack>
-        <PinInput otp type="number" value={otp} onChange={setOtp} size="lg" focusBorderColor="teal.500">
-          <PinInputField inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" />
+        <PinInput
+          otp
+          type="number"
+          value={otp}
+          onChange={setOtp}
+          size="lg"
+          focusBorderColor="teal.500"
+          autoFocus={isOtpStep}
+        >
+          <PinInputField ref={otpInputRef} inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" />
           <PinInputField inputMode="numeric" pattern="[0-9]*" />
           <PinInputField inputMode="numeric" pattern="[0-9]*" />
           <PinInputField inputMode="numeric" pattern="[0-9]*" />
@@ -1289,10 +1516,17 @@ const SignUpForm = observer(() => {
   };
 
   return (
-    <Box
+    <MotionBox
       minH={{ base: "100vh", md: "auto" }}
       bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
       py={{ base: 0, md: 2, xl: 4 }}
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={
+        isRouteTransitioning
+          ? { opacity: 0, x: 24, scale: 0.98 }
+          : { opacity: 1, x: 0, y: 0, scale: 1 }
+      }
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     >
       <Container maxW={{ base: "full", md: "container.lg", xl: "760px" }} px={0}>
         <Box
@@ -1330,11 +1564,16 @@ const SignUpForm = observer(() => {
 
             <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
 
-            <Stack direction={{ base: "column", sm: "row" }} spacing={4} align={{ base: "flex-start", sm: "center" }}>
+            <Stack
+              direction={isSellerPhotosStep ? "column" : { base: "column", sm: "row" }}
+              spacing={4}
+              align={isSellerPhotosStep ? "center" : { base: "flex-start", sm: "center" }}
+              justify={isSellerPhotosStep ? "center" : undefined}
+            >
               <Circle size="50px" bg="teal.50" color="teal.600">
                 <Icon as={activeStep.icon as any} boxSize={5} />
               </Circle>
-              <Box flex="1" minW={0}>
+              <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? "center" : "left"}>
                 <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
                   {activeStep.title}
                 </Heading>
@@ -1367,14 +1606,20 @@ const SignUpForm = observer(() => {
 
             <Text textAlign="center" color="gray.600">
               Already have an account?{" "}
-              <Button variant="link" color="teal.600" onClick={() => router.push("/login")}>
+              <Button
+                type="button"
+                variant="link"
+                color="teal.600"
+                isDisabled={isRouteTransitioning}
+                onClick={() => navigateWithAnimation("/login")}
+              >
                 Sign in
               </Button>
             </Text>
           </VStack>
         </Box>
       </Container>
-    </Box>
+    </MotionBox>
   );
 });
 
