@@ -320,13 +320,41 @@ const CustomersTab: React.FC = observer(() => {
 
   const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
   const isMobileLedgerView = useBreakpointValue({ base: true, md: false }) ?? false;
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isDesktopBuyerView, setIsDesktopBuyerView] = useState(false);
   const isAndroidRuntime = useMemo(() => {
     if (typeof window === "undefined") return false;
     const platform = (window as any)?.Capacitor?.getPlatform?.();
     return platform === "android";
   }, []);
-  const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime;
-  const useCompactBuyerView = isAndroidRuntime;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateMobileDeviceState = () => {
+      const platform = (window as any)?.Capacitor?.getPlatform?.();
+      const userAgent = window.navigator?.userAgent || "";
+      const isMobileUserAgent = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+        userAgent,
+      );
+      const isCompactViewport = window.innerWidth < 1024;
+      const nextIsMobileDevice = Boolean(
+        isMobileUserAgent || platform === "android" || platform === "ios" || isCompactViewport,
+      );
+      setIsMobileDevice(nextIsMobileDevice);
+      setIsDesktopBuyerView(!nextIsMobileDevice);
+    };
+
+    updateMobileDeviceState();
+    window.addEventListener("resize", updateMobileDeviceState);
+
+    return () => {
+      window.removeEventListener("resize", updateMobileDeviceState);
+    };
+  }, []);
+
+  const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime || isMobileDevice;
+  const useCompactBuyerView = !isDesktopBuyerView;
   const canUseDeviceContactImport = isAndroidRuntime;
 
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
@@ -1795,9 +1823,21 @@ const CustomersTab: React.FC = observer(() => {
   const renderLedgerMobile = () => (
     <VStack align="stretch" spacing={4}>
       {ledgerLoading ? (
-        <Text fontSize="sm" color="gray.500">
-          Loading ledger entries...
-        </Text>
+        <VStack
+          spacing={3}
+          py={8}
+          px={4}
+          borderWidth="1px"
+          borderColor="gray.200"
+          borderRadius="xl"
+          bg="white"
+          shadow="sm"
+        >
+          <Spinner color="blue.500" thickness="3px" size="lg" />
+          <Text fontSize="sm" color="gray.500">
+            Loading ledger entries...
+          </Text>
+        </VStack>
       ) : ledgerEntries.length === 0 ? (
         <Text fontSize="sm" color="gray.500">
           No ledger entries found.
@@ -2527,18 +2567,21 @@ const CustomersTab: React.FC = observer(() => {
         </Flex>
 
         {!selectedLedgerBuyer ? (
-          useCompactBuyerView ? (
-            renderBuyerProfilesMobile()
-          ) : (
-            <CustomTable
-              title={`Buyers (${total})`}
-              columns={buyerColumns}
-              data={buyerTableData}
-              loading={loading}
-              actions={buyerTableActions}
-              serial={{ show: true, text: "S.No." }}
-            />
-          )
+          <>
+            <Box display={{ base: "block", lg: "none" }}>
+              {renderBuyerProfilesMobile()}
+            </Box>
+            <Box display={{ base: "none", lg: "block" }}>
+              <CustomTable
+                title={`Buyers (${total})`}
+                columns={buyerColumns}
+                data={buyerTableData}
+                loading={loading}
+                actions={buyerTableActions}
+                serial={{ show: true, text: "S.No." }}
+              />
+            </Box>
+          </>
         ) : (
           <VStack align="stretch" spacing={4}>
             <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
