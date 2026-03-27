@@ -1,13 +1,9 @@
 import { extendTheme, StyleFunctionProps } from "@chakra-ui/react";
-import { Lato } from "next/font/google";
 import stores from "../store/stores";
-
-const lato = Lato({
-  variable: "--font-lato",
-  weight: ["400", "700"],
-  subsets: ["latin"]
-});
-
+const bodyFontStack =
+  "'Lato', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
+const headingFontStack =
+  "'Montserrat', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
 
 const breakpoints = {
   sm: "30em",
@@ -49,7 +45,7 @@ const styles = {
   global: (props: StyleFunctionProps) => ({
     body: {
       bg: "FFFFFA",
-      fontFamily: "var(--font-lato), sans-serif", // Apply Lato globally
+      fontFamily: bodyFontStack,
       color: props.colorMode === "light" ? "brand.900" : "darkBrand.50", // Dynamic text color
     },
   }),
@@ -86,8 +82,8 @@ const colors = {
 
 
 const fonts = {
-  heading: "Montserrat, sans-serif",
-  body: "var(--font-lato), sans-serif", // Set Lato as body font globally
+  heading: headingFontStack,
+  body: bodyFontStack,
 };
 
 
@@ -109,5 +105,5 @@ const {
 } = stores;
 
 const theme = extendTheme({...themeConfig,colors, fonts,breakpoints,components,styles});
-export { theme, lato };
+export { theme, bodyFontStack, headingFontStack };
 export default theme;

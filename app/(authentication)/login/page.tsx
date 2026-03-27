@@ -1,6 +1,6 @@
 "use client";
 
-import React, { startTransition, useEffect, useRef, useState } from "react";
+import React, { Suspense, startTransition, useEffect, useRef, useState } from "react";
 import {
   Badge,
   Box,
@@ -84,7 +84,7 @@ type LoginInfo = {
   token?: string;
 };
 
-const LoginForm = observer(() => {
+const LoginFormContent = observer(() => {
   const {
     auth: { login, verifyLoginOtp, openNotification },
   } = stores;
@@ -540,5 +540,78 @@ const LoginForm = observer(() => {
     </Box>
   );
 });
+
+const LoginFormFallback = () => (
+  <Box
+    minH={{ base: "100vh", md: "auto" }}
+    bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
+    py={{ base: 0, md: 2, xl: 4 }}
+  >
+    <Container maxW={{ base: "full", md: "container.md", xl: "680px" }} px={0}>
+      <Box
+        {...panelStyles}
+        borderRadius={{ base: "none", md: "3xl" }}
+        boxShadow={{ base: "none", md: panelStyles.boxShadow }}
+        borderWidth={{ base: "0px", md: panelStyles.borderWidth }}
+        px={{ base: 5, md: 8, xl: 9 }}
+        py={{ base: 6, md: 8, xl: 9 }}
+      >
+        <VStack align="stretch" spacing={8}>
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            justify="space-between"
+            align={{ base: "flex-start", sm: "center" }}
+            spacing={3}
+          >
+            <Badge
+              bg="teal.50"
+              color="teal.600"
+              borderRadius="md"
+              px={3}
+              py={1}
+              fontSize="xs"
+              fontWeight="700"
+            >
+              Secure login
+            </Badge>
+            <Badge
+              bg="teal.50"
+              color="teal.600"
+              borderRadius="md"
+              px={3}
+              py={1}
+              fontSize="xs"
+              fontWeight="700"
+            >
+              Step 1/2
+            </Badge>
+          </Stack>
+
+          <Progress value={50} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
+
+          <Stack direction={{ base: "column", sm: "row" }} spacing={4} align={{ base: "flex-start", sm: "center" }}>
+            <Circle size="50px" bg="teal.50" color="teal.600">
+              <Icon as={FiPhone} boxSize={5} />
+            </Circle>
+            <Box flex="1" minW={0}>
+              <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
+                Welcome back
+              </Heading>
+              <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                Preparing secure login...
+              </Text>
+            </Box>
+          </Stack>
+        </VStack>
+      </Box>
+    </Container>
+  </Box>
+);
+
+const LoginForm = () => (
+  <Suspense fallback={<LoginFormFallback />}>
+    <LoginFormContent />
+  </Suspense>
+);
 
 export default LoginForm;

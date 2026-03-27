@@ -1,7 +1,12 @@
+import { Suspense } from "react";
 import ProductClient from "./ProductClient";
 
 const Page = () => {
-    return <ProductClient />;
+    return (
+        <Suspense fallback={null}>
+            <ProductClient />
+        </Suspense>
+    );
 }
 
 export default Page;

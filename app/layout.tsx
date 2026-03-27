@@ -8,11 +8,8 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import stores from "./store/stores";
 import Notification from "./component/common/Notification/Notification";
-import { Montserrat } from 'next/font/google';
 import WhatsAppButton from "./component/common/whatsApp/whatsAppButton";
 import Image from "next/image";
-
-const montserrat = Montserrat({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export default function RootLayout({
   children,
@@ -44,7 +41,14 @@ export default function RootLayout({
         <ColorModeScript initialColorMode="light" />
       </head>
 
-      <body className={`${montserrat.className}`} style={{ margin: 0, padding: 0 }}>
+      <body
+        style={{
+          margin: 0,
+          padding: 0,
+          fontFamily:
+            "'Montserrat', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
+        }}
+      >
         <noscript>
           <Image
             alt=""
