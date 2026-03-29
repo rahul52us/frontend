@@ -110,11 +110,21 @@ type BuyerSaleRecord = {
 };
 
 type SaleFormItem = {
+  productId?: string;
   itemName: string;
   quantity: string;
   unitPrice: string;
   discount: string;
   tax: string;
+};
+
+type InventoryProductSuggestion = {
+  _id: string;
+  name: string;
+  price?: number;
+  stock?: number;
+  brand?: string;
+  sku?: string;
 };
 
 type LedgerSummary = {
@@ -210,6 +220,7 @@ const defaultLedgerSummary: LedgerSummary = {
 };
 
 const defaultSaleFormItem = (): SaleFormItem => ({
+  productId: "",
   itemName: "",
   quantity: "1",
   unitPrice: "",
@@ -250,7 +261,7 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onSaleDetailsOpen,
     onClose: onSaleDetailsClose,
   } = useDisclosure();
-  const { auth, buyerStore } = stores;
+  const { auth, buyerStore, shopStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
   const [selectedLedgerBuyer, setSelectedLedgerBuyer] = useState<BuyerProfile | null>(null);
@@ -276,6 +287,9 @@ const CustomersTab: React.FC = observer(() => {
   const [selectedSaleRecord, setSelectedSaleRecord] = useState<BuyerSaleRecord | null>(null);
   const [saleRecordDetails, setSaleRecordDetails] = useState<BuyerSaleRecordDetails | null>(null);
   const [saleDetailsLoading, setSaleDetailsLoading] = useState(false);
+  const [activeSaleItemIndex, setActiveSaleItemIndex] = useState<number | null>(null);
+  const [saleItemSuggestions, setSaleItemSuggestions] = useState<InventoryProductSuggestion[]>([]);
+  const [saleItemSuggestionsLoading, setSaleItemSuggestionsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -356,6 +370,13 @@ const CustomersTab: React.FC = observer(() => {
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime || isMobileDevice;
   const useCompactBuyerView = !isDesktopBuyerView;
   const canUseDeviceContactImport = isAndroidRuntime;
+  const activeSaleItemQuery = useMemo(() => {
+    if (activeSaleItemIndex === null) {
+      return "";
+    }
+
+    return saleFormValues.items[activeSaleItemIndex]?.itemName?.trim() || "";
+  }, [activeSaleItemIndex, saleFormValues.items]);
 
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
     return buyer.displayName || buyer.buyerId?.fullName || "-";
@@ -677,6 +698,9 @@ const CustomersTab: React.FC = observer(() => {
 
   const closeSaleRecordModal = () => {
     onSaleRecordClose();
+    setActiveSaleItemIndex(null);
+    setSaleItemSuggestions([]);
+    setSaleItemSuggestionsLoading(false);
     resetSaleForm();
   };
 
@@ -1123,8 +1147,38 @@ const CustomersTab: React.FC = observer(() => {
   const updateSaleItem = (index: number, key: keyof SaleFormItem, value: string) => {
     setSaleFormValues((prev) => ({
       ...prev,
-      items: prev.items.map((item, idx) => (idx === index ? { ...item, [key]: value } : item)),
+      items: prev.items.map((item, idx) =>
+        idx === index
+          ? {
+              ...item,
+              [key]: value,
+              ...(key === "itemName" ? { productId: "" } : {}),
+            }
+          : item,
+      ),
     }));
+  };
+
+  const applySuggestedProductToSaleItem = (index: number, product: InventoryProductSuggestion) => {
+    setSaleFormValues((prev) => ({
+      ...prev,
+      items: prev.items.map((item, idx) =>
+        idx === index
+          ? {
+              ...item,
+              productId: product._id,
+              itemName: product.name,
+              unitPrice:
+                typeof product.price === "number" && Number.isFinite(product.price)
+                  ? String(product.price)
+                  : item.unitPrice,
+            }
+          : item,
+      ),
+    }));
+    setActiveSaleItemIndex(null);
+    setSaleItemSuggestions([]);
+    setSaleItemSuggestionsLoading(false);
   };
 
   const addSaleItem = () => {
@@ -1143,6 +1197,15 @@ const CustomersTab: React.FC = observer(() => {
         ...prev,
         items: prev.items.filter((_, idx) => idx !== index),
       };
+    });
+    setActiveSaleItemIndex((current) => {
+      if (current === null) {
+        return null;
+      }
+      if (current === index) {
+        return null;
+      }
+      return current > index ? current - 1 : current;
     });
   };
 
@@ -1370,6 +1433,91 @@ const CustomersTab: React.FC = observer(() => {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, search, selectedLedgerBuyer]);
+
+  useEffect(() => {
+    if (!isSaleRecordOpen || !companyId || activeSaleItemIndex === null) {
+      setSaleItemSuggestions([]);
+      setSaleItemSuggestionsLoading(false);
+      return;
+    }
+
+    const query = activeSaleItemQuery.trim();
+    if (!query) {
+      setSaleItemSuggestions([]);
+      setSaleItemSuggestionsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setSaleItemSuggestionsLoading(true);
+      try {
+        const response = await shopStore.getShopProducts(
+          {
+            company: companyId,
+            page: 1,
+            limit: 8,
+            search: query,
+          },
+          true,
+        );
+
+        if (isCancelled) {
+          return;
+        }
+
+        const suggestions: InventoryProductSuggestion[] = (response?.data?.products || []).map((product: any) => ({
+          _id: String(product?._id || ""),
+          name: String(product?.name || ""),
+          price:
+            typeof product?.price === "number" || typeof product?.price === "string"
+              ? Number(product.price)
+              : undefined,
+          stock:
+            typeof product?.stock === "number" || typeof product?.stock === "string"
+              ? Number(product.stock)
+              : undefined,
+          brand: product?.brand ? String(product.brand) : undefined,
+          sku: product?.sku ? String(product.sku) : undefined,
+        }));
+
+        const normalizedQuery = query.toLowerCase();
+        const filteredSuggestions = suggestions
+          .filter(
+            (product) =>
+              product._id &&
+              product.name &&
+              (product.name.toLowerCase().includes(normalizedQuery) ||
+                product.brand?.toLowerCase().includes(normalizedQuery) ||
+                product.sku?.toLowerCase().includes(normalizedQuery)),
+          )
+          .sort((first, second) => {
+            const firstStartsWith = first.name.toLowerCase().startsWith(normalizedQuery) ? 1 : 0;
+            const secondStartsWith = second.name.toLowerCase().startsWith(normalizedQuery) ? 1 : 0;
+            if (firstStartsWith !== secondStartsWith) {
+              return secondStartsWith - firstStartsWith;
+            }
+            return first.name.localeCompare(second.name);
+          })
+          .slice(0, 6);
+
+        setSaleItemSuggestions(filteredSuggestions);
+      } catch {
+        if (!isCancelled) {
+          setSaleItemSuggestions([]);
+        }
+      } finally {
+        if (!isCancelled) {
+          setSaleItemSuggestionsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeSaleItemIndex, activeSaleItemQuery, companyId, isSaleRecordOpen, shopStore]);
 
   const buyerTableData = useMemo(() => {
     return buyers.map((buyer) => ({
@@ -3048,14 +3196,112 @@ const CustomersTab: React.FC = observer(() => {
               <VStack align="stretch" spacing={4}>
                 {saleFormValues.items.map((item, index) => (
                   <Box key={`sale-item-${index}`} borderWidth="1px" borderRadius="md" p={3}>
-                    <SimpleGrid columns={{ base: 1, md: 5 }} spacing={3}>
-                      <FormControl>
+                    <SimpleGrid columns={{ base: 1, md: 2, xl: 6 }} spacing={3}>
+                      <FormControl position="relative" gridColumn={{ base: "auto", md: "span 2 / span 2" }}>
                         <FormLabel>Item Name</FormLabel>
                         <Input
                           value={item.itemName}
                           onChange={(e) => updateSaleItem(index, "itemName", e.target.value)}
+                          onFocus={() => setActiveSaleItemIndex(index)}
+                          onBlur={() => {
+                            window.setTimeout(() => {
+                              setActiveSaleItemIndex((current) => (current === index ? null : current));
+                            }, 120);
+                          }}
                           placeholder="e.g. Cement Bag"
+                          autoComplete="off"
                         />
+                        {activeSaleItemIndex === index && item.itemName.trim() ? (
+                          <Box
+                            position="absolute"
+                            top="calc(100% + 8px)"
+                            left={0}
+                            right={0}
+                            bg="white"
+                            borderWidth="1px"
+                            borderColor="gray.200"
+                            borderRadius="lg"
+                            boxShadow="xl"
+                            zIndex={20}
+                            overflow="hidden"
+                            maxH="320px"
+                            overflowY="auto"
+                          >
+                            {saleItemSuggestionsLoading ? (
+                              <Flex align="center" justify="center" py={4} gap={2}>
+                                <Spinner size="sm" color="teal.500" />
+                                <Text fontSize="sm" color="gray.600">
+                                  Searching your inventory...
+                                </Text>
+                              </Flex>
+                            ) : saleItemSuggestions.length > 0 ? (
+                              <VStack align="stretch" spacing={0}>
+                                {saleItemSuggestions.map((product, suggestionIndex) => (
+                                  <Box
+                                    key={product._id}
+                                    px={3}
+                                    py={3}
+                                    cursor="pointer"
+                                    bg="white"
+                                    borderTopWidth={suggestionIndex === 0 ? "0" : "1px"}
+                                    borderColor="gray.100"
+                                    _hover={{ bg: "gray.50" }}
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
+                                      applySuggestedProductToSaleItem(index, product);
+                                    }}
+                                  >
+                                    <Flex justify="space-between" align="flex-start" gap={3}>
+                                      <Box minW={0}>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="semibold"
+                                          color="gray.800"
+                                          whiteSpace="normal"
+                                          lineHeight="short"
+                                        >
+                                          {product.name}
+                                        </Text>
+                                        <Text
+                                          fontSize="xs"
+                                          color="gray.500"
+                                          whiteSpace="normal"
+                                          lineHeight="short"
+                                          mt={1}
+                                        >
+                                          {[product.brand, product.sku ? `SKU: ${product.sku}` : ""]
+                                            .filter(Boolean)
+                                            .join(" | ") || "Inventory product"}
+                                        </Text>
+                                      </Box>
+                                      <Box textAlign="right" flexShrink={0}>
+                                        <Text fontSize="sm" fontWeight="semibold" color="teal.600">
+                                          {formatCurrency(Number(product.price || 0))}
+                                        </Text>
+                                        {typeof product.stock === "number" && Number.isFinite(product.stock) ? (
+                                          <Text fontSize="xs" color="gray.500">
+                                            Stock {product.stock}
+                                          </Text>
+                                        ) : null}
+                                      </Box>
+                                    </Flex>
+                                  </Box>
+                                ))}
+                              </VStack>
+                            ) : (
+                              <Box px={3} py={3}>
+                                <Text fontSize="sm" color="gray.600">
+                                  No matching inventory items found.
+                                </Text>
+                              </Box>
+                            )}
+                          </Box>
+                        ) : null}
+                        {item.productId ? (
+                          <Text mt={2} fontSize="xs" color="teal.600" fontWeight="medium">
+                            Price auto-filled from your inventory. You can still edit this row.
+                          </Text>
+                        ) : null}
                       </FormControl>
 
                       <FormControl>
@@ -3174,3 +3420,4 @@ const CustomersTab: React.FC = observer(() => {
 });
 
 export default CustomersTab;
+
