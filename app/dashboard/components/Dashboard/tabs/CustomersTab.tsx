@@ -40,11 +40,13 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { AddIcon, ArrowBackIcon, CopyIcon } from "@chakra-ui/icons";
+import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type BuyerProfile = {
   _id: string;
@@ -287,6 +289,8 @@ const CustomersTab: React.FC = observer(() => {
   const [selectedSaleRecord, setSelectedSaleRecord] = useState<BuyerSaleRecord | null>(null);
   const [saleRecordDetails, setSaleRecordDetails] = useState<BuyerSaleRecordDetails | null>(null);
   const [saleDetailsLoading, setSaleDetailsLoading] = useState(false);
+  const [invoiceDownloadingSaleId, setInvoiceDownloadingSaleId] = useState("");
+  const [invoiceDownloadingLedgerEntryId, setInvoiceDownloadingLedgerEntryId] = useState("");
   const [activeSaleItemIndex, setActiveSaleItemIndex] = useState<number | null>(null);
   const [saleItemSuggestions, setSaleItemSuggestions] = useState<InventoryProductSuggestion[]>([]);
   const [saleItemSuggestionsLoading, setSaleItemSuggestionsLoading] = useState(false);
@@ -385,12 +389,68 @@ const CustomersTab: React.FC = observer(() => {
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
   const formatShortId = (value?: string) => (value ? value.slice(-6) : "");
+  const formatDateOnly = (value?: string) =>
+    value ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+  const formatCompanyAddress = (company: any) =>
+    [
+      company?.location?.address,
+      company?.location?.city,
+      company?.location?.state,
+      company?.location?.postalCode,
+      company?.location?.country,
+    ]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+      .join(", ");
   const formatLedgerReference = (entry: BuyerLedgerEntry) =>
     entry.referenceId
       ? `${entry.referenceType || "manual"}: ${formatShortId(entry.referenceId)}`
       : entry.referenceType || "manual";
   const formatSignedAmount = (entry: BuyerLedgerEntry) =>
     `${entry.direction === "credit" ? "-" : "+"}${formatCurrency(Number(entry.amount || 0))}`;
+  const canDownloadLedgerInvoice = (entry?: BuyerLedgerEntry | null) =>
+    Boolean(
+      entry &&
+        entry.status !== "reversed" &&
+        entry.direction === "debit" &&
+        !(entry.referenceType === "saleRecord" && entry.referenceId),
+    );
+  const getBuyerLedgerDirectionLabel = (
+    direction: LedgerDirection,
+    entryType?: LedgerEntryType,
+  ) => {
+    if (direction === "debit") {
+      return "You will get";
+    }
+    if (entryType === "payment") {
+      return "Payment received";
+    }
+    return "Due reduced";
+  };
+  const getBuyerLedgerDirectionColorScheme = (
+    direction: LedgerDirection,
+    entryType?: LedgerEntryType,
+  ) => {
+    if (direction === "debit") {
+      return "green";
+    }
+    if (entryType === "payment") {
+      return "green";
+    }
+    return "red";
+  };
+  const getBuyerLedgerDirectionTextColor = (
+    direction: LedgerDirection,
+    entryType?: LedgerEntryType,
+  ) => {
+    if (direction === "debit") {
+      return "green.700";
+    }
+    if (entryType === "payment") {
+      return "green.700";
+    }
+    return "red.700";
+  };
   const getTimelineTitle = (entry: BuyerLedgerEntry) => {
     if (entry.relationType === "reversal") {
       return "Reversal Adjustment";
@@ -549,6 +609,341 @@ const CustomersTab: React.FC = observer(() => {
     setSelectedSaleRecord(null);
     setSaleRecordDetails(null);
     onSaleDetailsClose();
+  };
+
+  const getInvoicePartyDetails = () => {
+    const sellerCompany =
+      auth.company && typeof auth.company === "object"
+        ? auth.company
+        : auth.user?.company && typeof auth.user.company === "object"
+          ? auth.user.company
+          : null;
+
+    return {
+      sellerName: sellerCompany?.name || sellerCompany?.companyName || "Your Shop",
+      sellerPhone: sellerCompany?.contactInfo?.phone || auth.user?.phone || "-",
+      sellerEmail: sellerCompany?.contactInfo?.email || auth.user?.email || "-",
+      sellerGst: sellerCompany?.gstNumber || "-",
+      sellerAddress: formatCompanyAddress(sellerCompany) || "-",
+      buyerName: selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "Customer",
+      buyerPhone: selectedLedgerBuyer?.buyerId?.phoneE164 || "-",
+      buyerEmail: selectedLedgerBuyer?.buyerId?.emailNormalized || "-",
+    };
+  };
+
+  const handleDownloadSaleInvoice = async (details: BuyerSaleRecordDetails) => {
+    const saleRecord = details?.saleRecord;
+    if (!saleRecord?._id) {
+      return;
+    }
+
+    setInvoiceDownloadingSaleId(saleRecord._id);
+    try {
+      const {
+        sellerName,
+        sellerPhone,
+        sellerEmail,
+        sellerGst,
+        sellerAddress,
+        buyerName,
+        buyerPhone,
+        buyerEmail,
+      } = getInvoicePartyDetails();
+
+      const totalQuantity = Array.isArray(saleRecord.items)
+        ? saleRecord.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+        : 0;
+
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const invoiceId = `INV-${formatShortId(saleRecord._id).toUpperCase() || saleRecord._id}`;
+      const issueDate = formatDateOnly(saleRecord.saleDate || saleRecord.createdAt);
+
+      doc.setFillColor(15, 118, 110);
+      doc.rect(0, 0, 210, 36, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text("INVOICE", 14, 18);
+      doc.setFontSize(10);
+      doc.text(`Invoice No: ${invoiceId}`, 14, 26);
+      doc.text(`Issue Date: ${issueDate}`, 14, 31);
+
+      doc.setFontSize(18);
+      doc.text(String(sellerName), 196, 18, { align: "right" });
+      doc.setFontSize(9);
+      doc.text(`Phone: ${sellerPhone}`, 196, 26, { align: "right" });
+      doc.text(`Email: ${sellerEmail}`, 196, 31, { align: "right" });
+
+      doc.setTextColor(31, 41, 55);
+      doc.setFontSize(10);
+      doc.text("Bill From", 14, 48);
+      doc.setFontSize(12);
+      doc.text(String(sellerName), 14, 55);
+      doc.setFontSize(9);
+      const sellerDetailsLines = [
+        `GST: ${sellerGst}`,
+        `Phone: ${sellerPhone}`,
+        sellerEmail !== "-" ? `Email: ${sellerEmail}` : "",
+        sellerAddress,
+      ]
+        .filter(Boolean)
+        .flatMap((line) => doc.splitTextToSize(String(line), 82));
+      doc.text(sellerDetailsLines, 14, 61);
+
+      doc.setFontSize(10);
+      doc.text("Bill To", 116, 48);
+      doc.setFontSize(12);
+      doc.text(String(buyerName), 116, 55);
+      doc.setFontSize(9);
+      const buyerDetailsLines = [
+        `Phone: ${buyerPhone}`,
+        buyerEmail !== "-" ? `Email: ${buyerEmail}` : "",
+      ]
+        .filter(Boolean)
+        .flatMap((line) => doc.splitTextToSize(String(line), 80));
+      doc.text(buyerDetailsLines, 116, 61);
+
+      autoTable(doc, {
+        startY: 86,
+        head: [["#", "Item", "Qty", "Unit Price", "Discount", "Tax", "Line Total"]],
+        body: (saleRecord.items || []).map((item, index) => [
+          String(index + 1),
+          item.itemName || "-",
+          String(Number(item.quantity || 0)),
+          formatCurrency(Number(item.unitPrice || 0)),
+          formatCurrency(Number(item.discount || 0)),
+          formatCurrency(Number(item.tax || 0)),
+          formatCurrency(Number(item.lineTotal || 0)),
+        ]),
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          textColor: [31, 41, 55],
+        },
+        headStyles: {
+          fillColor: [15, 118, 110],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { halign: "center", cellWidth: 10 },
+          1: { cellWidth: 60 },
+          2: { halign: "right", cellWidth: 18 },
+          3: { halign: "right", cellWidth: 28 },
+          4: { halign: "right", cellWidth: 24 },
+          5: { halign: "right", cellWidth: 20 },
+          6: { halign: "right", cellWidth: 30 },
+        },
+        margin: { left: 14, right: 14 },
+      });
+
+      const finalY = (doc as any).lastAutoTable?.finalY ?? 120;
+      const totalsStartY = finalY + 10;
+      const summaryRows = [
+        ["Items / Qty", `${saleRecord.items?.length || 0} lines / ${totalQuantity} qty`],
+        ["Subtotal", formatCurrency(Number(saleRecord.subtotal || 0))],
+        ["Discount", formatCurrency(Number(saleRecord.discountTotal || 0))],
+        ["Tax", formatCurrency(Number(saleRecord.taxTotal || 0))],
+        ["Paid", formatCurrency(Number(details.summary?.paidAmount || 0))],
+        ["Remaining Due", formatCurrency(Number(details.summary?.remainingDue || 0))],
+        ["Grand Total", formatCurrency(Number(details.summary?.saleAmount || saleRecord.grandTotal || 0))],
+      ];
+
+      doc.setFontSize(10);
+      doc.setTextColor(75, 85, 99);
+      summaryRows.forEach(([label, value], index) => {
+        const y = totalsStartY + index * 7;
+        doc.text(label, 120, y);
+        doc.text(value, 196, y, { align: "right" });
+      });
+
+      if (saleRecord.notes) {
+        const notesY = totalsStartY + summaryRows.length * 7 + 8;
+        doc.setFontSize(10);
+        doc.setTextColor(31, 41, 55);
+        doc.text("Notes", 14, notesY);
+        doc.setFontSize(9);
+        doc.setTextColor(75, 85, 99);
+        doc.text(doc.splitTextToSize(String(saleRecord.notes), 182), 14, notesY + 6);
+      }
+
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, pageHeight - 18, 196, pageHeight - 18);
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.text("Thank you for your business.", 14, pageHeight - 11);
+
+      doc.save(`${invoiceId}.pdf`);
+      toast({
+        title: "Invoice downloaded",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to generate invoice",
+        description: getReadableErrorMessage(error),
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setInvoiceDownloadingSaleId("");
+    }
+  };
+
+  const handleDownloadLedgerEntryInvoice = async (entry: BuyerLedgerEntry) => {
+    if (!entry?._id || !canDownloadLedgerInvoice(entry)) {
+      return;
+    }
+
+    setInvoiceDownloadingLedgerEntryId(entry._id);
+    try {
+      const {
+        sellerName,
+        sellerPhone,
+        sellerEmail,
+        sellerGst,
+        sellerAddress,
+        buyerName,
+        buyerPhone,
+        buyerEmail,
+      } = getInvoicePartyDetails();
+
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const invoiceId = `LED-${formatShortId(entry._id).toUpperCase() || entry._id}`;
+      const issueDate = formatDateOnly(entry.entryDate || entry.createdAt);
+      const lineDescription = entry.notes?.trim() || "Invoice item";
+
+      doc.setFillColor(15, 118, 110);
+      doc.rect(0, 0, 210, 36, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text("INVOICE", 14, 18);
+      doc.setFontSize(10);
+      doc.text(`Invoice No: ${invoiceId}`, 14, 26);
+      doc.text(`Issue Date: ${issueDate}`, 14, 31);
+
+      doc.setFontSize(18);
+      doc.text(String(sellerName), 196, 18, { align: "right" });
+      doc.setFontSize(9);
+      doc.text(`Phone: ${sellerPhone}`, 196, 26, { align: "right" });
+      doc.text(`Email: ${sellerEmail}`, 196, 31, { align: "right" });
+
+      doc.setTextColor(31, 41, 55);
+      doc.setFontSize(10);
+      doc.text("Bill From", 14, 48);
+      doc.setFontSize(12);
+      doc.text(String(sellerName), 14, 55);
+      doc.setFontSize(9);
+      const sellerDetailsLines = [
+        `GST: ${sellerGst}`,
+        `Phone: ${sellerPhone}`,
+        sellerEmail !== "-" ? `Email: ${sellerEmail}` : "",
+        sellerAddress,
+      ]
+        .filter(Boolean)
+        .flatMap((line) => doc.splitTextToSize(String(line), 82));
+      doc.text(sellerDetailsLines, 14, 61);
+
+      doc.setFontSize(10);
+      doc.text("Bill To", 116, 48);
+      doc.setFontSize(12);
+      doc.text(String(buyerName), 116, 55);
+      doc.setFontSize(9);
+      const buyerDetailsLines = [
+        `Phone: ${buyerPhone}`,
+        buyerEmail !== "-" ? `Email: ${buyerEmail}` : "",
+      ]
+        .filter(Boolean)
+        .flatMap((line) => doc.splitTextToSize(String(line), 80));
+      doc.text(buyerDetailsLines, 116, 61);
+
+      autoTable(doc, {
+        startY: 86,
+        head: [["#", "Description", "Amount"]],
+        body: [
+          [
+            "1",
+            lineDescription,
+            formatCurrency(Number(entry.amount || 0)),
+          ],
+        ],
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          textColor: [31, 41, 55],
+        },
+        headStyles: {
+          fillColor: [15, 118, 110],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { halign: "center", cellWidth: 10 },
+          1: { cellWidth: 136 },
+          2: { halign: "right", cellWidth: 30 },
+        },
+        margin: { left: 14, right: 14 },
+      });
+
+      const finalY = (doc as any).lastAutoTable?.finalY ?? 120;
+      const summaryStartY = finalY + 10;
+      const summaryRows = [
+        ["Entry Date", formatDateTime(entry.entryDate || entry.createdAt)],
+        ["Grand Total", formatCurrency(Number(entry.amount || 0))],
+      ];
+
+      doc.setFontSize(10);
+      doc.setTextColor(75, 85, 99);
+      summaryRows.forEach(([label, value], index) => {
+        const y = summaryStartY + index * 7;
+        doc.text(label, 120, y);
+        doc.text(value, 196, y, { align: "right" });
+      });
+
+      if (entry.notes) {
+        const notesY = summaryStartY + summaryRows.length * 7 + 8;
+        doc.setFontSize(10);
+        doc.setTextColor(31, 41, 55);
+        doc.text("Notes", 14, notesY);
+        doc.setFontSize(9);
+        doc.setTextColor(75, 85, 99);
+        doc.text(doc.splitTextToSize(String(entry.notes), 182), 14, notesY + 6);
+      }
+
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, pageHeight - 18, 196, pageHeight - 18);
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.text("Thank you for your business.", 14, pageHeight - 11);
+
+      doc.save(`${invoiceId}.pdf`);
+      toast({
+        title: "Ledger invoice downloaded",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to generate ledger invoice",
+        description: getReadableErrorMessage(error),
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setInvoiceDownloadingLedgerEntryId("");
+    }
   };
 
   const buildLocalSaleRecordDetails = (record: BuyerSaleRecord): BuyerSaleRecordDetails => {
@@ -1775,13 +2170,16 @@ const CustomersTab: React.FC = observer(() => {
         </Badge>
       ),
       directionBadge: (
-        <Badge colorScheme={entry.direction === "debit" ? "orange" : "green"} textTransform="capitalize">
-          {entry.direction}
+        <Badge
+          colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+          textTransform="none"
+        >
+          {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
         </Badge>
       ),
       amountDisplay: (
-        <Text color={entry.direction === "debit" ? "orange.600" : "green.600"} fontWeight="bold">
-          {formatCurrency(entry.amount || 0)} {entry.direction === "debit" ? "(Dr)" : "(Cr)"}
+        <Text color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)} fontWeight="bold">
+          {formatCurrency(entry.amount || 0)}
         </Text>
       ),
       balanceText: formatCurrency(entry.balanceAfter || 0),
@@ -1808,6 +2206,17 @@ const CustomersTab: React.FC = observer(() => {
           <Text color="gray.500">-</Text>
         ) : (
           <HStack spacing={2}>
+            {canDownloadLedgerInvoice(entry) && (
+              <Button
+                size="xs"
+                colorScheme="teal"
+                variant="outline"
+                isLoading={invoiceDownloadingLedgerEntryId === entry._id}
+                onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
+              >
+                Invoice
+              </Button>
+            )}
             {entry.direction === "debit" && (
               <Button size="xs" colorScheme="green" variant="outline" onClick={() => openPayModal(entry)}>
                 Pay
@@ -1829,7 +2238,7 @@ const CustomersTab: React.FC = observer(() => {
       metaData: { component: (row: any) => row.typeBadge },
     },
     {
-      headerName: "Direction",
+      headerName: "Due Impact",
       key: "directionBadge",
       type: "component",
       metaData: { component: (row: any) => row.directionBadge },
@@ -2031,20 +2440,20 @@ const CustomersTab: React.FC = observer(() => {
                     {entry.entryType}
                   </Badge>
                   <Badge
-                    colorScheme={entry.direction === "debit" ? "orange" : "green"}
-                    textTransform="capitalize"
+                    colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                    textTransform="none"
                     borderRadius="full"
                     px={2}
                   >
-                    {entry.direction}
+                    {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
                   </Badge>
                 </HStack>
                 <Text
                   fontWeight="800"
                   fontSize="sm"
-                  color={entry.direction === "debit" ? "orange.700" : "green.700"}
+                  color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
                 >
-                  {formatCurrency(entry.amount || 0)} {entry.direction === "debit" ? "(Dr)" : "(Cr)"}
+                  {formatCurrency(entry.amount || 0)}
                 </Text>
               </HStack>
             </Box>
@@ -2097,6 +2506,18 @@ const CustomersTab: React.FC = observer(() => {
                 </Badge>
                 {entry.status !== "reversed" ? (
                   <HStack spacing={2}>
+                    {canDownloadLedgerInvoice(entry) && (
+                      <Button
+                        size="xs"
+                        colorScheme="teal"
+                        variant="outline"
+                        borderRadius="full"
+                        isLoading={invoiceDownloadingLedgerEntryId === entry._id}
+                        onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
+                      >
+                        Invoice
+                      </Button>
+                    )}
                     {entry.direction === "debit" && (
                       <Button
                         size="xs"
@@ -2366,16 +2787,29 @@ const CustomersTab: React.FC = observer(() => {
                 ) : null}
               </HStack>
             </Box>
-            <IconButton
-              aria-label="Copy sale ID"
-              icon={<CopyIcon />}
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(saleRecord._id || "");
-                toast({ title: "Sale ID Copied", status: "success", duration: 1000, isClosable: true });
-              }}
-            />
+            <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
+              <Button
+                size="sm"
+                leftIcon={<DownloadIcon />}
+                colorScheme="teal"
+                variant="solid"
+                borderRadius="full"
+                isLoading={invoiceDownloadingSaleId === saleRecord._id}
+                onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
+              >
+                Download Invoice
+              </Button>
+              <IconButton
+                aria-label="Copy sale ID"
+                icon={<CopyIcon />}
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(saleRecord._id || "");
+                  toast({ title: "Sale ID Copied", status: "success", duration: 1000, isClosable: true });
+                }}
+              />
+            </VStack>
           </HStack>
         </Box>
 
@@ -2584,8 +3018,11 @@ const CustomersTab: React.FC = observer(() => {
                         <Badge colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"} textTransform="capitalize">
                           {entry.entryType}
                         </Badge>
-                        <Badge colorScheme={entry.direction === "debit" ? "orange" : "green"} textTransform="capitalize">
-                          {entry.direction}
+                        <Badge
+                          colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                          textTransform="none"
+                        >
+                          {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
                         </Badge>
                         {entry.status ? (
                           <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
@@ -2610,7 +3047,7 @@ const CustomersTab: React.FC = observer(() => {
                       <Text
                         fontSize="sm"
                         fontWeight="800"
-                        color={entry.direction === "debit" ? "orange.700" : "green.700"}
+                        color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
                       >
                         {formatSignedAmount(entry)}
                       </Text>
@@ -3083,8 +3520,8 @@ const CustomersTab: React.FC = observer(() => {
                     }))
                   }
                 >
-                  <option value="debit">Debit (increase due)</option>
-                  <option value="credit">Credit (decrease due)</option>
+                  <option value="debit">You will get more</option>
+                  <option value="credit">You will give credit / reduce due</option>
                 </Select>
               </FormControl>
 

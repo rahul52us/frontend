@@ -362,12 +362,15 @@ const SignUpForm = observer(() => {
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [geocoding, setGeocoding] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const navigationTimeoutRef = useRef<number | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
   const otpInputRef = useRef<HTMLInputElement | null>(null);
+  const otpAutoSubmitRef = useRef("");
+  const autoLocationAttemptedRef = useRef(false);
 
   const [userData, setUserData] = useState({
     phone: "",
@@ -474,6 +477,29 @@ const SignUpForm = observer(() => {
     }
   }, [intent, isOtpStep, stepIndex]);
 
+  useEffect(() => {
+    const isSellerLocationStep = intent === "seller" && stepIndex === 2;
+    const canAttemptAutoLocation = !GOOGLE_MAPS_API_KEY || isLoaded || Boolean(loadError);
+
+    if (!isSellerLocationStep || !canAttemptAutoLocation) {
+      return;
+    }
+
+    if (hasPickedCoordinates(sellerData.location.coordinates) || autoLocationAttemptedRef.current) {
+      return;
+    }
+
+    autoLocationAttemptedRef.current = true;
+    detectCurrentLocation({ silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent, stepIndex, isLoaded, loadError, sellerData.location.coordinates]);
+
+  useEffect(() => {
+    if (!isOtpStep || otp.trim().length < 6) {
+      otpAutoSubmitRef.current = "";
+    }
+  }, [isOtpStep, otp]);
+
   const setIntentSelection = (nextIntent: Intent) => {
     setIntent(nextIntent);
     setStepIndex(0);
@@ -546,26 +572,33 @@ const SignUpForm = observer(() => {
     });
   };
 
-  const detectCurrentLocation = () => {
+  const detectCurrentLocation = ({ silent = false }: { silent?: boolean } = {}) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast({
-        title: "Location unavailable",
-        description: "Geolocation is not supported on this device.",
-        status: "warning",
-      });
+      if (!silent) {
+        toast({
+          title: "Location unavailable",
+          description: "Geolocation is not supported on this device.",
+          status: "warning",
+        });
+      }
       return;
     }
 
+    setDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        setDetectingLocation(false);
         hydrateSellerLocation(position.coords.latitude, position.coords.longitude);
       },
       (error) => {
-        toast({
-          title: "Unable to fetch location",
-          description: error.message || "Please place the pin manually on the map.",
-          status: "error",
-        });
+        setDetectingLocation(false);
+        if (!silent) {
+          toast({
+            title: "Unable to fetch location",
+            description: error.message || "Please place the pin manually on the map.",
+            status: "error",
+          });
+        }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -578,7 +611,7 @@ const SignUpForm = observer(() => {
     hydrateSellerLocation(lat, lng);
   };
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = (otpValue = otp) => {
     const nextErrors: Record<string, string> = {};
 
     if (stepIndex === 0 && !phoneRegex.test(userData.phone.trim())) {
@@ -610,7 +643,7 @@ const SignUpForm = observer(() => {
       if (!isValidEmail(userData.email)) nextErrors.email = "Enter a valid email address.";
     }
 
-    if (isOtpStep && otp.trim().length < 6) {
+    if (isOtpStep && otpValue.trim().length < 6) {
       nextErrors.otp = "Enter the 6-digit OTP.";
     }
 
@@ -763,8 +796,29 @@ const SignUpForm = observer(() => {
     setStepIndex((prev) => Math.min(steps.length - 1, prev + 1));
   };
 
-  const handleVerify = async () => {
-    const nextErrors = validateCurrentStep();
+  const handleOtpChange = (value: string) => {
+    setOtp(value);
+
+    if (errors.otp) {
+      setErrors((prev) => ({ ...prev, otp: "" }));
+    }
+
+    const nextOtp = value.trim();
+    if (nextOtp.length < 6 || !isOtpStep || loading || !token) {
+      return;
+    }
+
+    if (otpAutoSubmitRef.current === nextOtp) {
+      return;
+    }
+
+    otpAutoSubmitRef.current = nextOtp;
+    void handleVerify(nextOtp);
+  };
+
+  const handleVerify = async (otpValue = otp) => {
+    const normalizedOtp = otpValue.trim();
+    const nextErrors = validateCurrentStep(normalizedOtp);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
@@ -776,7 +830,7 @@ const SignUpForm = observer(() => {
 
       await auth.verifyRegisterOtp({
         token,
-        otp,
+        otp: normalizedOtp,
       });
 
       if (intent === "seller") {
@@ -1030,8 +1084,9 @@ const SignUpForm = observer(() => {
             whiteSpace="nowrap"
             flexShrink={0}
             alignSelf={{ base: "stretch", lg: "center" }}
-            onClick={detectCurrentLocation}
-            isLoading={geocoding}
+            onClick={() => detectCurrentLocation()}
+            isLoading={detectingLocation || geocoding}
+            loadingText="Detecting location"
           >
             Use current location
           </Button>
@@ -1485,7 +1540,7 @@ const SignUpForm = observer(() => {
           otp
           type="number"
           value={otp}
-          onChange={setOtp}
+          onChange={handleOtpChange}
           size="lg"
           focusBorderColor="teal.500"
           autoFocus={isOtpStep}
@@ -1598,7 +1653,7 @@ const SignUpForm = observer(() => {
             <Button
               w="full"
               {...primaryButtonStyles}
-              onClick={isOtpStep ? handleVerify : handleContinue}
+              onClick={isOtpStep ? () => void handleVerify() : handleContinue}
               isLoading={loading}
             >
               {isOtpStep ? "Verify & Continue" : "Continue"}

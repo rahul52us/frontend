@@ -101,6 +101,7 @@ const LoginFormContent = observer(() => {
   const navigationTimeoutRef = useRef<number | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
   const otpInputRef = useRef<HTMLInputElement | null>(null);
+  const otpAutoSubmitRef = useRef("");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -134,6 +135,12 @@ const LoginFormContent = observer(() => {
       return () => window.clearInterval(timer);
     }
   }, [otpTimer, step]);
+
+  useEffect(() => {
+    if (step !== 2 || otp.trim().length < 6) {
+      otpAutoSubmitRef.current = "";
+    }
+  }, [otp, step]);
 
   useEffect(() => {
     return () => {
@@ -195,6 +202,18 @@ const LoginFormContent = observer(() => {
     if (errors.otp) {
       setErrors((prev) => ({ ...prev, otp: "" }));
     }
+
+    const nextOtp = value.trim();
+    if (nextOtp.length < 6 || step !== 2 || loading || !loginInfo?.token) {
+      return;
+    }
+
+    if (otpAutoSubmitRef.current === nextOtp) {
+      return;
+    }
+
+    otpAutoSubmitRef.current = nextOtp;
+    void handleOtpSubmit(nextOtp);
   };
 
   const navigateWithAnimation = (href: string) => {
@@ -260,8 +279,8 @@ const LoginFormContent = observer(() => {
     }
   };
 
-  const handleOtpSubmit = async () => {
-    const nextOtp = otp.trim();
+  const handleOtpSubmit = async (otpOverride?: string) => {
+    const nextOtp = (otpOverride ?? otp).trim();
 
     if (!otpRegex.test(nextOtp)) {
       setErrors({ otp: "Enter the 6-digit OTP." });
