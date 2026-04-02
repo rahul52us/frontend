@@ -13,7 +13,10 @@ import {
   FormLabel,
   Heading,
   HStack,
+  Icon,
   Input,
+  InputGroup,
+  InputLeftElement,
   IconButton,
   Modal,
   ModalBody,
@@ -28,12 +31,15 @@ import {
   Stat,
   StatLabel,
   StatNumber,
+  Radio,
+  RadioGroup,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
   Text,
+  Textarea,
   Spinner,
   useBreakpointValue,
   useDisclosure,
@@ -41,6 +47,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons";
+import { FiChevronRight, FiMail, FiPhone, FiSearch, FiTrash2, FiUpload, FiUserPlus, FiUsers } from "react-icons/fi";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
@@ -55,6 +62,8 @@ type BuyerProfile = {
   outstandingBalance?: number;
   isBlocked?: boolean;
   source?: "manual" | "import" | "order";
+  createdAt?: string;
+  updatedAt?: string;
   buyerId?: {
     fullName?: string;
     phoneE164?: string;
@@ -230,6 +239,24 @@ const defaultSaleFormItem = (): SaleFormItem => ({
   tax: "0",
 });
 
+const getDefaultBuyerFormValues = () => ({
+  fullName: "",
+  phone: "",
+  phoneCountryCode: "+91",
+  phoneNationalNumber: "",
+  email: "",
+  displayName: "",
+  tags: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "India",
+  notes: "",
+  partyType: "customer" as "customer" | "supplier",
+});
+
 const CustomersTab: React.FC = observer(() => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -257,6 +284,16 @@ const CustomersTab: React.FC = observer(() => {
     isOpen: isImportOpen,
     onOpen: onImportOpen,
     onClose: onImportClose,
+  } = useDisclosure();
+  const {
+    isOpen: isContactReviewOpen,
+    onOpen: onContactReviewOpen,
+    onClose: onContactReviewClose,
+  } = useDisclosure();
+  const {
+    isOpen: isBuyerSuccessOpen,
+    onOpen: onBuyerSuccessOpen,
+    onClose: onBuyerSuccessClose,
   } = useDisclosure();
   const {
     isOpen: isSaleDetailsOpen,
@@ -311,13 +348,10 @@ const CustomersTab: React.FC = observer(() => {
   const ledgerLimit = 10;
   const saleLimit = 10;
 
-  const [formValues, setFormValues] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    displayName: "",
-    tags: "",
-  });
+  const [formValues, setFormValues] = useState(getDefaultBuyerFormValues);
+  const [showContactExtraFields, setShowContactExtraFields] = useState(false);
+  const [isPickedContactFlow, setIsPickedContactFlow] = useState(false);
+  const [lastCreatedBuyer, setLastCreatedBuyer] = useState<BuyerProfile | null>(null);
 
   const [ledgerFormValues, setLedgerFormValues] = useState({
     entryType: "sale" as LedgerEntryType,
@@ -385,12 +419,153 @@ const CustomersTab: React.FC = observer(() => {
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
     return buyer.displayName || buyer.buyerId?.fullName || "-";
   };
+  const companyDisplayName =
+    (typeof auth.company === "object" && auth.company?.companyName) ||
+    (typeof auth.company === "object" && auth.company?.name) ||
+    "My Business";
+  const buyerOverview = useMemo(() => {
+    return buyers.reduce(
+      (summary, buyer) => {
+        const outstanding = Number(buyer.outstandingBalance || 0);
+        if (outstanding >= 0) {
+          summary.receivable += outstanding;
+        } else {
+          summary.payable += Math.abs(outstanding);
+        }
+
+        if (!buyer.isBlocked) {
+          summary.active += 1;
+        }
+
+        return summary;
+      },
+      { receivable: 0, payable: 0, active: 0 },
+    );
+  }, [buyers]);
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
   const formatShortId = (value?: string) => (value ? value.slice(-6) : "");
   const formatDateOnly = (value?: string) =>
     value ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+  const formatCompactCurrency = (amount: number) => {
+    const numericAmount = Number(amount || 0);
+    const hasDecimals = Math.abs(numericAmount % 1) > 0;
+    return `Rs ${numericAmount.toLocaleString("en-IN", {
+      minimumFractionDigits: hasDecimals ? 2 : 0,
+      maximumFractionDigits: hasDecimals ? 2 : 0,
+    })}`;
+  };
+  const formatRelativeTime = (value?: string) => {
+    if (!value) {
+      return "Recently added";
+    }
+
+    const timestamp = new Date(value).getTime();
+    if (Number.isNaN(timestamp)) {
+      return "Recently added";
+    }
+
+    const diffInSeconds = Math.round((timestamp - Date.now()) / 1000);
+    const absoluteSeconds = Math.abs(diffInSeconds);
+    const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+    if (absoluteSeconds < 60) {
+      return formatter.format(diffInSeconds, "second");
+    }
+    if (absoluteSeconds < 3600) {
+      return formatter.format(Math.round(diffInSeconds / 60), "minute");
+    }
+    if (absoluteSeconds < 86400) {
+      return formatter.format(Math.round(diffInSeconds / 3600), "hour");
+    }
+    if (absoluteSeconds < 604800) {
+      return formatter.format(Math.round(diffInSeconds / 86400), "day");
+    }
+    if (absoluteSeconds < 2629800) {
+      return formatter.format(Math.round(diffInSeconds / 604800), "week");
+    }
+    if (absoluteSeconds < 31557600) {
+      return formatter.format(Math.round(diffInSeconds / 2629800), "month");
+    }
+
+    return formatter.format(Math.round(diffInSeconds / 31557600), "year");
+  };
+  const getBuyerInitials = (buyer: BuyerProfile) => {
+    const rawName = getBuyerDisplayName(buyer).trim();
+    if (!rawName || rawName === "-") {
+      return "C";
+    }
+
+    const parts = rawName.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 1).toUpperCase();
+    }
+
+    return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+  };
+  const getBuyerSecondaryLabel = (buyer: BuyerProfile) => {
+    const relativeLabel = formatRelativeTime(buyer.updatedAt || buyer.createdAt);
+    const sourceLabel = buyer.source ? buyer.source.charAt(0).toUpperCase() + buyer.source.slice(1) : "Manual";
+    return `${relativeLabel} • ${sourceLabel}`;
+  };
+  const splitPhoneParts = (value?: string) => {
+    const raw = String(value || "").trim();
+    if (!raw) {
+      return {
+        phoneCountryCode: "+91",
+        phoneNationalNumber: "",
+        phone: "",
+      };
+    }
+
+    const normalized = raw.replace(/[^0-9+]/g, "");
+    const explicitMatch = normalized.match(/^(\+\d{1,4})(\d{4,})$/);
+    if (explicitMatch) {
+      return {
+        phoneCountryCode: explicitMatch[1],
+        phoneNationalNumber: explicitMatch[2],
+        phone: `${explicitMatch[1]}${explicitMatch[2]}`,
+      };
+    }
+
+    const digitsOnly = normalized.replace(/\D/g, "");
+    if (!digitsOnly) {
+      return {
+        phoneCountryCode: "+91",
+        phoneNationalNumber: "",
+        phone: "",
+      };
+    }
+
+    if (digitsOnly.length > 10) {
+      const countryDigits = digitsOnly.slice(0, digitsOnly.length - 10);
+      const localDigits = digitsOnly.slice(-10);
+      return {
+        phoneCountryCode: `+${countryDigits}`,
+        phoneNationalNumber: localDigits,
+        phone: `+${countryDigits}${localDigits}`,
+      };
+    }
+
+    return {
+      phoneCountryCode: "+91",
+      phoneNationalNumber: digitsOnly,
+      phone: `+91${digitsOnly}`,
+    };
+  };
+  const composePhoneFromForm = () => {
+    const localPhone = String(formValues.phoneNationalNumber || "").replace(/\D/g, "");
+    const countryCode = String(formValues.phoneCountryCode || "")
+      .replace(/[^\d+]/g, "")
+      .trim();
+
+    if (localPhone) {
+      return `${countryCode || ""}${localPhone}`.trim();
+    }
+
+    return formValues.phone.trim();
+  };
   const formatCompanyAddress = (company: any) =>
     [
       company?.location?.address,
@@ -1056,13 +1231,9 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const resetForm = () => {
-    setFormValues({
-      fullName: "",
-      phone: "",
-      email: "",
-      displayName: "",
-      tags: "",
-    });
+    setFormValues(getDefaultBuyerFormValues());
+    setShowContactExtraFields(false);
+    setIsPickedContactFlow(false);
   };
 
   const resetLedgerForm = () => {
@@ -1089,6 +1260,47 @@ const CustomersTab: React.FC = observer(() => {
   const closeImportModal = () => {
     onImportClose();
     setImportDefaultTags("");
+  };
+
+  const closeBuyerModal = () => {
+    resetForm();
+    onClose();
+  };
+
+  const closeContactReviewModal = () => {
+    resetForm();
+    onContactReviewClose();
+  };
+
+  const closeBuyerSuccessModal = () => {
+    setLastCreatedBuyer(null);
+    onBuyerSuccessClose();
+  };
+
+  const openManualBuyerModal = () => {
+    resetForm();
+    onOpen();
+  };
+
+  const openContactReviewForPickedContact = (contact: BuyerImportContact) => {
+    const fullName = String(contact.fullName || "").trim();
+    const email = String(contact.email || "").trim().toLowerCase();
+    const phoneParts = splitPhoneParts(contact.phone);
+
+    setFormValues({
+      ...getDefaultBuyerFormValues(),
+      fullName,
+      displayName: fullName,
+      email,
+      phone: phoneParts.phone,
+      phoneCountryCode: phoneParts.phoneCountryCode,
+      phoneNationalNumber: phoneParts.phoneNationalNumber,
+      partyType: "customer",
+    });
+    setShowContactExtraFields(false);
+    setIsPickedContactFlow(true);
+    closeImportModal();
+    onContactReviewOpen();
   };
 
   const closeSaleRecordModal = () => {
@@ -1397,8 +1609,39 @@ const CustomersTab: React.FC = observer(() => {
     }
   };
 
-  const handlePickSingleContact = async () =>
-    importContactsWith(pickSingleContactFromDevice, "Choose one contact to continue.");
+  const handlePickSingleContact = async () => {
+    try {
+      setIsImportingContacts(true);
+      const contacts = await pickSingleContactFromDevice();
+      const pickedContact = contacts[0];
+
+      if (!pickedContact) {
+        toast({
+          title: "No contacts selected",
+          description: "Choose one contact to continue.",
+          status: "info",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      openContactReviewForPickedContact(pickedContact);
+    } catch (error: any) {
+      toast({
+        title: "Unable to read device contacts",
+        description: getReadableErrorMessage(
+          error,
+          "Grant contacts permission in app settings, or add the buyer manually.",
+        ),
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsImportingContacts(false);
+    }
+  };
 
   const handleImportFromDevice = async () =>
     importContactsWith(fetchContactsFromDevice, "No contacts were returned from the device.");
@@ -1415,7 +1658,20 @@ const CustomersTab: React.FC = observer(() => {
       return;
     }
 
-    if (!formValues.phone.trim() && !formValues.email.trim()) {
+    if (isPickedContactFlow && formValues.partyType === "supplier") {
+      toast({
+        title: "Suppliers coming next",
+        description: "Supplier ledger flow is not ready yet. Save this contact as a customer for now.",
+        status: "info",
+        duration: 3500,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const composedPhone = composePhoneFromForm();
+
+    if (!composedPhone.trim() && !formValues.email.trim()) {
       toast({
         title: "Validation failed",
         description: "Provide at least phone or email.",
@@ -1433,27 +1689,50 @@ const CustomersTab: React.FC = observer(() => {
         .map((tag) => tag.trim())
         .filter(Boolean);
 
-      await buyerStore.upsertBuyer({
+      const addressEntry = {
+        label: "Primary",
+        addressLine1: formValues.addressLine1.trim(),
+        addressLine2: formValues.addressLine2.trim(),
+        city: formValues.city.trim(),
+        state: formValues.state.trim(),
+        postalCode: formValues.postalCode.trim(),
+        country: formValues.country.trim(),
+      };
+      const hasAddressEntry = Object.values(addressEntry).some((value) => Boolean(String(value || "").trim()));
+
+      const response = await buyerStore.upsertBuyer({
         companyId,
         fullName: formValues.fullName.trim() || undefined,
-        phone: formValues.phone.trim() || undefined,
+        phone: composedPhone.trim() || undefined,
         email: formValues.email.trim() || undefined,
-        displayName: formValues.displayName.trim() || undefined,
+        displayName: formValues.displayName.trim() || formValues.fullName.trim() || undefined,
         tags: tagsArray.length ? tagsArray : undefined,
-        source: "manual",
+        addressBook: hasAddressEntry ? [addressEntry] : undefined,
+        notes: formValues.notes.trim() || undefined,
+        source: isPickedContactFlow ? "import" : "manual",
       });
 
-      toast({
-        title: "Buyer saved",
-        description: "Buyer profile has been created/updated.",
-        status: "success",
-        duration: 2500,
-        isClosable: true,
-      });
+      const savedProfile = response?.data?.profile || null;
+      setLastCreatedBuyer(savedProfile);
+
+      if (isPickedContactFlow) {
+        onContactReviewClose();
+        onBuyerSuccessOpen();
+      } else {
+        toast({
+          title: "Buyer saved",
+          description: "Buyer profile has been created/updated.",
+          status: "success",
+          duration: 2500,
+          isClosable: true,
+        });
+      }
 
       resetForm();
-      onClose();
-      fetchBuyers(1);
+      if (!isPickedContactFlow) {
+        onClose();
+      }
+      await fetchBuyers(1);
     } catch (error: any) {
       toast({
         title: "Failed to save buyer",
@@ -2004,158 +2283,372 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const renderBuyerProfilesMobile = () => (
-    <VStack align="stretch" spacing={4}>
-      <Box>
-        <Text fontSize="sm" color="gray.500" mb={2}>
-          Buyers ({total})
-        </Text>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, phone or email"
-          bg="white"
-          borderRadius="xl"
-        />
+    <Box
+      bg="#F4F7FC"
+      borderRadius={{ base: "none", md: "3xl" }}
+      mx={{ base: -2, md: 0 }}
+      mt={{ base: -2, md: 0 }}
+      overflow="hidden"
+      pb="120px"
+    >
+      <Box
+        bgGradient="linear(160deg, #0A4E9D 0%, #1668C1 58%, #1E7AD7 100%)"
+        px={{ base: 4, sm: 5 }}
+        pt={{ base: 5, sm: 6 }}
+        pb={{ base: 8, sm: 9 }}
+      >
+        <VStack align="stretch" spacing={5}>
+          <Flex justify="space-between" align="start" gap={3}>
+            <Box minW={0} flex="1">
+              <Text fontSize="xs" fontWeight="800" letterSpacing="0.16em" textTransform="uppercase" color="whiteAlpha.700">
+                Buyer Ledger
+              </Text>
+              <Heading size="md" color="white" mt={1} noOfLines={2}>
+                {companyDisplayName}
+              </Heading>
+              <Text fontSize="sm" color="whiteAlpha.800" mt={1} maxW="260px">
+                Track customers, dues, and collection status from one place.
+              </Text>
+            </Box>
+            {canUseDeviceContactImport ? (
+              <Button
+                size="sm"
+                leftIcon={<Icon as={FiUpload} boxSize={4} />}
+                variant="outline"
+                borderRadius="full"
+                color="white"
+                borderColor="whiteAlpha.500"
+                _hover={{ bg: "whiteAlpha.200" }}
+                _active={{ bg: "whiteAlpha.300" }}
+                onClick={onImportOpen}
+                flexShrink={0}
+              >
+                Import
+              </Button>
+            ) : null}
+          </Flex>
+
+          <HStack spacing={6} align="end">
+            <Box position="relative" pb={2}>
+              <Text fontSize="lg" fontWeight="900" color="white">
+                Customers
+              </Text>
+              <Box position="absolute" left={0} bottom={0} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
+            </Box>
+            <VStack align="start" spacing={0} pb={2} opacity={0.72}>
+              <Text fontSize="lg" fontWeight="800" color="white">
+                Suppliers
+              </Text>
+              <Text fontSize="xs" color="whiteAlpha.800">
+                Coming soon
+              </Text>
+            </VStack>
+          </HStack>
+
+          <Box bg="white" borderRadius="24px" shadow="0 18px 40px rgba(5, 44, 92, 0.22)" overflow="hidden">
+            <SimpleGrid columns={2}>
+              <VStack spacing={1} px={4} py={4} align="center">
+                <Text fontSize="sm" color="gray.500" fontWeight="600">
+                  You will give
+                </Text>
+                <Text fontSize="2xl" fontWeight="900" color="red.500">
+                  {formatCompactCurrency(buyerOverview.payable)}
+                </Text>
+              </VStack>
+              <VStack spacing={1} px={4} py={4} align="center" borderLeftWidth="1px" borderLeftColor="gray.100">
+                <Text fontSize="sm" color="gray.500" fontWeight="600">
+                  You will get
+                </Text>
+                <Text fontSize="2xl" fontWeight="900" color="green.500">
+                  {formatCompactCurrency(buyerOverview.receivable)}
+                </Text>
+              </VStack>
+            </SimpleGrid>
+            <HStack justify="space-between" px={4} py={3} bg="#F8FBFF" borderTopWidth="1px" borderTopColor="#E5EEF9">
+              <HStack spacing={2} color="#215E9D">
+                <Icon as={FiUsers} boxSize={4} />
+                <Text fontSize="sm" fontWeight="700">
+                  {total} customers
+                </Text>
+              </HStack>
+              <Text fontSize="xs" fontWeight="700" color="gray.500">
+                {buyerOverview.active} active
+              </Text>
+            </HStack>
+          </Box>
+        </VStack>
       </Box>
 
-      {loading ? (
-        <Text fontSize="sm" color="gray.500">
-          Loading buyers...
-        </Text>
-      ) : buyers.length === 0 ? (
-        <Text fontSize="sm" color="gray.500">
-          No buyers found.
-        </Text>
-      ) : (
-        buyers.map((buyer) => (
+      <Box px={{ base: 3, sm: 4 }} mt="-20px">
+        <Box
+          bg="white"
+          borderRadius="24px"
+          px={{ base: 3, sm: 4 }}
+          py={3}
+          shadow="0 12px 28px rgba(15, 23, 42, 0.08)"
+          borderWidth="1px"
+          borderColor="#E6EEF8"
+        >
+          <HStack spacing={3} align="stretch">
+            <InputGroup flex="1">
+              <InputLeftElement pointerEvents="none" h="100%">
+                <Icon as={FiSearch} color="#2B6CB0" boxSize={5} />
+              </InputLeftElement>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search customer"
+                bg="#F8FAFD"
+                borderRadius="18px"
+                borderColor="transparent"
+                h="52px"
+                pl={12}
+                _placeholder={{ color: "gray.400" }}
+                _focus={{ borderColor: "blue.200", bg: "white", boxShadow: "0 0 0 1px #90CDF4" }}
+              />
+            </InputGroup>
+            {canUseDeviceContactImport ? (
+              <IconButton
+                aria-label="Import contacts"
+                icon={<Icon as={FiUpload} boxSize={5} />}
+                onClick={onImportOpen}
+                h="52px"
+                minW="52px"
+                borderRadius="18px"
+                bg="#EFF6FF"
+                color="#1E63B6"
+                _hover={{ bg: "#DBEAFE" }}
+              />
+            ) : null}
+          </HStack>
+        </Box>
+      </Box>
+
+      <VStack align="stretch" spacing={3} px={{ base: 3, sm: 4 }} pt={4}>
+        {loading ? (
           <Box
-            key={buyer._id}
-            borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="xl"
             bg="white"
+            borderRadius="24px"
+            px={5}
+            py={8}
+            borderWidth="1px"
+            borderColor="#E6EEF8"
             shadow="sm"
-            overflow="hidden"
           >
-            <Box
-              px={4}
-              py={3}
-              bg={buyer.isBlocked ? "red.50" : "blue.50"}
-              borderBottomWidth="1px"
-              borderBottomColor="gray.200"
-            >
-              <HStack justify="space-between" align="start" spacing={3}>
-                <Box>
-                  <Text fontSize="md" fontWeight="800" color="gray.900">
-                    {getBuyerDisplayName(buyer)}
-                  </Text>
-                  <HStack spacing={2} mt={2} wrap="wrap">
-                    <Badge colorScheme="purple" textTransform="capitalize">
-                      {buyer.source || "manual"}
-                    </Badge>
-                    <Badge colorScheme={buyer.isBlocked ? "red" : "green"}>
-                      {buyer.isBlocked ? "Blocked" : "Active"}
-                    </Badge>
-                  </HStack>
-                </Box>
-                <Text fontSize="sm" fontWeight="800" color="blue.700" textAlign="right">
-                  {formatCurrency(Number(buyer.outstandingBalance || 0))}
-                </Text>
-              </HStack>
-            </Box>
-
-            <VStack align="stretch" spacing={3} p={4}>
-              <SimpleGrid columns={2} spacing={3}>
-                <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-                    Phone
-                  </Text>
-                  <Text fontSize="sm" color="gray.800">
-                    {buyer.buyerId?.phoneE164 || "-"}
-                  </Text>
-                </Box>
-                <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-                    Email
-                  </Text>
-                  <Text fontSize="sm" color="gray.800" wordBreak="break-word">
-                    {buyer.buyerId?.emailNormalized || "-"}
-                  </Text>
-                </Box>
-              </SimpleGrid>
-
-              <Box>
-                <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700" mb={2}>
-                  Tags
-                </Text>
-                {buyer.tags && buyer.tags.length ? (
-                  <HStack spacing={2} wrap="wrap">
-                    {buyer.tags.slice(0, 4).map((tag, idx) => (
-                      <Badge key={`${buyer._id}-${tag}-${idx}`} colorScheme="gray">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </HStack>
-                ) : (
-                  <Text fontSize="sm" color="gray.500">
-                    No tags
-                  </Text>
-                )}
-              </Box>
-
-              <HStack justify="space-between" pt={1}>
-                <Button size="sm" colorScheme="blue" borderRadius="full" onClick={() => openLedgerView(buyer)}>
-                  View Ledger
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  colorScheme="red"
-                  borderRadius="full"
-                  onClick={() => openDeleteModal(buyer)}
-                >
-                  Delete
-                </Button>
-              </HStack>
+            <VStack spacing={3}>
+              <Spinner color="blue.500" thickness="3px" />
+              <Text fontSize="sm" color="gray.500">
+                Loading buyers...
+              </Text>
             </VStack>
           </Box>
-        ))
-      )}
+        ) : buyers.length === 0 ? (
+          <Box
+            bg="white"
+            borderRadius="24px"
+            px={5}
+            py={8}
+            borderWidth="1px"
+            borderColor="#E6EEF8"
+            shadow="sm"
+          >
+            <VStack spacing={2}>
+              <Icon as={FiUsers} boxSize={8} color="blue.300" />
+              <Text fontWeight="700" color="gray.700">
+                No buyers found
+              </Text>
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                Try a different search or add a new customer to start the ledger.
+              </Text>
+            </VStack>
+          </Box>
+        ) : (
+          buyers.map((buyer) => (
+            <Box
+              key={buyer._id}
+              bg="white"
+              borderRadius="24px"
+              px={4}
+              py={4}
+              borderWidth="1px"
+              borderColor="#E6EEF8"
+              shadow="0 10px 24px rgba(15, 23, 42, 0.05)"
+            >
+              <HStack align="start" spacing={3}>
+                <Flex
+                  h="50px"
+                  w="50px"
+                  borderRadius="full"
+                  bg={buyer.isBlocked ? "red.50" : "blue.50"}
+                  color={buyer.isBlocked ? "red.500" : "#1957A5"}
+                  align="center"
+                  justify="center"
+                  fontWeight="900"
+                  fontSize="md"
+                  flexShrink={0}
+                >
+                  {getBuyerInitials(buyer)}
+                </Flex>
 
-      <HStack justify="space-between" pt={1}>
-        <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
-          isDisabled={page <= 1 || loading}
-          onClick={() => {
-            if (page <= 1) return;
-            const nextPage = page - 1;
-            setPage(nextPage);
-            fetchBuyers(nextPage, search);
-          }}
-        >
-          Previous
-        </Button>
-        <Text fontSize="sm" color="gray.600">
-          Page {page} of {totalPages || 1}
-        </Text>
-        <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
-          isDisabled={page >= (totalPages || 1) || loading}
-          onClick={() => {
-            if (page >= (totalPages || 1)) return;
-            const nextPage = page + 1;
-            setPage(nextPage);
-            fetchBuyers(nextPage, search);
-          }}
-        >
-          Next
-        </Button>
-      </HStack>
-    </VStack>
+                <Box flex="1" minW={0}>
+                  <Flex justify="space-between" align="start" gap={3}>
+                    <Box minW={0}>
+                      <Text fontSize="lg" fontWeight="800" color="gray.900" noOfLines={1}>
+                        {getBuyerDisplayName(buyer)}
+                      </Text>
+                      <Text fontSize="sm" color="gray.500" mt={0.5}>
+                        {getBuyerSecondaryLabel(buyer)}
+                      </Text>
+                    </Box>
+
+                    <VStack spacing={1} align="end" flexShrink={0}>
+                      <Text
+                        fontSize="xl"
+                        fontWeight="900"
+                        color={Number(buyer.outstandingBalance || 0) >= 0 ? "green.500" : "red.500"}
+                        lineHeight="1"
+                      >
+                        {formatCompactCurrency(Math.abs(Number(buyer.outstandingBalance || 0)))}
+                      </Text>
+                      <Badge
+                        borderRadius="full"
+                        px={2.5}
+                        py={0.5}
+                        colorScheme={buyer.isBlocked ? "red" : "green"}
+                        textTransform="uppercase"
+                        fontSize="0.65rem"
+                      >
+                        {buyer.isBlocked ? "Blocked" : "Active"}
+                      </Badge>
+                    </VStack>
+                  </Flex>
+
+                  <VStack align="stretch" spacing={2} mt={3}>
+                    <HStack spacing={2} color="gray.600" align="start">
+                      <Icon as={FiPhone} boxSize={4} mt={0.5} color="blue.500" flexShrink={0} />
+                      <Text fontSize="sm" fontWeight="500">
+                        {buyer.buyerId?.phoneE164 || "-"}
+                      </Text>
+                    </HStack>
+                    {buyer.buyerId?.emailNormalized ? (
+                      <HStack spacing={2} color="gray.600" align="start">
+                        <Icon as={FiMail} boxSize={4} mt={0.5} color="blue.500" flexShrink={0} />
+                        <Text fontSize="sm" fontWeight="500" wordBreak="break-word">
+                          {buyer.buyerId.emailNormalized}
+                        </Text>
+                      </HStack>
+                    ) : null}
+                  </VStack>
+
+                  {buyer.tags && buyer.tags.length ? (
+                    <HStack spacing={2} mt={3} wrap="wrap">
+                      {buyer.tags.slice(0, 3).map((tag, idx) => (
+                        <Badge
+                          key={`${buyer._id}-${tag}-${idx}`}
+                          borderRadius="full"
+                          px={2.5}
+                          py={1}
+                          bg="#EEF4FF"
+                          color="#315D9C"
+                          fontWeight="700"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </HStack>
+                  ) : null}
+
+                  <HStack mt={4} spacing={2}>
+                    <Button
+                      flex="1"
+                      rightIcon={<Icon as={FiChevronRight} boxSize={4} />}
+                      onClick={() => openLedgerView(buyer)}
+                      bg="#0D63B8"
+                      color="white"
+                      borderRadius="16px"
+                      h="44px"
+                      fontWeight="800"
+                      _hover={{ bg: "#0A56A4" }}
+                      _active={{ bg: "#094A8D" }}
+                    >
+                      View Ledger
+                    </Button>
+                    <IconButton
+                      aria-label="Delete buyer"
+                      icon={<Icon as={FiTrash2} boxSize={4} />}
+                      onClick={() => openDeleteModal(buyer)}
+                      variant="outline"
+                      borderRadius="16px"
+                      h="44px"
+                      minW="44px"
+                      colorScheme="red"
+                    />
+                  </HStack>
+                </Box>
+              </HStack>
+            </Box>
+          ))
+        )}
+
+        <HStack justify="space-between" align="center" pt={2}>
+          <Button
+            size="sm"
+            variant="outline"
+            borderRadius="full"
+            isDisabled={page <= 1 || loading}
+            onClick={() => {
+              if (page <= 1) return;
+              const nextPage = page - 1;
+              setPage(nextPage);
+              fetchBuyers(nextPage, search);
+            }}
+          >
+            Previous
+          </Button>
+          <Text fontSize="sm" color="gray.600" fontWeight="600">
+            Page {page} of {totalPages || 1}
+          </Text>
+          <Button
+            size="sm"
+            variant="outline"
+            borderRadius="full"
+            isDisabled={page >= (totalPages || 1) || loading}
+            onClick={() => {
+              if (page >= (totalPages || 1)) return;
+              const nextPage = page + 1;
+              setPage(nextPage);
+              fetchBuyers(nextPage, search);
+            }}
+          >
+            Next
+          </Button>
+        </HStack>
+      </VStack>
+
+      <Button
+        position="fixed"
+        left="50%"
+        transform="translateX(-50%)"
+        bottom="calc(92px + env(safe-area-inset-bottom))"
+        zIndex={20}
+        leftIcon={<Icon as={FiUserPlus} boxSize={5} />}
+        onClick={openManualBuyerModal}
+        h="58px"
+        minW="min(88vw, 290px)"
+        px={8}
+        borderRadius="full"
+        bgGradient="linear(135deg, #C51162 0%, #D81B60 100%)"
+        color="white"
+        fontSize="md"
+        fontWeight="900"
+        letterSpacing="0.02em"
+        shadow="0 18px 34px rgba(197, 17, 98, 0.35)"
+        _hover={{ bgGradient: "linear(135deg, #B20E58 0%, #C2185B 100%)" }}
+        _active={{ bgGradient: "linear(135deg, #9F0C4F 0%, #AD1457 100%)" }}
+      >
+        Add Customer
+      </Button>
+    </Box>
   );
 
   const ledgerTableData = ledgerEntries.map((entry) => ({
@@ -3066,106 +3559,110 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
+  const showMobileBuyerManagement = !selectedLedgerBuyer && useCompactBuyerView;
 
   return (
     <Box px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }}>
       <VStack align="stretch" spacing={4}>
-        <Flex
-          justify="space-between"
-          align={{ base: "stretch", md: "center" }}
-          direction={{ base: "column", md: "row" }}
-          gap={3}
-        >
-          <Box>
-            <Heading size="md">
-              {selectedLedgerBuyer ? `Buyer Ledger - ${selectedBuyerName}` : "Buyer Management"}
-            </Heading>
-            <Text fontSize="sm" color="gray.500">
-              {selectedLedgerBuyer
-                ? "Track sale, payment and adjustment entries"
-                : "Manage offline buyers for your company"}
-            </Text>
-          </Box>
-          {selectedLedgerBuyer ? (
-            <Stack
-              direction={{ base: "column", sm: "row" }}
-              spacing={2}
-              w={{ base: "full", md: "auto" }}
-              align={{ base: "stretch", sm: "center" }}
-            >
-              <Button
-                leftIcon={<ArrowBackIcon />}
-                variant="outline"
-                onClick={closeLedgerView}
-                size={{ base: "sm", md: "md" }}
-                w={{ base: "full", sm: "auto" }}
+        {!showMobileBuyerManagement ? (
+          <Flex
+            justify="space-between"
+            align={{ base: "stretch", md: "center" }}
+            direction={{ base: "column", md: "row" }}
+            gap={3}
+          >
+            <Box>
+              <Heading size="md">
+                {selectedLedgerBuyer ? `Buyer Ledger - ${selectedBuyerName}` : "Buyer Management"}
+              </Heading>
+              <Text fontSize="sm" color="gray.500">
+                {selectedLedgerBuyer
+                  ? "Track sale, payment and adjustment entries"
+                  : "Manage offline buyers for your company"}
+              </Text>
+            </Box>
+            {selectedLedgerBuyer ? (
+              <Stack
+                direction={{ base: "column", sm: "row" }}
+                spacing={2}
+                w={{ base: "full", md: "auto" }}
+                align={{ base: "stretch", sm: "center" }}
               >
-                Back to Buyers
-              </Button>
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="teal"
-                onClick={onSaleRecordOpen}
-                size={{ base: "sm", md: "md" }}
-                w={{ base: "full", sm: "auto" }}
-              >
-                Add Sale Record
-              </Button>
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="blue"
-                onClick={onLedgerEntryOpen}
-                size={{ base: "sm", md: "md" }}
-                w={{ base: "full", sm: "auto" }}
-              >
-                Add Ledger Entry
-              </Button>
-            </Stack>
-          ) : (
-            <Stack
-              direction={{ base: "column", sm: "row" }}
-              spacing={2}
-              w={{ base: "full", md: "auto" }}
-              align={{ base: "stretch", sm: "center" }}
-            >
-              {canUseDeviceContactImport ? (
                 <Button
+                  leftIcon={<ArrowBackIcon />}
                   variant="outline"
-                  onClick={onImportOpen}
+                  onClick={closeLedgerView}
                   size={{ base: "sm", md: "md" }}
                   w={{ base: "full", sm: "auto" }}
                 >
-                  Import Contacts
+                  Back to Buyers
                 </Button>
-              ) : null}
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="blue"
-                onClick={onOpen}
-                size={{ base: "sm", md: "md" }}
-                w={{ base: "full", sm: "auto" }}
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="teal"
+                  onClick={onSaleRecordOpen}
+                  size={{ base: "sm", md: "md" }}
+                  w={{ base: "full", sm: "auto" }}
+                >
+                  Add Sale Record
+                </Button>
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="blue"
+                  onClick={onLedgerEntryOpen}
+                  size={{ base: "sm", md: "md" }}
+                  w={{ base: "full", sm: "auto" }}
+                >
+                  Add Ledger Entry
+                </Button>
+              </Stack>
+            ) : (
+              <Stack
+                direction={{ base: "column", sm: "row" }}
+                spacing={2}
+                w={{ base: "full", md: "auto" }}
+                align={{ base: "stretch", sm: "center" }}
               >
-                Add Buyer
-              </Button>
-            </Stack>
-          )}
-        </Flex>
+                {canUseDeviceContactImport ? (
+                  <Button
+                    variant="outline"
+                    onClick={onImportOpen}
+                    size={{ base: "sm", md: "md" }}
+                    w={{ base: "full", sm: "auto" }}
+                  >
+                    Import Contacts
+                  </Button>
+                ) : null}
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="blue"
+                  onClick={openManualBuyerModal}
+                  size={{ base: "sm", md: "md" }}
+                  w={{ base: "full", sm: "auto" }}
+                >
+                  Add Buyer
+                </Button>
+              </Stack>
+            )}
+          </Flex>
+        ) : null}
 
         {!selectedLedgerBuyer ? (
           <>
-            <Box display={{ base: "block", lg: "none" }}>
-              {renderBuyerProfilesMobile()}
-            </Box>
-            <Box display={{ base: "none", lg: "block" }}>
-              <CustomTable
-                title={`Buyers (${total})`}
-                columns={buyerColumns}
-                data={buyerTableData}
-                loading={loading}
-                actions={buyerTableActions}
-                serial={{ show: true, text: "S.No." }}
-              />
-            </Box>
+            {showMobileBuyerManagement ? (
+              renderBuyerProfilesMobile()
+            ) : (
+              <Box>
+                <CustomTable
+                  title={`Buyers (${total})`}
+                  columns={buyerColumns}
+                  data={buyerTableData}
+                  loading={loading}
+                  actions={buyerTableActions}
+                  serial={{ show: true, text: "S.No." }}
+                />
+              </Box>
+            )}
           </>
         ) : (
           <VStack align="stretch" spacing={4}>
@@ -3413,7 +3910,307 @@ const CustomersTab: React.FC = observer(() => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+      <Modal isOpen={isContactReviewOpen} onClose={closeContactReviewModal} size="full" scrollBehavior="inside">
+        <ModalOverlay />
+        <ModalContent bg="#F7FAFC">
+          <Box bg="#0A57B0" px={4} py={4} color="white">
+            <HStack spacing={3}>
+              <IconButton
+                aria-label="Back"
+                icon={<ArrowBackIcon />}
+                onClick={closeContactReviewModal}
+                variant="ghost"
+                color="white"
+                _hover={{ bg: "whiteAlpha.200" }}
+                _active={{ bg: "whiteAlpha.300" }}
+              />
+              <Text fontSize="2xl" fontWeight="700">
+                Add Party
+              </Text>
+            </HStack>
+          </Box>
+
+          <ModalBody px={4} py={5}>
+            <VStack align="stretch" spacing={5}>
+              <FormControl>
+                <Input
+                  value={formValues.fullName}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      fullName: e.target.value,
+                      displayName: prev.displayName === prev.fullName ? e.target.value : prev.displayName,
+                    }))
+                  }
+                  placeholder="Full name"
+                  h="74px"
+                  borderRadius="20px"
+                  borderWidth="2px"
+                  borderColor="#1C5FB0"
+                  bg="white"
+                  fontSize="2xl"
+                  fontWeight="500"
+                  px={6}
+                />
+              </FormControl>
+
+              <HStack align="stretch" spacing={3}>
+                <FormControl maxW="112px">
+                  <Input
+                    value={formValues.phoneCountryCode}
+                    onChange={(e) =>
+                      setFormValues((prev) => ({
+                        ...prev,
+                        phoneCountryCode: e.target.value,
+                        phone: `${e.target.value}${prev.phoneNationalNumber}`.trim(),
+                      }))
+                    }
+                    placeholder="+91"
+                    h="74px"
+                    borderRadius="18px"
+                    borderWidth="2px"
+                    borderColor="gray.300"
+                    bg="white"
+                    fontSize="2xl"
+                    textAlign="center"
+                    px={3}
+                  />
+                </FormControl>
+                <FormControl flex="1">
+                  <Input
+                    value={formValues.phoneNationalNumber}
+                    onChange={(e) =>
+                      setFormValues((prev) => {
+                        const localPhone = e.target.value.replace(/\D/g, "");
+                        return {
+                          ...prev,
+                          phoneNationalNumber: localPhone,
+                          phone: `${prev.phoneCountryCode}${localPhone}`.trim(),
+                        };
+                      })
+                    }
+                    placeholder="Phone number"
+                    h="74px"
+                    borderRadius="18px"
+                    borderWidth="2px"
+                    borderColor="gray.300"
+                    bg="white"
+                    fontSize="2xl"
+                    px={6}
+                    inputMode="tel"
+                  />
+                </FormControl>
+              </HStack>
+
+              <Box>
+                <Text fontSize="2xl" color="gray.500" mb={3}>
+                  Who are they?
+                </Text>
+                <RadioGroup
+                  value={formValues.partyType}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({ ...prev, partyType: value as "customer" | "supplier" }))
+                  }
+                >
+                  <HStack spacing={8}>
+                    <Radio value="customer" colorScheme="blue" size="lg">
+                      <Text fontSize="xl" fontWeight="500">
+                        Customer
+                      </Text>
+                    </Radio>
+                    <Radio value="supplier" colorScheme="blue" size="lg" isDisabled>
+                      <Text fontSize="xl" fontWeight="500" color="gray.400">
+                        Supplier
+                      </Text>
+                    </Radio>
+                  </HStack>
+                </RadioGroup>
+                <Text fontSize="sm" color="gray.500" mt={2}>
+                  Supplier flow will plug into this screen once supplier ledger is ready.
+                </Text>
+              </Box>
+
+              <Button
+                variant="ghost"
+                justifyContent="flex-start"
+                px={0}
+                color="#0A57B0"
+                fontSize="lg"
+                fontWeight="700"
+                onClick={() => setShowContactExtraFields((prev) => !prev)}
+                _hover={{ bg: "transparent", color: "#084A97" }}
+                _active={{ bg: "transparent" }}
+              >
+                {showContactExtraFields ? "- Hide extra details" : "+ Add address & notes (optional)"}
+              </Button>
+
+              {showContactExtraFields ? (
+                <VStack align="stretch" spacing={3}>
+                  <FormControl>
+                    <FormLabel>Email</FormLabel>
+                    <Input
+                      value={formValues.email}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
+                      placeholder="name@example.com"
+                      bg="white"
+                      borderRadius="16px"
+                      h="54px"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Address line 1</FormLabel>
+                    <Input
+                      value={formValues.addressLine1}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine1: e.target.value }))}
+                      placeholder="Shop or street address"
+                      bg="white"
+                      borderRadius="16px"
+                      h="54px"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Address line 2</FormLabel>
+                    <Input
+                      value={formValues.addressLine2}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine2: e.target.value }))}
+                      placeholder="Area, landmark"
+                      bg="white"
+                      borderRadius="16px"
+                      h="54px"
+                    />
+                  </FormControl>
+                  <SimpleGrid columns={2} spacing={3}>
+                    <FormControl>
+                      <FormLabel>City</FormLabel>
+                      <Input
+                        value={formValues.city}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, city: e.target.value }))}
+                        bg="white"
+                        borderRadius="16px"
+                        h="54px"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>State</FormLabel>
+                      <Input
+                        value={formValues.state}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, state: e.target.value }))}
+                        bg="white"
+                        borderRadius="16px"
+                        h="54px"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>Postal code</FormLabel>
+                      <Input
+                        value={formValues.postalCode}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, postalCode: e.target.value }))}
+                        bg="white"
+                        borderRadius="16px"
+                        h="54px"
+                        inputMode="numeric"
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel>Country</FormLabel>
+                      <Input
+                        value={formValues.country}
+                        onChange={(e) => setFormValues((prev) => ({ ...prev, country: e.target.value }))}
+                        bg="white"
+                        borderRadius="16px"
+                        h="54px"
+                      />
+                    </FormControl>
+                  </SimpleGrid>
+                  <FormControl>
+                    <FormLabel>Notes</FormLabel>
+                    <Textarea
+                      value={formValues.notes}
+                      onChange={(e) => setFormValues((prev) => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Anything useful to remember about this customer"
+                      bg="white"
+                      borderRadius="16px"
+                      minH="120px"
+                      resize="vertical"
+                    />
+                  </FormControl>
+                </VStack>
+              ) : null}
+            </VStack>
+          </ModalBody>
+
+          <ModalFooter px={4} py={4} borderTopWidth="1px" borderTopColor="gray.200" bg="white">
+            <Button
+              w="full"
+              h="58px"
+              colorScheme="blue"
+              borderRadius="16px"
+              fontSize="lg"
+              onClick={handleCreateBuyer}
+              isLoading={submitting}
+            >
+              Add Customer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isBuyerSuccessOpen} onClose={closeBuyerSuccessModal} isCentered size="sm">
+        <ModalOverlay bg="blackAlpha.500" />
+        <ModalContent borderRadius="24px" overflow="hidden">
+          <Box bgGradient="linear(180deg, #0E7A44 0%, #0A6538 100%)" color="white" px={6} py={7}>
+            <VStack spacing={3}>
+              <Flex
+                h="64px"
+                w="64px"
+                borderRadius="full"
+                bg="whiteAlpha.250"
+                align="center"
+                justify="center"
+                fontSize="3xl"
+                fontWeight="900"
+              >
+                OK
+              </Flex>
+              <Text fontSize="2xl" fontWeight="800">
+                Customer saved
+              </Text>
+              <Text fontSize="sm" color="whiteAlpha.900" textAlign="center">
+                {lastCreatedBuyer
+                  ? `${getBuyerDisplayName(lastCreatedBuyer)} is ready for ledger entries.`
+                  : "The contact has been added to your customer list."}
+              </Text>
+            </VStack>
+          </Box>
+          <ModalBody px={6} py={5}>
+            <VStack spacing={3} align="stretch">
+              <Button
+                colorScheme="blue"
+                h="52px"
+                borderRadius="16px"
+                onClick={async () => {
+                  closeBuyerSuccessModal();
+                  if (lastCreatedBuyer?._id) {
+                    await openLedgerView(lastCreatedBuyer);
+                  }
+                }}
+              >
+                Open Ledger
+              </Button>
+              <Button
+                variant="outline"
+                h="52px"
+                borderRadius="16px"
+                onClick={closeBuyerSuccessModal}
+              >
+                Done
+              </Button>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Add Buyer</ModalHeader>
@@ -3467,7 +4264,7 @@ const CustomersTab: React.FC = observer(() => {
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={closeBuyerModal}>
               Cancel
             </Button>
             <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting}>
