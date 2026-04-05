@@ -164,6 +164,14 @@ const fieldCardStyles = {
   p: 5,
 };
 
+const textareaStyles = {
+  minH: "132px",
+  borderRadius: "18px",
+  borderColor: "#D9E2EC",
+  bg: "#F8FBFD",
+  _focusVisible: { borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" },
+};
+
 const isValidEmail = (email: string) => {
   if (!email.trim()) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -896,164 +904,145 @@ const SignUpForm = observer(() => {
     }));
   };
 
-  const renderPhoneStep = () => (
-    <VStack align="stretch" spacing={6}>
-      <Box {...fieldCardStyles}>
-        <Text fontSize="sm" color="gray.500" mb={3}>
-          I want to join as
-        </Text>
-        <SimpleGrid columns={2} spacing={3}>
-          <Button
-            type="button"
-            variant={intent === "user" ? "solid" : "outline"}
-            colorScheme="teal"
-            borderRadius="2xl"
-            h="52px"
-            onClick={() => setIntentSelection("user")}
-          >
-            Buyer / User
-          </Button>
-          <Button
-            type="button"
-            variant={intent === "seller" ? "solid" : "outline"}
-            colorScheme="blue"
-            borderRadius="2xl"
-            h="52px"
-            onClick={() => setIntentSelection("seller")}
-          >
-            Seller
-          </Button>
-        </SimpleGrid>
-      </Box>
+const renderPhoneStep = () => (
+  <VStack align="stretch" spacing={6}>
+    <Box>
+      <Text fontSize="sm" color="gray.500" mb={3}>
+        I want to join as
+      </Text>
+      <SimpleGrid columns={2} spacing={3}>
+        <Button
+          type="button"
+          variant={intent === "user" ? "solid" : "outline"}
+          colorScheme="teal"
+          borderRadius="2xl"
+          h="52px"
+          onClick={() => setIntentSelection("user")}
+        >
+          Buyer / User
+        </Button>
+        <Button
+          type="button"
+          variant={intent === "seller" ? "solid" : "outline"}
+          colorScheme="blue"
+          borderRadius="2xl"
+          h="52px"
+          onClick={() => setIntentSelection("seller")}
+        >
+          Seller
+        </Button>
+      </SimpleGrid>
+    </Box>
 
-      <Box {...fieldCardStyles}>
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            Phone Number
-          </FormLabel>
-          <Input
-            ref={phoneInputRef}
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={userData.phone}
-            onChange={(event) => setUserData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }))}
-            placeholder="Enter 10-digit mobile number"
-            {...inputStyles}
-          />
-          <FieldError message={errors.phone} />
-        </FormControl>
-      </Box>
-    </VStack>
-  );
+    <FormControl isRequired>
+      <FormLabel color="gray.700" fontWeight="600">
+        Phone Number
+      </FormLabel>
+      <Input
+        ref={phoneInputRef}
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={userData.phone}
+        onChange={(event) => setUserData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }))}
+        placeholder="Enter 10-digit mobile number"
+        {...inputStyles}
+      />
+      <FieldError message={errors.phone} />
+    </FormControl>
+  </VStack>
+);
 
-  const renderUserProfileStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <Box {...fieldCardStyles}>
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            Full Name
-          </FormLabel>
-          <Input
-            value={userData.name}
-            onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-            placeholder="Your name"
-            {...inputStyles}
-          />
-          <FieldError message={errors.name} />
-        </FormControl>
-      </Box>
+const renderUserProfileStep = () => (
+  <VStack align="stretch" spacing={5}>
+    <FormControl isRequired>
+      <FormLabel color="gray.700" fontWeight="600">
+        Full Name
+      </FormLabel>
+      <Input
+        value={userData.name}
+        onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+        placeholder="Your name"
+        {...inputStyles}
+      />
+      <FieldError message={errors.name} />
+    </FormControl>
 
-      <Box {...fieldCardStyles}>
-        <FormControl>
-          <FormLabel color="gray.700" fontWeight="600">
-            Email
-          </FormLabel>
-          <Input
-            type="email"
-            value={userData.email}
-            onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-            placeholder="Optional email"
-            {...inputStyles}
-          />
-          <FieldError message={errors.email} />
-        </FormControl>
-      </Box>
-    </VStack>
-  );
+    <FormControl>
+      <FormLabel color="gray.700" fontWeight="600">
+        Email
+      </FormLabel>
+      <Input
+        type="email"
+        value={userData.email}
+        onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
+        placeholder="Optional email"
+        {...inputStyles}
+      />
+      <FieldError message={errors.email} />
+    </FormControl>
+  </VStack>
+);
 
-  const renderSellerBasicsStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <Box {...fieldCardStyles}>
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            Owner Name
-          </FormLabel>
-          <Input
-            value={userData.name}
-            onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-            placeholder="Your full name"
-            {...inputStyles}
-          />
-          <FieldError message={errors.name} />
-        </FormControl>
-      </Box>
+const renderSellerBasicsStep = () => (
+  <VStack align="stretch" spacing={5}>
+    <FormControl isRequired>
+      <FormLabel color="gray.700" fontWeight="600">
+        Owner Name
+      </FormLabel>
+      <Input
+        value={userData.name}
+        onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+        placeholder="Your full name"
+        {...inputStyles}
+      />
+      <FieldError message={errors.name} />
+    </FormControl>
 
-      <VStack align="stretch" spacing={5}>
-        <Box {...fieldCardStyles}>
-          <FormControl isRequired>
-            <FormLabel color="gray.700" fontWeight="600">
-              Store Name
-            </FormLabel>
-            <Input
-              value={sellerData.storeName}
-              onChange={(event) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
-              placeholder="Ex. Sharma Electronics"
-              {...inputStyles}
-            />
-            <FieldError message={errors.storeName} />
-          </FormControl>
-        </Box>
+    <FormControl isRequired>
+      <FormLabel color="gray.700" fontWeight="600">
+        Store Name
+      </FormLabel>
+      <Input
+        value={sellerData.storeName}
+        onChange={(event) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
+        placeholder="Ex. Sharma Electronics"
+        {...inputStyles}
+      />
+      <FieldError message={errors.storeName} />
+    </FormControl>
 
-        <Box {...fieldCardStyles}>
-          <FormControl>
-            <FormLabel color="gray.700" fontWeight="600">
-              GST Number
-            </FormLabel>
-            <Input
-              value={sellerData.gstNumber}
-              onChange={(event) =>
-                setSellerData((prev) => ({
-                  ...prev,
-                  gstNumber: normalizeGstNumber(event.target.value),
-                }))
-              }
-              placeholder="Optional"
-              {...inputStyles}
-            />
-            <FieldError message={errors.gstNumber} />
-          </FormControl>
-        </Box>
-      </VStack>
+    <FormControl>
+      <FormLabel color="gray.700" fontWeight="600">
+        GST Number
+      </FormLabel>
+      <Input
+        value={sellerData.gstNumber}
+        onChange={(event) =>
+          setSellerData((prev) => ({
+            ...prev,
+            gstNumber: normalizeGstNumber(event.target.value),
+          }))
+        }
+        placeholder="Optional"
+        {...inputStyles}
+      />
+      <FieldError message={errors.gstNumber} />
+    </FormControl>
 
-      <Box {...fieldCardStyles}>
-        <FormControl>
-          <FormLabel color="gray.700" fontWeight="600">
-            About Your Shop
-          </FormLabel>
-          <Textarea
-            value={sellerData.description}
-            onChange={(event) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
-            placeholder="What do you sell? What makes your store special?"
-            minH="140px"
-            borderRadius="2xl"
-            borderColor="gray.200"
-            _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
-          />
-        </FormControl>
-      </Box>
-    </VStack>
-  );
+    <FormControl>
+      <FormLabel color="gray.700" fontWeight="600">
+        About Your Shop
+      </FormLabel>
+      <Textarea
+        value={sellerData.description}
+        onChange={(event) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
+        placeholder="What do you sell? What makes your store special?"
+        {...textareaStyles}
+      />
+    </FormControl>
+  </VStack>
+);
 
   const renderSellerLocationStep = () => (
     <VStack align="stretch" spacing={5}>
@@ -1146,127 +1135,113 @@ const SignUpForm = observer(() => {
       </Box>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-        <Box {...fieldCardStyles}>
-          <FormControl isRequired>
-            <FormLabel color="gray.700" fontWeight="600">
-              Address
-            </FormLabel>
-            <Input
-              value={sellerData.location.address}
-              onChange={(event) => setSellerFieldValue("location.address", event.target.value)}
-              placeholder="Shop address"
-              {...inputStyles}
-            />
-            <FieldError message={errors.address} />
-          </FormControl>
-        </Box>
+        <FormControl isRequired>
+          <FormLabel color="gray.700" fontWeight="600">
+            Address
+          </FormLabel>
+          <Input
+            value={sellerData.location.address}
+            onChange={(event) => setSellerFieldValue("location.address", event.target.value)}
+            placeholder="Shop address"
+            {...inputStyles}
+          />
+          <FieldError message={errors.address} />
+        </FormControl>
 
-        <Box {...fieldCardStyles}>
-          <FormControl isRequired>
-            <FormLabel color="gray.700" fontWeight="600">
-              City
-            </FormLabel>
-            <Input
-              value={sellerData.location.city}
-              onChange={(event) => setSellerFieldValue("location.city", event.target.value)}
-              placeholder="City"
-              {...inputStyles}
-            />
-            <FieldError message={errors.city} />
-          </FormControl>
-        </Box>
+        <FormControl isRequired>
+          <FormLabel color="gray.700" fontWeight="600">
+            City
+          </FormLabel>
+          <Input
+            value={sellerData.location.city}
+            onChange={(event) => setSellerFieldValue("location.city", event.target.value)}
+            placeholder="City"
+            {...inputStyles}
+          />
+          <FieldError message={errors.city} />
+        </FormControl>
 
-        <Box {...fieldCardStyles}>
-          <FormControl isRequired>
-            <FormLabel color="gray.700" fontWeight="600">
-              State
-            </FormLabel>
-            <Input
-              value={sellerData.location.state}
-              onChange={(event) => setSellerFieldValue("location.state", event.target.value)}
-              placeholder="State"
-              {...inputStyles}
-            />
-            <FieldError message={errors.state} />
-          </FormControl>
-        </Box>
+        <FormControl isRequired>
+          <FormLabel color="gray.700" fontWeight="600">
+            State
+          </FormLabel>
+          <Input
+            value={sellerData.location.state}
+            onChange={(event) => setSellerFieldValue("location.state", event.target.value)}
+            placeholder="State"
+            {...inputStyles}
+          />
+          <FieldError message={errors.state} />
+        </FormControl>
 
-        <Box {...fieldCardStyles}>
-          <FormControl>
-            <FormLabel color="gray.700" fontWeight="600">
-              Postal Code
-            </FormLabel>
-            <Input
-              value={sellerData.location.postalCode}
-              onChange={(event) => setSellerFieldValue("location.postalCode", event.target.value)}
-              placeholder="Postal code"
-              {...inputStyles}
-            />
-          </FormControl>
-        </Box>
+        <FormControl>
+          <FormLabel color="gray.700" fontWeight="600">
+            Postal Code
+          </FormLabel>
+          <Input
+            value={sellerData.location.postalCode}
+            onChange={(event) => setSellerFieldValue("location.postalCode", event.target.value)}
+            placeholder="Postal code"
+            {...inputStyles}
+          />
+        </FormControl>
 
-        <Box {...fieldCardStyles} gridColumn={{ base: "span 1", md: "span 2" }}>
-          <FormControl isRequired>
-            <FormLabel color="gray.700" fontWeight="600">
-              Country
-            </FormLabel>
-            <Input
-              value={sellerData.location.country}
-              onChange={(event) => setSellerFieldValue("location.country", event.target.value)}
-              placeholder="Country"
-              {...inputStyles}
-            />
-            <FieldError message={errors.country} />
-          </FormControl>
-        </Box>
+        <FormControl isRequired gridColumn={{ base: "span 1", md: "span 2" }}>
+          <FormLabel color="gray.700" fontWeight="600">
+            Country
+          </FormLabel>
+          <Input
+            value={sellerData.location.country}
+            onChange={(event) => setSellerFieldValue("location.country", event.target.value)}
+            placeholder="Country"
+            {...inputStyles}
+          />
+          <FieldError message={errors.country} />
+        </FormControl>
       </SimpleGrid>
     </VStack>
   );
 
-  const renderSellerContactStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <Box {...fieldCardStyles}>
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            Store Phone
-          </FormLabel>
-          <Input
-            type="tel"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={sellerData.contactPhone}
-            onChange={(event) => {
-              const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
-              setSellerData((prev) => ({
-                ...prev,
-                contactPhone: nextPhone,
-              }));
-              setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
-            }}
-            placeholder="Public shop phone"
-            {...inputStyles}
-          />
-          <FieldError message={errors.contactPhone} />
-        </FormControl>
-      </Box>
+const renderSellerContactStep = () => (
+  <VStack align="stretch" spacing={5}>
+    <FormControl isRequired>
+      <FormLabel color="gray.700" fontWeight="600">
+        Store Phone
+      </FormLabel>
+      <Input
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={sellerData.contactPhone}
+        onChange={(event) => {
+          const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
+          setSellerData((prev) => ({
+            ...prev,
+            contactPhone: nextPhone,
+          }));
+          setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
+        }}
+        placeholder="Public shop phone"
+        {...inputStyles}
+      />
+      <FieldError message={errors.contactPhone} />
+    </FormControl>
 
-      <Box {...fieldCardStyles}>
-        <FormControl>
-          <FormLabel color="gray.700" fontWeight="600">
-            Email
-          </FormLabel>
-          <Input
-            type="email"
-            value={userData.email}
-            onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-            placeholder="Optional email"
-            {...inputStyles}
-          />
-          <FieldError message={errors.email} />
-        </FormControl>
-      </Box>
-    </VStack>
-  );
+    <FormControl>
+      <FormLabel color="gray.700" fontWeight="600">
+        Email
+      </FormLabel>
+      <Input
+        type="email"
+        value={userData.email}
+        onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
+        placeholder="Optional email"
+        {...inputStyles}
+      />
+      <FieldError message={errors.email} />
+    </FormControl>
+  </VStack>
+);
 
   const renderSellerPhotosStep = () => {
     const completedMediaCount =
