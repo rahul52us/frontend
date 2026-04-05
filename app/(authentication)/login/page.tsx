@@ -35,35 +35,36 @@ const otpRegex = /^\d{6}$/;
 const panelStyles = {
   bg: "white",
   borderWidth: "1px",
-  borderColor: "gray.200",
-  borderRadius: "3xl",
-  boxShadow: "0 28px 90px rgba(15, 23, 42, 0.08)",
+  borderColor: "#E2E8F0",
+  borderRadius: "28px",
+  boxShadow: "0 18px 48px rgba(15, 23, 42, 0.07)",
 };
 
 const primaryButtonStyles = {
   bgGradient: "linear(to-r, teal.500, cyan.500)",
   color: "white",
-  h: "56px",
-  borderRadius: "full",
-  fontWeight: "700",
+  h: "58px",
+  borderRadius: "18px",
+  fontWeight: "800",
   _hover: { bgGradient: "linear(to-r, teal.600, cyan.600)" },
   _active: { transform: "scale(0.98)" },
 };
 
 const inputStyles = {
-  h: "58px",
-  borderRadius: "2xl",
-  borderColor: "gray.200",
+  h: "56px",
+  borderRadius: "18px",
+  borderColor: "#D9E2EC",
+  bg: "#F8FBFD",
   _focusVisible: { borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" },
 };
 
 const fieldCardStyles = {
   borderWidth: "1px",
-  borderColor: "gray.200",
-  borderRadius: "2xl",
+  borderColor: "#E5EDF6",
+  borderRadius: "24px",
   bg: "white",
-  boxShadow: "0 18px 48px rgba(15, 23, 42, 0.04)",
-  p: 5,
+  boxShadow: "0 12px 32px rgba(15, 23, 42, 0.04)",
+  p: { base: 5, md: 6 },
 };
 
 const loginSteps = [
@@ -349,11 +350,12 @@ const LoginFormContent = observer(() => {
 
   return (
     <Box
-      minH={{ base: "100vh", md: "auto" }}
-      bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
-      py={{ base: 0, md: 2, xl: 4 }}
+      minH="100vh"
+      bgGradient="linear(to-b, #F6FAFD 0%, #FFFFFF 42%, #EEF9F7 100%)"
+      pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
+      pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
     >
-      <Container maxW={{ base: "full", md: "container.md", xl: "680px" }} px={0}>
+      <Container maxW={{ base: "full", md: "container.sm", xl: "640px" }} px={{ base: 4, md: 6 }}>
         <MotionBox
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={
@@ -362,58 +364,43 @@ const LoginFormContent = observer(() => {
               : { opacity: 1, x: 0, y: 0, scale: 1 }
           }
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          style={{ minHeight: "100%" }}
         >
           <Box
             {...panelStyles}
-            borderRadius={{ base: "none", md: "3xl" }}
-            boxShadow={{ base: "none", md: panelStyles.boxShadow }}
-            borderWidth={{ base: "0px", md: panelStyles.borderWidth }}
-            px={{ base: 5, md: 8, xl: 9 }}
-            py={{ base: 6, md: 8, xl: 9 }}
+            px={{ base: 5, md: 7, xl: 8 }}
+            py={{ base: 5, md: 7, xl: 8 }}
+            mt={{ base: 6, md: 10 }}
           >
             <Box as="form" onSubmit={handleFormSubmit}>
-              <VStack align="stretch" spacing={8}>
+              <VStack align="stretch" spacing={7}>
                 <Stack
-                  direction={{ base: "column", sm: "row" }}
-                  justify="space-between"
-                  align={{ base: "flex-start", sm: "center" }}
+                  direction="row"
+                  justify="center"
+                  align="center"
                   spacing={3}
                 >
                   <Badge
                     bg="teal.50"
                     color="teal.600"
-                    borderRadius="md"
+                    borderRadius="full"
                     px={3}
                     py={1}
                     fontSize="xs"
-                    fontWeight="700"
-                  >
-                    Secure login
-                  </Badge>
-                  <Badge
-                    bg="teal.50"
-                    color="teal.600"
-                    borderRadius="md"
-                    px={3}
-                    py={1}
-                    fontSize="xs"
-                    fontWeight="700"
+                    fontWeight="800"
                   >
                     Step {step}/{loginSteps.length}
                   </Badge>
                 </Stack>
 
-                <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
+                <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="5px" />
 
-                <Stack direction={{ base: "column", sm: "row" }} spacing={4} align={{ base: "flex-start", sm: "center" }}>
-                  <Circle size="50px" bg="teal.50" color="teal.600">
-                    <Icon as={activeStep.icon as any} boxSize={5} />
-                  </Circle>
+                <Stack direction="column" spacing={2} align="center" textAlign="center">
                   <Box flex="1" minW={0}>
-                    <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
+                    <Heading fontSize={{ base: "2xl", sm: "3xl" }} color="gray.900" lineHeight="1.1">
                       {activeStep.title}
                     </Heading>
-                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                    <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} mt={1}>
                       {step === 1 ? activeStep.subtitle : `We sent a 6-digit code to ${maskedPhone}.`}
                     </Text>
                   </Box>
@@ -431,7 +418,7 @@ const LoginFormContent = observer(() => {
                       <VStack align="stretch" spacing={5}>
                         <Box {...fieldCardStyles}>
                           <FormControl isInvalid={Boolean(errors.phone)}>
-                            <FormLabel color="gray.700" fontWeight="600">
+                            <FormLabel color="gray.700" fontWeight="700">
                               Phone Number
                             </FormLabel>
                             <Input
@@ -445,12 +432,12 @@ const LoginFormContent = observer(() => {
                               {...inputStyles}
                             />
                             {errors.phone ? (
-                              <Text mt={2} fontSize="sm" color="red.500">
+                              <Text mt={2} fontSize="sm" color="red.500" textAlign="center">
                                 {errors.phone}
                               </Text>
                             ) : (
-                              <Text mt={2} fontSize="sm" color="gray.500">
-                                We will send a one-time password to this number.
+                              <Text mt={2} fontSize="sm" color="gray.500" textAlign="center">
+                                We&apos;ll send a one-time password to this number.
                               </Text>
                             )}
                           </FormControl>
@@ -461,7 +448,7 @@ const LoginFormContent = observer(() => {
                         <Box {...fieldCardStyles}>
                           <VStack align="stretch" spacing={5}>
                             <FormControl isInvalid={Boolean(errors.otp)}>
-                              <FormLabel color="gray.700" fontWeight="600">
+                              <FormLabel color="gray.700" fontWeight="700">
                                 OTP Code
                               </FormLabel>
                               <HStack justify="center">
@@ -473,12 +460,12 @@ const LoginFormContent = observer(() => {
                                   focusBorderColor="teal.500"
                                   autoFocus={step === 2}
                                 >
-                                  <PinInputField ref={otpInputRef} h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
-                                  <PinInputField h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
-                                  <PinInputField h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
-                                  <PinInputField h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
-                                  <PinInputField h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
-                                  <PinInputField h="58px" w={{ base: "42px", md: "54px" }} borderRadius="xl" borderColor="gray.200" />
+                                  <PinInputField ref={otpInputRef} h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
+                                  <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
+                                  <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
+                                  <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
+                                  <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
+                                  <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="18px" borderColor="#D9E2EC" bg="#F8FBFD" />
                                 </PinInput>
                               </HStack>
                               {errors.otp ? (
@@ -540,14 +527,7 @@ const LoginFormContent = observer(() => {
 
                 <Text textAlign="center" color="gray.600">
                   Don't have an account?{" "}
-                  <Button
-                    type="button"
-                    variant="link"
-                    color="teal.600"
-                    fontWeight="700"
-                    isDisabled={isRouteTransitioning}
-                    onClick={() => navigateWithAnimation("/register")}
-                  >
+                  <Button type="button" variant="link" color="teal.600" fontWeight="800" isDisabled={isRouteTransitioning} onClick={() => navigateWithAnimation("/register")}>
                     Register
                   </Button>
                 </Text>
@@ -562,62 +542,47 @@ const LoginFormContent = observer(() => {
 
 const LoginFormFallback = () => (
   <Box
-    minH={{ base: "100vh", md: "auto" }}
-    bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
-    py={{ base: 0, md: 2, xl: 4 }}
+    minH="100vh"
+    bgGradient="linear(to-b, #F6FAFD 0%, #FFFFFF 42%, #EEF9F7 100%)"
+    pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
+    pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
   >
-    <Container maxW={{ base: "full", md: "container.md", xl: "680px" }} px={0}>
-      <Box
-        {...panelStyles}
-        borderRadius={{ base: "none", md: "3xl" }}
-        boxShadow={{ base: "none", md: panelStyles.boxShadow }}
-        borderWidth={{ base: "0px", md: panelStyles.borderWidth }}
-        px={{ base: 5, md: 8, xl: 9 }}
-        py={{ base: 6, md: 8, xl: 9 }}
-      >
-        <VStack align="stretch" spacing={8}>
+    <Container maxW={{ base: "full", md: "container.sm", xl: "640px" }} px={{ base: 4, md: 6 }}>
+        <Box
+          {...panelStyles}
+          px={{ base: 5, md: 7, xl: 8 }}
+          py={{ base: 5, md: 7, xl: 8 }}
+          mt={{ base: 6, md: 10 }}
+        >
+        <VStack align="stretch" spacing={7}>
           <Stack
-            direction={{ base: "column", sm: "row" }}
-            justify="space-between"
-            align={{ base: "flex-start", sm: "center" }}
+            direction="row"
+            justify="center"
+            align="center"
             spacing={3}
           >
             <Badge
               bg="teal.50"
               color="teal.600"
-              borderRadius="md"
+              borderRadius="full"
               px={3}
               py={1}
               fontSize="xs"
-              fontWeight="700"
-            >
-              Secure login
-            </Badge>
-            <Badge
-              bg="teal.50"
-              color="teal.600"
-              borderRadius="md"
-              px={3}
-              py={1}
-              fontSize="xs"
-              fontWeight="700"
+              fontWeight="800"
             >
               Step 1/2
             </Badge>
           </Stack>
 
-          <Progress value={50} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
+          <Progress value={50} bg="gray.100" borderRadius="full" colorScheme="teal" h="5px" />
 
-          <Stack direction={{ base: "column", sm: "row" }} spacing={4} align={{ base: "flex-start", sm: "center" }}>
-            <Circle size="50px" bg="teal.50" color="teal.600">
-              <Icon as={FiPhone} boxSize={5} />
-            </Circle>
+          <Stack direction="column" spacing={2} align="center" textAlign="center">
             <Box flex="1" minW={0}>
-              <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
+              <Heading fontSize={{ base: "2xl", sm: "3xl" }} color="gray.900" lineHeight="1.1">
                 Welcome back
               </Heading>
-              <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
-                Preparing secure login...
+              <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} mt={1}>
+                Preparing your login screen...
               </Text>
             </Box>
           </Stack>
