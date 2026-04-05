@@ -41,9 +41,27 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   );
 
   const [isMounted, setIsMounted] = useState(false);
+  const [runtimeTopInset, setRuntimeTopInset] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const platform = (window as any)?.Capacitor?.getPlatform?.();
+    if (platform === 'android') {
+      setRuntimeTopInset(28);
+      return;
+    }
+
+    if (platform === 'ios') {
+      setRuntimeTopInset(0);
+      return;
+    }
+
+    setRuntimeTopInset(0);
   }, []);
 
   useEffect(() => {
@@ -87,6 +105,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             $mediumScreenMode={mediumScreenMode}
             $fullScreenMode={fullScreenMode}
             $backgroundColor={headerBackgroundColor}
+            $runtimeTopInset={runtimeTopInset}
           >
             <HeaderLayout />
           </HeaderContainer>
@@ -98,6 +117,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             }
             $fullScreenMode={fullScreenMode}
             $sizeStatus={sizeStatus}
+            $runtimeTopInset={runtimeTopInset}
           >
             {children}
           </ContentContainer>
@@ -134,9 +154,12 @@ const HeaderContainer = styled.div<{
   $mediumScreenMode: boolean;
   $backgroundColor: string;
   $isMobile: boolean;
+  $runtimeTopInset: number;
 }>`
   z-index: 99;
-  height: ${headerHeight};
+  height: calc(${headerHeight} + ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
+  padding-top: ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`};
+  box-sizing: border-box;
   position: fixed;
   top: 0;
   right: 0;
@@ -150,13 +173,14 @@ const ContentContainer = styled.div<{
   $fullScreenMode: boolean;
   $mediumScreenMode: boolean;
   $isMobile: boolean;
+  $runtimeTopInset: number;
 }>`
   padding: ${({ $isMobile }) =>
     $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
   width: ${({ $isMobile }) =>
     $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
   overflow-x: hidden;
-  height: calc(100vh - ${headerHeight});
+  height: calc(100vh - ${headerHeight} - ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
   transition: all 0.3s ease-in-out;
-  margin-top: ${headerHeight};
+  margin-top: calc(${headerHeight} + ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
 `;

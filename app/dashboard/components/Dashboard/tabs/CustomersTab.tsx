@@ -18,6 +18,13 @@ import {
   InputGroup,
   InputLeftElement,
   IconButton,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -47,16 +54,18 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons";
-import { FiChevronRight, FiMail, FiPhone, FiSearch, FiTrash2, FiUpload, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FileViewer } from "@capacitor/file-viewer";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { FiChevronRight, FiMail, FiPhone, FiSearch, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 type BuyerProfile = {
   _id: string;
+  partyType?: "customer" | "supplier";
   displayName?: string;
   tags?: string[];
   outstandingBalance?: number;
@@ -82,6 +91,8 @@ type BuyerLedgerEntry = {
   direction: LedgerDirection;
   referenceType?: LedgerReferenceType;
   referenceId?: string;
+  linkedLedgerEntryId?: string;
+  linkedSaleRecordId?: string;
   notes?: string;
   entryDate?: string;
   balanceAfter?: number;
@@ -210,18 +221,6 @@ const isMissingImportEndpointError = (error: any) => {
   );
 };
 
-const isMissingSaleDetailsEndpointError = (error: any) => {
-  const text = getReadableErrorMessage(error, "").toLowerCase();
-  return (
-    text.includes("cannot get /api/buyer/") ||
-    text.includes("cannot get /buyer/") ||
-    text.includes("/sales/") ||
-    text.includes("not found") ||
-    error?.statusCode === 404 ||
-    error?.response?.status === 404
-  );
-};
-
 const defaultLedgerSummary: LedgerSummary = {
   totalDebit: 0,
   totalCredit: 0,
@@ -303,6 +302,7 @@ const CustomersTab: React.FC = observer(() => {
   const { auth, buyerStore, shopStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
+  const [activePartyType, setActivePartyType] = useState<"customer" | "supplier">("customer");
   const [selectedLedgerBuyer, setSelectedLedgerBuyer] = useState<BuyerProfile | null>(null);
   const [ledgerEntries, setLedgerEntries] = useState<BuyerLedgerEntry[]>([]);
   const [saleRecords, setSaleRecords] = useState<BuyerSaleRecord[]>([]);
@@ -359,6 +359,8 @@ const CustomersTab: React.FC = observer(() => {
     direction: "debit" as LedgerDirection,
     referenceType: "manual" as LedgerReferenceType,
     referenceId: "",
+    linkedLedgerEntryId: "",
+    linkedSaleRecordId: "",
     entryDate: "",
     notes: "",
   });
@@ -419,6 +421,15 @@ const CustomersTab: React.FC = observer(() => {
   const getBuyerDisplayName = (buyer: BuyerProfile) => {
     return buyer.displayName || buyer.buyerId?.fullName || "-";
   };
+  const normalizedActivePartyType = activePartyType === "supplier" ? "supplier" : "customer";
+  const isSupplierTab = normalizedActivePartyType === "supplier";
+  const partySingularLabel = isSupplierTab ? "Supplier" : "Customer";
+  const partyPluralLabel = isSupplierTab ? "Suppliers" : "Customers";
+  const selectedPartyType = (selectedLedgerBuyer?.partyType || normalizedActivePartyType) as "customer" | "supplier";
+  const isSelectedSupplier = selectedPartyType === "supplier";
+  const transactionSingularLabel = isSupplierTab ? "Purchase" : "Sale";
+  const selectedTransactionSingularLabel = isSelectedSupplier ? "Purchase" : "Sale";
+  const selectedTransactionPluralLabel = isSelectedSupplier ? "Purchases" : "Sales";
   const companyDisplayName =
     (typeof auth.company === "object" && auth.company?.companyName) ||
     (typeof auth.company === "object" && auth.company?.name) ||
@@ -427,10 +438,19 @@ const CustomersTab: React.FC = observer(() => {
     return buyers.reduce(
       (summary, buyer) => {
         const outstanding = Number(buyer.outstandingBalance || 0);
+        const partyType = (buyer.partyType || normalizedActivePartyType) === "supplier" ? "supplier" : "customer";
         if (outstanding >= 0) {
-          summary.receivable += outstanding;
+          if (partyType === "supplier") {
+            summary.payable += outstanding;
+          } else {
+            summary.receivable += outstanding;
+          }
         } else {
-          summary.payable += Math.abs(outstanding);
+          if (partyType === "supplier") {
+            summary.receivable += Math.abs(outstanding);
+          } else {
+            summary.payable += Math.abs(outstanding);
+          }
         }
 
         if (!buyer.isBlocked) {
@@ -441,7 +461,31 @@ const CustomersTab: React.FC = observer(() => {
       },
       { receivable: 0, payable: 0, active: 0 },
     );
-  }, [buyers]);
+  }, [buyers, normalizedActivePartyType]);
+  const outstandingHeadlineLabel = isSupplierTab ? "You will give" : "You will get";
+  const oppositeOutstandingLabel = isSupplierTab ? "You will get" : "You will give";
+  const mobileLeftSummary = isSupplierTab
+    ? {
+        label: oppositeOutstandingLabel,
+        value: buyerOverview.receivable,
+        color: "green.500",
+      }
+    : {
+        label: oppositeOutstandingLabel,
+        value: buyerOverview.payable,
+        color: "red.500",
+      };
+  const mobileRightSummary = isSupplierTab
+    ? {
+        label: outstandingHeadlineLabel,
+        value: buyerOverview.payable,
+        color: "red.500",
+      }
+    : {
+        label: outstandingHeadlineLabel,
+        value: buyerOverview.receivable,
+        color: "green.500",
+      };
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
@@ -507,7 +551,7 @@ const CustomersTab: React.FC = observer(() => {
   const getBuyerSecondaryLabel = (buyer: BuyerProfile) => {
     const relativeLabel = formatRelativeTime(buyer.updatedAt || buyer.createdAt);
     const sourceLabel = buyer.source ? buyer.source.charAt(0).toUpperCase() + buyer.source.slice(1) : "Manual";
-    return `${relativeLabel} • ${sourceLabel}`;
+    return `${relativeLabel} - ${sourceLabel}`;
   };
   const splitPhoneParts = (value?: string) => {
     const raw = String(value || "").trim();
@@ -566,34 +610,45 @@ const CustomersTab: React.FC = observer(() => {
 
     return formValues.phone.trim();
   };
-  const formatCompanyAddress = (company: any) =>
-    [
-      company?.location?.address,
-      company?.location?.city,
-      company?.location?.state,
-      company?.location?.postalCode,
-      company?.location?.country,
-    ]
-      .map((value) => String(value || "").trim())
-      .filter(Boolean)
-      .join(", ");
   const formatLedgerReference = (entry: BuyerLedgerEntry) =>
     entry.referenceId
       ? `${entry.referenceType || "manual"}: ${formatShortId(entry.referenceId)}`
       : entry.referenceType || "manual";
   const formatSignedAmount = (entry: BuyerLedgerEntry) =>
     `${entry.direction === "credit" ? "-" : "+"}${formatCurrency(Number(entry.amount || 0))}`;
+  const getLinkedSaleRecordIdFromEntry = (entry?: BuyerLedgerEntry | null) => {
+    if (!entry) {
+      return "";
+    }
+
+    return (
+      entry.linkedSaleRecordId ||
+      (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "")
+    );
+  };
+
   const canDownloadLedgerInvoice = (entry?: BuyerLedgerEntry | null) =>
     Boolean(
       entry &&
         entry.status !== "reversed" &&
-        entry.direction === "debit" &&
-        !(entry.referenceType === "saleRecord" && entry.referenceId),
+        selectedPartyType !== "supplier" &&
+        (Boolean(getLinkedSaleRecordIdFromEntry(entry)) || entry.direction === "debit"),
     );
   const getBuyerLedgerDirectionLabel = (
     direction: LedgerDirection,
     entryType?: LedgerEntryType,
+    partyType: "customer" | "supplier" = selectedPartyType,
   ) => {
+    if (partyType === "supplier") {
+      if (direction === "debit") {
+        return "You will give";
+      }
+      if (entryType === "payment") {
+        return "Payment sent";
+      }
+      return "Due reduced";
+    }
+
     if (direction === "debit") {
       return "You will get";
     }
@@ -605,7 +660,15 @@ const CustomersTab: React.FC = observer(() => {
   const getBuyerLedgerDirectionColorScheme = (
     direction: LedgerDirection,
     entryType?: LedgerEntryType,
+    partyType: "customer" | "supplier" = selectedPartyType,
   ) => {
+    if (partyType === "supplier") {
+      if (direction === "debit") {
+        return "red";
+      }
+      return "green";
+    }
+
     if (direction === "debit") {
       return "green";
     }
@@ -617,7 +680,15 @@ const CustomersTab: React.FC = observer(() => {
   const getBuyerLedgerDirectionTextColor = (
     direction: LedgerDirection,
     entryType?: LedgerEntryType,
+    partyType: "customer" | "supplier" = selectedPartyType,
   ) => {
+    if (partyType === "supplier") {
+      if (direction === "debit") {
+        return "red.700";
+      }
+      return "green.700";
+    }
+
     if (direction === "debit") {
       return "green.700";
     }
@@ -625,6 +696,18 @@ const CustomersTab: React.FC = observer(() => {
       return "green.700";
     }
     return "red.700";
+  };
+  const getLedgerEntryTypeLabel = (
+    entryType: LedgerEntryType,
+    partyType: "customer" | "supplier" = selectedPartyType,
+  ) => {
+    if (entryType === "sale") {
+      return partyType === "supplier" ? "Purchase" : "Sale";
+    }
+    if (entryType === "payment") {
+      return "Payment";
+    }
+    return "Adjustment";
   };
   const getTimelineTitle = (entry: BuyerLedgerEntry) => {
     if (entry.relationType === "reversal") {
@@ -634,12 +717,12 @@ const CustomersTab: React.FC = observer(() => {
       return "Posted To Ledger";
     }
     if (entry.entryType === "payment") {
-      return "Payment Received";
+      return isSelectedSupplier ? "Payment Sent" : "Payment Received";
     }
     if (entry.entryType === "adjustment") {
       return "Manual Adjustment";
     }
-    return "Sale Ledger Entry";
+    return isSelectedSupplier ? "Purchase Ledger Entry" : "Sale Ledger Entry";
   };
 
   const fetchBuyers = async (pageToLoad = 1, query = search) => {
@@ -651,6 +734,7 @@ const CustomersTab: React.FC = observer(() => {
     try {
       const response = await buyerStore.listBuyerProfiles({
         companyId,
+        partyType: normalizedActivePartyType,
         page: pageToLoad,
         limit,
         search: query?.trim() || undefined,
@@ -667,8 +751,8 @@ const CustomersTab: React.FC = observer(() => {
       setTotal(totalCount);
     } catch (error: any) {
       toast({
-        title: "Failed to load buyers",
-        description: error?.message || "Unable to fetch buyer list",
+        title: `Failed to load ${partyPluralLabel.toLowerCase()}`,
+        description: error?.message || `Unable to fetch ${partyPluralLabel.toLowerCase()} list`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -743,8 +827,8 @@ const CustomersTab: React.FC = observer(() => {
       setSaleTotal(nextTotal);
     } catch (error: any) {
       toast({
-        title: "Failed to load sale records",
-        description: error?.message || "Unable to fetch buyer sale records",
+        title: `Failed to load ${transactionSingularLabel.toLowerCase()} records`,
+        description: error?.message || `Unable to fetch ${transactionSingularLabel.toLowerCase()} records`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -786,182 +870,244 @@ const CustomersTab: React.FC = observer(() => {
     onSaleDetailsClose();
   };
 
-  const getInvoicePartyDetails = () => {
-    const sellerCompany =
-      auth.company && typeof auth.company === "object"
-        ? auth.company
-        : auth.user?.company && typeof auth.user.company === "object"
-          ? auth.user.company
-          : null;
+  const blobToBase64 = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        if (typeof result !== "string") {
+          reject(new Error("Failed to read file data"));
+          return;
+        }
+        const base64 = result.split(",")[1];
+        if (!base64) {
+          reject(new Error("Failed to encode file"));
+          return;
+        }
+        resolve(base64);
+      };
+      reader.onerror = () => reject(reader.error || new Error("Failed to read file"));
+      reader.readAsDataURL(blob);
+    });
 
-    return {
-      sellerName: sellerCompany?.name || sellerCompany?.companyName || "Your Shop",
-      sellerPhone: sellerCompany?.contactInfo?.phone || auth.user?.phone || "-",
-      sellerEmail: sellerCompany?.contactInfo?.email || auth.user?.email || "-",
-      sellerGst: sellerCompany?.gstNumber || "-",
-      sellerAddress: formatCompanyAddress(sellerCompany) || "-",
-      buyerName: selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "Customer",
-      buyerPhone: selectedLedgerBuyer?.buyerId?.phoneE164 || "-",
-      buyerEmail: selectedLedgerBuyer?.buyerId?.emailNormalized || "-",
-    };
+  const getFileNameFromContentDisposition = (contentDisposition?: string, fallback = "invoice.pdf") => {
+    if (!contentDisposition) {
+      return fallback;
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]).replace(/["']/g, "");
+    }
+
+    const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    if (basicMatch?.[1]) {
+      return basicMatch[1].trim();
+    }
+
+    return fallback;
+  };
+
+  const readBlobErrorMessage = async (error: any, fallback = "Please try again.") => {
+    const blobLike = error?.response?.data;
+    if (blobLike instanceof Blob) {
+      try {
+        const rawText = await blobLike.text();
+        if (!rawText) {
+          return fallback;
+        }
+
+        try {
+          const parsed = JSON.parse(rawText);
+          if (typeof parsed?.message === "string" && parsed.message.trim()) {
+            return parsed.message;
+          }
+        } catch {
+          return rawText.trim() || fallback;
+        }
+      } catch {
+        return fallback;
+      }
+    }
+
+    return getReadableErrorMessage(error, fallback);
+  };
+
+  const ensureNativeInvoiceStoragePermission = async () => {
+    try {
+      const permissionStatus = await Filesystem.checkPermissions();
+      if (permissionStatus.publicStorage === "granted") {
+        return;
+      }
+
+      const requested = await Filesystem.requestPermissions();
+      if (requested.publicStorage !== "granted") {
+        throw new Error("Storage permission was denied");
+      }
+    } catch (error: any) {
+      const message = String(error?.message || "").toLowerCase();
+      if (message.includes("not implemented") || message.includes("unavailable")) {
+        return;
+      }
+      throw error;
+    }
+  };
+
+  const deliverPdfBlob = async (pdfBlob: Blob, fileName: string) => {
+    if (typeof window === "undefined") {
+      return "downloaded" as const;
+    }
+
+    const isNativeCapacitor = Boolean((window as any)?.Capacitor?.isNativePlatform?.()) || isAndroidRuntime;
+    if (!isNativeCapacitor) {
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const anchor = document.createElement("a");
+      anchor.href = blobUrl;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      return "downloaded" as const;
+    }
+
+    const base64Data = await blobToBase64(pdfBlob);
+
+    try {
+      await ensureNativeInvoiceStoragePermission();
+
+      const filePath = `BusinessSahayata/Invoices/${fileName}`;
+      await Filesystem.writeFile({
+        path: filePath,
+        data: base64Data,
+        directory: Directory.Documents,
+        recursive: true,
+      });
+
+      try {
+        const uriResult = await Filesystem.getUri({
+          path: filePath,
+          directory: Directory.Documents,
+        });
+        const localOpenPath = uriResult.uri.startsWith("file://")
+          ? uriResult.uri.replace("file://", "")
+          : uriResult.uri;
+
+        try {
+          await FileViewer.openDocumentFromLocalPath({
+            path: localOpenPath,
+          });
+          return "savedPrompted" as const;
+        } catch (viewerError: any) {
+          console.warn("Saved invoice could not be opened directly, falling back to share", viewerError);
+        }
+
+        const shareAvailability = await Share.canShare();
+        if (shareAvailability.value) {
+          await Share.share({
+            title: fileName,
+            files: [uriResult.uri],
+            dialogTitle: "Open invoice",
+          });
+          return "savedPrompted" as const;
+        }
+      } catch (openError: any) {
+        const openMessage = String(openError?.message || "").toLowerCase();
+        if (openMessage.includes("cancel") || openMessage.includes("abort")) {
+          return "saved" as const;
+        }
+        console.warn("Invoice saved but open/share chooser for saved file was unavailable", openError);
+      }
+
+      return "saved" as const;
+    } catch (saveError: any) {
+      console.warn("Falling back from native file save for invoice delivery", saveError);
+
+      try {
+        const cachePath = `invoices/${fileName}`;
+        await Filesystem.writeFile({
+          path: cachePath,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        const uriResult = await Filesystem.getUri({
+          path: cachePath,
+          directory: Directory.Cache,
+        });
+
+        const shareAvailability = await Share.canShare();
+        if (shareAvailability.value) {
+          await Share.share({
+            title: fileName,
+            files: [uriResult.uri],
+            dialogTitle: "Share invoice",
+          });
+          return "shared" as const;
+        }
+      } catch (shareError: any) {
+        const shareMessage = String(shareError?.message || "").toLowerCase();
+        if (shareMessage.includes("cancel") || shareMessage.includes("abort")) {
+          return "cancelled" as const;
+        }
+        console.warn("Falling back from native share for invoice delivery", shareError);
+      }
+    }
+
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    const anchor = document.createElement("a");
+    anchor.href = blobUrl;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.download = fileName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    return "downloaded" as const;
   };
 
   const handleDownloadSaleInvoice = async (details: BuyerSaleRecordDetails) => {
     const saleRecord = details?.saleRecord;
-    if (!saleRecord?._id) {
+    if (!selectedLedgerBuyer?._id || !saleRecord?._id) {
       return;
     }
 
     setInvoiceDownloadingSaleId(saleRecord._id);
     try {
-      const {
-        sellerName,
-        sellerPhone,
-        sellerEmail,
-        sellerGst,
-        sellerAddress,
-        buyerName,
-        buyerPhone,
-        buyerEmail,
-      } = getInvoicePartyDetails();
-
-      const totalQuantity = Array.isArray(saleRecord.items)
-        ? saleRecord.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
-        : 0;
-
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const invoiceId = `INV-${formatShortId(saleRecord._id).toUpperCase() || saleRecord._id}`;
-      const issueDate = formatDateOnly(saleRecord.saleDate || saleRecord.createdAt);
-
-      doc.setFillColor(15, 118, 110);
-      doc.rect(0, 0, 210, 36, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.text("INVOICE", 14, 18);
-      doc.setFontSize(10);
-      doc.text(`Invoice No: ${invoiceId}`, 14, 26);
-      doc.text(`Issue Date: ${issueDate}`, 14, 31);
-
-      doc.setFontSize(18);
-      doc.text(String(sellerName), 196, 18, { align: "right" });
-      doc.setFontSize(9);
-      doc.text(`Phone: ${sellerPhone}`, 196, 26, { align: "right" });
-      doc.text(`Email: ${sellerEmail}`, 196, 31, { align: "right" });
-
-      doc.setTextColor(31, 41, 55);
-      doc.setFontSize(10);
-      doc.text("Bill From", 14, 48);
-      doc.setFontSize(12);
-      doc.text(String(sellerName), 14, 55);
-      doc.setFontSize(9);
-      const sellerDetailsLines = [
-        `GST: ${sellerGst}`,
-        `Phone: ${sellerPhone}`,
-        sellerEmail !== "-" ? `Email: ${sellerEmail}` : "",
-        sellerAddress,
-      ]
-        .filter(Boolean)
-        .flatMap((line) => doc.splitTextToSize(String(line), 82));
-      doc.text(sellerDetailsLines, 14, 61);
-
-      doc.setFontSize(10);
-      doc.text("Bill To", 116, 48);
-      doc.setFontSize(12);
-      doc.text(String(buyerName), 116, 55);
-      doc.setFontSize(9);
-      const buyerDetailsLines = [
-        `Phone: ${buyerPhone}`,
-        buyerEmail !== "-" ? `Email: ${buyerEmail}` : "",
-      ]
-        .filter(Boolean)
-        .flatMap((line) => doc.splitTextToSize(String(line), 80));
-      doc.text(buyerDetailsLines, 116, 61);
-
-      autoTable(doc, {
-        startY: 86,
-        head: [["#", "Item", "Qty", "Unit Price", "Discount", "Tax", "Line Total"]],
-        body: (saleRecord.items || []).map((item, index) => [
-          String(index + 1),
-          item.itemName || "-",
-          String(Number(item.quantity || 0)),
-          formatCurrency(Number(item.unitPrice || 0)),
-          formatCurrency(Number(item.discount || 0)),
-          formatCurrency(Number(item.tax || 0)),
-          formatCurrency(Number(item.lineTotal || 0)),
-        ]),
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-          textColor: [31, 41, 55],
-        },
-        headStyles: {
-          fillColor: [15, 118, 110],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252],
-        },
-        columnStyles: {
-          0: { halign: "center", cellWidth: 10 },
-          1: { cellWidth: 60 },
-          2: { halign: "right", cellWidth: 18 },
-          3: { halign: "right", cellWidth: 28 },
-          4: { halign: "right", cellWidth: 24 },
-          5: { halign: "right", cellWidth: 20 },
-          6: { halign: "right", cellWidth: 30 },
-        },
-        margin: { left: 14, right: 14 },
-      });
-
-      const finalY = (doc as any).lastAutoTable?.finalY ?? 120;
-      const totalsStartY = finalY + 10;
-      const summaryRows = [
-        ["Items / Qty", `${saleRecord.items?.length || 0} lines / ${totalQuantity} qty`],
-        ["Subtotal", formatCurrency(Number(saleRecord.subtotal || 0))],
-        ["Discount", formatCurrency(Number(saleRecord.discountTotal || 0))],
-        ["Tax", formatCurrency(Number(saleRecord.taxTotal || 0))],
-        ["Paid", formatCurrency(Number(details.summary?.paidAmount || 0))],
-        ["Remaining Due", formatCurrency(Number(details.summary?.remainingDue || 0))],
-        ["Grand Total", formatCurrency(Number(details.summary?.saleAmount || saleRecord.grandTotal || 0))],
-      ];
-
-      doc.setFontSize(10);
-      doc.setTextColor(75, 85, 99);
-      summaryRows.forEach(([label, value], index) => {
-        const y = totalsStartY + index * 7;
-        doc.text(label, 120, y);
-        doc.text(value, 196, y, { align: "right" });
-      });
-
-      if (saleRecord.notes) {
-        const notesY = totalsStartY + summaryRows.length * 7 + 8;
-        doc.setFontSize(10);
-        doc.setTextColor(31, 41, 55);
-        doc.text("Notes", 14, notesY);
-        doc.setFontSize(9);
-        doc.setTextColor(75, 85, 99);
-        doc.text(doc.splitTextToSize(String(saleRecord.notes), 182), 14, notesY + 6);
+      const response = await buyerStore.downloadBuyerSaleRecordInvoice(selectedLedgerBuyer._id, saleRecord._id);
+      const fileName = getFileNameFromContentDisposition(
+        response?.headers?.["content-disposition"],
+        `INV-${formatShortId(saleRecord._id).toUpperCase() || saleRecord._id}.pdf`,
+      );
+      const deliveryResult = await deliverPdfBlob(response.data, fileName);
+      if (deliveryResult !== "cancelled") {
+        toast({
+          title:
+            deliveryResult === "savedPrompted"
+              ? "Invoice saved and ready to open"
+              : deliveryResult === "saved"
+              ? "Invoice saved to device"
+              : deliveryResult === "shared"
+                ? "Invoice ready to share"
+                : "Invoice downloaded",
+          description:
+            deliveryResult === "savedPrompted" || deliveryResult === "saved"
+              ? "Saved in Documents/BusinessSahayata/Invoices."
+              : undefined,
+          status: "success",
+          duration: 2600,
+          isClosable: true,
+        });
       }
-
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.setDrawColor(226, 232, 240);
-      doc.line(14, pageHeight - 18, 196, pageHeight - 18);
-      doc.setFontSize(8);
-      doc.setTextColor(107, 114, 128);
-      doc.text("Thank you for your business.", 14, pageHeight - 11);
-
-      doc.save(`${invoiceId}.pdf`);
-      toast({
-        title: "Invoice downloaded",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
     } catch (error: any) {
       toast({
         title: "Failed to generate invoice",
-        description: getReadableErrorMessage(error),
+        description: await readBlobErrorMessage(error),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -972,146 +1118,54 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const handleDownloadLedgerEntryInvoice = async (entry: BuyerLedgerEntry) => {
-    if (!entry?._id || !canDownloadLedgerInvoice(entry)) {
+    if (!selectedLedgerBuyer?._id || !entry?._id || !canDownloadLedgerInvoice(entry)) {
       return;
     }
 
     setInvoiceDownloadingLedgerEntryId(entry._id);
     try {
-      const {
-        sellerName,
-        sellerPhone,
-        sellerEmail,
-        sellerGst,
-        sellerAddress,
-        buyerName,
-        buyerPhone,
-        buyerEmail,
-      } = getInvoicePartyDetails();
-
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
-      const invoiceId = `LED-${formatShortId(entry._id).toUpperCase() || entry._id}`;
-      const issueDate = formatDateOnly(entry.entryDate || entry.createdAt);
-      const lineDescription = entry.notes?.trim() || "Invoice item";
-
-      doc.setFillColor(15, 118, 110);
-      doc.rect(0, 0, 210, 36, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.text("INVOICE", 14, 18);
-      doc.setFontSize(10);
-      doc.text(`Invoice No: ${invoiceId}`, 14, 26);
-      doc.text(`Issue Date: ${issueDate}`, 14, 31);
-
-      doc.setFontSize(18);
-      doc.text(String(sellerName), 196, 18, { align: "right" });
-      doc.setFontSize(9);
-      doc.text(`Phone: ${sellerPhone}`, 196, 26, { align: "right" });
-      doc.text(`Email: ${sellerEmail}`, 196, 31, { align: "right" });
-
-      doc.setTextColor(31, 41, 55);
-      doc.setFontSize(10);
-      doc.text("Bill From", 14, 48);
-      doc.setFontSize(12);
-      doc.text(String(sellerName), 14, 55);
-      doc.setFontSize(9);
-      const sellerDetailsLines = [
-        `GST: ${sellerGst}`,
-        `Phone: ${sellerPhone}`,
-        sellerEmail !== "-" ? `Email: ${sellerEmail}` : "",
-        sellerAddress,
-      ]
-        .filter(Boolean)
-        .flatMap((line) => doc.splitTextToSize(String(line), 82));
-      doc.text(sellerDetailsLines, 14, 61);
-
-      doc.setFontSize(10);
-      doc.text("Bill To", 116, 48);
-      doc.setFontSize(12);
-      doc.text(String(buyerName), 116, 55);
-      doc.setFontSize(9);
-      const buyerDetailsLines = [
-        `Phone: ${buyerPhone}`,
-        buyerEmail !== "-" ? `Email: ${buyerEmail}` : "",
-      ]
-        .filter(Boolean)
-        .flatMap((line) => doc.splitTextToSize(String(line), 80));
-      doc.text(buyerDetailsLines, 116, 61);
-
-      autoTable(doc, {
-        startY: 86,
-        head: [["#", "Description", "Amount"]],
-        body: [
-          [
-            "1",
-            lineDescription,
-            formatCurrency(Number(entry.amount || 0)),
-          ],
-        ],
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-          textColor: [31, 41, 55],
-        },
-        headStyles: {
-          fillColor: [15, 118, 110],
-          textColor: [255, 255, 255],
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252],
-        },
-        columnStyles: {
-          0: { halign: "center", cellWidth: 10 },
-          1: { cellWidth: 136 },
-          2: { halign: "right", cellWidth: 30 },
-        },
-        margin: { left: 14, right: 14 },
-      });
-
-      const finalY = (doc as any).lastAutoTable?.finalY ?? 120;
-      const summaryStartY = finalY + 10;
-      const summaryRows = [
-        ["Entry Date", formatDateTime(entry.entryDate || entry.createdAt)],
-        ["Grand Total", formatCurrency(Number(entry.amount || 0))],
-      ];
-
-      doc.setFontSize(10);
-      doc.setTextColor(75, 85, 99);
-      summaryRows.forEach(([label, value], index) => {
-        const y = summaryStartY + index * 7;
-        doc.text(label, 120, y);
-        doc.text(value, 196, y, { align: "right" });
-      });
-
-      if (entry.notes) {
-        const notesY = summaryStartY + summaryRows.length * 7 + 8;
-        doc.setFontSize(10);
-        doc.setTextColor(31, 41, 55);
-        doc.text("Notes", 14, notesY);
-        doc.setFontSize(9);
-        doc.setTextColor(75, 85, 99);
-        doc.text(doc.splitTextToSize(String(entry.notes), 182), 14, notesY + 6);
+      const saleRecordId = getLinkedSaleRecordIdFromEntry(entry);
+      const response = saleRecordId
+        ? await buyerStore.downloadBuyerSaleRecordInvoice(selectedLedgerBuyer._id, saleRecordId)
+        : await buyerStore.downloadBuyerLedgerEntryInvoice(selectedLedgerBuyer._id, entry._id);
+      const fileName = getFileNameFromContentDisposition(
+        response?.headers?.["content-disposition"],
+        saleRecordId
+          ? `INV-${formatShortId(saleRecordId).toUpperCase() || saleRecordId}.pdf`
+          : `INV-MANUAL-${formatShortId(entry._id).toUpperCase() || entry._id}.pdf`,
+      );
+      const deliveryResult = await deliverPdfBlob(response.data, fileName);
+      if (deliveryResult !== "cancelled") {
+        toast({
+          title:
+            deliveryResult === "shared"
+              ? saleRecordId
+                ? "Invoice ready to share"
+                : "Ledger invoice ready to share"
+              : deliveryResult === "savedPrompted"
+                ? saleRecordId
+                  ? "Invoice saved and ready to open"
+                  : "Ledger invoice saved and ready to open"
+                : deliveryResult === "saved"
+                ? saleRecordId
+                  ? "Invoice saved to device"
+                  : "Ledger invoice saved to device"
+                : saleRecordId
+                  ? "Invoice downloaded"
+                  : "Ledger invoice downloaded",
+          description:
+            deliveryResult === "savedPrompted" || deliveryResult === "saved"
+              ? "Saved in Documents/BusinessSahayata/Invoices."
+              : undefined,
+          status: "success",
+          duration: 2600,
+          isClosable: true,
+        });
       }
-
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.setDrawColor(226, 232, 240);
-      doc.line(14, pageHeight - 18, 196, pageHeight - 18);
-      doc.setFontSize(8);
-      doc.setTextColor(107, 114, 128);
-      doc.text("Thank you for your business.", 14, pageHeight - 11);
-
-      doc.save(`${invoiceId}.pdf`);
-      toast({
-        title: "Ledger invoice downloaded",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
     } catch (error: any) {
       toast({
-        title: "Failed to generate ledger invoice",
-        description: getReadableErrorMessage(error),
+        title: getLinkedSaleRecordIdFromEntry(entry) ? "Failed to generate invoice" : "Failed to generate ledger invoice",
+        description: await readBlobErrorMessage(error),
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -1119,70 +1173,6 @@ const CustomersTab: React.FC = observer(() => {
     } finally {
       setInvoiceDownloadingLedgerEntryId("");
     }
-  };
-
-  const buildLocalSaleRecordDetails = (record: BuyerSaleRecord): BuyerSaleRecordDetails => {
-    const directEntries = ledgerEntries.filter(
-      (entry) =>
-        (entry.referenceType === "saleRecord" && entry.referenceId === record._id) ||
-        (record.ledgerEntryId ? String(entry._id) === String(record.ledgerEntryId) : false)
-    );
-    const directEntryIds = directEntries.map((entry) => String(entry._id));
-    const reversalEntries = ledgerEntries.filter(
-      (entry) => entry.referenceId && directEntryIds.includes(String(entry.referenceId))
-    );
-    const timeline = [...directEntries, ...reversalEntries]
-      .filter((entry, index, allEntries) => allEntries.findIndex((candidate) => candidate._id === entry._id) === index)
-      .sort((a, b) => {
-        const aTime = new Date(a.entryDate || a.createdAt || 0).getTime();
-        const bTime = new Date(b.entryDate || b.createdAt || 0).getTime();
-        return aTime - bTime;
-      })
-      .map((entry) => ({
-        ...entry,
-        relationType: directEntryIds.includes(String(entry._id))
-          ? ("direct" as const)
-          : ("reversal" as const),
-        isPrimarySaleLedgerEntry:
-          record.ledgerEntryId && String(entry._id) === String(record.ledgerEntryId),
-      }));
-
-    const activeTimelineEntries = timeline.filter((entry) => entry.status !== "reversed");
-    const paidAmount = activeTimelineEntries.reduce((sum, entry) => {
-      if (entry.entryType !== "payment" || entry.direction !== "credit") {
-        return sum;
-      }
-      return sum + Number(entry.amount || 0);
-    }, 0);
-    const adjustmentDebitAmount = activeTimelineEntries.reduce((sum, entry) => {
-      if (entry.entryType !== "adjustment" || entry.direction !== "debit") {
-        return sum;
-      }
-      return sum + Number(entry.amount || 0);
-    }, 0);
-    const adjustmentCreditAmount = activeTimelineEntries.reduce((sum, entry) => {
-      if (entry.entryType !== "adjustment" || entry.direction !== "credit") {
-        return sum;
-      }
-      return sum + Number(entry.amount || 0);
-    }, 0);
-
-    return {
-      saleRecord: record,
-      timeline,
-      summary: {
-        saleAmount: Number(record.grandTotal || 0),
-        paidAmount,
-        adjustmentDebitAmount,
-        adjustmentCreditAmount,
-        remainingDue: Math.max(
-          Number(record.grandTotal || 0) + adjustmentDebitAmount - paidAmount - adjustmentCreditAmount,
-          0
-        ),
-        isPosted: Boolean(record.ledgerEntryId),
-        eventCount: timeline.length,
-      },
-    };
   };
 
   const openSaleDetails = async (record: BuyerSaleRecord) => {
@@ -1199,19 +1189,6 @@ const CustomersTab: React.FC = observer(() => {
       const response = await buyerStore.getBuyerSaleRecordDetails(selectedLedgerBuyer._id, record._id);
       setSaleRecordDetails(response?.data || null);
     } catch (error: any) {
-      if (isMissingSaleDetailsEndpointError(error)) {
-        const localDetails = buildLocalSaleRecordDetails(record);
-        setSaleRecordDetails(localDetails);
-        toast({
-          title: "Showing local sale history",
-          description: "Detailed sale history endpoint is not deployed yet, so this view is using available local data.",
-          status: "info",
-          duration: 3500,
-          isClosable: true,
-        });
-        return;
-      }
-
       toast({
         title: "Failed to load sale details",
         description: getReadableErrorMessage(error),
@@ -1231,7 +1208,10 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const resetForm = () => {
-    setFormValues(getDefaultBuyerFormValues());
+    setFormValues({
+      ...getDefaultBuyerFormValues(),
+      partyType: normalizedActivePartyType,
+    });
     setShowContactExtraFields(false);
     setIsPickedContactFlow(false);
   };
@@ -1243,6 +1223,8 @@ const CustomersTab: React.FC = observer(() => {
       direction: "debit",
       referenceType: "manual",
       referenceId: "",
+      linkedLedgerEntryId: "",
+      linkedSaleRecordId: "",
       entryDate: "",
       notes: "",
     });
@@ -1295,7 +1277,7 @@ const CustomersTab: React.FC = observer(() => {
       phone: phoneParts.phone,
       phoneCountryCode: phoneParts.phoneCountryCode,
       phoneNationalNumber: phoneParts.phoneNationalNumber,
-      partyType: "customer",
+      partyType: normalizedActivePartyType,
     });
     setShowContactExtraFields(false);
     setIsPickedContactFlow(true);
@@ -1434,6 +1416,7 @@ const CustomersTab: React.FC = observer(() => {
           try {
             await buyerStore.upsertBuyer({
               companyId,
+              partyType: normalizedActivePartyType,
               fullName: contact.fullName || undefined,
               phone: contact.phone || undefined,
               email: contact.email || undefined,
@@ -1465,6 +1448,7 @@ const CustomersTab: React.FC = observer(() => {
         try {
           const response = await buyerStore.importBuyerContacts({
             companyId,
+            partyType: normalizedActivePartyType,
             contacts: batch,
             defaultTags: defaultTags.length ? defaultTags : undefined,
           });
@@ -1598,7 +1582,7 @@ const CustomersTab: React.FC = observer(() => {
         title: "Unable to read device contacts",
         description: getReadableErrorMessage(
           error,
-          "Grant contacts permission in app settings, or add the buyer manually.",
+          `Grant contacts permission in app settings, or add the ${partySingularLabel.toLowerCase()} manually.`,
         ),
         status: "warning",
         duration: 4000,
@@ -1632,7 +1616,7 @@ const CustomersTab: React.FC = observer(() => {
         title: "Unable to read device contacts",
         description: getReadableErrorMessage(
           error,
-          "Grant contacts permission in app settings, or add the buyer manually.",
+          `Grant contacts permission in app settings, or add the ${partySingularLabel.toLowerCase()} manually.`,
         ),
         status: "warning",
         duration: 4000,
@@ -1653,17 +1637,6 @@ const CustomersTab: React.FC = observer(() => {
         description: "Please create/select your shop first.",
         status: "warning",
         duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (isPickedContactFlow && formValues.partyType === "supplier") {
-      toast({
-        title: "Suppliers coming next",
-        description: "Supplier ledger flow is not ready yet. Save this contact as a customer for now.",
-        status: "info",
-        duration: 3500,
         isClosable: true,
       });
       return;
@@ -1702,6 +1675,7 @@ const CustomersTab: React.FC = observer(() => {
 
       const response = await buyerStore.upsertBuyer({
         companyId,
+        partyType: formValues.partyType,
         fullName: formValues.fullName.trim() || undefined,
         phone: composedPhone.trim() || undefined,
         email: formValues.email.trim() || undefined,
@@ -1720,8 +1694,8 @@ const CustomersTab: React.FC = observer(() => {
         onBuyerSuccessOpen();
       } else {
         toast({
-          title: "Buyer saved",
-          description: "Buyer profile has been created/updated.",
+          title: `${formValues.partyType === "supplier" ? "Supplier" : "Customer"} saved`,
+          description: `${formValues.partyType === "supplier" ? "Supplier" : "Customer"} profile has been created/updated.`,
           status: "success",
           duration: 2500,
           isClosable: true,
@@ -1735,7 +1709,7 @@ const CustomersTab: React.FC = observer(() => {
       await fetchBuyers(1);
     } catch (error: any) {
       toast({
-        title: "Failed to save buyer",
+        title: `Failed to save ${formValues.partyType === "supplier" ? "supplier" : "customer"}`,
         description: error?.message || "Please try again.",
         status: "error",
         duration: 3000,
@@ -1781,6 +1755,8 @@ const CustomersTab: React.FC = observer(() => {
         amount: parsedAmount,
         referenceType: ledgerFormValues.referenceType || undefined,
         referenceId: ledgerFormValues.referenceId.trim() || undefined,
+        linkedLedgerEntryId: ledgerFormValues.linkedLedgerEntryId.trim() || undefined,
+        linkedSaleRecordId: ledgerFormValues.linkedSaleRecordId.trim() || undefined,
         notes: ledgerFormValues.notes.trim() || undefined,
         entryDate: ledgerFormValues.entryDate
           ? new Date(ledgerFormValues.entryDate).toISOString()
@@ -1958,7 +1934,7 @@ const CustomersTab: React.FC = observer(() => {
       });
 
       toast({
-        title: "Sale record saved",
+        title: `${selectedTransactionSingularLabel} record saved`,
         status: "success",
         duration: 2500,
         isClosable: true,
@@ -1975,7 +1951,7 @@ const CustomersTab: React.FC = observer(() => {
       }
     } catch (error: any) {
       toast({
-        title: "Failed to save sale record",
+        title: `Failed to save ${selectedTransactionSingularLabel.toLowerCase()} record`,
         description: error?.message || "Please try again.",
         status: "error",
         duration: 3000,
@@ -1995,7 +1971,7 @@ const CustomersTab: React.FC = observer(() => {
     try {
       await buyerStore.postBuyerSaleRecordToLedger(selectedLedgerBuyer._id, saleId, {});
       toast({
-        title: "Sale posted to ledger",
+        title: `${selectedTransactionSingularLabel} posted to ledger`,
         status: "success",
         duration: 2500,
         isClosable: true,
@@ -2009,7 +1985,7 @@ const CustomersTab: React.FC = observer(() => {
       ]);
     } catch (error: any) {
       toast({
-        title: "Failed to post sale",
+        title: `Failed to post ${selectedTransactionSingularLabel.toLowerCase()}`,
         description: error?.message || "Please try again.",
         status: "error",
         duration: 3000,
@@ -2026,12 +2002,18 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const openPayModal = (entry: BuyerLedgerEntry) => {
+    const linkedSaleRecordId =
+      entry.linkedSaleRecordId ||
+      (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "");
+
     setLedgerFormValues({
       entryType: "payment",
       amount: String(entry.amount),
       direction: "credit",
       referenceType: entry.referenceType || "manual",
       referenceId: entry.referenceId || entry._id || "",
+      linkedLedgerEntryId: entry._id || "",
+      linkedSaleRecordId,
       entryDate: new Date().toISOString().split("T")[0],
       notes: `Payment for ${entry.referenceType || 'entry'} ${entry.referenceId || entry._id}`,
     });
@@ -2080,7 +2062,7 @@ const CustomersTab: React.FC = observer(() => {
     try {
       await buyerStore.deleteBuyerProfile(selectedBuyer._id);
       toast({
-        title: "Buyer deleted",
+        title: `${selectedBuyer.partyType === "supplier" ? "Supplier" : "Customer"} deleted`,
         status: "success",
         duration: 2500,
         isClosable: true,
@@ -2090,7 +2072,7 @@ const CustomersTab: React.FC = observer(() => {
       fetchBuyers(nextPage, search);
     } catch (error: any) {
       toast({
-        title: "Failed to delete buyer",
+        title: `Failed to delete ${selectedBuyer?.partyType === "supplier" ? "supplier" : "customer"}`,
         description: error?.message || "Please try again.",
         status: "error",
         duration: 3000,
@@ -2106,7 +2088,7 @@ const CustomersTab: React.FC = observer(() => {
     const timer = setTimeout(() => fetchBuyers(1, search), 400);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, search, selectedLedgerBuyer]);
+  }, [companyId, search, selectedLedgerBuyer, normalizedActivePartyType]);
 
   useEffect(() => {
     if (!isSaleRecordOpen || !companyId || activeSaleItemIndex === null) {
@@ -2260,7 +2242,7 @@ const CustomersTab: React.FC = observer(() => {
       },
       deleteKey: {
         showDeleteButton: true,
-        title: "Delete Buyer",
+        title: `Delete ${partySingularLabel}`,
         function: (row: BuyerProfile) => openDeleteModal(row),
       },
     },
@@ -2301,47 +2283,56 @@ const CustomersTab: React.FC = observer(() => {
           <Flex justify="space-between" align="start" gap={3}>
             <Box minW={0} flex="1">
               <Text fontSize="xs" fontWeight="800" letterSpacing="0.16em" textTransform="uppercase" color="whiteAlpha.700">
-                Buyer Ledger
+                {isSupplierTab ? "Supplier Ledger" : "Customer Ledger"}
               </Text>
               <Heading size="md" color="white" mt={1} noOfLines={2}>
                 {companyDisplayName}
               </Heading>
               <Text fontSize="sm" color="whiteAlpha.800" mt={1} maxW="260px">
-                Track customers, dues, and collection status from one place.
+                {isSupplierTab
+                  ? "Track suppliers, payables, and payment status from one place."
+                  : "Track customers, dues, and collection status from one place."}
               </Text>
             </Box>
-            {canUseDeviceContactImport ? (
-              <Button
-                size="sm"
-                leftIcon={<Icon as={FiUpload} boxSize={4} />}
-                variant="outline"
-                borderRadius="full"
-                color="white"
-                borderColor="whiteAlpha.500"
-                _hover={{ bg: "whiteAlpha.200" }}
-                _active={{ bg: "whiteAlpha.300" }}
-                onClick={onImportOpen}
-                flexShrink={0}
-              >
-                Import
-              </Button>
-            ) : null}
+            <Button
+              size="sm"
+              leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
+              variant="outline"
+              borderRadius="full"
+              color="white"
+              borderColor="whiteAlpha.500"
+              _hover={{ bg: "whiteAlpha.200" }}
+              _active={{ bg: "whiteAlpha.300" }}
+              onClick={openManualBuyerModal}
+              flexShrink={0}
+            >
+              Add {partySingularLabel}
+            </Button>
           </Flex>
 
           <HStack spacing={6} align="end">
-            <Box position="relative" pb={2}>
+            <Box position="relative" pb={2} cursor="pointer" onClick={() => setActivePartyType("customer")}>
               <Text fontSize="lg" fontWeight="900" color="white">
                 Customers
               </Text>
-              <Box position="absolute" left={0} bottom={0} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
+              {normalizedActivePartyType === "customer" ? (
+                <Box position="absolute" left={0} bottom={0} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
+              ) : null}
             </Box>
-            <VStack align="start" spacing={0} pb={2} opacity={0.72}>
+            <VStack
+              align="start"
+              spacing={0}
+              pb={2}
+              opacity={normalizedActivePartyType === "supplier" ? 1 : 0.72}
+              cursor="pointer"
+              onClick={() => setActivePartyType("supplier")}
+            >
               <Text fontSize="lg" fontWeight="800" color="white">
                 Suppliers
               </Text>
-              <Text fontSize="xs" color="whiteAlpha.800">
-                Coming soon
-              </Text>
+              {normalizedActivePartyType === "supplier" ? (
+                <Box mt={1} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
+              ) : null}
             </VStack>
           </HStack>
 
@@ -2349,27 +2340,27 @@ const CustomersTab: React.FC = observer(() => {
             <SimpleGrid columns={2}>
               <VStack spacing={1} px={4} py={4} align="center">
                 <Text fontSize="sm" color="gray.500" fontWeight="600">
-                  You will give
+                  {mobileLeftSummary.label}
                 </Text>
-                <Text fontSize="2xl" fontWeight="900" color="red.500">
-                  {formatCompactCurrency(buyerOverview.payable)}
+                <Text fontSize="2xl" fontWeight="900" color={mobileLeftSummary.color}>
+                  {formatCompactCurrency(mobileLeftSummary.value)}
                 </Text>
               </VStack>
               <VStack spacing={1} px={4} py={4} align="center" borderLeftWidth="1px" borderLeftColor="gray.100">
                 <Text fontSize="sm" color="gray.500" fontWeight="600">
-                  You will get
+                  {mobileRightSummary.label}
                 </Text>
-                <Text fontSize="2xl" fontWeight="900" color="green.500">
-                  {formatCompactCurrency(buyerOverview.receivable)}
+                <Text fontSize="2xl" fontWeight="900" color={mobileRightSummary.color}>
+                  {formatCompactCurrency(mobileRightSummary.value)}
                 </Text>
               </VStack>
             </SimpleGrid>
             <HStack justify="space-between" px={4} py={3} bg="#F8FBFF" borderTopWidth="1px" borderTopColor="#E5EEF9">
               <HStack spacing={2} color="#215E9D">
                 <Icon as={FiUsers} boxSize={4} />
-                <Text fontSize="sm" fontWeight="700">
-                  {total} customers
-                </Text>
+                  <Text fontSize="sm" fontWeight="700">
+                  {total} {partyPluralLabel.toLowerCase()}
+                  </Text>
               </HStack>
               <Text fontSize="xs" fontWeight="700" color="gray.500">
                 {buyerOverview.active} active
@@ -2397,7 +2388,7 @@ const CustomersTab: React.FC = observer(() => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search customer"
+                placeholder={`Search ${partySingularLabel.toLowerCase()}`}
                 bg="#F8FAFD"
                 borderRadius="18px"
                 borderColor="transparent"
@@ -2407,19 +2398,17 @@ const CustomersTab: React.FC = observer(() => {
                 _focus={{ borderColor: "blue.200", bg: "white", boxShadow: "0 0 0 1px #90CDF4" }}
               />
             </InputGroup>
-            {canUseDeviceContactImport ? (
-              <IconButton
-                aria-label="Import contacts"
-                icon={<Icon as={FiUpload} boxSize={5} />}
-                onClick={onImportOpen}
-                h="52px"
-                minW="52px"
-                borderRadius="18px"
-                bg="#EFF6FF"
-                color="#1E63B6"
-                _hover={{ bg: "#DBEAFE" }}
-              />
-            ) : null}
+            <IconButton
+              aria-label={`Add ${partySingularLabel.toLowerCase()} manually`}
+              icon={<Icon as={FiUserPlus} boxSize={5} />}
+              onClick={openManualBuyerModal}
+              h="52px"
+              minW="52px"
+              borderRadius="18px"
+              bg="#EFF6FF"
+              color="#1E63B6"
+              _hover={{ bg: "#DBEAFE" }}
+            />
           </HStack>
         </Box>
       </Box>
@@ -2438,7 +2427,7 @@ const CustomersTab: React.FC = observer(() => {
             <VStack spacing={3}>
               <Spinner color="blue.500" thickness="3px" />
               <Text fontSize="sm" color="gray.500">
-                Loading buyers...
+                Loading {partyPluralLabel.toLowerCase()}...
               </Text>
             </VStack>
           </Box>
@@ -2455,10 +2444,10 @@ const CustomersTab: React.FC = observer(() => {
             <VStack spacing={2}>
               <Icon as={FiUsers} boxSize={8} color="blue.300" />
               <Text fontWeight="700" color="gray.700">
-                No buyers found
+                No {partyPluralLabel.toLowerCase()} found
               </Text>
               <Text fontSize="sm" color="gray.500" textAlign="center">
-                Try a different search or add a new customer to start the ledger.
+                Try a different search or add a new {partySingularLabel.toLowerCase()} to start the ledger.
               </Text>
             </VStack>
           </Box>
@@ -2505,7 +2494,15 @@ const CustomersTab: React.FC = observer(() => {
                       <Text
                         fontSize="xl"
                         fontWeight="900"
-                        color={Number(buyer.outstandingBalance || 0) >= 0 ? "green.500" : "red.500"}
+                        color={
+                          Number(buyer.outstandingBalance || 0) >= 0
+                            ? buyer.partyType === "supplier"
+                              ? "red.500"
+                              : "green.500"
+                            : buyer.partyType === "supplier"
+                              ? "green.500"
+                              : "red.500"
+                        }
                         lineHeight="1"
                       >
                         {formatCompactCurrency(Math.abs(Number(buyer.outstandingBalance || 0)))}
@@ -2574,7 +2571,7 @@ const CustomersTab: React.FC = observer(() => {
                       View Ledger
                     </Button>
                     <IconButton
-                      aria-label="Delete buyer"
+                      aria-label={`Delete ${buyer.partyType === "supplier" ? "supplier" : "customer"}`}
                       icon={<Icon as={FiTrash2} boxSize={4} />}
                       onClick={() => openDeleteModal(buyer)}
                       variant="outline"
@@ -2627,26 +2624,26 @@ const CustomersTab: React.FC = observer(() => {
 
       <Button
         position="fixed"
-        left="50%"
-        transform="translateX(-50%)"
-        bottom="calc(92px + env(safe-area-inset-bottom))"
+        left={{ base: "12px", sm: "16px" }}
+        transform="none"
+        bottom="calc(74px + env(safe-area-inset-bottom, 0px))"
         zIndex={20}
         leftIcon={<Icon as={FiUserPlus} boxSize={5} />}
-        onClick={openManualBuyerModal}
-        h="58px"
-        minW="min(88vw, 290px)"
-        px={8}
+        onClick={handlePickSingleContact}
+        h="48px"
+        minW="0"
+        px={5}
         borderRadius="full"
         bgGradient="linear(135deg, #C51162 0%, #D81B60 100%)"
         color="white"
-        fontSize="md"
+        fontSize="sm"
         fontWeight="900"
         letterSpacing="0.02em"
         shadow="0 18px 34px rgba(197, 17, 98, 0.35)"
         _hover={{ bgGradient: "linear(135deg, #B20E58 0%, #C2185B 100%)" }}
         _active={{ bgGradient: "linear(135deg, #9F0C4F 0%, #AD1457 100%)" }}
       >
-        Add Customer
+        Add {partySingularLabel}
       </Button>
     </Box>
   );
@@ -2659,7 +2656,7 @@ const CustomersTab: React.FC = observer(() => {
           colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"}
           textTransform="capitalize"
         >
-          {entry.entryType}
+          {getLedgerEntryTypeLabel(entry.entryType)}
         </Badge>
       ),
       directionBadge: (
@@ -2819,7 +2816,7 @@ const CustomersTab: React.FC = observer(() => {
               isLoading={postingSaleId === record._id}
               onClick={() => handlePostSaleRecordToLedger(record._id)}
             >
-              Post to Ledger
+              Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
             </Button>
           ) : (
             <Text color="gray.500">-</Text>
@@ -2885,126 +2882,214 @@ const CustomersTab: React.FC = observer(() => {
         >
           <Spinner color="blue.500" thickness="3px" size="lg" />
           <Text fontSize="sm" color="gray.500">
-            Loading ledger entries...
+            Loading ledger activity...
           </Text>
         </VStack>
       ) : ledgerEntries.length === 0 ? (
-        <Text fontSize="sm" color="gray.500">
-          No ledger entries found.
-        </Text>
+        <VStack
+          spacing={2}
+          py={8}
+          px={5}
+          borderRadius="2xl"
+          borderWidth="1px"
+          borderColor="#D7E5F4"
+          bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
+          shadow="0 12px 30px rgba(15, 23, 42, 0.06)"
+        >
+          <Text fontSize="sm" fontWeight="800" color="#1E3A5F">
+            No ledger entries yet
+          </Text>
+          <Text fontSize="sm" color="gray.500" textAlign="center">
+            {isSelectedSupplier
+              ? "Purchases, payments, and adjustments for this supplier will appear here."
+              : "Sales, payments, and adjustments for this customer will appear here."}
+          </Text>
+        </VStack>
       ) : (
         ledgerEntries.map((entry) => (
           <Box
             key={entry._id}
             borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="xl"
-            bg="white"
-            shadow="sm"
+            borderColor="#D9E4F2"
+            borderRadius="24px"
+            bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
+            shadow="0 16px 38px rgba(15, 23, 42, 0.08)"
             overflow="hidden"
           >
             <Box
               px={4}
-              py={3}
-              bg={
+              py={3.5}
+              bgGradient={
                 entry.entryType === "sale"
-                  ? "orange.50"
+                  ? "linear(135deg, #FFF4E5 0%, #FFE8CC 100%)"
                   : entry.entryType === "payment"
-                    ? "green.50"
-                    : "blue.50"
+                    ? "linear(135deg, #E7FBF3 0%, #D3F7E8 100%)"
+                    : "linear(135deg, #E8F3FF 0%, #DDEEFF 100%)"
               }
               borderBottomWidth="1px"
-              borderBottomColor="gray.200"
+              borderBottomColor="#E5EDF6"
             >
-              <HStack justify="space-between" align="center">
-                <HStack spacing={2}>
-                  <Badge
-                    colorScheme={
-                      entry.entryType === "sale"
-                        ? "orange"
-                        : entry.entryType === "payment"
-                          ? "green"
-                          : "blue"
-                    }
-                    textTransform="capitalize"
-                    borderRadius="full"
-                    px={2}
+              <Flex justify="space-between" align="flex-start" gap={3}>
+                <VStack align="start" spacing={2} flex="1" minW={0}>
+                  <HStack spacing={2} flexWrap="wrap">
+                    <Badge
+                      colorScheme={
+                        entry.entryType === "sale"
+                          ? "orange"
+                          : entry.entryType === "payment"
+                            ? "green"
+                            : "blue"
+                      }
+                      textTransform="capitalize"
+                      borderRadius="full"
+                      px={2.5}
+                      py={1}
+                      fontSize="10px"
+                      fontWeight="800"
+                    >
+                      {getLedgerEntryTypeLabel(entry.entryType)}
+                    </Badge>
+                    <Badge
+                      colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                      textTransform="none"
+                      borderRadius="full"
+                      px={2.5}
+                      py={1}
+                      fontSize="10px"
+                      fontWeight="800"
+                    >
+                      {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
+                    </Badge>
+                  </HStack>
+                  <Text fontSize="11px" fontWeight="700" color="#52627A" letterSpacing="0.01em">
+                    {entry.status === "reversed"
+                      ? "This entry has been reversed"
+                      : `Recorded in ${isSelectedSupplier ? "supplier" : "customer"} ledger`}
+                  </Text>
+                </VStack>
+
+                <VStack align="end" spacing={0} minW="fit-content">
+                  <Text
+                    fontSize="10px"
+                    color="#64748B"
+                    fontWeight="700"
+                    textTransform="uppercase"
+                    letterSpacing="0.08em"
                   >
-                    {entry.entryType}
-                  </Badge>
-                  <Badge
-                    colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
-                    textTransform="none"
-                    borderRadius="full"
-                    px={2}
+                    Amount
+                  </Text>
+                  <Text
+                    fontWeight="900"
+                    fontSize="md"
+                    lineHeight="1.1"
+                    color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
                   >
-                    {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
-                  </Badge>
-                </HStack>
-                <Text
-                  fontWeight="800"
-                  fontSize="sm"
-                  color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
-                >
-                  {formatCurrency(entry.amount || 0)}
-                </Text>
-              </HStack>
+                    {formatCurrency(entry.amount || 0)}
+                  </Text>
+                </VStack>
+              </Flex>
             </Box>
-            <VStack align="stretch" spacing={3} p={4}>
-              <SimpleGrid columns={2} spacing={2}>
+            <VStack align="stretch" spacing={3.5} p={4}>
+              <SimpleGrid columns={2} spacing={3}>
                 <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  <Box
+                    borderRadius="18px"
+                    bg="white"
+                    borderWidth="1px"
+                    borderColor="#E7EEF8"
+                    px={3}
+                    py={3}
+                    minH="72px"
+                  >
+                    <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                     Date
-                  </Text>
-                  <Text fontSize="sm" color="gray.800">
-                    {formatDateTime(entry.entryDate)}
-                  </Text>
+                    </Text>
+                    <Text fontSize="13px" color="#1F2937" fontWeight="700" mt={1}>
+                      {formatDateTime(entry.entryDate)}
+                    </Text>
+                  </Box>
                 </Box>
                 <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-                    Balance
-                  </Text>
-                  <Text fontSize="sm" color="gray.800" fontWeight="700">
-                    {formatCurrency(entry.balanceAfter || 0)}
-                  </Text>
+                  <Box
+                    borderRadius="18px"
+                    bg="white"
+                    borderWidth="1px"
+                    borderColor="#E7EEF8"
+                    px={3}
+                    py={3}
+                    minH="72px"
+                  >
+                    <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+                      Balance
+                    </Text>
+                    <Text fontSize="13px" color="#0F172A" fontWeight="900" mt={1}>
+                      {formatCurrency(entry.balanceAfter || 0)}
+                    </Text>
+                  </Box>
                 </Box>
               </SimpleGrid>
               <Box>
-                <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                   Reference
                 </Text>
-                <Text fontSize="sm" color="gray.700">
-                  {formatLedgerReference(entry)}
-                </Text>
+                <Box
+                  mt={1.5}
+                  borderRadius="16px"
+                  bg="#F3F8FE"
+                  borderWidth="1px"
+                  borderColor="#D9E6F6"
+                  px={3}
+                  py={2.5}
+                >
+                  <Text fontSize="13px" color="#244261" fontWeight="700" fontFamily="mono" wordBreak="break-word">
+                    {formatLedgerReference(entry)}
+                  </Text>
+                </Box>
               </Box>
               {entry.notes ? (
                 <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                     Notes
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
-                    {entry.notes}
-                  </Text>
+                  <Box
+                    mt={1.5}
+                    borderRadius="16px"
+                    bg="#FFFDF7"
+                    borderWidth="1px"
+                    borderColor="#F4E8B2"
+                    px={3}
+                    py={2.5}
+                  >
+                    <Text fontSize="13px" color="#5B5340" lineHeight="1.5">
+                      {entry.notes}
+                    </Text>
+                  </Box>
                 </Box>
               ) : null}
-              <HStack justify="space-between">
+              <Flex justify="space-between" align="center" gap={3} wrap="wrap">
                 <Badge
                   alignSelf="flex-start"
                   colorScheme={entry.status === "reversed" ? "red" : "green"}
                   textTransform="capitalize"
                   borderRadius="full"
-                  px={2}
+                  px={3}
+                  py={1}
+                  fontSize="10px"
+                  fontWeight="800"
                 >
                   {entry.status || "active"}
                 </Badge>
                 {entry.status !== "reversed" ? (
-                  <HStack spacing={2}>
+                  <Flex flex="1" justify="flex-end" gap={2} wrap="wrap">
                     {canDownloadLedgerInvoice(entry) && (
                       <Button
                         size="xs"
-                        colorScheme="teal"
-                        variant="outline"
+                        h="32px"
+                        colorScheme="blue"
+                        variant="subtle"
                         borderRadius="full"
+                        fontWeight="800"
+                        fontSize="12px"
                         isLoading={invoiceDownloadingLedgerEntryId === entry._id}
                         onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
                       >
@@ -3014,9 +3099,12 @@ const CustomersTab: React.FC = observer(() => {
                     {entry.direction === "debit" && (
                       <Button
                         size="xs"
+                        h="32px"
                         colorScheme="green"
-                        variant="outline"
+                        variant="solid"
                         borderRadius="full"
+                        fontWeight="800"
+                        fontSize="12px"
                         onClick={() => openPayModal(entry)}
                       >
                         Pay
@@ -3024,16 +3112,19 @@ const CustomersTab: React.FC = observer(() => {
                     )}
                     <Button
                       size="xs"
+                      h="32px"
                       colorScheme="red"
                       variant="outline"
                       borderRadius="full"
+                      fontWeight="800"
+                      fontSize="12px"
                       onClick={() => openReverseModal(entry)}
                     >
                       Reverse
                     </Button>
-                  </HStack>
+                  </Flex>
                 ) : null}
-              </HStack>
+              </Flex>
             </VStack>
           </Box>
         ))
@@ -3079,11 +3170,11 @@ const CustomersTab: React.FC = observer(() => {
     <VStack align="stretch" spacing={4}>
       {saleLoading ? (
         <Text fontSize="sm" color="gray.500">
-          Loading sale records...
+          Loading {isSelectedSupplier ? "purchase" : "sale"} records...
         </Text>
       ) : saleRecords.length === 0 ? (
         <Text fontSize="sm" color="gray.500">
-          No sale records found.
+          No {isSelectedSupplier ? "purchase" : "sale"} records found.
         </Text>
       ) : (
         saleRecords.map((record) => {
@@ -3181,7 +3272,7 @@ const CustomersTab: React.FC = observer(() => {
                     isLoading={postingSaleId === record._id}
                     onClick={() => handlePostSaleRecordToLedger(record._id)}
                   >
-                    Post to Ledger
+                    Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
                   </Button>
                 ) : null}
               </VStack>
@@ -3226,6 +3317,326 @@ const CustomersTab: React.FC = observer(() => {
     </VStack>
   );
 
+  const renderLedgerDetailMobile = () => {
+    if (!selectedLedgerBuyer) {
+      return null;
+    }
+
+    const outstandingBalance = Number(ledgerSummary.outstandingBalance || 0);
+    const totalSales = Number(ledgerSummary.totalDebit || 0);
+    const totalReceived = Number(ledgerSummary.totalCredit || 0);
+    const creditLimit = Number(ledgerSummary.creditLimit || 0);
+    const buyerPhone = selectedLedgerBuyer.buyerId?.phoneE164 || "-";
+    const buyerEmail = selectedLedgerBuyer.buyerId?.emailNormalized || "";
+    const lastUpdated = formatRelativeTime(selectedLedgerBuyer.updatedAt || selectedLedgerBuyer.createdAt);
+    const hasOutstanding = outstandingBalance >= 0;
+    const detailBalanceTone = isSelectedSupplier
+      ? hasOutstanding
+        ? {
+            bg: "#FEF2F2",
+            borderColor: "red.100",
+            labelColor: "red.700",
+            amountColor: "red.600",
+            label: "You Will Give",
+          }
+        : {
+            bg: "#ECFDF5",
+            borderColor: "green.100",
+            labelColor: "green.700",
+            amountColor: "green.600",
+            label: "Supplier Advance",
+          }
+      : hasOutstanding
+        ? {
+            bg: "#EFF6FF",
+            borderColor: "blue.100",
+            labelColor: "blue.700",
+            amountColor: "blue.700",
+            label: "You Will Get",
+          }
+        : {
+            bg: "#FEF2F2",
+            borderColor: "red.100",
+            labelColor: "red.700",
+            amountColor: "red.600",
+            label: "Advance Balance",
+          };
+
+    return (
+      <Box mx={-2} mt={-2} pb="132px" bg="#EEF5FF" minH="calc(100vh - 56px)">
+        <Box
+          bgGradient="linear(180deg, #0A57B0 0%, #0F6FD2 100%)"
+          px={4}
+          pt={4}
+          pb={10}
+          borderBottomRadius="30px"
+          boxShadow="0 14px 36px rgba(10, 87, 176, 0.22)"
+        >
+          <HStack justify="space-between" align="center">
+            <IconButton
+              aria-label={`Back to ${selectedPartyType === "supplier" ? "suppliers" : "customers"}`}
+              icon={<ArrowBackIcon />}
+              onClick={closeLedgerView}
+              borderRadius="full"
+              bg="whiteAlpha.220"
+              color="white"
+              _hover={{ bg: "whiteAlpha.300" }}
+              _active={{ bg: "whiteAlpha.400" }}
+            />
+            <Badge
+              px={3}
+              py={1.5}
+              borderRadius="full"
+              bg="whiteAlpha.220"
+              color="white"
+              textTransform="none"
+              fontSize="0.72rem"
+              fontWeight="800"
+            >
+              {isSelectedSupplier ? "Supplier Ledger" : "Customer Ledger"}
+            </Badge>
+          </HStack>
+
+          <HStack mt={5} spacing={4} align="start">
+            <Flex
+              h="58px"
+              w="58px"
+              borderRadius="full"
+              bg="whiteAlpha.250"
+              color="white"
+              align="center"
+              justify="center"
+              fontWeight="900"
+              fontSize="xl"
+              flexShrink={0}
+            >
+              {getBuyerInitials(selectedLedgerBuyer)}
+            </Flex>
+
+            <Box flex="1" minW={0}>
+              <Text color="whiteAlpha.800" fontSize="xs" textTransform="uppercase" letterSpacing="0.12em">
+                {selectedLedgerBuyer.source
+                  ? `${selectedLedgerBuyer.source} ${isSelectedSupplier ? "supplier" : "contact"}`
+                  : `${isSelectedSupplier ? "supplier" : "customer"} profile`}
+              </Text>
+              <Text color="white" fontSize="2xl" fontWeight="900" lineHeight="1.1" mt={1}>
+                {selectedBuyerName}
+              </Text>
+              <HStack mt={2} spacing={2} wrap="wrap">
+                <Badge
+                  borderRadius="full"
+                  px={2.5}
+                  py={1}
+                  bg="whiteAlpha.220"
+                  color="white"
+                  textTransform="none"
+                  fontWeight="700"
+                >
+                  {selectedLedgerBuyer.isBlocked ? "Blocked" : "Active"}
+                </Badge>
+                <Badge
+                  borderRadius="full"
+                  px={2.5}
+                  py={1}
+                  bg="whiteAlpha.180"
+                  color="whiteAlpha.900"
+                  textTransform="none"
+                  fontWeight="700"
+                >
+                  Updated {lastUpdated}
+                </Badge>
+              </HStack>
+
+              <VStack align="stretch" spacing={1.5} mt={3}>
+                <HStack spacing={2} color="whiteAlpha.900" align="start">
+                  <Icon as={FiPhone} boxSize={4} mt={0.5} />
+                  <Text fontSize="sm" fontWeight="600">
+                    {buyerPhone}
+                  </Text>
+                </HStack>
+                {buyerEmail ? (
+                  <HStack spacing={2} color="whiteAlpha.900" align="start">
+                    <Icon as={FiMail} boxSize={4} mt={0.5} />
+                    <Text fontSize="sm" fontWeight="600" wordBreak="break-word">
+                      {buyerEmail}
+                    </Text>
+                  </HStack>
+                ) : null}
+              </VStack>
+            </Box>
+          </HStack>
+        </Box>
+
+        <VStack align="stretch" spacing={4} px={3} mt="-26px">
+          <Box
+            bg="white"
+            borderRadius="26px"
+            p={4}
+            shadow="0 16px 36px rgba(15, 23, 42, 0.08)"
+            borderWidth="1px"
+            borderColor="#E5EEF8"
+          >
+            <SimpleGrid columns={2} spacing={3}>
+              <Box
+                borderRadius="20px"
+                px={3.5}
+                py={3}
+                bg="linear-gradient(135deg, rgba(236,253,245,1) 0%, rgba(209,250,229,1) 100%)"
+                borderWidth="1px"
+                borderColor="green.100"
+              >
+                <Text fontSize="xs" fontWeight="800" color="green.700" textTransform="uppercase" letterSpacing="0.08em">
+                  Total Received
+                </Text>
+                <Text fontSize="xl" fontWeight="900" color="green.600" mt={1}>
+                  {formatCompactCurrency(totalReceived)}
+                </Text>
+              </Box>
+              <Box
+                borderRadius="20px"
+                px={3.5}
+                py={3}
+                bg={detailBalanceTone.bg}
+                borderWidth="1px"
+                borderColor={detailBalanceTone.borderColor}
+              >
+                <Text
+                  fontSize="xs"
+                  fontWeight="800"
+                  color={detailBalanceTone.labelColor}
+                  textTransform="uppercase"
+                  letterSpacing="0.08em"
+                >
+                  {detailBalanceTone.label}
+                </Text>
+                <Text fontSize="xl" fontWeight="900" color={detailBalanceTone.amountColor} mt={1}>
+                  {formatCompactCurrency(Math.abs(outstandingBalance))}
+                </Text>
+              </Box>
+              <Box
+                borderRadius="20px"
+                px={3.5}
+                py={3}
+                bg="#FFF7ED"
+                borderWidth="1px"
+                borderColor="orange.100"
+              >
+                <Text fontSize="xs" fontWeight="800" color="orange.700" textTransform="uppercase" letterSpacing="0.08em">
+                  {isSelectedSupplier ? "Total Purchase" : "Total Sale"}
+                </Text>
+                <Text fontSize="xl" fontWeight="900" color="orange.600" mt={1}>
+                  {formatCompactCurrency(totalSales)}
+                </Text>
+              </Box>
+              <Box
+                borderRadius="20px"
+                px={3.5}
+                py={3}
+                bg="#F5F3FF"
+                borderWidth="1px"
+                borderColor="purple.100"
+              >
+                <Text fontSize="xs" fontWeight="800" color="purple.700" textTransform="uppercase" letterSpacing="0.08em">
+                  Credit Limit
+                </Text>
+                <Text fontSize="xl" fontWeight="900" color="purple.600" mt={1}>
+                  {formatCompactCurrency(creditLimit)}
+                </Text>
+              </Box>
+            </SimpleGrid>
+          </Box>
+
+          <Box
+            bg="white"
+            borderRadius="22px"
+            p={1.5}
+            shadow="0 14px 30px rgba(15, 23, 42, 0.06)"
+            borderWidth="1px"
+            borderColor="#E5EEF8"
+          >
+            <HStack spacing={2}>
+              <Button
+                flex="1"
+                h="44px"
+                borderRadius="16px"
+                bg={ledgerTabIndex === 0 ? "#0A57B0" : "transparent"}
+                color={ledgerTabIndex === 0 ? "white" : "#33506D"}
+                fontWeight="800"
+                onClick={() => setLedgerTabIndex(0)}
+                _hover={{ bg: ledgerTabIndex === 0 ? "#0A57B0" : "#F8FBFF" }}
+                _active={{ bg: ledgerTabIndex === 0 ? "#094894" : "#EEF5FF" }}
+              >
+                Entries ({ledgerTotal})
+              </Button>
+              <Button
+                flex="1"
+                h="44px"
+                borderRadius="16px"
+                bg={ledgerTabIndex === 1 ? "#0A57B0" : "transparent"}
+                color={ledgerTabIndex === 1 ? "white" : "#33506D"}
+                fontWeight="800"
+                onClick={() => setLedgerTabIndex(1)}
+                _hover={{ bg: ledgerTabIndex === 1 ? "#0A57B0" : "#F8FBFF" }}
+                _active={{ bg: ledgerTabIndex === 1 ? "#094894" : "#EEF5FF" }}
+              >
+                {isSelectedSupplier ? "Purchases" : "Sales"} ({saleTotal})
+              </Button>
+            </HStack>
+          </Box>
+
+          {ledgerTabIndex === 0 ? renderLedgerMobile() : renderSaleRecordsMobile()}
+        </VStack>
+
+        <Box
+          position="fixed"
+          left="12px"
+          right="12px"
+          bottom="calc(76px + env(safe-area-inset-bottom, 0px))"
+          zIndex={20}
+        >
+          <HStack
+            spacing={3}
+            bg="white"
+            borderRadius="22px"
+            p={3}
+            shadow="0 18px 40px rgba(15, 23, 42, 0.16)"
+            borderWidth="1px"
+            borderColor="#E5EEF8"
+          >
+            <Button
+              flex="1"
+              h="52px"
+              borderRadius="16px"
+              bg="#0F766E"
+              color="white"
+              fontWeight="800"
+              leftIcon={<AddIcon />}
+              onClick={onSaleRecordOpen}
+              _hover={{ bg: "#0B5E58" }}
+              _active={{ bg: "#094C47" }}
+            >
+              Add {isSelectedSupplier ? "Purchase" : "Sale"}
+            </Button>
+            <Button
+              flex="1"
+              h="52px"
+              borderRadius="16px"
+              bg="#0A57B0"
+              color="white"
+              fontWeight="800"
+              leftIcon={<AddIcon />}
+              onClick={onLedgerEntryOpen}
+              _hover={{ bg: "#094894" }}
+              _active={{ bg: "#073A76" }}
+            >
+              Add Entry
+            </Button>
+          </HStack>
+        </Box>
+      </Box>
+    );
+  };
+
   const renderSaleDetailsContent = () => {
     const activeSaleRecord = saleRecordDetails?.saleRecord || selectedSaleRecord;
 
@@ -3234,7 +3645,7 @@ const CustomersTab: React.FC = observer(() => {
         <Flex minH="240px" align="center" justify="center" direction="column" gap={3}>
           <Spinner color="blue.500" thickness="3px" size="lg" />
           <Text fontSize="sm" color="gray.500">
-            Loading sale history{activeSaleRecord? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
+            Loading {isSelectedSupplier ? "purchase" : "sale"} history{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
           </Text>
         </Flex>
       );
@@ -3244,7 +3655,7 @@ const CustomersTab: React.FC = observer(() => {
       return (
         <Flex minH="200px" align="center" justify="center">
           <Text fontSize="sm" color="gray.500">
-            Sale details are not available{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}.
+            {selectedTransactionSingularLabel} details are not available{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}.
           </Text>
         </Flex>
       );
@@ -3261,7 +3672,7 @@ const CustomersTab: React.FC = observer(() => {
           <HStack justify="space-between" align="start" spacing={3}>
             <Box>
               <Text fontSize="xs" textTransform="uppercase" color="blue.700" fontWeight="700">
-                Sale ID
+                {selectedTransactionSingularLabel} ID
               </Text>
               <Text fontSize="lg" fontWeight="800" color="blue.900" wordBreak="break-all">
                 {saleRecord._id}
@@ -3280,61 +3691,63 @@ const CustomersTab: React.FC = observer(() => {
                 ) : null}
               </HStack>
             </Box>
-            <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
-              <Button
-                size="sm"
-                leftIcon={<DownloadIcon />}
-                colorScheme="teal"
-                variant="solid"
-                borderRadius="full"
-                isLoading={invoiceDownloadingSaleId === saleRecord._id}
-                onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
-              >
-                Download Invoice
-              </Button>
-              <IconButton
-                aria-label="Copy sale ID"
-                icon={<CopyIcon />}
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(saleRecord._id || "");
-                  toast({ title: "Sale ID Copied", status: "success", duration: 1000, isClosable: true });
-                }}
-              />
-            </VStack>
+              <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
+                {!isSelectedSupplier ? (
+                  <Button
+                    size="sm"
+                    leftIcon={<DownloadIcon />}
+                    colorScheme="teal"
+                    variant="solid"
+                    borderRadius="full"
+                    isLoading={invoiceDownloadingSaleId === saleRecord._id}
+                    onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
+                  >
+                    Download Invoice
+                  </Button>
+                ) : null}
+                <IconButton
+                  aria-label={`Copy ${selectedTransactionSingularLabel.toLowerCase()} ID`}
+                  icon={<CopyIcon />}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(saleRecord._id || "");
+                    toast({ title: `${selectedTransactionSingularLabel} ID Copied`, status: "success", duration: 1000, isClosable: true });
+                  }}
+                />
+              </VStack>
           </HStack>
         </Box>
 
         <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
           <Box p={3} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
             <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              Sale Total
+              {selectedTransactionSingularLabel} Total
             </Text>
             <Text fontSize="lg" fontWeight="800" color="gray.900">
               {formatCurrency(summary.saleAmount)}
             </Text>
           </Box>
           <Box p={3} borderWidth="1px" borderColor="green.200" borderRadius="xl" bg="green.50">
-            <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
-              Paid
-            </Text>
+              <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
+                {isSelectedSupplier ? "Paid Out" : "Paid"}
+              </Text>
             <Text fontSize="lg" fontWeight="800" color="green.800">
               {formatCurrency(summary.paidAmount)}
             </Text>
           </Box>
           <Box p={3} borderWidth="1px" borderColor="orange.200" borderRadius="xl" bg="orange.50">
             <Text fontSize="xs" color="orange.700" textTransform="uppercase" fontWeight="700">
-              Debit Adjustments
+              {isSelectedSupplier ? "Debit Adjustments" : "Debit Adjustments"}
             </Text>
             <Text fontSize="lg" fontWeight="800" color="orange.800">
               {formatCurrency(summary.adjustmentDebitAmount)}
             </Text>
           </Box>
           <Box p={3} borderWidth="1px" borderColor="blue.200" borderRadius="xl" bg="blue.50">
-            <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
-              Remaining Due
-            </Text>
+              <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
+                {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
+              </Text>
             <Text fontSize="lg" fontWeight="800" color="blue.800">
               {formatCurrency(summary.remainingDue)}
             </Text>
@@ -3344,12 +3757,12 @@ const CustomersTab: React.FC = observer(() => {
         <SimpleGrid columns={1} spacing={3}>
           <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
             <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              Sale Meta
+              {selectedTransactionSingularLabel} Meta
             </Text>
             <VStack align="stretch" spacing={2} mt={3}>
               <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
                 <Text fontSize="sm" color="gray.600">
-                  Sale Date
+                  {selectedTransactionSingularLabel} Date
                 </Text>
                 <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
                   {formatDateTime(saleRecord.saleDate)}
@@ -3402,7 +3815,7 @@ const CustomersTab: React.FC = observer(() => {
 
           <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
             <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              Sale Totals
+              {selectedTransactionSingularLabel} Totals
             </Text>
             <VStack align="stretch" spacing={2} mt={3}>
               <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
@@ -3483,7 +3896,7 @@ const CustomersTab: React.FC = observer(() => {
               <HStack justify="space-between" align="start">
                 <Box>
                   <Text fontSize="sm" fontWeight="700" color="gray.900">
-                    Sale Record Created
+                    {selectedTransactionSingularLabel} Record Created
                   </Text>
                   <Text fontSize="sm" color="gray.500">
                     {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
@@ -3497,7 +3910,7 @@ const CustomersTab: React.FC = observer(() => {
 
             {timeline.length === 0 ? (
               <Text fontSize="sm" color="gray.500">
-                No ledger activity linked to this sale yet.
+                No ledger activity linked to this {selectedTransactionSingularLabel.toLowerCase()} yet.
               </Text>
             ) : (
               timeline.map((entry) => (
@@ -3509,7 +3922,7 @@ const CustomersTab: React.FC = observer(() => {
                           {getTimelineTitle(entry)}
                         </Text>
                         <Badge colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"} textTransform="capitalize">
-                          {entry.entryType}
+                          {getLedgerEntryTypeLabel(entry.entryType)}
                         </Badge>
                         <Badge
                           colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
@@ -3560,11 +3973,12 @@ const CustomersTab: React.FC = observer(() => {
 
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
   const showMobileBuyerManagement = !selectedLedgerBuyer && useCompactBuyerView;
+  const showMobileLedgerDetail = Boolean(selectedLedgerBuyer && useCompactLedgerView);
 
   return (
     <Box px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }}>
       <VStack align="stretch" spacing={4}>
-        {!showMobileBuyerManagement ? (
+        {!showMobileBuyerManagement && !showMobileLedgerDetail ? (
           <Flex
             justify="space-between"
             align={{ base: "stretch", md: "center" }}
@@ -3573,13 +3987,41 @@ const CustomersTab: React.FC = observer(() => {
           >
             <Box>
               <Heading size="md">
-                {selectedLedgerBuyer ? `Buyer Ledger - ${selectedBuyerName}` : "Buyer Management"}
+                {selectedLedgerBuyer ? `${isSelectedSupplier ? "Supplier" : "Customer"} Ledger - ${selectedBuyerName}` : `${partySingularLabel} Management`}
               </Heading>
               <Text fontSize="sm" color="gray.500">
                 {selectedLedgerBuyer
-                  ? "Track sale, payment and adjustment entries"
-                  : "Manage offline buyers for your company"}
+                  ? `Track ${isSelectedSupplier ? "purchase" : "sale"}, payment and adjustment entries`
+                  : `Manage offline ${partyPluralLabel.toLowerCase()} for your company`}
               </Text>
+              {!selectedLedgerBuyer ? (
+                <HStack spacing={2} mt={3}>
+                  <Button
+                    size="sm"
+                    borderRadius="full"
+                    bg={normalizedActivePartyType === "customer" ? "blue.600" : "white"}
+                    color={normalizedActivePartyType === "customer" ? "white" : "blue.700"}
+                    borderWidth="1px"
+                    borderColor="blue.100"
+                    onClick={() => setActivePartyType("customer")}
+                    _hover={{ bg: normalizedActivePartyType === "customer" ? "blue.700" : "blue.50" }}
+                  >
+                    Customers
+                  </Button>
+                  <Button
+                    size="sm"
+                    borderRadius="full"
+                    bg={normalizedActivePartyType === "supplier" ? "blue.600" : "white"}
+                    color={normalizedActivePartyType === "supplier" ? "white" : "blue.700"}
+                    borderWidth="1px"
+                    borderColor="blue.100"
+                    onClick={() => setActivePartyType("supplier")}
+                    _hover={{ bg: normalizedActivePartyType === "supplier" ? "blue.700" : "blue.50" }}
+                  >
+                    Suppliers
+                  </Button>
+                </HStack>
+              ) : null}
             </Box>
             {selectedLedgerBuyer ? (
               <Stack
@@ -3595,7 +4037,7 @@ const CustomersTab: React.FC = observer(() => {
                   size={{ base: "sm", md: "md" }}
                   w={{ base: "full", sm: "auto" }}
                 >
-                  Back to Buyers
+                  Back to {partyPluralLabel}
                 </Button>
                 <Button
                   leftIcon={<AddIcon />}
@@ -3604,7 +4046,7 @@ const CustomersTab: React.FC = observer(() => {
                   size={{ base: "sm", md: "md" }}
                   w={{ base: "full", sm: "auto" }}
                 >
-                  Add Sale Record
+                  Add {isSelectedSupplier ? "Purchase" : "Sale"} Record
                 </Button>
                 <Button
                   leftIcon={<AddIcon />}
@@ -3640,7 +4082,7 @@ const CustomersTab: React.FC = observer(() => {
                   size={{ base: "sm", md: "md" }}
                   w={{ base: "full", sm: "auto" }}
                 >
-                  Add Buyer
+                  Add {partySingularLabel}
                 </Button>
               </Stack>
             )}
@@ -3654,7 +4096,7 @@ const CustomersTab: React.FC = observer(() => {
             ) : (
               <Box>
                 <CustomTable
-                  title={`Buyers (${total})`}
+                  title={`${partyPluralLabel} (${total})`}
                   columns={buyerColumns}
                   data={buyerTableData}
                   loading={loading}
@@ -3665,148 +4107,154 @@ const CustomersTab: React.FC = observer(() => {
             )}
           </>
         ) : (
-          <VStack align="stretch" spacing={4}>
-            <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderColor="orange.200"
-                bg="orange.50"
-                borderRadius="xl"
-                shadow="sm"
-              >
-                <Stat>
-                  <StatLabel color="orange.700" fontWeight="700">
-                    Total Sale (Debit)
-                  </StatLabel>
-                  <StatNumber color="orange.800">{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
-                </Stat>
-              </Box>
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderColor="green.200"
-                bg="green.50"
-                borderRadius="xl"
-                shadow="sm"
-              >
-                <Stat>
-                  <StatLabel color="green.700" fontWeight="700">
-                    Total Payment (Credit)
-                  </StatLabel>
-                  <StatNumber color="green.800">{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
-                </Stat>
-              </Box>
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderColor="blue.200"
-                bg="blue.50"
-                borderRadius="xl"
-                shadow="sm"
-              >
-                <Stat>
-                  <StatLabel color="blue.700" fontWeight="700">
-                    Outstanding
-                  </StatLabel>
-                  <StatNumber color="blue.800">{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
-                </Stat>
-              </Box>
-              <Box
-                p={4}
-                borderWidth="1px"
-                borderColor="purple.200"
-                bg="purple.50"
-                borderRadius="xl"
-                shadow="sm"
-              >
-                <Stat>
-                  <StatLabel color="purple.700" fontWeight="700">
-                    Credit Limit
-                  </StatLabel>
-                  <StatNumber color="purple.800">{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
-                </Stat>
-              </Box>
-            </SimpleGrid>
+          <>
+            {showMobileLedgerDetail ? (
+              renderLedgerDetailMobile()
+            ) : (
+              <VStack align="stretch" spacing={4}>
+                <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
+                  <Box
+                    p={4}
+                    borderWidth="1px"
+                    borderColor="orange.200"
+                    bg="orange.50"
+                    borderRadius="xl"
+                    shadow="sm"
+                  >
+                    <Stat>
+                      <StatLabel color="orange.700" fontWeight="700">
+                        Total {isSelectedSupplier ? "Purchase" : "Sale"} (Debit)
+                      </StatLabel>
+                      <StatNumber color="orange.800">{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
+                    </Stat>
+                  </Box>
+                  <Box
+                    p={4}
+                    borderWidth="1px"
+                    borderColor="green.200"
+                    bg="green.50"
+                    borderRadius="xl"
+                    shadow="sm"
+                  >
+                    <Stat>
+                      <StatLabel color="green.700" fontWeight="700">
+                        Total {isSelectedSupplier ? "Payment Sent" : "Payment"} (Credit)
+                      </StatLabel>
+                      <StatNumber color="green.800">{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
+                    </Stat>
+                  </Box>
+                  <Box
+                    p={4}
+                    borderWidth="1px"
+                    borderColor="blue.200"
+                    bg="blue.50"
+                    borderRadius="xl"
+                    shadow="sm"
+                  >
+                    <Stat>
+                      <StatLabel color="blue.700" fontWeight="700">
+                        {isSelectedSupplier ? "Payable Outstanding" : "Outstanding"}
+                      </StatLabel>
+                      <StatNumber color="blue.800">{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
+                    </Stat>
+                  </Box>
+                  <Box
+                    p={4}
+                    borderWidth="1px"
+                    borderColor="purple.200"
+                    bg="purple.50"
+                    borderRadius="xl"
+                    shadow="sm"
+                  >
+                    <Stat>
+                      <StatLabel color="purple.700" fontWeight="700">
+                        Credit Limit
+                      </StatLabel>
+                      <StatNumber color="purple.800">{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
+                    </Stat>
+                  </Box>
+                </SimpleGrid>
 
-            <Tabs
-              index={ledgerTabIndex}
-              onChange={(index) => setLedgerTabIndex(index)}
-              variant="unstyled"
-              colorScheme="blue"
-            >
-              <TabList
-                overflowX="auto"
-                bg="gray.100"
-                borderWidth="1px"
-                borderColor="gray.200"
-                borderRadius="xl"
-                p={1}
-                gap={1}
-              >
-                <Tab
-                  whiteSpace="nowrap"
-                  borderRadius="lg"
-                  fontWeight="700"
-                  color="gray.600"
-                  _selected={{
-                    bg: "white",
-                    color: "blue.700",
-                    shadow: "sm",
-                    borderWidth: "1px",
-                    borderColor: "blue.200",
-                  }}
+                <Tabs
+                  index={ledgerTabIndex}
+                  onChange={(index) => setLedgerTabIndex(index)}
+                  variant="unstyled"
+                  colorScheme="blue"
                 >
-                  Ledger Entries ({ledgerTotal})
-                </Tab>
-                <Tab
-                  whiteSpace="nowrap"
-                  borderRadius="lg"
-                  fontWeight="700"
-                  color="gray.600"
-                  _selected={{
-                    bg: "white",
-                    color: "blue.700",
-                    shadow: "sm",
-                    borderWidth: "1px",
-                    borderColor: "blue.200",
-                  }}
-                >
-                  Sale Records ({saleTotal})
-                </Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel px={0} pt={4}>
-                  {useCompactLedgerView ? (
-                    renderLedgerMobile()
-                  ) : (
-                    <CustomTable
-                      title={`Ledger Entries (${ledgerTotal})`}
-                      columns={ledgerColumns}
-                      data={ledgerTableData}
-                      loading={ledgerLoading}
-                      actions={ledgerTableActions}
-                      serial={{ show: true, text: "S.No." }}
-                    />
-                  )}
-                </TabPanel>
-                <TabPanel px={0} pt={4}>
-                  {useCompactLedgerView ? (
-                    renderSaleRecordsMobile()
-                  ) : (
-                    <CustomTable
-                      title={`Sale Records (${saleTotal})`}
-                      columns={saleColumns}
-                      data={saleTableData}
-                      loading={saleLoading}
-                      actions={saleTableActions}
-                      serial={{ show: true, text: "S.No." }}
-                    />
-                  )}
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </VStack>
+                  <TabList
+                    overflowX="auto"
+                    bg="gray.100"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="xl"
+                    p={1}
+                    gap={1}
+                  >
+                    <Tab
+                      whiteSpace="nowrap"
+                      borderRadius="lg"
+                      fontWeight="700"
+                      color="gray.600"
+                      _selected={{
+                        bg: "white",
+                        color: "blue.700",
+                        shadow: "sm",
+                        borderWidth: "1px",
+                        borderColor: "blue.200",
+                      }}
+                    >
+                      Ledger Entries ({ledgerTotal})
+                    </Tab>
+                    <Tab
+                      whiteSpace="nowrap"
+                      borderRadius="lg"
+                      fontWeight="700"
+                      color="gray.600"
+                      _selected={{
+                        bg: "white",
+                        color: "blue.700",
+                        shadow: "sm",
+                        borderWidth: "1px",
+                        borderColor: "blue.200",
+                      }}
+                    >
+                      {selectedTransactionPluralLabel} ({saleTotal})
+                    </Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel px={0} pt={4}>
+                      {useCompactLedgerView ? (
+                        renderLedgerMobile()
+                      ) : (
+                        <CustomTable
+                          title={`Ledger Entries (${ledgerTotal})`}
+                          columns={ledgerColumns}
+                          data={ledgerTableData}
+                          loading={ledgerLoading}
+                          actions={ledgerTableActions}
+                          serial={{ show: true, text: "S.No." }}
+                        />
+                      )}
+                    </TabPanel>
+                    <TabPanel px={0} pt={4}>
+                      {useCompactLedgerView ? (
+                        renderSaleRecordsMobile()
+                      ) : (
+                        <CustomTable
+                          title={`${selectedTransactionPluralLabel} (${saleTotal})`}
+                          columns={saleColumns}
+                          data={saleTableData}
+                          loading={saleLoading}
+                          actions={saleTableActions}
+                          serial={{ show: true, text: "S.No." }}
+                        />
+                      )}
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
+              </VStack>
+            )}
+          </>
         )}
       </VStack>
 
@@ -3814,7 +4262,7 @@ const CustomersTab: React.FC = observer(() => {
         <Modal isOpen={isSaleDetailsOpen} onClose={closeSaleDetails} size="full" scrollBehavior="inside">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Sale Details</ModalHeader>
+            <ModalHeader>{selectedTransactionSingularLabel} Details</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>{renderSaleDetailsContent()}</ModalBody>
           </ModalContent>
@@ -3823,7 +4271,7 @@ const CustomersTab: React.FC = observer(() => {
         <CustomDrawer
           open={isSaleDetailsOpen}
           close={closeSaleDetails}
-          title="Sale Details"
+          title={`${selectedTransactionSingularLabel} Details`}
           size="md"
           loading={saleDetailsLoading && !saleRecordDetails}
         >
@@ -3834,12 +4282,12 @@ const CustomersTab: React.FC = observer(() => {
       <Modal isOpen={isImportOpen} onClose={closeImportModal} isCentered size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Import Buyers From Contacts</ModalHeader>
+          <ModalHeader>Import {partyPluralLabel} From Contacts</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
               <Text fontSize="sm" color="gray.600">
-                Import buyers directly from device contacts.
+                Import {partyPluralLabel.toLowerCase()} directly from device contacts.
               </Text>
 
               <FormControl>
@@ -4018,16 +4466,13 @@ const CustomersTab: React.FC = observer(() => {
                         Customer
                       </Text>
                     </Radio>
-                    <Radio value="supplier" colorScheme="blue" size="lg" isDisabled>
-                      <Text fontSize="xl" fontWeight="500" color="gray.400">
+                    <Radio value="supplier" colorScheme="blue" size="lg">
+                      <Text fontSize="xl" fontWeight="500">
                         Supplier
                       </Text>
                     </Radio>
                   </HStack>
                 </RadioGroup>
-                <Text fontSize="sm" color="gray.500" mt={2}>
-                  Supplier flow will plug into this screen once supplier ledger is ready.
-                </Text>
               </Box>
 
               <Button
@@ -4127,7 +4572,7 @@ const CustomersTab: React.FC = observer(() => {
                     <Textarea
                       value={formValues.notes}
                       onChange={(e) => setFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Anything useful to remember about this customer"
+                      placeholder={`Anything useful to remember about this ${formValues.partyType}`}
                       bg="white"
                       borderRadius="16px"
                       minH="120px"
@@ -4149,7 +4594,7 @@ const CustomersTab: React.FC = observer(() => {
               onClick={handleCreateBuyer}
               isLoading={submitting}
             >
-              Add Customer
+              Add {formValues.partyType === "supplier" ? "Supplier" : "Customer"}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -4173,12 +4618,12 @@ const CustomersTab: React.FC = observer(() => {
                 OK
               </Flex>
               <Text fontSize="2xl" fontWeight="800">
-                Customer saved
+                {lastCreatedBuyer?.partyType === "supplier" ? "Supplier saved" : "Customer saved"}
               </Text>
               <Text fontSize="sm" color="whiteAlpha.900" textAlign="center">
                 {lastCreatedBuyer
                   ? `${getBuyerDisplayName(lastCreatedBuyer)} is ready for ledger entries.`
-                  : "The contact has been added to your customer list."}
+                  : `The contact has been added to your ${normalizedActivePartyType === "supplier" ? "supplier" : "customer"} list.`}
               </Text>
             </VStack>
           </Box>
@@ -4210,69 +4655,148 @@ const CustomersTab: React.FC = observer(() => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add Buyer</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={3}>
-              <FormControl>
-                <FormLabel>Full Name</FormLabel>
-                <Input
-                  value={formValues.fullName}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
-                  placeholder="Buyer full name"
-                />
-              </FormControl>
+      {useCompactBuyerView ? (
+        <Drawer isOpen={isOpen} placement="bottom" onClose={closeBuyerModal} size="xl">
+          <DrawerOverlay bg="blackAlpha.500" />
+          <DrawerContent borderTopRadius="24px" overflow="hidden">
+            <DrawerHeader borderBottomWidth="1px" borderBottomColor="gray.100" fontWeight="800">
+              Add {partySingularLabel}
+            </DrawerHeader>
+            <DrawerCloseButton top={4} right={4} />
+            <DrawerBody py={4}>
+              <VStack spacing={4} align="stretch">
+                <FormControl>
+                  <FormLabel>Full Name</FormLabel>
+                  <Input
+                    value={formValues.fullName}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
+                    placeholder={`${partySingularLabel} full name`}
+                    h="52px"
+                    borderRadius="16px"
+                  />
+                </FormControl>
 
-              <FormControl>
-                <FormLabel>Phone</FormLabel>
-                <Input
-                  value={formValues.phone}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
-                  placeholder="10-digit or +country code"
-                />
-              </FormControl>
+                <FormControl>
+                  <FormLabel>Phone</FormLabel>
+                  <Input
+                    value={formValues.phone}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
+                    placeholder="10-digit or +country code"
+                    h="52px"
+                    borderRadius="16px"
+                    inputMode="tel"
+                  />
+                </FormControl>
 
-              <FormControl>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  value={formValues.email}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
-                  placeholder="buyer@example.com"
-                />
-              </FormControl>
+                <FormControl>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    value={formValues.email}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder={`${partySingularLabel.toLowerCase()}@example.com`}
+                    h="52px"
+                    borderRadius="16px"
+                  />
+                </FormControl>
 
-              <FormControl>
-                <FormLabel>Display Name (optional)</FormLabel>
-                <Input
-                  value={formValues.displayName}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
-                  placeholder="How you want this buyer to appear"
-                />
-              </FormControl>
+                <FormControl>
+                  <FormLabel>Display Name (optional)</FormLabel>
+                  <Input
+                    value={formValues.displayName}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
+                    placeholder={`How this ${partySingularLabel.toLowerCase()} should appear`}
+                    h="52px"
+                    borderRadius="16px"
+                  />
+                </FormControl>
 
-              <FormControl>
-                <FormLabel>Tags (comma-separated)</FormLabel>
-                <Input
-                  value={formValues.tags}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
-                  placeholder="wholesale, repeat, priority"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={closeBuyerModal}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting}>
-              Save Buyer
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+                <FormControl>
+                  <FormLabel>Tags (comma-separated)</FormLabel>
+                  <Input
+                    value={formValues.tags}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
+                    placeholder="wholesale, repeat, priority"
+                    h="52px"
+                    borderRadius="16px"
+                  />
+                </FormControl>
+              </VStack>
+            </DrawerBody>
+            <DrawerFooter borderTopWidth="1px" borderTopColor="gray.100" gap={3}>
+              <Button variant="ghost" onClick={closeBuyerModal}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting} flex="1" h="52px">
+                Save {partySingularLabel}
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
+          <ModalOverlay />
+            <ModalContent>
+            <ModalHeader>Add {partySingularLabel}</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <VStack spacing={3}>
+                <FormControl>
+                  <FormLabel>Full Name</FormLabel>
+                  <Input
+                    value={formValues.fullName}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
+                    placeholder={`${partySingularLabel} full name`}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Phone</FormLabel>
+                  <Input
+                    value={formValues.phone}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
+                    placeholder="10-digit or +country code"
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    value={formValues.email}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
+                    placeholder={`${partySingularLabel.toLowerCase()}@example.com`}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Display Name (optional)</FormLabel>
+                  <Input
+                    value={formValues.displayName}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
+                    placeholder={`How you want this ${partySingularLabel.toLowerCase()} to appear`}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Tags (comma-separated)</FormLabel>
+                  <Input
+                    value={formValues.tags}
+                    onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
+                    placeholder="wholesale, repeat, priority"
+                  />
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={closeBuyerModal}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting}>
+                Save {partySingularLabel}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
 
       <Modal isOpen={isLedgerEntryOpen} onClose={onLedgerEntryClose} isCentered size="lg">
         <ModalOverlay />
@@ -4294,8 +4818,8 @@ const CustomersTab: React.FC = observer(() => {
                     }));
                   }}
                 >
-                  <option value="sale">Sale</option>
-                  <option value="payment">Payment</option>
+                  <option value="sale">{isSelectedSupplier ? "Purchase" : "Sale"}</option>
+                  <option value="payment">{isSelectedSupplier ? "Payment Sent" : "Payment"}</option>
                   <option value="adjustment">Adjustment</option>
                 </Select>
               </FormControl>
@@ -4317,8 +4841,8 @@ const CustomersTab: React.FC = observer(() => {
                     }))
                   }
                 >
-                  <option value="debit">You will get more</option>
-                  <option value="credit">You will give credit / reduce due</option>
+                  <option value="debit">{isSelectedSupplier ? "You will give more" : "You will get more"}</option>
+                  <option value="credit">{isSelectedSupplier ? "You will pay / reduce due" : "You will give credit / reduce due"}</option>
                 </Select>
               </FormControl>
 
@@ -4394,13 +4918,13 @@ const CustomersTab: React.FC = observer(() => {
       <Modal isOpen={isSaleRecordOpen} onClose={closeSaleRecordModal} isCentered size="4xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Add Buyer Sale Record</ModalHeader>
+          <ModalHeader>Add {isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
                 <FormControl>
-                  <FormLabel>Sale Date (optional)</FormLabel>
+                  <FormLabel>{isSelectedSupplier ? "Purchase" : "Sale"} Date (optional)</FormLabel>
                   <Input
                     type="datetime-local"
                     value={saleFormValues.saleDate}
@@ -4413,7 +4937,7 @@ const CustomersTab: React.FC = observer(() => {
                   <Input
                     value={saleFormValues.notes}
                     onChange={(e) => setSaleFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Sale remarks"
+                    placeholder={isSelectedSupplier ? "Purchase remarks" : "Sale remarks"}
                   />
                 </FormControl>
               </SimpleGrid>
@@ -4422,7 +4946,7 @@ const CustomersTab: React.FC = observer(() => {
                 isChecked={saleFormValues.postToLedger}
                 onChange={(e) => setSaleFormValues((prev) => ({ ...prev, postToLedger: e.target.checked }))}
               >
-                Post to ledger now
+                Post {isSelectedSupplier ? "purchase" : "sale"} to ledger now
               </Checkbox>
 
               <Divider />
@@ -4611,7 +5135,7 @@ const CustomersTab: React.FC = observer(() => {
               Cancel
             </Button>
             <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
-              Save Sale Record
+              Save {selectedTransactionSingularLabel} Record
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -4621,10 +5145,10 @@ const CustomersTab: React.FC = observer(() => {
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
         onConfirm={confirmDelete}
-        title="Delete Buyer"
+        title={`Delete ${selectedBuyer?.partyType === "supplier" ? "Supplier" : "Customer"}`}
         message={
           <Text>
-            Are you sure you want to delete buyer{" "}
+            Are you sure you want to delete {selectedBuyer?.partyType === "supplier" ? "supplier" : "customer"}{" "}
             <strong>{selectedBuyer?.displayName || selectedBuyer?.buyerId?.fullName || "-"}</strong>?
             This action cannot be undone.
           </Text>
@@ -4654,4 +5178,5 @@ const CustomersTab: React.FC = observer(() => {
 });
 
 export default CustomersTab;
+
 

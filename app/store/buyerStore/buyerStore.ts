@@ -122,6 +122,26 @@ class BuyerStore {
       return Promise.reject(err?.response?.data || err);
     }
   };
+
+  downloadBuyerSaleRecordInvoice = async (profileId: string, saleId: string) => {
+    try {
+      return await axios.get(`/buyer/${profileId}/sales/${saleId}/invoice`, {
+        responseType: "blob",
+      });
+    } catch (err: any) {
+      return Promise.reject(err);
+    }
+  };
+
+  downloadBuyerLedgerEntryInvoice = async (profileId: string, entryId: string) => {
+    try {
+      return await axios.get(`/buyer/${profileId}/ledger/${entryId}/invoice`, {
+        responseType: "blob",
+      });
+    } catch (err: any) {
+      return Promise.reject(err);
+    }
+  };
 }
 
 const buyerStore = new BuyerStore();
