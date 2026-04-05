@@ -115,6 +115,18 @@ class CompanyStores {
     }
   };
 
+  getDashboardSummary = async (companyId: string) => {
+    this.isLoading = true;
+    try {
+      const response = await axios.get(`/company/${companyId}/dashboard-summary`);
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
   deleteShop = async (id: string) => {
     this.isLoading = true;
     try {
