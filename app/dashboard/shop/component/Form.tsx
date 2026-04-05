@@ -47,7 +47,7 @@ import {
 } from "react-icons/fa";
 import { FiLayers } from "react-icons/fi";
 import { validationSchema } from "./utils/validation";
-import { readFileAsBase64 } from "../../../config/utils/utils";
+import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import SellerOnboardingWizard from "./SellerOnboardingWizard";
 import { createCompanyCode } from "./utils/companyCode";
 
@@ -210,13 +210,10 @@ const ShopForm = observer(() => {
 
   const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
-      return await readFileAsBase64(imageFile).then((buffer) => ({
-        buffer,
-        filename: imageFile.name,
-        type: imageFile.type,
+      return buildBase64ImageUpload(imageFile, {
         isDeleted: isDeleted || 0,
         isAdd: isAdd || 0,
-      }));
+      });
     } else if (isDeleted) {
       return { isDeleted, isAdd: isAdd || 0 };
     }

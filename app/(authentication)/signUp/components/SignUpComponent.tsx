@@ -49,7 +49,7 @@ import {
   getOptionalGstError,
   normalizeGstNumber,
 } from "../../../config/utils/gstValidation";
-import { readFileAsBase64 } from "../../../config/utils/utils";
+import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
 
 const MotionBox = motion(Box);
@@ -660,14 +660,7 @@ const SignUpForm = observer(() => {
 
   const handleImageProcessing = async (file?: File | null) => {
     if (!file) return null;
-    const buffer = await readFileAsBase64(file);
-    return {
-      buffer,
-      filename: file.name,
-      type: file.type,
-      isAdd: 1,
-      isDeleted: 0,
-    };
+    return buildBase64ImageUpload(file, { isAdd: 1, isDeleted: 0 });
   };
 
   const createSellerCompany = async () => {

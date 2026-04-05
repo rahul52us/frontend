@@ -25,6 +25,7 @@ import { Formik, Field, Form, FieldArray } from "formik";
 import { FaPlus, FaTrash, FaUpload, FaGift } from "react-icons/fa";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
 import FreebieProductModal from "./FreebieProductModal";
+import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -62,17 +63,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
     const fileReaders = files.map((file: any) => {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve({
-            filename: file.name,
-            buffer: reader.result,
-            isAdd: true,
-            preview: URL.createObjectURL(file),
-          });
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+        buildBase64ImageUpload(file, { isAdd: 1, isDeleted: 0 })
+          .then((payload) => {
+            resolve({
+              ...payload,
+              preview: URL.createObjectURL(file),
+            });
+          })
+          .catch(reject);
       });
     });
 

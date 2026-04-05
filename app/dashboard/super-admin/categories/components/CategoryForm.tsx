@@ -17,6 +17,7 @@ import * as Yup from "yup";
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import { convertImageFileToWebp } from "../../../../config/utils/imageUpload";
 
 interface CategoryFormProps {
     isOpen: boolean;
@@ -59,7 +60,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             formData.append("parent", values.parent);
         }
         if (values.image instanceof File) {
-            formData.append("image", values.image);
+            const normalizedImage = await convertImageFileToWebp(values.image);
+            formData.append("image", normalizedImage, normalizedImage.name);
         }
 
         let res;
