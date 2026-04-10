@@ -8,9 +8,24 @@ import {
   Icon,
   useColorModeValue,
   Circle,
+  Button,
+  Badge,
+  HStack,
+  useToast,
 } from "@chakra-ui/react";
+import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { FiMapPin } from "react-icons/fi";
+import { FiNavigation } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
+import {
+  FALLBACK_CENTER,
+  getSelectedPoint,
+  GOOGLE_MAPS_API_KEY,
+  hasPickedCoordinates,
+  mapContainerStyle,
+  mapOptions,
+  parseAddressComponents,
+} from "./utils/locationPicker";
 
 // SectionCard reused from ShopDetailsSection
 const SectionCard = ({ title, description, children }) => {
@@ -59,19 +74,268 @@ const SectionCard = ({ title, description, children }) => {
 };
 
 const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
+  const toast = useToast();
   const location = values.location || {};
   const locationErrors = errors.location || {};
   const coordinates = location.coordinates || ["", ""];
   const coordinatesErrors = locationErrors.coordinates || [];
+  const selectedPoint = getSelectedPoint(coordinates);
+  const isPlaceholderCoordinate =
+    Array.isArray(coordinates) &&
+    coordinates.length >= 2 &&
+    Number(coordinates[0]) === 0 &&
+    Number(coordinates[1]) === 0;
+  const longitudeValue = isPlaceholderCoordinate ? "" : coordinates[0] ?? "";
+  const latitudeValue = isPlaceholderCoordinate ? "" : coordinates[1] ?? "";
+  const savedAddress = [
+    location.address,
+    location.city,
+    location.state,
+    location.postalCode,
+    location.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const mapCenter = selectedPoint
+    ? { lat: selectedPoint.lat, lng: selectedPoint.lng }
+    : FALLBACK_CENTER;
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+  });
+  const [detectingLocation, setDetectingLocation] = React.useState(false);
+  const [geocoding, setGeocoding] = React.useState(false);
+  const hydratedCoordinatesRef = React.useRef("");
+  const hydratedAddressRef = React.useRef("");
+
+  const hydrateLocation = React.useCallback(
+    (lat: number, lng: number) => {
+      const nextLng = Number(lng.toFixed(6));
+      const nextLat = Number(lat.toFixed(6));
+      setFieldValue("location.coordinates", [nextLng, nextLat]);
+      setFieldValue("location.coordinates[0]", nextLng);
+      setFieldValue("location.coordinates[1]", nextLat);
+
+      if (!window.google?.maps) {
+        return;
+      }
+
+      setGeocoding(true);
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        setGeocoding(false);
+        if (status !== "OK" || !results?.length) return;
+
+        const result = results[0];
+        const parsed = parseAddressComponents(result.address_components || []);
+        setFieldValue("location.address", result.formatted_address || location.address || "");
+        setFieldValue("location.city", parsed.city || location.city || "");
+        setFieldValue("location.state", parsed.state || location.state || "");
+        setFieldValue("location.postalCode", parsed.postalCode || location.postalCode || "");
+        setFieldValue("location.country", parsed.country || location.country || "");
+      });
+    },
+    [location.address, location.city, location.country, location.postalCode, location.state, setFieldValue]
+  );
+
+  const detectCurrentLocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast({
+        title: "Location unavailable",
+        description: "Geolocation is not supported on this device.",
+        status: "warning",
+      });
+      return;
+    }
+
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setDetectingLocation(false);
+        hydrateLocation(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        setDetectingLocation(false);
+        toast({
+          title: "Unable to fetch location",
+          description: error.message || "Please place the pin manually on the map.",
+          status: "error",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const handleMapClick = (event: google.maps.MapMouseEvent) => {
+    const lat = event.latLng?.lat();
+    const lng = event.latLng?.lng();
+    if (typeof lat !== "number" || typeof lng !== "number") return;
+    hydrateLocation(lat, lng);
+  };
+
+  React.useEffect(() => {
+    if (!isLoaded || !selectedPoint || location.address || !window.google?.maps) {
+      return;
+    }
+
+    const coordinateKey = `${selectedPoint.lat},${selectedPoint.lng}`;
+    if (hydratedCoordinatesRef.current === coordinateKey) {
+      return;
+    }
+
+    hydratedCoordinatesRef.current = coordinateKey;
+    setGeocoding(true);
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode(
+      { location: { lat: selectedPoint.lat, lng: selectedPoint.lng } },
+      (results, status) => {
+        setGeocoding(false);
+        if (status !== "OK" || !results?.length) {
+          return;
+        }
+
+        const result = results[0];
+        const parsed = parseAddressComponents(result.address_components || []);
+        setFieldValue("location.address", result.formatted_address || "");
+        setFieldValue("location.city", parsed.city || location.city || "");
+        setFieldValue("location.state", parsed.state || location.state || "");
+        setFieldValue("location.postalCode", parsed.postalCode || location.postalCode || "");
+        setFieldValue("location.country", parsed.country || location.country || "");
+      }
+    );
+  }, [
+    isLoaded,
+    location.address,
+    location.city,
+    location.country,
+    location.postalCode,
+    location.state,
+    selectedPoint,
+    setFieldValue,
+  ]);
+
+  React.useEffect(() => {
+    if (
+      !isLoaded ||
+      !savedAddress ||
+      hasPickedCoordinates(coordinates) ||
+      !window.google?.maps
+    ) {
+      return;
+    }
+
+    if (hydratedAddressRef.current === savedAddress) {
+      return;
+    }
+
+    hydratedAddressRef.current = savedAddress;
+    setGeocoding(true);
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: savedAddress }, (results, status) => {
+      setGeocoding(false);
+      const resultLocation = results?.[0]?.geometry?.location;
+      if (status !== "OK" || !resultLocation) {
+        return;
+      }
+
+      const lat = resultLocation.lat();
+      const lng = resultLocation.lng();
+      const nextLng = Number(lng.toFixed(6));
+      const nextLat = Number(lat.toFixed(6));
+      setFieldValue("location.coordinates", [nextLng, nextLat]);
+      setFieldValue("location.coordinates[0]", nextLng);
+      setFieldValue("location.coordinates[1]", nextLat);
+    });
+  }, [coordinates, isLoaded, savedAddress, setFieldValue]);
 
   return (
     <VStack spacing={8} align="stretch">
       <SectionCard
         // icon={FiMapPin}
         title="Main Location"
-        description="Add the address and geo-coordinates of your shop"
+        description="Pick your location on the map and fine-tune the address if needed"
       >
         <VStack spacing={6} align="stretch">
+          <Box>
+            <Flex
+              justify="space-between"
+              align={{ base: "start", md: "center" }}
+              direction={{ base: "column", md: "row" }}
+              gap={3}
+              mb={4}
+            >
+              <Box>
+                <Text fontSize="sm" fontWeight="600" color="gray.700">
+                  Choose your shop location
+                </Text>
+                <Text fontSize="xs" color="gray.500">
+                  Tap the map to drop a pin, just like registration.
+                </Text>
+              </Box>
+              <Button
+                leftIcon={<FiNavigation />}
+                variant="outline"
+                size="sm"
+                borderRadius="full"
+                onClick={detectCurrentLocation}
+                isLoading={detectingLocation || geocoding}
+              >
+                Use current location
+              </Button>
+            </Flex>
+
+            <Box
+              h={{ base: "240px", md: "300px" }}
+              borderRadius="2xl"
+              overflow="hidden"
+              borderWidth="1px"
+              borderColor="blue.100"
+              bg="blue.50"
+            >
+              {!GOOGLE_MAPS_API_KEY ? (
+                <Flex h="100%" align="center" justify="center" px={6}>
+                  <Text fontSize="sm" color="gray.600" textAlign="center">
+                    Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
+                  </Text>
+                </Flex>
+              ) : loadError ? (
+                <Flex h="100%" align="center" justify="center" px={6}>
+                  <Text fontSize="sm" color="red.500" textAlign="center">
+                    Failed to load Google Maps.
+                  </Text>
+                </Flex>
+              ) : !isLoaded ? (
+                <Flex h="100%" align="center" justify="center" px={6}>
+                  <Text fontSize="sm" color="gray.500" textAlign="center">
+                    Loading map...
+                  </Text>
+                </Flex>
+              ) : (
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={selectedPoint ? 15 : 11}
+                  options={mapOptions}
+                  onClick={handleMapClick}
+                >
+                  {selectedPoint ? (
+                    <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
+                  ) : null}
+                </GoogleMap>
+              )}
+            </Box>
+
+            <HStack mt={3} spacing={3} wrap="wrap">
+              <Badge colorScheme={selectedPoint ? "green" : "blue"} px={3} py={1} borderRadius="full">
+                {selectedPoint ? "Pin selected" : "Pin not selected"}
+              </Badge>
+              {selectedPoint ? (
+                <Text fontSize="sm" color="gray.500">
+                  {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+                </Text>
+              ) : null}
+            </HStack>
+          </Box>
+
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
             <CustomInput
               showError={showError}
@@ -129,7 +393,7 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
               name="location.coordinates[0]"
               required
               error={coordinatesErrors[0]}
-              value={coordinates[0] || ""}
+              value={longitudeValue}
               onChange={(e) =>
                 setFieldValue("location.coordinates[0]", e.target.value)
               }
@@ -140,7 +404,7 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
               name="location.coordinates[1]"
               required
               error={coordinatesErrors[1]}
-              value={coordinates[1] || ""}
+              value={latitudeValue}
               onChange={(e) =>
                 setFieldValue("location.coordinates[1]", e.target.value)
               }

@@ -40,6 +40,13 @@ const HeaderProfile = observer(() => {
     themeStore: { setOpenThemeDrawer },
   } = stores;
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const shopLogoUrl =
+    user?.company && typeof user.company === "object"
+      ? user.company?.logo?.url
+      : undefined;
+  const menuAvatarSrc = shopLogoUrl || user?.pic?.url || undefined;
+  const menuAvatarName =
+    (user?.company && typeof user.company === "object" && user.company?.name) || user?.name;
 
   return user ? (
     <>
@@ -49,10 +56,10 @@ const HeaderProfile = observer(() => {
           aria-label="User Menu"
           icon={
             <Avatar
-              src={user?.pic?.url || undefined}
+              src={menuAvatarSrc}
               size="sm"
               borderRadius={10}
-              name={user?.name}
+              name={menuAvatarName}
             />
           }
           size="sm"
@@ -62,7 +69,7 @@ const HeaderProfile = observer(() => {
           <MenuList minWidth="220px" boxShadow="md" borderRadius="md" zIndex={10} p={2}>
             <VStack spacing={2}>
               <Box textAlign="center">
-                <Avatar src={user?.pic?.url || undefined} size="lg" name={user?.name} />
+                <Avatar src={menuAvatarSrc} size="lg" name={menuAvatarName} />
                 <Text mt={2} fontWeight="bold">{user?.name}</Text>
                 <Text mt={0.5} fontWeight="xl" fontSize="sm" cursor="pointer">
                   {WEBSITE_TITLE?.split('-').join(' ')}

@@ -132,6 +132,129 @@ const SectionHeader = ({ activeSection, sections }) => {
   );
 };
 
+const isFiniteCoordinate = (value: any) => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue);
+};
+
+const isCoordinatePairString = (value: any) => {
+  if (typeof value !== "string") return false;
+  const parts = value.split(",").map((item) => Number(item.trim()));
+  return parts.length === 2 && parts.every(Number.isFinite);
+};
+
+const normalizeCoordinates = (source: any, fallback: any = [0, 0]) => {
+  const sourceCoordinates = Array.isArray(source?.coordinates)
+    ? source.coordinates
+    : Array.isArray(source)
+      ? source
+      : null;
+
+  if (
+    sourceCoordinates?.length >= 2 &&
+    isFiniteCoordinate(sourceCoordinates[0]) &&
+    isFiniteCoordinate(sourceCoordinates[1])
+  ) {
+    return [Number(sourceCoordinates[0]), Number(sourceCoordinates[1])];
+  }
+
+  if (isCoordinatePairString(source)) {
+    const [lat, lng] = source.split(",").map((item) => Number(item.trim()));
+    return [lng, lat];
+  }
+
+  if (
+    Array.isArray(fallback) &&
+    fallback.length >= 2 &&
+    isFiniteCoordinate(fallback[0]) &&
+    isFiniteCoordinate(fallback[1])
+  ) {
+    return [Number(fallback[0]), Number(fallback[1])];
+  }
+
+  return [0, 0];
+};
+
+const normalizeLocationForForm = (source: any, fallback: any) => {
+  const sourceLocation =
+    source && typeof source === "object" && !Array.isArray(source) ? source : {};
+  const fallbackLocation = fallback || {};
+
+  return {
+    ...fallbackLocation,
+    ...sourceLocation,
+    address:
+      sourceLocation.address ||
+      (!isCoordinatePairString(source) && typeof source === "string" ? source : "") ||
+      fallbackLocation.address ||
+      "",
+    city: sourceLocation.city || fallbackLocation.city || "",
+    state: sourceLocation.state || fallbackLocation.state || "",
+    postalCode: sourceLocation.postalCode || fallbackLocation.postalCode || "",
+    country: sourceLocation.country || fallbackLocation.country || "",
+    coordinates: normalizeCoordinates(source, fallbackLocation.coordinates),
+  };
+};
+
+const normalizeMultipleLocationsForForm = (source: any, fallback: any) => {
+  const locations = Array.isArray(source) ? source : fallback;
+  if (!Array.isArray(locations)) return [];
+
+  return locations.map((location, index) =>
+    normalizeLocationForForm(location, fallback?.[index] || fallback?.[0] || {})
+  );
+};
+
+const normalizeStringArray = (source: any) => {
+  if (Array.isArray(source)) {
+    return source
+      .map((item) => (typeof item === "string" ? item.trim() : String(item || "").trim()))
+      .filter(Boolean);
+  }
+
+  if (typeof source === "string") {
+    return source
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+};
+
+const normalizeShopDataForForm = (shopData: any) => {
+  const defaults = createEmptyShopFormData();
+
+  return {
+    ...defaults,
+    ...shopData,
+    tags: normalizeStringArray(shopData?.tags),
+    categories: normalizeStringArray(shopData?.categories),
+    paymentMethods: normalizeStringArray(shopData?.paymentMethods),
+    description: shopData?.description || defaults.description,
+    about: shopData?.about || shopData?.description || defaults.about,
+    gstNumber: shopData?.gstNumber || defaults.gstNumber,
+    returnPolicy: shopData?.returnPolicy || defaults.returnPolicy,
+    location: normalizeLocationForForm(shopData?.location, defaults.location),
+    multipleLocations: normalizeMultipleLocationsForForm(
+      shopData?.multipleLocations,
+      defaults.multipleLocations
+    ),
+    contactInfo: {
+      ...defaults.contactInfo,
+      ...(shopData?.contactInfo || {}),
+      socialMedia: {
+        ...defaults.contactInfo.socialMedia,
+        ...(shopData?.contactInfo?.socialMedia || {}),
+      },
+    },
+    bankDetails: {
+      ...defaults.bankDetails,
+      ...(shopData?.bankDetails || {}),
+    },
+  };
+};
+
 const ShopForm = observer(() => {
   const [initialValues, setInitialValues] = useState(() => createEmptyShopFormData());
   const [activeSection, setActiveSection] = useState(0);
@@ -142,7 +265,7 @@ const ShopForm = observer(() => {
   const {
     companyStore: { updateCompanyDetails, createCompany },
     auth: { openNotification, user },
-    shopStore: { getSingleShop },
+    shopStore: { getSingleShop, getSingleShopById },
   } = stores;
 
   const { shopTitle } = useParams();
@@ -176,23 +299,27 @@ const ShopForm = observer(() => {
 
       // If user has company, fetch data and switch to update mode
       try {
-        const data = await getSingleShop({
-          title: user?.company?.name,
-          status: user?.company?.shopStatus,
-        });
+        const companyId = user?.company?._id || (typeof user?.company === "string" ? user.company : "");
+        const data = companyId
+          ? await getSingleShopById(companyId)
+          : await getSingleShop({
+              title: user?.company?.name,
+              status: user?.company?.shopStatus,
+            });
 
         if (!data?.data) {
           // Fallback to creation mode if not found (shouldn't happen if user.company exists, but safe fallback)
           setIsUpdateMode(false);
         } else {
           setIsUpdateMode(true);
-          const coverImage = data.data.coverImage?.url ? { file: [data.data.coverImage] } : { file: [] };
-          const logo = data.data.logo?.url ? { file: [data.data.logo] } : { file: [] };
-          const gallery = Array.isArray(data.data.gallery)
-            ? data.data.gallery.map((item) => ({ file: item.file?.url ? [item.file] : [], title: item.title || "" }))
+          const shopData = normalizeShopDataForForm(data.data);
+          const coverImage = shopData.coverImage?.url ? { file: [shopData.coverImage] } : { file: [] };
+          const logo = shopData.logo?.url ? { file: [shopData.logo] } : { file: [] };
+          const gallery = Array.isArray(shopData.gallery)
+            ? shopData.gallery.map((item) => ({ file: item.file?.url ? [item.file] : [], title: item.title || "" }))
             : [];
 
-          setInitialValues((prev) => ({ ...prev, ...data.data, coverImage, logo, gallery }));
+          setInitialValues({ ...shopData, coverImage, logo, gallery });
         }
       } catch {
         // If error (e.g. 404), assume creation mode is safer than blocking
@@ -206,7 +333,7 @@ const ShopForm = observer(() => {
     if (user) {
       fetchShopData();
     }
-  }, [shopTitle, getSingleShop, user, user?.company]);
+  }, [shopTitle, getSingleShop, getSingleShopById, user, user?.company]);
 
   const handleImageProcessing = async (imageFile, isAdd, isDeleted) => {
     if (imageFile && imageFile.length !== 0 && isAdd) {
@@ -383,6 +510,8 @@ const ShopForm = observer(() => {
             onSubmit={onSubmit}
           >
             {({ values, errors, setFieldValue, isSubmitting, submitForm }) => {
+              const ActiveSectionComponent = sections[activeSection].component;
+
               // Debug validation errors
               if (Object.keys(errors).length > 0 && showError) {
                 // eslint-disable-next-line no-console
@@ -393,7 +522,12 @@ const ShopForm = observer(() => {
                 <Form>
                   <VStack spacing={4} align="stretch">
                     <SectionHeader activeSection={activeSection} sections={sections} />
-                    {sections[activeSection].component({ values, errors, setFieldValue, showError })}
+                    <ActiveSectionComponent
+                      values={values}
+                      errors={errors}
+                      setFieldValue={setFieldValue}
+                      showError={showError}
+                    />
 
                     {/* Inline Save Section */}
                     <Flex justify="flex-end">
