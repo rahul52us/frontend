@@ -281,7 +281,7 @@ const ShopForm = observer(() => {
       const formData = await buildCompanyPayload(values);
 
       if (isUpdateMode) {
-        await updateCompanyDetails({ ...formData, _id: user?.company?._id, shopStatus: "active" });
+        await updateCompanyDetails({ ...formData, _id: user?.company?._id });
         openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
       } else {
         const createData = { ...formData };

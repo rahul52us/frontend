@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
 import styled from 'styled-components';
 import stores from '../../store/stores';
 // import { authenticastion } from '../../config/utils/routes';
@@ -39,6 +39,14 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     themeConfig.colors.custom.light.primary,
     themeConfig.colors.custom.dark.primary
   );
+  const isSuperAdmin =
+    user?.type === 'superAdmin' ||
+    user?.role === 'superAdmin' ||
+    (Array.isArray(user?.role) && user.role.includes('superAdmin'));
+  const shopStatus =
+    user?.company && typeof user.company === 'object'
+      ? user.company.shopStatus
+      : null;
 
   const [isMounted, setIsMounted] = useState(false);
   const [runtimeTopInset, setRuntimeTopInset] = useState(0);
@@ -85,6 +93,36 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     );
   }
 
+  const shopStatusBanner = (() => {
+    if (isSuperAdmin) return null;
+
+    switch (shopStatus) {
+      case 'pending':
+        return {
+          status: 'warning' as const,
+          title: 'Shop under review',
+          description:
+            "Your shop has been created and is under review. Your shop and products won't be visible to buyers until an admin approves it. You can still update your shop details and prepare your inventory.",
+        };
+      case 'inactive':
+        return {
+          status: 'error' as const,
+          title: 'Shop inactive',
+          description:
+            "Your shop is currently inactive. Your shop and products are hidden from buyers until an admin reactivates it.",
+        };
+      case 'suspended':
+        return {
+          status: 'error' as const,
+          title: 'Shop suspended',
+          description:
+            'Your shop is currently suspended. Your shop and products are hidden from buyers while this status is active. Please contact admin or support for help.',
+        };
+      default:
+        return null;
+    }
+  })();
+
   return user ? (
     <Box
     >
@@ -119,6 +157,22 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             $sizeStatus={sizeStatus}
             $runtimeTopInset={runtimeTopInset}
           >
+            {shopStatusBanner ? (
+              <Alert
+                status={shopStatusBanner.status}
+                variant="left-accent"
+                borderRadius="xl"
+                mb={4}
+                alignItems="flex-start"
+                boxShadow="sm"
+              >
+                <AlertIcon mt={1} />
+                <Box>
+                  <AlertTitle>{shopStatusBanner.title}</AlertTitle>
+                  <AlertDescription>{shopStatusBanner.description}</AlertDescription>
+                </Box>
+              </Alert>
+            ) : null}
             {children}
           </ContentContainer>
         </Container>

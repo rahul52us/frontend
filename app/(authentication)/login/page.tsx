@@ -316,7 +316,7 @@ const LoginFormContent = observer(() => {
       const redirect = searchParams.get("redirect");
 
       if (dt?.role === "superAdmin") {
-        router.push("/super-admin/dashboard");
+        router.push("/dashboard/super-admin/index");
       } else if (dt?.role === "seller") {
         router.push("/dashboard/shop");
       } else if (nextAction === "complete_seller_shop" || onboardingState === "seller_pending_shop") {

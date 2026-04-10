@@ -132,6 +132,7 @@ type BuyerSaleRecord = {
 };
 
 type SaleFormItem = {
+  itemSource: "catalog" | "manual";
   productId?: string;
   itemName: string;
   quantity: string;
@@ -230,6 +231,7 @@ const defaultLedgerSummary: LedgerSummary = {
 };
 
 const defaultSaleFormItem = (): SaleFormItem => ({
+  itemSource: "manual",
   productId: "",
   itemName: "",
   quantity: "1",
@@ -466,26 +468,26 @@ const CustomersTab: React.FC = observer(() => {
   const oppositeOutstandingLabel = isSupplierTab ? "You will get" : "You will give";
   const mobileLeftSummary = isSupplierTab
     ? {
-        label: oppositeOutstandingLabel,
-        value: buyerOverview.receivable,
-        color: "green.500",
-      }
+      label: oppositeOutstandingLabel,
+      value: buyerOverview.receivable,
+      color: "green.500",
+    }
     : {
-        label: oppositeOutstandingLabel,
-        value: buyerOverview.payable,
-        color: "red.500",
-      };
+      label: oppositeOutstandingLabel,
+      value: buyerOverview.payable,
+      color: "red.500",
+    };
   const mobileRightSummary = isSupplierTab
     ? {
-        label: outstandingHeadlineLabel,
-        value: buyerOverview.payable,
-        color: "red.500",
-      }
+      label: outstandingHeadlineLabel,
+      value: buyerOverview.payable,
+      color: "red.500",
+    }
     : {
-        label: outstandingHeadlineLabel,
-        value: buyerOverview.receivable,
-        color: "green.500",
-      };
+      label: outstandingHeadlineLabel,
+      value: buyerOverview.receivable,
+      color: "green.500",
+    };
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
@@ -630,9 +632,9 @@ const CustomersTab: React.FC = observer(() => {
   const canDownloadLedgerInvoice = (entry?: BuyerLedgerEntry | null) =>
     Boolean(
       entry &&
-        entry.status !== "reversed" &&
-        selectedPartyType !== "supplier" &&
-        (Boolean(getLinkedSaleRecordIdFromEntry(entry)) || entry.direction === "debit"),
+      entry.status !== "reversed" &&
+      selectedPartyType !== "supplier" &&
+      (Boolean(getLinkedSaleRecordIdFromEntry(entry)) || entry.direction === "debit"),
     );
   const getBuyerLedgerDirectionLabel = (
     direction: LedgerDirection,
@@ -1091,10 +1093,10 @@ const CustomersTab: React.FC = observer(() => {
             deliveryResult === "savedPrompted"
               ? "Invoice saved and ready to open"
               : deliveryResult === "saved"
-              ? "Invoice saved to device"
-              : deliveryResult === "shared"
-                ? "Invoice ready to share"
-                : "Invoice downloaded",
+                ? "Invoice saved to device"
+                : deliveryResult === "shared"
+                  ? "Invoice ready to share"
+                  : "Invoice downloaded",
           description:
             deliveryResult === "savedPrompted" || deliveryResult === "saved"
               ? "Saved in Documents/BusinessSahayata/Invoices."
@@ -1147,12 +1149,12 @@ const CustomersTab: React.FC = observer(() => {
                   ? "Invoice saved and ready to open"
                   : "Ledger invoice saved and ready to open"
                 : deliveryResult === "saved"
-                ? saleRecordId
-                  ? "Invoice saved to device"
-                  : "Ledger invoice saved to device"
-                : saleRecordId
-                  ? "Invoice downloaded"
-                  : "Ledger invoice downloaded",
+                  ? saleRecordId
+                    ? "Invoice saved to device"
+                    : "Ledger invoice saved to device"
+                  : saleRecordId
+                    ? "Invoice downloaded"
+                    : "Ledger invoice downloaded",
           description:
             deliveryResult === "savedPrompted" || deliveryResult === "saved"
               ? "Saved in Documents/BusinessSahayata/Invoices."
@@ -1800,10 +1802,10 @@ const CustomersTab: React.FC = observer(() => {
       items: prev.items.map((item, idx) =>
         idx === index
           ? {
-              ...item,
-              [key]: value,
-              ...(key === "itemName" ? { productId: "" } : {}),
-            }
+            ...item,
+            [key]: value,
+            ...(key === "itemName" ? { productId: "", itemSource: "manual" as const } : {}),
+          }
           : item,
       ),
     }));
@@ -1815,14 +1817,15 @@ const CustomersTab: React.FC = observer(() => {
       items: prev.items.map((item, idx) =>
         idx === index
           ? {
-              ...item,
-              productId: product._id,
-              itemName: product.name,
-              unitPrice:
-                typeof product.price === "number" && Number.isFinite(product.price)
-                  ? String(product.price)
-                  : item.unitPrice,
-            }
+            ...item,
+            itemSource: "catalog",
+            productId: product._id,
+            itemName: product.name,
+            unitPrice:
+              typeof product.price === "number" && Number.isFinite(product.price)
+                ? String(product.price)
+                : item.unitPrice,
+          }
           : item,
       ),
     }));
@@ -1915,6 +1918,8 @@ const CustomersTab: React.FC = observer(() => {
       }
 
       sanitizedItems.push({
+        itemSource: item.itemSource || "manual",
+        productId: item.itemSource === "catalog" ? item.productId : undefined,
         itemName,
         quantity,
         unitPrice,
@@ -2358,9 +2363,9 @@ const CustomersTab: React.FC = observer(() => {
             <HStack justify="space-between" px={4} py={3} bg="#F8FBFF" borderTopWidth="1px" borderTopColor="#E5EEF9">
               <HStack spacing={2} color="#215E9D">
                 <Icon as={FiUsers} boxSize={4} />
-                  <Text fontSize="sm" fontWeight="700">
+                <Text fontSize="sm" fontWeight="700">
                   {total} {partyPluralLabel.toLowerCase()}
-                  </Text>
+                </Text>
               </HStack>
               <Text fontSize="xs" fontWeight="700" color="gray.500">
                 {buyerOverview.active} active
@@ -2649,75 +2654,75 @@ const CustomersTab: React.FC = observer(() => {
   );
 
   const ledgerTableData = ledgerEntries.map((entry) => ({
-      ...entry,
-      entryDate: entry.entryDate,
-      typeBadge: (
-        <Badge
-          colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"}
-          textTransform="capitalize"
-        >
-          {getLedgerEntryTypeLabel(entry.entryType)}
-        </Badge>
-      ),
-      directionBadge: (
-        <Badge
-          colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
-          textTransform="none"
-        >
-          {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
-        </Badge>
-      ),
-      amountDisplay: (
-        <Text color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)} fontWeight="bold">
-          {formatCurrency(entry.amount || 0)}
+    ...entry,
+    entryDate: entry.entryDate,
+    typeBadge: (
+      <Badge
+        colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"}
+        textTransform="capitalize"
+      >
+        {getLedgerEntryTypeLabel(entry.entryType)}
+      </Badge>
+    ),
+    directionBadge: (
+      <Badge
+        colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+        textTransform="none"
+      >
+        {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
+      </Badge>
+    ),
+    amountDisplay: (
+      <Text color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)} fontWeight="bold">
+        {formatCurrency(entry.amount || 0)}
+      </Text>
+    ),
+    balanceText: formatCurrency(entry.balanceAfter || 0),
+    referenceText: entry.referenceId ? (
+      <HStack spacing={1}>
+        <Text>{entry.referenceType || "manual"}: </Text>
+        <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
+          navigator.clipboard.writeText(entry.referenceId || '');
+          toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
+        }}>
+          {formatShortId(entry.referenceId)}
         </Text>
-      ),
-      balanceText: formatCurrency(entry.balanceAfter || 0),
-      referenceText: entry.referenceId ? (
-        <HStack spacing={1}>
-          <Text>{entry.referenceType || "manual"}: </Text>
-          <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
-              navigator.clipboard.writeText(entry.referenceId || '');
-              toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
-            }}>
-            {formatShortId(entry.referenceId)}
-          </Text>
-        </HStack>
+      </HStack>
+    ) : (
+      <Text>{entry.referenceType || "manual"}</Text>
+    ),
+    statusBadge: (
+      <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
+        {entry.status || "active"}
+      </Badge>
+    ),
+    reverseAction:
+      entry.status === "reversed" ? (
+        <Text color="gray.500">-</Text>
       ) : (
-        <Text>{entry.referenceType || "manual"}</Text>
-      ),
-      statusBadge: (
-        <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
-          {entry.status || "active"}
-        </Badge>
-      ),
-      reverseAction:
-        entry.status === "reversed" ? (
-          <Text color="gray.500">-</Text>
-        ) : (
-          <HStack spacing={2}>
-            {canDownloadLedgerInvoice(entry) && (
-              <Button
-                size="xs"
-                colorScheme="teal"
-                variant="outline"
-                isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-                onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-              >
-                Invoice
-              </Button>
-            )}
-            {entry.direction === "debit" && (
-              <Button size="xs" colorScheme="green" variant="outline" onClick={() => openPayModal(entry)}>
-                Pay
-              </Button>
-            )}
-            <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
-              Reverse
+        <HStack spacing={2}>
+          {canDownloadLedgerInvoice(entry) && (
+            <Button
+              size="xs"
+              colorScheme="teal"
+              variant="outline"
+              isLoading={invoiceDownloadingLedgerEntryId === entry._id}
+              onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
+            >
+              Invoice
             </Button>
-          </HStack>
-        ),
-    }));
+          )}
+          {entry.direction === "debit" && (
+            <Button size="xs" colorScheme="green" variant="outline" onClick={() => openPayModal(entry)}>
+              Pay
+            </Button>
+          )}
+          <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
+            Reverse
+          </Button>
+        </HStack>
+      ),
+  }));
 
   const ledgerColumns = [
     { headerName: "Date", key: "entryDate", type: "date" },
@@ -2773,57 +2778,57 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const saleTableData = saleRecords.map((record) => {
-      const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
-      const itemPreview =
-        itemsCount > 0
-          ? record.items
-              .slice(0, 2)
-              .map((item) => `${item.itemName} x ${item.quantity}`)
-              .join(", ")
-          : "-";
+    const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
+    const itemPreview =
+      itemsCount > 0
+        ? record.items
+          .slice(0, 2)
+          .map((item) => `${item.itemName} x ${item.quantity}`)
+          .join(", ")
+        : "-";
 
-      return {
-        ...record,
-        saleDate: record.saleDate,
-        itemsCount,
-        idDisplay: (
-          <Text
-            fontWeight="600"
-            color="blue.600"
-            cursor="pointer"
-            textDecoration="underline"
-            onClick={() => openSaleDetails(record)}
+    return {
+      ...record,
+      saleDate: record.saleDate,
+      itemsCount,
+      idDisplay: (
+        <Text
+          fontWeight="600"
+          color="blue.600"
+          cursor="pointer"
+          textDecoration="underline"
+          onClick={() => openSaleDetails(record)}
+        >
+          {record._id.slice(-6)}
+        </Text>
+      ),
+      itemPreview: itemsCount > 2 ? `${itemPreview} +${itemsCount - 2} more` : itemPreview,
+      grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
+      statusBadge: (
+        <Badge
+          colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
+          textTransform="capitalize"
+        >
+          {record.status}
+        </Badge>
+      ),
+      postAction:
+        record.status === "draft" && !record.ledgerEntryId ? (
+          <Button
+            size="xs"
+            colorScheme="blue"
+            variant="outline"
+            isLoading={postingSaleId === record._id}
+            onClick={() => handlePostSaleRecordToLedger(record._id)}
           >
-            {record._id.slice(-6)}
-          </Text>
+            Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
+          </Button>
+        ) : (
+          <Text color="gray.500">-</Text>
         ),
-        itemPreview: itemsCount > 2 ? `${itemPreview} +${itemsCount - 2} more` : itemPreview,
-        grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
-        statusBadge: (
-          <Badge
-            colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
-            textTransform="capitalize"
-          >
-            {record.status}
-          </Badge>
-        ),
-        postAction:
-          record.status === "draft" && !record.ledgerEntryId ? (
-            <Button
-              size="xs"
-              colorScheme="blue"
-              variant="outline"
-              isLoading={postingSaleId === record._id}
-              onClick={() => handlePostSaleRecordToLedger(record._id)}
-            >
-              Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
-            </Button>
-          ) : (
-            <Text color="gray.500">-</Text>
-          ),
-      };
-    });
-  
+    };
+  });
+
 
   const saleColumns = [
     { headerName: "Date", key: "saleDate", type: "date" },
@@ -3002,7 +3007,7 @@ const CustomersTab: React.FC = observer(() => {
                     minH="72px"
                   >
                     <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                    Date
+                      Date
                     </Text>
                     <Text fontSize="13px" color="#1F2937" fontWeight="700" mt={1}>
                       {formatDateTime(entry.entryDate)}
@@ -3181,9 +3186,9 @@ const CustomersTab: React.FC = observer(() => {
           const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
           const preview = itemsCount
             ? record.items
-                .slice(0, 2)
-                .map((item) => `${item.itemName} x ${item.quantity}`)
-                .join(", ")
+              .slice(0, 2)
+              .map((item) => `${item.itemName} x ${item.quantity}`)
+              .join(", ")
             : "-";
 
           return (
@@ -3333,34 +3338,34 @@ const CustomersTab: React.FC = observer(() => {
     const detailBalanceTone = isSelectedSupplier
       ? hasOutstanding
         ? {
-            bg: "#FEF2F2",
-            borderColor: "red.100",
-            labelColor: "red.700",
-            amountColor: "red.600",
-            label: "You Will Give",
-          }
+          bg: "#FEF2F2",
+          borderColor: "red.100",
+          labelColor: "red.700",
+          amountColor: "red.600",
+          label: "You Will Give",
+        }
         : {
-            bg: "#ECFDF5",
-            borderColor: "green.100",
-            labelColor: "green.700",
-            amountColor: "green.600",
-            label: "Supplier Advance",
-          }
+          bg: "#ECFDF5",
+          borderColor: "green.100",
+          labelColor: "green.700",
+          amountColor: "green.600",
+          label: "Supplier Advance",
+        }
       : hasOutstanding
         ? {
-            bg: "#EFF6FF",
-            borderColor: "blue.100",
-            labelColor: "blue.700",
-            amountColor: "blue.700",
-            label: "You Will Get",
-          }
+          bg: "#EFF6FF",
+          borderColor: "blue.100",
+          labelColor: "blue.700",
+          amountColor: "blue.700",
+          label: "You Will Get",
+        }
         : {
-            bg: "#FEF2F2",
-            borderColor: "red.100",
-            labelColor: "red.700",
-            amountColor: "red.600",
-            label: "Advance Balance",
-          };
+          bg: "#FEF2F2",
+          borderColor: "red.100",
+          labelColor: "red.700",
+          amountColor: "red.600",
+          label: "Advance Balance",
+        };
 
     return (
       <Box mx={-2} mt={-2} pb="132px" bg="#EEF5FF" minH="calc(100vh - 56px)">
@@ -3691,31 +3696,31 @@ const CustomersTab: React.FC = observer(() => {
                 ) : null}
               </HStack>
             </Box>
-              <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
-                {!isSelectedSupplier ? (
-                  <Button
-                    size="sm"
-                    leftIcon={<DownloadIcon />}
-                    colorScheme="teal"
-                    variant="solid"
-                    borderRadius="full"
-                    isLoading={invoiceDownloadingSaleId === saleRecord._id}
-                    onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
-                  >
-                    Download Invoice
-                  </Button>
-                ) : null}
-                <IconButton
-                  aria-label={`Copy ${selectedTransactionSingularLabel.toLowerCase()} ID`}
-                  icon={<CopyIcon />}
+            <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
+              {!isSelectedSupplier ? (
+                <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(saleRecord._id || "");
-                    toast({ title: `${selectedTransactionSingularLabel} ID Copied`, status: "success", duration: 1000, isClosable: true });
-                  }}
-                />
-              </VStack>
+                  leftIcon={<DownloadIcon />}
+                  colorScheme="teal"
+                  variant="solid"
+                  borderRadius="full"
+                  isLoading={invoiceDownloadingSaleId === saleRecord._id}
+                  onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
+                >
+                  Download Invoice
+                </Button>
+              ) : null}
+              <IconButton
+                aria-label={`Copy ${selectedTransactionSingularLabel.toLowerCase()} ID`}
+                icon={<CopyIcon />}
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(saleRecord._id || "");
+                  toast({ title: `${selectedTransactionSingularLabel} ID Copied`, status: "success", duration: 1000, isClosable: true });
+                }}
+              />
+            </VStack>
           </HStack>
         </Box>
 
@@ -3729,9 +3734,9 @@ const CustomersTab: React.FC = observer(() => {
             </Text>
           </Box>
           <Box p={3} borderWidth="1px" borderColor="green.200" borderRadius="xl" bg="green.50">
-              <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
-                {isSelectedSupplier ? "Paid Out" : "Paid"}
-              </Text>
+            <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
+              {isSelectedSupplier ? "Paid Out" : "Paid"}
+            </Text>
             <Text fontSize="lg" fontWeight="800" color="green.800">
               {formatCurrency(summary.paidAmount)}
             </Text>
@@ -3745,9 +3750,9 @@ const CustomersTab: React.FC = observer(() => {
             </Text>
           </Box>
           <Box p={3} borderWidth="1px" borderColor="blue.200" borderRadius="xl" bg="blue.50">
-              <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
-                {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
-              </Text>
+            <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
+              {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
+            </Text>
             <Text fontSize="lg" fontWeight="800" color="blue.800">
               {formatCurrency(summary.remainingDue)}
             </Text>
@@ -4735,7 +4740,7 @@ const CustomersTab: React.FC = observer(() => {
       ) : (
         <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
           <ModalOverlay />
-            <ModalContent>
+          <ModalContent>
             <ModalHeader>Add {partySingularLabel}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>

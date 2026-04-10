@@ -138,7 +138,6 @@ const ShopsPage = observer(() => {
                     name: editingShop?.name || "",
                     description: editingShop?.description || "",
                     shopStatus: editingShop?.shopStatus || "active",
-                    isActive: editingShop?.isActive || false,
                     contactInfo: {
                         phone: editingShop?.contactInfo?.phone || "",
                         email: editingShop?.contactInfo?.email || "",

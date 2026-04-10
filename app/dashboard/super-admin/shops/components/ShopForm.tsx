@@ -1,8 +1,10 @@
 
 import React from "react";
 import {
+    Badge,
     Button,
     FormControl,
+    FormHelperText,
     FormLabel,
     Input,
     VStack,
@@ -14,7 +16,7 @@ import {
     SimpleGrid,
     Stack,
     Text,
-    Switch
+    HStack
 } from "@chakra-ui/react";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
@@ -29,12 +31,53 @@ interface ShopFormProps {
     isLoading?: boolean;
 }
 
+const getShopStatusMeta = (status?: string) => {
+    switch (status) {
+        case "active":
+            return {
+                label: "Active",
+                colorScheme: "green",
+                bg: "green.50",
+                border: "green.200",
+                focus: "green.400",
+                description: "Shop and products are visible to buyers across the app.",
+            };
+        case "inactive":
+            return {
+                label: "Inactive",
+                colorScheme: "orange",
+                bg: "orange.50",
+                border: "orange.200",
+                focus: "orange.400",
+                description: "Shop and products stay hidden until the shop is reactivated.",
+            };
+        case "suspended":
+            return {
+                label: "Suspended",
+                colorScheme: "red",
+                bg: "red.50",
+                border: "red.200",
+                focus: "red.400",
+                description: "Shop and products are hidden while the suspension is active.",
+            };
+        case "pending":
+        default:
+            return {
+                label: "Pending Review",
+                colorScheme: "yellow",
+                bg: "yellow.50",
+                border: "yellow.200",
+                focus: "yellow.400",
+                description: "Shop exists, but it stays hidden from buyers until approved.",
+            };
+    }
+};
+
 const ShopValidationSchema = Yup.object().shape({
     name: Yup.string().required("Shop name is required"),
     description: Yup.string(),
     shopStatus: Yup.string().required("Status is required"),
     remarks: Yup.string(), // Added validation for remarks
-    isActive: Yup.boolean(), // Added validation for isActive
     contactInfo: Yup.object().shape({ // Added validation for contactInfo
         phone: Yup.string().matches(/^[0-9]+$/, "Phone number must be digits only").min(10, "Phone number must be at least 10 digits").max(15, "Phone number must be at most 15 digits").optional(),
         email: Yup.string().email("Invalid email address").optional(),
@@ -127,7 +170,7 @@ const ShopForm: React.FC<ShopFormProps> = ({
                             {/* Status Section */}
                             <Box>
                                 <Text fontWeight="bold" fontSize="lg" mb={4}>Status & Visibility</Text>
-                                <SimpleGrid columns={2} spacing={6}>
+                                <Box>
                                     <Field name="shopStatus">
                                         {({ field, form }: any) => (
                                             <FormControl
@@ -136,31 +179,51 @@ const ShopForm: React.FC<ShopFormProps> = ({
                                                 }
                                                 isRequired
                                             >
-                                                <FormLabel>Shop Status</FormLabel>
-                                                <Select {...field} placeholder="Select status">
-                                                    <option value="active">Active</option>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="suspended">Suspended</option>
-                                                    <option value="inactive">Inactive</option> {/* Added inactive option */}
-                                                </Select>
+                                                <HStack justify="space-between" align="center" mb={2}>
+                                                    <FormLabel mb="0">Shop Status</FormLabel>
+                                                    <Badge
+                                                        colorScheme={getShopStatusMeta(field.value).colorScheme}
+                                                        px={3}
+                                                        py={1}
+                                                        borderRadius="full"
+                                                        fontSize="0.75rem"
+                                                    >
+                                                        {getShopStatusMeta(field.value).label}
+                                                    </Badge>
+                                                </HStack>
+                                                {(() => {
+                                                    const statusMeta = getShopStatusMeta(field.value);
+                                                    return (
+                                                        <>
+                                                            <Select
+                                                                {...field}
+                                                                placeholder="Select status"
+                                                                size="lg"
+                                                                bg="white"
+                                                                borderWidth="2px"
+                                                                borderColor={statusMeta.border}
+                                                                focusBorderColor={statusMeta.focus}
+                                                                fontWeight="600"
+                                                                _hover={{ borderColor: statusMeta.focus }}
+                                                            >
+                                                                <option value="active">Active</option>
+                                                                <option value="pending">Pending</option>
+                                                                <option value="suspended">Suspended</option>
+                                                                <option value="inactive">Inactive</option>
+                                                            </Select>
+                                                            <FormHelperText mt={2} color="gray.600">
+                                                                {statusMeta.description}
+                                                            </FormHelperText>
+                                                        </>
+                                                    );
+                                                })()}
                                                 <FormErrorMessage>
                                                     {form.errors.shopStatus}
                                                 </FormErrorMessage>
                                             </FormControl>
                                         )}
                                     </Field>
-
-                                    <Field name="isActive">
-                                        {({ field }: any) => (
-                                            <FormControl display="flex" alignItems="center" mt={8}>
-                                                <FormLabel htmlFor="isActive" mb="0">
-                                                    Is Active?
-                                                </FormLabel>
-                                                <Switch id="isActive" {...field} isChecked={field.value} />
-                                            </FormControl>
-                                        )}
-                                    </Field>
-                                </SimpleGrid>
+                                </Box>
 
                                 <Box mt={4}>
                                     <Field name="remarks">
