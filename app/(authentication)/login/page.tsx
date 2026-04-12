@@ -354,8 +354,17 @@ const LoginFormContent = observer(() => {
       bgGradient="linear(to-b, #F6FAFD 0%, #FFFFFF 42%, #EEF9F7 100%)"
       pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
       pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
+      display="flex"
+      alignItems="center"
     >
-      <Container maxW={{ base: "full", md: "container.sm", xl: "640px" }} px={{ base: 4, md: 6 }}>
+      <Container
+        maxW={{ base: "full", md: "container.sm", xl: "640px" }}
+        px={{ base: 4, md: 6 }}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minH={{ base: "calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 42px)", md: "calc(100vh - 48px)" }}
+      >
         <MotionBox
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={
@@ -364,13 +373,12 @@ const LoginFormContent = observer(() => {
               : { opacity: 1, x: 0, y: 0, scale: 1 }
           }
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          style={{ minHeight: "100%" }}
+          style={{ width: "100%" }}
         >
           <Box
             {...panelStyles}
             px={{ base: 5, md: 7, xl: 8 }}
             py={{ base: 5, md: 7, xl: 8 }}
-            mt={{ base: 6, md: 10 }}
           >
             <Box as="form" onSubmit={handleFormSubmit}>
               <VStack align="stretch" spacing={7}>
@@ -546,13 +554,22 @@ const LoginFormFallback = () => (
     bgGradient="linear(to-b, #F6FAFD 0%, #FFFFFF 42%, #EEF9F7 100%)"
     pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
     pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
+    display="flex"
+    alignItems="center"
   >
-    <Container maxW={{ base: "full", md: "container.sm", xl: "640px" }} px={{ base: 4, md: 6 }}>
+    <Container
+      maxW={{ base: "full", md: "container.sm", xl: "640px" }}
+      px={{ base: 4, md: 6 }}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      minH={{ base: "calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 42px)", md: "calc(100vh - 48px)" }}
+    >
         <Box
           {...panelStyles}
           px={{ base: 5, md: 7, xl: 8 }}
           py={{ base: 5, md: 7, xl: 8 }}
-          mt={{ base: 6, md: 10 }}
+          w="full"
         >
         <VStack align="stretch" spacing={7}>
           <Stack

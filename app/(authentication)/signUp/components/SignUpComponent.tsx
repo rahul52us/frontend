@@ -1540,9 +1540,12 @@ const renderSellerContactStep = () => (
 
   return (
     <MotionBox
-      minH={{ base: "100vh", md: "auto" }}
+      minH="100vh"
       bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
-      py={{ base: 0, md: 2, xl: 4 }}
+      pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
+      pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
+      display="flex"
+      alignItems="center"
       initial={{ opacity: 0, y: 24, scale: 0.98 }}
       animate={
         isRouteTransitioning
@@ -1551,14 +1554,22 @@ const renderSellerContactStep = () => (
       }
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
     >
-      <Container maxW={{ base: "full", md: "container.lg", xl: "760px" }} px={0}>
+      <Container
+        maxW={{ base: "full", md: "container.lg", xl: "760px" }}
+        px={{ base: 4, md: 6 }}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minH={{ base: "calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 42px)", md: "calc(100vh - 48px)" }}
+      >
         <Box
           {...panelStyles}
-          borderRadius={{ base: "none", md: "3xl" }}
-          boxShadow={{ base: "none", md: panelStyles.boxShadow }}
-          borderWidth={{ base: "0px", md: panelStyles.borderWidth }}
+          borderRadius={{ base: "3xl", md: "3xl" }}
+          boxShadow={panelStyles.boxShadow}
+          borderWidth={panelStyles.borderWidth}
           px={{ base: 5, md: 8, xl: 9 }}
           py={{ base: 6, md: 8, xl: 9 }}
+          w="full"
         >
           <VStack align="stretch" spacing={8}>
             <Flex justify="space-between" align={{ base: "start", sm: "center" }} direction={{ base: "column", sm: "row" }} gap={3}>
