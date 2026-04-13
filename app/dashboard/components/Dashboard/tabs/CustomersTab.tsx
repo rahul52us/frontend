@@ -18,13 +18,6 @@ import {
   InputGroup,
   InputLeftElement,
   IconButton,
-  Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -62,6 +55,7 @@ import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
 
 type BuyerProfile = {
   _id: string;
@@ -3976,6 +3970,319 @@ const CustomersTab: React.FC = observer(() => {
     );
   };
 
+  const renderLedgerEntryFormFields = () => (
+    <VStack spacing={3}>
+      <FormControl>
+        <FormLabel>Entry Type</FormLabel>
+        <Select
+          value={ledgerFormValues.entryType}
+          onChange={(e) => {
+            const nextType = e.target.value as LedgerEntryType;
+            setLedgerFormValues((prev) => ({
+              ...prev,
+              entryType: nextType,
+              direction: nextType === "payment" ? "credit" : nextType === "sale" ? "debit" : prev.direction,
+            }));
+          }}
+        >
+          <option value="sale">{isSelectedSupplier ? "Purchase" : "Sale"}</option>
+          <option value="payment">{isSelectedSupplier ? "Payment Sent" : "Payment"}</option>
+          <option value="adjustment">Adjustment</option>
+        </Select>
+      </FormControl>
+
+      <FormControl isDisabled={ledgerFormValues.entryType !== "adjustment"}>
+        <FormLabel>Direction</FormLabel>
+        <Select
+          value={
+            ledgerFormValues.entryType === "adjustment"
+              ? ledgerFormValues.direction
+              : ledgerFormValues.entryType === "payment"
+                ? "credit"
+                : "debit"
+          }
+          onChange={(e) =>
+            setLedgerFormValues((prev) => ({
+              ...prev,
+              direction: e.target.value as LedgerDirection,
+            }))
+          }
+        >
+          <option value="debit">{isSelectedSupplier ? "You will give more" : "You will get more"}</option>
+          <option value="credit">{isSelectedSupplier ? "You will pay / reduce due" : "You will give credit / reduce due"}</option>
+        </Select>
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Amount</FormLabel>
+        <Input
+          type="number"
+          min="0"
+          step="0.01"
+          value={ledgerFormValues.amount}
+          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
+          placeholder="Enter amount"
+        />
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Reference Type</FormLabel>
+        <Select
+          value={ledgerFormValues.referenceType}
+          onChange={(e) =>
+            setLedgerFormValues((prev) => ({
+              ...prev,
+              referenceType: e.target.value as LedgerReferenceType,
+            }))
+          }
+        >
+          <option value="manual">Manual</option>
+          <option value="order">Order</option>
+          <option value="refund">Refund</option>
+          <option value="import">Import</option>
+        </Select>
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Reference ID (optional)</FormLabel>
+        <Input
+          value={ledgerFormValues.referenceId}
+          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, referenceId: e.target.value }))}
+          placeholder="orderId / refundId / rowId"
+        />
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Entry Date (optional)</FormLabel>
+        <Input
+          type="datetime-local"
+          value={ledgerFormValues.entryDate}
+          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
+        />
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Notes (optional)</FormLabel>
+        <Input
+          value={ledgerFormValues.notes}
+          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, notes: e.target.value }))}
+          placeholder="Optional remarks"
+        />
+      </FormControl>
+    </VStack>
+  );
+
+  const renderSaleRecordFormFields = () => (
+    <VStack spacing={4} align="stretch">
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+        <FormControl>
+          <FormLabel>{isSelectedSupplier ? "Purchase" : "Sale"} Date (optional)</FormLabel>
+          <Input
+            type="datetime-local"
+            value={saleFormValues.saleDate}
+            onChange={(e) => setSaleFormValues((prev) => ({ ...prev, saleDate: e.target.value }))}
+          />
+        </FormControl>
+
+        <FormControl>
+          <FormLabel>Notes (optional)</FormLabel>
+          <Input
+            value={saleFormValues.notes}
+            onChange={(e) => setSaleFormValues((prev) => ({ ...prev, notes: e.target.value }))}
+            placeholder={isSelectedSupplier ? "Purchase remarks" : "Sale remarks"}
+          />
+        </FormControl>
+      </SimpleGrid>
+
+      <Checkbox
+        isChecked={saleFormValues.postToLedger}
+        onChange={(e) => setSaleFormValues((prev) => ({ ...prev, postToLedger: e.target.checked }))}
+      >
+        Post {isSelectedSupplier ? "purchase" : "sale"} to ledger now
+      </Checkbox>
+
+      <Divider />
+
+      <VStack align="stretch" spacing={4}>
+        {saleFormValues.items.map((item, index) => (
+          <Box key={`sale-item-${index}`} borderWidth="1px" borderRadius="md" p={3}>
+            <SimpleGrid columns={{ base: 1, md: 2, xl: 6 }} spacing={3}>
+              <FormControl position="relative" gridColumn={{ base: "auto", md: "span 2 / span 2" }}>
+                <FormLabel>Item Name</FormLabel>
+                <Input
+                  value={item.itemName}
+                  onChange={(e) => updateSaleItem(index, "itemName", e.target.value)}
+                  onFocus={() => setActiveSaleItemIndex(index)}
+                  onBlur={() => {
+                    window.setTimeout(() => {
+                      setActiveSaleItemIndex((current) => (current === index ? null : current));
+                    }, 120);
+                  }}
+                  placeholder="e.g. Cement Bag"
+                  autoComplete="off"
+                />
+                {activeSaleItemIndex === index && item.itemName.trim() ? (
+                  <Box
+                    position="absolute"
+                    top="calc(100% + 8px)"
+                    left={0}
+                    right={0}
+                    bg="white"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="lg"
+                    boxShadow="xl"
+                    zIndex={20}
+                    overflow="hidden"
+                    maxH="320px"
+                    overflowY="auto"
+                  >
+                    {saleItemSuggestionsLoading ? (
+                      <Flex align="center" justify="center" py={4} gap={2}>
+                        <Spinner size="sm" color="teal.500" />
+                        <Text fontSize="sm" color="gray.600">
+                          Searching your inventory...
+                        </Text>
+                      </Flex>
+                    ) : saleItemSuggestions.length > 0 ? (
+                      <VStack align="stretch" spacing={0}>
+                        {saleItemSuggestions.map((product, suggestionIndex) => (
+                          <Box
+                            key={product._id}
+                            px={3}
+                            py={3}
+                            cursor="pointer"
+                            bg="white"
+                            borderTopWidth={suggestionIndex === 0 ? "0" : "1px"}
+                            borderColor="gray.100"
+                            _hover={{ bg: "gray.50" }}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              applySuggestedProductToSaleItem(index, product);
+                            }}
+                          >
+                            <Flex justify="space-between" align="flex-start" gap={3}>
+                              <Box minW={0}>
+                                <Text
+                                  fontSize="sm"
+                                  fontWeight="semibold"
+                                  color="gray.800"
+                                  whiteSpace="normal"
+                                  lineHeight="short"
+                                >
+                                  {product.name}
+                                </Text>
+                                <Text
+                                  fontSize="xs"
+                                  color="gray.500"
+                                  whiteSpace="normal"
+                                  lineHeight="short"
+                                  mt={1}
+                                >
+                                  {[product.brand, product.sku ? `SKU: ${product.sku}` : ""]
+                                    .filter(Boolean)
+                                    .join(" | ") || "Inventory product"}
+                                </Text>
+                              </Box>
+                              <Box textAlign="right" flexShrink={0}>
+                                <Text fontSize="sm" fontWeight="semibold" color="teal.600">
+                                  {formatCurrency(Number(product.price || 0))}
+                                </Text>
+                                {typeof product.stock === "number" && Number.isFinite(product.stock) ? (
+                                  <Text fontSize="xs" color="gray.500">
+                                    Stock {product.stock}
+                                  </Text>
+                                ) : null}
+                              </Box>
+                            </Flex>
+                          </Box>
+                        ))}
+                      </VStack>
+                    ) : (
+                      <Box px={3} py={3}>
+                        <Text fontSize="sm" color="gray.600">
+                          No matching inventory items found.
+                        </Text>
+                      </Box>
+                    )}
+                  </Box>
+                ) : null}
+                {item.productId ? (
+                  <Text mt={2} fontSize="xs" color="teal.600" fontWeight="medium">
+                    Price auto-filled from your inventory. You can still edit this row.
+                  </Text>
+                ) : null}
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Quantity</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.quantity}
+                  onChange={(e) => updateSaleItem(index, "quantity", e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Unit Price</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.unitPrice}
+                  onChange={(e) => updateSaleItem(index, "unitPrice", e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Discount</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.discount}
+                  onChange={(e) => updateSaleItem(index, "discount", e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Tax</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.tax}
+                  onChange={(e) => updateSaleItem(index, "tax", e.target.value)}
+                />
+              </FormControl>
+            </SimpleGrid>
+
+            <Flex mt={3} justify="space-between" align="center">
+              <Text fontSize="sm" color="gray.600">
+                Line Total: {formatCurrency(calculateSaleLineTotal(item))}
+              </Text>
+              <Button
+                size="xs"
+                colorScheme="red"
+                variant="ghost"
+                onClick={() => removeSaleItem(index)}
+                isDisabled={saleFormValues.items.length <= 1}
+              >
+                Remove
+              </Button>
+            </Flex>
+          </Box>
+        ))}
+      </VStack>
+
+      <Button size="sm" variant="outline" leftIcon={<AddIcon />} alignSelf="flex-start" onClick={addSaleItem}>
+        Add Item Row
+      </Button>
+    </VStack>
+  );
+
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
   const showMobileBuyerManagement = !selectedLedgerBuyer && useCompactBuyerView;
   const showMobileLedgerDetail = Boolean(selectedLedgerBuyer && useCompactLedgerView);
@@ -4661,82 +4968,79 @@ const CustomersTab: React.FC = observer(() => {
       </Modal>
 
       {useCompactBuyerView ? (
-        <Drawer isOpen={isOpen} placement="bottom" onClose={closeBuyerModal} size="xl">
-          <DrawerOverlay bg="blackAlpha.500" />
-          <DrawerContent borderTopRadius="24px" overflow="hidden">
-            <DrawerHeader borderBottomWidth="1px" borderBottomColor="gray.100" fontWeight="800">
-              Add {partySingularLabel}
-            </DrawerHeader>
-            <DrawerCloseButton top={4} right={4} />
-            <DrawerBody py={4}>
-              <VStack spacing={4} align="stretch">
-                <FormControl>
-                  <FormLabel>Full Name</FormLabel>
-                  <Input
-                    value={formValues.fullName}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
-                    placeholder={`${partySingularLabel} full name`}
-                    h="52px"
-                    borderRadius="16px"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Phone</FormLabel>
-                  <Input
-                    value={formValues.phone}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
-                    placeholder="10-digit or +country code"
-                    h="52px"
-                    borderRadius="16px"
-                    inputMode="tel"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Email</FormLabel>
-                  <Input
-                    value={formValues.email}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
-                    placeholder={`${partySingularLabel.toLowerCase()}@example.com`}
-                    h="52px"
-                    borderRadius="16px"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Display Name (optional)</FormLabel>
-                  <Input
-                    value={formValues.displayName}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
-                    placeholder={`How this ${partySingularLabel.toLowerCase()} should appear`}
-                    h="52px"
-                    borderRadius="16px"
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Tags (comma-separated)</FormLabel>
-                  <Input
-                    value={formValues.tags}
-                    onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
-                    placeholder="wholesale, repeat, priority"
-                    h="52px"
-                    borderRadius="16px"
-                  />
-                </FormControl>
-              </VStack>
-            </DrawerBody>
-            <DrawerFooter borderTopWidth="1px" borderTopColor="gray.100" gap={3}>
+        <BottomSheetDrawer
+          isOpen={isOpen}
+          onClose={closeBuyerModal}
+          title={`Add ${partySingularLabel}`}
+          footer={
+            <>
               <Button variant="ghost" onClick={closeBuyerModal}>
                 Cancel
               </Button>
               <Button colorScheme="blue" onClick={handleCreateBuyer} isLoading={submitting} flex="1" h="52px">
                 Save {partySingularLabel}
               </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+            </>
+          }
+        >
+          <VStack spacing={4} align="stretch">
+            <FormControl>
+              <FormLabel>Full Name</FormLabel>
+              <Input
+                value={formValues.fullName}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, fullName: e.target.value }))}
+                placeholder={`${partySingularLabel} full name`}
+                h="52px"
+                borderRadius="16px"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                value={formValues.phone}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, phone: e.target.value }))}
+                placeholder="10-digit or +country code"
+                h="52px"
+                borderRadius="16px"
+                inputMode="tel"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Email</FormLabel>
+              <Input
+                value={formValues.email}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder={`${partySingularLabel.toLowerCase()}@example.com`}
+                h="52px"
+                borderRadius="16px"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Display Name (optional)</FormLabel>
+              <Input
+                value={formValues.displayName}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
+                placeholder={`How this ${partySingularLabel.toLowerCase()} should appear`}
+                h="52px"
+                borderRadius="16px"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Tags (comma-separated)</FormLabel>
+              <Input
+                value={formValues.tags}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
+                placeholder="wholesale, repeat, priority"
+                h="52px"
+                borderRadius="16px"
+              />
+            </FormControl>
+          </VStack>
+        </BottomSheetDrawer>
       ) : (
         <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
           <ModalOverlay />
@@ -4803,348 +5107,83 @@ const CustomersTab: React.FC = observer(() => {
         </Modal>
       )}
 
-      <Modal isOpen={isLedgerEntryOpen} onClose={onLedgerEntryClose} isCentered size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add Ledger Entry</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={3}>
-              <FormControl>
-                <FormLabel>Entry Type</FormLabel>
-                <Select
-                  value={ledgerFormValues.entryType}
-                  onChange={(e) => {
-                    const nextType = e.target.value as LedgerEntryType;
-                    setLedgerFormValues((prev) => ({
-                      ...prev,
-                      entryType: nextType,
-                      direction: nextType === "payment" ? "credit" : nextType === "sale" ? "debit" : prev.direction,
-                    }));
-                  }}
-                >
-                  <option value="sale">{isSelectedSupplier ? "Purchase" : "Sale"}</option>
-                  <option value="payment">{isSelectedSupplier ? "Payment Sent" : "Payment"}</option>
-                  <option value="adjustment">Adjustment</option>
-                </Select>
-              </FormControl>
+      {useCompactBuyerView ? (
+        <>
+          <BottomSheetDrawer
+            isOpen={isLedgerEntryOpen}
+            onClose={onLedgerEntryClose}
+            title="Add Ledger Entry"
+            footer={
+              <>
+                <Button variant="ghost" onClick={onLedgerEntryClose}>
+                  Cancel
+                </Button>
+                <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting} flex="1" h="52px">
+                  Save Entry
+                </Button>
+              </>
+            }
+          >
+            {renderLedgerEntryFormFields()}
+          </BottomSheetDrawer>
 
-              <FormControl isDisabled={ledgerFormValues.entryType !== "adjustment"}>
-                <FormLabel>Direction</FormLabel>
-                <Select
-                  value={
-                    ledgerFormValues.entryType === "adjustment"
-                      ? ledgerFormValues.direction
-                      : ledgerFormValues.entryType === "payment"
-                        ? "credit"
-                        : "debit"
-                  }
-                  onChange={(e) =>
-                    setLedgerFormValues((prev) => ({
-                      ...prev,
-                      direction: e.target.value as LedgerDirection,
-                    }))
-                  }
-                >
-                  <option value="debit">{isSelectedSupplier ? "You will give more" : "You will get more"}</option>
-                  <option value="credit">{isSelectedSupplier ? "You will pay / reduce due" : "You will give credit / reduce due"}</option>
-                </Select>
-              </FormControl>
+          <BottomSheetDrawer
+            isOpen={isSaleRecordOpen}
+            onClose={closeSaleRecordModal}
+            title={`Add ${isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record`}
+            size="full"
+            bodyProps={{ py: 4 }}
+            footer={
+              <>
+                <Button variant="ghost" onClick={closeSaleRecordModal}>
+                  Cancel
+                </Button>
+                <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting} flex="1" h="52px">
+                  Save {selectedTransactionSingularLabel} Record
+                </Button>
+              </>
+            }
+          >
+            {renderSaleRecordFormFields()}
+          </BottomSheetDrawer>
+        </>
+      ) : (
+        <>
+          <Modal isOpen={isLedgerEntryOpen} onClose={onLedgerEntryClose} isCentered size="lg">
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Add Ledger Entry</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>{renderLedgerEntryFormFields()}</ModalBody>
+              <ModalFooter>
+                <Button variant="ghost" mr={3} onClick={onLedgerEntryClose}>
+                  Cancel
+                </Button>
+                <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
+                  Save Entry
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
 
-              <FormControl>
-                <FormLabel>Amount</FormLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={ledgerFormValues.amount}
-                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder="Enter amount"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Reference Type</FormLabel>
-                <Select
-                  value={ledgerFormValues.referenceType}
-                  onChange={(e) =>
-                    setLedgerFormValues((prev) => ({
-                      ...prev,
-                      referenceType: e.target.value as LedgerReferenceType,
-                    }))
-                  }
-                >
-                  <option value="manual">Manual</option>
-                  <option value="order">Order</option>
-                  <option value="refund">Refund</option>
-                  <option value="import">Import</option>
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Reference ID (optional)</FormLabel>
-                <Input
-                  value={ledgerFormValues.referenceId}
-                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, referenceId: e.target.value }))}
-                  placeholder="orderId / refundId / rowId"
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Entry Date (optional)</FormLabel>
-                <Input
-                  type="datetime-local"
-                  value={ledgerFormValues.entryDate}
-                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Notes (optional)</FormLabel>
-                <Input
-                  value={ledgerFormValues.notes}
-                  onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Optional remarks"
-                />
-              </FormControl>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onLedgerEntryClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
-              Save Entry
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal isOpen={isSaleRecordOpen} onClose={closeSaleRecordModal} isCentered size="4xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add {isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-                <FormControl>
-                  <FormLabel>{isSelectedSupplier ? "Purchase" : "Sale"} Date (optional)</FormLabel>
-                  <Input
-                    type="datetime-local"
-                    value={saleFormValues.saleDate}
-                    onChange={(e) => setSaleFormValues((prev) => ({ ...prev, saleDate: e.target.value }))}
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Notes (optional)</FormLabel>
-                  <Input
-                    value={saleFormValues.notes}
-                    onChange={(e) => setSaleFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                    placeholder={isSelectedSupplier ? "Purchase remarks" : "Sale remarks"}
-                  />
-                </FormControl>
-              </SimpleGrid>
-
-              <Checkbox
-                isChecked={saleFormValues.postToLedger}
-                onChange={(e) => setSaleFormValues((prev) => ({ ...prev, postToLedger: e.target.checked }))}
-              >
-                Post {isSelectedSupplier ? "purchase" : "sale"} to ledger now
-              </Checkbox>
-
-              <Divider />
-
-              <VStack align="stretch" spacing={4}>
-                {saleFormValues.items.map((item, index) => (
-                  <Box key={`sale-item-${index}`} borderWidth="1px" borderRadius="md" p={3}>
-                    <SimpleGrid columns={{ base: 1, md: 2, xl: 6 }} spacing={3}>
-                      <FormControl position="relative" gridColumn={{ base: "auto", md: "span 2 / span 2" }}>
-                        <FormLabel>Item Name</FormLabel>
-                        <Input
-                          value={item.itemName}
-                          onChange={(e) => updateSaleItem(index, "itemName", e.target.value)}
-                          onFocus={() => setActiveSaleItemIndex(index)}
-                          onBlur={() => {
-                            window.setTimeout(() => {
-                              setActiveSaleItemIndex((current) => (current === index ? null : current));
-                            }, 120);
-                          }}
-                          placeholder="e.g. Cement Bag"
-                          autoComplete="off"
-                        />
-                        {activeSaleItemIndex === index && item.itemName.trim() ? (
-                          <Box
-                            position="absolute"
-                            top="calc(100% + 8px)"
-                            left={0}
-                            right={0}
-                            bg="white"
-                            borderWidth="1px"
-                            borderColor="gray.200"
-                            borderRadius="lg"
-                            boxShadow="xl"
-                            zIndex={20}
-                            overflow="hidden"
-                            maxH="320px"
-                            overflowY="auto"
-                          >
-                            {saleItemSuggestionsLoading ? (
-                              <Flex align="center" justify="center" py={4} gap={2}>
-                                <Spinner size="sm" color="teal.500" />
-                                <Text fontSize="sm" color="gray.600">
-                                  Searching your inventory...
-                                </Text>
-                              </Flex>
-                            ) : saleItemSuggestions.length > 0 ? (
-                              <VStack align="stretch" spacing={0}>
-                                {saleItemSuggestions.map((product, suggestionIndex) => (
-                                  <Box
-                                    key={product._id}
-                                    px={3}
-                                    py={3}
-                                    cursor="pointer"
-                                    bg="white"
-                                    borderTopWidth={suggestionIndex === 0 ? "0" : "1px"}
-                                    borderColor="gray.100"
-                                    _hover={{ bg: "gray.50" }}
-                                    onMouseDown={(event) => {
-                                      event.preventDefault();
-                                      applySuggestedProductToSaleItem(index, product);
-                                    }}
-                                  >
-                                    <Flex justify="space-between" align="flex-start" gap={3}>
-                                      <Box minW={0}>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="semibold"
-                                          color="gray.800"
-                                          whiteSpace="normal"
-                                          lineHeight="short"
-                                        >
-                                          {product.name}
-                                        </Text>
-                                        <Text
-                                          fontSize="xs"
-                                          color="gray.500"
-                                          whiteSpace="normal"
-                                          lineHeight="short"
-                                          mt={1}
-                                        >
-                                          {[product.brand, product.sku ? `SKU: ${product.sku}` : ""]
-                                            .filter(Boolean)
-                                            .join(" | ") || "Inventory product"}
-                                        </Text>
-                                      </Box>
-                                      <Box textAlign="right" flexShrink={0}>
-                                        <Text fontSize="sm" fontWeight="semibold" color="teal.600">
-                                          {formatCurrency(Number(product.price || 0))}
-                                        </Text>
-                                        {typeof product.stock === "number" && Number.isFinite(product.stock) ? (
-                                          <Text fontSize="xs" color="gray.500">
-                                            Stock {product.stock}
-                                          </Text>
-                                        ) : null}
-                                      </Box>
-                                    </Flex>
-                                  </Box>
-                                ))}
-                              </VStack>
-                            ) : (
-                              <Box px={3} py={3}>
-                                <Text fontSize="sm" color="gray.600">
-                                  No matching inventory items found.
-                                </Text>
-                              </Box>
-                            )}
-                          </Box>
-                        ) : null}
-                        {item.productId ? (
-                          <Text mt={2} fontSize="xs" color="teal.600" fontWeight="medium">
-                            Price auto-filled from your inventory. You can still edit this row.
-                          </Text>
-                        ) : null}
-                      </FormControl>
-
-                      <FormControl>
-                        <FormLabel>Quantity</FormLabel>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.quantity}
-                          onChange={(e) => updateSaleItem(index, "quantity", e.target.value)}
-                        />
-                      </FormControl>
-
-                      <FormControl>
-                        <FormLabel>Unit Price</FormLabel>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.unitPrice}
-                          onChange={(e) => updateSaleItem(index, "unitPrice", e.target.value)}
-                        />
-                      </FormControl>
-
-                      <FormControl>
-                        <FormLabel>Discount</FormLabel>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.discount}
-                          onChange={(e) => updateSaleItem(index, "discount", e.target.value)}
-                        />
-                      </FormControl>
-
-                      <FormControl>
-                        <FormLabel>Tax</FormLabel>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.tax}
-                          onChange={(e) => updateSaleItem(index, "tax", e.target.value)}
-                        />
-                      </FormControl>
-                    </SimpleGrid>
-
-                    <Flex mt={3} justify="space-between" align="center">
-                      <Text fontSize="sm" color="gray.600">
-                        Line Total: {formatCurrency(calculateSaleLineTotal(item))}
-                      </Text>
-                      <Button
-                        size="xs"
-                        colorScheme="red"
-                        variant="ghost"
-                        onClick={() => removeSaleItem(index)}
-                        isDisabled={saleFormValues.items.length <= 1}
-                      >
-                        Remove
-                      </Button>
-                    </Flex>
-                  </Box>
-                ))}
-              </VStack>
-
-              <Button size="sm" variant="outline" leftIcon={<AddIcon />} alignSelf="flex-start" onClick={addSaleItem}>
-                Add Item Row
-              </Button>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={closeSaleRecordModal}>
-              Cancel
-            </Button>
-            <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
-              Save {selectedTransactionSingularLabel} Record
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          <Modal isOpen={isSaleRecordOpen} onClose={closeSaleRecordModal} isCentered size="4xl">
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Add {isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>{renderSaleRecordFormFields()}</ModalBody>
+              <ModalFooter>
+                <Button variant="ghost" mr={3} onClick={closeSaleRecordModal}>
+                  Cancel
+                </Button>
+                <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
+                  Save {selectedTransactionSingularLabel} Record
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </>
+      )}
 
       <ConfirmationModal
         isOpen={isDeleteOpen}
@@ -5183,5 +5222,3 @@ const CustomersTab: React.FC = observer(() => {
 });
 
 export default CustomersTab;
-
-
