@@ -3590,7 +3590,7 @@ const CustomersTab: React.FC = observer(() => {
           position="fixed"
           left="12px"
           right="12px"
-          bottom="calc(76px + env(safe-area-inset-bottom, 0px))"
+          bottom="calc(12px + env(safe-area-inset-bottom, 0px))"
           zIndex={20}
         >
           <HStack
