@@ -23,16 +23,7 @@ export const createEmptyShopFormData = () => ({
     country: "",
     coordinates: [0, 0],
   },
-  multipleLocations: [
-    {
-      address: "",
-      city: "",
-      state: "",
-      postalCode: "",
-      country: "",
-      coordinates: [0, 0],
-    },
-  ],
+  multipleLocations: [],
   contactInfo: {
     phone: "",
     email: "",

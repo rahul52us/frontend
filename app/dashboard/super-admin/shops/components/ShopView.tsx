@@ -81,14 +81,32 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                 <Text fontSize={{ base: "2xl", md: "4xl" }} fontWeight="800" color="gray.800" textShadow="0 1px 2px rgba(0,0,0,0.1)">
                                     {shop.name}
                                 </Text>
-                                <HStack spacing={3} mt={1}>
-                                    <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" colorScheme="blue" variant="solid">
-                                        {shop.companyCode || "N/A"}
-                                    </Badge>
-                                    <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" variant="solid" colorScheme={
-                                        shop.shopStatus === 'active' ? 'green' :
-                                            shop.shopStatus === 'suspended' ? 'red' : 'orange'
-                                    }>
+                                    <HStack spacing={3} mt={1}>
+                                        <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" colorScheme="blue" variant="solid">
+                                            {shop.companyCode || "N/A"}
+                                        </Badge>
+                                        <Badge
+                                            px={2}
+                                            py={1}
+                                            fontSize="0.8em"
+                                            borderRadius="md"
+                                            variant="solid"
+                                            colorScheme={
+                                                shop.reviewStatus === "approved"
+                                                    ? "green"
+                                                    : shop.reviewStatus === "changes_requested"
+                                                        ? "orange"
+                                                        : shop.reviewStatus === "rejected"
+                                                            ? "red"
+                                                            : "purple"
+                                            }
+                                        >
+                                            {shop.reviewStatus || "pending"}
+                                        </Badge>
+                                        <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" variant="solid" colorScheme={
+                                            shop.shopStatus === 'active' ? 'green' :
+                                                shop.shopStatus === 'suspended' ? 'red' : 'orange'
+                                        }>
                                         {shop.shopStatus}
                                     </Badge>
                                 </HStack>
@@ -233,12 +251,32 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
 
                                                         <Box flexShrink="0" mb={8} w="100%">
                                                             <StepTitle>
-                                                                <Badge
-                                                                    colorScheme={step.status === 'active' ? 'green' : step.status === 'suspended' ? 'red' : 'orange'}
-                                                                    px={2} py={0.5} borderRadius="full"
-                                                                >
-                                                                    {step.status}
-                                                                </Badge>
+                                                                <HStack spacing={2} display="inline-flex">
+                                                                    <Badge
+                                                                        colorScheme={step.status === 'active' ? 'green' : step.status === 'suspended' ? 'red' : 'orange'}
+                                                                        px={2} py={0.5} borderRadius="full"
+                                                                    >
+                                                                        {step.status}
+                                                                    </Badge>
+                                                                    {step.reviewStatus ? (
+                                                                        <Badge
+                                                                            colorScheme={
+                                                                                step.reviewStatus === "approved"
+                                                                                    ? "green"
+                                                                                    : step.reviewStatus === "changes_requested"
+                                                                                        ? "orange"
+                                                                                        : step.reviewStatus === "rejected"
+                                                                                            ? "red"
+                                                                                            : "purple"
+                                                                            }
+                                                                            px={2}
+                                                                            py={0.5}
+                                                                            borderRadius="full"
+                                                                        >
+                                                                            {step.reviewStatus}
+                                                                        </Badge>
+                                                                    ) : null}
+                                                                </HStack>
                                                                 <Text as="span" ml={3} fontSize="sm" color="gray.500">
                                                                     {new Date(step.updatedAt).toLocaleString()}
                                                                 </Text>

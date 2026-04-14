@@ -1,17 +1,25 @@
 "use client";
 
 import React from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { Badge, Box, HStack, Tab, TabList, Tabs, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import { useShopList } from "./hooks/useShopList";
 import { useShopDelete } from "./hooks/useShopDelete";
 import { ShopColumns } from "./components/ShopColumns";
-import ShopForm from "./components/ShopForm";
 import ShopView from "./components/ShopView";
+import ReviewShopDrawer from "./components/ReviewShopDrawer";
 import stores from "../../../store/stores";
 import { useDisclosure, useToast } from "@chakra-ui/react";
+
+const reviewTabs = [
+    { label: "Pending Review", value: "pending" },
+    { label: "Changes Requested", value: "changes_requested" },
+    { label: "Approved", value: "approved" },
+    { label: "Rejected", value: "rejected" },
+    { label: "All", value: "all" },
+];
 
 const ShopsPage = observer(() => {
     const {
@@ -20,6 +28,8 @@ const ShopsPage = observer(() => {
         currentPage,
         totalPages,
         totalShops,
+        reviewStatus,
+        setReviewStatus,
         setCurrentPage,
         fetchShops
     } = useShopList();
@@ -34,9 +44,9 @@ const ShopsPage = observer(() => {
     } = useShopDelete(() => fetchShops(currentPage));
 
     const {
-        isOpen: isEditOpen,
-        onOpen: onEditOpen,
-        onClose: onEditClose
+        isOpen: isReviewOpen,
+        onOpen: onReviewOpen,
+        onClose: onReviewClose
     } = useDisclosure();
 
     const {
@@ -45,15 +55,15 @@ const ShopsPage = observer(() => {
         onClose: onViewClose
     } = useDisclosure();
 
-    const [editingShop, setEditingShop] = React.useState<any>(null);
+    const [reviewingShop, setReviewingShop] = React.useState<any>(null);
     const [viewingShop, setViewingShop] = React.useState<any>(null);
-    const [isUpdating, setIsUpdating] = React.useState(false);
+    const [isReviewing, setIsReviewing] = React.useState(false);
     const toast = useToast();
     const { companyStore } = stores;
 
-    const handleEditClick = (shop: any) => {
-        setEditingShop(shop);
-        onEditOpen();
+    const handleReviewClick = (shop: any) => {
+        setReviewingShop(shop);
+        onReviewOpen();
     };
 
     const handleViewClick = (shop: any) => {
@@ -61,30 +71,34 @@ const ShopsPage = observer(() => {
         onViewOpen();
     };
 
-    const handleUpdateShop = async (values: any) => {
-        if (!editingShop?._id) return;
-        values._id = editingShop._id;
-        setIsUpdating(true);
+    const handleReviewShop = async (action: "approve" | "request_changes" | "reject", remarks: string) => {
+        if (!reviewingShop?._id) return;
+        setIsReviewing(true);
         try {
-            await companyStore.updateShop(editingShop._id, values);
+            await companyStore.reviewShop(reviewingShop._id, { action, remarks });
             toast({
-                title: "Shop updated successfully",
+                title:
+                    action === "approve"
+                        ? "Shop approved"
+                        : action === "request_changes"
+                            ? "Changes requested"
+                            : "Shop rejected",
                 status: "success",
                 duration: 3000,
                 isClosable: true,
             });
-            onEditClose();
-            fetchShops(currentPage);
+            onReviewClose();
+            fetchShops(currentPage, reviewStatus);
         } catch (error: any) {
             toast({
-                title: "Error updating shop",
+                title: "Review action failed",
                 description: error.message || "Something went wrong",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
             });
         } finally {
-            setIsUpdating(false);
+            setIsReviewing(false);
         }
     };
 
@@ -99,7 +113,7 @@ const ShopsPage = observer(() => {
             editKey: {
                 showEditButton: true,
                 function: (row: any) => {
-                    handleEditClick(row);
+                    handleReviewClick(row);
                 }
             },
             deleteKey: {
@@ -122,8 +136,31 @@ const ShopsPage = observer(() => {
 
     return (
         <Box p={6}>
+            <Tabs
+                variant="soft-rounded"
+                colorScheme="blue"
+                index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
+                onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
+                mb={6}
+            >
+                <TabList gap={3} flexWrap="wrap">
+                    {reviewTabs.map((tab) => (
+                        <Tab key={tab.value}>
+                            <HStack spacing={2}>
+                                <Text>{tab.label}</Text>
+                                {reviewStatus === tab.value ? (
+                                    <Badge colorScheme="blue" borderRadius="full">
+                                        {totalShops}
+                                    </Badge>
+                                ) : null}
+                            </HStack>
+                        </Tab>
+                    ))}
+                </TabList>
+            </Tabs>
+
             <CustomTable
-                title={`All Shops (${totalShops})`}
+                title={`${reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops"} (${totalShops})`}
                 columns={ShopColumns}
                 data={shops}
                 loading={loading}
@@ -131,30 +168,12 @@ const ShopsPage = observer(() => {
                 serial={{ show: true, text: "S.No." }}
             />
 
-            <ShopForm
-                isOpen={isEditOpen}
-                onClose={onEditClose}
-                initialValues={{
-                    name: editingShop?.name || "",
-                    description: editingShop?.description || "",
-                    shopStatus: editingShop?.shopStatus || "active",
-                    contactInfo: {
-                        phone: editingShop?.contactInfo?.phone || "",
-                        email: editingShop?.contactInfo?.email || "",
-                        website: editingShop?.contactInfo?.website || ""
-                    },
-                    location: {
-                        address: editingShop?.location?.address || "",
-                        city: editingShop?.location?.city || "",
-                        state: editingShop?.location?.state || "",
-                        postalCode: editingShop?.location?.postalCode || "",
-                        country: editingShop?.location?.country || ""
-                    },
-                    remarks: ""
-                }}
-                onSubmit={handleUpdateShop}
-                isEdit={true}
-                isLoading={isUpdating}
+            <ReviewShopDrawer
+                isOpen={isReviewOpen}
+                onClose={onReviewClose}
+                shop={reviewingShop}
+                onSubmit={handleReviewShop}
+                isSubmitting={isReviewing}
             />
 
             <ShopView

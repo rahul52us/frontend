@@ -13,6 +13,20 @@ const getStatusColor = (status: string) => {
     }
 };
 
+const getReviewColor = (status: string) => {
+    switch (status) {
+        case "approved":
+            return "green";
+        case "changes_requested":
+            return "orange";
+        case "rejected":
+            return "red";
+        case "pending":
+        default:
+            return "purple";
+    }
+};
+
 export const ShopColumns = [
     {
         headerName: "Shop Name",
@@ -40,7 +54,26 @@ export const ShopColumns = [
         }
     },
     {
-        headerName: "Status",
+        headerName: "Review",
+        key: "reviewStatus",
+        type: "component",
+        metaData: {
+            component: (row: any) => (
+                <Box>
+                    <Badge colorScheme={getReviewColor(row.reviewStatus)}>
+                        {row.reviewStatus || "pending"}
+                    </Badge>
+                    {row.reviewRemarks ? (
+                        <Text mt={1} fontSize="xs" color="gray.500" noOfLines={2} maxW="220px">
+                            {row.reviewRemarks}
+                        </Text>
+                    ) : null}
+                </Box>
+            ),
+        },
+    },
+    {
+        headerName: "Visibility",
         key: "shopStatus",
         type: "component",
         metaData: {
@@ -64,7 +97,7 @@ export const ShopColumns = [
         type: "component",
         metaData: {
             component: (row: any) => (
-                <Text>{row.ratings?.averageRating?.toFixed(1) || 0} ({row.ratings?.count || 0})</Text>
+                <Text>{row.ratings?.averageRating?.toFixed(1) || 0} ({row.ratings?.totalRatings || 0})</Text>
             )
         }
     },

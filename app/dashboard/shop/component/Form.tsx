@@ -9,6 +9,10 @@
 import React, { useEffect, useState } from "react";
 import { Formik, Form } from "formik";
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
   VStack,
@@ -200,9 +204,20 @@ const normalizeMultipleLocationsForForm = (source: any, fallback: any) => {
   const locations = Array.isArray(source) ? source : fallback;
   if (!Array.isArray(locations)) return [];
 
-  return locations.map((location, index) =>
-    normalizeLocationForForm(location, fallback?.[index] || fallback?.[0] || {})
-  );
+  return locations
+    .map((location, index) =>
+      normalizeLocationForForm(location, fallback?.[index] || fallback?.[0] || {})
+    )
+    .filter((location) => {
+      const hasText = [location.address, location.city, location.state, location.postalCode, location.country]
+        .some((value) => typeof value === "string" && value.trim().length > 0);
+      const hasCoordinates =
+        Array.isArray(location.coordinates) &&
+        location.coordinates.length >= 2 &&
+        (Number(location.coordinates[0]) !== 0 || Number(location.coordinates[1]) !== 0);
+
+      return hasText || hasCoordinates;
+    });
 };
 
 const normalizeStringArray = (source: any) => {
@@ -255,12 +270,182 @@ const normalizeShopDataForForm = (shopData: any) => {
   };
 };
 
+const sectionErrorMatchers = [
+  {
+    index: 0,
+    matches: (errors: any) =>
+      Boolean(
+        errors?.name ||
+        errors?.companyCode ||
+        errors?.tags ||
+        errors?.categories ||
+        errors?.description ||
+        errors?.about ||
+        errors?.gstNumber ||
+        errors?.bankDetails ||
+        errors?.returnPolicy ||
+        errors?.paymentMethods
+      ),
+  },
+  {
+    index: 1,
+    matches: (errors: any) => Boolean(errors?.location),
+  },
+  {
+    index: 2,
+    matches: (errors: any) => Boolean(errors?.multipleLocations),
+  },
+  {
+    index: 3,
+    matches: (errors: any) => Boolean(errors?.gallery),
+  },
+  {
+    index: 4,
+    matches: (errors: any) => Boolean(errors?.contactInfo),
+  },
+  {
+    index: 5,
+    matches: (errors: any) => Boolean(errors?.operatingHours || errors?.closedDates),
+  },
+];
+
+const resolveFirstErrorSection = (errors: any) => {
+  const match = sectionErrorMatchers.find((section) => section.matches(errors));
+  return match?.index ?? null;
+};
+
+const fieldLabelMap: Record<string, string> = {
+  address: "Address",
+  city: "City",
+  state: "State",
+  postalCode: "Postal Code",
+  country: "Country",
+  coordinates: "Map Pin / Coordinates",
+  "coordinates.0": "Longitude",
+  "coordinates.1": "Latitude",
+  name: "Shop Name",
+  companyCode: "Company Code",
+  tags: "Tags",
+  categories: "Categories",
+  description: "Description",
+  about: "About",
+  gstNumber: "GST Number",
+  "bankDetails.accountHolderName": "Account Holder Name",
+  "bankDetails.accountNumber": "Account Number",
+  "bankDetails.bankName": "Bank Name",
+  "bankDetails.ifscCode": "IFSC Code",
+  returnPolicy: "Return Policy",
+  paymentMethods: "Payment Methods",
+  "location.address": "Address",
+  "location.city": "City",
+  "location.state": "State",
+  "location.postalCode": "Postal Code",
+  "location.country": "Country",
+  "location.coordinates": "Map Pin / Coordinates",
+  "location.coordinates.0": "Longitude",
+  "location.coordinates.1": "Latitude",
+  gallery: "Gallery",
+  "contactInfo.phone": "Phone",
+  "contactInfo.email": "Email",
+  "contactInfo.website": "Website",
+  "contactInfo.socialMedia.facebook": "Facebook",
+  "contactInfo.socialMedia.instagram": "Instagram",
+  "contactInfo.socialMedia.twitter": "Twitter",
+  "contactInfo.socialMedia.linkedin": "LinkedIn",
+  "contactInfo.socialMedia.youtube": "YouTube",
+  operatingHours: "Operating Hours",
+  closedDates: "Closed Dates",
+};
+
+const flattenErrorPaths = (errors: any, parentPath = ""): string[] => {
+  if (!errors) return [];
+
+  if (typeof errors === "string") {
+    return parentPath ? [parentPath] : [];
+  }
+
+  if (Array.isArray(errors)) {
+    return errors.flatMap((item, index) =>
+      flattenErrorPaths(item, parentPath ? `${parentPath}.${index}` : `${index}`)
+    );
+  }
+
+  if (typeof errors === "object") {
+    return Object.entries(errors).flatMap(([key, value]) =>
+      flattenErrorPaths(value, parentPath ? `${parentPath}.${key}` : key)
+    );
+  }
+
+  return [];
+};
+
+const normalizeErrorPath = (path: string) =>
+  path.replace(/\.\d+/g, "");
+
+const getFriendlyFieldLabel = (path: string) => {
+  const normalized = normalizeErrorPath(path);
+  if (fieldLabelMap[normalized]) {
+    return fieldLabelMap[normalized];
+  }
+
+  if (normalized.startsWith("multipleLocations")) {
+    const locationMatch = path.match(/multipleLocations\.(\d+)\.(.+)/);
+    if (locationMatch) {
+      const locationNumber = Number(locationMatch[1]) + 1;
+      const fieldPath = `multipleLocations.${locationMatch[2].replace(/\.\d+/g, "")}`;
+      const fieldName = fieldLabelMap[fieldPath] || fieldLabelMap[locationMatch[2].replace(/\.\d+/g, "")] || "Location Field";
+      return `Location ${locationNumber}: ${fieldName}`;
+    }
+
+    return "Additional Location";
+  }
+
+  return normalized
+    .split(".")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
+const getSectionFieldLabels = (errors: any, sectionIndex: number) => {
+  const paths = flattenErrorPaths(errors);
+  const labels = paths
+    .map((path) => ({
+      path,
+      label: getFriendlyFieldLabel(path),
+    }))
+    .filter(({ path }) => {
+      switch (sectionIndex) {
+        case 0:
+          return !path.startsWith("location") && !path.startsWith("multipleLocations") && !path.startsWith("gallery") && !path.startsWith("contactInfo") && !path.startsWith("operatingHours") && !path.startsWith("closedDates");
+        case 1:
+          return path.startsWith("location");
+        case 2:
+          return path.startsWith("multipleLocations");
+        case 3:
+          return path.startsWith("gallery");
+        case 4:
+          return path.startsWith("contactInfo");
+        case 5:
+          return path.startsWith("operatingHours") || path.startsWith("closedDates");
+        default:
+          return false;
+      }
+    })
+    .map(({ label }) => label);
+
+  return Array.from(new Set(labels));
+};
+
 const ShopForm = observer(() => {
   const [initialValues, setInitialValues] = useState(() => createEmptyShopFormData());
   const [activeSection, setActiveSection] = useState(0);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isUpdateMode, setIsUpdateMode] = useState(false); // Track mode
+  const [reviewMeta, setReviewMeta] = useState({
+    reviewStatus: null as string | null,
+    reviewRemarks: "",
+  });
 
   const {
     companyStore: { updateCompanyDetails, createCompany },
@@ -278,6 +463,15 @@ const ShopForm = observer(() => {
     { title: "Contact Info", icon: FaPhone, component: ContactInfoSection },
     { title: "Operating Hours", icon: FaClock, component: OperatingHoursSection },
   ];
+
+  useEffect(() => {
+    if (user?.company && typeof user.company === "object") {
+      setReviewMeta({
+        reviewStatus: user.company.reviewStatus || null,
+        reviewRemarks: user.company.reviewRemarks || "",
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchShopData = async () => {
@@ -313,6 +507,10 @@ const ShopForm = observer(() => {
         } else {
           setIsUpdateMode(true);
           const shopData = normalizeShopDataForForm(data.data);
+          setReviewMeta({
+            reviewStatus: data.data?.reviewStatus || null,
+            reviewRemarks: data.data?.reviewRemarks || "",
+          });
           const coverImage = shopData.coverImage?.url ? { file: [shopData.coverImage] } : { file: [] };
           const logo = shopData.logo?.url ? { file: [shopData.logo] } : { file: [] };
           const gallery = Array.isArray(shopData.gallery)
@@ -367,6 +565,16 @@ const ShopForm = observer(() => {
     );
 
     formData.gallery = updatedGallery.filter(Boolean);
+    formData.multipleLocations = (formData.multipleLocations || []).filter((location: any) => {
+      const hasText = [location?.address, location?.city, location?.state, location?.postalCode, location?.country]
+        .some((value) => typeof value === "string" && value.trim().length > 0);
+      const coordinates = Array.isArray(location?.coordinates) ? location.coordinates : [];
+      const hasCoordinates =
+        coordinates.length >= 2 &&
+        (Number(coordinates[0]) !== 0 || Number(coordinates[1]) !== 0);
+
+      return hasText || hasCoordinates;
+    });
     formData.about = formData.about || formData.description || "";
     formData.gstNumber = normalizeGstNumber(formData.gstNumber) || undefined;
 
@@ -408,8 +616,20 @@ const ShopForm = observer(() => {
       const formData = await buildCompanyPayload(values);
 
       if (isUpdateMode) {
-        await updateCompanyDetails({ ...formData, _id: user?.company?._id });
-        openNotification({ title: "Success", message: "Shop details updated.", type: "success" });
+        const response = await updateCompanyDetails({ ...formData, _id: user?.company?._id });
+        const updatedShop = response?.data?.data || {};
+        const wasReviewReworkState = ["changes_requested", "rejected"].includes(reviewMeta.reviewStatus || "");
+        setReviewMeta({
+          reviewStatus: updatedShop.reviewStatus || reviewMeta.reviewStatus || null,
+          reviewRemarks: updatedShop.reviewRemarks || "",
+        });
+        openNotification({
+          title: "Success",
+          message: wasReviewReworkState
+            ? "Shop details updated and resubmitted for review."
+            : "Shop details updated.",
+          type: "success",
+        });
       } else {
         const createData = { ...formData };
         delete createData._id;
@@ -432,6 +652,36 @@ const ShopForm = observer(() => {
 
   if (loading) return <Center minH="80vh"><SpinnerLoader size="xl" /></Center>;
 
+  const reviewBanner = (() => {
+    switch (reviewMeta.reviewStatus) {
+      case "pending":
+        return {
+          status: "warning" as const,
+          title: "Shop under review",
+          description:
+            "Your shop is waiting for admin approval. You can still update your details while it is under review.",
+        };
+      case "changes_requested":
+        return {
+          status: "warning" as const,
+          title: "Changes requested",
+          description: reviewMeta.reviewRemarks
+            ? `${reviewMeta.reviewRemarks} Save your changes to resubmit the shop for review.`
+            : "Admin requested updates to your shop. Save your changes to resubmit it for review.",
+        };
+      case "rejected":
+        return {
+          status: "error" as const,
+          title: "Review rejected",
+          description: reviewMeta.reviewRemarks
+            ? `${reviewMeta.reviewRemarks} Update your details and save again when you are ready to resubmit.`
+            : "Your shop review was rejected. Update your details and save again when you are ready to resubmit.",
+        };
+      default:
+        return null;
+    }
+  })();
+
   if (!isUpdateMode) {
     return (
       <SellerOnboardingWizard
@@ -445,6 +695,15 @@ const ShopForm = observer(() => {
 
   return (
     <Container maxW="container.2xl" py={4}>
+      {reviewBanner ? (
+        <Alert status={reviewBanner.status} variant="left-accent" borderRadius="xl" mb={4} alignItems="flex-start">
+          <AlertIcon mt={1} />
+          <Box>
+            <AlertTitle>{reviewBanner.title}</AlertTitle>
+            <AlertDescription>{reviewBanner.description}</AlertDescription>
+          </Box>
+        </Alert>
+      ) : null}
       <Flex direction={{ base: "column", md: "row" }} gap={4}>
         {/* Static Sidebar */}
         <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200">
@@ -509,8 +768,31 @@ const ShopForm = observer(() => {
             enableReinitialize
             onSubmit={onSubmit}
           >
-            {({ values, errors, setFieldValue, isSubmitting, submitForm }) => {
+            {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm }) => {
               const ActiveSectionComponent = sections[activeSection].component;
+              const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSection);
+
+              const handleAttemptSubmit = async () => {
+                setShowError(true);
+                const validationErrors = await validateForm();
+                const firstErrorSection = resolveFirstErrorSection(validationErrors);
+
+                if (firstErrorSection !== null) {
+                  setActiveSection(firstErrorSection);
+                  const fieldLabels = getSectionFieldLabels(validationErrors, firstErrorSection);
+                  openNotification({
+                    title: "Please review the highlighted fields",
+                    message:
+                      fieldLabels.length > 0
+                        ? `Missing or invalid: ${fieldLabels.slice(0, 4).join(", ")}${fieldLabels.length > 4 ? "..." : ""}`
+                        : `Some required details are missing in ${sections[firstErrorSection]?.title}.`,
+                    type: "warning",
+                  });
+                  return;
+                }
+
+                submitForm();
+              };
 
               // Debug validation errors
               if (Object.keys(errors).length > 0 && showError) {
@@ -522,6 +804,17 @@ const ShopForm = observer(() => {
                 <Form>
                   <VStack spacing={4} align="stretch">
                     <SectionHeader activeSection={activeSection} sections={sections} />
+                    {showError && currentSectionFieldLabels.length > 0 ? (
+                      <Alert status="warning" variant="left-accent" borderRadius="xl" alignItems="flex-start">
+                        <AlertIcon mt={1} />
+                        <Box>
+                          <AlertTitle>Please update these fields</AlertTitle>
+                          <AlertDescription>
+                            {currentSectionFieldLabels.join(", ")}
+                          </AlertDescription>
+                        </Box>
+                      </Alert>
+                    ) : null}
                     <ActiveSectionComponent
                       values={values}
                       errors={errors}
@@ -536,10 +829,7 @@ const ShopForm = observer(() => {
                         colorScheme="teal"
                         variant="outline"
                         isLoading={isSubmitting}
-                        onClick={() => {
-                          setShowError(true);
-                          submitForm();
-                        }}
+                        onClick={handleAttemptSubmit}
                       >
                         Save Section
                       </Button>
@@ -563,10 +853,9 @@ const ShopForm = observer(() => {
                         </Button>
                       ) : (
                         <Button
-                          type="submit"
                           isLoading={isSubmitting}
                           colorScheme="blue"
-                          onClick={() => setShowError(true)}
+                          onClick={handleAttemptSubmit}
                         >
                           {isUpdateMode ? "Save Shop" : "Create Shop"}
                         </Button>

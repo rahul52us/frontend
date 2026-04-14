@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
 import styled from 'styled-components';
+import { usePathname } from 'next/navigation';
 import stores from '../../store/stores';
 // import { authenticastion } from '../../config/utils/routes';
 import SidebarLayout from './SidebarLayout/SidebarLayout';
@@ -21,6 +22,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     themeStore: { themeConfig },
   } = stores;
   const theme = useTheme();
+  const pathname = usePathname();
 
   const [sizeStatus] = useMediaQuery(`(max-width: ${theme.breakpoints.xl})`);
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
@@ -47,6 +49,14 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     user?.company && typeof user.company === 'object'
       ? user.company.shopStatus
       : null;
+  const reviewStatus =
+    user?.company && typeof user.company === 'object'
+      ? user.company.reviewStatus
+      : null;
+  const reviewRemarks =
+    user?.company && typeof user.company === 'object'
+      ? user.company.reviewRemarks
+      : "";
 
   const [isMounted, setIsMounted] = useState(false);
   const [runtimeTopInset, setRuntimeTopInset] = useState(0);
@@ -96,13 +106,41 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const shopStatusBanner = (() => {
     if (isSuperAdmin) return null;
 
+    switch (reviewStatus) {
+      case 'pending':
+        return {
+          status: 'warning' as const,
+          title: 'Shop under review',
+          description:
+            "Your shop is waiting for admin approval. You can continue updating your details and inventory while it is under review.",
+        };
+      case 'changes_requested':
+        return {
+          status: 'warning' as const,
+          title: 'Changes requested by admin',
+          description: reviewRemarks
+            ? `${reviewRemarks} Update your shop details and save again to resubmit it for review.`
+            : 'Admin requested changes to your shop. Update the details and save again to resubmit it for review.',
+        };
+      case 'rejected':
+        return {
+          status: 'error' as const,
+          title: 'Shop review rejected',
+          description: reviewRemarks
+            ? `${reviewRemarks} Update the shop and save again when you are ready to resubmit it for review.`
+            : 'Your shop review was rejected. Update the shop details and save again when you are ready to resubmit it.',
+        };
+      default:
+        break;
+    }
+
     switch (shopStatus) {
       case 'pending':
         return {
           status: 'warning' as const,
           title: 'Shop under review',
           description:
-            "Your shop has been created and is under review. Your shop and products won't be visible to buyers until an admin approves it. You can still update your shop details and prepare your inventory.",
+            "Your shop is waiting for admin approval. You can continue updating your details and inventory while it is under review.",
         };
       case 'inactive':
         return {
@@ -122,6 +160,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
         return null;
     }
   })();
+  const shouldShowLayoutShopBanner = !pathname?.startsWith('/dashboard/shop');
 
   return user ? (
     <Box
@@ -157,7 +196,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             $sizeStatus={sizeStatus}
             $runtimeTopInset={runtimeTopInset}
           >
-            {shopStatusBanner ? (
+            {shopStatusBanner && shouldShowLayoutShopBanner ? (
               <Alert
                 status={shopStatusBanner.status}
                 variant="left-accent"
