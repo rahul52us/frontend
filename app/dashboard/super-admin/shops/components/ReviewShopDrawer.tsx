@@ -19,12 +19,14 @@ import {
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 
 type ReviewAction = "approve" | "request_changes" | "reject";
+type VisibilityAction = "active" | "inactive" | "suspended";
 
 interface ReviewShopDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   shop: any;
   onSubmit: (action: ReviewAction, remarks: string) => Promise<void> | void;
+  onVisibilitySubmit: (status: VisibilityAction, remarks: string) => Promise<void> | void;
   isSubmitting?: boolean;
 }
 
@@ -61,10 +63,11 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
   onClose,
   shop,
   onSubmit,
+  onVisibilitySubmit,
   isSubmitting = false,
 }) => {
   const [remarks, setRemarks] = useState("");
-  const [activeAction, setActiveAction] = useState<ReviewAction | null>(null);
+  const [activeAction, setActiveAction] = useState<ReviewAction | VisibilityAction | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -85,6 +88,15 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
     setActiveAction(action);
     try {
       await onSubmit(action, remarks);
+    } finally {
+      setActiveAction(null);
+    }
+  };
+
+  const handleVisibilitySubmit = async (status: VisibilityAction) => {
+    setActiveAction(status);
+    try {
+      await onVisibilitySubmit(status, remarks);
     } finally {
       setActiveAction(null);
     }
@@ -223,6 +235,41 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
               resize="vertical"
             />
           </FormControl>
+        </Box>
+
+        <Box borderWidth="1px" borderColor="gray.200" borderRadius="2xl" p={5} bg="white">
+          <Text fontWeight="700" color="gray.800" mb={2}>
+            Visibility Controls
+          </Text>
+          <Text fontSize="sm" color="gray.500" mb={4}>
+            Use these when you need to moderate the shop after review. Remarks above will be included in the status update for the seller.
+          </Text>
+          <HStack spacing={3} flexWrap="wrap">
+            <Button
+              colorScheme="green"
+              variant="outline"
+              onClick={() => handleVisibilitySubmit("active")}
+              isLoading={isSubmitting && activeAction === "active"}
+            >
+              Activate
+            </Button>
+            <Button
+              colorScheme="gray"
+              variant="outline"
+              onClick={() => handleVisibilitySubmit("inactive")}
+              isLoading={isSubmitting && activeAction === "inactive"}
+            >
+              Mark Inactive
+            </Button>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={() => handleVisibilitySubmit("suspended")}
+              isLoading={isSubmitting && activeAction === "suspended"}
+            >
+              Suspend
+            </Button>
+          </HStack>
         </Box>
 
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="2xl" p={5} bg="white">

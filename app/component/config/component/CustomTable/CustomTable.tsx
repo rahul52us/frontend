@@ -70,6 +70,18 @@ interface TableActionsProps {
   cells: boolean;
 }
 
+const getColumnTextAlign = (column: any) =>
+  column?.props?.row?.textAlign ||
+  column?.props?.column?.textAlign ||
+  (column?.type === "table-actions" ? "center" : "left");
+
+const getSharedCellLayoutProps = (column: any) => ({
+  textAlign: getColumnTextAlign(column),
+  verticalAlign: "middle" as const,
+  px: 4,
+  py: 3,
+});
+
 const TableActions: React.FC<TableActionsProps> = ({
   actions,
   column,
@@ -92,7 +104,7 @@ const TableActions: React.FC<TableActionsProps> = ({
       // {...cellProps}
       position={column?.props?.isSticky ? "sticky" : "relative"}
       right={column?.props?.isSticky ? "0" : undefined}
-      p={1}
+      {...getSharedCellLayoutProps(column)}
       zIndex={column?.props?.isSticky ? "5" : undefined}
       bgColor={column?.props?.isSticky ? "white" : undefined}
     >
@@ -166,6 +178,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
         >
@@ -180,6 +193,7 @@ const GenerateRows: React.FC<{
           fontSize="sm"
           color="blue.400"
           textDecoration="underline"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
           onClick={() => {
@@ -197,6 +211,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
         >
@@ -213,6 +228,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
         >
@@ -243,6 +259,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
           isTruncated={true}
@@ -256,6 +273,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
         >
@@ -269,6 +287,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
+          {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}
           {...cellProps}
           isTruncated={true}
@@ -444,6 +463,15 @@ const CustomTable: React.FC<CustomTableProps> = ({
           bg={bodyBg}
           borderRadius="md"
           overflow="hidden"
+          sx={{
+            th: {
+              verticalAlign: "middle",
+            },
+            td: {
+              verticalAlign: "middle",
+            },
+            ...(tableProps.table?.sx || {}),
+          }}
         >
           <Thead
             bg={headerBg}
@@ -461,6 +489,10 @@ const CustomTable: React.FC<CustomTableProps> = ({
                   textTransform="uppercase"
                   letterSpacing="wider"
                   fontSize="xs"
+                  textAlign="center"
+                  verticalAlign="middle"
+                  px={4}
+                  py={3}
                 >
                   {serial?.text || "S.No."}
                 </Th>
@@ -468,7 +500,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
               {columns.map((column, colIndex) => (
                 <Th
                   key={colIndex}
-                  textAlign="center"
+                  textAlign={getColumnTextAlign(column)}
                   position={column?.props?.isSticky ? "sticky" : "relative"}
                   right={column?.props?.isSticky ? "0" : undefined}
                   bg={headerBg}
@@ -477,6 +509,9 @@ const CustomTable: React.FC<CustomTableProps> = ({
                   letterSpacing="wider"
                   color="white"
                   fontWeight="bold"
+                  verticalAlign="middle"
+                  px={4}
+                  py={3}
                   border="none" // No borders on header cells
                   {...column?.props?.column}
                 >
@@ -503,7 +538,9 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       fontWeight="bold"
                       w={serial?.width || undefined}
                       textAlign="center"
-                      p={2}
+                      verticalAlign="middle"
+                      px={4}
+                      py={3}
                       fontSize="sm"
                       border="none" // No border on cells
                     >

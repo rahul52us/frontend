@@ -102,6 +102,37 @@ const ShopsPage = observer(() => {
         }
     };
 
+    const handleVisibilityChange = async (shopStatus: "active" | "inactive" | "suspended", remarks: string) => {
+        if (!reviewingShop?._id) return;
+        setIsReviewing(true);
+        try {
+            await companyStore.updateShop(reviewingShop._id, { shopStatus, remarks });
+            toast({
+                title:
+                    shopStatus === "active"
+                        ? "Shop activated"
+                        : shopStatus === "inactive"
+                            ? "Shop marked inactive"
+                            : "Shop suspended",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            onReviewClose();
+            fetchShops(currentPage, reviewStatus);
+        } catch (error: any) {
+            toast({
+                title: "Status update failed",
+                description: error.message || "Something went wrong",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsReviewing(false);
+        }
+    };
+
     const tableActions = {
         actionBtn: {
             viewKey: {
@@ -173,6 +204,7 @@ const ShopsPage = observer(() => {
                 onClose={onReviewClose}
                 shop={reviewingShop}
                 onSubmit={handleReviewShop}
+                onVisibilitySubmit={handleVisibilityChange}
                 isSubmitting={isReviewing}
             />
 
