@@ -174,9 +174,14 @@ const UserMenu = observer(() => {
               router.push("/dashboard")
             )
           ) : (
-            renderItem("Become a Seller", FiUser, "green", () =>
-              router.push("/become-seller")
-            )
+            <>
+              {renderItem("My Dashboard", FiGrid, "blue", () =>
+                router.push("/account?tab=dashboard")
+              )}
+              {renderItem("Become a Seller", FiUser, "green", () =>
+                router.push("/become-seller")
+              )}
+            </>
           )}
 
           {isSuperAdmin && renderItem("Account Settings", FiUser, "red", () =>

@@ -224,6 +224,175 @@ const defaultLedgerSummary: LedgerSummary = {
   isBlocked: false,
 };
 
+const androidTheme = {
+  colors: {
+    primary: "#0D63B8",
+    primaryDark: "#0A56A4",
+    primarySoft: "#EAF3FF",
+    primaryBorder: "#D2E2F5",
+    surface: "#F4F7FC",
+    surfaceMuted: "#F8FAFD",
+    surfaceElevated: "#FFFFFF",
+    border: "#E2EAF4",
+    borderStrong: "#D3E0EF",
+    text: "#172334",
+    textMuted: "#66758C",
+    textSubtle: "#8897AB",
+    success: "#17965F",
+    successSoft: "#E8F8EF",
+    successBorder: "#C6EAD6",
+    danger: "#D94A4A",
+    dangerSoft: "#FEF1F1",
+    dangerBorder: "#F5D1D1",
+    warning: "#C57A10",
+    warningSoft: "#FFF4E3",
+    warningBorder: "#F6DEB8",
+    infoSoft: "#EEF5FF",
+    infoBorder: "#D8E7F8",
+    fabStart: "#C51162",
+    fabEnd: "#D81B60",
+  },
+  spacing: {
+    pageX: { base: 3, sm: 4 },
+    sectionGap: 4,
+    fixedInset: "12px",
+  },
+  header: {
+    bgGradient: "linear(160deg, #0A4E9D 0%, #1668C1 58%, #1E7AD7 100%)",
+    boxShadow: "0 18px 38px rgba(10, 87, 176, 0.24)",
+    borderBottomRadius: "30px",
+  },
+  card: {
+    bg: "#FFFFFF",
+    borderWidth: "1px",
+    borderColor: "#E2EAF4",
+    borderRadius: "24px",
+    boxShadow: "0 12px 28px rgba(15, 23, 42, 0.08)",
+  },
+  sectionCard: {
+    bg: "#FFFFFF",
+    borderWidth: "1px",
+    borderColor: "#E5EEF8",
+    borderRadius: "22px",
+    boxShadow: "0 14px 30px rgba(15, 23, 42, 0.06)",
+  },
+  infoCard: {
+    bg: "#FFFFFF",
+    borderWidth: "1px",
+    borderColor: "#E5EDF6",
+    borderRadius: "18px",
+    px: 3,
+    py: 3,
+    minH: "72px",
+  },
+  badge: {
+    borderRadius: "full",
+    px: 2.5,
+    py: 1,
+    fontSize: "10px",
+    fontWeight: "800",
+  },
+  input: {
+    h: "48px",
+    bg: "#F8FAFD",
+    borderRadius: "16px",
+    borderColor: "transparent",
+    _placeholder: { color: "gray.400" },
+    _focus: {
+      borderColor: "#90CDF4",
+      bg: "#FFFFFF",
+      boxShadow: "0 0 0 1px #90CDF4",
+    },
+  },
+  actionBar: {
+    bg: "rgba(255, 255, 255, 0.96)",
+    borderRadius: "22px",
+    p: 3,
+    borderWidth: "1px",
+    borderColor: "#E5EEF8",
+    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.16)",
+    backdropFilter: "blur(18px)",
+  },
+  button: {
+    primary: {
+      h: "48px",
+      borderRadius: "14px",
+      fontWeight: "700",
+      fontSize: "sm",
+      _active: { transform: "scale(0.97)" },
+    },
+    secondary: {
+      h: "48px",
+      borderRadius: "14px",
+      fontWeight: "700",
+      fontSize: "sm",
+      _active: { transform: "scale(0.97)" },
+    },
+    small: {
+      h: "34px",
+      minH: "34px",
+      borderRadius: "12px",
+      fontSize: "12px",
+      fontWeight: "800",
+      px: 4,
+      _active: { transform: "scale(0.97)" },
+    },
+    pagination: {
+      h: "36px",
+      minW: "86px",
+      borderRadius: "full",
+      variant: "outline",
+      borderColor: "#D7E5F4",
+      bg: "#FFFFFF",
+      color: "#36506C",
+      fontSize: "sm",
+      fontWeight: "700",
+      _hover: { bg: "#F8FBFF" },
+      _active: { transform: "scale(0.97)", bg: "#EEF5FF" },
+    },
+    segment: {
+      flex: "1",
+      h: "44px",
+      borderRadius: "16px",
+      fontWeight: "800",
+      fontSize: "sm",
+      _active: { transform: "scale(0.98)" },
+    },
+    headerPill: {
+      h: "40px",
+      borderRadius: "full",
+      fontWeight: "700",
+      fontSize: "sm",
+      _active: { transform: "scale(0.97)" },
+    },
+  },
+  fab: {
+    h: "48px",
+    minW: "0",
+    px: 5,
+    borderRadius: "full",
+    fontSize: "sm",
+    fontWeight: "900",
+    letterSpacing: "0.02em",
+    boxShadow: "0 18px 34px rgba(197, 17, 98, 0.35)",
+    _active: { transform: "scale(0.97)" },
+  },
+  tones: {
+    sale: {
+      softBg: "linear-gradient(135deg, #FFF4E5 0%, #FFE8CC 100%)",
+      softBorder: "#F2DFC2",
+    },
+    payment: {
+      softBg: "linear-gradient(135deg, #E7FBF3 0%, #D3F7E8 100%)",
+      softBorder: "#CBEAD8",
+    },
+    adjustment: {
+      softBg: "linear-gradient(135deg, #E8F3FF 0%, #DDEEFF 100%)",
+      softBorder: "#D1E2F5",
+    },
+  },
+} as const;
+
 const defaultSaleFormItem = (): SaleFormItem => ({
   itemSource: "manual",
   productId: "",
@@ -2265,7 +2434,7 @@ const CustomersTab: React.FC = observer(() => {
 
   const renderBuyerProfilesMobile = () => (
     <Box
-      bg="#F4F7FC"
+      bg={androidTheme.colors.surface}
       borderRadius={{ base: "none", md: "3xl" }}
       mx={{ base: -2, md: 0 }}
       mt={{ base: -2, md: 0 }}
@@ -2273,7 +2442,7 @@ const CustomersTab: React.FC = observer(() => {
       pb="120px"
     >
       <Box
-        bgGradient="linear(160deg, #0A4E9D 0%, #1668C1 58%, #1E7AD7 100%)"
+        {...androidTheme.header}
         px={{ base: 4, sm: 5 }}
         pt={{ base: 5, sm: 6 }}
         pb={{ base: 8, sm: 9 }}
@@ -2294,14 +2463,13 @@ const CustomersTab: React.FC = observer(() => {
               </Text>
             </Box>
             <Button
-              size="sm"
+              {...androidTheme.button.headerPill}
               leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
               variant="outline"
-              borderRadius="full"
               color="white"
               borderColor="whiteAlpha.500"
               _hover={{ bg: "whiteAlpha.200" }}
-              _active={{ bg: "whiteAlpha.300" }}
+              _active={{ ...androidTheme.button.headerPill._active, bg: "whiteAlpha.300" }}
               onClick={openManualBuyerModal}
               flexShrink={0}
             >
@@ -2335,18 +2503,29 @@ const CustomersTab: React.FC = observer(() => {
             </VStack>
           </HStack>
 
-          <Box bg="white" borderRadius="24px" shadow="0 18px 40px rgba(5, 44, 92, 0.22)" overflow="hidden">
+          <Box
+            {...androidTheme.card}
+            overflow="hidden"
+            boxShadow="0 18px 40px rgba(5, 44, 92, 0.22)"
+          >
             <SimpleGrid columns={2}>
               <VStack spacing={1} px={4} py={4} align="center">
-                <Text fontSize="sm" color="gray.500" fontWeight="600">
+                <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
                   {mobileLeftSummary.label}
                 </Text>
                 <Text fontSize="2xl" fontWeight="900" color={mobileLeftSummary.color}>
                   {formatCompactCurrency(mobileLeftSummary.value)}
                 </Text>
               </VStack>
-              <VStack spacing={1} px={4} py={4} align="center" borderLeftWidth="1px" borderLeftColor="gray.100">
-                <Text fontSize="sm" color="gray.500" fontWeight="600">
+              <VStack
+                spacing={1}
+                px={4}
+                py={4}
+                align="center"
+                borderLeftWidth="1px"
+                borderLeftColor={androidTheme.colors.border}
+              >
+                <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
                   {mobileRightSummary.label}
                 </Text>
                 <Text fontSize="2xl" fontWeight="900" color={mobileRightSummary.color}>
@@ -2354,14 +2533,21 @@ const CustomersTab: React.FC = observer(() => {
                 </Text>
               </VStack>
             </SimpleGrid>
-            <HStack justify="space-between" px={4} py={3} bg="#F8FBFF" borderTopWidth="1px" borderTopColor="#E5EEF9">
-              <HStack spacing={2} color="#215E9D">
+            <HStack
+              justify="space-between"
+              px={4}
+              py={3}
+              bg={androidTheme.colors.surfaceMuted}
+              borderTopWidth="1px"
+              borderTopColor={androidTheme.colors.border}
+            >
+              <HStack spacing={2} color={androidTheme.colors.primary}>
                 <Icon as={FiUsers} boxSize={4} />
                 <Text fontSize="sm" fontWeight="700">
                   {total} {partyPluralLabel.toLowerCase()}
                 </Text>
               </HStack>
-              <Text fontSize="xs" fontWeight="700" color="gray.500">
+              <Text fontSize="xs" fontWeight="700" color={androidTheme.colors.textMuted}>
                 {buyerOverview.active} active
               </Text>
             </HStack>
@@ -2369,106 +2555,67 @@ const CustomersTab: React.FC = observer(() => {
         </VStack>
       </Box>
 
-      <Box px={{ base: 3, sm: 4 }} mt="-20px">
-        <Box
-          bg="white"
-          borderRadius="24px"
-          px={{ base: 3, sm: 4 }}
-          py={3}
-          shadow="0 12px 28px rgba(15, 23, 42, 0.08)"
-          borderWidth="1px"
-          borderColor="#E6EEF8"
-        >
+      <Box px={androidTheme.spacing.pageX} mt="-20px">
+        <Box {...androidTheme.card} px={{ base: 3, sm: 4 }} py={3}>
           <HStack spacing={3} align="stretch">
             <InputGroup flex="1">
               <InputLeftElement pointerEvents="none" h="100%">
-                <Icon as={FiSearch} color="#2B6CB0" boxSize={5} />
+                <Icon as={FiSearch} color={androidTheme.colors.primary} boxSize={5} />
               </InputLeftElement>
               <Input
+                {...androidTheme.input}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={`Search ${partySingularLabel.toLowerCase()}`}
-                bg="#F8FAFD"
-                borderRadius="18px"
-                borderColor="transparent"
-                h="52px"
                 pl={12}
-                _placeholder={{ color: "gray.400" }}
-                _focus={{ borderColor: "blue.200", bg: "white", boxShadow: "0 0 0 1px #90CDF4" }}
               />
             </InputGroup>
             <IconButton
               aria-label={`Add ${partySingularLabel.toLowerCase()} manually`}
               icon={<Icon as={FiUserPlus} boxSize={5} />}
               onClick={openManualBuyerModal}
-              h="52px"
-              minW="52px"
-              borderRadius="18px"
-              bg="#EFF6FF"
-              color="#1E63B6"
+              {...androidTheme.button.secondary}
+              minW={androidTheme.button.secondary.h}
+              bg={androidTheme.colors.primarySoft}
+              color={androidTheme.colors.primary}
               _hover={{ bg: "#DBEAFE" }}
             />
           </HStack>
         </Box>
       </Box>
 
-      <VStack align="stretch" spacing={3} px={{ base: 3, sm: 4 }} pt={4}>
+      <VStack align="stretch" spacing={androidTheme.spacing.sectionGap} px={androidTheme.spacing.pageX} pt={4}>
         {loading ? (
-          <Box
-            bg="white"
-            borderRadius="24px"
-            px={5}
-            py={8}
-            borderWidth="1px"
-            borderColor="#E6EEF8"
-            shadow="sm"
-          >
+          <Box {...androidTheme.card} px={5} py={8}>
             <VStack spacing={3}>
-              <Spinner color="blue.500" thickness="3px" />
-              <Text fontSize="sm" color="gray.500">
+              <Spinner color={androidTheme.colors.primary} thickness="3px" />
+              <Text fontSize="sm" color={androidTheme.colors.textMuted}>
                 Loading {partyPluralLabel.toLowerCase()}...
               </Text>
             </VStack>
           </Box>
         ) : buyers.length === 0 ? (
-          <Box
-            bg="white"
-            borderRadius="24px"
-            px={5}
-            py={8}
-            borderWidth="1px"
-            borderColor="#E6EEF8"
-            shadow="sm"
-          >
+          <Box {...androidTheme.card} px={5} py={8}>
             <VStack spacing={2}>
               <Icon as={FiUsers} boxSize={8} color="blue.300" />
-              <Text fontWeight="700" color="gray.700">
+              <Text fontWeight="700" color={androidTheme.colors.text}>
                 No {partyPluralLabel.toLowerCase()} found
               </Text>
-              <Text fontSize="sm" color="gray.500" textAlign="center">
+              <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
                 Try a different search or add a new {partySingularLabel.toLowerCase()} to start the ledger.
               </Text>
             </VStack>
           </Box>
         ) : (
           buyers.map((buyer) => (
-            <Box
-              key={buyer._id}
-              bg="white"
-              borderRadius="24px"
-              px={4}
-              py={4}
-              borderWidth="1px"
-              borderColor="#E6EEF8"
-              shadow="0 10px 24px rgba(15, 23, 42, 0.05)"
-            >
+            <Box key={buyer._id} {...androidTheme.card} px={4} py={4}>
               <HStack align="start" spacing={3}>
                 <Flex
                   h="50px"
                   w="50px"
                   borderRadius="full"
-                  bg={buyer.isBlocked ? "red.50" : "blue.50"}
-                  color={buyer.isBlocked ? "red.500" : "#1957A5"}
+                  bg={buyer.isBlocked ? androidTheme.colors.dangerSoft : androidTheme.colors.primarySoft}
+                  color={buyer.isBlocked ? androidTheme.colors.danger : androidTheme.colors.primary}
                   align="center"
                   justify="center"
                   fontWeight="900"
@@ -2481,10 +2628,10 @@ const CustomersTab: React.FC = observer(() => {
                 <Box flex="1" minW={0}>
                   <Flex justify="space-between" align="start" gap={3}>
                     <Box minW={0}>
-                      <Text fontSize="lg" fontWeight="800" color="gray.900" noOfLines={1}>
+                      <Text fontSize="lg" fontWeight="800" color={androidTheme.colors.text} noOfLines={1}>
                         {getBuyerDisplayName(buyer)}
                       </Text>
-                      <Text fontSize="sm" color="gray.500" mt={0.5}>
+                      <Text fontSize="sm" color={androidTheme.colors.textMuted} mt={0.5}>
                         {getBuyerSecondaryLabel(buyer)}
                       </Text>
                     </Box>
@@ -2496,18 +2643,18 @@ const CustomersTab: React.FC = observer(() => {
                         color={
                           Number(buyer.outstandingBalance || 0) >= 0
                             ? buyer.partyType === "supplier"
-                              ? "red.500"
-                              : "green.500"
+                              ? androidTheme.colors.danger
+                              : androidTheme.colors.success
                             : buyer.partyType === "supplier"
-                              ? "green.500"
-                              : "red.500"
+                              ? androidTheme.colors.success
+                              : androidTheme.colors.danger
                         }
                         lineHeight="1"
                       >
                         {formatCompactCurrency(Math.abs(Number(buyer.outstandingBalance || 0)))}
                       </Text>
                       <Badge
-                        borderRadius="full"
+                        {...androidTheme.badge}
                         px={2.5}
                         py={0.5}
                         colorScheme={buyer.isBlocked ? "red" : "green"}
@@ -2520,15 +2667,15 @@ const CustomersTab: React.FC = observer(() => {
                   </Flex>
 
                   <VStack align="stretch" spacing={2} mt={3}>
-                    <HStack spacing={2} color="gray.600" align="start">
-                      <Icon as={FiPhone} boxSize={4} mt={0.5} color="blue.500" flexShrink={0} />
+                    <HStack spacing={2} color={androidTheme.colors.textMuted} align="start">
+                      <Icon as={FiPhone} boxSize={4} mt={0.5} color={androidTheme.colors.primary} flexShrink={0} />
                       <Text fontSize="sm" fontWeight="500">
                         {buyer.buyerId?.phoneE164 || "-"}
                       </Text>
                     </HStack>
                     {buyer.buyerId?.emailNormalized ? (
-                      <HStack spacing={2} color="gray.600" align="start">
-                        <Icon as={FiMail} boxSize={4} mt={0.5} color="blue.500" flexShrink={0} />
+                      <HStack spacing={2} color={androidTheme.colors.textMuted} align="start">
+                        <Icon as={FiMail} boxSize={4} mt={0.5} color={androidTheme.colors.primary} flexShrink={0} />
                         <Text fontSize="sm" fontWeight="500" wordBreak="break-word">
                           {buyer.buyerId.emailNormalized}
                         </Text>
@@ -2541,12 +2688,9 @@ const CustomersTab: React.FC = observer(() => {
                       {buyer.tags.slice(0, 3).map((tag, idx) => (
                         <Badge
                           key={`${buyer._id}-${tag}-${idx}`}
-                          borderRadius="full"
-                          px={2.5}
-                          py={1}
-                          bg="#EEF4FF"
+                          {...androidTheme.badge}
+                          bg={androidTheme.colors.primarySoft}
                           color="#315D9C"
-                          fontWeight="700"
                         >
                           {tag}
                         </Badge>
@@ -2556,16 +2700,13 @@ const CustomersTab: React.FC = observer(() => {
 
                   <HStack mt={4} spacing={2}>
                     <Button
+                      {...androidTheme.button.primary}
                       flex="1"
                       rightIcon={<Icon as={FiChevronRight} boxSize={4} />}
                       onClick={() => openLedgerView(buyer)}
-                      bg="#0D63B8"
+                      bg={androidTheme.colors.primary}
                       color="white"
-                      borderRadius="16px"
-                      h="44px"
-                      fontWeight="800"
-                      _hover={{ bg: "#0A56A4" }}
-                      _active={{ bg: "#094A8D" }}
+                      _hover={{ bg: androidTheme.colors.primaryDark }}
                     >
                       View Ledger
                     </Button>
@@ -2573,11 +2714,13 @@ const CustomersTab: React.FC = observer(() => {
                       aria-label={`Delete ${buyer.partyType === "supplier" ? "supplier" : "customer"}`}
                       icon={<Icon as={FiTrash2} boxSize={4} />}
                       onClick={() => openDeleteModal(buyer)}
+                      {...androidTheme.button.secondary}
+                      minW={androidTheme.button.secondary.h}
                       variant="outline"
-                      borderRadius="16px"
-                      h="44px"
-                      minW="44px"
-                      colorScheme="red"
+                      borderColor={androidTheme.colors.danger}
+                      color={androidTheme.colors.danger}
+                      bg="transparent"
+                      _hover={{ bg: androidTheme.colors.dangerSoft }}
                     />
                   </HStack>
                 </Box>
@@ -2588,9 +2731,7 @@ const CustomersTab: React.FC = observer(() => {
 
         <HStack justify="space-between" align="center" pt={2}>
           <Button
-            size="sm"
-            variant="outline"
-            borderRadius="full"
+            {...androidTheme.button.pagination}
             isDisabled={page <= 1 || loading}
             onClick={() => {
               if (page <= 1) return;
@@ -2601,13 +2742,11 @@ const CustomersTab: React.FC = observer(() => {
           >
             Previous
           </Button>
-          <Text fontSize="sm" color="gray.600" fontWeight="600">
+          <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
             Page {page} of {totalPages || 1}
           </Text>
           <Button
-            size="sm"
-            variant="outline"
-            borderRadius="full"
+            {...androidTheme.button.pagination}
             isDisabled={page >= (totalPages || 1) || loading}
             onClick={() => {
               if (page >= (totalPages || 1)) return;
@@ -2623,24 +2762,16 @@ const CustomersTab: React.FC = observer(() => {
 
       <Button
         position="fixed"
-        left={{ base: "12px", sm: "16px" }}
+        left={{ base: androidTheme.spacing.fixedInset, sm: "16px" }}
         transform="none"
         bottom="calc(74px + env(safe-area-inset-bottom, 0px))"
         zIndex={20}
         leftIcon={<Icon as={FiUserPlus} boxSize={5} />}
         onClick={handlePickSingleContact}
-        h="48px"
-        minW="0"
-        px={5}
-        borderRadius="full"
-        bgGradient="linear(135deg, #C51162 0%, #D81B60 100%)"
+        {...androidTheme.fab}
+        bgGradient={`linear(135deg, ${androidTheme.colors.fabStart} 0%, ${androidTheme.colors.fabEnd} 100%)`}
         color="white"
-        fontSize="sm"
-        fontWeight="900"
-        letterSpacing="0.02em"
-        shadow="0 18px 34px rgba(197, 17, 98, 0.35)"
         _hover={{ bgGradient: "linear(135deg, #B20E58 0%, #C2185B 100%)" }}
-        _active={{ bgGradient: "linear(135deg, #9F0C4F 0%, #AD1457 100%)" }}
       >
         Add {partySingularLabel}
       </Button>
@@ -2867,20 +2998,11 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const renderLedgerMobile = () => (
-    <VStack align="stretch" spacing={4}>
+    <VStack align="stretch" spacing={androidTheme.spacing.sectionGap}>
       {ledgerLoading ? (
-        <VStack
-          spacing={3}
-          py={8}
-          px={4}
-          borderWidth="1px"
-          borderColor="gray.200"
-          borderRadius="xl"
-          bg="white"
-          shadow="sm"
-        >
-          <Spinner color="blue.500" thickness="3px" size="lg" />
-          <Text fontSize="sm" color="gray.500">
+        <VStack spacing={3} py={8} px={4} {...androidTheme.card}>
+          <Spinner color={androidTheme.colors.primary} thickness="3px" size="lg" />
+          <Text fontSize="sm" color={androidTheme.colors.textMuted}>
             Loading ledger activity...
           </Text>
         </VStack>
@@ -2889,251 +3011,208 @@ const CustomersTab: React.FC = observer(() => {
           spacing={2}
           py={8}
           px={5}
-          borderRadius="2xl"
-          borderWidth="1px"
-          borderColor="#D7E5F4"
+          {...androidTheme.card}
           bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
-          shadow="0 12px 30px rgba(15, 23, 42, 0.06)"
         >
           <Text fontSize="sm" fontWeight="800" color="#1E3A5F">
             No ledger entries yet
           </Text>
-          <Text fontSize="sm" color="gray.500" textAlign="center">
+          <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
             {isSelectedSupplier
               ? "Purchases, payments, and adjustments for this supplier will appear here."
               : "Sales, payments, and adjustments for this customer will appear here."}
           </Text>
         </VStack>
       ) : (
-        ledgerEntries.map((entry) => (
-          <Box
-            key={entry._id}
-            borderWidth="1px"
-            borderColor="#D9E4F2"
-            borderRadius="24px"
-            bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
-            shadow="0 16px 38px rgba(15, 23, 42, 0.08)"
-            overflow="hidden"
-          >
-            <Box
-              px={4}
-              py={3.5}
-              bgGradient={
-                entry.entryType === "sale"
-                  ? "linear(135deg, #FFF4E5 0%, #FFE8CC 100%)"
-                  : entry.entryType === "payment"
-                    ? "linear(135deg, #E7FBF3 0%, #D3F7E8 100%)"
-                    : "linear(135deg, #E8F3FF 0%, #DDEEFF 100%)"
-              }
-              borderBottomWidth="1px"
-              borderBottomColor="#E5EDF6"
-            >
-              <Flex justify="space-between" align="flex-start" gap={3}>
-                <VStack align="start" spacing={2} flex="1" minW={0}>
-                  <HStack spacing={2} flexWrap="wrap">
-                    <Badge
-                      colorScheme={
-                        entry.entryType === "sale"
-                          ? "orange"
-                          : entry.entryType === "payment"
-                            ? "green"
-                            : "blue"
-                      }
-                      textTransform="capitalize"
-                      borderRadius="full"
-                      px={2.5}
-                      py={1}
-                      fontSize="10px"
-                      fontWeight="800"
-                    >
-                      {getLedgerEntryTypeLabel(entry.entryType)}
-                    </Badge>
-                    <Badge
-                      colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
-                      textTransform="none"
-                      borderRadius="full"
-                      px={2.5}
-                      py={1}
-                      fontSize="10px"
-                      fontWeight="800"
-                    >
-                      {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
-                    </Badge>
-                  </HStack>
-                  <Text fontSize="11px" fontWeight="700" color="#52627A" letterSpacing="0.01em">
-                    {entry.status === "reversed"
-                      ? "This entry has been reversed"
-                      : `Recorded in ${isSelectedSupplier ? "supplier" : "customer"} ledger`}
-                  </Text>
-                </VStack>
+        ledgerEntries.map((entry) => {
+          const entryTone =
+            entry.entryType === "sale"
+              ? androidTheme.tones.sale
+              : entry.entryType === "payment"
+                ? androidTheme.tones.payment
+                : androidTheme.tones.adjustment;
 
-                <VStack align="end" spacing={0} minW="fit-content">
-                  <Text
-                    fontSize="10px"
-                    color="#64748B"
-                    fontWeight="700"
-                    textTransform="uppercase"
-                    letterSpacing="0.08em"
-                  >
-                    Amount
-                  </Text>
-                  <Text
-                    fontWeight="900"
-                    fontSize="md"
-                    lineHeight="1.1"
-                    color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
-                  >
-                    {formatCurrency(entry.amount || 0)}
-                  </Text>
-                </VStack>
-              </Flex>
-            </Box>
-            <VStack align="stretch" spacing={3.5} p={4}>
-              <SimpleGrid columns={2} spacing={3}>
-                <Box>
-                  <Box
-                    borderRadius="18px"
-                    bg="white"
-                    borderWidth="1px"
-                    borderColor="#E7EEF8"
-                    px={3}
-                    py={3}
-                    minH="72px"
-                  >
-                    <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+          return (
+            <Box
+              key={entry._id}
+              {...androidTheme.card}
+              borderColor={entryTone.softBorder}
+              bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
+              boxShadow="0 16px 38px rgba(15, 23, 42, 0.08)"
+              overflow="hidden"
+            >
+              <Box
+                px={4}
+                py={3.5}
+                bgGradient={entryTone.softBg}
+                borderBottomWidth="1px"
+                borderBottomColor={androidTheme.colors.border}
+              >
+                <Flex justify="space-between" align="flex-start" gap={3}>
+                  <VStack align="start" spacing={2} flex="1" minW={0}>
+                    <HStack spacing={2} flexWrap="wrap">
+                      <Badge
+                        {...androidTheme.badge}
+                        colorScheme={
+                          entry.entryType === "sale"
+                            ? "orange"
+                            : entry.entryType === "payment"
+                              ? "green"
+                              : "blue"
+                        }
+                        textTransform="capitalize"
+                      >
+                        {getLedgerEntryTypeLabel(entry.entryType)}
+                      </Badge>
+                      <Badge
+                        {...androidTheme.badge}
+                        colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                        textTransform="none"
+                      >
+                        {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
+                      </Badge>
+                    </HStack>
+                    <Text fontSize="11px" fontWeight="700" color={androidTheme.colors.textMuted} letterSpacing="0.01em">
+                      {entry.status === "reversed"
+                        ? "This entry has been reversed"
+                        : `Recorded in ${isSelectedSupplier ? "supplier" : "customer"} ledger`}
+                    </Text>
+                  </VStack>
+
+                  <VStack align="end" spacing={0} minW="fit-content">
+                    <Text
+                      fontSize="10px"
+                      color={androidTheme.colors.textSubtle}
+                      fontWeight="700"
+                      textTransform="uppercase"
+                      letterSpacing="0.08em"
+                    >
+                      Amount
+                    </Text>
+                    <Text
+                      fontWeight="900"
+                      fontSize="md"
+                      lineHeight="1.1"
+                      color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
+                    >
+                      {formatCurrency(entry.amount || 0)}
+                    </Text>
+                  </VStack>
+                </Flex>
+              </Box>
+              <VStack align="stretch" spacing={3.5} p={4}>
+                <SimpleGrid columns={2} spacing={3}>
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Date
                     </Text>
-                    <Text fontSize="13px" color="#1F2937" fontWeight="700" mt={1}>
+                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="700" mt={1}>
                       {formatDateTime(entry.entryDate)}
                     </Text>
                   </Box>
-                </Box>
-                <Box>
-                  <Box
-                    borderRadius="18px"
-                    bg="white"
-                    borderWidth="1px"
-                    borderColor="#E7EEF8"
-                    px={3}
-                    py={3}
-                    minH="72px"
-                  >
-                    <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Balance
                     </Text>
                     <Text fontSize="13px" color="#0F172A" fontWeight="900" mt={1}>
                       {formatCurrency(entry.balanceAfter || 0)}
                     </Text>
                   </Box>
-                </Box>
-              </SimpleGrid>
-              <Box>
-                <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                  Reference
-                </Text>
-                <Box
-                  mt={1.5}
-                  borderRadius="16px"
-                  bg="#F3F8FE"
-                  borderWidth="1px"
-                  borderColor="#D9E6F6"
-                  px={3}
-                  py={2.5}
-                >
-                  <Text fontSize="13px" color="#244261" fontWeight="700" fontFamily="mono" wordBreak="break-word">
-                    {formatLedgerReference(entry)}
-                  </Text>
-                </Box>
-              </Box>
-              {entry.notes ? (
+                </SimpleGrid>
                 <Box>
-                  <Text fontSize="10px" color="#64748B" textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                    Notes
+                  <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+                    Reference
                   </Text>
                   <Box
+                    {...androidTheme.infoCard}
                     mt={1.5}
-                    borderRadius="16px"
-                    bg="#FFFDF7"
-                    borderWidth="1px"
-                    borderColor="#F4E8B2"
-                    px={3}
+                    bg={androidTheme.colors.infoSoft}
+                    borderColor={androidTheme.colors.infoBorder}
+                    minH="unset"
                     py={2.5}
                   >
-                    <Text fontSize="13px" color="#5B5340" lineHeight="1.5">
-                      {entry.notes}
+                    <Text fontSize="13px" color="#244261" fontWeight="700" fontFamily="mono" wordBreak="break-word">
+                      {formatLedgerReference(entry)}
                     </Text>
                   </Box>
                 </Box>
-              ) : null}
-              <Flex justify="space-between" align="center" gap={3} wrap="wrap">
-                <Badge
-                  alignSelf="flex-start"
-                  colorScheme={entry.status === "reversed" ? "red" : "green"}
-                  textTransform="capitalize"
-                  borderRadius="full"
-                  px={3}
-                  py={1}
-                  fontSize="10px"
-                  fontWeight="800"
-                >
-                  {entry.status || "active"}
-                </Badge>
-                {entry.status !== "reversed" ? (
-                  <Flex flex="1" justify="flex-end" gap={2} wrap="wrap">
-                    {canDownloadLedgerInvoice(entry) && (
-                      <Button
-                        size="xs"
-                        h="32px"
-                        colorScheme="blue"
-                        variant="subtle"
-                        borderRadius="full"
-                        fontWeight="800"
-                        fontSize="12px"
-                        isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-                        onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-                      >
-                        Invoice
-                      </Button>
-                    )}
-                    {entry.direction === "debit" && (
-                      <Button
-                        size="xs"
-                        h="32px"
-                        colorScheme="green"
-                        variant="solid"
-                        borderRadius="full"
-                        fontWeight="800"
-                        fontSize="12px"
-                        onClick={() => openPayModal(entry)}
-                      >
-                        Pay
-                      </Button>
-                    )}
-                    <Button
-                      size="xs"
-                      h="32px"
-                      colorScheme="red"
-                      variant="outline"
-                      borderRadius="full"
-                      fontWeight="800"
-                      fontSize="12px"
-                      onClick={() => openReverseModal(entry)}
+                {entry.notes ? (
+                  <Box>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+                      Notes
+                    </Text>
+                    <Box
+                      {...androidTheme.infoCard}
+                      mt={1.5}
+                      bg={androidTheme.colors.warningSoft}
+                      borderColor={androidTheme.colors.warningBorder}
+                      minH="unset"
+                      py={2.5}
                     >
-                      Reverse
-                    </Button>
-                  </Flex>
+                      <Text fontSize="13px" color="#5B5340" lineHeight="1.5">
+                        {entry.notes}
+                      </Text>
+                    </Box>
+                  </Box>
                 ) : null}
-              </Flex>
-            </VStack>
-          </Box>
-        ))
+                <Flex justify="space-between" align="center" gap={3} wrap="wrap">
+                  <Badge
+                    {...androidTheme.badge}
+                    alignSelf="flex-start"
+                    colorScheme={entry.status === "reversed" ? "red" : "green"}
+                    textTransform="capitalize"
+                    px={3}
+                  >
+                    {entry.status || "active"}
+                  </Badge>
+                  {entry.status !== "reversed" ? (
+                    <Flex flex="1" justify="flex-end" gap={2} wrap="wrap">
+                      {canDownloadLedgerInvoice(entry) && (
+                        <Button
+                          {...androidTheme.button.small}
+                          bg={androidTheme.colors.primarySoft}
+                          color={androidTheme.colors.primary}
+                          isLoading={invoiceDownloadingLedgerEntryId === entry._id}
+                          onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
+                          _hover={{ bg: "#DBEAFE" }}
+                        >
+                          Invoice
+                        </Button>
+                      )}
+                      {entry.direction === "debit" && (
+                        <Button
+                          {...androidTheme.button.small}
+                          bg={androidTheme.colors.success}
+                          color="white"
+                          onClick={() => openPayModal(entry)}
+                          _hover={{ bg: "#148551" }}
+                        >
+                          Pay
+                        </Button>
+                      )}
+                      <Button
+                        {...androidTheme.button.small}
+                        variant="outline"
+                        borderColor={androidTheme.colors.danger}
+                        color={androidTheme.colors.danger}
+                        bg="transparent"
+                        onClick={() => openReverseModal(entry)}
+                        _hover={{ bg: androidTheme.colors.dangerSoft }}
+                      >
+                        Reverse
+                      </Button>
+                    </Flex>
+                  ) : null}
+                </Flex>
+              </VStack>
+            </Box>
+          );
+        })
       )}
 
       <HStack justify="space-between" pt={1}>
         <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
+          {...androidTheme.button.pagination}
           isDisabled={ledgerPage <= 1 || ledgerLoading}
           onClick={() => {
             if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
@@ -3144,13 +3223,11 @@ const CustomersTab: React.FC = observer(() => {
         >
           Previous
         </Button>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color={androidTheme.colors.textMuted}>
           Page {ledgerPage} of {ledgerTotalPages || 1}
         </Text>
         <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
+          {...androidTheme.button.pagination}
           isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
           onClick={() => {
             if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;
@@ -3166,15 +3243,25 @@ const CustomersTab: React.FC = observer(() => {
   );
 
   const renderSaleRecordsMobile = () => (
-    <VStack align="stretch" spacing={4}>
+    <VStack align="stretch" spacing={androidTheme.spacing.sectionGap}>
       {saleLoading ? (
-        <Text fontSize="sm" color="gray.500">
-          Loading {isSelectedSupplier ? "purchase" : "sale"} records...
-        </Text>
+        <VStack spacing={3} py={8} px={4} {...androidTheme.card}>
+          <Spinner color={androidTheme.colors.primary} thickness="3px" size="lg" />
+          <Text fontSize="sm" color={androidTheme.colors.textMuted}>
+            Loading {isSelectedSupplier ? "purchase" : "sale"} records...
+          </Text>
+        </VStack>
       ) : saleRecords.length === 0 ? (
-        <Text fontSize="sm" color="gray.500">
-          No {isSelectedSupplier ? "purchase" : "sale"} records found.
-        </Text>
+        <VStack spacing={2} py={8} px={5} {...androidTheme.card}>
+          <Text fontSize="sm" fontWeight="800" color={androidTheme.colors.text}>
+            No {isSelectedSupplier ? "purchase" : "sale"} records found
+          </Text>
+          <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
+            {isSelectedSupplier
+              ? "Your purchases and supplier bills will appear here."
+              : "Your sales and customer bills will appear here."}
+          </Text>
+        </VStack>
       ) : (
         saleRecords.map((record) => {
           const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
@@ -3188,92 +3275,126 @@ const CustomersTab: React.FC = observer(() => {
           return (
             <Box
               key={record._id}
-              borderWidth="1px"
-              borderColor="gray.200"
-              borderRadius="xl"
-              bg="white"
-              shadow="sm"
+              {...androidTheme.card}
+              borderColor={androidTheme.colors.borderStrong}
+              boxShadow="0 16px 34px rgba(15, 23, 42, 0.08)"
               overflow="hidden"
             >
-              <Box px={4} py={3} bg="blue.50" borderBottomWidth="1px" borderBottomColor="gray.200">
+              <Box
+                px={4}
+                py={3.5}
+                bg={androidTheme.colors.infoSoft}
+                borderBottomWidth="1px"
+                borderBottomColor={androidTheme.colors.border}
+              >
                 <HStack justify="space-between" align="center">
                   <Badge
+                    {...androidTheme.badge}
                     colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
                     textTransform="capitalize"
-                    borderRadius="full"
-                    px={2}
                   >
                     {record.status}
                   </Badge>
-                  <Text fontWeight="800" color="blue.800" fontSize="sm">
+                  <Text fontWeight="900" color={androidTheme.colors.primaryDark} fontSize="md">
                     {formatCurrency(Number(record.grandTotal || 0))}
                   </Text>
                 </HStack>
               </Box>
               <VStack align="stretch" spacing={3} p={4}>
-                <SimpleGrid columns={2} spacing={2}>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                <SimpleGrid columns={2} spacing={3}>
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       ID
                     </Text>
                     <Text
-                      fontSize="sm"
-                      color="blue.600"
-                      fontWeight="600"
+                      fontSize="13px"
+                      color={androidTheme.colors.primary}
+                      fontWeight="700"
                       cursor="pointer"
-                      textDecoration="underline"
+                      mt={1}
                       onClick={() => openSaleDetails(record)}
                     >
                       {record._id.slice(-6)}
                     </Text>
                   </Box>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Date
                     </Text>
-                    <Text fontSize="sm" color="gray.800">
+                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="700" mt={1}>
                       {formatDateTime(record.saleDate)}
                     </Text>
                   </Box>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Item Count
                     </Text>
-                    <Text fontSize="sm" color="gray.800" fontWeight="700">
+                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="900" mt={1}>
                       {itemsCount}
                     </Text>
                   </Box>
                 </SimpleGrid>
                 <Box>
-                  <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                  <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                     Items
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
-                    {itemsCount > 2 ? `${preview} +${itemsCount - 2} more` : preview}
-                  </Text>
+                  <Box
+                    {...androidTheme.infoCard}
+                    mt={1.5}
+                    bg={androidTheme.colors.surfaceMuted}
+                    borderColor={androidTheme.colors.border}
+                    minH="unset"
+                    py={2.5}
+                  >
+                    <Text fontSize="13px" color={androidTheme.colors.textMuted}>
+                      {itemsCount > 2 ? `${preview} +${itemsCount - 2} more` : preview}
+                    </Text>
+                  </Box>
                 </Box>
                 {record.notes ? (
                   <Box>
-                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Notes
                     </Text>
-                    <Text fontSize="sm" color="gray.700">
-                      {record.notes}
-                    </Text>
+                    <Box
+                      {...androidTheme.infoCard}
+                      mt={1.5}
+                      bg={androidTheme.colors.warningSoft}
+                      borderColor={androidTheme.colors.warningBorder}
+                      minH="unset"
+                      py={2.5}
+                    >
+                      <Text fontSize="13px" color="#5B5340">
+                        {record.notes}
+                      </Text>
+                    </Box>
                   </Box>
                 ) : null}
-                {record.status === "draft" && !record.ledgerEntryId ? (
+                <Flex justify="space-between" align="center" gap={3} wrap="wrap">
                   <Button
-                    size="xs"
-                    colorScheme="blue"
-                    variant="outline"
-                    borderRadius="full"
-                    isLoading={postingSaleId === record._id}
-                    onClick={() => handlePostSaleRecordToLedger(record._id)}
+                    {...androidTheme.button.small}
+                    bg={androidTheme.colors.primarySoft}
+                    color={androidTheme.colors.primary}
+                    onClick={() => openSaleDetails(record)}
+                    _hover={{ bg: "#DBEAFE" }}
                   >
-                    Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
+                    View Details
                   </Button>
-                ) : null}
+                  {record.status === "draft" && !record.ledgerEntryId ? (
+                    <Button
+                      {...androidTheme.button.small}
+                      variant="outline"
+                      borderColor={androidTheme.colors.primary}
+                      color={androidTheme.colors.primary}
+                      bg="transparent"
+                      isLoading={postingSaleId === record._id}
+                      onClick={() => handlePostSaleRecordToLedger(record._id)}
+                      _hover={{ bg: androidTheme.colors.primarySoft }}
+                    >
+                      Post to Ledger
+                    </Button>
+                  ) : null}
+                </Flex>
               </VStack>
             </Box>
           );
@@ -3282,9 +3403,7 @@ const CustomersTab: React.FC = observer(() => {
 
       <HStack justify="space-between" pt={1}>
         <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
+          {...androidTheme.button.pagination}
           isDisabled={salePage <= 1 || saleLoading}
           onClick={() => {
             if (!selectedLedgerBuyer?._id || salePage <= 1) return;
@@ -3295,13 +3414,11 @@ const CustomersTab: React.FC = observer(() => {
         >
           Previous
         </Button>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color={androidTheme.colors.textMuted}>
           Page {salePage} of {saleTotalPages || 1}
         </Text>
         <Button
-          size="sm"
-          variant="outline"
-          borderRadius="full"
+          {...androidTheme.button.pagination}
           isDisabled={salePage >= (saleTotalPages || 1) || saleLoading}
           onClick={() => {
             if (!selectedLedgerBuyer?._id || salePage >= (saleTotalPages || 1)) return;
@@ -3362,14 +3479,13 @@ const CustomersTab: React.FC = observer(() => {
         };
 
     return (
-      <Box mx={-2} mt={-2} pb="132px" bg="#EEF5FF" minH="calc(100vh - 56px)">
+      <Box mx={-2} mt={-2} pb="132px" bg={androidTheme.colors.surface} minH="calc(100vh - 56px)">
         <Box
+          {...androidTheme.header}
           bgGradient="linear(180deg, #0A57B0 0%, #0F6FD2 100%)"
           px={4}
           pt={4}
           pb={10}
-          borderBottomRadius="30px"
-          boxShadow="0 14px 36px rgba(10, 87, 176, 0.22)"
         >
           <HStack justify="space-between" align="center">
             <IconButton
@@ -3466,22 +3582,21 @@ const CustomersTab: React.FC = observer(() => {
           </HStack>
         </Box>
 
-        <VStack align="stretch" spacing={4} px={3} mt="-26px">
+        <VStack align="stretch" spacing={androidTheme.spacing.sectionGap} px={3} mt="-26px">
           <Box
-            bg="white"
+            {...androidTheme.card}
             borderRadius="26px"
             p={4}
-            shadow="0 16px 36px rgba(15, 23, 42, 0.08)"
-            borderWidth="1px"
-            borderColor="#E5EEF8"
+            boxShadow="0 16px 36px rgba(15, 23, 42, 0.08)"
           >
             <SimpleGrid columns={2} spacing={3}>
               <Box
+                {...androidTheme.infoCard}
                 borderRadius="20px"
                 px={3.5}
                 py={3}
+                minH="unset"
                 bg="linear-gradient(135deg, rgba(236,253,245,1) 0%, rgba(209,250,229,1) 100%)"
-                borderWidth="1px"
                 borderColor="green.100"
               >
                 <Text fontSize="xs" fontWeight="800" color="green.700" textTransform="uppercase" letterSpacing="0.08em">
@@ -3492,11 +3607,12 @@ const CustomersTab: React.FC = observer(() => {
                 </Text>
               </Box>
               <Box
+                {...androidTheme.infoCard}
                 borderRadius="20px"
                 px={3.5}
                 py={3}
+                minH="unset"
                 bg={detailBalanceTone.bg}
-                borderWidth="1px"
                 borderColor={detailBalanceTone.borderColor}
               >
                 <Text
@@ -3513,11 +3629,12 @@ const CustomersTab: React.FC = observer(() => {
                 </Text>
               </Box>
               <Box
+                {...androidTheme.infoCard}
                 borderRadius="20px"
                 px={3.5}
                 py={3}
+                minH="unset"
                 bg="#FFF7ED"
-                borderWidth="1px"
                 borderColor="orange.100"
               >
                 <Text fontSize="xs" fontWeight="800" color="orange.700" textTransform="uppercase" letterSpacing="0.08em">
@@ -3528,11 +3645,12 @@ const CustomersTab: React.FC = observer(() => {
                 </Text>
               </Box>
               <Box
+                {...androidTheme.infoCard}
                 borderRadius="20px"
                 px={3.5}
                 py={3}
+                minH="unset"
                 bg="#F5F3FF"
-                borderWidth="1px"
                 borderColor="purple.100"
               >
                 <Text fontSize="xs" fontWeight="800" color="purple.700" textTransform="uppercase" letterSpacing="0.08em">
@@ -3545,38 +3663,31 @@ const CustomersTab: React.FC = observer(() => {
             </SimpleGrid>
           </Box>
 
-          <Box
-            bg="white"
-            borderRadius="22px"
-            p={1.5}
-            shadow="0 14px 30px rgba(15, 23, 42, 0.06)"
-            borderWidth="1px"
-            borderColor="#E5EEF8"
-          >
+          <Box {...androidTheme.sectionCard} p={1.5}>
             <HStack spacing={2}>
               <Button
-                flex="1"
-                h="44px"
-                borderRadius="16px"
+                {...androidTheme.button.segment}
                 bg={ledgerTabIndex === 0 ? "#0A57B0" : "transparent"}
                 color={ledgerTabIndex === 0 ? "white" : "#33506D"}
-                fontWeight="800"
                 onClick={() => setLedgerTabIndex(0)}
                 _hover={{ bg: ledgerTabIndex === 0 ? "#0A57B0" : "#F8FBFF" }}
-                _active={{ bg: ledgerTabIndex === 0 ? "#094894" : "#EEF5FF" }}
+                _active={{
+                  ...androidTheme.button.segment._active,
+                  bg: ledgerTabIndex === 0 ? "#094894" : "#EEF5FF",
+                }}
               >
                 Entries ({ledgerTotal})
               </Button>
               <Button
-                flex="1"
-                h="44px"
-                borderRadius="16px"
+                {...androidTheme.button.segment}
                 bg={ledgerTabIndex === 1 ? "#0A57B0" : "transparent"}
                 color={ledgerTabIndex === 1 ? "white" : "#33506D"}
-                fontWeight="800"
                 onClick={() => setLedgerTabIndex(1)}
                 _hover={{ bg: ledgerTabIndex === 1 ? "#0A57B0" : "#F8FBFF" }}
-                _active={{ bg: ledgerTabIndex === 1 ? "#094894" : "#EEF5FF" }}
+                _active={{
+                  ...androidTheme.button.segment._active,
+                  bg: ledgerTabIndex === 1 ? "#094894" : "#EEF5FF",
+                }}
               >
                 {isSelectedSupplier ? "Purchases" : "Sales"} ({saleTotal})
               </Button>
@@ -3588,45 +3699,37 @@ const CustomersTab: React.FC = observer(() => {
 
         <Box
           position="fixed"
-          left="12px"
-          right="12px"
+          left={androidTheme.spacing.fixedInset}
+          right={androidTheme.spacing.fixedInset}
           bottom="calc(12px + env(safe-area-inset-bottom, 0px))"
           zIndex={20}
         >
-          <HStack
-            spacing={3}
-            bg="white"
-            borderRadius="22px"
-            p={3}
-            shadow="0 18px 40px rgba(15, 23, 42, 0.16)"
-            borderWidth="1px"
-            borderColor="#E5EEF8"
-          >
+          <HStack spacing={3} {...androidTheme.actionBar}>
             <Button
+              {...androidTheme.button.primary}
               flex="1"
               h="52px"
               borderRadius="16px"
               bg="#0F766E"
               color="white"
-              fontWeight="800"
               leftIcon={<AddIcon />}
               onClick={onSaleRecordOpen}
               _hover={{ bg: "#0B5E58" }}
-              _active={{ bg: "#094C47" }}
+              _active={{ ...androidTheme.button.primary._active, bg: "#094C47" }}
             >
               Add {isSelectedSupplier ? "Purchase" : "Sale"}
             </Button>
             <Button
+              {...androidTheme.button.primary}
               flex="1"
               h="52px"
               borderRadius="16px"
               bg="#0A57B0"
               color="white"
-              fontWeight="800"
               leftIcon={<AddIcon />}
               onClick={onLedgerEntryOpen}
               _hover={{ bg: "#094894" }}
-              _active={{ bg: "#073A76" }}
+              _active={{ ...androidTheme.button.primary._active, bg: "#073A76" }}
             >
               Add Entry
             </Button>

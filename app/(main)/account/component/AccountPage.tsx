@@ -3,13 +3,14 @@ import { observer } from "mobx-react-lite";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { FaBox, FaHome, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
+import { FaBox, FaChartBar, FaHome, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
 import { AddressesSection } from "./AddressSection/AddressSection";
 // import { OrdersSection } from "./OrderSection/OrderSection";
 import OrdersSection from "./OrderSection/OrderSection";
 import { ProfileSection } from "./ProfileSection/ProfileSection";
 import SidebarButton from "./SidebarButton/SidebarButton";
 import { WalletSection } from "./WalletSection/WalletSection";
+import BuyerDashboard from "./BuyerDashboard/BuyerDashboard";
 import stores from "../../../store/stores";
 
 const AccountPage = observer(() => {
@@ -49,6 +50,7 @@ const AccountPage = observer(() => {
 
   const menuItems = [
     { label: "Profile Details", icon: <FaUser size="18px" />, tab: "details" },
+    { label: "Dashboard", icon: <FaChartBar size="18px" />, tab: "dashboard" },
     { label: "Orders", icon: <FaBox size="18px" />, tab: "orders" },
     { label: "Addresses", icon: <FaHome size="18px" />, tab: "addresses" },
     { label: "Wallet", icon: <FaWallet size="18px" />, tab: "wallet" },
@@ -119,6 +121,7 @@ const AccountPage = observer(() => {
         <Card borderRadius="2xl" boxShadow="lg" bg={useColorModeValue("white", "gray.700")}>
           <CardBody p={8}>
             {activeTab === "details" && <ProfileSection user={user} />}
+            {activeTab === "dashboard" && <BuyerDashboard />}
             {activeTab === "orders" && <OrdersSection />}
             {activeTab === "addresses" && <AddressesSection />}
             {activeTab === "wallet" && <WalletSection />}

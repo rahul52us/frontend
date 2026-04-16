@@ -21,7 +21,7 @@ import {
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
-import { FiShoppingCart, FiHeart, FiShoppingBag, FiMapPin, FiCreditCard, FiUser, FiLogOut } from "react-icons/fi";
+import { FiShoppingCart, FiHeart, FiShoppingBag, FiMapPin, FiCreditCard, FiUser, FiLogOut, FiGrid } from "react-icons/fi";
 import { useEffect, useState } from "react";
 
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
@@ -178,6 +178,13 @@ const Header = observer(() => {
                       <Icon as={FiCreditCard} color="purple.500" />
                       <Text fontWeight="500" fontSize="md">Payment Methods</Text>
                     </Flex>
+
+                    {user?.type === "user" && (
+                      <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/account?tab=dashboard"); }}>
+                        <Icon as={FiGrid} color="blue.500" />
+                        <Text fontWeight="500" fontSize="md">My Dashboard</Text>
+                      </Flex>
+                    )}
 
                     <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard"); }}>
                       <Icon as={FiUser} color="orange.500" />
