@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Box, IconButton } from "@chakra-ui/react";
 import { FaWhatsapp } from "react-icons/fa";
+import { usePathname } from "next/navigation";
 
 // Declare fbq globally for TypeScript
 declare global {
@@ -10,8 +11,13 @@ declare global {
 }
 
 const WhatsAppButton = () => {
+    const pathname = usePathname();
     const phoneNumber = "919899129943"; // Your WhatsApp number
     const message = "Hello, I need some information."; // Default message
+
+    if (pathname?.startsWith("/dashboard/customers")) {
+        return null;
+    }
 
     const handleWhatsAppClick = () => {
         // 🔥 Meta Pixel Event Tracking

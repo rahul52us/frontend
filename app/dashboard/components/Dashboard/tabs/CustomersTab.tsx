@@ -2439,7 +2439,7 @@ const CustomersTab: React.FC = observer(() => {
 
   const renderBuyerProfilesMobile = () => (
     <Box
-      bg="#F3F5FB"
+      bg="#f4f6fb"
       borderRadius={{ base: "none", md: "3xl" }}
       mx={{ base: -2, md: 0 }}
       mt={{ base: -2, md: 0 }}
@@ -2448,6 +2448,8 @@ const CustomersTab: React.FC = observer(() => {
     >
       <Box
         {...androidTheme.header}
+        bgGradient="linear(180deg, #0f1f5c 0%, #0f1f5c 100%)"
+        boxShadow="0 18px 36px rgba(15, 31, 92, 0.22)"
         position="relative"
         overflow="hidden"
         px={{ base: 3, sm: 4 }}
@@ -2572,14 +2574,14 @@ const CustomersTab: React.FC = observer(() => {
                 h="36px"
                 px={4}
                 borderRadius="12px"
-                bg="#6F8EFF"
-                color="white"
+                bg="white"
+                color="#0f1f5c"
                 leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
                 fontSize="xs"
                 fontWeight="800"
                 boxShadow="0 14px 24px rgba(8, 28, 78, 0.18)"
-                _hover={{ bg: "#7C99FF" }}
-                _active={{ transform: "scale(0.98)", bg: "#6888F5" }}
+                _hover={{ bg: "rgba(255,255,255,0.92)" }}
+                _active={{ transform: "scale(0.98)", bg: "rgba(255,255,255,0.88)" }}
                 onClick={openManualBuyerModal}
               >
                 Add {partySingularLabel}
@@ -2620,7 +2622,7 @@ const CustomersTab: React.FC = observer(() => {
                 fontSize="xs"
                 fontWeight="800"
                 bg={normalizedActivePartyType === "customer" ? "white" : "transparent"}
-                color={normalizedActivePartyType === "customer" ? androidTheme.colors.primary : "rgba(255,255,255,0.54)"}
+                color={normalizedActivePartyType === "customer" ? "#0f1f5c" : "rgba(255,255,255,0.54)"}
                 boxShadow={normalizedActivePartyType === "customer" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
                 _hover={{
                   bg: normalizedActivePartyType === "customer" ? "white" : "rgba(255,255,255,0.10)",
@@ -2637,7 +2639,7 @@ const CustomersTab: React.FC = observer(() => {
                 fontSize="xs"
                 fontWeight="800"
                 bg={normalizedActivePartyType === "supplier" ? "white" : "transparent"}
-                color={normalizedActivePartyType === "supplier" ? androidTheme.colors.primary : "rgba(255,255,255,0.54)"}
+                color={normalizedActivePartyType === "supplier" ? "#0f1f5c" : "rgba(255,255,255,0.54)"}
                 boxShadow={normalizedActivePartyType === "supplier" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
                 _hover={{
                   bg: normalizedActivePartyType === "supplier" ? "white" : "rgba(255,255,255,0.10)",
@@ -2684,10 +2686,12 @@ const CustomersTab: React.FC = observer(() => {
               </Text>
               <Text
                 mt={2}
-                fontSize="2xl"
+                fontSize="clamp(1rem, 5vw, 1.5rem)"
                 fontWeight="900"
                 lineHeight="1"
                 color={mobileLeftSummary.color}
+                display="block"
+                maxW="100%"
                 whiteSpace="nowrap"
                 letterSpacing="-0.02em"
               >
@@ -2719,10 +2723,12 @@ const CustomersTab: React.FC = observer(() => {
               </Text>
               <Text
                 mt={2}
-                fontSize="2xl"
+                fontSize="clamp(1rem, 5vw, 1.5rem)"
                 fontWeight="900"
                 lineHeight="1"
                 color={mobileRightSummary.color}
+                display="block"
+                maxW="100%"
                 whiteSpace="nowrap"
                 letterSpacing="-0.03em"
               >
@@ -2736,12 +2742,12 @@ const CustomersTab: React.FC = observer(() => {
         </VStack>
       </Box>
 
-      <Box bg="#F5F7FD" px={{ base: 3, sm: 4 }} pt={3.5} pb={7}>
+      <Box bg="#f4f6fb" px={{ base: 3, sm: 4 }} pt={3.5} pb={7}>
         <HStack justify="space-between" align="center" mb={3}>
-          <Text fontSize="xl" fontWeight="900" color="#0F2565" letterSpacing="-0.02em">
+          <Text fontSize="xl" fontWeight="900" color="#0f1f5c" letterSpacing="-0.02em">
             {mobileListHeading}
           </Text>
-          <Text fontSize="xs" fontWeight="700" color="#607CFF">
+          <Text fontSize="xs" fontWeight="700" color="rgba(15, 31, 92, 0.72)">
             Page {page} of {totalPages || 1}
           </Text>
         </HStack>
@@ -2802,7 +2808,7 @@ const CustomersTab: React.FC = observer(() => {
                       </Flex>
 
                       <Box flex="1" minW={0}>
-                        <Text fontSize="lg" fontWeight="900" color="#16306C" noOfLines={1} letterSpacing="-0.02em">
+                        <Text fontSize="lg" fontWeight="900" color="#0f1f5c" noOfLines={1} letterSpacing="-0.02em">
                           {getBuyerDisplayName(buyer)}
                         </Text>
                         <Text fontSize="xs" color="#91A0B8" mt={0.5} noOfLines={1}>
@@ -2851,7 +2857,7 @@ const CustomersTab: React.FC = observer(() => {
                     px={2.5}
                     py={2}
                     borderRadius="full"
-                    bg="#F4F6FB"
+                    bg="#f4f6fb"
                     color="#5F7090"
                     align="center"
                   >
@@ -2866,14 +2872,14 @@ const CustomersTab: React.FC = observer(() => {
                     w="full"
                     h="42px"
                     borderRadius="14px"
-                    bg="#1C2A73"
+                    bg="#0f1f5c"
                     color="white"
                     fontSize="sm"
                     fontWeight="800"
                     rightIcon={<Icon as={FiChevronRight} boxSize={3.5} />}
                     onClick={() => openLedgerView(buyer)}
-                    _hover={{ bg: "#182466" }}
-                    _active={{ transform: "scale(0.98)", bg: "#14205A" }}
+                    _hover={{ bg: "#0c1848" }}
+                    _active={{ transform: "scale(0.98)", bg: "#0a153f" }}
                   >
                     View Ledger
                   </Button>
@@ -2930,13 +2936,13 @@ const CustomersTab: React.FC = observer(() => {
           h="36px"
           px={4}
           borderRadius="full"
-          bg="#1C2A73"
+          bg="#0f1f5c"
           color="white"
           fontSize="xs"
           fontWeight="800"
           boxShadow="0 12px 24px rgba(16, 30, 82, 0.18)"
-          _hover={{ bg: "#182466" }}
-          _active={{ transform: "scale(0.98)", bg: "#14205A" }}
+          _hover={{ bg: "#0c1848" }}
+          _active={{ transform: "scale(0.98)", bg: "#0a153f" }}
         >
           Add {partySingularLabel}
         </Button>
