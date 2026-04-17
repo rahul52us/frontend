@@ -50,7 +50,8 @@ import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons
 import { FileViewer } from "@capacitor/file-viewer";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { FiChevronRight, FiMail, FiPhone, FiSearch, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiChevronRight, FiMail, FiMenu, FiPhone, FiSearch, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
@@ -651,6 +652,10 @@ const CustomersTab: React.FC = observer(() => {
       value: buyerOverview.receivable,
       color: "green.500",
     };
+  const mobileListHeading = `All ${partyPluralLabel}`;
+  const whatsappSupportUrl = `https://wa.me/919899129943?text=${encodeURIComponent(
+    `Hello, I need help with the ${partySingularLabel.toLowerCase()} ledger.`,
+  )}`;
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
@@ -2434,211 +2439,381 @@ const CustomersTab: React.FC = observer(() => {
 
   const renderBuyerProfilesMobile = () => (
     <Box
-      bg={androidTheme.colors.surface}
+      bg="#F3F5FB"
       borderRadius={{ base: "none", md: "3xl" }}
       mx={{ base: -2, md: 0 }}
       mt={{ base: -2, md: 0 }}
       overflow="hidden"
-      pb="120px"
+      pb="104px"
     >
       <Box
         {...androidTheme.header}
-        px={{ base: 4, sm: 5 }}
-        pt={{ base: 5, sm: 6 }}
-        pb={{ base: 8, sm: 9 }}
+        position="relative"
+        overflow="hidden"
+        px={{ base: 3, sm: 4 }}
+        pt={{ base: 3, sm: 4 }}
+        pb={{ base: 5, sm: 6 }}
       >
-        <VStack align="stretch" spacing={5}>
-          <Flex justify="space-between" align="start" gap={3}>
-            <Box minW={0} flex="1">
-              <Text fontSize="xs" fontWeight="800" letterSpacing="0.16em" textTransform="uppercase" color="whiteAlpha.700">
-                {isSupplierTab ? "Supplier Ledger" : "Customer Ledger"}
-              </Text>
-              <Heading size="md" color="white" mt={1} noOfLines={2}>
-                {companyDisplayName}
-              </Heading>
-              <Text fontSize="sm" color="whiteAlpha.800" mt={1} maxW="260px">
-                {isSupplierTab
-                  ? "Track suppliers, payables, and payment status from one place."
-                  : "Track customers, dues, and collection status from one place."}
-              </Text>
-            </Box>
-            <Button
-              {...androidTheme.button.headerPill}
-              leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
-              variant="outline"
-              color="white"
-              borderColor="whiteAlpha.500"
-              _hover={{ bg: "whiteAlpha.200" }}
-              _active={{ ...androidTheme.button.headerPill._active, bg: "whiteAlpha.300" }}
-              onClick={openManualBuyerModal}
-              flexShrink={0}
-            >
-              Add {partySingularLabel}
-            </Button>
-          </Flex>
+        <Box
+          position="absolute"
+          top="-30px"
+          right="-24px"
+          h="120px"
+          w="120px"
+          borderRadius="full"
+          bg="radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0) 72%)"
+          pointerEvents="none"
+        />
+        <Box
+          position="absolute"
+          left="-56px"
+          bottom="-52px"
+          h="170px"
+          w="170px"
+          borderRadius="full"
+          bg="radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0) 72%)"
+          pointerEvents="none"
+        />
 
-          <HStack spacing={6} align="end">
-            <Box position="relative" pb={2} cursor="pointer" onClick={() => setActivePartyType("customer")}>
-              <Text fontSize="lg" fontWeight="900" color="white">
-                Customers
-              </Text>
-              {normalizedActivePartyType === "customer" ? (
-                <Box position="absolute" left={0} bottom={0} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
-              ) : null}
-            </Box>
-            <VStack
-              align="start"
-              spacing={0}
-              pb={2}
-              opacity={normalizedActivePartyType === "supplier" ? 1 : 0.72}
-              cursor="pointer"
-              onClick={() => setActivePartyType("supplier")}
-            >
-              <Text fontSize="lg" fontWeight="800" color="white">
-                Suppliers
-              </Text>
-              {normalizedActivePartyType === "supplier" ? (
-                <Box mt={1} h="3px" w="100%" bg="#FFB13B" borderRadius="full" />
-              ) : null}
-            </VStack>
-          </HStack>
-
-          <Box
-            {...androidTheme.card}
-            overflow="hidden"
-            boxShadow="0 18px 40px rgba(5, 44, 92, 0.22)"
-          >
-            <SimpleGrid columns={2}>
-              <VStack spacing={1} px={4} py={4} align="center">
-                <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
-                  {mobileLeftSummary.label}
-                </Text>
-                <Text fontSize="2xl" fontWeight="900" color={mobileLeftSummary.color}>
-                  {formatCompactCurrency(mobileLeftSummary.value)}
-                </Text>
-              </VStack>
-              <VStack
-                spacing={1}
-                px={4}
-                py={4}
-                align="center"
-                borderLeftWidth="1px"
-                borderLeftColor={androidTheme.colors.border}
-              >
-                <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
-                  {mobileRightSummary.label}
-                </Text>
-                <Text fontSize="2xl" fontWeight="900" color={mobileRightSummary.color}>
-                  {formatCompactCurrency(mobileRightSummary.value)}
-                </Text>
-              </VStack>
-            </SimpleGrid>
-            <HStack
-              justify="space-between"
-              px={4}
-              py={3}
-              bg={androidTheme.colors.surfaceMuted}
-              borderTopWidth="1px"
-              borderTopColor={androidTheme.colors.border}
-            >
-              <HStack spacing={2} color={androidTheme.colors.primary}>
-                <Icon as={FiUsers} boxSize={4} />
-                <Text fontSize="sm" fontWeight="700">
-                  {total} {partyPluralLabel.toLowerCase()}
-                </Text>
-              </HStack>
-              <Text fontSize="xs" fontWeight="700" color={androidTheme.colors.textMuted}>
-                {buyerOverview.active} active
-              </Text>
-            </HStack>
-          </Box>
-        </VStack>
-      </Box>
-
-      <Box px={androidTheme.spacing.pageX} mt="-20px">
-        <Box {...androidTheme.card} px={{ base: 3, sm: 4 }} py={3}>
-          <HStack spacing={3} align="stretch">
+        <VStack position="relative" align="stretch" spacing={3}>
+          <HStack spacing={2} align="stretch">
             <InputGroup flex="1">
               <InputLeftElement pointerEvents="none" h="100%">
-                <Icon as={FiSearch} color={androidTheme.colors.primary} boxSize={5} />
+                <Icon as={FiSearch} color="rgba(255,255,255,0.62)" boxSize={4} />
               </InputLeftElement>
               <Input
-                {...androidTheme.input}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={`Search ${partySingularLabel.toLowerCase()}`}
-                pl={12}
+                placeholder="Start typing to search..."
+                pl={9}
+                h="34px"
+                borderRadius="14px"
+                bg="rgba(255,255,255,0.10)"
+                color="white"
+                borderColor="transparent"
+                fontSize="xs"
+                fontWeight="600"
+                _placeholder={{ color: "rgba(255,255,255,0.52)" }}
+                _focus={{
+                  borderColor: "rgba(255,255,255,0.18)",
+                  bg: "rgba(255,255,255,0.12)",
+                  boxShadow: "0 0 0 1px rgba(255,255,255,0.10)",
+                }}
               />
             </InputGroup>
             <IconButton
-              aria-label={`Add ${partySingularLabel.toLowerCase()} manually`}
-              icon={<Icon as={FiUserPlus} boxSize={5} />}
-              onClick={openManualBuyerModal}
-              {...androidTheme.button.secondary}
-              minW={androidTheme.button.secondary.h}
-              bg={androidTheme.colors.primarySoft}
-              color={androidTheme.colors.primary}
-              _hover={{ bg: "#DBEAFE" }}
+              aria-label="More options"
+              icon={<Icon as={FiMenu} boxSize={4} />}
+              h="34px"
+              minW="34px"
+              borderRadius="10px"
+              bg="rgba(255,255,255,0.12)"
+              color="white"
+              borderWidth="1px"
+              borderColor="rgba(255,255,255,0.08)"
+              _hover={{ bg: "rgba(255,255,255,0.16)" }}
+              _active={{ transform: "scale(0.98)", bg: "rgba(255,255,255,0.18)" }}
+              onClick={() => { }}
             />
           </HStack>
-        </Box>
+
+          <Flex justify="space-between" align="start" gap={3}>
+            <VStack align="stretch" spacing={3} flex="1" minW={0}>
+              <HStack spacing={2} wrap="wrap" pr={1}>
+                <Badge
+                  borderRadius="full"
+                  px={2.5}
+                  py={1}
+                  bg="rgba(255,255,255,0.18)"
+                  color="white"
+                  textTransform="uppercase"
+                  fontSize="9px"
+                  fontWeight="900"
+                  letterSpacing="0.04em"
+                >
+                  {isSupplierTab ? "Supplier Ledger" : "Customer Ledger"}
+                </Badge>
+                <Badge
+                  borderRadius="full"
+                  px={2.5}
+                  py={1}
+                  bg="#29CF5B"
+                  color="white"
+                  textTransform="none"
+                  fontSize="9px"
+                  fontWeight="900"
+                >
+                  {buyerOverview.active} Active
+                </Badge>
+              </HStack>
+
+              <Box minW={0}>
+                <Heading
+                  size="md"
+                  color="white"
+                  noOfLines={3}
+                  fontSize={{ base: "xl", sm: "2xl" }}
+                  lineHeight="1.06"
+                  letterSpacing="-0.02em"
+                  textTransform="uppercase"
+                  maxW="180px"
+                >
+                  {companyDisplayName}
+                </Heading>
+                <Text fontSize="xs" color="rgba(255,255,255,0.72)" mt={1.5} maxW="200px" lineHeight="1.45">
+                  {isSupplierTab
+                    ? "Track payouts, dues, and supplier relationships from one clean view."
+                    : "Track collections, dues, and customer relationships from one clean view."}
+                </Text>
+              </Box>
+
+              <Button
+                alignSelf="start"
+                h="36px"
+                px={4}
+                borderRadius="12px"
+                bg="#6F8EFF"
+                color="white"
+                leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
+                fontSize="xs"
+                fontWeight="800"
+                boxShadow="0 14px 24px rgba(8, 28, 78, 0.18)"
+                _hover={{ bg: "#7C99FF" }}
+                _active={{ transform: "scale(0.98)", bg: "#6888F5" }}
+                onClick={openManualBuyerModal}
+              >
+                Add {partySingularLabel}
+              </Button>
+            </VStack>
+
+            <Box
+              flexShrink={0}
+              minW="82px"
+              borderRadius="18px"
+              px={3}
+              py={3}
+              textAlign="center"
+              bg="linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.09) 100%)"
+              borderWidth="1px"
+              borderColor="rgba(255,255,255,0.16)"
+              boxShadow="inset 0 1px 0 rgba(255,255,255,0.10), 0 14px 22px rgba(7, 33, 70, 0.12)"
+              backdropFilter="blur(10px)"
+            >
+              <Flex justify="center" mb={1}>
+                <Icon as={FiUsers} boxSize={4} color="rgba(255,255,255,0.86)" />
+              </Flex>
+              <Text color="white" fontSize="3xl" fontWeight="900" lineHeight="0.95">
+                {total}
+              </Text>
+              <Text color="rgba(255,255,255,0.62)" fontSize="9px" fontWeight="800" letterSpacing="0.06em">
+                {partyPluralLabel.toUpperCase()}
+              </Text>
+            </Box>
+          </Flex>
+
+          <Box bg="rgba(255,255,255,0.08)" borderRadius="16px" p={1}>
+            <HStack spacing={1}>
+              <Button
+                flex="1"
+                h="36px"
+                borderRadius="12px"
+                fontSize="xs"
+                fontWeight="800"
+                bg={normalizedActivePartyType === "customer" ? "white" : "transparent"}
+                color={normalizedActivePartyType === "customer" ? androidTheme.colors.primary : "rgba(255,255,255,0.54)"}
+                boxShadow={normalizedActivePartyType === "customer" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
+                _hover={{
+                  bg: normalizedActivePartyType === "customer" ? "white" : "rgba(255,255,255,0.10)",
+                }}
+                _active={{ transform: "scale(0.98)" }}
+                onClick={() => setActivePartyType("customer")}
+              >
+                Customers
+              </Button>
+              <Button
+                flex="1"
+                h="36px"
+                borderRadius="12px"
+                fontSize="xs"
+                fontWeight="800"
+                bg={normalizedActivePartyType === "supplier" ? "white" : "transparent"}
+                color={normalizedActivePartyType === "supplier" ? androidTheme.colors.primary : "rgba(255,255,255,0.54)"}
+                boxShadow={normalizedActivePartyType === "supplier" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
+                _hover={{
+                  bg: normalizedActivePartyType === "supplier" ? "white" : "rgba(255,255,255,0.10)",
+                }}
+                _active={{ transform: "scale(0.98)" }}
+                onClick={() => setActivePartyType("supplier")}
+              >
+                Suppliers
+              </Button>
+            </HStack>
+          </Box>
+
+          <SimpleGrid columns={2} spacing={2.5}>
+            <Box
+              minH="84px"
+              borderRadius="18px"
+              px={3}
+              py={3}
+              borderWidth="1px"
+              borderColor="rgba(255,255,255,0.14)"
+              bg="rgba(255,255,255,0.08)"
+              backdropFilter="blur(10px)"
+              position="relative"
+              overflow="hidden"
+            >
+              <Box
+                position="absolute"
+                left="-44px"
+                bottom="-34px"
+                h="120px"
+                w="120px"
+                borderRadius="full"
+                bg="radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 58%, rgba(255,255,255,0) 76%)"
+                pointerEvents="none"
+              />
+              <Text
+                fontSize="9px"
+                color="rgba(255,255,255,0.54)"
+                textTransform="uppercase"
+                fontWeight="800"
+                letterSpacing="0.06em"
+              >
+                {mobileLeftSummary.label}
+              </Text>
+              <Text
+                mt={2}
+                fontSize="2xl"
+                fontWeight="900"
+                lineHeight="1"
+                color={mobileLeftSummary.color}
+                whiteSpace="nowrap"
+                letterSpacing="-0.02em"
+              >
+                {formatCompactCurrency(mobileLeftSummary.value)}
+              </Text>
+              <Text mt={1.5} fontSize="10px" color="rgba(255,255,255,0.54)" fontWeight="600">
+                Offset side
+              </Text>
+            </Box>
+
+            <Box
+              minH="84px"
+              borderRadius="18px"
+              px={3}
+              py={3}
+              bg="white"
+              borderWidth="1px"
+              borderColor="rgba(255,255,255,0.20)"
+              boxShadow="0 16px 24px rgba(9, 43, 89, 0.12)"
+            >
+              <Text
+                fontSize="9px"
+                color="#B1B9C8"
+                textTransform="uppercase"
+                fontWeight="800"
+                letterSpacing="0.06em"
+              >
+                {mobileRightSummary.label}
+              </Text>
+              <Text
+                mt={2}
+                fontSize="2xl"
+                fontWeight="900"
+                lineHeight="1"
+                color={mobileRightSummary.color}
+                whiteSpace="nowrap"
+                letterSpacing="-0.03em"
+              >
+                {formatCompactCurrency(mobileRightSummary.value)}
+              </Text>
+              <Text mt={1.5} fontSize="10px" color="#C0C8D7" fontWeight="600">
+                Main focus
+              </Text>
+            </Box>
+          </SimpleGrid>
+        </VStack>
       </Box>
 
-      <VStack align="stretch" spacing={androidTheme.spacing.sectionGap} px={androidTheme.spacing.pageX} pt={4}>
-        {loading ? (
-          <Box {...androidTheme.card} px={5} py={8}>
-            <VStack spacing={3}>
-              <Spinner color={androidTheme.colors.primary} thickness="3px" />
-              <Text fontSize="sm" color={androidTheme.colors.textMuted}>
-                Loading {partyPluralLabel.toLowerCase()}...
-              </Text>
-            </VStack>
-          </Box>
-        ) : buyers.length === 0 ? (
-          <Box {...androidTheme.card} px={5} py={8}>
-            <VStack spacing={2}>
-              <Icon as={FiUsers} boxSize={8} color="blue.300" />
-              <Text fontWeight="700" color={androidTheme.colors.text}>
-                No {partyPluralLabel.toLowerCase()} found
-              </Text>
-              <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
-                Try a different search or add a new {partySingularLabel.toLowerCase()} to start the ledger.
-              </Text>
-            </VStack>
-          </Box>
-        ) : (
-          buyers.map((buyer) => (
-            <Box key={buyer._id} {...androidTheme.card} px={4} py={4}>
-              <HStack align="start" spacing={3}>
-                <Flex
-                  h="50px"
-                  w="50px"
-                  borderRadius="full"
-                  bg={buyer.isBlocked ? androidTheme.colors.dangerSoft : androidTheme.colors.primarySoft}
-                  color={buyer.isBlocked ? androidTheme.colors.danger : androidTheme.colors.primary}
-                  align="center"
-                  justify="center"
-                  fontWeight="900"
-                  fontSize="md"
-                  flexShrink={0}
+      <Box bg="#F5F7FD" px={{ base: 3, sm: 4 }} pt={3.5} pb={7}>
+        <HStack justify="space-between" align="center" mb={3}>
+          <Text fontSize="xl" fontWeight="900" color="#0F2565" letterSpacing="-0.02em">
+            {mobileListHeading}
+          </Text>
+          <Text fontSize="xs" fontWeight="700" color="#607CFF">
+            Page {page} of {totalPages || 1}
+          </Text>
+        </HStack>
+
+        <VStack align="stretch" spacing={3}>
+          {loading ? (
+            <Box bg="white" borderWidth="1px" borderColor="#E5EAF7" borderRadius="20px" px={4} py={6}>
+              <VStack spacing={3}>
+                <Spinner color={androidTheme.colors.primary} thickness="3px" />
+                <Text fontSize="sm" color={androidTheme.colors.textMuted}>
+                  Loading {partyPluralLabel.toLowerCase()}...
+                </Text>
+              </VStack>
+            </Box>
+          ) : buyers.length === 0 ? (
+            <Box bg="white" borderWidth="1px" borderColor="#E5EAF7" borderRadius="20px" px={4} py={6}>
+              <VStack spacing={2}>
+                <Icon as={FiUsers} boxSize={8} color="blue.300" />
+                <Text fontWeight="700" color={androidTheme.colors.text}>
+                  No {partyPluralLabel.toLowerCase()} found
+                </Text>
+                <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
+                  Try a different search or add a new {partySingularLabel.toLowerCase()} to start the ledger.
+                </Text>
+              </VStack>
+            </Box>
+          ) : (
+            buyers.map((buyer) => {
+              const buyerContact = buyer.buyerId?.phoneE164 || buyer.buyerId?.emailNormalized || "-";
+              const hasPhone = Boolean(buyer.buyerId?.phoneE164);
+
+              return (
+                <Box
+                  key={buyer._id}
+                  bg="white"
+                  borderWidth="1px"
+                  borderColor="#E6EAF5"
+                  borderRadius="20px"
+                  boxShadow="0 10px 24px rgba(18, 42, 95, 0.05)"
+                  px={3}
+                  py={3}
                 >
-                  {getBuyerInitials(buyer)}
-                </Flex>
+                  <Flex justify="space-between" align="start" gap={2.5}>
+                    <HStack spacing={2.5} align="start" minW={0} flex="1">
+                      <Flex
+                        h="38px"
+                        w="38px"
+                        borderRadius="12px"
+                        bg={buyer.isBlocked ? "#FCE9ED" : "#F1ECFF"}
+                        color={buyer.isBlocked ? androidTheme.colors.danger : "#6447F6"}
+                        align="center"
+                        justify="center"
+                        fontWeight="900"
+                        fontSize="sm"
+                        flexShrink={0}
+                      >
+                        {getBuyerInitials(buyer)}
+                      </Flex>
 
-                <Box flex="1" minW={0}>
-                  <Flex justify="space-between" align="start" gap={3}>
-                    <Box minW={0}>
-                      <Text fontSize="lg" fontWeight="800" color={androidTheme.colors.text} noOfLines={1}>
-                        {getBuyerDisplayName(buyer)}
-                      </Text>
-                      <Text fontSize="sm" color={androidTheme.colors.textMuted} mt={0.5}>
-                        {getBuyerSecondaryLabel(buyer)}
-                      </Text>
-                    </Box>
+                      <Box flex="1" minW={0}>
+                        <Text fontSize="lg" fontWeight="900" color="#16306C" noOfLines={1} letterSpacing="-0.02em">
+                          {getBuyerDisplayName(buyer)}
+                        </Text>
+                        <Text fontSize="xs" color="#91A0B8" mt={0.5} noOfLines={1}>
+                          {getBuyerSecondaryLabel(buyer)}
+                        </Text>
+                      </Box>
+                    </HStack>
 
-                    <VStack spacing={1} align="end" flexShrink={0}>
+                    <VStack spacing={1.5} align="end" flexShrink={0}>
                       <Text
-                        fontSize="xl"
+                        fontSize="lg"
                         fontWeight="900"
                         color={
                           Number(buyer.outstandingBalance || 0) >= 0
@@ -2650,131 +2825,140 @@ const CustomersTab: React.FC = observer(() => {
                               : androidTheme.colors.danger
                         }
                         lineHeight="1"
+                        whiteSpace="nowrap"
+                        letterSpacing="-0.02em"
                       >
                         {formatCompactCurrency(Math.abs(Number(buyer.outstandingBalance || 0)))}
                       </Text>
                       <Badge
-                        {...androidTheme.badge}
                         px={2.5}
                         py={0.5}
-                        colorScheme={buyer.isBlocked ? "red" : "green"}
-                        textTransform="uppercase"
-                        fontSize="0.65rem"
+                        borderRadius="full"
+                        bg={buyer.isBlocked ? "#FDECEC" : "#DFF8E5"}
+                        color={buyer.isBlocked ? "#C94B4B" : "#169956"}
+                        textTransform="none"
+                        fontSize="10px"
+                        fontWeight="800"
                       >
                         {buyer.isBlocked ? "Blocked" : "Active"}
                       </Badge>
                     </VStack>
                   </Flex>
 
-                  <VStack align="stretch" spacing={2} mt={3}>
-                    <HStack spacing={2} color={androidTheme.colors.textMuted} align="start">
-                      <Icon as={FiPhone} boxSize={4} mt={0.5} color={androidTheme.colors.primary} flexShrink={0} />
-                      <Text fontSize="sm" fontWeight="500">
-                        {buyer.buyerId?.phoneE164 || "-"}
-                      </Text>
-                    </HStack>
-                    {buyer.buyerId?.emailNormalized ? (
-                      <HStack spacing={2} color={androidTheme.colors.textMuted} align="start">
-                        <Icon as={FiMail} boxSize={4} mt={0.5} color={androidTheme.colors.primary} flexShrink={0} />
-                        <Text fontSize="sm" fontWeight="500" wordBreak="break-word">
-                          {buyer.buyerId.emailNormalized}
-                        </Text>
-                      </HStack>
-                    ) : null}
-                  </VStack>
-
-                  {buyer.tags && buyer.tags.length ? (
-                    <HStack spacing={2} mt={3} wrap="wrap">
-                      {buyer.tags.slice(0, 3).map((tag, idx) => (
-                        <Badge
-                          key={`${buyer._id}-${tag}-${idx}`}
-                          {...androidTheme.badge}
-                          bg={androidTheme.colors.primarySoft}
-                          color="#315D9C"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </HStack>
-                  ) : null}
-
-                  <HStack mt={4} spacing={2}>
-                    <Button
-                      {...androidTheme.button.primary}
-                      flex="1"
-                      rightIcon={<Icon as={FiChevronRight} boxSize={4} />}
-                      onClick={() => openLedgerView(buyer)}
-                      bg={androidTheme.colors.primary}
-                      color="white"
-                      _hover={{ bg: androidTheme.colors.primaryDark }}
-                    >
-                      View Ledger
-                    </Button>
-                    <IconButton
-                      aria-label={`Delete ${buyer.partyType === "supplier" ? "supplier" : "customer"}`}
-                      icon={<Icon as={FiTrash2} boxSize={4} />}
-                      onClick={() => openDeleteModal(buyer)}
-                      {...androidTheme.button.secondary}
-                      minW={androidTheme.button.secondary.h}
-                      variant="outline"
-                      borderColor={androidTheme.colors.danger}
-                      color={androidTheme.colors.danger}
-                      bg="transparent"
-                      _hover={{ bg: androidTheme.colors.dangerSoft }}
-                    />
+                  <HStack
+                    mt={3}
+                    spacing={2}
+                    px={2.5}
+                    py={2}
+                    borderRadius="full"
+                    bg="#F4F6FB"
+                    color="#5F7090"
+                    align="center"
+                  >
+                    <Icon as={hasPhone ? FiPhone : FiMail} boxSize={3} color="#8192AF" />
+                    <Text fontSize="xs" fontWeight="600" noOfLines={1}>
+                      {buyerContact}
+                    </Text>
                   </HStack>
+
+                  <Button
+                    mt={3}
+                    w="full"
+                    h="42px"
+                    borderRadius="14px"
+                    bg="#1C2A73"
+                    color="white"
+                    fontSize="sm"
+                    fontWeight="800"
+                    rightIcon={<Icon as={FiChevronRight} boxSize={3.5} />}
+                    onClick={() => openLedgerView(buyer)}
+                    _hover={{ bg: "#182466" }}
+                    _active={{ transform: "scale(0.98)", bg: "#14205A" }}
+                  >
+                    View Ledger
+                  </Button>
                 </Box>
-              </HStack>
-            </Box>
-          ))
-        )}
+              );
+            })
+          )}
 
-        <HStack justify="space-between" align="center" pt={2}>
-          <Button
-            {...androidTheme.button.pagination}
-            isDisabled={page <= 1 || loading}
-            onClick={() => {
-              if (page <= 1) return;
-              const nextPage = page - 1;
-              setPage(nextPage);
-              fetchBuyers(nextPage, search);
-            }}
-          >
-            Previous
-          </Button>
-          <Text fontSize="sm" color={androidTheme.colors.textMuted} fontWeight="600">
-            Page {page} of {totalPages || 1}
-          </Text>
-          <Button
-            {...androidTheme.button.pagination}
-            isDisabled={page >= (totalPages || 1) || loading}
-            onClick={() => {
-              if (page >= (totalPages || 1)) return;
-              const nextPage = page + 1;
-              setPage(nextPage);
-              fetchBuyers(nextPage, search);
-            }}
-          >
-            Next
-          </Button>
-        </HStack>
-      </VStack>
+          {(totalPages || 1) > 1 ? (
+            <HStack justify="space-between" align="center" pt={1}>
+              <Button
+                {...androidTheme.button.pagination}
+                isDisabled={page <= 1 || loading}
+                onClick={() => {
+                  if (page <= 1) return;
+                  const nextPage = page - 1;
+                  setPage(nextPage);
+                  fetchBuyers(nextPage, search);
+                }}
+              >
+                Previous
+              </Button>
+              <Button
+                {...androidTheme.button.pagination}
+                isDisabled={page >= (totalPages || 1) || loading}
+                onClick={() => {
+                  if (page >= (totalPages || 1)) return;
+                  const nextPage = page + 1;
+                  setPage(nextPage);
+                  fetchBuyers(nextPage, search);
+                }}
+              >
+                Next
+              </Button>
+            </HStack>
+          ) : null}
+        </VStack>
+      </Box>
 
-      <Button
+      <HStack
         position="fixed"
-        left={{ base: androidTheme.spacing.fixedInset, sm: "16px" }}
-        transform="none"
-        bottom="calc(74px + env(safe-area-inset-bottom, 0px))"
-        zIndex={20}
-        leftIcon={<Icon as={FiUserPlus} boxSize={5} />}
-        onClick={handlePickSingleContact}
-        {...androidTheme.fab}
-        bgGradient={`linear(135deg, ${androidTheme.colors.fabStart} 0%, ${androidTheme.colors.fabEnd} 100%)`}
-        color="white"
-        _hover={{ bgGradient: "linear(135deg, #B20E58 0%, #C2185B 100%)" }}
+        left={{ base: "12px", sm: "16px" }}
+        right={{ base: "12px", sm: "16px" }}
+        bottom="calc(12px + env(safe-area-inset-bottom, 0px))"
+        justify="space-between"
+        align="center"
+        zIndex={25}
+        pointerEvents="none"
       >
-        Add {partySingularLabel}
-      </Button>
+        <Button
+          pointerEvents="auto"
+          leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
+          onClick={openManualBuyerModal}
+          h="36px"
+          px={4}
+          borderRadius="full"
+          bg="#1C2A73"
+          color="white"
+          fontSize="xs"
+          fontWeight="800"
+          boxShadow="0 12px 24px rgba(16, 30, 82, 0.18)"
+          _hover={{ bg: "#182466" }}
+          _active={{ transform: "scale(0.98)", bg: "#14205A" }}
+        >
+          Add {partySingularLabel}
+        </Button>
+
+        <IconButton
+          pointerEvents="auto"
+          as="a"
+          href={whatsappSupportUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open WhatsApp"
+          icon={<FaWhatsapp size={18} />}
+          h="42px"
+          minW="42px"
+          borderRadius="full"
+          bg="#25D366"
+          color="white"
+          boxShadow="0 16px 28px rgba(37, 211, 102, 0.28)"
+          _hover={{ bg: "#21C15C" }}
+          _active={{ transform: "scale(0.98)", bg: "#1CAA51" }}
+        />
+      </HStack>
     </Box>
   );
 
