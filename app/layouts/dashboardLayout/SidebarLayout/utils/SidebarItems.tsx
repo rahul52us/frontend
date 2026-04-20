@@ -22,7 +22,14 @@ const sidebarDatas: SidebarItem[] = [
     name: "Dashboard",
     icon: <FaChartPie />,
     url: "/dashboard",
-    role: ["user", "admin"],
+    role: ["buyer", "seller", "admin"],
+  },
+  {
+    id: 9,
+    name: "Orders",
+    icon: <FaBox />,
+    url: "/dashboard/orders",
+    role: ["buyer"],
   },
   {
     id: 101,
@@ -71,28 +78,28 @@ const sidebarDatas: SidebarItem[] = [
     name: "Shops",
     icon: <FaChartPie />,
     url: "/dashboard/shop",
-    role: ["user", "admin"],
+    role: ["seller", "admin"],
   },
   {
     id: 6,
     name: "Products",
     icon: <FaBox />,
     url: "/dashboard/products",
-    role: ["user", "admin"],
+    role: ["seller", "admin"],
   },
   {
     id: 7,
     name: "Orders",
     icon: <FaChartPie />,
     url: "/dashboard/orders",
-    role: ["user", "admin"],
+    role: ["seller", "admin"],
   },
   {
     id: 8,
     name: "Buyers",
     icon: <FaUsers />,
     url: "/dashboard/customers",
-    role: ["user", "admin"],
+    role: ["seller", "admin"],
   },
   // Blogs
   // {

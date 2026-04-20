@@ -100,7 +100,7 @@ const BuyerDashboard = () => {
     <VStack align="stretch" spacing={6}>
       {/* Header */}
       <Box>
-        <Heading size="md" color="gray.800">My Dashboard</Heading>
+        <Heading size="md" color="gray.800">Dashboard</Heading>
         <Text fontSize="sm" color="gray.500" mt={1}>
           View your connections with sellers and track your outstanding balances.
         </Text>

@@ -445,8 +445,21 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const userRole = user.role || user.type;
-    const roles = userRole === "superAdmin" ? ["superAdmin"] : ["user", userRole];
+    const rawRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role, user?.type].filter(Boolean);
+    const hasCompany = Boolean(user?.company?._id || user?.company);
+    const isSuperAdmin = rawRoles.includes("superAdmin");
+    const isBuyerOnlyUser =
+      !isSuperAdmin &&
+      !rawRoles.includes("admin") &&
+      !hasCompany &&
+      user?.type !== "seller";
+    const roles = isSuperAdmin
+      ? ["superAdmin"]
+      : isBuyerOnlyUser
+        ? ["buyer"]
+        : ["seller", "admin", ...rawRoles];
     setSidebarData(getSidebarDataByRole(roles));
   }, [user]);
 

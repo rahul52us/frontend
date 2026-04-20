@@ -180,16 +180,18 @@ const Header = observer(() => {
                     </Flex>
 
                     {user?.type === "user" && (
-                      <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/account?tab=dashboard"); }}>
+                      <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard"); }}>
                         <Icon as={FiGrid} color="blue.500" />
-                        <Text fontWeight="500" fontSize="md">My Dashboard</Text>
+                        <Text fontWeight="500" fontSize="md">Dashboard</Text>
                       </Flex>
                     )}
 
-                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard"); }}>
-                      <Icon as={FiUser} color="orange.500" />
-                      <Text fontWeight="500" fontSize="md">Seller Dashboard</Text>
-                    </Flex>
+                    {user?.type === "seller" && (
+                      <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard"); }}>
+                        <Icon as={FiUser} color="orange.500" />
+                        <Text fontWeight="500" fontSize="md">Seller Dashboard</Text>
+                      </Flex>
+                    )}
 
                     <Box mt={2} pt={2} borderTop="1px dashed" borderColor="gray.200">
                       <Flex align="center" gap={3} py={2} cursor="pointer" onClick={handleLogout}>

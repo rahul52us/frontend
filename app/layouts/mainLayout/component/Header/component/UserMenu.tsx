@@ -175,8 +175,8 @@ const UserMenu = observer(() => {
             )
           ) : (
             <>
-              {renderItem("My Dashboard", FiGrid, "blue", () =>
-                router.push("/account?tab=dashboard")
+              {renderItem("Dashboard", FiGrid, "blue", () =>
+                router.push("/dashboard")
               )}
               {renderItem("Become a Seller", FiUser, "green", () =>
                 router.push("/become-seller")

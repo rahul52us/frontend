@@ -44,6 +44,8 @@ const HeaderProfile = observer(() => {
     user?.company && typeof user.company === "object"
       ? user.company?.logo?.url
       : undefined;
+  const hasCompany = Boolean(user?.company && typeof user.company === "object" && user.company?._id);
+  const isBuyerOnlyUser = user?.type !== "seller" && !hasCompany;
   const menuAvatarSrc = shopLogoUrl || user?.pic?.url || undefined;
   const menuAvatarName =
     (user?.company && typeof user.company === "object" && user.company?.name) || user?.name;
@@ -81,8 +83,8 @@ const HeaderProfile = observer(() => {
                   <FaHome style={{ marginRight: "8px" }} /> Home
                 </MenuItem>
               )}
-              <MenuItem onClick={() => router.push(dashboard.shop)}>
-                <FaCog style={{ marginRight: "8px" }} /> {user?.company?.name}
+              <MenuItem onClick={() => router.push(isBuyerOnlyUser ? dashboard.home : dashboard.shop)}>
+                <FaCog style={{ marginRight: "8px" }} /> {isBuyerOnlyUser ? "Dashboard" : user?.company?.name}
               </MenuItem>
               <MenuItem onClick={onOpen}>
                 <FaLock style={{ marginRight: "8px" }} /> Change Password
