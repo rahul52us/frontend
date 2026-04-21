@@ -112,7 +112,9 @@ type BuyerSaleItem = {
 type BuyerSaleRecord = {
   _id: string;
   saleDate?: string;
-  items: BuyerSaleItem[];
+  items?: BuyerSaleItem[];
+  itemCount?: number;
+  itemPreview?: string;
   subtotal?: number;
   discountTotal?: number;
   taxTotal?: number;
@@ -669,6 +671,28 @@ const CustomersTab: React.FC = observer(() => {
       minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: hasDecimals ? 2 : 0,
     })}`;
+  };
+  const getSaleRecordItemCount = (record: BuyerSaleRecord) =>
+    typeof record.itemCount === "number"
+      ? record.itemCount
+      : Array.isArray(record.items)
+        ? record.items.length
+        : 0;
+  const getSaleRecordItemPreview = (record: BuyerSaleRecord) => {
+    if (typeof record.itemPreview === "string" && record.itemPreview.trim()) {
+      return record.itemPreview;
+    }
+
+    const itemCount = getSaleRecordItemCount(record);
+    const previewText =
+      itemCount > 0 && Array.isArray(record.items)
+        ? record.items
+          .slice(0, 2)
+          .map((item) => `${item.itemName} x ${item.quantity}`)
+          .join(", ")
+        : "-";
+
+    return itemCount > 2 ? `${previewText} +${itemCount - 2} more` : previewText;
   };
   const formatRelativeTime = (value?: string) => {
     if (!value) {
@@ -3093,14 +3117,7 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const saleTableData = saleRecords.map((record) => {
-    const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
-    const itemPreview =
-      itemsCount > 0
-        ? record.items
-          .slice(0, 2)
-          .map((item) => `${item.itemName} x ${item.quantity}`)
-          .join(", ")
-        : "-";
+    const itemsCount = getSaleRecordItemCount(record);
 
     return {
       ...record,
@@ -3117,7 +3134,7 @@ const CustomersTab: React.FC = observer(() => {
           {record._id.slice(-6)}
         </Text>
       ),
-      itemPreview: itemsCount > 2 ? `${itemPreview} +${itemsCount - 2} more` : itemPreview,
+      itemPreview: getSaleRecordItemPreview(record),
       grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
       statusBadge: (
         <Badge
@@ -3454,13 +3471,8 @@ const CustomersTab: React.FC = observer(() => {
         </VStack>
       ) : (
         saleRecords.map((record) => {
-          const itemsCount = Array.isArray(record.items) ? record.items.length : 0;
-          const preview = itemsCount
-            ? record.items
-              .slice(0, 2)
-              .map((item) => `${item.itemName} x ${item.quantity}`)
-              .join(", ")
-            : "-";
+          const itemsCount = getSaleRecordItemCount(record);
+          const preview = getSaleRecordItemPreview(record);
 
           return (
             <Box
