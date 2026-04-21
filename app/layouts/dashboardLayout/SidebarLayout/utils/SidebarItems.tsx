@@ -25,13 +25,6 @@ const sidebarDatas: SidebarItem[] = [
     role: ["buyer", "seller", "admin"],
   },
   {
-    id: 9,
-    name: "Orders",
-    icon: <FaBox />,
-    url: "/dashboard/orders",
-    role: ["buyer"],
-  },
-  {
     id: 101,
     name: "Dashboard",
     icon: <FaChartPie />,

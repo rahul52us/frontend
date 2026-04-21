@@ -164,7 +164,7 @@ const Header = observer(() => {
                       <Text fontWeight="500" fontSize="md">Your Wishlist</Text>
                     </Flex>
 
-                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/dashboard/orders"); }}>
+                    <Flex align="center" gap={3} py={2} cursor="pointer" onClick={() => { onClose(); router.push("/account?tab=orders"); }}>
                       <Icon as={FiShoppingBag} color="blue.500" />
                       <Text fontWeight="500" fontSize="md">Your Orders</Text>
                     </Flex>
