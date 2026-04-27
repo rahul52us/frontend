@@ -2,17 +2,17 @@
 
 import React from "react";
 import {
+  Badge,
   Box,
   Flex,
-  Text,
-  Image,
-  Badge,
   HStack,
   IconButton,
+  Image,
+  Text,
   Tooltip,
-  useColorModeValue,
 } from "@chakra-ui/react";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 
 interface ProductCardProps {
   product: any;
@@ -20,38 +20,30 @@ interface ProductCardProps {
   onDelete: any;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
-  product,
-  onEdit,
-  onDelete,
-}) => {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const mutedText = useColorModeValue("gray.600", "gray.400");
-
+const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
   const inStock = product.stock > 0;
   const imageSrc =
+    product.images?.[0]?.preview ||
     product.images?.[0] ||
     "https://via.placeholder.com/300x300?text=Product";
 
   return (
     <Box
-      bg={cardBg}
-      borderRadius="2xl"
+      bg={dashboardPalette.surface}
+      borderRadius="24px"
       overflow="hidden"
       border="1px solid"
-      borderColor={borderColor}
-      boxShadow="sm"
+      borderColor={dashboardPalette.border}
+      boxShadow="0 18px 42px rgba(0, 0, 0, 0.20)"
       transition="all 0.25s ease"
       role="group"
       _hover={{
         transform: "translateY(-6px)",
-        boxShadow: "xl",
-        borderColor: "blue.300",
+        boxShadow: "0 26px 56px rgba(0, 0, 0, 0.28)",
+        borderColor: dashboardPalette.accent,
       }}
     >
-      {/* ---------- IMAGE ---------- */}
-      <Box position="relative" h="220px" bg="gray.100">
+      <Box position="relative" h="220px" bg={dashboardPalette.surfaceSoft}>
         <Image
           src={imageSrc}
           alt={product.name}
@@ -62,7 +54,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           _groupHover={{ transform: "scale(1.05)" }}
         />
 
-        {/* Stock Badge */}
         <Badge
           position="absolute"
           top={3}
@@ -71,13 +62,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           py={1}
           borderRadius="full"
           fontSize="xs"
-          colorScheme={inStock ? "green" : "red"}
-          boxShadow="sm"
+          bg={inStock ? "rgba(70, 201, 139, 0.14)" : "rgba(239, 107, 107, 0.14)"}
+          color={inStock ? dashboardPalette.success : dashboardPalette.danger}
+          border="1px solid"
+          borderColor={inStock ? "rgba(70, 201, 139, 0.24)" : "rgba(239, 107, 107, 0.24)"}
         >
           {inStock ? `${product.stock} in stock` : "Out of stock"}
         </Badge>
 
-        {/* Hover Actions */}
         <HStack
           position="absolute"
           top={3}
@@ -92,8 +84,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               aria-label="Edit product"
               icon={<FaEdit />}
               size="sm"
-              colorScheme="blue"
-              variant="solid"
+              bg={dashboardPalette.accentSoft}
+              color={dashboardPalette.accentStrong}
+              border="1px solid"
+              borderColor={dashboardPalette.border}
+              _hover={{ bg: dashboardPalette.accent, color: dashboardPalette.page }}
               onClick={() => onEdit(product)}
             />
           </Tooltip>
@@ -102,87 +97,84 @@ const ProductCard: React.FC<ProductCardProps> = ({
               aria-label="Delete product"
               icon={<FaTrash />}
               size="sm"
-              colorScheme="red"
-              variant="solid"
+              bg="rgba(239, 107, 107, 0.12)"
+              color={dashboardPalette.danger}
+              border="1px solid"
+              borderColor="rgba(239, 107, 107, 0.24)"
+              _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
               onClick={() => onDelete(product)}
             />
           </Tooltip>
         </HStack>
       </Box>
 
-      {/* ---------- CONTENT ---------- */}
       <Box p={4}>
-        {/* Name */}
-        <Text
-          fontWeight="semibold"
-          fontSize="md"
-          noOfLines={2}
-          mb={1}
-        >
+        <Text fontWeight="600" fontSize="md" color={dashboardPalette.text} noOfLines={2} mb={1}>
           {product.name}
         </Text>
 
-        {/* Price */}
-        <Text
-          fontSize="xl"
-          fontWeight="bold"
-          color="blue.600"
-          mb={2}
-        >
-          ₹{Number(product.price).toLocaleString()}
+        <Text fontSize="xl" fontWeight="700" color={dashboardPalette.accentStrong} mb={2}>
+          Rs {Number(product.price).toLocaleString()}
         </Text>
 
-        {/* Footer */}
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" gap={3}>
           <Badge
-            variant="subtle"
-            colorScheme="purple"
+            bg={dashboardPalette.accentSoft}
+            color={dashboardPalette.accentStrong}
             fontSize="xs"
-            px={2}
+            px={2.5}
             py={1}
             borderRadius="md"
             textTransform="uppercase"
           >
-            {typeof product.category === 'object' ? product.category.name : product.category}
+            {typeof product.category === "object" ? product.category.name : product.category}
           </Badge>
 
-          {product.brand && (
-            <Text fontSize="xs" color={mutedText}>
+          {product.brand ? (
+            <Text fontSize="xs" color={dashboardPalette.textSoft}>
               {product.brand}
             </Text>
-          )}
+          ) : null}
         </Flex>
 
+        {product.subCategories?.length > 0
+          ? (() => {
+              const maxShow = 3;
+              const extraCount = product.subCategories.length - maxShow;
 
-        {/* ---------- SUBCATEGORIES (limit to 3) ---------- */}
-        {product.subCategories?.length > 0 && (() => {
-          const maxShow = 3;
-          const extraCount = product.subCategories.length - maxShow;
-
-          return (
-            <HStack spacing={1} mt={1}>
-              {product.subCategories.slice(0, maxShow).map((sub: any) => (
-                <Badge
-                  key={typeof sub === 'object' ? sub._id : sub}
-                  variant="outline"
-                  colorScheme="teal"
-                  fontSize="xx-small"
-                  px={2}
-                  py={0.5}
-                  borderRadius="md"
-                >
-                  {typeof sub === 'object' ? sub.name : sub}
-                </Badge>
-              ))}
-              {extraCount > 0 && (
-                <Badge variant="outline" fontSize="xx-small" px={2} py={0.5} borderRadius="md">
-                  +{extraCount} more
-                </Badge>
-              )}
-            </HStack>
-          );
-        })()}
-
+              return (
+                <HStack spacing={1} mt={3} flexWrap="wrap">
+                  {product.subCategories.slice(0, maxShow).map((sub: any) => (
+                    <Badge
+                      key={typeof sub === "object" ? sub._id : sub}
+                      variant="outline"
+                      color={dashboardPalette.textMuted}
+                      borderColor={dashboardPalette.borderStrong}
+                      fontSize="xx-small"
+                      px={2}
+                      py={0.5}
+                      borderRadius="md"
+                    >
+                      {typeof sub === "object" ? sub.name : sub}
+                    </Badge>
+                  ))}
+                  {extraCount > 0 ? (
+                    <Badge
+                      variant="outline"
+                      color={dashboardPalette.textSoft}
+                      borderColor={dashboardPalette.borderStrong}
+                      fontSize="xx-small"
+                      px={2}
+                      py={0.5}
+                      borderRadius="md"
+                    >
+                      +{extraCount} more
+                    </Badge>
+                  ) : null}
+                </HStack>
+              );
+            })()
+          : null}
       </Box>
     </Box>
   );

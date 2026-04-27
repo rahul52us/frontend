@@ -6,6 +6,7 @@ import HeaderNavbar from "./component/HeaderNavbar/HeaderNavbar";
 import HeaderLogo from "./component/Logo/HeaderLogo";
 import { observer } from "mobx-react-lite";
 import { headerHeight, headerPadding } from "../../../component/config/utils/variable";
+import { dashboardPalette } from "../dashboardPalette";
 
 
 const HeaderLayout = observer(() => {
@@ -18,7 +19,9 @@ const HeaderLayout = observer(() => {
       justifyContent="space-between"
       height={headerHeight}
       padding={headerPadding}
-      boxShadow="2px 2px 4px rgba(0, 0, 0, 0.2)" // Moved styled-components shadow to Chakra UI prop
+      bg="transparent"
+      borderBottom="1px solid"
+      borderBottomColor={dashboardPalette.border}
     >
       <Flex width={isLargerThan1020 ? "85%" : "95%"}>
         <HeaderLogo />

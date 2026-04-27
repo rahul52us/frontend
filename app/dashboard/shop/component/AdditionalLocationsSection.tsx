@@ -10,9 +10,6 @@ import {
   HStack,
   Text,
   Flex,
-  useColorModeValue,
-  Circle,
-  Icon,
   useToast,
 } from "@chakra-ui/react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
@@ -28,52 +25,7 @@ import {
   mapOptions,
   parseAddressComponents,
 } from "./utils/locationPicker";
-
-// Shared SectionCard wrapper
-const SectionCard = ({ icon, title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
-          <Icon as={icon} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
+import { MerchantSectionCard } from "./merchantTheme";
 
 const AdditionalLocationCard = ({
   index,
@@ -198,20 +150,21 @@ const AdditionalLocationCard = ({
     <Box
       p={4}
       border="1px solid"
-      borderColor="gray.200"
-      borderRadius="md"
-      bg="gray.50"
+      borderColor="var(--dashboard-border-strong)"
+      borderRadius="20px"
+      bg="rgba(255,255,255,0.02)"
     >
       <HStack justify="space-between" mb={4}>
-        <Text fontSize="lg" fontWeight="semibold" color="teal.500">
+        <Text fontSize="lg" fontWeight="semibold" color="var(--dashboard-accent-strong)">
           Location {index + 1}
         </Text>
         <IconButton
           aria-label="Remove Location"
           icon={<FaMinus />}
           size="sm"
-          colorScheme="red"
-          variant="outline"
+          variant="ghost"
+          color="#ef6b6b"
+          _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
           onClick={() => remove(index)}
         />
       </HStack>
@@ -226,10 +179,10 @@ const AdditionalLocationCard = ({
             mb={4}
           >
             <Box>
-              <Text fontSize="sm" fontWeight="600" color="gray.700">
+              <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
                 Pick this branch on the map
               </Text>
-              <Text fontSize="xs" color="gray.500">
+              <Text fontSize="xs" color="var(--dashboard-text-soft)">
                 Click the map to drop a pin or use your current location.
               </Text>
             </Box>
@@ -237,7 +190,10 @@ const AdditionalLocationCard = ({
               leftIcon={<FiNavigation />}
               variant="outline"
               size="sm"
-              borderRadius="full"
+              borderRadius="16px"
+              borderColor="var(--dashboard-border-strong)"
+              color="var(--dashboard-accent-strong)"
+              _hover={{ bg: "var(--dashboard-accent-soft)" }}
               onClick={detectCurrentLocation}
               isLoading={detectingLocation || geocoding}
             >
@@ -250,24 +206,24 @@ const AdditionalLocationCard = ({
             borderRadius="2xl"
             overflow="hidden"
             borderWidth="1px"
-            borderColor="blue.100"
-            bg="blue.50"
+            borderColor="var(--dashboard-border-strong)"
+            bg="var(--dashboard-surface-soft)"
           >
             {!GOOGLE_MAPS_API_KEY ? (
               <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="gray.600" textAlign="center">
+                <Text fontSize="sm" color="var(--dashboard-text-muted)" textAlign="center">
                   Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
                 </Text>
               </Flex>
             ) : loadError ? (
               <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="red.500" textAlign="center">
+                <Text fontSize="sm" color="var(--dashboard-danger, #ef6b6b)" textAlign="center">
                   Failed to load Google Maps.
                 </Text>
               </Flex>
             ) : !isLoaded ? (
               <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="gray.500" textAlign="center">
+                <Text fontSize="sm" color="var(--dashboard-text-soft)" textAlign="center">
                   Loading map...
                 </Text>
               </Flex>
@@ -288,15 +244,18 @@ const AdditionalLocationCard = ({
 
           <HStack mt={3} spacing={3} flexWrap="wrap">
             <Badge
-              colorScheme={selectedPoint ? "green" : "blue"}
               px={3}
               py={1}
               borderRadius="full"
+              bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : "var(--dashboard-accent-soft)"}
+              color={selectedPoint ? "var(--dashboard-success, #46c98b)" : "var(--dashboard-accent-strong)"}
+              border="1px solid"
+              borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : "var(--dashboard-border)"}
             >
               {selectedPoint ? "Pin selected" : "Pin not selected"}
             </Badge>
             {selectedPoint ? (
-              <Text fontSize="sm" color="gray.500">
+              <Text fontSize="sm" color="var(--dashboard-text-soft)">
                 {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
               </Text>
             ) : null}
@@ -407,7 +366,7 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
   });
 
   return (
-    <SectionCard
+    <MerchantSectionCard
       icon={FiMapPin}
       title="Additional Locations"
       description="Add multiple branches or delivery points"
@@ -432,10 +391,13 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
               ))}
             <Button
               leftIcon={<FaPlus />}
-              colorScheme="teal"
               variant="outline"
               size="md"
               w="fit-content"
+              borderRadius="16px"
+              borderColor="var(--dashboard-border-strong)"
+              color="var(--dashboard-accent-strong)"
+              _hover={{ bg: "var(--dashboard-accent-soft)" }}
               onClick={() =>
                 push({
                   address: "",
@@ -452,7 +414,7 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
           </VStack>
         )}
       </FieldArray>
-    </SectionCard>
+    </MerchantSectionCard>
   );
 };
 

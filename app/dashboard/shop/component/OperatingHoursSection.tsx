@@ -1,119 +1,68 @@
 import {
   Box,
+  Checkbox,
+  Flex,
   Grid,
   GridItem,
-  VStack,
   HStack,
   Text,
-  Checkbox,
-  Divider,
-  Flex,
-  Icon,
-  Circle,
-  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
 import { FiClock } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
-
-// Reusable section layout
-const SectionCard = ({ icon, title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
-          <Icon as={icon} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
+import { MerchantSectionCard } from "./merchantTheme";
 
 const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => {
-  const bgColor = useColorModeValue("gray.50", "gray.700");
-  const hoverBg = useColorModeValue("gray.100", "gray.600");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.700", "gray.100");
-
   return (
-    <SectionCard
+    <MerchantSectionCard
       icon={FiClock}
       title="Operating Hours"
-      description="Set your shop’s daily schedule and any closed days"
+      description="Set your daily schedule and any days when the shop stays closed."
     >
-      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={5}>
         {values.operatingHours.map((hour, index) => (
           <GridItem key={hour.day}>
             <VStack
               spacing={5}
-              p={6}
-              bg={bgColor}
-              borderRadius="xl"
+              p={5}
+              bg="rgba(255,255,255,0.02)"
+              borderRadius="20px"
               border="1px solid"
-              borderColor={borderColor}
-              boxShadow="md"
+              borderColor="var(--dashboard-border-strong)"
               align="stretch"
-              _hover={{
-                boxShadow: "xl",
-                bg: hoverBg,
-              }}
-              transition="all 0.2s ease-in-out"
             >
-              <HStack justify="space-between">
-                <Text fontSize="lg" fontWeight="bold" color={textColor}>
+              <HStack justify="space-between" align="start">
+                <Text fontSize="lg" fontWeight="700" color="var(--dashboard-text)">
                   {hour.day}
                 </Text>
                 <Checkbox
-                  colorScheme="teal"
+                  colorScheme="yellow"
                   isChecked={values?.operatingHours[index].isClosed}
-                  onChange={(e) =>
-                    setFieldValue(
-                      `operatingHours[${index}].isClosed`,
-                      e.target.checked
-                    )
+                  onChange={(event) =>
+                    setFieldValue(`operatingHours[${index}].isClosed`, event.target.checked)
                   }
+                  sx={{
+                    ".chakra-checkbox__control": {
+                      bg: "var(--dashboard-checkbox-bg)",
+                      borderColor: "var(--dashboard-checkbox-border)",
+                    },
+                    ".chakra-checkbox__control[data-checked]": {
+                      bg: "var(--dashboard-checkbox-active-bg)",
+                      borderColor: "var(--dashboard-accent)",
+                    },
+                    ".chakra-checkbox__label": {
+                      color: "var(--dashboard-text-muted)",
+                      fontSize: "sm",
+                    },
+                  }}
                 >
-                  <Text fontSize="sm" color="gray.600">
-                    Closed
-                  </Text>
+                  Closed
                 </Checkbox>
               </HStack>
 
-              <Divider borderColor="gray.300" />
+              <Box borderTop="1px solid" borderColor="var(--dashboard-border)" />
 
-              <Flex gap={4} align="center">
+              <Flex gap={4} align="center" direction={{ base: "column", md: "row" }}>
                 <CustomInput
                   label="Open"
                   name={`operatingHours[${index}].open`}
@@ -121,8 +70,8 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
                   value={values.operatingHours[index].open}
                   showError={showError}
                   error={errors.operatingHours?.[index]?.open}
-                  onChange={(e) =>
-                    setFieldValue(`operatingHours[${index}].open`, e.target.value)
+                  onChange={(event) =>
+                    setFieldValue(`operatingHours[${index}].open`, event.target.value)
                   }
                   disabled={values.operatingHours[index].isClosed}
                 />
@@ -133,8 +82,8 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
                   value={values.operatingHours[index].close}
                   showError={showError}
                   error={errors.operatingHours?.[index]?.close}
-                  onChange={(e) =>
-                    setFieldValue(`operatingHours[${index}].close`, e.target.value)
+                  onChange={(event) =>
+                    setFieldValue(`operatingHours[${index}].close`, event.target.value)
                   }
                   disabled={values.operatingHours[index].isClosed}
                 />
@@ -152,12 +101,10 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
           value={values.closedDates}
           onChange={(dates) => setFieldValue("closedDates", dates)}
           showError={showError}
-          error={
-            typeof errors.closedDates === "string" ? errors.closedDates : undefined
-          }
+          error={typeof errors.closedDates === "string" ? errors.closedDates : undefined}
         />
       </Box>
-    </SectionCard>
+    </MerchantSectionCard>
   );
 };
 

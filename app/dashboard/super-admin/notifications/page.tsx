@@ -18,8 +18,18 @@ import {
   Textarea,
   VStack,
 } from "@chakra-ui/react";
+import { FiBell, FiSend, FiUsers } from "react-icons/fi";
 import axios from "axios";
 import { notifyError, notifySuccess } from "../../../config/utils/notification";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import {
+  MerchantBadge,
+  merchantPrimaryButtonProps,
+  MerchantHeroSection,
+  MerchantPageShell,
+  MerchantPanel,
+  MerchantStatCard,
+} from "../../components/common/merchantDashboardUI";
 
 const roleOptions = ["user", "seller", "admin", "superAdmin"];
 
@@ -53,6 +63,33 @@ const NotificationComposerPage = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const recipientPickerVersion = "Recipient Picker v4";
+  const fieldProps = {
+    bg: dashboardPalette.surface,
+    borderColor: dashboardPalette.borderStrong,
+    color: dashboardPalette.text,
+    _placeholder: { color: dashboardPalette.textSoft },
+    _hover: { borderColor: dashboardPalette.border },
+    _focusVisible: {
+      borderColor: dashboardPalette.accent,
+      boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+    },
+  };
+  const selectProps = {
+    ...fieldProps,
+    sx: {
+      option: {
+        color: "#09080d",
+        backgroundColor: "#ffffff",
+      },
+    },
+  };
+  const selectionCardProps = {
+    border: "1px solid",
+    borderRadius: "md",
+    px: 3,
+    py: 2,
+    cursor: "pointer",
+  };
 
   const toggleArrayValue = (current: string[], value: string, checked: boolean) => {
     if (!value) {
@@ -226,19 +263,26 @@ const NotificationComposerPage = () => {
   };
 
   return (
-    <Box maxW="900px" p={6}>
-      <Heading size="lg" mb={2}>
-        Notification Composer
-      </Heading>
-      <Text color="gray.500" mb={6}>
-        Send persistent in-app notifications to users, roles, or all active users.
-      </Text>
+    <MerchantPageShell maxW="7xl">
+      <MerchantHeroSection
+        icon={FiBell}
+        primaryBadge="Broadcast Center"
+        title="Notification Composer"
+        description="Send persistent in-app notifications to users, roles, or all active users from one controlled admin workflow."
+        rightContent={
+          <HStack spacing={3}>
+            <MerchantStatCard label="Target Mode" value={targetMode} icon={FiSend} />
+            <MerchantStatCard label="Selected Users" value={resolvedUserIds.length} icon={FiUsers} valueColor={resolvedUserIds.length > 0 ? dashboardPalette.success : dashboardPalette.textMuted} />
+          </HStack>
+        }
+      />
 
-      <Box as="form" onSubmit={handleSubmit} bg="white" borderRadius="lg" p={6} shadow="sm">
+      <MerchantPanel p={{ base: 5, md: 7 }}>
+      <Box as="form" onSubmit={handleSubmit}>
         <Stack spacing={4}>
           <FormControl isRequired>
-            <FormLabel>Target Mode</FormLabel>
-            <Select value={targetMode} onChange={(event) => setTargetMode(event.target.value as any)}>
+            <FormLabel color={dashboardPalette.textMuted}>Target Mode</FormLabel>
+            <Select value={targetMode} onChange={(event) => setTargetMode(event.target.value as any)} {...selectProps}>
               <option value="broadcast">Broadcast (all active users)</option>
               <option value="role">Role</option>
               <option value="user">User IDs</option>
@@ -248,29 +292,30 @@ const NotificationComposerPage = () => {
           {targetMode === "user" && (
             <>
               <FormControl>
-                <FormLabel>Search Recipients</FormLabel>
+                <FormLabel color={dashboardPalette.textMuted}>Search Recipients</FormLabel>
                 <Input
                   value={recipientSearch}
                   onChange={(event) => setRecipientSearch(event.target.value)}
                   placeholder="Search by name, phone, or email"
+                  {...fieldProps}
                 />
               </FormControl>
 
               <FormControl>
-                <FormLabel>Select Recipients</FormLabel>
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <FormLabel color={dashboardPalette.textMuted}>Select Recipients</FormLabel>
+                <Text fontSize="xs" color={dashboardPalette.textSoft} mb={2}>
                   {recipientPickerVersion}
                 </Text>
-                <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={3} maxH="220px" overflowY="auto">
+                <Box border="1px solid" borderColor={dashboardPalette.borderStrong} borderRadius="md" p={3} maxH="220px" overflowY="auto" bg={dashboardPalette.surface}>
                   {recipientLoading ? (
                     <HStack py={4} justify="center">
                       <Spinner size="sm" />
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         Loading recipients...
                       </Text>
                     </HStack>
                   ) : recipientOptions.length === 0 ? (
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color={dashboardPalette.textSoft}>
                       No recipients found.
                     </Text>
                   ) : (
@@ -280,13 +325,9 @@ const NotificationComposerPage = () => {
                         return (
                           <Box
                             key={`${item.recipientId}-${index}`}
-                            border="1px solid"
-                            borderColor={isSelected ? "blue.400" : "gray.200"}
-                            bg={isSelected ? "blue.50" : "white"}
-                            borderRadius="md"
-                            px={3}
-                            py={2}
-                            cursor="pointer"
+                            {...selectionCardProps}
+                            borderColor={isSelected ? dashboardPalette.accent : dashboardPalette.borderStrong}
+                            bg={isSelected ? dashboardPalette.accentSoft : dashboardPalette.shellElevated}
                             width="100%"
                             onClick={() =>
                               setSelectedUserIds((prev) =>
@@ -295,10 +336,10 @@ const NotificationComposerPage = () => {
                             }
                           >
                             <HStack justify="space-between" align="center">
-                              <Text fontSize="sm" textAlign="left" noOfLines={1}>
+                              <Text fontSize="sm" textAlign="left" noOfLines={1} color={dashboardPalette.text}>
                                 {item.name || "Unnamed"} ({item.type || "user"}) - {item.phone || item.email || "N/A"}
                               </Text>
-                              {isSelected ? <Badge colorScheme="blue">Selected</Badge> : <Badge>Pick</Badge>}
+                              {isSelected ? <MerchantBadge tone="accent">Selected</MerchantBadge> : <MerchantBadge tone="soft">Pick</MerchantBadge>}
                             </HStack>
                           </Box>
                         );
@@ -309,15 +350,16 @@ const NotificationComposerPage = () => {
               </FormControl>
 
               <FormControl>
-                <FormLabel>Manual User IDs (optional)</FormLabel>
+                <FormLabel color={dashboardPalette.textMuted}>Manual User IDs (optional)</FormLabel>
                 <Textarea
                   value={manualUserIdsInput}
                   onChange={(event) => setManualUserIdsInput(event.target.value)}
                   placeholder="Comma-separated user IDs"
                   rows={2}
+                  {...fieldProps}
                 />
-                <FormHelperText>{resolvedUserIds.length} recipient(s) selected.</FormHelperText>
-                <Text fontSize="xs" color="gray.500" mt={1}>
+                <FormHelperText color={dashboardPalette.textSoft}>{resolvedUserIds.length} recipient(s) selected.</FormHelperText>
+                <Text fontSize="xs" color={dashboardPalette.textSoft} mt={1}>
                   Selected IDs: {selectedUserIds.join(", ") || "none"}
                 </Text>
               </FormControl>
@@ -326,23 +368,19 @@ const NotificationComposerPage = () => {
 
           {targetMode === "role" && (
             <FormControl isRequired>
-              <FormLabel>Roles</FormLabel>
+              <FormLabel color={dashboardPalette.textMuted}>Roles</FormLabel>
               <HStack spacing={3} align="start" flexWrap="wrap">
                 {roleOptions.map((role) => (
                   <Box
                     key={role}
-                    border="1px solid"
-                    borderColor={roles.includes(role) ? "blue.400" : "gray.200"}
-                    bg={roles.includes(role) ? "blue.50" : "white"}
-                    borderRadius="md"
-                    px={3}
-                    py={2}
-                    cursor="pointer"
+                    {...selectionCardProps}
+                    borderColor={roles.includes(role) ? dashboardPalette.accent : dashboardPalette.borderStrong}
+                    bg={roles.includes(role) ? dashboardPalette.accentSoft : dashboardPalette.shellElevated}
                     onClick={() => setRoles((prev) => toggleArrayValue(prev, role, !prev.includes(role)))}
                   >
                     <HStack spacing={2}>
-                      {roles.includes(role) ? <Badge colorScheme="blue">Selected</Badge> : <Badge>Pick</Badge>}
-                      <Text textTransform="capitalize">{role}</Text>
+                      {roles.includes(role) ? <MerchantBadge tone="accent">Selected</MerchantBadge> : <MerchantBadge tone="soft">Pick</MerchantBadge>}
+                      <Text textTransform="capitalize" color={dashboardPalette.text}>{role}</Text>
                     </HStack>
                   </Box>
                 ))}
@@ -351,24 +389,24 @@ const NotificationComposerPage = () => {
           )}
 
           <FormControl isRequired>
-            <FormLabel>Title</FormLabel>
-            <Input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} />
+            <FormLabel color={dashboardPalette.textMuted}>Title</FormLabel>
+            <Input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={160} {...fieldProps} />
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>Message</FormLabel>
-            <Textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={4} maxLength={2000} />
+            <FormLabel color={dashboardPalette.textMuted}>Message</FormLabel>
+            <Textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={4} maxLength={2000} {...fieldProps} />
           </FormControl>
 
           <HStack spacing={4} align="start">
             <FormControl>
-              <FormLabel>Category</FormLabel>
-              <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="announcement" />
+              <FormLabel color={dashboardPalette.textMuted}>Category</FormLabel>
+              <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="announcement" {...fieldProps} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Priority</FormLabel>
-              <Select value={priority} onChange={(event) => setPriority(event.target.value as any)}>
+              <FormLabel color={dashboardPalette.textMuted}>Priority</FormLabel>
+              <Select value={priority} onChange={(event) => setPriority(event.target.value as any)} {...selectProps}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
@@ -377,46 +415,48 @@ const NotificationComposerPage = () => {
           </HStack>
 
           <FormControl>
-            <FormLabel>Action URL</FormLabel>
-            <Input value={actionUrl} onChange={(event) => setActionUrl(event.target.value)} placeholder="/dashboard/orders" />
+            <FormLabel color={dashboardPalette.textMuted}>Action URL</FormLabel>
+            <Input value={actionUrl} onChange={(event) => setActionUrl(event.target.value)} placeholder="/dashboard/orders" {...fieldProps} />
           </FormControl>
 
           <HStack spacing={4} align="start">
             <FormControl>
-              <FormLabel>Source Type</FormLabel>
-              <Input value={sourceType} onChange={(event) => setSourceType(event.target.value)} placeholder="manual_admin" />
+              <FormLabel color={dashboardPalette.textMuted}>Source Type</FormLabel>
+              <Input value={sourceType} onChange={(event) => setSourceType(event.target.value)} placeholder="manual_admin" {...fieldProps} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Source ID</FormLabel>
-              <Input value={sourceId} onChange={(event) => setSourceId(event.target.value)} placeholder="Optional source reference" />
+              <FormLabel color={dashboardPalette.textMuted}>Source ID</FormLabel>
+              <Input value={sourceId} onChange={(event) => setSourceId(event.target.value)} placeholder="Optional source reference" {...fieldProps} />
             </FormControl>
           </HStack>
 
           <FormControl>
-            <FormLabel>Expires At</FormLabel>
-            <Input type="datetime-local" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} />
-            <FormHelperText>Leave empty to use default retention window.</FormHelperText>
+            <FormLabel color={dashboardPalette.textMuted}>Expires At</FormLabel>
+            <Input type="datetime-local" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} {...fieldProps} />
+            <FormHelperText color={dashboardPalette.textSoft}>Leave empty to use default retention window.</FormHelperText>
           </FormControl>
 
           <FormControl>
-            <FormLabel>Meta (JSON)</FormLabel>
+            <FormLabel color={dashboardPalette.textMuted}>Meta (JSON)</FormLabel>
             <Textarea
               value={metaInput}
               onChange={(event) => setMetaInput(event.target.value)}
               placeholder='{"key":"value"}'
               rows={4}
+              {...fieldProps}
             />
           </FormControl>
 
           <HStack justify="flex-end" pt={2}>
-            <Button type="submit" colorScheme="blue" isLoading={submitting}>
+            <Button type="submit" isLoading={submitting} {...merchantPrimaryButtonProps}>
               Send Notification
             </Button>
           </HStack>
         </Stack>
       </Box>
-    </Box>
+      </MerchantPanel>
+    </MerchantPageShell>
   );
 };
 

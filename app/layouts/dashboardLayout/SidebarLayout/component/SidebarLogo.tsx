@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex , Text, useColorModeValue, Tooltip } from "@chakra-ui/react";
+import { Box, Flex , Text, Tooltip } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import NextImage from "next/image";
 import { headerHeight } from "../../../../component/config/utils/variable";
@@ -8,24 +8,31 @@ import stores from "../../../../store/stores";
 import { dashboard } from "../../../../config/utils/routes";
 import { useRouter } from "next/navigation";
 import { WEBSITE_TITLE } from "../../../../config/utils/variables";
+import { dashboardPalette } from "../../dashboardPalette";
 
 const SidebarLogo: React.FC = observer(() => {
   const router = useRouter()
   const {
     layout: { isCallapse },
-    themeStore: { themeConfig },
   } = stores;
+  const brandMark = WEBSITE_TITLE
+    ? WEBSITE_TITLE
+        .split(/[\s-]+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("·")
+    : "B·A";
 
   return (
     <Flex
-      bgColor={useColorModeValue(
-        themeConfig.colors.custom.light.primary,
-        themeConfig.colors.custom.dark.primary
-      )}
+      bg={dashboardPalette.shell}
       justifyContent={isCallapse ? "center" : undefined}
       flexDirection={isCallapse ? "column" : undefined}
       alignItems="center"
       height={headerHeight}
+      borderBottom="1px solid"
+      borderBottomColor={dashboardPalette.border}
     >
       <Box
         cursor="pointer"
@@ -36,12 +43,11 @@ const SidebarLogo: React.FC = observer(() => {
         onClick={() => router.push(dashboard.home)}
       >
         {isCallapse ? (
-          <Text fontWeight={600} fontSize="lg">
-            {`${WEBSITE_TITLE?.charAt(0).toUpperCase()}.${WEBSITE_TITLE?.slice(-1).toUpperCase()}`}
+          <Text fontWeight={700} fontSize="lg" color={dashboardPalette.accentStrong}>
+            {brandMark}
           </Text>
         ) : (
-          <Flex alignItems="center" columnGap={4} maxW="100%" px={2} ml={3}>
-            {/* Company Logo with fallback and dynamic sizing */}
+          <Flex alignItems="center" columnGap={4} maxW="100%" px={4} ml={2}>
             <Box display="none" position="relative" width={isCallapse ? "35px" : "50px"} height={isCallapse ? "35px" : "50px"}>
               <NextImage
                 src={"/images/whiteLogo.png"}
@@ -50,21 +56,35 @@ const SidebarLogo: React.FC = observer(() => {
                 style={{ objectFit: "contain", borderRadius: "50%" }}
               />
             </Box>
-            {/* Truncated Company Name with Tooltip */}
             <Tooltip
               label={WEBSITE_TITLE}
               hasArrow
               isDisabled={false}
             >
-              <Text
-                textAlign="center"
-                fontSize="lg"
-                fontWeight="bold"
-                noOfLines={1}
-                isTruncated
-              >
-                {WEBSITE_TITLE}
-              </Text>
+              <Box>
+                <Text
+                  textAlign="left"
+                  fontSize="32px"
+                  fontFamily="Georgia, 'Times New Roman', serif"
+                  lineHeight="0.95"
+                  letterSpacing="0.08em"
+                  color={dashboardPalette.accentStrong}
+                  noOfLines={1}
+                  isTruncated
+                >
+                  {brandMark}
+                </Text>
+                <Text
+                  mt={1}
+                  fontSize="xs"
+                  letterSpacing="0.18em"
+                  textTransform="uppercase"
+                  color={dashboardPalette.textSoft}
+                  noOfLines={1}
+                >
+                  Merchant Studio
+                </Text>
+              </Box>
             </Tooltip>
           </Flex>
         )}

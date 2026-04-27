@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Badge, Box, HStack, Tab, TabList, Tabs, Text } from "@chakra-ui/react";
+import { Badge, Box, HStack, SimpleGrid, Tab, TabList, Tabs, Text } from "@chakra-ui/react";
+import { FiCheckCircle, FiClock, FiShield, FiShoppingBag } from "react-icons/fi";
 import { observer } from "mobx-react-lite";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
@@ -12,6 +13,15 @@ import ShopView from "./components/ShopView";
 import ReviewShopDrawer from "./components/ReviewShopDrawer";
 import stores from "../../../store/stores";
 import { useDisclosure, useToast } from "@chakra-ui/react";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import {
+    getMerchantTableProps,
+    MerchantBadge,
+    MerchantHeroSection,
+    MerchantPageShell,
+    MerchantPanel,
+    MerchantStatCard,
+} from "../../components/common/merchantDashboardUI";
 
 const reviewTabs = [
     { label: "Pending Review", value: "pending" },
@@ -60,6 +70,9 @@ const ShopsPage = observer(() => {
     const [isReviewing, setIsReviewing] = React.useState(false);
     const toast = useToast();
     const { companyStore } = stores;
+    const currentTabLabel = reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops";
+    const pendingCount = shops.filter((shop: any) => shop.reviewStatus === "pending").length;
+    const approvedCount = shops.filter((shop: any) => shop.reviewStatus === "approved").length;
 
     const handleReviewClick = (shop: any) => {
         setReviewingShop(shop);
@@ -166,21 +179,61 @@ const ShopsPage = observer(() => {
     }
 
     return (
-        <Box p={6}>
+        <MerchantPageShell>
+            <MerchantHeroSection
+                icon={FiShield}
+                primaryBadge="Review Workflow"
+                title="Shop Oversight"
+                description="Review storefront submissions, track moderation state, and manage visibility decisions without leaving the super-admin workspace."
+                rightContent={
+                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3} minW={{ xl: "320px" }}>
+                        <MerchantStatCard label="Current Results" value={totalShops} icon={FiShoppingBag} />
+                        <MerchantStatCard label="Pending In View" value={pendingCount} valueColor={dashboardPalette.warning} icon={FiClock} iconColor={dashboardPalette.warning} />
+                    </SimpleGrid>
+                }
+            />
+
+            <MerchantPanel p={{ base: 4, md: 6 }}>
+                <HStack spacing={2} mb={5} flexWrap="wrap">
+                    <MerchantBadge tone="accent">{currentTabLabel}</MerchantBadge>
+                    <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
+                        {approvedCount} Approved In View
+                    </MerchantBadge>
+                </HStack>
+
             <Tabs
-                variant="soft-rounded"
-                colorScheme="blue"
+                variant="unstyled"
                 index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
                 onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
                 mb={6}
             >
-                <TabList gap={3} flexWrap="wrap">
+                <TabList
+                    gap={2}
+                    flexWrap="wrap"
+                    bg={dashboardPalette.surfaceAlt}
+                    borderWidth="1px"
+                    borderColor={dashboardPalette.border}
+                    borderRadius="20px"
+                    p={1}
+                >
                     {reviewTabs.map((tab) => (
-                        <Tab key={tab.value}>
+                        <Tab
+                            key={tab.value}
+                            borderRadius="16px"
+                            color={dashboardPalette.textMuted}
+                            fontWeight="700"
+                            _selected={{
+                                bg: dashboardPalette.accentSoft,
+                                color: dashboardPalette.accentStrong,
+                                borderWidth: "1px",
+                                borderColor: dashboardPalette.border,
+                            }}
+                            _hover={{ color: dashboardPalette.text }}
+                        >
                             <HStack spacing={2}>
                                 <Text>{tab.label}</Text>
                                 {reviewStatus === tab.value ? (
-                                    <Badge colorScheme="blue" borderRadius="full">
+                                    <Badge bg={dashboardPalette.surface} color={dashboardPalette.textMuted} borderRadius="full">
                                         {totalShops}
                                     </Badge>
                                 ) : null}
@@ -191,13 +244,15 @@ const ShopsPage = observer(() => {
             </Tabs>
 
             <CustomTable
-                title={`${reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops"} (${totalShops})`}
+                title={`${currentTabLabel} (${totalShops})`}
                 columns={ShopColumns}
                 data={shops}
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
+                {...getMerchantTableProps("62vh")}
             />
+            </MerchantPanel>
 
             <ReviewShopDrawer
                 isOpen={isReviewOpen}
@@ -229,7 +284,7 @@ const ShopsPage = observer(() => {
                 isLoading={isDeleting}
                 image={selectedShop?.logo?.url}
             />
-        </Box>
+        </MerchantPageShell>
     );
 });
 

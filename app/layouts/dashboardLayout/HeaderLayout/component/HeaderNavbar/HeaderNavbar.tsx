@@ -10,6 +10,7 @@ import HeaderThemeSwitch from "./HeaderThemeSwitch/HeaderThemeSwitch";
 // import CartContainer from "./CartContainer/CartContainer";
 import stores from "../../../../../store/stores";
 import NotificationBell from "../../../../../layouts/mainLayout/component/Header/Notification/NotificationBell";
+import { dashboardPalette } from "../../../dashboardPalette";
 
 const HeaderNavbar = observer(() => {
   const {
@@ -24,6 +25,7 @@ const HeaderNavbar = observer(() => {
       alignItems="center"
       width={isLargerThan1020 ? "auto" : "10%"}
       gap={2}
+      color={dashboardPalette.text}
     >
       {isLargerThan1020 ? (
         <>
@@ -39,8 +41,12 @@ const HeaderNavbar = observer(() => {
         <IconButton
           aria-label="Arrow"
           fontSize="xl"
-          _hover={{ color: "blue.500", bg: "gray.700" }}
-          _active={{ bg: "gray.800" }}
+          bg={dashboardPalette.surfaceAlt}
+          color={dashboardPalette.text}
+          border="1px solid"
+          borderColor={dashboardPalette.border}
+          _hover={{ color: dashboardPalette.accentStrong, bg: dashboardPalette.surfaceSoft }}
+          _active={{ bg: dashboardPalette.surface }}
           icon={
             <FaBars
               cursor="pointer"

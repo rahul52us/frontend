@@ -1,71 +1,20 @@
 import React from "react";
 import {
   Box,
-  VStack,
+  Button,
   Flex,
   IconButton,
-  Button,
-  Icon,
-  useColorModeValue,
   Text,
-  Circle,
+  VStack,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import { FiImage } from "react-icons/fi";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
+import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import { removeDataByIndex } from "../../../config/utils/utils";
-
-// Shared styled card
-const SectionCard = ({ icon, title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-  const circleBg = useColorModeValue("blue.100", "blue.600");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={circleBg}>
-          <Icon as={icon} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
+import { MerchantSectionCard } from "./merchantTheme";
 
 const GallerySection = ({ values, errors, setFieldValue, showError }) => {
-  const inputBorderColor = useColorModeValue("gray.200", "gray.600");
-
   const handleAddGalleryItem = () => {
     setFieldValue("gallery", [...values.gallery, { file: null, title: "" }]);
   };
@@ -91,10 +40,10 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
   };
 
   return (
-    <SectionCard
+    <MerchantSectionCard
       icon={FiImage}
       title="Shop Gallery"
-      description="Add images and titles for your shop gallery"
+      description="Add supporting photos for your storefront, products, or workspace."
     >
       <VStack spacing={6} align="stretch">
         {values?.gallery?.map((item, index) => (
@@ -102,18 +51,19 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
             key={index}
             gap={4}
             p={4}
-            borderRadius="md"
+            borderRadius="20px"
             border="1px solid"
-            borderColor={inputBorderColor}
+            borderColor="var(--dashboard-border-strong)"
+            bg="rgba(255,255,255,0.02)"
             wrap="wrap"
             align="center"
           >
-            <Box flex="1">
+            <Box flex="1" minW={{ base: "100%", md: "240px" }}>
               {item.file ? (
                 <ShowFileUploadFile
                   files={item.file}
                   removeFile={() => handleRemoveGalleryItem(index)}
-                  edit={true}
+                  edit
                 />
               ) : (
                 <CustomInput
@@ -121,41 +71,56 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
                   name={`gallery[${index}].file`}
                   isMulti={false}
                   accept="image/*"
-                  onChange={(e) => handleFileChange(index, e.target.files[0])}
+                  onChange={(event) => handleFileChange(index, event.target.files[0])}
                   showError={showError}
                   error={errors?.gallery?.[index]?.file}
                 />
               )}
             </Box>
-            <Box flex="1">
+
+            <Box flex="1" minW={{ base: "100%", md: "220px" }}>
               <CustomInput
+                label="Image Title"
                 name={`gallery[${index}].title`}
                 placeholder="Enter image title"
                 value={item.title}
-                onChange={(e) => handleTitleChange(index, e.target.value)}
+                onChange={(event) => handleTitleChange(index, event.target.value)}
                 showError={showError}
                 error={errors?.gallery?.[index]?.title}
               />
             </Box>
+
             <IconButton
               icon={<DeleteIcon />}
-              colorScheme="red"
               onClick={() => handleRemoveGalleryItem(index)}
               aria-label="Remove Image"
+              variant="ghost"
+              color="#ef6b6b"
+              _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
             />
           </Flex>
         ))}
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="teal"
-          variant="outline"
-          onClick={handleAddGalleryItem}
-          alignSelf="flex-start"
-        >
-          Add Image
-        </Button>
+
+        <Box>
+          <Button
+            leftIcon={<AddIcon />}
+            variant="outline"
+            borderRadius="16px"
+            borderColor="var(--dashboard-border-strong)"
+            color="var(--dashboard-accent-strong)"
+            _hover={{ bg: "var(--dashboard-accent-soft)" }}
+            onClick={handleAddGalleryItem}
+          >
+            Add Image
+          </Button>
+          {!values?.gallery?.length ? (
+            <Text mt={3} fontSize="sm" color="var(--dashboard-text-soft)">
+              Start with a few strong visuals. You can always add more later.
+            </Text>
+          ) : null}
+        </Box>
       </VStack>
-    </SectionCard>
+    </MerchantSectionCard>
   );
 };
 

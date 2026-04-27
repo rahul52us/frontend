@@ -5,16 +5,12 @@ import {
   Text,
   SimpleGrid,
   Flex,
-  Icon,
-  useColorModeValue,
-  Circle,
   Button,
   Badge,
   HStack,
   useToast,
 } from "@chakra-ui/react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import { FiMapPin } from "react-icons/fi";
 import { FiNavigation } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import {
@@ -26,52 +22,7 @@ import {
   mapOptions,
   parseAddressComponents,
 } from "./utils/locationPicker";
-
-// SectionCard reused from ShopDetailsSection
-const SectionCard = ({ title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
-          <Icon as={FiMapPin} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
+import { MerchantSectionCard } from "./merchantTheme";
 
 const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
   const toast = useToast();
@@ -249,8 +200,8 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
 
   return (
     <VStack spacing={8} align="stretch">
-      <SectionCard
-        // icon={FiMapPin}
+      <MerchantSectionCard
+        icon={FiNavigation}
         title="Main Location"
         description="Pick your location on the map and fine-tune the address if needed"
       >
@@ -264,10 +215,10 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
               mb={4}
             >
               <Box>
-                <Text fontSize="sm" fontWeight="600" color="gray.700">
+                <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
                   Choose your shop location
                 </Text>
-                <Text fontSize="xs" color="gray.500">
+                <Text fontSize="xs" color="var(--dashboard-text-soft)">
                   Tap the map to drop a pin, just like registration.
                 </Text>
               </Box>
@@ -275,7 +226,10 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
                 leftIcon={<FiNavigation />}
                 variant="outline"
                 size="sm"
-                borderRadius="full"
+                borderRadius="16px"
+                borderColor="var(--dashboard-border-strong)"
+                color="var(--dashboard-accent-strong)"
+                _hover={{ bg: "var(--dashboard-accent-soft)" }}
                 onClick={detectCurrentLocation}
                 isLoading={detectingLocation || geocoding}
               >
@@ -288,24 +242,24 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
               borderRadius="2xl"
               overflow="hidden"
               borderWidth="1px"
-              borderColor="blue.100"
-              bg="blue.50"
+              borderColor="var(--dashboard-border-strong)"
+              bg="var(--dashboard-surface-soft)"
             >
               {!GOOGLE_MAPS_API_KEY ? (
                 <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="gray.600" textAlign="center">
+                  <Text fontSize="sm" color="var(--dashboard-text-muted)" textAlign="center">
                     Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
                   </Text>
                 </Flex>
               ) : loadError ? (
                 <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="red.500" textAlign="center">
+                  <Text fontSize="sm" color="var(--dashboard-danger, #ef6b6b)" textAlign="center">
                     Failed to load Google Maps.
                   </Text>
                 </Flex>
               ) : !isLoaded ? (
                 <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="gray.500" textAlign="center">
+                  <Text fontSize="sm" color="var(--dashboard-text-soft)" textAlign="center">
                     Loading map...
                   </Text>
                 </Flex>
@@ -324,12 +278,20 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
               )}
             </Box>
 
-            <HStack mt={3} spacing={3} wrap="wrap">
-              <Badge colorScheme={selectedPoint ? "green" : "blue"} px={3} py={1} borderRadius="full">
+            <HStack mt={3} spacing={3} flexWrap="wrap">
+              <Badge
+                px={3}
+                py={1}
+                borderRadius="full"
+                bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : "var(--dashboard-accent-soft)"}
+                color={selectedPoint ? "var(--dashboard-success, #46c98b)" : "var(--dashboard-accent-strong)"}
+                border="1px solid"
+                borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : "var(--dashboard-border)"}
+              >
                 {selectedPoint ? "Pin selected" : "Pin not selected"}
               </Badge>
               {selectedPoint ? (
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color="var(--dashboard-text-soft)">
                   {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
                 </Text>
               ) : null}
@@ -411,7 +373,7 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
             />
           </SimpleGrid>
         </VStack>
-      </SectionCard>
+      </MerchantSectionCard>
     </VStack>
   );
 };

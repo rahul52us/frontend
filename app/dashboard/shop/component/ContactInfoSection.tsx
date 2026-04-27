@@ -1,74 +1,18 @@
 import React from "react";
-import {
-  Box,
-  VStack,
-  Grid,
-  GridItem,
-  Text,
-  Icon,
-  Flex,
-  useColorModeValue,
-  Circle,
-} from "@chakra-ui/react";
+import { Grid, GridItem, VStack } from "@chakra-ui/react";
 import { FiPhone, FiUsers } from "react-icons/fi";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
-
-// Reusable styled section card
-const SectionCard = ({ icon, title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
-          <Icon as={icon} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
+import { MerchantSectionCard } from "./merchantTheme";
 
 const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
   return (
     <VStack spacing={8} align="stretch">
-      {/* Contact Info Card */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiPhone}
         title="Contact Details"
-        description="Phone, email and website for your shop"
+        description="Phone, email, and website details that buyers can use to reach you."
       >
-        <VStack spacing={4}>
+        <VStack spacing={5}>
           <CustomInput
             showError={showError}
             label="Phone"
@@ -76,9 +20,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
             required
             error={errors.contactInfo?.phone}
             value={values?.contactInfo?.phone}
-            onChange={(e) =>
-              setFieldValue("contactInfo.phone", e.target.value)
-            }
+            onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
           />
           <CustomInput
             showError={showError}
@@ -87,9 +29,7 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
             type="text"
             error={errors?.contactInfo?.email}
             value={values?.contactInfo?.email}
-            onChange={(e) =>
-              setFieldValue("contactInfo.email", e.target.value)
-            }
+            onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
           />
           <CustomInput
             showError={showError}
@@ -98,20 +38,17 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
             type="url"
             error={errors.contactInfo?.website}
             value={values?.contactInfo?.website}
-            onChange={(e) =>
-              setFieldValue("contactInfo.website", e.target.value)
-            }
+            onChange={(event) => setFieldValue("contactInfo.website", event.target.value)}
           />
         </VStack>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Social Media Links Card */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiUsers}
         title="Social Media"
-        description="Connect your business with social platforms"
+        description="Optional social profiles to build trust and help buyers discover you."
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={5}>
           <GridItem>
             <CustomInput
               showError={showError}
@@ -120,8 +57,8 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
               type="url"
               error={errors.contactInfo?.socialMedia?.facebook}
               value={values?.contactInfo?.socialMedia?.facebook}
-              onChange={(e) =>
-                setFieldValue("contactInfo.socialMedia.facebook", e.target.value)
+              onChange={(event) =>
+                setFieldValue("contactInfo.socialMedia.facebook", event.target.value)
               }
             />
           </GridItem>
@@ -133,8 +70,8 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
               type="url"
               error={errors.contactInfo?.socialMedia?.instagram}
               value={values?.contactInfo?.socialMedia?.instagram}
-              onChange={(e) =>
-                setFieldValue("contactInfo.socialMedia.instagram", e.target.value)
+              onChange={(event) =>
+                setFieldValue("contactInfo.socialMedia.instagram", event.target.value)
               }
             />
           </GridItem>
@@ -146,8 +83,8 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
               type="url"
               error={errors.contactInfo?.socialMedia?.twitter}
               value={values?.contactInfo?.socialMedia?.twitter}
-              onChange={(e) =>
-                setFieldValue("contactInfo.socialMedia.twitter", e.target.value)
+              onChange={(event) =>
+                setFieldValue("contactInfo.socialMedia.twitter", event.target.value)
               }
             />
           </GridItem>
@@ -159,8 +96,8 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
               type="url"
               error={errors.contactInfo?.socialMedia?.linkedin}
               value={values?.contactInfo?.socialMedia?.linkedin}
-              onChange={(e) =>
-                setFieldValue("contactInfo.socialMedia.linkedin", e.target.value)
+              onChange={(event) =>
+                setFieldValue("contactInfo.socialMedia.linkedin", event.target.value)
               }
             />
           </GridItem>
@@ -172,13 +109,13 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
               type="url"
               error={errors.contactInfo?.socialMedia?.youtube}
               value={values?.contactInfo?.socialMedia?.youtube}
-              onChange={(e) =>
-                setFieldValue("contactInfo.socialMedia.youtube", e.target.value)
+              onChange={(event) =>
+                setFieldValue("contactInfo.socialMedia.youtube", event.target.value)
               }
             />
           </GridItem>
         </Grid>
-      </SectionCard>
+      </MerchantSectionCard>
     </VStack>
   );
 };

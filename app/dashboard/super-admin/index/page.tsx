@@ -1,57 +1,82 @@
 "use client";
 
 import React from "react";
-import { Box, Heading, Text, SimpleGrid, Card, CardBody, Stat, StatLabel, StatNumber, StatHelpText, Icon, Flex } from "@chakra-ui/react";
-import { FiUsers, FiShoppingBag, FiBox, FiActivity } from "react-icons/fi";
+import { Box, SimpleGrid, Text } from "@chakra-ui/react";
+import { FiActivity, FiBox, FiShield, FiShoppingBag, FiUsers } from "react-icons/fi";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import {
+    MerchantHeroSection,
+    MerchantPageShell,
+    MerchantPanel,
+    MerchantStatCard,
+} from "../../components/common/merchantDashboardUI";
 
 const SuperAdminDashboard = () => {
     // Mock data for dashboard stats
     const stats = [
-        { label: "Total Shops", value: "128", helpText: "+12% this month", icon: FiShoppingBag, color: "blue.500" },
-        { label: "Total Products", value: "4,320", helpText: "+5% this week", icon: FiBox, color: "purple.500" },
-        { label: "Active Users", value: "12,450", helpText: "Daily avg", icon: FiUsers, color: "green.500" },
-        { label: "Platform Revenue", value: "$45,200", helpText: "Last 30 days", icon: FiActivity, color: "orange.500" },
+        { label: "Total Shops", value: "128", helpText: "+12% this month", icon: FiShoppingBag, color: dashboardPalette.accentStrong, bg: "rgba(214, 183, 114, 0.10)" },
+        { label: "Total Products", value: "4,320", helpText: "+5% this week", icon: FiBox, color: dashboardPalette.warning, bg: "rgba(224, 179, 91, 0.10)" },
+        { label: "Active Users", value: "12,450", helpText: "Daily avg", icon: FiUsers, color: dashboardPalette.success, bg: "rgba(70, 201, 139, 0.10)" },
+        { label: "Platform Revenue", value: "$45,200", helpText: "Last 30 days", icon: FiActivity, color: dashboardPalette.danger, bg: "rgba(239, 107, 107, 0.10)" },
     ];
 
     return (
-        <Box>
-            <Heading mb={2}>Super Admin Dashboard</Heading>
-            <Text color="gray.500" mb={8}>Welcome back, Super Admin. Here is an overview of the platform.</Text>
+        <MerchantPageShell>
+            <MerchantHeroSection
+                icon={FiShield}
+                primaryBadge="Platform Control"
+                title="Super Admin Dashboard"
+                description="Welcome back. Monitor storefront growth, platform activity, and operational health from the central admin workspace."
+                rightContent={
+                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3} minW={{ xl: "360px" }}>
+                        {stats.slice(0, 2).map((stat, index) => (
+                            <MerchantStatCard
+                                key={index}
+                                label={stat.label}
+                                value={stat.value}
+                                icon={stat.icon}
+                                iconColor={stat.color}
+                                iconBg={stat.bg}
+                            />
+                        ))}
+                    </SimpleGrid>
+                }
+            />
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
+            <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4} mb={6}>
                 {stats.map((stat, index) => (
-                    <Card key={index} borderLeft="4px solid" borderColor={stat.color}>
-                        <CardBody>
-                            <Flex justifyContent="space-between" alignItems="center">
-                                <Stat>
-                                    <StatLabel fontSize="sm" color="gray.500">{stat.label}</StatLabel>
-                                    <StatNumber fontSize="2xl" fontWeight="bold">{stat.value}</StatNumber>
-                                    <StatHelpText mb={0}>{stat.helpText}</StatHelpText>
-                                </Stat>
-                                <Box p={2} bg={`${stat.color}15`} borderRadius="md">
-                                    <Icon as={stat.icon} boxSize={6} color={stat.color} />
-                                </Box>
-                            </Flex>
-                        </CardBody>
-                    </Card>
+                    <MerchantStatCard
+                        key={index}
+                        label={stat.label}
+                        value={stat.value}
+                        valueColor={stat.color}
+                        icon={stat.icon}
+                        iconColor={stat.color}
+                        iconBg={stat.bg}
+                        variant="panel"
+                    />
                 ))}
             </SimpleGrid>
 
             <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
-                <Card minH="300px">
-                    <CardBody>
-                        <Heading size="md" mb={4}>Recent Activity</Heading>
-                        <Text color="gray.500">Activity logs and platform updates will appear here.</Text>
-                    </CardBody>
-                </Card>
-                <Card minH="300px">
-                    <CardBody>
-                        <Heading size="md" mb={4}>Platform Health</Heading>
-                        <Text color="gray.500">System status and performance metrics will appear here.</Text>
-                    </CardBody>
-                </Card>
+                <MerchantPanel minH="260px">
+                    <Text fontSize="xl" fontWeight="700" color={dashboardPalette.text} mb={3}>
+                        Recent Activity
+                    </Text>
+                    <Text color={dashboardPalette.textMuted}>
+                        Activity logs and platform updates will appear here.
+                    </Text>
+                </MerchantPanel>
+                <MerchantPanel minH="260px">
+                    <Text fontSize="xl" fontWeight="700" color={dashboardPalette.text} mb={3}>
+                        Platform Health
+                    </Text>
+                    <Text color={dashboardPalette.textMuted}>
+                        System status and performance metrics will appear here.
+                    </Text>
+                </MerchantPanel>
             </SimpleGrid>
-        </Box>
+        </MerchantPageShell>
     );
 };
 

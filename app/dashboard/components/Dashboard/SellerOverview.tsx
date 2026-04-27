@@ -26,7 +26,6 @@ import {
   StatLabel,
   StatNumber,
   Text,
-  useColorModeValue,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
@@ -45,6 +44,7 @@ import {
   FaWarehouse,
 } from "react-icons/fa";
 import stores from "../../../store/stores";
+import { dashboardHeroGradient, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 
 type DashboardOrder = {
   _id?: string;
@@ -210,33 +210,30 @@ const MetricCard = ({
   icon: any;
   accent: string;
 }) => {
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const bg = useColorModeValue("white", "gray.800");
-
   return (
     <Box
-      bg={bg}
+      bg={dashboardPalette.surface}
       border="1px solid"
-      borderColor={borderColor}
+      borderColor={dashboardPalette.border}
       borderRadius="2xl"
       p={5}
-      boxShadow="sm"
+      boxShadow="0 18px 30px rgba(0, 0, 0, 0.22)"
       position="relative"
       overflow="hidden"
     >
-      <Box position="absolute" insetX={0} top={0} h="4px" bg={`${accent}.500`} />
+      <Box position="absolute" insetX={0} top={0} h="3px" bg={dashboardPalette.accent} />
       <Flex justify="space-between" align="start" gap={3}>
         <Stat>
-          <StatLabel fontSize="sm" color="gray.500">
+          <StatLabel fontSize="sm" color={dashboardPalette.textMuted}>
             {label}
           </StatLabel>
-          <StatNumber fontSize={{ base: "xl", md: "2xl" }} color="gray.800">
+          <StatNumber fontSize={{ base: "xl", md: "2xl" }} color={dashboardPalette.text}>
             {value}
           </StatNumber>
-          <StatHelpText mb={0}>{helper}</StatHelpText>
+          <StatHelpText mb={0} color={dashboardPalette.textSoft}>{helper}</StatHelpText>
         </Stat>
-        <Circle size="46px" bg={`${accent}.100`}>
-          <Icon as={icon} color={`${accent}.600`} boxSize={5} />
+        <Circle size="46px" bg={dashboardPalette.accentSoft}>
+          <Icon as={icon} color={dashboardPalette.accentStrong} boxSize={5} />
         </Circle>
       </Flex>
     </Box>
@@ -256,17 +253,14 @@ const SectionCard = ({
   onAction?: () => void;
   children: React.ReactNode;
 }) => {
-  const bg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-
   return (
     <Box
-      bg={bg}
+      bg={dashboardPalette.surface}
       border="1px solid"
-      borderColor={borderColor}
+      borderColor={dashboardPalette.border}
       borderRadius="2xl"
       p={{ base: 4, md: 5 }}
-      boxShadow="sm"
+      boxShadow="0 18px 30px rgba(0, 0, 0, 0.22)"
       h="100%"
     >
       <Flex
@@ -277,11 +271,11 @@ const SectionCard = ({
         mb={4}
       >
         <Box>
-          <Heading size="md" color="gray.800">
+          <Heading size="md" color={dashboardPalette.text}>
             {title}
           </Heading>
           {subtitle ? (
-            <Text mt={1} color="gray.500" fontSize="sm">
+            <Text mt={1} color={dashboardPalette.textMuted} fontSize="sm">
               {subtitle}
             </Text>
           ) : null}
@@ -289,8 +283,10 @@ const SectionCard = ({
         {actionLabel && onAction ? (
           <Button
             size="sm"
-            variant="ghost"
-            colorScheme="blue"
+            variant="outline"
+            color={dashboardPalette.accentStrong}
+            borderColor={dashboardPalette.borderStrong}
+            _hover={{ bg: dashboardPalette.accentSoft, borderColor: dashboardPalette.accent }}
             rightIcon={<FaArrowRight />}
             onClick={onAction}
           >
@@ -320,12 +316,11 @@ const SellerOverview = observer(() => {
     notifications: [],
   });
 
-  const pageBg = useColorModeValue("gray.50", "gray.900");
-  const panelBg = useColorModeValue("white", "gray.800");
-  const mutedText = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const heroBg =
-    "linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #14b8a6 100%)";
+  const pageBg = dashboardPalette.page;
+  const panelBg = dashboardPalette.surface;
+  const mutedText = dashboardPalette.textMuted;
+  const borderColor = dashboardPalette.border;
+  const heroBg = dashboardHeroGradient;
 
   const loadDashboard = useCallback(async () => {
     if (!companyId) {
@@ -471,7 +466,7 @@ const SellerOverview = observer(() => {
               <Heading size={{ base: "lg", md: "xl" }} lineHeight="1.2">
                 {company?.name ? `Welcome back, ${company.name}` : "Welcome to your seller dashboard"}
               </Heading>
-              <Text mt={3} color="whiteAlpha.900" maxW="2xl">
+              <Text mt={3} color={dashboardPalette.textMuted} maxW="2xl">
                 Keep track of orders, stock, customers, suppliers, and shop readiness from one place.
               </Text>
               <HStack spacing={5} mt={5} wrap="wrap">
@@ -491,7 +486,7 @@ const SellerOverview = observer(() => {
             </Box>
 
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3} minW={{ base: "100%", xl: "460px" }}>
-              <Box bg="whiteAlpha.180" borderRadius="2xl" p={4}>
+              <Box bg="rgba(255,255,255,0.04)" border="1px solid" borderColor={dashboardPalette.border} borderRadius="2xl" p={4}>
                 <Text fontSize="xs" textTransform="uppercase" color="whiteAlpha.700">
                   Pending orders
                 </Text>
@@ -499,7 +494,7 @@ const SellerOverview = observer(() => {
                   {dashboardData.metrics.pendingOrders}
                 </Heading>
               </Box>
-              <Box bg="whiteAlpha.180" borderRadius="2xl" p={4}>
+              <Box bg="rgba(255,255,255,0.04)" border="1px solid" borderColor={dashboardPalette.border} borderRadius="2xl" p={4}>
                 <Text fontSize="xs" textTransform="uppercase" color="whiteAlpha.700">
                   Customer due
                 </Text>
@@ -507,7 +502,7 @@ const SellerOverview = observer(() => {
                   {formatCompactCurrency(dashboardData.metrics.customerReceivable)}
                 </Heading>
               </Box>
-              <Box bg="whiteAlpha.180" borderRadius="2xl" p={4}>
+              <Box bg="rgba(255,255,255,0.04)" border="1px solid" borderColor={dashboardPalette.border} borderRadius="2xl" p={4}>
                 <Text fontSize="xs" textTransform="uppercase" color="whiteAlpha.700">
                   Supplier payable
                 </Text>
@@ -515,7 +510,7 @@ const SellerOverview = observer(() => {
                   {formatCompactCurrency(dashboardData.metrics.supplierPayable)}
                 </Heading>
               </Box>
-              <Box bg="whiteAlpha.180" borderRadius="2xl" p={4}>
+              <Box bg="rgba(255,255,255,0.04)" border="1px solid" borderColor={dashboardPalette.border} borderRadius="2xl" p={4}>
                 <Text fontSize="xs" textTransform="uppercase" color="whiteAlpha.700">
                   Unread alerts
                 </Text>
@@ -571,14 +566,14 @@ const SellerOverview = observer(() => {
         )}
 
         {error ? (
-          <Box bg={panelBg} border="1px solid" borderColor="red.200" borderRadius="2xl" p={5}>
+          <Box bg={panelBg} border="1px solid" borderColor="rgba(239, 107, 107, 0.22)" borderRadius="2xl" p={5}>
             <HStack justify="space-between" align="start" spacing={4}>
               <HStack align="start" spacing={3}>
-                <Circle size="42px" bg="red.50">
-                  <Icon as={FaExclamationTriangle} color="red.500" />
+                <Circle size="42px" bg="rgba(239, 107, 107, 0.14)">
+                  <Icon as={FaExclamationTriangle} color={dashboardPalette.danger} />
                 </Circle>
                 <Box>
-                  <Heading size="sm" color="gray.800">
+                  <Heading size="sm" color={dashboardPalette.text}>
                     Seller overview could not load fully
                   </Heading>
                   <Text mt={1} color={mutedText}>
@@ -586,7 +581,14 @@ const SellerOverview = observer(() => {
                   </Text>
                 </Box>
               </HStack>
-              <Button size="sm" colorScheme="blue" onClick={loadDashboard}>
+              <Button
+                size="sm"
+                variant="outline"
+                borderColor={dashboardPalette.borderStrong}
+                color={dashboardPalette.accentStrong}
+                _hover={{ bg: dashboardPalette.accentSoft }}
+                onClick={loadDashboard}
+              >
                 Retry
               </Button>
             </HStack>
@@ -626,7 +628,7 @@ const SellerOverview = observer(() => {
                         <Flex justify="space-between" align={{ base: "start", md: "center" }} gap={3} direction={{ base: "column", md: "row" }}>
                           <Box>
                             <HStack spacing={3}>
-                              <Text fontWeight="semibold" color="gray.800">
+                              <Text fontWeight="semibold" color={dashboardPalette.text}>
                                 {order.orderId || order._id}
                               </Text>
                               <Badge colorScheme={statusMeta.colorScheme}>{statusMeta.label}</Badge>
@@ -636,7 +638,7 @@ const SellerOverview = observer(() => {
                             </Text>
                           </Box>
                           <Box textAlign={{ base: "left", md: "right" }}>
-                            <Text fontWeight="bold" color="gray.800">
+                            <Text fontWeight="bold" color={dashboardPalette.text}>
                               {formatCurrency(getOrderAmount(order))}
                             </Text>
                             <Text fontSize="sm" color={mutedText}>
@@ -650,7 +652,7 @@ const SellerOverview = observer(() => {
                 </Stack>
               ) : (
                 <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={6}>
-                  <Text fontWeight="medium" color="gray.700">
+                  <Text fontWeight="medium" color={dashboardPalette.text}>
                     No orders yet
                   </Text>
                   <Text mt={1} color={mutedText} fontSize="sm">
@@ -673,7 +675,7 @@ const SellerOverview = observer(() => {
                   <Text fontSize="sm" color={mutedText}>
                     Completion
                   </Text>
-                  <Text fontWeight="semibold" color="gray.800">
+                  <Text fontWeight="semibold" color={dashboardPalette.text}>
                     {checklistItems.completed}/{checklistItems.items.length}
                   </Text>
                 </Flex>
@@ -682,7 +684,7 @@ const SellerOverview = observer(() => {
                   {checklistItems.items.map((item) => (
                     <ListItem key={item.label}>
                       <HStack justify="space-between">
-                        <Text fontSize="sm" color="gray.700">
+                        <Text fontSize="sm" color={dashboardPalette.text}>
                           {item.label}
                         </Text>
                         <Badge colorScheme={item.done ? "green" : "orange"}>{item.done ? "Done" : "Pending"}</Badge>
@@ -707,11 +709,11 @@ const SellerOverview = observer(() => {
                       onClick={action.onClick}
                     >
                       <HStack align="start" spacing={3}>
-                        <Circle size="38px" bg="blue.50">
-                          <Icon as={action.icon} color="blue.600" />
+                        <Circle size="38px" bg={dashboardPalette.accentSoft}>
+                          <Icon as={action.icon} color={dashboardPalette.accentStrong} />
                         </Circle>
                         <Box>
-                          <Text fontWeight="semibold" color="gray.800">
+                          <Text fontWeight="semibold" color={dashboardPalette.text}>
                             {action.label}
                           </Text>
                           <Text fontSize="xs" color={mutedText} whiteSpace="normal">
@@ -740,7 +742,7 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" color={mutedText}>
                     Total products
                   </Text>
-                  <Text mt={1} fontWeight="bold" color="gray.800">
+                  <Text mt={1} fontWeight="bold" color={dashboardPalette.text}>
                     {dashboardData.metrics.totalProducts}
                   </Text>
                 </Box>
@@ -748,7 +750,7 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" color={mutedText}>
                     Active
                   </Text>
-                  <Text mt={1} fontWeight="bold" color="gray.800">
+                  <Text mt={1} fontWeight="bold" color={dashboardPalette.text}>
                     {dashboardData.metrics.activeProducts}
                   </Text>
                 </Box>
@@ -756,7 +758,7 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" color={mutedText}>
                     Low stock
                   </Text>
-                  <Text mt={1} fontWeight="bold" color="orange.500">
+                  <Text mt={1} fontWeight="bold" color={dashboardPalette.warning}>
                     {dashboardData.metrics.lowStockProducts}
                   </Text>
                 </Box>
@@ -764,7 +766,7 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" color={mutedText}>
                     Featured
                   </Text>
-                  <Text mt={1} fontWeight="bold" color="blue.600">
+                  <Text mt={1} fontWeight="bold" color={dashboardPalette.accentStrong}>
                     {dashboardData.metrics.featuredProducts}
                   </Text>
                 </Box>
@@ -783,7 +785,7 @@ const SellerOverview = observer(() => {
                       p={3}
                     >
                       <Box>
-                        <Text fontWeight="semibold" color="gray.800">
+                        <Text fontWeight="semibold" color={dashboardPalette.text}>
                           {product.name || "Unnamed product"}
                         </Text>
                         <Text fontSize="sm" color={mutedText}>
@@ -798,7 +800,7 @@ const SellerOverview = observer(() => {
                 </Stack>
               ) : (
                 <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={5}>
-                  <Text fontWeight="medium" color="gray.700">
+                  <Text fontWeight="medium" color={dashboardPalette.text}>
                     Inventory looks healthy
                   </Text>
                   <Text mt={1} fontSize="sm" color={mutedText}>
@@ -821,10 +823,10 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" textTransform="uppercase" color={mutedText}>
                     Customers
                   </Text>
-                  <Heading size="md" mt={1} color="gray.800">
+                  <Heading size="md" mt={1} color={dashboardPalette.text}>
                     {dashboardData.metrics.totalCustomers}
                   </Heading>
-                  <Text mt={2} fontSize="sm" color="green.600" fontWeight="semibold">
+                  <Text mt={2} fontSize="sm" color={dashboardPalette.success} fontWeight="semibold">
                     You will get {formatCurrency(dashboardData.metrics.customerReceivable)}
                   </Text>
                 </Box>
@@ -832,10 +834,10 @@ const SellerOverview = observer(() => {
                   <Text fontSize="xs" textTransform="uppercase" color={mutedText}>
                     Suppliers
                   </Text>
-                  <Heading size="md" mt={1} color="gray.800">
+                  <Heading size="md" mt={1} color={dashboardPalette.text}>
                     {dashboardData.metrics.totalSuppliers}
                   </Heading>
-                  <Text mt={2} fontSize="sm" color="red.500" fontWeight="semibold">
+                  <Text mt={2} fontSize="sm" color={dashboardPalette.danger} fontWeight="semibold">
                     You will give {formatCurrency(dashboardData.metrics.supplierPayable)}
                   </Text>
                 </Box>
@@ -843,7 +845,7 @@ const SellerOverview = observer(() => {
 
               <Stack spacing={4}>
                 <Box>
-                  <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={2}>
+                  <Text fontSize="sm" fontWeight="semibold" color={dashboardPalette.text} mb={2}>
                     Top customer receivables
                   </Text>
                   <Stack spacing={2}>
@@ -853,7 +855,7 @@ const SellerOverview = observer(() => {
                           <HStack spacing={3}>
                             <Avatar size="sm" name={party.name} />
                             <Box>
-                              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                              <Text fontSize="sm" fontWeight="medium" color={dashboardPalette.text}>
                                 {party.name || "Unnamed customer"}
                               </Text>
                               <Text fontSize="xs" color={mutedText}>
@@ -861,7 +863,7 @@ const SellerOverview = observer(() => {
                               </Text>
                             </Box>
                           </HStack>
-                          <Text fontWeight="semibold" color="green.600">
+                          <Text fontWeight="semibold" color={dashboardPalette.success}>
                             {formatCurrency(Number(party.outstandingBalance || 0))}
                           </Text>
                         </Flex>
@@ -877,7 +879,7 @@ const SellerOverview = observer(() => {
                 <Divider />
 
                 <Box>
-                  <Text fontSize="sm" fontWeight="semibold" color="gray.700" mb={2}>
+                  <Text fontSize="sm" fontWeight="semibold" color={dashboardPalette.text} mb={2}>
                     Top supplier payables
                   </Text>
                   <Stack spacing={2}>
@@ -887,7 +889,7 @@ const SellerOverview = observer(() => {
                           <HStack spacing={3}>
                             <Avatar size="sm" name={party.name} />
                             <Box>
-                              <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                              <Text fontSize="sm" fontWeight="medium" color={dashboardPalette.text}>
                                 {party.name || "Unnamed supplier"}
                               </Text>
                               <Text fontSize="xs" color={mutedText}>
@@ -895,7 +897,7 @@ const SellerOverview = observer(() => {
                               </Text>
                             </Box>
                           </HStack>
-                          <Text fontWeight="semibold" color="red.500">
+                          <Text fontWeight="semibold" color={dashboardPalette.danger}>
                             {formatCurrency(Number(party.outstandingBalance || 0))}
                           </Text>
                         </Flex>
@@ -942,7 +944,7 @@ const SellerOverview = observer(() => {
                     </Circle>
                     <Box>
                       <HStack spacing={2} wrap="wrap">
-                        <Text fontWeight="semibold" color="gray.800">
+                        <Text fontWeight="semibold" color={dashboardPalette.text}>
                           {notification.title}
                         </Text>
                         {notification.category ? (
@@ -965,7 +967,7 @@ const SellerOverview = observer(() => {
             </Stack>
           ) : (
             <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={5}>
-              <Text fontWeight="medium" color="gray.700">
+              <Text fontWeight="medium" color={dashboardPalette.text}>
                 No recent notifications
               </Text>
               <Text mt={1} fontSize="sm" color={mutedText}>

@@ -21,7 +21,6 @@ import {
   Divider,
   Center,
   Text,
-  useColorModeValue,
   Container,
   HStack,
   Icon,
@@ -54,84 +53,140 @@ import { validationSchema } from "./utils/validation";
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import SellerOnboardingWizard from "./SellerOnboardingWizard";
 import { createCompanyCode } from "./utils/companyCode";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { merchantFormSx } from "./merchantTheme";
 
 const SectionHeader = ({ activeSection, sections }) => {
-  const progress = ((activeSection + 1) / sections.length) * 100;
-  const iconColor = useColorModeValue("white", "gray.900");
-
   return (
     <Box
-      px={{ base: 4, md: 4 }}
-      py={{ base: 6, md: 4 }}
-      bg="white"
-      borderRadius="2xl"
+      px={{ base: 5, md: 7 }}
+      py={{ base: 6, md: 7 }}
+      bg={dashboardPalette.shellElevated}
+      borderRadius="28px"
       border="1px solid"
-      borderColor="gray.200"
-      boxShadow="md"
-      position="relative"
+      borderColor={dashboardPalette.border}
+      boxShadow="0 28px 60px rgba(0, 0, 0, 0.28)"
     >
-      {/* Top Progress Bar */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        h="3px"
-        w={`${progress}%`}
-        bgGradient="linear(to-r, blue.500, teal.400)"
-        borderTopRadius="full"
-        transition="width 0.3s ease"
-        zIndex={1}
-      />
-
       <Flex
         justify="space-between"
-        align={{ base: "start", md: "center" }}
-        direction={{ base: "column", md: "row" }}
-        gap={4}
-        zIndex={2}
-        position="relative"
+        align={{ base: "start", lg: "center" }}
+        direction={{ base: "column", lg: "row" }}
+        gap={6}
       >
         <HStack spacing={4} align="center">
           <Box
-            bg="blue.500"
+            bg="rgba(214, 183, 114, 0.10)"
             p={3}
-            rounded="xl"
+            rounded="2xl"
             display="flex"
             alignItems="center"
             justifyContent="center"
-            boxShadow="lg"
-            color={iconColor}
+            border="1px solid"
+            borderColor={dashboardPalette.border}
+            color={dashboardPalette.accent}
           >
             <Icon as={sections[activeSection]?.icon || FiLayers} boxSize={6} />
           </Box>
-          <VStack align="start" spacing={0}>
+          <VStack align="start" spacing={1}>
+            <Text
+              fontSize="xs"
+              textTransform="uppercase"
+              letterSpacing="0.28em"
+              color={dashboardPalette.textSoft}
+            >
+              Shop Configuration
+            </Text>
             <Heading
-              fontSize={{ base: "lg", md: "2xl" }}
-              fontWeight="bold"
-              color="gray.800"
+              fontSize={{ base: "2xl", md: "3xl" }}
+              fontWeight="500"
+              lineHeight="1"
+              color={dashboardPalette.text}
+              fontFamily='Georgia, "Times New Roman", serif'
             >
               Building Your Shop
             </Heading>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color={dashboardPalette.textMuted}>
               {sections[activeSection]?.title}
             </Text>
           </VStack>
         </HStack>
 
         <Badge
-          variant="solid"
-          colorScheme="teal"
-          fontSize="sm"
           px={4}
-          py={1}
-          rounded="full"
-          whiteSpace="nowrap"
-          boxShadow="sm"
-          alignSelf={{ base: "flex-start", md: "center" }}
+          py={2}
+          borderRadius="full"
+          bg="rgba(214, 183, 114, 0.10)"
+          color={dashboardPalette.accentStrong}
+          border="1px solid"
+          borderColor={dashboardPalette.border}
+          textTransform="uppercase"
+          letterSpacing="0.12em"
+          alignSelf={{ base: "flex-start", lg: "center" }}
         >
-          {sections[activeSection]?.title}
+          Step {activeSection + 1}
         </Badge>
       </Flex>
+
+      <HStack
+        mt={8}
+        spacing={{ base: 2, md: 4 }}
+        align="center"
+        flexWrap="wrap"
+      >
+        {sections.map((section, index) => {
+          const isCurrent = index === activeSection;
+          const isCompleted = index < activeSection;
+
+          return (
+            <Flex key={section.title} align="center" gap={{ base: 2, md: 3 }}>
+              <HStack spacing={2.5}>
+                <Center
+                  w={{ base: "34px", md: "38px" }}
+                  h={{ base: "34px", md: "38px" }}
+                  borderRadius="full"
+                  border="1px solid"
+                  borderColor={
+                    isCurrent || isCompleted
+                      ? dashboardPalette.accent
+                      : dashboardPalette.borderStrong
+                  }
+                  bg={isCompleted ? dashboardPalette.accent : "transparent"}
+                  color={
+                    isCompleted
+                      ? dashboardPalette.page
+                      : isCurrent
+                        ? dashboardPalette.accentStrong
+                        : dashboardPalette.textSoft
+                  }
+                  fontWeight="700"
+                  fontSize="sm"
+                >
+                  {isCompleted ? "✓" : index + 1}
+                </Center>
+                <Text
+                  fontSize={{ base: "xs", md: "sm" }}
+                  textTransform="uppercase"
+                  letterSpacing="0.08em"
+                  color={
+                    isCurrent || isCompleted
+                      ? dashboardPalette.accentStrong
+                      : dashboardPalette.textSoft
+                  }
+                >
+                  {section.title}
+                </Text>
+              </HStack>
+              {index < sections.length - 1 ? (
+                <Box
+                  w={{ base: "18px", md: "34px" }}
+                  h="1px"
+                  bg={index < activeSection ? dashboardPalette.accent : dashboardPalette.borderStrong}
+                />
+              ) : null}
+            </Flex>
+          );
+        })}
+      </HStack>
     </Box>
   );
 };
@@ -694,74 +749,124 @@ const ShopForm = observer(() => {
   }
 
   return (
-    <Container maxW="container.2xl" py={4}>
+    <Container maxW="container.xl" py={{ base: 4, md: 6 }} sx={merchantFormSx}>
       {reviewBanner ? (
-        <Alert status={reviewBanner.status} variant="left-accent" borderRadius="xl" mb={4} alignItems="flex-start">
-          <AlertIcon mt={1} />
+        <Alert
+          status={reviewBanner.status}
+          borderRadius="22px"
+          mb={5}
+          alignItems="flex-start"
+          bg={dashboardPalette.surfaceAlt}
+          border="1px solid"
+          borderColor={reviewBanner.status === "error" ? "rgba(239, 107, 107, 0.24)" : dashboardPalette.border}
+          color={dashboardPalette.text}
+          boxShadow="0 18px 34px rgba(0, 0, 0, 0.22)"
+        >
+          <AlertIcon mt={1} color={reviewBanner.status === "error" ? dashboardPalette.danger : dashboardPalette.accentStrong} />
           <Box>
-            <AlertTitle>{reviewBanner.title}</AlertTitle>
-            <AlertDescription>{reviewBanner.description}</AlertDescription>
+            <AlertTitle color={dashboardPalette.text}>{reviewBanner.title}</AlertTitle>
+            <AlertDescription color={dashboardPalette.textMuted}>{reviewBanner.description}</AlertDescription>
           </Box>
         </Alert>
       ) : null}
-      <Flex direction={{ base: "column", md: "row" }} gap={4}>
-        {/* Static Sidebar */}
-        <Box w={{ base: "100%", md: "280px" }} borderRadius="xl" boxShadow="md" p={4} border="1px solid" borderColor="gray.200">
-          <VStack align="stretch" spacing={3} px={2}>
-            <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={1}>
+      <Flex direction={{ base: "column", lg: "row" }} gap={6}>
+        <Box
+          w={{ base: "100%", lg: "280px" }}
+          borderRadius="28px"
+          p={5}
+          border="1px solid"
+          borderColor={dashboardPalette.border}
+          bg={dashboardPalette.shellElevated}
+          boxShadow="0 24px 46px rgba(0, 0, 0, 0.26)"
+          alignSelf="flex-start"
+          position={{ base: "static", lg: "sticky" }}
+          top={{ lg: "104px" }}
+        >
+          <VStack align="stretch" spacing={4}>
+            <Text
+              fontWeight="600"
+              fontSize="xs"
+              color={dashboardPalette.textSoft}
+              mb={1}
+              textTransform="uppercase"
+              letterSpacing="0.22em"
+            >
               {isUpdateMode ? "Edit Sections" : "Creation Steps"}
             </Text>
-            <Divider borderColor="gray.300" mb={2} />
+            <Divider borderColor={dashboardPalette.border} />
 
             {sections.map((section, index) => {
               const isActive = activeSection === index;
-              // Disable navigation in creation mode to force linear flow
               const isDisabled = !isUpdateMode && index > activeSection;
 
               return (
                 <Button
                   key={index}
-                  variant="ghost"
+                  variant="unstyled"
+                  display="flex"
+                  alignItems="center"
                   justifyContent="flex-start"
-                  leftIcon={<Icon as={section.icon} boxSize={5} />}
-                  fontWeight={isActive ? "bold" : "normal"}
-                  color={isActive ? "blue.600" : "gray.700"}
-                  bg={isActive ? "blue.50" : "transparent"}
+                  gap={3}
+                  minH="58px"
+                  fontWeight={isActive ? "700" : "500"}
+                  color={isActive ? dashboardPalette.text : dashboardPalette.textMuted}
+                  bg={isActive ? dashboardPalette.accentSoft : "transparent"}
                   _hover={{
-                    bg: "blue.50",
+                    bg: "rgba(255,255,255,0.03)",
                     transform: "translateX(2px)",
                   }}
-                  _active={{
-                    bg: "blue.100",
-                  }}
-                  size="md"
                   onClick={() => !isDisabled && setActiveSection(index)}
-                  borderRadius="md"
-                  px={3}
-                  py={2}
+                  borderRadius="18px"
+                  px={4}
+                  py={3}
                   isDisabled={isDisabled}
                   transition="all 0.2s ease"
+                  border="1px solid"
+                  borderColor={isActive ? dashboardPalette.border : "transparent"}
+                  opacity={isDisabled ? 0.42 : 1}
                 >
-                  {section.title}
+                  <Center
+                    w="34px"
+                    h="34px"
+                    borderRadius="full"
+                    border="1px solid"
+                    borderColor={isActive ? dashboardPalette.accent : dashboardPalette.borderStrong}
+                    color={isActive ? dashboardPalette.accentStrong : dashboardPalette.textSoft}
+                    bg={isActive ? "rgba(214, 183, 114, 0.08)" : "transparent"}
+                    flexShrink={0}
+                  >
+                    <Text fontSize="xs" fontWeight="700">
+                      {index + 1}
+                    </Text>
+                  </Center>
+                  <Box textAlign="left">
+                    <Text fontSize="sm">{section.title}</Text>
+                    <Text fontSize="xs" color={dashboardPalette.textSoft}>
+                      Section {index + 1}
+                    </Text>
+                  </Box>
                 </Button>
               );
             })}
 
             <Progress
-              mt={3}
+              mt={2}
               size="sm"
               value={(activeSection + 1) * (100 / sections.length)}
               borderRadius="full"
-              colorScheme="blue"
-              bg="gray.100"
-              hasStripe
             />
           </VStack>
-
         </Box>
 
-        {/* Main Form */}
-        <Box flex={1} borderRadius="2xl" boxShadow="xl" p={2} border="1px solid" borderColor="gray.200">
+        <Box
+          flex={1}
+          borderRadius="30px"
+          boxShadow="0 30px 64px rgba(0, 0, 0, 0.32)"
+          p={{ base: 3, md: 5 }}
+          border="1px solid"
+          borderColor={dashboardPalette.border}
+          bg={dashboardPalette.shell}
+        >
           <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
@@ -802,14 +907,22 @@ const ShopForm = observer(() => {
 
               return (
                 <Form>
-                  <VStack spacing={4} align="stretch">
+                  <VStack spacing={5} align="stretch">
                     <SectionHeader activeSection={activeSection} sections={sections} />
                     {showError && currentSectionFieldLabels.length > 0 ? (
-                      <Alert status="warning" variant="left-accent" borderRadius="xl" alignItems="flex-start">
-                        <AlertIcon mt={1} />
+                      <Alert
+                        status="warning"
+                        borderRadius="22px"
+                        alignItems="flex-start"
+                        bg={dashboardPalette.surfaceAlt}
+                        border="1px solid"
+                        borderColor={dashboardPalette.border}
+                        color={dashboardPalette.text}
+                      >
+                        <AlertIcon mt={1} color={dashboardPalette.accentStrong} />
                         <Box>
-                          <AlertTitle>Please update these fields</AlertTitle>
-                          <AlertDescription>
+                          <AlertTitle color={dashboardPalette.text}>Please update these fields</AlertTitle>
+                          <AlertDescription color={dashboardPalette.textMuted}>
                             {currentSectionFieldLabels.join(", ")}
                           </AlertDescription>
                         </Box>
@@ -822,12 +935,14 @@ const ShopForm = observer(() => {
                       showError={showError}
                     />
 
-                    {/* Inline Save Section */}
                     <Flex justify="flex-end">
                       <Button
-                        size="sm"
-                        colorScheme="teal"
+                        size="md"
                         variant="outline"
+                        borderRadius="18px"
+                        borderColor={dashboardPalette.borderStrong}
+                        color={dashboardPalette.accentStrong}
+                        _hover={{ bg: dashboardPalette.accentSoft, borderColor: dashboardPalette.accent }}
                         isLoading={isSubmitting}
                         onClick={handleAttemptSubmit}
                       >
@@ -835,26 +950,35 @@ const ShopForm = observer(() => {
                       </Button>
                     </Flex>
 
-                    {/* Navigation */}
                     <Flex justify="space-between" pt={4}>
                       <Button
                         onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
                         isDisabled={activeSection === 0}
                         variant="outline"
+                        borderRadius="18px"
+                        borderColor={dashboardPalette.borderStrong}
+                        color={dashboardPalette.textMuted}
+                        _hover={{ bg: "rgba(255,255,255,0.03)", color: dashboardPalette.text }}
                       >
                         Previous
                       </Button>
                       {activeSection < sections.length - 1 ? (
                         <Button
                           onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
-                          colorScheme="blue"
+                          borderRadius="18px"
+                          bg={dashboardPalette.accent}
+                          color={dashboardPalette.page}
+                          _hover={{ bg: dashboardPalette.accentStrong }}
                         >
                           Next
                         </Button>
                       ) : (
                         <Button
                           isLoading={isSubmitting}
-                          colorScheme="blue"
+                          borderRadius="18px"
+                          bg={dashboardPalette.accent}
+                          color={dashboardPalette.page}
+                          _hover={{ bg: dashboardPalette.accentStrong }}
                           onClick={handleAttemptSubmit}
                         >
                           {isUpdateMode ? "Save Shop" : "Create Shop"}

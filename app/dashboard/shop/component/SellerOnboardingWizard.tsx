@@ -35,6 +35,8 @@ import {
   normalizeGstNumber,
 } from "../../../config/utils/gstValidation";
 import { createCompanyCode } from "./utils/companyCode";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { merchantFormSx } from "./merchantTheme";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 const FALLBACK_CENTER = { lat: 28.6139, lng: 77.209 };
@@ -61,44 +63,69 @@ const mapOptions: google.maps.MapOptions = {
 
 const onboardingSteps = [
   {
-    title: "Store basics",
+    title: "Identity",
     subtitle: "Tell buyers what your shop is called and add business details.",
     icon: FiShoppingBag,
   },
   {
-    title: "Shop location",
+    title: "Location",
     subtitle: "Drop a pin on the map so nearby buyers can discover your store.",
     icon: FiMapPin,
   },
   {
-    title: "Contact info",
+    title: "Contact",
     subtitle: "Add the phone and optional email buyers can use to reach you.",
     icon: FiMail,
   },
   {
-    title: "Shop pictures",
+    title: "Media",
     subtitle: "Upload your logo, cover, or product photos. You can skip and add them later.",
     icon: FiCamera,
   },
 ];
 
 const primaryButtonSx = {
-  bgGradient: "linear(to-r, #14b8a6, #06b6d4)",
-  color: "white",
-  _hover: { bgGradient: "linear(to-r, #0d9488, #0891b2)" },
+  bg: dashboardPalette.accent,
+  color: dashboardPalette.page,
+  _hover: { bg: dashboardPalette.accentStrong },
   _active: { transform: "scale(0.98)" },
-  borderRadius: "full",
+  borderRadius: "18px",
   h: "56px",
   fontWeight: "700",
 };
 
 const getFieldShellStyles = () => ({
-  borderRadius: "2xl",
+  borderRadius: "24px",
   borderWidth: "1px",
-  borderColor: "gray.200",
-  bg: "white",
-  boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
+  borderColor: dashboardPalette.border,
+  bg: dashboardPalette.surface,
+  boxShadow: "0 18px 42px rgba(0, 0, 0, 0.24)",
 });
+
+const fieldInputSx = {
+  h: "58px",
+  borderRadius: "16px",
+  bg: dashboardPalette.surfaceSoft,
+  borderColor: dashboardPalette.borderStrong,
+  color: dashboardPalette.text,
+  _placeholder: { color: dashboardPalette.textSoft },
+  _focusVisible: {
+    borderColor: dashboardPalette.accent,
+    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+  },
+};
+
+const fieldTextareaSx = {
+  borderRadius: "16px",
+  bg: dashboardPalette.surfaceSoft,
+  borderColor: dashboardPalette.borderStrong,
+  color: dashboardPalette.text,
+  _placeholder: { color: dashboardPalette.textSoft },
+  _focusVisible: {
+    borderColor: dashboardPalette.accent,
+    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+  },
+};
 
 const isValidEmail = (email: string) => {
   if (!email.trim()) return true;
@@ -161,10 +188,10 @@ const UploadCard = ({
     <Box p={5} {...getFieldShellStyles()}>
       <VStack align="stretch" spacing={4}>
         <Box>
-          <Text fontSize="md" fontWeight="700" color="gray.900">
+          <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
             {title}
           </Text>
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color={dashboardPalette.textSoft}>
             {helper}
           </Text>
         </Box>
@@ -177,16 +204,16 @@ const UploadCard = ({
             tabIndex={0}
             borderWidth="1px"
             borderStyle="dashed"
-            borderColor="teal.200"
-            borderRadius="2xl"
+            borderColor={dashboardPalette.borderStrong}
+            borderRadius="22px"
             py={8}
             px={6}
             textAlign="center"
-            bg="teal.50"
+            bg={dashboardPalette.shellElevated}
             cursor="pointer"
             transition="all 0.2s ease"
-            _hover={{ borderColor: "teal.400", bg: "teal.100" }}
-            _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+            _hover={{ borderColor: dashboardPalette.accent, bg: dashboardPalette.surfaceSoft }}
+            _focusVisible={{ outline: "none", boxShadow: `0 0 0 3px ${dashboardPalette.accentSoft}` }}
             onClick={openPicker}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -195,10 +222,10 @@ const UploadCard = ({
               }
             }}
           >
-            <Text fontSize="sm" fontWeight="600" color="gray.700">
+            <Text fontSize="sm" fontWeight="600" color={dashboardPalette.text}>
               Tap to upload image
             </Text>
-            <Text mt={1} fontSize="xs" color="gray.500">
+            <Text mt={1} fontSize="xs" color={dashboardPalette.textSoft}>
               JPG, PNG or WEBP
             </Text>
           </Box>
@@ -217,11 +244,24 @@ const UploadCard = ({
         />
 
         <HStack spacing={3}>
-          <Button variant="outline" borderRadius="full" onClick={openPicker}>
+          <Button
+            variant="outline"
+            borderRadius="16px"
+            borderColor={dashboardPalette.borderStrong}
+            color={dashboardPalette.accentStrong}
+            _hover={{ bg: dashboardPalette.accentSoft }}
+            onClick={openPicker}
+          >
             {hasFiles ? "Replace" : "Upload"}
           </Button>
           {hasFiles ? (
-            <Button variant="ghost" colorScheme="red" borderRadius="full" onClick={onRemove}>
+            <Button
+              variant="ghost"
+              borderRadius="16px"
+              color={dashboardPalette.danger}
+              _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
+              onClick={onRemove}
+            >
               Remove
             </Button>
           ) : null}
@@ -476,57 +516,85 @@ const SellerOnboardingWizard = ({
   return (
     <Box
       minH="100vh"
-      bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
+      bg={dashboardPalette.page}
       py={{ base: 6, md: 10 }}
+      sx={merchantFormSx}
     >
-      <Container maxW="container.sm">
+      <Container maxW="container.lg">
         <Box
-          bg="whiteAlpha.900"
-          borderRadius="3xl"
+          bg={dashboardPalette.shell}
+          borderRadius="32px"
           borderWidth="1px"
-          borderColor="teal.100"
-          boxShadow="0 30px 90px rgba(15, 23, 42, 0.10)"
+          borderColor={dashboardPalette.border}
+          boxShadow="0 30px 90px rgba(0, 0, 0, 0.30)"
           px={{ base: 5, md: 8 }}
           py={{ base: 6, md: 8 }}
         >
           <VStack align="stretch" spacing={8}>
             <Flex justify="space-between" align="center">
-              <Circle size="42px" bg="white" borderWidth="1px" borderColor="gray.200" boxShadow="sm">
+              <Circle
+                size="42px"
+                bg={dashboardPalette.surfaceSoft}
+                borderWidth="1px"
+                borderColor={dashboardPalette.border}
+                boxShadow="sm"
+              >
                 <IconButton
                   aria-label="Go back"
                   icon={<ArrowBackIcon />}
                   variant="ghost"
                   borderRadius="full"
                   onClick={goBack}
+                  color={dashboardPalette.text}
+                  _hover={{ bg: dashboardPalette.accentSoft, color: dashboardPalette.accentStrong }}
                 />
               </Circle>
               <Badge
-                bg="teal.50"
-                color="teal.600"
+                bg="rgba(214, 183, 114, 0.10)"
+                color={dashboardPalette.accentStrong}
                 borderRadius="md"
                 px={3}
                 py={1}
                 fontSize="xs"
                 fontWeight="700"
+                border="1px solid"
+                borderColor={dashboardPalette.border}
+                letterSpacing="0.12em"
+                textTransform="uppercase"
               >
                 Step {stepIndex + 1}/{onboardingSteps.length}
               </Badge>
             </Flex>
 
             <Box>
-              <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
+              <Progress value={progress} borderRadius="full" h="6px" />
             </Box>
 
             <Stack spacing={4}>
               <HStack spacing={3} align="center">
-                <Circle size="50px" bg="teal.50" color="teal.600">
+                <Circle size="50px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
                   <Icon as={activeStep.icon} boxSize={5} />
                 </Circle>
                 <Box>
-                  <Heading fontSize={{ base: "3xl", md: "4xl" }} color="gray.900" lineHeight="1.1">
+                  <Text
+                    fontSize="xs"
+                    textTransform="uppercase"
+                    letterSpacing="0.28em"
+                    color={dashboardPalette.textSoft}
+                  >
+                    Building Your Shop
+                  </Text>
+                  <Heading
+                    mt={2}
+                    fontSize={{ base: "3xl", md: "4xl" }}
+                    color={dashboardPalette.text}
+                    lineHeight="1.05"
+                    fontWeight="500"
+                    fontFamily='Georgia, "Times New Roman", serif'
+                  >
                     {activeStep.title}
                   </Heading>
-                  <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                  <Text color={dashboardPalette.textMuted} fontSize={{ base: "sm", md: "md" }}>
                     {activeStep.subtitle}
                   </Text>
                 </Box>
@@ -537,7 +605,7 @@ const SellerOnboardingWizard = ({
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl isRequired>
-                    <FormLabel color="gray.700" fontWeight="600">
+                    <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                       Store Name
                     </FormLabel>
                     <Input
@@ -551,10 +619,7 @@ const SellerOnboardingWizard = ({
                         );
                       }}
                       placeholder="Ex. Gupta General Store"
-                      h="58px"
-                      borderRadius="2xl"
-                      borderColor="gray.200"
-                      _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                      sx={fieldInputSx}
                     />
                     <FieldError message={stepErrors.name} />
                   </FormControl>
@@ -563,30 +628,27 @@ const SellerOnboardingWizard = ({
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         GST Number
                       </FormLabel>
                       <Input
                         value={formValues.gstNumber || ""}
                         onChange={(event) => setFieldValue("gstNumber", normalizeGstNumber(event.target.value))}
                         placeholder="Optional"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                       <FieldError message={stepErrors.gstNumber} />
                     </FormControl>
                   </Box>
 
                   <Box p={5} {...getFieldShellStyles()}>
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color={dashboardPalette.textSoft}>
                       Company Code
                     </Text>
-                    <Text fontSize="lg" fontWeight="700" color="gray.800">
+                    <Text fontSize="lg" fontWeight="700" color={dashboardPalette.text}>
                       {formValues.companyCode || "Will be generated"}
                     </Text>
-                    <Text mt={2} fontSize="sm" color="gray.500">
+                    <Text mt={2} fontSize="sm" color={dashboardPalette.textSoft}>
                       We generate this automatically so sellers do not need to fill it manually.
                     </Text>
                   </Box>
@@ -594,7 +656,7 @@ const SellerOnboardingWizard = ({
 
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl>
-                    <FormLabel color="gray.700" fontWeight="600">
+                    <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                       About Your Shop
                     </FormLabel>
                     <Textarea
@@ -607,9 +669,7 @@ const SellerOnboardingWizard = ({
                       }}
                       placeholder="Tell buyers what you sell, your specialities, or the area you serve."
                       minH="140px"
-                      borderRadius="2xl"
-                      borderColor="gray.200"
-                      _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                      sx={fieldTextareaSx}
                     />
                   </FormControl>
                 </Box>
@@ -626,17 +686,17 @@ const SellerOnboardingWizard = ({
                     gap={3}
                   >
                     <Box>
-                      <Text fontSize="md" fontWeight="700" color="gray.900">
+                      <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
                         Choose shop location
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         Tap the map to place your shop. We will auto-fill the address when possible.
                       </Text>
                     </Box>
                     <Button
                       leftIcon={<FiNavigation />}
                       variant="outline"
-                      borderRadius="full"
+                      borderRadius="16px"
                       w={{ base: "full", lg: "auto" }}
                       minH="48px"
                       px={5}
@@ -647,6 +707,9 @@ const SellerOnboardingWizard = ({
                       alignSelf={{ base: "stretch", lg: "center" }}
                       onClick={detectCurrentLocation}
                       isLoading={geocoding}
+                      borderColor={dashboardPalette.borderStrong}
+                      color={dashboardPalette.accentStrong}
+                      _hover={{ bg: dashboardPalette.accentSoft }}
                     >
                       Use current location
                     </Button>
@@ -658,12 +721,12 @@ const SellerOnboardingWizard = ({
                     borderRadius="2xl"
                     overflow="hidden"
                     borderWidth="1px"
-                    borderColor="teal.100"
-                    bg="teal.50"
+                    borderColor={dashboardPalette.borderStrong}
+                    bg={dashboardPalette.surfaceSoft}
                   >
                     {!GOOGLE_MAPS_API_KEY ? (
                       <CenteredBox h="100%">
-                        <Text fontSize="sm" color="gray.600" textAlign="center">
+                        <Text fontSize="sm" color={dashboardPalette.textMuted} textAlign="center">
                           Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
                         </Text>
                       </CenteredBox>
@@ -675,7 +738,7 @@ const SellerOnboardingWizard = ({
                       </CenteredBox>
                     ) : !isLoaded ? (
                       <CenteredBox h="100%">
-                        <Text fontSize="sm" color="gray.500">
+                        <Text fontSize="sm" color={dashboardPalette.textSoft}>
                           Loading map...
                         </Text>
                       </CenteredBox>
@@ -692,12 +755,20 @@ const SellerOnboardingWizard = ({
                     )}
                   </Box>
 
-                  <HStack mt={4} spacing={3} wrap="wrap">
-                    <Badge colorScheme={selectedPoint ? "green" : "teal"} px={3} py={1} borderRadius="full">
+                  <HStack mt={4} spacing={3} flexWrap="wrap">
+                    <Badge
+                      px={3}
+                      py={1}
+                      borderRadius="full"
+                      bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : dashboardPalette.accentSoft}
+                      color={selectedPoint ? dashboardPalette.success : dashboardPalette.accentStrong}
+                      border="1px solid"
+                      borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : dashboardPalette.border}
+                    >
                       {selectedPoint ? "Pin selected" : "Pin not selected"}
                     </Badge>
                     {selectedPoint ? (
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
                       </Text>
                     ) : null}
@@ -708,17 +779,14 @@ const SellerOnboardingWizard = ({
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         Address
                       </FormLabel>
                       <Input
                         value={formValues.location?.address || ""}
                         onChange={(event) => setFieldValue("location.address", event.target.value)}
                         placeholder="Shop address"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                       <FieldError message={stepErrors.address} />
                     </FormControl>
@@ -726,17 +794,14 @@ const SellerOnboardingWizard = ({
 
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         City
                       </FormLabel>
                       <Input
                         value={formValues.location?.city || ""}
                         onChange={(event) => setFieldValue("location.city", event.target.value)}
                         placeholder="City"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                       <FieldError message={stepErrors.city} />
                     </FormControl>
@@ -744,17 +809,14 @@ const SellerOnboardingWizard = ({
 
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         State
                       </FormLabel>
                       <Input
                         value={formValues.location?.state || ""}
                         onChange={(event) => setFieldValue("location.state", event.target.value)}
                         placeholder="State"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                       <FieldError message={stepErrors.state} />
                     </FormControl>
@@ -762,34 +824,28 @@ const SellerOnboardingWizard = ({
 
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         Postal Code
                       </FormLabel>
                       <Input
                         value={formValues.location?.postalCode || ""}
                         onChange={(event) => setFieldValue("location.postalCode", event.target.value)}
                         placeholder="Postal code"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                     </FormControl>
                   </Box>
 
                   <Box p={5} {...getFieldShellStyles()} gridColumn={{ base: "span 1", md: "span 2" }}>
                     <FormControl isRequired>
-                      <FormLabel color="gray.700" fontWeight="600">
+                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
                         Country
                       </FormLabel>
                       <Input
                         value={formValues.location?.country || ""}
                         onChange={(event) => setFieldValue("location.country", event.target.value)}
                         placeholder="Country"
-                        h="58px"
-                        borderRadius="2xl"
-                        borderColor="gray.200"
-                        _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                        sx={fieldInputSx}
                       />
                       <FieldError message={stepErrors.country} />
                     </FormControl>
@@ -802,14 +858,14 @@ const SellerOnboardingWizard = ({
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <HStack spacing={3} mb={4}>
-                    <Circle size="42px" bg="teal.50" color="teal.600">
+                    <Circle size="42px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
                       <Icon as={FiPhone} />
                     </Circle>
                     <Box>
-                      <Text fontWeight="700" color="gray.900">
+                      <Text fontWeight="700" color={dashboardPalette.text}>
                         Contact phone
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         This is what buyers will see on your shop profile.
                       </Text>
                     </Box>
@@ -818,24 +874,21 @@ const SellerOnboardingWizard = ({
                     value={formValues.contactInfo?.phone || ""}
                     onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
                     placeholder="Phone number"
-                    h="58px"
-                    borderRadius="2xl"
-                    borderColor="gray.200"
-                    _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                    sx={fieldInputSx}
                   />
                   <FieldError message={stepErrors.phone} />
                 </Box>
 
                 <Box p={5} {...getFieldShellStyles()}>
                   <HStack spacing={3} mb={4}>
-                    <Circle size="42px" bg="teal.50" color="teal.600">
+                    <Circle size="42px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
                       <Icon as={FiMail} />
                     </Circle>
                     <Box>
-                      <Text fontWeight="700" color="gray.900">
+                      <Text fontWeight="700" color={dashboardPalette.text}>
                         Email address
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         Optional. Useful for invoices and buyer communication.
                       </Text>
                     </Box>
@@ -844,29 +897,26 @@ const SellerOnboardingWizard = ({
                     value={formValues.contactInfo?.email || ""}
                     onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
                     placeholder="Optional email"
-                    h="58px"
-                    borderRadius="2xl"
-                    borderColor="gray.200"
-                    _focusVisible={{ borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" }}
+                    sx={fieldInputSx}
                   />
                   <FieldError message={stepErrors.email} />
                 </Box>
 
                 <Box p={5} {...getFieldShellStyles()}>
-                  <Text fontWeight="700" color="gray.900">
+                  <Text fontWeight="700" color={dashboardPalette.text}>
                     What buyers will get from this
                   </Text>
                   <Divider my={4} />
                   <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
                     <HStack align="start">
-                      <CheckIcon mt={1} color="green.500" />
-                      <Text fontSize="sm" color="gray.600">
+                      <CheckIcon mt={1} color={dashboardPalette.success} />
+                      <Text fontSize="sm" color={dashboardPalette.textMuted}>
                         Easier order follow-up and payment coordination
                       </Text>
                     </HStack>
                     <HStack align="start">
-                      <CheckIcon mt={1} color="green.500" />
-                      <Text fontSize="sm" color="gray.600">
+                      <CheckIcon mt={1} color={dashboardPalette.success} />
+                      <Text fontSize="sm" color={dashboardPalette.textMuted}>
                         Better trust when buyers see verified contact details
                       </Text>
                     </HStack>
@@ -924,10 +974,10 @@ const SellerOnboardingWizard = ({
                 <Box p={5} {...getFieldShellStyles()}>
                   <VStack align="stretch" spacing={4}>
                     <Box>
-                      <Text fontSize="md" fontWeight="700" color="gray.900">
+                      <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
                         Shop gallery
                       </Text>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         Optional photos of your store, shelves, or products.
                       </Text>
                     </Box>
@@ -949,16 +999,16 @@ const SellerOnboardingWizard = ({
                       tabIndex={0}
                       borderWidth="1px"
                       borderStyle="dashed"
-                      borderColor="teal.200"
-                      borderRadius="2xl"
+                      borderColor={dashboardPalette.borderStrong}
+                      borderRadius="22px"
                       py={7}
                       px={6}
-                      bg="teal.50"
+                      bg={dashboardPalette.shellElevated}
                       textAlign="center"
                       cursor="pointer"
                       transition="all 0.2s ease"
-                      _hover={{ borderColor: "teal.400", bg: "teal.100" }}
-                      _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
+                      _hover={{ borderColor: dashboardPalette.accent, bg: dashboardPalette.surfaceSoft }}
+                      _focusVisible={{ outline: "none", boxShadow: `0 0 0 3px ${dashboardPalette.accentSoft}` }}
                       onClick={() => galleryInputRef.current?.click()}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
@@ -967,23 +1017,25 @@ const SellerOnboardingWizard = ({
                         }
                       }}
                     >
-                      <Text fontSize="sm" fontWeight="600" color="gray.700">
+                      <Text fontSize="sm" fontWeight="600" color={dashboardPalette.text}>
                         Tap to choose gallery images
                       </Text>
-                      <Text mt={1} fontSize="xs" color="gray.500">
+                      <Text mt={1} fontSize="xs" color={dashboardPalette.textSoft}>
                         Upload multiple storefront or product photos
                       </Text>
                     </Box>
 
                     <HStack spacing={3} flexWrap="wrap">
                       <Button
-                        colorScheme="teal"
-                        borderRadius="full"
+                        borderRadius="16px"
+                        bg={dashboardPalette.accent}
+                        color={dashboardPalette.page}
+                        _hover={{ bg: dashboardPalette.accentStrong }}
                         onClick={() => galleryInputRef.current?.click()}
                       >
                         Add Photos
                       </Button>
-                      <Text fontSize="sm" color="gray.500">
+                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
                         {(formValues.gallery || []).length
                           ? `${formValues.gallery.length} photo${formValues.gallery.length > 1 ? "s" : ""} selected`
                           : "No gallery images selected yet."}
@@ -996,8 +1048,8 @@ const SellerOnboardingWizard = ({
                           <Box
                             key={`${item.title || "gallery"}-${index}`}
                             borderWidth="1px"
-                            borderColor="teal.100"
-                            bg="teal.50"
+                            borderColor={dashboardPalette.borderStrong}
+                            bg="rgba(255,255,255,0.02)"
                             borderRadius="2xl"
                             px={4}
                             py={3}
@@ -1009,17 +1061,18 @@ const SellerOnboardingWizard = ({
                               gap={3}
                             >
                               <Box>
-                                <Text fontWeight="600" color="gray.800">
+                                <Text fontWeight="600" color={dashboardPalette.text}>
                                   {item.title || item.file?.name || `Photo ${index + 1}`}
                                 </Text>
-                                <Text fontSize="sm" color="gray.500">
+                                <Text fontSize="sm" color={dashboardPalette.textSoft}>
                                   {item.file?.name || "Selected image"}
                                 </Text>
                               </Box>
                               <Button
                                 variant="ghost"
-                                colorScheme="red"
-                                borderRadius="full"
+                                borderRadius="16px"
+                                color={dashboardPalette.danger}
+                                _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
                                 onClick={() =>
                                   setFieldValue(
                                     "gallery",

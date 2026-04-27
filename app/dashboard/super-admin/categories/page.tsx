@@ -1,21 +1,33 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-    Box,
-    Heading,
     Button,
     Flex,
     useDisclosure,
     useToast,
     Text,
-    Badge,
+    Box,
+    HStack,
+    Icon,
+    SimpleGrid,
 } from "@chakra-ui/react";
+import { FiFolderPlus, FiLayers } from "react-icons/fi";
 import { observer } from "mobx-react-lite";
 import stores from "../../../store/stores";
 import CategoryForm from "./components/CategoryForm";
 // import CustomTable from "../../../component/common/Table/CustomTable";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import {
+    getMerchantTableProps,
+    MerchantBadge,
+    merchantPrimaryButtonProps,
+    MerchantHeroSection,
+    MerchantPageShell,
+    MerchantPanel,
+    MerchantStatCard,
+} from "../../components/common/merchantDashboardUI";
 
 const CategoryPage = () => {
     const { categoryStore } = stores;
@@ -84,11 +96,11 @@ const CategoryPage = () => {
             metaData: {
                 component: (data: any) => (
                     data.image?.url ? (
-                        <Box w="50px" h="50px" borderRadius="md" overflow="hidden">
+                        <Box w="50px" h="50px" borderRadius="md" overflow="hidden" border="1px solid" borderColor={dashboardPalette.borderStrong}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={data.image.url} alt={data.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </Box>
-                    ) : <Text color="gray.400" fontSize="sm">No Image</Text>
+                    ) : <Text color={dashboardPalette.textSoft} fontSize="sm">No Image</Text>
                 )
             }
         },
@@ -107,7 +119,12 @@ const CategoryPage = () => {
             key: "parent",
             type: "component",
             metaData: {
-                component: (data: any) => data.parent ? <Badge colorScheme="blue">{data.parent.name}</Badge> : <Badge>Root</Badge>
+                component: (data: any) =>
+                    data.parent ? (
+                        <MerchantBadge tone="accent">{data.parent.name}</MerchantBadge>
+                    ) : (
+                        <MerchantBadge tone="soft">Root</MerchantBadge>
+                    )
             }
         },
         {
@@ -116,9 +133,9 @@ const CategoryPage = () => {
             type: "component",
             metaData: {
                 component: (data: any) => (
-                    <Badge colorScheme={data.isActive ? "green" : "red"}>
+                    <MerchantBadge tone={data.isActive ? "success" : "danger"}>
                         {data.isActive ? "Active" : "Inactive"}
-                    </Badge>
+                    </MerchantBadge>
                 )
             }
         },
@@ -152,16 +169,40 @@ const CategoryPage = () => {
         }
     }
 
-    return (
-        <Box p={6}>
-            <Flex justify="space-between" align="center" mb={6}>
-                <Heading size="lg">Categories</Heading>
-                <Button colorScheme="blue" onClick={handleAddClick}>
-                    Add Category
-                </Button>
-            </Flex>
+    const activeCategories = categoryStore.categories.filter((category: any) => category.isActive).length;
+    const rootCategories = categoryStore.categories.filter((category: any) => !category.parent).length;
 
-            <Box bg="white" borderRadius="lg" shadow="sm">
+    return (
+        <MerchantPageShell>
+            <MerchantHeroSection
+                icon={FiLayers}
+                primaryBadge="Catalog Control"
+                title="Category Management"
+                description="Organize category structure, keep parent-child taxonomy tidy, and maintain what sellers can classify products under."
+                rightContent={
+                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3} minW={{ xl: "320px" }}>
+                        <MerchantStatCard label="Total Categories" value={categoryStore.categories.length} icon={FiLayers} />
+                        <MerchantStatCard label="Active Now" value={activeCategories} valueColor={dashboardPalette.success} icon={FiFolderPlus} iconColor={dashboardPalette.success} iconBg="rgba(70, 201, 139, 0.10)" />
+                    </SimpleGrid>
+                }
+            />
+
+            <MerchantPanel p={{ base: 4, md: 6 }}>
+                <Flex justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={3} mb={5}>
+                    <Box>
+                        <Text fontSize="lg" fontWeight="700" color={dashboardPalette.text}>
+                            Categories Registry
+                        </Text>
+                        <HStack spacing={2} mt={2} flexWrap="wrap">
+                            <MerchantBadge tone="soft">{rootCategories} Root Categories</MerchantBadge>
+                            <MerchantBadge tone={activeCategories > 0 ? "success" : "soft"}>{activeCategories} Active</MerchantBadge>
+                        </HStack>
+                    </Box>
+                    <Button leftIcon={<FiFolderPlus />} onClick={handleAddClick} {...merchantPrimaryButtonProps}>
+                        Add Category
+                    </Button>
+                </Flex>
+
                 <CustomTable
                     title={`All Categories (${categoryStore.categories.length})`}
                     data={categoryStore.categories}
@@ -169,8 +210,9 @@ const CategoryPage = () => {
                     loading={categoryStore.loading}
                     actions={tableActions}
                     serial={{ show: true, text: "S.No." }}
+                    {...getMerchantTableProps("62vh")}
                 />
-            </Box>
+            </MerchantPanel>
 
             {isOpen && (
                 <CategoryForm
@@ -192,7 +234,7 @@ const CategoryPage = () => {
                     isLoading={categoryStore.loading}
                 />
             )}
-        </Box>
+        </MerchantPageShell>
     );
 };
 

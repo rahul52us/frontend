@@ -2,26 +2,24 @@
 
 import React, { useCallback, useState } from "react";
 import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
   Input,
-  Switch,
-  Textarea,
-  useTheme,
-  InputRightElement,
   InputGroup,
-  useColorMode,
-  useColorModeValue,
-  Box,
+  InputRightElement,
+  Switch,
+  Tag,
+  TagCloseButton,
+  TagLabel,
+  Text,
+  Textarea,
   Wrap,
   WrapItem,
-  Tag,
-  TagLabel,
-  TagCloseButton,
-  Checkbox,
-  Button,
-  Flex,
 } from "@chakra-ui/react";
 import Select from "react-select";
 import { RiEyeLine, RiEyeOffLine } from "react-icons/ri";
@@ -50,20 +48,20 @@ interface CustomInputProps {
     | "tags"
     | "multi-dates"
     | "real-time-user-search"
-    | "otp"; // Added "otp" type
+    | "otp";
   label?: string;
   placeholder?: string;
   required?: boolean;
   error?: string | null;
-  maxDate?: string; // Date string type
-  minDate?: string; // Date string type
-  disabledDates?: string[]; // Array of date strings
+  maxDate?: string;
+  minDate?: string;
+  disabledDates?: string[];
   name: string;
   isClear?: boolean;
   onChange?: any;
   value?: any;
   w?: string;
-  options?: { label: string; value: string }[]; // Options for select dropdown
+  options?: { label: string; value: string }[];
   isSearchable?: boolean;
   isMulti?: boolean;
   getOptionLabel?: any;
@@ -73,11 +71,38 @@ interface CustomInputProps {
   showError?: boolean;
   style?: React.CSSProperties;
   phone?: string;
-  accept?: string; // File accept type (string)
+  accept?: string;
   readOnly?: boolean;
   labelcolor?: string;
   isPortal?: boolean;
 }
+
+const cssVar = (name: string, fallback: string) => `var(${name}, ${fallback})`;
+
+const fieldShellStyles = {
+  bg: cssVar("--dashboard-input-bg", "white"),
+  borderColor: cssVar("--dashboard-input-border", "#CBD5E0"),
+  color: cssVar("--dashboard-input-text", "#1A202C"),
+  borderRadius: "16px",
+  minH: "52px",
+  _placeholder: {
+    color: cssVar("--dashboard-input-placeholder", "#718096"),
+    fontSize: "13px",
+  },
+  _hover: {
+    borderColor: cssVar("--dashboard-accent", "#3182CE"),
+  },
+  _focusVisible: {
+    borderColor: cssVar("--dashboard-accent", "#3182CE"),
+    boxShadow: `0 0 0 1px ${cssVar("--dashboard-accent", "#3182CE")}`,
+  },
+  _disabled: {
+    opacity: 0.72,
+    cursor: "not-allowed",
+  },
+};
+
+const labelFallback = cssVar("--dashboard-text-muted", "#4A5568");
 
 const CustomInput: React.FC<CustomInputProps> = ({
   type,
@@ -105,12 +130,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
   ...rest
 }) => {
   const [inputValue, setInputValue] = useState<string>("");
-  const theme = useTheme();
-  const { colorMode } = useColorMode();
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleTogglePassword = () => {
-    setShowPassword(!showPassword);
+    setShowPassword((current) => !current);
   };
 
   const handleFileDrop = useCallback(
@@ -118,43 +141,38 @@ const CustomInput: React.FC<CustomInputProps> = ({
       event.preventDefault();
       event.stopPropagation();
       const files = event.dataTransfer.files;
-      if (onChange) {
-        onChange({ target: { name, files } });
-      }
+      onChange?.({ target: { name, files } });
     },
     [name, onChange]
   );
 
-  const handleTagAdd = (inputValue: string) => {
-    const newTags = [...(value || []), inputValue];
-    if (onChange) {
-      onChange(newTags);
+  const handleTagAdd = (nextValue: string) => {
+    const trimmedValue = nextValue.trim();
+    if (!trimmedValue) {
+      return;
     }
+
+    const nextTags = [...(value || []), trimmedValue];
+    onChange?.(nextTags);
     setInputValue("");
   };
 
   const handleTagRemove = (tagToRemove: string) => {
-    const newTags = (value || []).filter((tag: string) => tag !== tagToRemove);
-    if (onChange) {
-      onChange(newTags);
-    }
+    const nextTags = (value || []).filter((tag: string) => tag !== tagToRemove);
+    onChange?.(nextTags);
   };
 
-  const handleAddDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = e.target.value;
-    if (selectedDate && !value.includes(selectedDate)) {
-      const newDates = [...value, selectedDate];
-      onChange?.(newDates);
+  const handleAddDate = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = event.target.value;
+    if (selectedDate && !(value || []).includes(selectedDate)) {
+      onChange?.([...(value || []), selectedDate]);
     }
-    setInputValue(""); // Reset input after selection
+    setInputValue("");
   };
 
   const handleRemoveDate = (dateToRemove: string) => {
-    const filteredDates = value.filter((date) => date !== dateToRemove);
-    onChange?.(filteredDates);
+    onChange?.((value || []).filter((date: string) => date !== dateToRemove));
   };
-
-  const inputBg = useColorModeValue("transparent", "gray.700");
 
   const renderInputComponent = () => {
     switch (type) {
@@ -169,15 +187,18 @@ const CustomInput: React.FC<CustomInputProps> = ({
               name={name}
               isRequired={required}
               disabled={disabled}
-              fontSize="sm"
+              readOnly={readOnly}
+              pr="3rem"
+              sx={fieldShellStyles}
+              style={style}
               {...rest}
             />
-            <InputRightElement cursor="pointer" onClick={handleTogglePassword}>
-              {showPassword ? (
-                <RiEyeOffLine size={18} />
-              ) : (
-                <RiEyeLine size={18} />
-              )}
+            <InputRightElement
+              cursor="pointer"
+              onClick={handleTogglePassword}
+              color={cssVar("--dashboard-text-muted", "#718096")}
+            >
+              {showPassword ? <RiEyeOffLine size={18} /> : <RiEyeLine size={18} />}
             </InputRightElement>
           </InputGroup>
         );
@@ -191,6 +212,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
             onChange={onChange}
             name={name}
             disabled={disabled}
+            readOnly={readOnly}
+            sx={fieldShellStyles}
+            style={style}
             {...rest}
           />
         );
@@ -199,19 +223,28 @@ const CustomInput: React.FC<CustomInputProps> = ({
         return (
           <Textarea
             rows={rows || 3}
+            minH="140px"
             placeholder={placeholder}
-            bg={inputBg}
             value={value}
             onChange={onChange}
             name={name}
             disabled={disabled}
+            readOnly={readOnly}
+            sx={fieldShellStyles}
+            style={style}
             {...rest}
           />
         );
 
       case "switch":
         return (
-          <Switch name={name} onChange={onChange} isChecked={value} {...rest} />
+          <Switch
+            name={name}
+            onChange={onChange}
+            isChecked={value}
+            colorScheme="yellow"
+            {...rest}
+          />
         );
 
       case "checkbox":
@@ -220,6 +253,18 @@ const CustomInput: React.FC<CustomInputProps> = ({
             name={name}
             onChange={onChange}
             isChecked={value}
+            colorScheme="yellow"
+            sx={{
+              ".chakra-checkbox__control": {
+                bg: cssVar("--dashboard-checkbox-bg", "white"),
+                borderColor: cssVar("--dashboard-checkbox-border", "#CBD5E0"),
+              },
+              ".chakra-checkbox__control[data-checked]": {
+                bg: cssVar("--dashboard-checkbox-active-bg", "#EBF8FF"),
+                borderColor: cssVar("--dashboard-accent", "#3182CE"),
+                color: cssVar("--dashboard-accent", "#3182CE"),
+              },
+            }}
             {...rest}
           />
         );
@@ -231,9 +276,25 @@ const CustomInput: React.FC<CustomInputProps> = ({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
+            containerStyle={{ width: "100%" }}
             inputStyle={{
-              backgroundColor: "transparent",
-              borderColor: "gray.400",
+              width: "100%",
+              height: "52px",
+              backgroundColor: cssVar("--dashboard-input-bg", "white"),
+              borderColor: cssVar("--dashboard-input-border", "#CBD5E0"),
+              color: cssVar("--dashboard-input-text", "#1A202C"),
+              borderRadius: "16px",
+              fontSize: "14px",
+            }}
+            buttonStyle={{
+              backgroundColor: cssVar("--dashboard-input-bg", "white"),
+              borderColor: cssVar("--dashboard-input-border", "#CBD5E0"),
+              borderTopLeftRadius: "16px",
+              borderBottomLeftRadius: "16px",
+            }}
+            dropdownStyle={{
+              backgroundColor: cssVar("--dashboard-surface", "white"),
+              color: cssVar("--dashboard-input-text", "#1A202C"),
             }}
           />
         );
@@ -243,14 +304,13 @@ const CustomInput: React.FC<CustomInputProps> = ({
           <Input
             readOnly={readOnly}
             style={style}
-            bg={inputBg}
             type="datetime-local"
             placeholder={placeholder}
             value={value}
             onChange={onChange}
             name={name}
             disabled={disabled}
-            _placeholder={{ fontSize: "12px" }}
+            sx={fieldShellStyles}
             {...rest}
           />
         );
@@ -258,37 +318,63 @@ const CustomInput: React.FC<CustomInputProps> = ({
       case "tags":
         return (
           <Box>
-            <Flex align="center" gap={2}>
+            <Flex align="center" gap={3} direction={{ base: "column", md: "row" }}>
               <Input
                 placeholder={placeholder}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleTagAdd(inputValue)}
+                onChange={(event) => setInputValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleTagAdd(inputValue);
+                  }
+                }}
                 name={name}
                 disabled={disabled}
                 aria-label="Input field"
+                sx={fieldShellStyles}
               />
               <Button
-                onClick={() => handleTagAdd(inputValue)}
+                minW={{ base: "100%", md: "150px" }}
+                minH="52px"
+                borderRadius="16px"
+                border="1px solid"
+                borderColor={cssVar("--dashboard-border-strong", "#CBD5E0")}
+                bg={cssVar("--dashboard-tag-button-bg", "#EBF8FF")}
+                color={cssVar("--dashboard-tag-button-text", "#2B6CB0")}
+                _hover={{ bg: cssVar("--dashboard-accent-soft", "#BEE3F8") }}
                 isDisabled={!inputValue.trim()}
-                colorScheme="blue"
+                onClick={() => handleTagAdd(inputValue)}
                 aria-label="Add Data"
               >
-                Add Data
+                Add Tag
               </Button>
             </Flex>
-            <Wrap mt={2}>
+            <Wrap mt={3} spacing={3}>
               {value?.map((tag: string, index: number) => (
                 <WrapItem key={index}>
-                  <Tag size="md" borderRadius="full" colorScheme="blue">
+                  <Tag
+                    size="md"
+                    px={3}
+                    py={2}
+                    borderRadius="full"
+                    bg={cssVar("--dashboard-tag-bg", "#EBF8FF")}
+                    color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                    border="1px solid"
+                    borderColor={cssVar("--dashboard-border", "#BEE3F8")}
+                  >
                     <TagLabel>{tag}</TagLabel>
-                    <TagCloseButton onClick={() => handleTagRemove(tag)} />
+                    <TagCloseButton
+                      color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                      onClick={() => handleTagRemove(tag)}
+                    />
                   </Tag>
                 </WrapItem>
               ))}
             </Wrap>
           </Box>
         );
+
       case "multi-dates":
         return (
           <Box>
@@ -298,13 +384,26 @@ const CustomInput: React.FC<CustomInputProps> = ({
               value={inputValue}
               onChange={handleAddDate}
               disabled={disabled}
+              sx={fieldShellStyles}
             />
-            <Wrap mt={2}>
-              {value.map((date, index) => (
+            <Wrap mt={3} spacing={3}>
+              {(value || []).map((date: string, index: number) => (
                 <WrapItem key={index}>
-                  <Tag size="md" borderRadius="full" colorScheme="blue">
+                  <Tag
+                    size="md"
+                    px={3}
+                    py={2}
+                    borderRadius="full"
+                    bg={cssVar("--dashboard-tag-bg", "#EBF8FF")}
+                    color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                    border="1px solid"
+                    borderColor={cssVar("--dashboard-border", "#BEE3F8")}
+                  >
                     <TagLabel>{date}</TagLabel>
-                    <TagCloseButton onClick={() => handleRemoveDate(date)} />
+                    <TagCloseButton
+                      color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                      onClick={() => handleRemoveDate(date)}
+                    />
                   </Tag>
                 </WrapItem>
               ))}
@@ -314,17 +413,23 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
       case "file-drag":
         return (
-          <div
-            style={{
-              border: "2px dashed #ddd",
-              borderRadius: "8px",
-              padding: "1rem",
-              textAlign: "center",
-            }}
-            onDragOver={(e) => e.preventDefault()}
+          <Box
+            border="1px dashed"
+            borderColor={cssVar("--dashboard-file-drop-border", "#CBD5E0")}
+            borderRadius="22px"
+            px={{ base: 5, md: 6 }}
+            py={{ base: 8, md: 10 }}
+            textAlign="center"
+            bg={cssVar("--dashboard-file-drop-bg", "#F7FAFC")}
+            onDragOver={(event) => event.preventDefault()}
             onDrop={handleFileDrop}
           >
-            <p>Drag & drop files here or click to browse</p>
+            <Text fontSize="md" fontWeight="600" color={cssVar("--dashboard-file-drop-text", "#4A5568")}>
+              Drag & drop files here
+            </Text>
+            <Text mt={2} fontSize="sm" color={cssVar("--dashboard-input-placeholder", "#718096")}>
+              or browse from your device
+            </Text>
             <input
               type="file"
               name={name}
@@ -335,18 +440,26 @@ const CustomInput: React.FC<CustomInputProps> = ({
               accept={accept}
             />
             <Button
-              colorScheme="blue"
+              mt={5}
+              minH="48px"
+              px={6}
+              borderRadius="16px"
+              variant="outline"
+              bg={cssVar("--dashboard-file-drop-button-bg", "transparent")}
+              color={cssVar("--dashboard-file-drop-button-text", "#2B6CB0")}
+              borderColor={cssVar("--dashboard-border-strong", "#CBD5E0")}
+              _hover={{ bg: cssVar("--dashboard-accent-soft", "#EBF8FF") }}
               onClick={() =>
                 (
                   document.getElementById(
                     `multiple-file-upload-with-draggable-${name}`
-                  ) as unknown as HTMLInputElement
+                  ) as HTMLInputElement | null
                 )?.click()
               }
             >
-              Browse
+              Browse Files
             </Button>
-          </div>
+          </Box>
         );
 
       case "url":
@@ -360,7 +473,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
             onChange={onChange}
             name={name}
             disabled={disabled}
-            _placeholder={{ fontSize: "12px" }}
+            sx={fieldShellStyles}
             {...rest}
           />
         );
@@ -376,8 +489,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
             onChange={onChange}
             name={name}
             disabled={disabled}
-            _placeholder={{ fontSize: "12px" }}
             accept={accept}
+            sx={fieldShellStyles}
             {...rest}
           />
         );
@@ -390,82 +503,102 @@ const CustomInput: React.FC<CustomInputProps> = ({
             onChange={onChange}
             placeholder={placeholder}
             isClearable={isClear ? true : undefined}
-            className={`chakra-select ${
-              theme ? theme.components.Select.baseStyle : ""
-            }`}
             isMulti={isMulti}
             isSearchable={isSearchable}
             getOptionLabel={getOptionLabel}
             getOptionValue={getOptionValue}
             isDisabled={disabled}
+            classNamePrefix="merchant-select"
+            menuPosition={isPortal ? "fixed" : undefined}
             styles={{
               control: (baseStyles, state) => ({
                 ...baseStyles,
-                borderColor: state.isFocused ? "gray.200" : "gray.300",
-                backgroundColor: colorMode === "light" ? "white" : "#2D3748",
-                fontSize: "14px",
-              }),
-              option: (styles, { isSelected, isFocused }) => ({
-                ...styles,
-                backgroundColor:
-                  colorMode === "light"
-                    ? isSelected
-                      ? "#4299e1"
-                      : isFocused
-                      ? "gray.100"
-                      : "white"
-                    : isSelected
-                    ? "#2b6cb0"
-                    : isFocused
-                    ? "gray.700"
-                    : "#2D3748",
-                color: colorMode === "light" ? "black" : "white",
-                padding: "8px 12px",
-                ":hover": {
-                  backgroundColor:
-                    colorMode === "light" ? "#bee3f8" : "#2b6cb0",
+                minHeight: 52,
+                borderRadius: 16,
+                borderColor: state.isFocused
+                  ? cssVar("--dashboard-accent", "#3182CE")
+                  : cssVar("--dashboard-input-border", "#CBD5E0"),
+                backgroundColor: cssVar("--dashboard-input-bg", "white"),
+                color: cssVar("--dashboard-input-text", "#1A202C"),
+                boxShadow: state.isFocused
+                  ? `0 0 0 1px ${cssVar("--dashboard-accent", "#3182CE")}`
+                  : "none",
+                "&:hover": {
+                  borderColor: cssVar("--dashboard-accent", "#3182CE"),
                 },
               }),
-              menu: (baseStyles) => ({
-                ...baseStyles,
-                backgroundColor: colorMode === "light" ? "white" : "#2D3748",
-                borderColor: colorMode === "light" ? "gray.200" : "#4A5568",
-              }),
-              multiValue: (styles) => ({
+              valueContainer: (styles) => ({
                 ...styles,
-                backgroundColor: colorMode === "light" ? "#bee3f8" : "#2b6cb0",
-                color: colorMode === "light" ? "black" : "white",
+                padding: "4px 12px",
               }),
-              multiValueLabel: (styles) => ({
+              placeholder: (styles) => ({
                 ...styles,
-                color: colorMode === "light" ? "blue.400" : "blue.200",
+                color: cssVar("--dashboard-input-placeholder", "#718096"),
+              }),
+              input: (styles) => ({
+                ...styles,
+                color: cssVar("--dashboard-input-text", "#1A202C"),
               }),
               singleValue: (styles) => ({
                 ...styles,
-                color: colorMode === "light" ? "black" : "white",
+                color: cssVar("--dashboard-input-text", "#1A202C"),
+              }),
+              menu: (baseStyles) => ({
+                ...baseStyles,
+                backgroundColor: cssVar("--dashboard-surface", "white"),
+                border: `1px solid ${cssVar("--dashboard-border-strong", "#CBD5E0")}`,
+                borderRadius: 16,
+                overflow: "hidden",
+              }),
+              menuPortal: (baseStyles) => ({
+                ...baseStyles,
+                zIndex: 1500,
+              }),
+              option: (styles, { isSelected, isFocused }) => ({
+                ...styles,
+                backgroundColor: isSelected
+                  ? cssVar("--dashboard-accent-soft", "#EBF8FF")
+                  : isFocused
+                    ? cssVar("--dashboard-surface-soft", "#EDF2F7")
+                    : cssVar("--dashboard-surface", "white"),
+                color: isSelected
+                  ? cssVar("--dashboard-accent-strong", "#2B6CB0")
+                  : cssVar("--dashboard-input-text", "#1A202C"),
+                padding: "10px 12px",
+                cursor: "pointer",
+              }),
+              multiValue: (styles) => ({
+                ...styles,
+                backgroundColor: cssVar("--dashboard-tag-bg", "#EBF8FF"),
+                borderRadius: 999,
+              }),
+              multiValueLabel: (styles) => ({
+                ...styles,
+                color: cssVar("--dashboard-tag-text", "#2B6CB0"),
+              }),
+              multiValueRemove: (styles) => ({
+                ...styles,
+                color: cssVar("--dashboard-tag-text", "#2B6CB0"),
+                ":hover": {
+                  backgroundColor: "transparent",
+                  color: cssVar("--dashboard-accent", "#3182CE"),
+                },
               }),
               clearIndicator: (styles) => ({
                 ...styles,
-                color: colorMode === "light" ? "black" : "white",
+                color: cssVar("--dashboard-text-muted", "#718096"),
               }),
               dropdownIndicator: (styles) => ({
                 ...styles,
-                color: colorMode === "light" ? "black" : "white",
+                color: cssVar("--dashboard-text-muted", "#718096"),
               }),
-              indicatorSeparator: (styles) => ({
-                ...styles,
-                backgroundColor: colorMode === "light" ? "gray.300" : "#4A5568",
+              indicatorSeparator: () => ({
+                display: "none",
               }),
             }}
-            components={{
-              IndicatorSeparator: null,
-              DropdownIndicator: () => (
-                <div className="chakra-select__dropdown-indicator" />
-              ),
-            }}
-            menuPosition={isPortal ? "fixed" : undefined}
           />
         );
+
       case "otp":
         return (
           <OtpInput
@@ -483,12 +616,15 @@ const CustomInput: React.FC<CustomInputProps> = ({
       default:
         return (
           <Input
-            type="text"
+            type={type || "text"}
             placeholder={placeholder}
             value={value}
             onChange={onChange}
             name={name}
             disabled={disabled}
+            readOnly={readOnly}
+            sx={fieldShellStyles}
+            style={style}
             {...rest}
           />
         );
@@ -497,15 +633,17 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
   return (
     <FormControl id={name} isInvalid={!!error && showError}>
-      {type !== "otp" && ( // Skip FormLabel for OTP since OtpInput handles it internally
-        <FormLabel color={labelcolor}>
-          {label} {required && <span style={{ color: "red" }}>*</span>}
+      {type !== "otp" ? (
+        <FormLabel color={labelcolor || labelFallback}>
+          {label} {required ? <span style={{ color: cssVar("--dashboard-danger", "#E53E3E") }}>*</span> : null}
         </FormLabel>
-      )}
+      ) : null}
       {renderInputComponent()}
-      {type !== "otp" && showError && error && (
-        <FormErrorMessage>{error}</FormErrorMessage>
-      )}
+      {type !== "otp" && showError && error ? (
+        <FormErrorMessage color={cssVar("--dashboard-danger", "#E53E3E")}>
+          {error}
+        </FormErrorMessage>
+      ) : null}
     </FormControl>
   );
 };

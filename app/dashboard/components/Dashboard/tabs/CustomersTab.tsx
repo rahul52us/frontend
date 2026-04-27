@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Circle,
   Divider,
   Flex,
   FormControl,
@@ -50,13 +51,25 @@ import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons
 import { FileViewer } from "@capacitor/file-viewer";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import { FiChevronRight, FiMail, FiMenu, FiPhone, FiSearch, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiChevronRight, FiMail, FiPhone, FiSearch, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
+import { dashboardHeroGradient, dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
+import {
+  getMerchantTableProps,
+  MerchantBadge,
+  merchantBadgeStyles,
+  merchantGhostButtonProps,
+  MerchantHeroSection,
+  MerchantPageShell,
+  MerchantPanel,
+  merchantPrimaryButtonProps,
+  MerchantStatCard,
+} from "../../common/merchantDashboardUI";
 
 type BuyerProfile = {
   _id: string;
@@ -229,10 +242,10 @@ const defaultLedgerSummary: LedgerSummary = {
 
 const androidTheme = {
   colors: {
-    primary: "#0D63B8",
-    primaryDark: "#0A56A4",
-    primarySoft: "#EAF3FF",
-    primaryBorder: "#D2E2F5",
+    primary: dashboardPalette.accent,
+    primaryDark: dashboardPalette.accentStrong,
+    primarySoft: dashboardPalette.accentSoft,
+    primaryBorder: "rgba(214, 183, 114, 0.22)",
     surface: "#F4F7FC",
     surfaceMuted: "#F8FAFD",
     surfaceElevated: "#FFFFFF",
@@ -250,8 +263,8 @@ const androidTheme = {
     warning: "#C57A10",
     warningSoft: "#FFF4E3",
     warningBorder: "#F6DEB8",
-    infoSoft: "#EEF5FF",
-    infoBorder: "#D8E7F8",
+    infoSoft: "rgba(214, 183, 114, 0.08)",
+    infoBorder: "rgba(214, 183, 114, 0.18)",
     fabStart: "#C51162",
     fabEnd: "#D81B60",
   },
@@ -261,8 +274,8 @@ const androidTheme = {
     fixedInset: "12px",
   },
   header: {
-    bgGradient: "linear(160deg, #0A4E9D 0%, #1668C1 58%, #1E7AD7 100%)",
-    boxShadow: "0 18px 38px rgba(10, 87, 176, 0.24)",
+    bgGradient: dashboardHeroGradient,
+    boxShadow: "0 18px 38px rgba(0, 0, 0, 0.28)",
     borderBottomRadius: "30px",
   },
   card: {
@@ -302,18 +315,18 @@ const androidTheme = {
     borderColor: "transparent",
     _placeholder: { color: "gray.400" },
     _focus: {
-      borderColor: "#90CDF4",
+      borderColor: dashboardPalette.accent,
       bg: "#FFFFFF",
-      boxShadow: "0 0 0 1px #90CDF4",
+      boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
     },
   },
   actionBar: {
-    bg: "rgba(255, 255, 255, 0.96)",
+    bg: "rgba(13, 11, 18, 0.94)",
     borderRadius: "22px",
     p: 3,
     borderWidth: "1px",
-    borderColor: "#E5EEF8",
-    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.16)",
+    borderColor: dashboardPalette.border,
+    boxShadow: "0 18px 40px rgba(0, 0, 0, 0.28)",
     backdropFilter: "blur(18px)",
   },
   button: {
@@ -345,13 +358,13 @@ const androidTheme = {
       minW: "86px",
       borderRadius: "full",
       variant: "outline",
-      borderColor: "#D7E5F4",
+      borderColor: "rgba(214, 183, 114, 0.22)",
       bg: "#FFFFFF",
       color: "#36506C",
       fontSize: "sm",
       fontWeight: "700",
-      _hover: { bg: "#F8FBFF" },
-      _active: { transform: "scale(0.97)", bg: "#EEF5FF" },
+      _hover: { bg: "#FBF8F2" },
+      _active: { transform: "scale(0.97)", bg: "rgba(214, 183, 114, 0.10)" },
     },
     segment: {
       flex: "1",
@@ -382,19 +395,53 @@ const androidTheme = {
   },
   tones: {
     sale: {
-      softBg: "linear-gradient(135deg, #FFF4E5 0%, #FFE8CC 100%)",
-      softBorder: "#F2DFC2",
+      softBg: "linear-gradient(135deg, rgba(214, 183, 114, 0.16) 0%, rgba(214, 183, 114, 0.08) 100%)",
+      softBorder: "rgba(214, 183, 114, 0.20)",
     },
     payment: {
       softBg: "linear-gradient(135deg, #E7FBF3 0%, #D3F7E8 100%)",
       softBorder: "#CBEAD8",
     },
     adjustment: {
-      softBg: "linear-gradient(135deg, #E8F3FF 0%, #DDEEFF 100%)",
-      softBorder: "#D1E2F5",
+      softBg: "linear-gradient(135deg, rgba(147, 140, 163, 0.18) 0%, rgba(147, 140, 163, 0.08) 100%)",
+      softBorder: "rgba(147, 140, 163, 0.24)",
     },
   },
 } as const;
+
+const mobileLedgerPalette = {
+  page: "#101018",
+  section: "#151421",
+  panel: "#23213A",
+  panelSoft: "#2B2950",
+  card: "#1D1B31",
+  cardBorder: "rgba(122, 107, 255, 0.16)",
+  text: "#F3F1FF",
+  textMuted: "#8C89A8",
+  textSoft: "#67637F",
+  purpleText: "#9EA1FF",
+  purpleGradient: "linear-gradient(90deg, #676CFF 0%, #8A59FF 100%)",
+  purpleGlow: "0 14px 28px rgba(132, 99, 255, 0.28)",
+  green: "#52E38E",
+  greenCard: "#203721",
+  greenSoft: "rgba(37, 91, 46, 0.48)",
+  greenBorder: "rgba(82, 227, 142, 0.24)",
+  danger: "#FF7676",
+  footer: "#12111C",
+  contactBg: "#13121D",
+} as const;
+
+const renderMerchantBadge = (
+  label: React.ReactNode,
+  tone: "accent" | "success" | "danger" | "soft" = "soft",
+  props?: Record<string, any>,
+) => {
+  return (
+    <MerchantBadge tone={tone} textTransform="capitalize" {...props}>
+      {label}
+    </MerchantBadge>
+  );
+};
 
 const defaultSaleFormItem = (): SaleFormItem => ({
   itemSource: "manual",
@@ -2378,22 +2425,25 @@ const CustomersTab: React.FC = observer(() => {
       name: getBuyerDisplayName(buyer),
       phone: buyer.buyerId?.phoneE164 || "-",
       email: buyer.buyerId?.emailNormalized || "-",
-      sourceBadge: (
-        <Badge colorScheme="purple" textTransform="capitalize">
-          {buyer.source || "manual"}
-        </Badge>
-      ),
+      sourceBadge: renderMerchantBadge(buyer.source || "manual", "accent"),
       outstandingText: formatCurrency(Number(buyer.outstandingBalance || 0)),
-      statusBadge: (
-        <Badge colorScheme={buyer.isBlocked ? "red" : "green"}>
-          {buyer.isBlocked ? "Blocked" : "Active"}
-        </Badge>
+      statusBadge: renderMerchantBadge(
+        buyer.isBlocked ? "Blocked" : "Active",
+        buyer.isBlocked ? "danger" : "success",
       ),
       tagsDisplay:
         buyer.tags && buyer.tags.length ? (
           <HStack spacing={1} wrap="wrap">
             {buyer.tags.slice(0, 3).map((tag, idx) => (
-              <Badge key={`${buyer._id}-${tag}-${idx}`} colorScheme="gray">
+              <Badge
+                key={`${buyer._id}-${tag}-${idx}`}
+                {...merchantBadgeStyles}
+                px={2.5}
+                py={1}
+                bg={dashboardPalette.surfaceAlt}
+                color={dashboardPalette.textSoft}
+                borderColor={dashboardPalette.borderStrong}
+              >
                 {tag}
               </Badge>
             ))}
@@ -2463,17 +2513,15 @@ const CustomersTab: React.FC = observer(() => {
 
   const renderBuyerProfilesMobile = () => (
     <Box
-      bg="#f4f6fb"
+      bg={mobileLedgerPalette.page}
       borderRadius={{ base: "none", md: "3xl" }}
       mx={{ base: -2, md: 0 }}
       mt={{ base: -2, md: 0 }}
       overflow="hidden"
-      pb="104px"
+      pb="calc(118px + env(safe-area-inset-bottom, 0px))"
     >
       <Box
-        {...androidTheme.header}
-        bgGradient="linear(180deg, #0f1f5c 0%, #0f1f5c 100%)"
-        boxShadow="0 18px 36px rgba(15, 31, 92, 0.22)"
+        bg={mobileLedgerPalette.page}
         position="relative"
         overflow="hidden"
         px={{ base: 3, sm: 4 }}
@@ -2482,193 +2530,158 @@ const CustomersTab: React.FC = observer(() => {
       >
         <Box
           position="absolute"
-          top="-30px"
-          right="-24px"
-          h="120px"
-          w="120px"
-          borderRadius="full"
-          bg="radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0) 72%)"
+          insetX={0}
+          top={0}
+          h="220px"
+          bg="radial-gradient(circle at top right, rgba(139,89,255,0.14) 0%, rgba(139,89,255,0.04) 28%, rgba(16,16,24,0) 58%)"
           pointerEvents="none"
         />
-        <Box
-          position="absolute"
-          left="-56px"
-          bottom="-52px"
-          h="170px"
-          w="170px"
-          borderRadius="full"
-          bg="radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 48%, rgba(255,255,255,0) 72%)"
-          pointerEvents="none"
-        />
-
-        <VStack position="relative" align="stretch" spacing={3}>
-          <HStack spacing={2} align="stretch">
-            <InputGroup flex="1">
-              <InputLeftElement pointerEvents="none" h="100%">
-                <Icon as={FiSearch} color="rgba(255,255,255,0.62)" boxSize={4} />
-              </InputLeftElement>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Start typing to search..."
-                pl={9}
-                h="34px"
-                borderRadius="14px"
-                bg="rgba(255,255,255,0.10)"
-                color="white"
-                borderColor="transparent"
-                fontSize="xs"
-                fontWeight="600"
-                _placeholder={{ color: "rgba(255,255,255,0.52)" }}
-                _focus={{
-                  borderColor: "rgba(255,255,255,0.18)",
-                  bg: "rgba(255,255,255,0.12)",
-                  boxShadow: "0 0 0 1px rgba(255,255,255,0.10)",
-                }}
-              />
-            </InputGroup>
-            <IconButton
-              aria-label="More options"
-              icon={<Icon as={FiMenu} boxSize={4} />}
-              h="34px"
-              minW="34px"
-              borderRadius="10px"
-              bg="rgba(255,255,255,0.12)"
-              color="white"
+        <VStack position="relative" align="stretch" spacing={4}>
+          <InputGroup>
+            <InputLeftElement pointerEvents="none" h="100%">
+              <Icon as={FiSearch} color={mobileLedgerPalette.textMuted} boxSize={4} />
+            </InputLeftElement>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search customers, transactions..."
+              pl={9}
+              h="42px"
+              borderRadius="16px"
+              bg={mobileLedgerPalette.panel}
+              color={mobileLedgerPalette.text}
               borderWidth="1px"
-              borderColor="rgba(255,255,255,0.08)"
-              _hover={{ bg: "rgba(255,255,255,0.16)" }}
-              _active={{ transform: "scale(0.98)", bg: "rgba(255,255,255,0.18)" }}
-              onClick={() => { }}
+              borderColor="rgba(122, 107, 255, 0.10)"
+              fontSize="xs"
+              fontWeight="600"
+              _placeholder={{ color: mobileLedgerPalette.textSoft }}
+              _focus={{
+                borderColor: "rgba(139, 89, 255, 0.28)",
+                boxShadow: "0 0 0 1px rgba(139, 89, 255, 0.16)",
+              }}
             />
-          </HStack>
+          </InputGroup>
 
-          <Flex justify="space-between" align="start" gap={3}>
-            <VStack align="stretch" spacing={3} flex="1" minW={0}>
-              <HStack spacing={2} wrap="wrap" pr={1}>
+          <Flex justify="space-between" align="start" gap={4}>
+            <VStack align="stretch" spacing={4} flex="1" minW={0}>
+              <HStack spacing={3} wrap="wrap">
                 <Badge
-                  borderRadius="full"
+                  borderRadius="14px"
                   px={2.5}
-                  py={1}
-                  bg="rgba(255,255,255,0.18)"
-                  color="white"
+                  py={1.25}
+                  bg={mobileLedgerPalette.panelSoft}
+                  color={mobileLedgerPalette.purpleText}
                   textTransform="uppercase"
                   fontSize="9px"
                   fontWeight="900"
-                  letterSpacing="0.04em"
+                  letterSpacing="0.06em"
                 >
                   {isSupplierTab ? "Supplier Ledger" : "Customer Ledger"}
                 </Badge>
                 <Badge
                   borderRadius="full"
                   px={2.5}
-                  py={1}
-                  bg="#29CF5B"
-                  color="white"
+                  py={1.25}
+                  bg={mobileLedgerPalette.greenSoft}
+                  color={mobileLedgerPalette.green}
+                  borderWidth="1px"
+                  borderColor={mobileLedgerPalette.greenBorder}
                   textTransform="none"
                   fontSize="9px"
                   fontWeight="900"
                 >
-                  {buyerOverview.active} Active
+                  {`• ${buyerOverview.active} Active`}
                 </Badge>
               </HStack>
 
               <Box minW={0}>
                 <Heading
-                  size="md"
-                  color="white"
+                  color={mobileLedgerPalette.text}
                   noOfLines={3}
                   fontSize={{ base: "xl", sm: "2xl" }}
-                  lineHeight="1.06"
-                  letterSpacing="-0.02em"
-                  textTransform="uppercase"
-                  maxW="180px"
+                  lineHeight="1.1"
+                  letterSpacing="-0.03em"
+                  maxW="190px"
                 >
                   {companyDisplayName}
                 </Heading>
-                <Text fontSize="xs" color="rgba(255,255,255,0.72)" mt={1.5} maxW="200px" lineHeight="1.45">
+                <Text fontSize="xs" color={mobileLedgerPalette.textMuted} mt={2} maxW="220px" lineHeight="1.55">
                   {isSupplierTab
-                    ? "Track payouts, dues, and supplier relationships from one clean view."
-                    : "Track collections, dues, and customer relationships from one clean view."}
+                    ? "Track payouts, dues & supplier relationships from one clean view."
+                    : "Track collections, dues & relationships from one clean view."}
                 </Text>
               </Box>
-
-              <Button
-                alignSelf="start"
-                h="36px"
-                px={4}
-                borderRadius="12px"
-                bg="white"
-                color="#0f1f5c"
-                leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
-                fontSize="xs"
-                fontWeight="800"
-                boxShadow="0 14px 24px rgba(8, 28, 78, 0.18)"
-                _hover={{ bg: "rgba(255,255,255,0.92)" }}
-                _active={{ transform: "scale(0.98)", bg: "rgba(255,255,255,0.88)" }}
-                onClick={openManualBuyerModal}
-              >
-                Add {partySingularLabel}
-              </Button>
             </VStack>
 
             <Box
               flexShrink={0}
-              minW="82px"
-              borderRadius="18px"
+              minW="92px"
+              borderRadius="22px"
               px={3}
-              py={3}
+              py={3.5}
               textAlign="center"
-              bg="linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.09) 100%)"
+              bg={mobileLedgerPalette.panel}
               borderWidth="1px"
-              borderColor="rgba(255,255,255,0.16)"
-              boxShadow="inset 0 1px 0 rgba(255,255,255,0.10), 0 14px 22px rgba(7, 33, 70, 0.12)"
-              backdropFilter="blur(10px)"
+              borderColor="rgba(122, 107, 255, 0.16)"
+              boxShadow="inset 0 1px 0 rgba(255,255,255,0.03)"
             >
               <Flex justify="center" mb={1}>
-                <Icon as={FiUsers} boxSize={4} color="rgba(255,255,255,0.86)" />
+                <Icon as={FiUsers} boxSize={4} color={mobileLedgerPalette.purpleText} />
               </Flex>
-              <Text color="white" fontSize="3xl" fontWeight="900" lineHeight="0.95">
+              <Text color={mobileLedgerPalette.text} fontSize="2xl" fontWeight="900" lineHeight="0.95">
                 {total}
               </Text>
-              <Text color="rgba(255,255,255,0.62)" fontSize="9px" fontWeight="800" letterSpacing="0.06em">
+              <Text color={mobileLedgerPalette.textSoft} fontSize="10px" fontWeight="800" letterSpacing="0.06em">
                 {partyPluralLabel.toUpperCase()}
               </Text>
             </Box>
           </Flex>
 
-          <Box bg="rgba(255,255,255,0.08)" borderRadius="16px" p={1}>
-            <HStack spacing={1}>
+          <Button
+            w="full"
+            h="48px"
+            borderRadius="18px"
+            bgGradient={mobileLedgerPalette.purpleGradient}
+            color="white"
+            leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
+            fontSize="sm"
+            fontWeight="800"
+            boxShadow={mobileLedgerPalette.purpleGlow}
+            _hover={{ filter: "brightness(1.06)" }}
+            _active={{ transform: "scale(0.98)" }}
+            onClick={openManualBuyerModal}
+          >
+            Add {partySingularLabel}
+          </Button>
+
+          <Box pt={1}>
+            <HStack spacing={0} borderBottom="1px solid rgba(255,255,255,0.08)">
               <Button
                 flex="1"
-                h="36px"
-                borderRadius="12px"
-                fontSize="xs"
+                h="42px"
+                variant="ghost"
+                borderRadius="0"
+                color={normalizedActivePartyType === "customer" ? mobileLedgerPalette.text : mobileLedgerPalette.textSoft}
+                fontSize="sm"
                 fontWeight="800"
-                bg={normalizedActivePartyType === "customer" ? "white" : "transparent"}
-                color={normalizedActivePartyType === "customer" ? "#0f1f5c" : "rgba(255,255,255,0.54)"}
-                boxShadow={normalizedActivePartyType === "customer" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
-                _hover={{
-                  bg: normalizedActivePartyType === "customer" ? "white" : "rgba(255,255,255,0.10)",
-                }}
-                _active={{ transform: "scale(0.98)" }}
+                boxShadow={normalizedActivePartyType === "customer" ? "inset 0 -3px 0 #6D6CFF" : "none"}
+                _hover={{ bg: "transparent", color: mobileLedgerPalette.text }}
+                _active={{ bg: "transparent" }}
                 onClick={() => setActivePartyType("customer")}
               >
                 Customers
               </Button>
               <Button
                 flex="1"
-                h="36px"
-                borderRadius="12px"
-                fontSize="xs"
+                h="42px"
+                variant="ghost"
+                borderRadius="0"
+                color={normalizedActivePartyType === "supplier" ? mobileLedgerPalette.text : mobileLedgerPalette.textSoft}
+                fontSize="sm"
                 fontWeight="800"
-                bg={normalizedActivePartyType === "supplier" ? "white" : "transparent"}
-                color={normalizedActivePartyType === "supplier" ? "#0f1f5c" : "rgba(255,255,255,0.54)"}
-                boxShadow={normalizedActivePartyType === "supplier" ? "0 10px 18px rgba(11, 37, 74, 0.12)" : "none"}
-                _hover={{
-                  bg: normalizedActivePartyType === "supplier" ? "white" : "rgba(255,255,255,0.10)",
-                }}
-                _active={{ transform: "scale(0.98)" }}
+                boxShadow={normalizedActivePartyType === "supplier" ? "inset 0 -3px 0 #6D6CFF" : "none"}
+                _hover={{ bg: "transparent", color: mobileLedgerPalette.text }}
+                _active={{ bg: "transparent" }}
                 onClick={() => setActivePartyType("supplier")}
               >
                 Suppliers
@@ -2676,196 +2689,192 @@ const CustomersTab: React.FC = observer(() => {
             </HStack>
           </Box>
 
-          <SimpleGrid columns={2} spacing={2.5}>
+          <SimpleGrid columns={2} spacing={3}>
             <Box
-              minH="84px"
-              borderRadius="18px"
-              px={3}
-              py={3}
+              minH="118px"
+              borderRadius="22px"
+              px={3.5}
+              py={3.5}
+              bg={mobileLedgerPalette.panel}
               borderWidth="1px"
-              borderColor="rgba(255,255,255,0.14)"
-              bg="rgba(255,255,255,0.08)"
-              backdropFilter="blur(10px)"
-              position="relative"
-              overflow="hidden"
+              borderColor="rgba(122, 107, 255, 0.18)"
             >
-              <Box
-                position="absolute"
-                left="-44px"
-                bottom="-34px"
-                h="120px"
-                w="120px"
-                borderRadius="full"
-                bg="radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 58%, rgba(255,255,255,0) 76%)"
-                pointerEvents="none"
-              />
-              <Text
-                fontSize="9px"
-                color="rgba(255,255,255,0.54)"
-                textTransform="uppercase"
-                fontWeight="800"
-                letterSpacing="0.06em"
-              >
+              <Text fontSize="10px" color={mobileLedgerPalette.textSoft} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                 {mobileLeftSummary.label}
               </Text>
               <Text
-                mt={2}
-                fontSize="clamp(1rem, 5vw, 1.5rem)"
+                mt={3}
+                fontSize="clamp(1.1rem, 6vw, 1.85rem)"
                 fontWeight="900"
-                lineHeight="1"
+                lineHeight="0.95"
                 color={mobileLeftSummary.color}
-                display="block"
-                maxW="100%"
-                whiteSpace="nowrap"
-                letterSpacing="-0.02em"
+                letterSpacing="-0.03em"
               >
                 {formatCompactCurrency(mobileLeftSummary.value)}
               </Text>
-              <Text mt={1.5} fontSize="10px" color="rgba(255,255,255,0.54)" fontWeight="600">
-                Offset side
+              <Text mt={2.5} fontSize="xs" color={mobileLedgerPalette.textSoft} fontWeight="500">
+                Offset balance
               </Text>
             </Box>
 
             <Box
-              minH="84px"
-              borderRadius="18px"
-              px={3}
-              py={3}
-              bg="white"
+              minH="118px"
+              borderRadius="22px"
+              px={3.5}
+              py={3.5}
+              bg={mobileLedgerPalette.greenCard}
               borderWidth="1px"
-              borderColor="rgba(255,255,255,0.20)"
-              boxShadow="0 16px 24px rgba(9, 43, 89, 0.12)"
+              borderColor={mobileLedgerPalette.greenBorder}
             >
-              <Text
-                fontSize="9px"
-                color="#B1B9C8"
-                textTransform="uppercase"
-                fontWeight="800"
-                letterSpacing="0.06em"
-              >
+              <Text fontSize="10px" color={mobileLedgerPalette.textSoft} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                 {mobileRightSummary.label}
               </Text>
               <Text
-                mt={2}
-                fontSize="clamp(1rem, 5vw, 1.5rem)"
+                mt={3}
+                fontSize="clamp(1.1rem, 6vw, 1.85rem)"
                 fontWeight="900"
-                lineHeight="1"
+                lineHeight="0.95"
                 color={mobileRightSummary.color}
-                display="block"
-                maxW="100%"
-                whiteSpace="nowrap"
                 letterSpacing="-0.03em"
               >
                 {formatCompactCurrency(mobileRightSummary.value)}
               </Text>
-              <Text mt={1.5} fontSize="10px" color="#C0C8D7" fontWeight="600">
-                Main focus
+              <Text mt={2.5} fontSize="xs" color={mobileLedgerPalette.textSoft} fontWeight="500">
+                Primary receivable
               </Text>
             </Box>
           </SimpleGrid>
         </VStack>
       </Box>
 
-      <Box bg="#f4f6fb" px={{ base: 3, sm: 4 }} pt={3.5} pb={7}>
-        <HStack justify="space-between" align="center" mb={3}>
-          <Text fontSize="xl" fontWeight="900" color="#0f1f5c" letterSpacing="-0.02em">
+      <Box
+        bg={mobileLedgerPalette.section}
+        px={{ base: 3, sm: 4 }}
+        pt={4}
+        pb={8}
+        borderTop="1px solid rgba(255,255,255,0.05)"
+      >
+        <HStack justify="space-between" align="start" mb={4}>
+          <Text fontSize="xl" fontWeight="900" color={mobileLedgerPalette.text} letterSpacing="-0.03em">
             {mobileListHeading}
           </Text>
-          <Text fontSize="xs" fontWeight="700" color="rgba(15, 31, 92, 0.72)">
+          <Text fontSize="xs" fontWeight="700" color={mobileLedgerPalette.textSoft} lineHeight="1.15" textAlign="right">
             Page {page} of {totalPages || 1}
           </Text>
         </HStack>
 
-        <VStack align="stretch" spacing={3}>
+        <VStack align="stretch" spacing={4}>
           {loading ? (
-            <Box bg="white" borderWidth="1px" borderColor="#E5EAF7" borderRadius="20px" px={4} py={6}>
+            <Box
+              bg={mobileLedgerPalette.card}
+              borderWidth="1px"
+              borderColor={mobileLedgerPalette.cardBorder}
+              borderRadius="24px"
+              px={4}
+              py={7}
+            >
               <VStack spacing={3}>
-                <Spinner color={androidTheme.colors.primary} thickness="3px" />
-                <Text fontSize="sm" color={androidTheme.colors.textMuted}>
+                <Spinner color={mobileLedgerPalette.purpleText} thickness="3px" />
+                <Text fontSize="sm" color={mobileLedgerPalette.textMuted}>
                   Loading {partyPluralLabel.toLowerCase()}...
                 </Text>
               </VStack>
             </Box>
           ) : buyers.length === 0 ? (
-            <Box bg="white" borderWidth="1px" borderColor="#E5EAF7" borderRadius="20px" px={4} py={6}>
+            <Box
+              bg={mobileLedgerPalette.card}
+              borderWidth="1px"
+              borderColor={mobileLedgerPalette.cardBorder}
+              borderRadius="24px"
+              px={4}
+              py={7}
+            >
               <VStack spacing={2}>
-                <Icon as={FiUsers} boxSize={8} color="blue.300" />
-                <Text fontWeight="700" color={androidTheme.colors.text}>
+                <Icon as={FiUsers} boxSize={8} color={mobileLedgerPalette.purpleText} />
+                <Text fontWeight="700" color={mobileLedgerPalette.text}>
                   No {partyPluralLabel.toLowerCase()} found
                 </Text>
-                <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
+                <Text fontSize="sm" color={mobileLedgerPalette.textMuted} textAlign="center">
                   Try a different search or add a new {partySingularLabel.toLowerCase()} to start the ledger.
                 </Text>
               </VStack>
             </Box>
           ) : (
-            buyers.map((buyer) => {
+            buyers.map((buyer, index) => {
               const buyerContact = buyer.buyerId?.phoneE164 || buyer.buyerId?.emailNormalized || "-";
               const hasPhone = Boolean(buyer.buyerId?.phoneE164);
+              const avatarGradient = buyer.isBlocked
+                ? "linear-gradient(135deg, #E25D72 0%, #FF8E8E 100%)"
+                : index % 2 === 0
+                  ? "linear-gradient(135deg, #6A6BFF 0%, #8A59FF 100%)"
+                  : "linear-gradient(135deg, #3A9CFF 0%, #657BFF 100%)";
 
               return (
                 <Box
                   key={buyer._id}
-                  bg="white"
+                  bg={mobileLedgerPalette.card}
                   borderWidth="1px"
-                  borderColor="#E6EAF5"
-                  borderRadius="20px"
-                  boxShadow="0 10px 24px rgba(18, 42, 95, 0.05)"
-                  px={3}
-                  py={3}
+                  borderColor={mobileLedgerPalette.cardBorder}
+                  borderRadius="22px"
+                  boxShadow="0 18px 40px rgba(0, 0, 0, 0.24)"
+                  px={3.5}
+                  py={3.5}
                 >
-                  <Flex justify="space-between" align="start" gap={2.5}>
-                    <HStack spacing={2.5} align="start" minW={0} flex="1">
+                  <Flex justify="space-between" align="start" gap={3}>
+                    <HStack spacing={3} align="start" minW={0} flex="1">
                       <Flex
-                        h="38px"
-                        w="38px"
-                        borderRadius="12px"
-                        bg={buyer.isBlocked ? "#FCE9ED" : "#F1ECFF"}
-                        color={buyer.isBlocked ? androidTheme.colors.danger : "#6447F6"}
+                        h="48px"
+                        w="48px"
+                        borderRadius="16px"
+                        bgGradient={avatarGradient}
+                        color="white"
                         align="center"
                         justify="center"
                         fontWeight="900"
-                        fontSize="sm"
+                        fontSize="xl"
                         flexShrink={0}
                       >
                         {getBuyerInitials(buyer)}
                       </Flex>
 
                       <Box flex="1" minW={0}>
-                        <Text fontSize="lg" fontWeight="900" color="#0f1f5c" noOfLines={1} letterSpacing="-0.02em">
+                        <Text fontSize="xl" fontWeight="900" color={mobileLedgerPalette.text} noOfLines={1} letterSpacing="-0.03em">
                           {getBuyerDisplayName(buyer)}
                         </Text>
-                        <Text fontSize="xs" color="#91A0B8" mt={0.5} noOfLines={1}>
+                        <Text fontSize="xs" color={mobileLedgerPalette.textSoft} mt={0.5} noOfLines={1}>
                           {getBuyerSecondaryLabel(buyer)}
                         </Text>
                       </Box>
                     </HStack>
 
-                    <VStack spacing={1.5} align="end" flexShrink={0}>
+                    <VStack spacing={2} align="end" flexShrink={0}>
                       <Text
-                        fontSize="lg"
+                        fontSize="clamp(1rem, 4.6vw, 1.65rem)"
                         fontWeight="900"
                         color={
                           Number(buyer.outstandingBalance || 0) >= 0
                             ? buyer.partyType === "supplier"
-                              ? androidTheme.colors.danger
-                              : androidTheme.colors.success
+                              ? mobileLedgerPalette.danger
+                              : mobileLedgerPalette.green
                             : buyer.partyType === "supplier"
-                              ? androidTheme.colors.success
-                              : androidTheme.colors.danger
+                              ? mobileLedgerPalette.green
+                              : mobileLedgerPalette.danger
                         }
-                        lineHeight="1"
-                        whiteSpace="nowrap"
-                        letterSpacing="-0.02em"
+                        lineHeight="0.95"
+                        textAlign="right"
+                        maxW="84px"
+                        letterSpacing="-0.03em"
                       >
                         {formatCompactCurrency(Math.abs(Number(buyer.outstandingBalance || 0)))}
                       </Text>
                       <Badge
                         px={2.5}
-                        py={0.5}
+                        py={0.75}
                         borderRadius="full"
-                        bg={buyer.isBlocked ? "#FDECEC" : "#DFF8E5"}
-                        color={buyer.isBlocked ? "#C94B4B" : "#169956"}
+                        bg={buyer.isBlocked ? "rgba(124, 34, 46, 0.44)" : mobileLedgerPalette.greenSoft}
+                        color={buyer.isBlocked ? "#FF9AA4" : mobileLedgerPalette.green}
+                        borderWidth="1px"
+                        borderColor={buyer.isBlocked ? "rgba(255, 118, 118, 0.20)" : mobileLedgerPalette.greenBorder}
                         textTransform="none"
                         fontSize="10px"
                         fontWeight="800"
@@ -2878,14 +2887,14 @@ const CustomersTab: React.FC = observer(() => {
                   <HStack
                     mt={3}
                     spacing={2}
-                    px={2.5}
-                    py={2}
-                    borderRadius="full"
-                    bg="#f4f6fb"
-                    color="#5F7090"
+                    px={3}
+                    py={2.5}
+                    borderRadius="14px"
+                    bg={mobileLedgerPalette.contactBg}
+                    color={mobileLedgerPalette.textMuted}
                     align="center"
                   >
-                    <Icon as={hasPhone ? FiPhone : FiMail} boxSize={3} color="#8192AF" />
+                    <Icon as={hasPhone ? FiPhone : FiMail} boxSize={3.5} color={mobileLedgerPalette.textSoft} />
                     <Text fontSize="xs" fontWeight="600" noOfLines={1}>
                       {buyerContact}
                     </Text>
@@ -2894,16 +2903,17 @@ const CustomersTab: React.FC = observer(() => {
                   <Button
                     mt={3}
                     w="full"
-                    h="42px"
-                    borderRadius="14px"
-                    bg="#0f1f5c"
+                    h="44px"
+                    borderRadius="16px"
+                    bgGradient={mobileLedgerPalette.purpleGradient}
                     color="white"
-                    fontSize="sm"
+                    fontSize="md"
                     fontWeight="800"
                     rightIcon={<Icon as={FiChevronRight} boxSize={3.5} />}
+                    boxShadow={mobileLedgerPalette.purpleGlow}
                     onClick={() => openLedgerView(buyer)}
-                    _hover={{ bg: "#0c1848" }}
-                    _active={{ transform: "scale(0.98)", bg: "#0a153f" }}
+                    _hover={{ filter: "brightness(1.06)" }}
+                    _active={{ transform: "scale(0.98)" }}
                   >
                     View Ledger
                   </Button>
@@ -2915,7 +2925,15 @@ const CustomersTab: React.FC = observer(() => {
           {(totalPages || 1) > 1 ? (
             <HStack justify="space-between" align="center" pt={1}>
               <Button
-                {...androidTheme.button.pagination}
+                h="38px"
+                minW="92px"
+                borderRadius="full"
+                bg={mobileLedgerPalette.panel}
+                color={mobileLedgerPalette.textMuted}
+                borderWidth="1px"
+                borderColor={mobileLedgerPalette.cardBorder}
+                _hover={{ bg: mobileLedgerPalette.panelSoft, color: mobileLedgerPalette.text }}
+                _active={{ transform: "scale(0.98)" }}
                 isDisabled={page <= 1 || loading}
                 onClick={() => {
                   if (page <= 1) return;
@@ -2927,7 +2945,15 @@ const CustomersTab: React.FC = observer(() => {
                 Previous
               </Button>
               <Button
-                {...androidTheme.button.pagination}
+                h="38px"
+                minW="92px"
+                borderRadius="full"
+                bg={mobileLedgerPalette.panel}
+                color={mobileLedgerPalette.textMuted}
+                borderWidth="1px"
+                borderColor={mobileLedgerPalette.cardBorder}
+                _hover={{ bg: mobileLedgerPalette.panelSoft, color: mobileLedgerPalette.text }}
+                _active={{ transform: "scale(0.98)" }}
                 isDisabled={page >= (totalPages || 1) || loading}
                 onClick={() => {
                   if (page >= (totalPages || 1)) return;
@@ -2943,84 +2969,85 @@ const CustomersTab: React.FC = observer(() => {
         </VStack>
       </Box>
 
-      <HStack
+      <Box
         position="fixed"
-        left={{ base: "12px", sm: "16px" }}
-        right={{ base: "12px", sm: "16px" }}
-        bottom="calc(12px + env(safe-area-inset-bottom, 0px))"
-        justify="space-between"
-        align="center"
+        left={0}
+        right={0}
+        bottom={0}
         zIndex={25}
-        pointerEvents="none"
+        bg={mobileLedgerPalette.footer}
+        borderTop="1px solid rgba(255,255,255,0.06)"
+        px={{ base: 3, sm: 4 }}
+        pt={3}
+        pb="calc(12px + env(safe-area-inset-bottom, 0px))"
       >
-        <Button
-          pointerEvents="auto"
-          leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
-          onClick={openManualBuyerModal}
-          h="36px"
-          px={4}
-          borderRadius="full"
-          bg="#0f1f5c"
-          color="white"
-          fontSize="xs"
-          fontWeight="800"
-          boxShadow="0 12px 24px rgba(16, 30, 82, 0.18)"
-          _hover={{ bg: "#0c1848" }}
-          _active={{ transform: "scale(0.98)", bg: "#0a153f" }}
-        >
-          Add {partySingularLabel}
-        </Button>
+        <HStack spacing={3} align="center">
+          <Button
+            flex="1"
+            leftIcon={<Icon as={FiUserPlus} boxSize={3.5} />}
+            onClick={openManualBuyerModal}
+            h="46px"
+            borderRadius="18px"
+            bgGradient={mobileLedgerPalette.purpleGradient}
+            color="white"
+            fontSize="md"
+            fontWeight="800"
+            boxShadow={mobileLedgerPalette.purpleGlow}
+            _hover={{ filter: "brightness(1.06)" }}
+            _active={{ transform: "scale(0.98)" }}
+          >
+            Add {partySingularLabel}
+          </Button>
 
-        <IconButton
-          pointerEvents="auto"
-          as="a"
-          href={whatsappSupportUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open WhatsApp"
-          icon={<FaWhatsapp size={18} />}
-          h="42px"
-          minW="42px"
-          borderRadius="full"
-          bg="#25D366"
-          color="white"
-          boxShadow="0 16px 28px rgba(37, 211, 102, 0.28)"
-          _hover={{ bg: "#21C15C" }}
-          _active={{ transform: "scale(0.98)", bg: "#1CAA51" }}
-        />
-      </HStack>
+          <IconButton
+            as="a"
+            href={whatsappSupportUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open WhatsApp"
+            icon={<FaWhatsapp size={20} />}
+            h="50px"
+            minW="50px"
+            borderRadius="full"
+            bg="#25D366"
+            color="white"
+            boxShadow="0 16px 28px rgba(37, 211, 102, 0.28)"
+            _hover={{ bg: "#21C15C" }}
+            _active={{ transform: "scale(0.98)", bg: "#1CAA51" }}
+          />
+        </HStack>
+      </Box>
     </Box>
   );
 
   const ledgerTableData = ledgerEntries.map((entry) => ({
     ...entry,
     entryDate: entry.entryDate,
-    typeBadge: (
-      <Badge
-        colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"}
-        textTransform="capitalize"
-      >
-        {getLedgerEntryTypeLabel(entry.entryType)}
-      </Badge>
+    typeBadge: renderMerchantBadge(
+      getLedgerEntryTypeLabel(entry.entryType),
+      entry.entryType === "payment"
+        ? "success"
+        : entry.entryType === "sale"
+          ? "accent"
+          : "soft",
     ),
-    directionBadge: (
-      <Badge
-        colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
-        textTransform="none"
-      >
-        {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
-      </Badge>
+    directionBadge: renderMerchantBadge(
+      getBuyerLedgerDirectionLabel(entry.direction, entry.entryType),
+      entry.direction === "credit" ? "success" : "danger",
     ),
     amountDisplay: (
-      <Text color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)} fontWeight="bold">
+      <Text
+        color={entry.direction === "credit" ? dashboardPalette.success : dashboardPalette.accentStrong}
+        fontWeight="bold"
+      >
         {formatCurrency(entry.amount || 0)}
       </Text>
     ),
     balanceText: formatCurrency(entry.balanceAfter || 0),
     referenceText: entry.referenceId ? (
       <HStack spacing={1}>
-        <Text>{entry.referenceType || "manual"}: </Text>
-        <Text fontWeight="600" color="blue.600" cursor="pointer" onClick={() => {
+        <Text color={dashboardPalette.textMuted}>{entry.referenceType || "manual"}:</Text>
+        <Text fontWeight="600" color={dashboardPalette.accentStrong} cursor="pointer" onClick={() => {
           navigator.clipboard.writeText(entry.referenceId || '');
           toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
         }}>
@@ -3028,35 +3055,51 @@ const CustomersTab: React.FC = observer(() => {
         </Text>
       </HStack>
     ) : (
-      <Text>{entry.referenceType || "manual"}</Text>
+      <Text color={dashboardPalette.textMuted}>{entry.referenceType || "manual"}</Text>
     ),
-    statusBadge: (
-      <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
-        {entry.status || "active"}
-      </Badge>
-    ),
+    statusBadge: renderMerchantBadge(entry.status || "active", entry.status === "reversed" ? "danger" : "success"),
     reverseAction:
       entry.status === "reversed" ? (
-        <Text color="gray.500">-</Text>
+        <Text color={dashboardPalette.textSoft}>-</Text>
       ) : (
         <HStack spacing={2}>
           {canDownloadLedgerInvoice(entry) && (
             <Button
               size="xs"
-              colorScheme="teal"
               variant="outline"
               isLoading={invoiceDownloadingLedgerEntryId === entry._id}
               onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
+              {...merchantGhostButtonProps}
+              h="32px"
+              minW="auto"
+              px={3}
+              color={dashboardPalette.accentStrong}
             >
               Invoice
             </Button>
           )}
           {entry.direction === "debit" && (
-            <Button size="xs" colorScheme="green" variant="outline" onClick={() => openPayModal(entry)}>
+            <Button
+              size="xs"
+              onClick={() => openPayModal(entry)}
+              {...merchantGhostButtonProps}
+              h="32px"
+              minW="auto"
+              px={3}
+              color={dashboardPalette.success}
+            >
               Pay
             </Button>
           )}
-          <Button size="xs" colorScheme="red" variant="outline" onClick={() => openReverseModal(entry)}>
+          <Button
+            size="xs"
+            onClick={() => openReverseModal(entry)}
+            {...merchantGhostButtonProps}
+            h="32px"
+            minW="auto"
+            px={3}
+            color={dashboardPalette.danger}
+          >
             Reverse
           </Button>
         </HStack>
@@ -3126,7 +3169,7 @@ const CustomersTab: React.FC = observer(() => {
       idDisplay: (
         <Text
           fontWeight="600"
-          color="blue.600"
+          color={dashboardPalette.accentStrong}
           cursor="pointer"
           textDecoration="underline"
           onClick={() => openSaleDetails(record)}
@@ -3136,27 +3179,27 @@ const CustomersTab: React.FC = observer(() => {
       ),
       itemPreview: getSaleRecordItemPreview(record),
       grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
-      statusBadge: (
-        <Badge
-          colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
-          textTransform="capitalize"
-        >
-          {record.status}
-        </Badge>
+      statusBadge: renderMerchantBadge(
+        record.status,
+        record.status === "posted" ? "success" : record.status === "void" ? "danger" : "accent",
       ),
       postAction:
         record.status === "draft" && !record.ledgerEntryId ? (
           <Button
             size="xs"
-            colorScheme="blue"
             variant="outline"
             isLoading={postingSaleId === record._id}
             onClick={() => handlePostSaleRecordToLedger(record._id)}
+            {...merchantGhostButtonProps}
+            h="32px"
+            minW="auto"
+            px={3}
+            color={dashboardPalette.accentStrong}
           >
             Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
           </Button>
         ) : (
-          <Text color="gray.500">-</Text>
+          <Text color={dashboardPalette.textSoft}>-</Text>
         ),
     };
   });
@@ -3244,7 +3287,7 @@ const CustomersTab: React.FC = observer(() => {
               key={entry._id}
               {...androidTheme.card}
               borderColor={entryTone.softBorder}
-              bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
+              bg="linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%)"
               boxShadow="0 16px 38px rgba(15, 23, 42, 0.08)"
               overflow="hidden"
             >
@@ -3381,7 +3424,7 @@ const CustomersTab: React.FC = observer(() => {
                           color={androidTheme.colors.primary}
                           isLoading={invoiceDownloadingLedgerEntryId === entry._id}
                           onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-                          _hover={{ bg: "#DBEAFE" }}
+                          _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
                         >
                           Invoice
                         </Button>
@@ -3578,7 +3621,7 @@ const CustomersTab: React.FC = observer(() => {
                     bg={androidTheme.colors.primarySoft}
                     color={androidTheme.colors.primary}
                     onClick={() => openSaleDetails(record)}
-                    _hover={{ bg: "#DBEAFE" }}
+                    _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
                   >
                     View Details
                   </Button>
@@ -3666,10 +3709,10 @@ const CustomersTab: React.FC = observer(() => {
         }
       : hasOutstanding
         ? {
-          bg: "#EFF6FF",
-          borderColor: "blue.100",
-          labelColor: "blue.700",
-          amountColor: "blue.700",
+          bg: "rgba(214, 183, 114, 0.10)",
+          borderColor: "rgba(214, 183, 114, 0.20)",
+          labelColor: dashboardPalette.accentStrong,
+          amountColor: dashboardPalette.accent,
           label: "You Will Get",
         }
         : {
@@ -3681,10 +3724,16 @@ const CustomersTab: React.FC = observer(() => {
         };
 
     return (
-      <Box mx={-2} mt={-2} pb="132px" bg={androidTheme.colors.surface} minH="calc(100vh - 56px)">
+      <Box
+        mx={-2}
+        mt={-2}
+        pb="calc(132px + env(safe-area-inset-bottom, 0px))"
+        bg={androidTheme.colors.surface}
+        minH="100dvh"
+      >
         <Box
           {...androidTheme.header}
-          bgGradient="linear(180deg, #0A57B0 0%, #0F6FD2 100%)"
+          bgGradient={dashboardHeroGradient}
           px={4}
           pt={4}
           pb={10}
@@ -3869,26 +3918,26 @@ const CustomersTab: React.FC = observer(() => {
             <HStack spacing={2}>
               <Button
                 {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 0 ? "#0A57B0" : "transparent"}
-                color={ledgerTabIndex === 0 ? "white" : "#33506D"}
+                bg={ledgerTabIndex === 0 ? dashboardPalette.accent : "transparent"}
+                color={ledgerTabIndex === 0 ? dashboardPalette.page : "#33506D"}
                 onClick={() => setLedgerTabIndex(0)}
-                _hover={{ bg: ledgerTabIndex === 0 ? "#0A57B0" : "#F8FBFF" }}
+                _hover={{ bg: ledgerTabIndex === 0 ? dashboardPalette.accentStrong : "#FBF8F2" }}
                 _active={{
                   ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 0 ? "#094894" : "#EEF5FF",
+                  bg: ledgerTabIndex === 0 ? dashboardPalette.accentStrong : "rgba(214, 183, 114, 0.10)",
                 }}
               >
                 Entries ({ledgerTotal})
               </Button>
               <Button
                 {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 1 ? "#0A57B0" : "transparent"}
-                color={ledgerTabIndex === 1 ? "white" : "#33506D"}
+                bg={ledgerTabIndex === 1 ? dashboardPalette.accent : "transparent"}
+                color={ledgerTabIndex === 1 ? dashboardPalette.page : "#33506D"}
                 onClick={() => setLedgerTabIndex(1)}
-                _hover={{ bg: ledgerTabIndex === 1 ? "#0A57B0" : "#F8FBFF" }}
+                _hover={{ bg: ledgerTabIndex === 1 ? dashboardPalette.accentStrong : "#FBF8F2" }}
                 _active={{
                   ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 1 ? "#094894" : "#EEF5FF",
+                  bg: ledgerTabIndex === 1 ? dashboardPalette.accentStrong : "rgba(214, 183, 114, 0.10)",
                 }}
               >
                 {isSelectedSupplier ? "Purchases" : "Sales"} ({saleTotal})
@@ -3912,12 +3961,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="52px"
               borderRadius="16px"
-              bg="#0F766E"
-              color="white"
+              bg={dashboardPalette.accent}
+              color={dashboardPalette.page}
               leftIcon={<AddIcon />}
               onClick={onSaleRecordOpen}
-              _hover={{ bg: "#0B5E58" }}
-              _active={{ ...androidTheme.button.primary._active, bg: "#094C47" }}
+              _hover={{ bg: dashboardPalette.accentStrong }}
+              _active={{ ...androidTheme.button.primary._active, bg: dashboardPalette.accentStrong }}
             >
               Add {isSelectedSupplier ? "Purchase" : "Sale"}
             </Button>
@@ -3926,12 +3975,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="52px"
               borderRadius="16px"
-              bg="#0A57B0"
-              color="white"
+              bg={dashboardPalette.surfaceAlt}
+              color={dashboardPalette.text}
               leftIcon={<AddIcon />}
               onClick={onLedgerEntryOpen}
-              _hover={{ bg: "#094894" }}
-              _active={{ ...androidTheme.button.primary._active, bg: "#073A76" }}
+              _hover={{ bg: dashboardPalette.surfaceSoft }}
+              _active={{ ...androidTheme.button.primary._active, bg: dashboardPalette.surfaceSoft }}
             >
               Add Entry
             </Button>
@@ -3947,7 +3996,7 @@ const CustomersTab: React.FC = observer(() => {
     if (saleDetailsLoading) {
       return (
         <Flex minH="240px" align="center" justify="center" direction="column" gap={3}>
-          <Spinner color="blue.500" thickness="3px" size="lg" />
+          <Spinner color={dashboardPalette.accent} thickness="3px" size="lg" />
           <Text fontSize="sm" color="gray.500">
             Loading {isSelectedSupplier ? "purchase" : "sale"} history{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
           </Text>
@@ -3972,13 +4021,19 @@ const CustomersTab: React.FC = observer(() => {
 
     return (
       <VStack align="stretch" spacing={5}>
-        <Box borderWidth="1px" borderColor="blue.100" bg="blue.50" borderRadius="xl" p={4}>
+        <Box
+          borderWidth="1px"
+          borderColor="rgba(214, 183, 114, 0.22)"
+          bg="rgba(214, 183, 114, 0.10)"
+          borderRadius="xl"
+          p={4}
+        >
           <HStack justify="space-between" align="start" spacing={3}>
             <Box>
-              <Text fontSize="xs" textTransform="uppercase" color="blue.700" fontWeight="700">
+              <Text fontSize="xs" textTransform="uppercase" color={dashboardPalette.accent} fontWeight="700">
                 {selectedTransactionSingularLabel} ID
               </Text>
-              <Text fontSize="lg" fontWeight="800" color="blue.900" wordBreak="break-all">
+              <Text fontSize="lg" fontWeight="800" color={dashboardPalette.page} wordBreak="break-all">
                 {saleRecord._id}
               </Text>
               <HStack spacing={2} mt={2} wrap="wrap">
@@ -4048,11 +4103,17 @@ const CustomersTab: React.FC = observer(() => {
               {formatCurrency(summary.adjustmentDebitAmount)}
             </Text>
           </Box>
-          <Box p={3} borderWidth="1px" borderColor="blue.200" borderRadius="xl" bg="blue.50">
-            <Text fontSize="xs" color="blue.700" textTransform="uppercase" fontWeight="700">
+          <Box
+            p={3}
+            borderWidth="1px"
+            borderColor="rgba(214, 183, 114, 0.22)"
+            borderRadius="xl"
+            bg="rgba(214, 183, 114, 0.10)"
+          >
+            <Text fontSize="xs" color={dashboardPalette.accent} textTransform="uppercase" fontWeight="700">
               {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
             </Text>
-            <Text fontSize="lg" fontWeight="800" color="blue.800">
+            <Text fontSize="lg" fontWeight="800" color={dashboardPalette.page}>
               {formatCurrency(summary.remainingDue)}
             </Text>
           </Box>
@@ -4182,7 +4243,7 @@ const CustomersTab: React.FC = observer(() => {
                       Qty {item.quantity} x {formatCurrency(Number(item.unitPrice || 0))}
                     </Text>
                   </Box>
-                  <Text fontSize="sm" fontWeight="800" color="blue.700">
+                  <Text fontSize="sm" fontWeight="800" color={dashboardPalette.accent}>
                     {formatCurrency(Number(item.lineTotal || 0))}
                   </Text>
                 </HStack>
@@ -4206,7 +4267,7 @@ const CustomersTab: React.FC = observer(() => {
                     {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
                   </Text>
                 </Box>
-                <Text fontSize="sm" fontWeight="800" color="blue.700">
+                <Text fontSize="sm" fontWeight="800" color={dashboardPalette.accent}>
                   {formatCurrency(summary.saleAmount)}
                 </Text>
               </HStack>
@@ -4591,289 +4652,297 @@ const CustomersTab: React.FC = observer(() => {
   const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
   const showMobileBuyerManagement = !selectedLedgerBuyer && useCompactBuyerView;
   const showMobileLedgerDetail = Boolean(selectedLedgerBuyer && useCompactLedgerView);
+  const blockedCount = Math.max(total - buyerOverview.active, 0);
+
+  const renderDesktopBuyerManagement = () => (
+    <VStack align="stretch" spacing={6}>
+      <MerchantHeroSection
+        icon={FiUsers}
+        primaryBadge={isSupplierTab ? "Supplier Ledger" : "Customer Ledger"}
+        extraBadges={renderMerchantBadge(`${buyerOverview.active} Active`, "success")}
+        title={`${partyPluralLabel} Management`}
+        description={`Manage offline ${partyPluralLabel.toLowerCase()}, review due balances, and jump into each ledger from one merchant workspace.`}
+        glowProps={{ top: "-80px", right: "-30px", w: "220px", h: "220px" }}
+        leftFooter={
+          <HStack
+            spacing={2}
+            bg="rgba(255,255,255,0.04)"
+            border="1px solid"
+            borderColor={dashboardPalette.border}
+            borderRadius="18px"
+            p={1}
+            alignSelf="flex-start"
+            maxW="320px"
+          >
+            <Button
+              flex="1"
+              h="40px"
+              borderRadius="14px"
+              bg={normalizedActivePartyType === "customer" ? dashboardPalette.accent : "transparent"}
+              color={normalizedActivePartyType === "customer" ? dashboardPalette.page : dashboardPalette.textMuted}
+              _hover={{
+                bg:
+                  normalizedActivePartyType === "customer"
+                    ? dashboardPalette.accentStrong
+                    : "rgba(255,255,255,0.04)",
+              }}
+              _active={{ transform: "scale(0.98)" }}
+              onClick={() => setActivePartyType("customer")}
+            >
+              Customers
+            </Button>
+            <Button
+              flex="1"
+              h="40px"
+              borderRadius="14px"
+              bg={normalizedActivePartyType === "supplier" ? dashboardPalette.accent : "transparent"}
+              color={normalizedActivePartyType === "supplier" ? dashboardPalette.page : dashboardPalette.textMuted}
+              _hover={{
+                bg:
+                  normalizedActivePartyType === "supplier"
+                    ? dashboardPalette.accentStrong
+                    : "rgba(255,255,255,0.04)",
+              }}
+              _active={{ transform: "scale(0.98)" }}
+              onClick={() => setActivePartyType("supplier")}
+            >
+              Suppliers
+            </Button>
+          </HStack>
+        }
+        rightContent={
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            spacing={3}
+            w={{ base: "full", xl: "auto" }}
+            align={{ base: "stretch", sm: "center" }}
+          >
+            {canUseDeviceContactImport ? (
+              <Button
+                onClick={onImportOpen}
+                size="lg"
+                leftIcon={<DownloadIcon />}
+                {...merchantGhostButtonProps}
+              >
+                Import Contacts
+              </Button>
+            ) : null}
+            <Button
+              leftIcon={<FiUserPlus />}
+              onClick={openManualBuyerModal}
+              size="lg"
+              {...merchantPrimaryButtonProps}
+            >
+              Add {partySingularLabel}
+            </Button>
+          </Stack>
+        }
+      />
+
+      <MerchantPanel>
+        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4} mb={6}>
+          <MerchantStatCard label={`Total ${partyPluralLabel}`} value={total} variant="panel" />
+          <MerchantStatCard label="Active Accounts" value={buyerOverview.active} valueColor={dashboardPalette.success} variant="panel" />
+          <MerchantStatCard label="You Will Get" value={formatCurrency(buyerOverview.receivable)} valueColor={dashboardPalette.success} variant="panel" />
+          <MerchantStatCard
+            label="You Will Give"
+            value={formatCurrency(buyerOverview.payable)}
+            valueColor={buyerOverview.payable > 0 ? dashboardPalette.danger : dashboardPalette.accentStrong}
+            variant="panel"
+          />
+        </SimpleGrid>
+
+        <HStack spacing={3} mb={5} flexWrap="wrap">
+          {renderMerchantBadge(`${partyPluralLabel} Register`, "accent")}
+          {blockedCount > 0 ? renderMerchantBadge(`${blockedCount} Blocked`, "danger") : renderMerchantBadge("No Blocked Accounts", "soft")}
+        </HStack>
+
+        <CustomTable
+          title={`${partyPluralLabel} (${total})`}
+          columns={buyerColumns}
+          data={buyerTableData}
+          loading={loading}
+          actions={buyerTableActions}
+          serial={{ show: true, text: "S.No." }}
+          {...getMerchantTableProps("62vh")}
+        />
+      </MerchantPanel>
+    </VStack>
+  );
+
+  const renderDesktopLedgerView = () => (
+    <VStack align="stretch" spacing={6}>
+      <MerchantHeroSection
+        icon={FiUsers}
+        primaryBadge={isSelectedSupplier ? "Supplier Ledger" : "Customer Ledger"}
+        extraBadges={renderMerchantBadge(selectedLedgerBuyer?.isBlocked ? "Blocked" : "Active", selectedLedgerBuyer?.isBlocked ? "danger" : "success")}
+        title={selectedBuyerName}
+        description={`Track ${isSelectedSupplier ? "purchases, payouts, and supplier adjustments" : "sales, collections, and customer adjustments"} for this relationship in one ledger view.`}
+        glowProps={{ top: "-84px", right: "-34px", w: "220px", h: "220px" }}
+        leftFooter={
+          <HStack spacing={3} flexWrap="wrap">
+            {selectedLedgerBuyer?.buyerId?.phoneE164
+              ? renderMerchantBadge(selectedLedgerBuyer.buyerId.phoneE164, "soft", { textTransform: "none" })
+              : null}
+            {selectedLedgerBuyer?.buyerId?.emailNormalized
+              ? renderMerchantBadge(selectedLedgerBuyer.buyerId.emailNormalized, "soft", { textTransform: "none" })
+              : null}
+          </HStack>
+        }
+        rightContent={
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            spacing={3}
+            w={{ base: "full", xl: "auto" }}
+            align={{ base: "stretch", sm: "center" }}
+          >
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              onClick={closeLedgerView}
+              size="lg"
+              {...merchantGhostButtonProps}
+            >
+              Back to {partyPluralLabel}
+            </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              onClick={onSaleRecordOpen}
+              size="lg"
+              {...merchantPrimaryButtonProps}
+            >
+              Add {isSelectedSupplier ? "Purchase" : "Sale"} Record
+            </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              onClick={onLedgerEntryOpen}
+              size="lg"
+              {...merchantGhostButtonProps}
+            >
+              Add Ledger Entry
+            </Button>
+          </Stack>
+        }
+      />
+
+      <MerchantPanel>
+        <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4} mb={6}>
+          <MerchantStatCard
+            label={`Total ${isSelectedSupplier ? "Purchase" : "Sale"} Debit`}
+            value={formatCurrency(ledgerSummary.totalDebit)}
+            valueColor={dashboardPalette.accentStrong}
+            variant="panel"
+          />
+          <MerchantStatCard
+            label={`Total ${isSelectedSupplier ? "Payment Sent" : "Payment"} Credit`}
+            value={formatCurrency(ledgerSummary.totalCredit)}
+            valueColor={dashboardPalette.success}
+            variant="panel"
+          />
+          <MerchantStatCard
+            label={isSelectedSupplier ? "Payable Outstanding" : "Outstanding"}
+            value={formatCurrency(ledgerSummary.outstandingBalance)}
+            valueColor={
+              Number(ledgerSummary.outstandingBalance || 0) >= 0
+                ? isSelectedSupplier
+                  ? dashboardPalette.danger
+                  : dashboardPalette.success
+                : dashboardPalette.warning
+            }
+            variant="panel"
+          />
+          <MerchantStatCard
+            label="Credit Limit"
+            value={formatCurrency(ledgerSummary.creditLimit)}
+            valueColor={dashboardPalette.text}
+            variant="panel"
+          />
+        </SimpleGrid>
+
+        <Tabs index={ledgerTabIndex} onChange={(index) => setLedgerTabIndex(index)} variant="unstyled">
+          <TabList
+            overflowX="auto"
+            bg={dashboardPalette.surfaceAlt}
+            borderWidth="1px"
+            borderColor={dashboardPalette.border}
+            borderRadius="20px"
+            p={1}
+            gap={1}
+          >
+            <Tab
+              whiteSpace="nowrap"
+              borderRadius="16px"
+              fontWeight="700"
+              color={dashboardPalette.textMuted}
+              _selected={{
+                bg: dashboardPalette.accentSoft,
+                color: dashboardPalette.accentStrong,
+                borderWidth: "1px",
+                borderColor: dashboardPalette.border,
+              }}
+            >
+              Ledger Entries ({ledgerTotal})
+            </Tab>
+            <Tab
+              whiteSpace="nowrap"
+              borderRadius="16px"
+              fontWeight="700"
+              color={dashboardPalette.textMuted}
+              _selected={{
+                bg: dashboardPalette.accentSoft,
+                color: dashboardPalette.accentStrong,
+                borderWidth: "1px",
+                borderColor: dashboardPalette.border,
+              }}
+            >
+              {selectedTransactionPluralLabel} ({saleTotal})
+            </Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel px={0} pt={5}>
+              <CustomTable
+                title={`Ledger Entries (${ledgerTotal})`}
+                columns={ledgerColumns}
+                data={ledgerTableData}
+                loading={ledgerLoading}
+                actions={ledgerTableActions}
+                serial={{ show: true, text: "S.No." }}
+                {...getMerchantTableProps("58vh")}
+              />
+            </TabPanel>
+            <TabPanel px={0} pt={5}>
+              <CustomTable
+                title={`${selectedTransactionPluralLabel} (${saleTotal})`}
+                columns={saleColumns}
+                data={saleTableData}
+                loading={saleLoading}
+                actions={saleTableActions}
+                serial={{ show: true, text: "S.No." }}
+                {...getMerchantTableProps("58vh")}
+              />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </MerchantPanel>
+    </VStack>
+  );
 
   return (
-    <Box px={{ base: 2, md: 4 }} py={{ base: 2, md: 4 }}>
-      <VStack align="stretch" spacing={4}>
-        {!showMobileBuyerManagement && !showMobileLedgerDetail ? (
-          <Flex
-            justify="space-between"
-            align={{ base: "stretch", md: "center" }}
-            direction={{ base: "column", md: "row" }}
-            gap={3}
-          >
-            <Box>
-              <Heading size="md">
-                {selectedLedgerBuyer ? `${isSelectedSupplier ? "Supplier" : "Customer"} Ledger - ${selectedBuyerName}` : `${partySingularLabel} Management`}
-              </Heading>
-              <Text fontSize="sm" color="gray.500">
-                {selectedLedgerBuyer
-                  ? `Track ${isSelectedSupplier ? "purchase" : "sale"}, payment and adjustment entries`
-                  : `Manage offline ${partyPluralLabel.toLowerCase()} for your company`}
-              </Text>
-              {!selectedLedgerBuyer ? (
-                <HStack spacing={2} mt={3}>
-                  <Button
-                    size="sm"
-                    borderRadius="full"
-                    bg={normalizedActivePartyType === "customer" ? "blue.600" : "white"}
-                    color={normalizedActivePartyType === "customer" ? "white" : "blue.700"}
-                    borderWidth="1px"
-                    borderColor="blue.100"
-                    onClick={() => setActivePartyType("customer")}
-                    _hover={{ bg: normalizedActivePartyType === "customer" ? "blue.700" : "blue.50" }}
-                  >
-                    Customers
-                  </Button>
-                  <Button
-                    size="sm"
-                    borderRadius="full"
-                    bg={normalizedActivePartyType === "supplier" ? "blue.600" : "white"}
-                    color={normalizedActivePartyType === "supplier" ? "white" : "blue.700"}
-                    borderWidth="1px"
-                    borderColor="blue.100"
-                    onClick={() => setActivePartyType("supplier")}
-                    _hover={{ bg: normalizedActivePartyType === "supplier" ? "blue.700" : "blue.50" }}
-                  >
-                    Suppliers
-                  </Button>
-                </HStack>
-              ) : null}
-            </Box>
-            {selectedLedgerBuyer ? (
-              <Stack
-                direction={{ base: "column", sm: "row" }}
-                spacing={2}
-                w={{ base: "full", md: "auto" }}
-                align={{ base: "stretch", sm: "center" }}
-              >
-                <Button
-                  leftIcon={<ArrowBackIcon />}
-                  variant="outline"
-                  onClick={closeLedgerView}
-                  size={{ base: "sm", md: "md" }}
-                  w={{ base: "full", sm: "auto" }}
-                >
-                  Back to {partyPluralLabel}
-                </Button>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="teal"
-                  onClick={onSaleRecordOpen}
-                  size={{ base: "sm", md: "md" }}
-                  w={{ base: "full", sm: "auto" }}
-                >
-                  Add {isSelectedSupplier ? "Purchase" : "Sale"} Record
-                </Button>
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={onLedgerEntryOpen}
-                  size={{ base: "sm", md: "md" }}
-                  w={{ base: "full", sm: "auto" }}
-                >
-                  Add Ledger Entry
-                </Button>
-              </Stack>
-            ) : (
-              <Stack
-                direction={{ base: "column", sm: "row" }}
-                spacing={2}
-                w={{ base: "full", md: "auto" }}
-                align={{ base: "stretch", sm: "center" }}
-              >
-                {canUseDeviceContactImport ? (
-                  <Button
-                    variant="outline"
-                    onClick={onImportOpen}
-                    size={{ base: "sm", md: "md" }}
-                    w={{ base: "full", sm: "auto" }}
-                  >
-                    Import Contacts
-                  </Button>
-                ) : null}
-                <Button
-                  leftIcon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={openManualBuyerModal}
-                  size={{ base: "sm", md: "md" }}
-                  w={{ base: "full", sm: "auto" }}
-                >
-                  Add {partySingularLabel}
-                </Button>
-              </Stack>
-            )}
-          </Flex>
-        ) : null}
-
-        {!selectedLedgerBuyer ? (
-          <>
-            {showMobileBuyerManagement ? (
-              renderBuyerProfilesMobile()
-            ) : (
-              <Box>
-                <CustomTable
-                  title={`${partyPluralLabel} (${total})`}
-                  columns={buyerColumns}
-                  data={buyerTableData}
-                  loading={loading}
-                  actions={buyerTableActions}
-                  serial={{ show: true, text: "S.No." }}
-                />
-              </Box>
-            )}
-          </>
-        ) : (
-          <>
-            {showMobileLedgerDetail ? (
-              renderLedgerDetailMobile()
-            ) : (
-              <VStack align="stretch" spacing={4}>
-                <SimpleGrid columns={{ base: 1, md: 4 }} spacing={3}>
-                  <Box
-                    p={4}
-                    borderWidth="1px"
-                    borderColor="orange.200"
-                    bg="orange.50"
-                    borderRadius="xl"
-                    shadow="sm"
-                  >
-                    <Stat>
-                      <StatLabel color="orange.700" fontWeight="700">
-                        Total {isSelectedSupplier ? "Purchase" : "Sale"} (Debit)
-                      </StatLabel>
-                      <StatNumber color="orange.800">{formatCurrency(ledgerSummary.totalDebit)}</StatNumber>
-                    </Stat>
-                  </Box>
-                  <Box
-                    p={4}
-                    borderWidth="1px"
-                    borderColor="green.200"
-                    bg="green.50"
-                    borderRadius="xl"
-                    shadow="sm"
-                  >
-                    <Stat>
-                      <StatLabel color="green.700" fontWeight="700">
-                        Total {isSelectedSupplier ? "Payment Sent" : "Payment"} (Credit)
-                      </StatLabel>
-                      <StatNumber color="green.800">{formatCurrency(ledgerSummary.totalCredit)}</StatNumber>
-                    </Stat>
-                  </Box>
-                  <Box
-                    p={4}
-                    borderWidth="1px"
-                    borderColor="blue.200"
-                    bg="blue.50"
-                    borderRadius="xl"
-                    shadow="sm"
-                  >
-                    <Stat>
-                      <StatLabel color="blue.700" fontWeight="700">
-                        {isSelectedSupplier ? "Payable Outstanding" : "Outstanding"}
-                      </StatLabel>
-                      <StatNumber color="blue.800">{formatCurrency(ledgerSummary.outstandingBalance)}</StatNumber>
-                    </Stat>
-                  </Box>
-                  <Box
-                    p={4}
-                    borderWidth="1px"
-                    borderColor="purple.200"
-                    bg="purple.50"
-                    borderRadius="xl"
-                    shadow="sm"
-                  >
-                    <Stat>
-                      <StatLabel color="purple.700" fontWeight="700">
-                        Credit Limit
-                      </StatLabel>
-                      <StatNumber color="purple.800">{formatCurrency(ledgerSummary.creditLimit)}</StatNumber>
-                    </Stat>
-                  </Box>
-                </SimpleGrid>
-
-                <Tabs
-                  index={ledgerTabIndex}
-                  onChange={(index) => setLedgerTabIndex(index)}
-                  variant="unstyled"
-                  colorScheme="blue"
-                >
-                  <TabList
-                    overflowX="auto"
-                    bg="gray.100"
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                    borderRadius="xl"
-                    p={1}
-                    gap={1}
-                  >
-                    <Tab
-                      whiteSpace="nowrap"
-                      borderRadius="lg"
-                      fontWeight="700"
-                      color="gray.600"
-                      _selected={{
-                        bg: "white",
-                        color: "blue.700",
-                        shadow: "sm",
-                        borderWidth: "1px",
-                        borderColor: "blue.200",
-                      }}
-                    >
-                      Ledger Entries ({ledgerTotal})
-                    </Tab>
-                    <Tab
-                      whiteSpace="nowrap"
-                      borderRadius="lg"
-                      fontWeight="700"
-                      color="gray.600"
-                      _selected={{
-                        bg: "white",
-                        color: "blue.700",
-                        shadow: "sm",
-                        borderWidth: "1px",
-                        borderColor: "blue.200",
-                      }}
-                    >
-                      {selectedTransactionPluralLabel} ({saleTotal})
-                    </Tab>
-                  </TabList>
-                  <TabPanels>
-                    <TabPanel px={0} pt={4}>
-                      {useCompactLedgerView ? (
-                        renderLedgerMobile()
-                      ) : (
-                        <CustomTable
-                          title={`Ledger Entries (${ledgerTotal})`}
-                          columns={ledgerColumns}
-                          data={ledgerTableData}
-                          loading={ledgerLoading}
-                          actions={ledgerTableActions}
-                          serial={{ show: true, text: "S.No." }}
-                        />
-                      )}
-                    </TabPanel>
-                    <TabPanel px={0} pt={4}>
-                      {useCompactLedgerView ? (
-                        renderSaleRecordsMobile()
-                      ) : (
-                        <CustomTable
-                          title={`${selectedTransactionPluralLabel} (${saleTotal})`}
-                          columns={saleColumns}
-                          data={saleTableData}
-                          loading={saleLoading}
-                          actions={saleTableActions}
-                          serial={{ show: true, text: "S.No." }}
-                        />
-                      )}
-                    </TabPanel>
-                  </TabPanels>
-                </Tabs>
-              </VStack>
-            )}
-          </>
-        )}
-      </VStack>
+    <>
+      {showMobileBuyerManagement || showMobileLedgerDetail ? (
+        <Box
+          px={{ base: 2, md: 4 }}
+          pt={{ base: 2, md: 4 }}
+          pb={0}
+          bg={showMobileBuyerManagement ? mobileLedgerPalette.page : androidTheme.colors.surface}
+          minH="100dvh"
+        >
+          {showMobileBuyerManagement ? renderBuyerProfilesMobile() : renderLedgerDetailMobile()}
+        </Box>
+      ) : (
+        <MerchantPageShell>
+          {selectedLedgerBuyer ? renderDesktopLedgerView() : renderDesktopBuyerManagement()}
+        </MerchantPageShell>
+      )}
 
       {useCompactLedgerView ? (
         <Modal isOpen={isSaleDetailsOpen} onClose={closeSaleDetails} size="full" scrollBehavior="inside">
@@ -4885,12 +4954,43 @@ const CustomersTab: React.FC = observer(() => {
           </ModalContent>
         </Modal>
       ) : (
-        <CustomDrawer
-          open={isSaleDetailsOpen}
-          close={closeSaleDetails}
-          title={`${selectedTransactionSingularLabel} Details`}
-          size="md"
-          loading={saleDetailsLoading && !saleRecordDetails}
+          <CustomDrawer
+            open={isSaleDetailsOpen}
+            close={closeSaleDetails}
+            title={`${selectedTransactionSingularLabel} Details`}
+            size="md"
+            loading={saleDetailsLoading && !saleRecordDetails}
+            showDivider={false}
+            contentProps={{
+              bg: dashboardPalette.page,
+              color: dashboardPalette.text,
+              borderLeft: "1px solid",
+              borderLeftColor: dashboardPalette.border,
+            }}
+            headerProps={{
+              bg: dashboardPalette.shell,
+              color: dashboardPalette.text,
+              borderBottom: "1px solid",
+              borderBottomColor: dashboardPalette.border,
+              px: 6,
+              py: 5,
+            }}
+            closeButtonProps={{
+              color: dashboardPalette.text,
+              bg: dashboardPalette.surfaceAlt,
+              border: "1px solid",
+              borderColor: dashboardPalette.borderStrong,
+              borderRadius: "12px",
+              _hover: {
+                bg: dashboardPalette.surfaceSoft,
+                color: dashboardPalette.accentStrong,
+              },
+            }}
+            bodyProps={{
+              bg: dashboardPalette.page,
+              px: { base: 3, md: 4 },
+              py: 4,
+            }}
         >
           {renderSaleDetailsContent()}
         </CustomDrawer>
@@ -4954,8 +5054,10 @@ const CustomersTab: React.FC = observer(() => {
                       textAlign="center"
                       px={6}
                       borderWidth="1.5px"
-                      bg="blue.50"
-                      _hover={{ bg: "blue.100", transform: "translateY(-1px)" }}
+                      bg="rgba(214, 183, 114, 0.10)"
+                      borderColor={dashboardPalette.accent}
+                      color={dashboardPalette.accent}
+                      _hover={{ bg: "rgba(214, 183, 114, 0.16)", transform: "translateY(-1px)" }}
                       _active={{ transform: "translateY(0)" }}
                     >
                       Import All Contacts
@@ -4978,7 +5080,7 @@ const CustomersTab: React.FC = observer(() => {
       <Modal isOpen={isContactReviewOpen} onClose={closeContactReviewModal} size="full" scrollBehavior="inside">
         <ModalOverlay />
         <ModalContent bg="#F7FAFC">
-          <Box bg="#0A57B0" px={4} py={4} color="white">
+          <Box bgGradient={dashboardHeroGradient} px={4} py={4} color="white">
             <HStack spacing={3}>
               <IconButton
                 aria-label="Back"
@@ -5011,7 +5113,7 @@ const CustomersTab: React.FC = observer(() => {
                   h="74px"
                   borderRadius="20px"
                   borderWidth="2px"
-                  borderColor="#1C5FB0"
+                  borderColor={dashboardPalette.accent}
                   bg="white"
                   fontSize="2xl"
                   fontWeight="500"
@@ -5078,12 +5180,12 @@ const CustomersTab: React.FC = observer(() => {
                   }
                 >
                   <HStack spacing={8}>
-                    <Radio value="customer" colorScheme="blue" size="lg">
+                    <Radio value="customer" colorScheme="yellow" size="lg">
                       <Text fontSize="xl" fontWeight="500">
                         Customer
                       </Text>
                     </Radio>
-                    <Radio value="supplier" colorScheme="blue" size="lg">
+                    <Radio value="supplier" colorScheme="yellow" size="lg">
                       <Text fontSize="xl" fontWeight="500">
                         Supplier
                       </Text>
@@ -5096,11 +5198,11 @@ const CustomersTab: React.FC = observer(() => {
                 variant="ghost"
                 justifyContent="flex-start"
                 px={0}
-                color="#0A57B0"
+                color={dashboardPalette.accent}
                 fontSize="lg"
                 fontWeight="700"
                 onClick={() => setShowContactExtraFields((prev) => !prev)}
-                _hover={{ bg: "transparent", color: "#084A97" }}
+                _hover={{ bg: "transparent", color: dashboardPalette.accentStrong }}
                 _active={{ bg: "transparent" }}
               >
                 {showContactExtraFields ? "- Hide extra details" : "+ Add address & notes (optional)"}
@@ -5522,7 +5624,7 @@ const CustomersTab: React.FC = observer(() => {
         confirmButtonProps={{ colorScheme: "red" }}
         isLoading={isReversing}
       />
-    </Box>
+    </>
   );
 });
 

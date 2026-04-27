@@ -31,6 +31,7 @@ import { MdDelete } from "react-icons/md";
 import { FcClearFilters } from "react-icons/fc";
 import { formatDate } from "../../utils/dateUtils";
 const CustomDateRange = dynamic(() => import('../CustomDateRange/CustomDateRange'), { ssr: false });
+import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 
 interface Column {
   headerName?: string;
@@ -61,6 +62,7 @@ interface CustomTableProps {
   cells?: boolean;
   tableProps?: any;
   onRowClick?: (row: RowData) => void;
+  variant?: "default" | "merchant";
 }
 
 interface TableActionsProps {
@@ -68,6 +70,7 @@ interface TableActionsProps {
   column: any;
   row: any;
   cells: boolean;
+  variant?: "default" | "merchant";
 }
 
 const getColumnTextAlign = (column: any) =>
@@ -86,16 +89,22 @@ const TableActions: React.FC<TableActionsProps> = ({
   actions,
   column,
   row,
+  variant = "default",
   // cells,
 }) => {
   if (!actions) {
     actions = {};
   }
   const { actionBtn } = actions;
+  const isMerchant = variant === "merchant";
   // const cellProps = cells ? { border: "1px groove gray" } : {};
 
-  const iconColor = useColorModeValue("gray.700", "gray.200");
-  const deleteColor = useColorModeValue("red.500", "red.300");
+  const iconColor = isMerchant
+    ? dashboardPalette.textMuted
+    : useColorModeValue("gray.700", "gray.200");
+  const deleteColor = isMerchant
+    ? dashboardPalette.danger
+    : useColorModeValue("red.500", "red.300");
 
   return (
     <Td
@@ -106,7 +115,13 @@ const TableActions: React.FC<TableActionsProps> = ({
       right={column?.props?.isSticky ? "0" : undefined}
       {...getSharedCellLayoutProps(column)}
       zIndex={column?.props?.isSticky ? "5" : undefined}
-      bgColor={column?.props?.isSticky ? "white" : undefined}
+      bgColor={
+        column?.props?.isSticky
+          ? isMerchant
+            ? dashboardPalette.surface
+            : "white"
+          : undefined
+      }
     >
       <Flex columnGap={0} justifyContent={"center"}>
         {actionBtn?.editKey?.showEditButton && (
@@ -114,6 +129,11 @@ const TableActions: React.FC<TableActionsProps> = ({
             size="lg"
             bgColor="transparent"
             color={iconColor}
+            _hover={
+              isMerchant
+                ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text }
+                : undefined
+            }
             onClick={() => {
               if (actionBtn?.editKey?.function)
                 actionBtn?.editKey.function(row);
@@ -129,6 +149,11 @@ const TableActions: React.FC<TableActionsProps> = ({
             size="lg"
             bgColor="transparent"
             color={iconColor}
+            _hover={
+              isMerchant
+                ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text }
+                : undefined
+            }
             onClick={() => {
               if (actionBtn?.viewKey?.function)
                 actionBtn?.viewKey.function(row);
@@ -144,6 +169,11 @@ const TableActions: React.FC<TableActionsProps> = ({
             size="lg"
             bgColor="transparent"
             color={deleteColor}
+            _hover={
+              isMerchant
+                ? { bg: "rgba(239, 107, 107, 0.12)" }
+                : undefined
+            }
             onClick={() => {
               if (actionBtn?.deleteKey?.function)
                 actionBtn?.deleteKey.function(row);
@@ -164,7 +194,8 @@ const GenerateRows: React.FC<{
   row: RowData;
   action: any;
   cells: boolean;
-}> = ({ column, row, action, cells }: any) => {
+  variant?: "default" | "merchant";
+}> = ({ column, row, action, cells, variant }: any) => {
   // Define cell border color based on color mode
   const cellBorder = useColorModeValue("gray.200", "gray.700");
   const cellProps = cells
@@ -251,6 +282,7 @@ const GenerateRows: React.FC<{
           column={column}
           row={row}
           cells={cells}
+          variant={variant}
         />
       );
     case "combineKey":
@@ -312,9 +344,11 @@ const CustomTable: React.FC<CustomTableProps> = ({
   cells = false,
   tableProps = {},
   onRowClick,
+  variant = "default",
   // isActions = false,
 }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const isMerchant = variant === "merchant";
   // const cellProps = cells ? { border: "1px solid gray" } : {};
   const headerBg = useColorModeValue("gray.700", "gray.800");
   // const borderColor = useColorModeValue("gray.300", "gray.600");
@@ -328,22 +362,84 @@ const CustomTable: React.FC<CustomTableProps> = ({
 
   const boxBorder = useColorModeValue("gray.200", "gray.700");
   const mainBox = useColorModeValue("white", "gray.900");
+  const activeHeaderBg = isMerchant ? dashboardPalette.surfaceAlt : headerBg;
+  const activeBodyBg = isMerchant ? dashboardPalette.surface : bodyBg;
+  const activeHoverBg = isMerchant ? "rgba(214, 183, 114, 0.10)" : hoverBg;
+  const activeMenuItemHover = isMerchant ? dashboardPalette.surfaceSoft : menuItemHover;
+  const activeMenuListBg = isMerchant ? dashboardPalette.surface : menuListBg;
+  const activeTitleColor = isMerchant ? dashboardPalette.text : titleColor;
+  const activeBoxBorder = isMerchant ? dashboardPalette.border : boxBorder;
+  const activeMainBox = isMerchant ? dashboardPalette.shell : mainBox;
+  const inputBorderColor = isMerchant ? dashboardPalette.borderStrong : "gray.300";
+  const inputFocusStyles = isMerchant
+    ? {
+        borderColor: dashboardPalette.accent,
+        boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+      }
+    : { borderColor: "blue.500", boxShadow: "outline" };
 
   return (
     <Box
       rounded={12}
-      bg={mainBox}
-      boxShadow="rgb(0 0 0 / 20%) 0px 0px 8px"
+      bg={activeMainBox}
+      boxShadow={isMerchant ? "0 28px 60px rgba(0, 0, 0, 0.24)" : "rgb(0 0 0 / 20%) 0px 0px 8px"}
       border={"1px solid"}
-      borderColor={boxBorder}
+      borderColor={activeBoxBorder}
+      sx={
+        isMerchant
+          ? {
+              "& .pagination": {
+                gap: "6px",
+              },
+              "& .pagination a": {
+                color: dashboardPalette.textMuted,
+                borderRadius: "12px",
+                minWidth: "38px",
+                minHeight: "38px",
+                padding: "6px 12px",
+                transition: "all 0.2s ease",
+              },
+              "& .pagination a:hover": {
+                color: dashboardPalette.accentStrong,
+                background: "rgba(214, 183, 114, 0.08)",
+              },
+              "& .paginationActive a": {
+                color: `${dashboardPalette.accentStrong} !important`,
+                background: "rgba(214, 183, 114, 0.12)",
+                border: `1px solid ${dashboardPalette.border}`,
+              },
+              "& .paginationDisabled": {
+                color: `${dashboardPalette.textSoft} !important`,
+              },
+              "& .custom-table-pagination .chakra-icon-button": {
+                bg: dashboardPalette.surfaceAlt,
+                color: dashboardPalette.textMuted,
+                border: "1px solid",
+                borderColor: dashboardPalette.borderStrong,
+              },
+              "& .custom-table-pagination .chakra-icon-button:hover": {
+                bg: dashboardPalette.surfaceSoft,
+                color: dashboardPalette.text,
+              },
+              "& .custom-table-pagination .chakra-icon-button[disabled]": {
+                opacity: 0.5,
+                cursor: "not-allowed",
+              },
+            }
+          : undefined
+      }
     >
       <Flex
         justifyContent="space-between"
         alignItems="center"
         p={title ? 3 : 0}
+        borderBottom={isMerchant && title ? "1px solid" : undefined}
+        borderColor={isMerchant ? dashboardPalette.border : undefined}
+        gap={3}
+        flexWrap="wrap"
       >
         {title ? (
-          <Heading color={titleColor} fontSize={isMobile ? "sm" : "xl"}>
+          <Heading color={activeTitleColor} fontSize={isMobile ? "sm" : "xl"} fontWeight={isMerchant ? "600" : undefined}>
             {title || ""}
           </Heading>
         ) : null}
@@ -355,9 +451,12 @@ const CustomTable: React.FC<CustomTableProps> = ({
               value={actions?.search?.searchValue}
               onChange={actions?.search?.onSearchChange}
               borderRadius="5rem"
-              // bg="white"
-              borderColor="gray.300"
-              _focus={{ borderColor: "blue.500", boxShadow: "outline" }}
+              bg={isMerchant ? dashboardPalette.surfaceAlt : undefined}
+              color={isMerchant ? dashboardPalette.text : undefined}
+              borderColor={inputBorderColor}
+              _placeholder={isMerchant ? { color: dashboardPalette.textSoft } : undefined}
+              _hover={isMerchant ? { borderColor: dashboardPalette.accent } : undefined}
+              _focus={inputFocusStyles}
               maxW="25rem"
             />
           )}
@@ -367,6 +466,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                 isMobile={actions?.datePicker?.isMobile}
                 startDate={actions?.datePicker?.date.startDate}
                 endDate={actions?.datePicker?.date.endDate}
+                variant={variant}
                 onStartDateChange={(e) => {
                   if (actions?.datePicker?.onDateChange) {
                     actions?.datePicker?.onDateChange(e, "startDate");
@@ -396,6 +496,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                     actions?.multidropdown?.search?.onSearchChange,
                 }}
                 actions={actions}
+                variant={variant}
               />
             </Box>
           )}
@@ -404,29 +505,36 @@ const CustomTable: React.FC<CustomTableProps> = ({
               <MenuButton
                 as={Button}
                 variant="outline"
-                colorScheme="red"
+                colorScheme={isMerchant ? undefined : "red"}
                 minW={{ base: "6rem", md: "10rem" }}
                 textAlign={"center"}
+                borderColor={isMerchant ? dashboardPalette.borderStrong : undefined}
+                color={isMerchant ? dashboardPalette.textMuted : undefined}
+                bg={isMerchant ? dashboardPalette.surfaceAlt : undefined}
+                _hover={isMerchant ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text } : undefined}
               >
                 Actions
               </MenuButton>
               <MenuList
                 zIndex={15}
-                bg={menuListBg}
+                bg={activeMenuListBg}
                 border="1px solid"
+                borderColor={isMerchant ? dashboardPalette.border : undefined}
                 // borderColor={useColorModeValue("gray.200", "gray.600")}
-                boxShadow="md"
+                boxShadow={isMerchant ? "0 20px 40px rgba(0, 0, 0, 0.35)" : "md"}
                 minW={"10rem"}
                 py={0}
+                color={isMerchant ? dashboardPalette.text : undefined}
               >
                 {actions?.actionBtn?.addKey?.showAddButton && (
                   <MenuItem
                     onClick={() =>
                       actions?.actionBtn?.addKey?.function?.("add")
                     }
-                    _hover={{ bg: hoverBg }}
+                    _hover={{ bg: activeHoverBg }}
                     icon={<IoMdAdd fontSize={"20px"} />}
                     p={"0.7rem"}
+                    bg="transparent"
                   >
                     Add
                   </MenuItem>
@@ -435,8 +543,9 @@ const CustomTable: React.FC<CustomTableProps> = ({
                   <MenuItem
                     onClick={actions?.resetData?.function}
                     icon={<FcClearFilters fontSize={"20px"} />}
-                    _hover={{ bg: menuItemHover }}
+                    _hover={{ bg: activeMenuItemHover }}
                     p={"0.7rem"}
+                    bg="transparent"
                   >
                     {actions?.resetData?.text || "Reset"}
                   </MenuItem>
@@ -454,13 +563,15 @@ const CustomTable: React.FC<CustomTableProps> = ({
         maxH={"65vh"}
         rounded={2}
         px={2}
+        bg={isMerchant ? dashboardPalette.shell : undefined}
         {...tableProps.tableBox}
       >
         <Table
           size={isMobile ? "xs" : "sm"}
-          variant="striped"
+          variant={isMerchant ? "simple" : "striped"}
           {...tableProps.table}
-          bg={bodyBg}
+          bg={activeBodyBg}
+          color={isMerchant ? dashboardPalette.text : undefined}
           borderRadius="md"
           overflow="hidden"
           sx={{
@@ -474,7 +585,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
           }}
         >
           <Thead
-            bg={headerBg}
+            bg={activeHeaderBg}
             position="sticky"
             top="0"
             zIndex="9"
@@ -483,7 +594,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
             <Tr>
               {serial?.show && (
                 <Th
-                  color="white"
+                  color={isMerchant ? dashboardPalette.textMuted : "white"}
                   w={serial?.width || undefined}
                   border="none"
                   textTransform="uppercase"
@@ -503,11 +614,11 @@ const CustomTable: React.FC<CustomTableProps> = ({
                   textAlign={getColumnTextAlign(column)}
                   position={column?.props?.isSticky ? "sticky" : "relative"}
                   right={column?.props?.isSticky ? "0" : undefined}
-                  bg={headerBg}
+                  bg={activeHeaderBg}
                   fontSize="xs"
                   textTransform="uppercase"
                   letterSpacing="wider"
-                  color="white"
+                  color={isMerchant ? dashboardPalette.textMuted : "white"}
                   fontWeight="bold"
                   verticalAlign="middle"
                   px={4}
@@ -521,17 +632,18 @@ const CustomTable: React.FC<CustomTableProps> = ({
             </Tr>
           </Thead>
 
-          <TableLoader loader={loading} show={data.length}>
+          <TableLoader loader={loading} show={data.length} variant={variant}>
             <Tbody >
               {data.map((row, rowIndex) => (
                 <Tr
                   key={rowIndex}
                   onClick={() => onRowClick && onRowClick(row)}
                   _hover={{
-                    bg: hoverBg,
+                    bg: activeHoverBg,
                     cursor: "pointer",
                     transition: "0.3s",
                   }}
+                  bg={isMerchant ? dashboardPalette.surface : undefined}
                 >
                   {serial?.show && (
                     <Td
@@ -543,6 +655,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       py={3}
                       fontSize="sm"
                       border="none" // No border on cells
+                      color={isMerchant ? dashboardPalette.textMuted : undefined}
                     >
                       {(actions?.pagination?.currentPage && actions?.pagination?.limit)
                         ? ((actions.pagination.currentPage - 1) * actions.pagination.limit + rowIndex + 1)
@@ -556,6 +669,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       row={row}
                       action={actions}
                       cells={cells}
+                      variant={variant}
                     // border="none" // No border on cells
                     />
                   ))}
@@ -574,7 +688,10 @@ const CustomTable: React.FC<CustomTableProps> = ({
             }
           }}
           totalPages={actions?.pagination?.totalPages || 1}
-          props={{ style: { marginTop: "15px" } }}
+          props={{
+            style: { marginTop: "15px" },
+            className: isMerchant ? "custom-table-pagination" : undefined,
+          }}
         />
       )}
     </Box>

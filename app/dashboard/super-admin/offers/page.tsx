@@ -2,20 +2,31 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Heading,
   Button,
   Flex,
   useDisclosure,
   useToast,
-  Badge,
+  Box,
+  HStack,
+  SimpleGrid,
   Text,
 } from "@chakra-ui/react";
+import { FiGift, FiPlusCircle, FiStar } from "react-icons/fi";
 import { observer } from "mobx-react-lite";
 import stores from "../../../store/stores";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import OfferForm from "./components/OfferForm";
+import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import {
+  getMerchantTableProps,
+  MerchantBadge,
+  merchantPrimaryButtonProps,
+  MerchantHeroSection,
+  MerchantPageShell,
+  MerchantPanel,
+  MerchantStatCard,
+} from "../../components/common/merchantDashboardUI";
 
 const OffersPage = () => {
   const { offerStore } = stores;
@@ -90,9 +101,9 @@ const OffersPage = () => {
       type: "component",
       metaData: {
         component: (data: any) => (
-          <Badge colorScheme="purple" textTransform="capitalize">
+          <MerchantBadge tone="accent" textTransform="capitalize">
             {data.type}
-          </Badge>
+          </MerchantBadge>
         ),
       },
     },
@@ -102,9 +113,9 @@ const OffersPage = () => {
       type: "component",
       metaData: {
         component: (data: any) => (
-          <Badge colorScheme={data.isActive ? "green" : "red"}>
+          <MerchantBadge tone={data.isActive ? "success" : "danger"}>
             {data.isActive ? "Active" : "Inactive"}
-          </Badge>
+          </MerchantBadge>
         ),
       },
     },
@@ -114,9 +125,9 @@ const OffersPage = () => {
       type: "component",
       metaData: {
         component: (data: any) => (
-          <Badge colorScheme={data.isDefault ? "blue" : "gray"}>
+          <MerchantBadge tone={data.isDefault ? "accent" : "soft"}>
             {data.isDefault ? "Yes" : "No"}
-          </Badge>
+          </MerchantBadge>
         ),
       },
     },
@@ -150,16 +161,40 @@ const OffersPage = () => {
     },
   };
 
-  return (
-    <Box p={6}>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg">Offers</Heading>
-        <Button colorScheme="blue" onClick={handleAddClick}>
-          Add Offer
-        </Button>
-      </Flex>
+  const activeOffers = offerStore.offers.filter((offer: any) => offer.isActive).length;
+  const defaultOffers = offerStore.offers.filter((offer: any) => offer.isDefault).length;
 
-      <Box bg="white" borderRadius="lg" shadow="sm">
+  return (
+    <MerchantPageShell>
+      <MerchantHeroSection
+        icon={FiGift}
+        primaryBadge="Promotions Desk"
+        title="Offer Management"
+        description="Control offer visibility, keep default promotions sane, and manage the incentives available across the marketplace."
+        rightContent={
+          <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3} minW={{ xl: "320px" }}>
+            <MerchantStatCard label="Total Offers" value={offerStore.offers.length} icon={FiGift} />
+            <MerchantStatCard label="Defaults Active" value={defaultOffers} valueColor={dashboardPalette.accentStrong} icon={FiStar} />
+          </SimpleGrid>
+        }
+      />
+
+      <MerchantPanel p={{ base: 4, md: 6 }}>
+        <Flex justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={3} mb={5}>
+          <Box>
+            <Text fontSize="lg" fontWeight="700" color={dashboardPalette.text}>
+              Offers Registry
+            </Text>
+            <HStack spacing={2} mt={2} flexWrap="wrap">
+              <MerchantBadge tone={activeOffers > 0 ? "success" : "soft"}>{activeOffers} Active</MerchantBadge>
+              <MerchantBadge tone={defaultOffers > 0 ? "accent" : "soft"}>{defaultOffers} Default</MerchantBadge>
+            </HStack>
+          </Box>
+          <Button leftIcon={<FiPlusCircle />} onClick={handleAddClick} {...merchantPrimaryButtonProps}>
+            Add Offer
+          </Button>
+        </Flex>
+
         <CustomTable
           title={`All Offers (${offerStore.offers.length})`}
           data={offerStore.offers}
@@ -167,8 +202,9 @@ const OffersPage = () => {
           loading={offerStore.loading}
           actions={tableActions}
           serial={{ show: true, text: "S.No." }}
+          {...getMerchantTableProps("62vh")}
         />
-      </Box>
+      </MerchantPanel>
 
       {isOpen && (
         <OfferForm
@@ -194,7 +230,7 @@ const OffersPage = () => {
           isLoading={offerStore.loading}
         />
       )}
-    </Box>
+    </MerchantPageShell>
   );
 };
 

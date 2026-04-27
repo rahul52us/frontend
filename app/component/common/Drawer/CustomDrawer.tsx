@@ -24,6 +24,11 @@ interface CustomDrawerProps {
   props?: any;
   width?: any;
   loading?: boolean;
+  headerProps?: any;
+  contentProps?: any;
+  bodyProps?: any;
+  showDivider?: boolean;
+  closeButtonProps?: any;
 }
 
 const CustomDrawer: React.FC<CustomDrawerProps> = ({
@@ -35,6 +40,11 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
   width,
   loading = false,
   props,
+  headerProps,
+  contentProps,
+  bodyProps,
+  showDivider = true,
+  closeButtonProps,
 }) => {
   const {
     themeStore: { themeConfig },
@@ -69,8 +79,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
           transition: "transform 0.1s ease-out",
           padding: 0,
           transform: open ? "translateX(0)" : "translateX(100%)",
-          ...props,
         }}
+        {...contentProps}
       >
         {title && (
           <Flex
@@ -80,6 +90,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
             bg={headerBgColor}
             color={headerTextColor}
             fontWeight="bold"
+            {...headerProps}
           >
             <Text fontSize="xl" cursor="pointer">{title}</Text>
             <DrawerCloseButton
@@ -88,12 +99,15 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
               _hover={{ color: "#00000" }}
               size="lg"
               mt={1}
+              {...closeButtonProps}
             />
           </Flex>
         )}
-        <Divider />
+        {showDivider ? <Divider /> : null}
         <DrawerBody
-          style={{ overflowY: "auto", padding: isDesktop ? "15px" : "6px" }}
+          overflowY="auto"
+          p={isDesktop ? "15px" : "6px"}
+          {...bodyProps}
         >
           <DrawerLoader loading={loading}>
             <div style={{ maxHeight: "calc(100vh - 245px)" }}>{children}</div>

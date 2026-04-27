@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Spinner, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Spinner, useBreakpointValue, useMediaQuery, useTheme } from '@chakra-ui/react';
 import styled from 'styled-components';
 import { usePathname } from 'next/navigation';
 import stores from '../../store/stores';
@@ -13,6 +13,7 @@ import HeaderLayout from './HeaderLayout/HeaderLayout';
 import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
 import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
 import PageLoader from '../../component/common/Loader/PageLoader';
+import { dashboardPalette } from './dashboardPalette';
 
 
 const DashboardLayout = observer(({ children }: { children: React.ReactNode }) => {
@@ -37,10 +38,6 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
       localStorage.setItem('activeComponentName', item.id);
     }
   };
-  const headerBackgroundColor = useColorModeValue(
-    themeConfig.colors.custom.light.primary,
-    themeConfig.colors.custom.dark.primary
-  );
   const isSuperAdmin =
     user?.type === 'superAdmin' ||
     user?.role === 'superAdmin' ||
@@ -163,8 +160,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const shouldShowLayoutShopBanner = !pathname?.startsWith('/dashboard/shop');
 
   return user ? (
-    <Box
-    >
+    <Box bg={dashboardPalette.page}>
       <MainContainer $isMobile={isMobile}>
         <Box ref={sidebarRef}>
           <SidebarLayout
@@ -181,7 +177,6 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             $sizeStatus={sizeStatus}
             $mediumScreenMode={mediumScreenMode}
             $fullScreenMode={fullScreenMode}
-            $backgroundColor={headerBackgroundColor}
             $runtimeTopInset={runtimeTopInset}
           >
             <HeaderLayout />
@@ -200,10 +195,18 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
               <Alert
                 status={shopStatusBanner.status}
                 variant="left-accent"
-                borderRadius="xl"
+                borderRadius="2xl"
                 mb={4}
                 alignItems="flex-start"
-                boxShadow="sm"
+                bg={dashboardPalette.surfaceAlt}
+                border="1px solid"
+                borderColor={
+                  shopStatusBanner.status === "error"
+                    ? "rgba(239, 107, 107, 0.28)"
+                    : "rgba(214, 183, 114, 0.22)"
+                }
+                color={dashboardPalette.text}
+                boxShadow="0 18px 30px rgba(0, 0, 0, 0.24)"
               >
                 <AlertIcon mt={1} />
                 <Box>
@@ -233,19 +236,25 @@ const MainContainer = styled.div<{ $isMobile: boolean }>`
   transition: all 0.3s ease-in-out;
   overflow: hidden;
   margin-left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(214, 183, 114, 0.08), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(83, 72, 119, 0.14), transparent 28%),
+    ${dashboardPalette.page};
 `;
 
 const Container = styled.div<{ $fullScreenMode: boolean }>`
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease-in-out;
+  min-height: 100vh;
+  width: 100%;
 `;
 
 const HeaderContainer = styled.div<{
   $fullScreenMode: boolean;
   $sizeStatus: boolean;
   $mediumScreenMode: boolean;
-  $backgroundColor: string;
   $isMobile: boolean;
   $runtimeTopInset: number;
 }>`
@@ -256,7 +265,10 @@ const HeaderContainer = styled.div<{
   position: fixed;
   top: 0;
   right: 0;
-  background-color: ${(props) => props.$backgroundColor};
+  background:
+    linear-gradient(180deg, rgba(12, 10, 17, 0.96) 0%, rgba(12, 10, 17, 0.90) 100%);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid ${dashboardPalette.border};
   left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
   transition: all 0.3s ease-in-out;
 `;
@@ -276,4 +288,8 @@ const ContentContainer = styled.div<{
   height: calc(100vh - ${headerHeight} - ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
   transition: all 0.3s ease-in-out;
   margin-top: calc(${headerHeight} + ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
+  color: ${dashboardPalette.text};
+  background:
+    radial-gradient(circle at top right, rgba(214, 183, 114, 0.06), transparent 18%),
+    linear-gradient(180deg, ${dashboardPalette.shell} 0%, ${dashboardPalette.page} 100%);
 `;

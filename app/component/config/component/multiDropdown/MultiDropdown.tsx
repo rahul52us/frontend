@@ -16,6 +16,8 @@ import { debounce } from "lodash";
 import { MdFilterList } from "react-icons/md";
 import CustomDateRange from "../CustomDateRange/CustomDateRange";
 import dynamic from "next/dynamic";
+import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
+import { merchantFormSx } from "../../../../dashboard/shop/component/merchantTheme";
 const CustomInput = dynamic(() => import('../../../../component/config/component/customInput/CustomInput'), { ssr: false });
 
 interface DropdownOption {
@@ -39,6 +41,7 @@ interface MultiDropdownProps {
   resetFilters?: any;
   minH?: any;
   actions: any;
+  variant?: "default" | "merchant";
 }
 
 const MultiDropdown = ({
@@ -49,15 +52,42 @@ const MultiDropdown = ({
   onApply,
   resetFilters,
   actions,
+  variant = "default",
 }: MultiDropdownProps) => {
   const [inputValue, setInputValue] = useState(search?.searchValue || "");
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  const isMerchant = variant === "merchant";
 
   // Use useColorModeValue to set colors for light and dark modes
   const popoverBg = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.300", "gray.600");
   const buttonTextColor = useColorModeValue("teal.400", "teal.200");
   const focusBorderColor = useColorModeValue("blue.500", "blue.300");
+  const merchantButtonStyles = isMerchant
+    ? {
+        bg: dashboardPalette.surfaceAlt,
+        color: dashboardPalette.accentStrong,
+        border: "1px solid",
+        borderColor: dashboardPalette.border,
+        borderRadius: "16px",
+        _hover: { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text },
+        _active: { bg: dashboardPalette.surfaceSoft },
+      }
+    : {};
+  const merchantInputStyles = isMerchant
+    ? {
+        bg: dashboardPalette.surfaceAlt,
+        borderColor: dashboardPalette.borderStrong,
+        color: dashboardPalette.text,
+        borderRadius: "16px",
+        _placeholder: { color: dashboardPalette.textSoft },
+        _hover: { borderColor: dashboardPalette.accent },
+        _focusVisible: {
+          borderColor: dashboardPalette.accent,
+          boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+        },
+      }
+    : {};
 
   const isMounted = React.useRef(false);
 
@@ -107,19 +137,27 @@ const MultiDropdown = ({
           aria-label=""
           fontSize="md"
           onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-          color={buttonTextColor}
+          color={isMerchant ? undefined : buttonTextColor}
           size="md"
           leftIcon={<MdFilterList />}
+          {...merchantButtonStyles}
         >
           Filter
         </Button>
       </PopoverTrigger>
-      <PopoverContent p={3} bg={popoverBg} borderColor={borderColor} boxShadow="md">
+      <PopoverContent
+        p={3}
+        bg={isMerchant ? dashboardPalette.surface : popoverBg}
+        borderColor={isMerchant ? dashboardPalette.border : borderColor}
+        boxShadow={isMerchant ? "0 24px 48px rgba(0, 0, 0, 0.36)" : "md"}
+        sx={isMerchant ? merchantFormSx : undefined}
+      >
         <PopoverHeader
           mt={-1}
           fontWeight="bold"
           borderBottomWidth="1px"
-          color={buttonTextColor}
+          color={isMerchant ? dashboardPalette.accentStrong : buttonTextColor}
+          borderBottomColor={isMerchant ? dashboardPalette.border : undefined}
         >
           Select Options
         </PopoverHeader>
@@ -133,6 +171,7 @@ const MultiDropdown = ({
                 isMobile={actions?.datePicker?.isMobile}
                 startDate={actions?.datePicker?.date?.startDate}
                 endDate={actions?.datePicker?.date?.endDate}
+                variant={variant}
                 onStartDateChange={(e) => {
                   if (actions?.datePicker?.onDateChange) {
                     actions?.datePicker?.onDateChange(e, "startDate");
@@ -151,9 +190,10 @@ const MultiDropdown = ({
                 value={inputValue}
                 onChange={handleInputChange}
                 borderRadius="md"
-                bg={popoverBg}
-                borderColor={borderColor}
-                _focus={{ borderColor: focusBorderColor, boxShadow: "outline" }}
+                bg={isMerchant ? undefined : popoverBg}
+                borderColor={isMerchant ? undefined : borderColor}
+                _focus={isMerchant ? undefined : { borderColor: focusBorderColor, boxShadow: "outline" }}
+                {...merchantInputStyles}
               />
             )}
             {dropdowns.map((dropdown: Dropdown, index: number) => {
@@ -176,12 +216,16 @@ const MultiDropdown = ({
               );
             })}
             <Button
-              colorScheme="teal"
+              colorScheme={isMerchant ? undefined : "teal"}
               onClick={() => {
                 onApply();
                 handlePopoverClose();
               }}
               mt={2}
+              bg={isMerchant ? dashboardPalette.accent : undefined}
+              color={isMerchant ? dashboardPalette.page : undefined}
+              borderRadius={isMerchant ? "16px" : undefined}
+              _hover={isMerchant ? { bg: dashboardPalette.accentStrong } : undefined}
             >
               Apply
             </Button>
@@ -191,7 +235,11 @@ const MultiDropdown = ({
                 mt={1}
                 onClick={() => resetFilterss()}
                 border="2px solid"
-                colorScheme="red"
+                colorScheme={isMerchant ? undefined : "red"}
+                borderColor={isMerchant ? dashboardPalette.borderStrong : undefined}
+                color={isMerchant ? dashboardPalette.textMuted : undefined}
+                borderRadius={isMerchant ? "16px" : undefined}
+                _hover={isMerchant ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text } : undefined}
               >
                 Reset Filter
               </Button>

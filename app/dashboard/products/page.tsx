@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  Container,
+  Circle,
   Flex,
   Heading,
   Text,
@@ -22,11 +22,6 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
-  Image,
-  Circle,
-  Tabs,
-  TabList,
-  Tab,
 } from "@chakra-ui/react";
 import * as Yup from "yup";
 import {
@@ -44,6 +39,12 @@ import ProductForm from "./components/ProductForm";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 import { useCartToast } from "../../hooks/useCartToast";
 import CompanyRequiredState from "../components/common/CompanyRequiredState";
+import { dashboardPalette } from "../../layouts/dashboardLayout/dashboardPalette";
+import {
+  MerchantHeroSection,
+  MerchantPageShell,
+  MerchantPanel,
+} from "../components/common/merchantDashboardUI";
 
 
 
@@ -330,171 +331,260 @@ const ProductsPage = observer(() => {
   };
 
   return (
-    <Box minH="100vh" bgGradient="linear(to-br, gray.50, cyan.50)" py={{ base: 4, md: 6 }}>
-      <Container maxW="8xl">
-        {/* Refined Hero Header */}
-        <Box bg="white" borderRadius="2xl" shadow="md" overflow="hidden" mb={6}>
-          <Box bgGradient="linear(to-r, blue.500, cyan.500)" px={{ base: 6, md: 10 }} py={9}>
-            <Flex
-              justify="space-between"
-              align="center"
-              flexDirection={{ base: "column", lg: "row" }}
-              gap={6}
-              textAlign={{ base: "center", lg: "left" }}
-            >
-              <Box>
-                <HStack spacing={3} mb={3} justify={{ base: "center", lg: "flex-start" }}>
-                  <Circle bg="whiteAlpha.300" size="12" p={3}>
-                    <Icon as={FaBoxOpen} boxSize={6} color="white" />
-                  </Circle>
-                  <Badge colorScheme="cyan" px={3} py={1} fontSize="sm" variant="solid">
-                    LIVE INVENTORY
-                  </Badge>
-                </HStack>
-                <Heading size="2xl" color="white" fontWeight="extrabold" mb={1}>
-                  Your Products
-                </Heading>
-                <Text fontSize="lg" color="whiteAlpha.900">
-                  Managing {totalCount} {totalCount === 1 ? "item" : "items"}
-                </Text>
-              </Box>
-              <Button
-                size="lg"
-                px={9}
-                bg="white"
-                color="cyan.600"
-                leftIcon={<FaPlus />}
-                fontWeight="bold"
-                boxShadow="md"
-                _hover={{ transform: "translateY(-2px)", shadow: "lg" }}
-                transition="all 0.2s"
-                onClick={onOpen}
-              >
-                Add Product
-              </Button>
-            </Flex>
-          </Box>
-        </Box>
+    <MerchantPageShell>
+      <MerchantHeroSection
+        icon={FaBoxOpen}
+        primaryBadge="Merchant Inventory"
+        title="Your Products"
+        description={`Managing ${totalCount} ${totalCount === 1 ? "item" : "items"} across your active catalog.`}
+        align={{ base: "start", lg: "center" }}
+        direction={{ base: "column", lg: "row" }}
+        glowProps={{ top: "-80px", right: "-30px", w: "220px", h: "220px" }}
+        rightContent={
+          <Button
+            size="lg"
+            px={9}
+            bg={dashboardPalette.accent}
+            color={dashboardPalette.page}
+            leftIcon={<FaPlus />}
+            fontWeight="700"
+            borderRadius="18px"
+            _hover={{ bg: dashboardPalette.accentStrong, transform: "translateY(-1px)" }}
+            transition="all 0.2s"
+            onClick={onOpen}
+          >
+            Add Product
+          </Button>
+        }
+      />
 
-        {/* Main Content */}
-        <Box bg="white" borderRadius="2xl" shadow="md" p={{ base: 5, md: 8 }}>
+      <MerchantPanel>
           {loading ? (
             <Center py={20}>
               <VStack spacing={5}>
-                <Spinner size="xl" color="cyan.500" thickness="4px" speed="0.7s" />
-                <Text fontSize="lg" color="gray.600" fontWeight="medium">
+                <Spinner size="xl" color={dashboardPalette.accent} thickness="4px" speed="0.7s" />
+                <Text fontSize="lg" color={dashboardPalette.textMuted} fontWeight="medium">
                   Loading products...
                 </Text>
               </VStack>
             </Center>
           ) : (
             <Box>
-              {/* Search & Filter */}
               <Flex
-                direction={{ base: "column", md: "row" }}
+                direction={{ base: "column", xl: "row" }}
                 gap={4}
                 mb={6}
-                align="center"
+                align={{ base: "stretch", xl: "center" }}
               >
-                <InputGroup maxW={{ base: "full", md: "360px" }}>
-                  <InputLeftElement>
-                    <Icon as={FaSearch} color="gray.400" />
+                <InputGroup maxW={{ base: "full", xl: "380px" }}>
+                  <InputLeftElement
+                    pointerEvents="none"
+                    h="100%"
+                    top={0}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Icon as={FaSearch} color={dashboardPalette.textSoft} />
                   </InputLeftElement>
                   <Input
                     placeholder="Search by name, SKU, or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    bg="gray.50"
-                    border="none"
-                    _focus={{ bg: "white", shadow: "outline", ringColor: "cyan.500" }}
+                    bg={dashboardPalette.surfaceAlt}
+                    border="1px solid"
+                    borderColor={dashboardPalette.borderStrong}
+                    color={dashboardPalette.text}
+                    borderRadius="16px"
+                    _placeholder={{ color: dashboardPalette.textSoft }}
+                    _hover={{ borderColor: dashboardPalette.accent }}
+                    _focusVisible={{
+                      borderColor: dashboardPalette.accent,
+                      boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+                    }}
                   />
                 </InputGroup>
 
-                <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)} size="sm">
-                  <TabList>
-                    <Tab>Active</Tab>
-                    <Tab>Trash</Tab>
-                  </TabList>
-                </Tabs>
+                <HStack
+                  spacing={2}
+                  bg={dashboardPalette.surfaceAlt}
+                  border="1px solid"
+                  borderColor={dashboardPalette.border}
+                  borderRadius="18px"
+                  p={1}
+                  alignSelf={{ base: "stretch", xl: "center" }}
+                >
+                  <Button
+                    size="sm"
+                    borderRadius="14px"
+                    bg={!showInactive ? dashboardPalette.accent : "transparent"}
+                    color={!showInactive ? dashboardPalette.page : dashboardPalette.textMuted}
+                    _hover={{ bg: !showInactive ? dashboardPalette.accentStrong : "rgba(255,255,255,0.04)" }}
+                    onClick={() => setShowInactive(false)}
+                  >
+                    Active
+                  </Button>
+                  <Button
+                    size="sm"
+                    borderRadius="14px"
+                    bg={showInactive ? "rgba(239, 107, 107, 0.14)" : "transparent"}
+                    color={showInactive ? dashboardPalette.danger : dashboardPalette.textMuted}
+                    _hover={{ bg: showInactive ? "rgba(239, 107, 107, 0.20)" : "rgba(255,255,255,0.04)" }}
+                    onClick={() => setShowInactive(true)}
+                  >
+                    Trash
+                  </Button>
+                </HStack>
 
                 <Select
-                  maxW={{ base: "full", md: "240px" }}
-                  placeholder="All Categories"
+                  maxW={{ base: "full", xl: "250px" }}
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  bg="gray.50"
-                  border="none"
+                  bg={dashboardPalette.surfaceAlt}
+                  border="1px solid"
+                  borderColor={dashboardPalette.borderStrong}
+                  color={dashboardPalette.text}
+                  borderRadius="16px"
+                  iconColor={dashboardPalette.textSoft}
+                  _hover={{ borderColor: dashboardPalette.accent }}
+                  _focusVisible={{
+                    borderColor: dashboardPalette.accent,
+                    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+                  }}
+                  sx={{
+                    option: {
+                      color: dashboardPalette.page,
+                      backgroundColor: "#ffffff",
+                    },
+                  }}
                 >
+                  <option value="" style={{ color: dashboardPalette.page, backgroundColor: "#ffffff" }}>
+                    All Categories
+                  </option>
                   {categoryStore.categories
                     .filter((cat: any) => !cat.parent)
                     .map((cat: any) => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      <option
+                        key={cat._id}
+                        value={cat._id}
+                        style={{ color: dashboardPalette.page, backgroundColor: "#ffffff" }}
+                      >
+                        {cat.name}
+                      </option>
                     ))}
                 </Select>
 
-                <Badge ml="auto" colorScheme="cyan" variant="subtle" fontSize="sm" px={3} py={1.5}>
+                <Badge
+                  ml={{ xl: "auto" }}
+                  alignSelf={{ base: "flex-start", xl: "center" }}
+                  bg={dashboardPalette.accentSoft}
+                  color={dashboardPalette.accentStrong}
+                  border="1px solid"
+                  borderColor={dashboardPalette.border}
+                  fontSize="sm"
+                  px={3}
+                  py={1.5}
+                  borderRadius="full"
+                >
                   {filteredProducts.length} visible
                 </Badge>
               </Flex>
 
-              <Divider my={5} />
+              <Divider my={5} borderColor={dashboardPalette.border} />
 
               {filteredProducts.length === 0 ? (
-                /* Unified Empty State */
                 <Center py={14}>
-                  <VStack spacing={6} textAlign="center" maxW="md">
-                    <Image
-                      src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/8e427a83004519.5d2ef81a41825.png"
-                      alt="No products found"
-                      borderRadius="lg"
-                      shadow="sm"
-                      maxH="280px"
-                      objectFit="contain"
-                      fallbackSrc="https://via.placeholder.com/600x400?text=Empty+Inventory"
-                    />
+                  <VStack spacing={6} textAlign="center" maxW="lg">
+                    <Circle
+                      size="88px"
+                      bg="rgba(214, 183, 114, 0.10)"
+                      border="1px solid"
+                      borderColor={dashboardPalette.border}
+                    >
+                      <Icon as={FaBoxOpen} boxSize={9} color={dashboardPalette.accentStrong} />
+                    </Circle>
                     <VStack spacing={3}>
-                      <Heading size="lg" color="gray.700">
+                      <Heading size="lg" color={dashboardPalette.text} fontWeight="500">
                         {searchTerm || selectedCategory
                           ? "No products found"
                           : showInactive
                             ? "Trash is empty"
                             : "No products added yet"}
                       </Heading>
-                      <Text fontSize="md" color="gray.500">
+                      <Text fontSize="md" color={dashboardPalette.textMuted}>
                         {searchTerm || selectedCategory
-                          ? "We couldn't find any products matching your search or filters."
+                          ? "No products match the current search or filter set."
                           : showInactive
-                            ? "There are no deleted products."
-                            : "Start building your store by adding your first product."}
+                            ? "There are no deleted products in this view."
+                            : "Start building your catalog by adding the first product to your shop."}
                       </Text>
                     </VStack>
-                    {!searchTerm && !selectedCategory && !showInactive && (
+                    {!searchTerm && !selectedCategory && !showInactive ? (
                       <Button
-                        colorScheme="cyan"
                         size="lg"
                         leftIcon={<FaPlus />}
                         px={8}
+                        borderRadius="18px"
+                        bg={dashboardPalette.accent}
+                        color={dashboardPalette.page}
+                        _hover={{ bg: dashboardPalette.accentStrong }}
                         onClick={onOpen}
                       >
                         Add Your First Product
                       </Button>
-                    )}
+                    ) : null}
                   </VStack>
                 </Center>
               ) : (
                 <>
-                  <Flex justify="space-between" align="center" mb={6}>
-                    <Heading size="lg" color="gray.800" display="flex" alignItems="center" gap={2}>
-                      <Icon as={showInactive ? FaTrash : FaFire} color={showInactive ? "red.500" : "orange.500"} />
+                  <Flex
+                    justify="space-between"
+                    align={{ base: "start", lg: "center" }}
+                    mb={6}
+                    gap={4}
+                    direction={{ base: "column", lg: "row" }}
+                  >
+                    <Heading
+                      size="lg"
+                      color={dashboardPalette.text}
+                      display="flex"
+                      alignItems="center"
+                      gap={2}
+                      fontWeight="500"
+                    >
+                      <Icon
+                        as={showInactive ? FaTrash : FaFire}
+                        color={showInactive ? dashboardPalette.danger : dashboardPalette.warning}
+                      />
                       {showInactive ? "Inactive Products" : "Active Products"}
                     </Heading>
 
-                    <Tabs variant="soft-rounded" colorScheme="cyan" index={showInactive ? 1 : 0} onChange={(index) => setShowInactive(index === 1)}>
-                      <TabList>
-                        <Tab>Active</Tab>
-                        <Tab>Trash</Tab>
-                      </TabList>
-                    </Tabs>
+                    <HStack spacing={2}>
+                      <Button
+                        size="sm"
+                        borderRadius="14px"
+                        variant="outline"
+                        borderColor={!showInactive ? dashboardPalette.accent : dashboardPalette.borderStrong}
+                        color={!showInactive ? dashboardPalette.accentStrong : dashboardPalette.textMuted}
+                        bg={!showInactive ? dashboardPalette.accentSoft : "transparent"}
+                        _hover={{ bg: "rgba(255,255,255,0.04)" }}
+                        onClick={() => setShowInactive(false)}
+                      >
+                        Active
+                      </Button>
+                      <Button
+                        size="sm"
+                        borderRadius="14px"
+                        variant="outline"
+                        borderColor={showInactive ? "rgba(239, 107, 107, 0.32)" : dashboardPalette.borderStrong}
+                        color={showInactive ? dashboardPalette.danger : dashboardPalette.textMuted}
+                        bg={showInactive ? "rgba(239, 107, 107, 0.12)" : "transparent"}
+                        _hover={{ bg: "rgba(255,255,255,0.04)" }}
+                        onClick={() => setShowInactive(true)}
+                      >
+                        Trash
+                      </Button>
+                    </HStack>
                   </Flex>
 
                   <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
@@ -508,36 +598,40 @@ const ProductsPage = observer(() => {
                     ))}
                   </SimpleGrid>
 
-                  {/* Pagination Controls */}
-                  {totalPages > 1 && (
-                    <Flex justify="center" mt={10} gap={4} align="center">
+                  {totalPages > 1 ? (
+                    <Flex justify="center" mt={10} gap={4} align="center" flexWrap="wrap">
                       <Button
                         onClick={() => handlePageChange(currentPage - 1)}
                         isDisabled={currentPage === 1}
-                        colorScheme="cyan"
                         variant="outline"
+                        borderRadius="16px"
+                        borderColor={dashboardPalette.borderStrong}
+                        color={dashboardPalette.textMuted}
+                        _hover={{ bg: "rgba(255,255,255,0.04)", color: dashboardPalette.text }}
                       >
                         Previous
                       </Button>
-                      <Text fontWeight="bold" color="gray.600">
+                      <Text fontWeight="600" color={dashboardPalette.textMuted}>
                         Page {currentPage} of {totalPages}
                       </Text>
                       <Button
                         onClick={() => handlePageChange(currentPage + 1)}
                         isDisabled={currentPage === totalPages}
-                        colorScheme="cyan"
                         variant="outline"
+                        borderRadius="16px"
+                        borderColor={dashboardPalette.borderStrong}
+                        color={dashboardPalette.textMuted}
+                        _hover={{ bg: "rgba(255,255,255,0.04)", color: dashboardPalette.text }}
                       >
                         Next
                       </Button>
                     </Flex>
-                  )}
+                  ) : null}
                 </>
               )}
             </Box>
           )}
-        </Box>
-      </Container>
+      </MerchantPanel>
 
       {/* Modals */}
       <ProductForm
@@ -561,7 +655,7 @@ const ProductsPage = observer(() => {
         onConfirm={confirmDelete}
         data={deleteOpen.data}
       />
-    </Box>
+    </MerchantPageShell>
   );
 });
 

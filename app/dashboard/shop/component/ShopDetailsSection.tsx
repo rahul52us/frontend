@@ -1,31 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
-  VStack,
-  Text,
-  SimpleGrid,
   Center,
-  Flex,
-  Icon,
-  useColorModeValue,
-  Circle,
+  Checkbox,
+  CheckboxGroup,
+  SimpleGrid,
+  Spinner,
+  Text,
+  VStack,
 } from "@chakra-ui/react";
 import {
+  FiDollarSign,
+  FiFileText,
   FiImage,
   FiInfo,
   FiTag,
   FiUploadCloud,
-  FiDollarSign,
-  FiFileText,
 } from "react-icons/fi";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
+import { observer } from "mobx-react-lite";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
+import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import { normalizeGstNumber } from "../../../config/utils/gstValidation";
 import { removeDataByIndex } from "../../../config/utils/utils";
-import { useEffect } from "react";
-import { observer } from "mobx-react-lite";
 import stores from "../../../store/stores";
-import { Checkbox, CheckboxGroup, Spinner } from "@chakra-ui/react";
+import { MerchantSectionCard } from "./merchantTheme";
 
 const CategorySelector = observer(({ values, setFieldValue, errors, showError }: any) => {
   const { categoryStore } = stores;
@@ -36,84 +34,70 @@ const CategorySelector = observer(({ values, setFieldValue, errors, showError }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (selected) => {
-    setFieldValue("categories", selected);
-  };
-
-  if (loading && categories.length === 0) return <Spinner size="sm" />;
+  if (loading && categories.length === 0) {
+    return <Spinner size="sm" color="var(--dashboard-accent)" />;
+  }
 
   return (
-    <Box>
-      <CheckboxGroup colorScheme="blue" value={values.categories || []} onChange={handleChange}>
-        <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
-          {categories.map((cat) => (
-            <Checkbox key={cat._id} value={cat.name}>
-              {cat.name}
+    <Box
+      sx={{
+        ".chakra-checkbox": {
+          px: 3,
+          py: 3,
+          borderRadius: "16px",
+          border: "1px solid",
+          borderColor: "var(--dashboard-border-strong)",
+          bg: "var(--dashboard-checkbox-bg)",
+          transition: "all 0.2s ease",
+        },
+        ".chakra-checkbox:hover": {
+          borderColor: "var(--dashboard-accent)",
+        },
+        ".chakra-checkbox__control": {
+          borderColor: "var(--dashboard-checkbox-border)",
+          bg: "transparent",
+        },
+        ".chakra-checkbox__control[data-checked]": {
+          bg: "var(--dashboard-checkbox-active-bg)",
+          borderColor: "var(--dashboard-accent)",
+          color: "var(--dashboard-accent)",
+        },
+        ".chakra-checkbox__label": {
+          color: "var(--dashboard-text-muted)",
+          fontSize: "sm",
+          fontWeight: 500,
+        },
+      }}
+    >
+      <CheckboxGroup
+        colorScheme="yellow"
+        value={values.categories || []}
+        onChange={(selected) => setFieldValue("categories", selected)}
+      >
+        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
+          {categories.map((category) => (
+            <Checkbox key={category._id} value={category.name}>
+              {category.name}
             </Checkbox>
           ))}
         </SimpleGrid>
       </CheckboxGroup>
-      {showError && errors.categories && (
-        <Text color="red.500" fontSize="xs" mt={1}>{errors.categories}</Text>
-      )}
+      {showError && errors.categories ? (
+        <Text color="var(--dashboard-danger, #ef6b6b)" fontSize="xs" mt={2}>
+          {errors.categories}
+        </Text>
+      ) : null}
     </Box>
   );
 });
 
-// Card layout with header and clean solid colors
-const SectionCard = ({ icon, title, description, children }) => {
-  const headerBg = useColorModeValue("gray.100", "gray.700");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const cardBorder = useColorModeValue("gray.200", "gray.600");
-  const textColor = useColorModeValue("gray.800", "gray.100");
-
-  return (
-    <Box
-      bg={cardBg}
-      borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      overflow="hidden"
-      boxShadow="md"
-    >
-      <Flex
-        bg={headerBg}
-        px={5}
-        py={3}
-        align="center"
-        gap={3}
-        borderBottom="1px solid"
-        borderColor={cardBorder}
-      >
-        <Circle size="36px" bg={useColorModeValue("blue.100", "blue.600")}>
-          <Icon as={icon} color="blue.600" boxSize={5} />
-        </Circle>
-        <Box>
-          <Text fontSize="md" fontWeight="bold" color={textColor}>
-            {title}
-          </Text>
-          {description && (
-            <Text fontSize="xs" color="gray.500">
-              {description}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-      <Box px={{ base: 4, md: 6 }} py={6}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
-
 const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
   return (
     <VStack spacing={8} align="stretch">
-      {/* Logo Upload */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiUploadCloud}
         title="Shop Logo"
-        description="Upload your business logo"
+        description="Your primary brand mark. PNG, JPG, SVG, or WEBP work well here."
       >
         <Center>
           {values?.logo?.file?.length === 0 ? (
@@ -121,12 +105,12 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
               type="file-drag"
               name="logo"
               value={values.logo}
-              isMulti={true}
+              isMulti
               accept="image/*"
-              onChange={(e) =>
+              onChange={(event) =>
                 setFieldValue("logo", {
                   ...values.logo,
-                  file: e.target.files[0],
+                  file: event.target.files[0],
                   isAdd: 1,
                 })
               }
@@ -143,41 +127,41 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
                   isDeleted: 1,
                 })
               }
-              edit={true}
+              edit
             />
           )}
         </Center>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Basic Info */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiInfo}
         title="Basic Information"
-        description="Shop name, tags and categories"
+        description="Name, tags, and categories buyers will use to recognize your shop."
       >
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
           <CustomInput
             label="Shop Name"
             name="name"
             required
             error={errors.name}
             value={values.name}
-            onChange={(e) => setFieldValue("name", e.target.value)}
+            onChange={(event) => setFieldValue("name", event.target.value)}
             showError={showError}
           />
           <CustomInput
             label="Tags"
             name="tags"
-            placeholder="Add Tags"
+            placeholder="Add tags"
             required
             type="tags"
             error={errors.tags}
             value={values.tags}
-            onChange={(e) => setFieldValue("tags", e)}
+            onChange={(nextTags) => setFieldValue("tags", nextTags)}
             showError={showError}
           />
         </SimpleGrid>
-        <Box mt={4}>
+
+        <Box mt={5}>
           <CustomInput
             label="Company Code (Initials)"
             name="companyCode"
@@ -185,12 +169,20 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             required
             error={errors.companyCode}
             value={values.companyCode}
-            onChange={(e) => setFieldValue("companyCode", e.target.value.toUpperCase())}
+            onChange={(event) => setFieldValue("companyCode", event.target.value.toUpperCase())}
             showError={showError}
           />
         </Box>
-        <Box mt={4}>
-          <Text mb={2} fontWeight="medium" fontSize="sm">
+
+        <Box mt={5}>
+          <Text
+            mb={3}
+            color="var(--dashboard-text-muted)"
+            fontSize="xs"
+            fontWeight="600"
+            textTransform="uppercase"
+            letterSpacing="0.12em"
+          >
             Categories
           </Text>
           <CategorySelector
@@ -200,13 +192,12 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             showError={showError}
           />
         </Box>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Cover Image */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiImage}
         title="Cover Image"
-        description="Image shown at the top of your shop page"
+        description="A wide hero image shown at the top of your shop profile."
       >
         <Center>
           {values?.coverImage?.file?.length === 0 ? (
@@ -214,12 +205,12 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
               type="file-drag"
               name="coverImage"
               value={values.coverImage}
-              isMulti={true}
+              isMulti
               accept="image/*"
-              onChange={(e) =>
+              onChange={(event) =>
                 setFieldValue("coverImage", {
                   ...values.coverImage,
-                  file: e.target.files[0],
+                  file: event.target.files[0],
                   isAdd: 1,
                 })
               }
@@ -236,19 +227,18 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
                   isDeleted: 1,
                 })
               }
-              edit={true}
+              edit
             />
           )}
         </Center>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Description */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiTag}
         title="Shop Description"
-        description="Describe your business in detail"
+        description="Describe what you sell, how you operate, and what makes your shop distinct."
       >
-        <VStack spacing={4}>
+        <VStack spacing={5}>
           <CustomInput
             label="Description"
             name="description"
@@ -256,7 +246,7 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             required
             error={errors.description}
             value={values.description}
-            onChange={(e) => setFieldValue("description", e.target.value)}
+            onChange={(event) => setFieldValue("description", event.target.value)}
             showError={showError}
           />
           <CustomInput
@@ -267,87 +257,87 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             placeholder="Write about your shop..."
             error={errors.about}
             value={values.about}
-            onChange={(e) => setFieldValue("about", e.target.value)}
+            onChange={(event) => setFieldValue("about", event.target.value)}
             showError={showError}
           />
         </VStack>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Bank Details */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiDollarSign}
         title="Bank Details"
-        description="For financial transactions"
+        description="Business payout information for payments and settlement."
       >
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
           <CustomInput
             label="Account Holder Name"
             name="bankDetails.accountHolderName"
             value={values.bankDetails?.accountHolderName}
-            onChange={(e) => setFieldValue("bankDetails.accountHolderName", e.target.value)}
+            onChange={(event) => setFieldValue("bankDetails.accountHolderName", event.target.value)}
             showError={showError}
           />
           <CustomInput
             label="Account Number"
             name="bankDetails.accountNumber"
             value={values.bankDetails?.accountNumber}
-            onChange={(e) => setFieldValue("bankDetails.accountNumber", e.target.value)}
+            onChange={(event) => setFieldValue("bankDetails.accountNumber", event.target.value)}
             showError={showError}
           />
           <CustomInput
             label="Bank Name"
             name="bankDetails.bankName"
             value={values.bankDetails?.bankName}
-            onChange={(e) => setFieldValue("bankDetails.bankName", e.target.value)}
+            onChange={(event) => setFieldValue("bankDetails.bankName", event.target.value)}
             showError={showError}
           />
           <CustomInput
             label="IFSC Code"
             name="bankDetails.ifscCode"
             value={values.bankDetails?.ifscCode}
-            onChange={(e) => setFieldValue("bankDetails.ifscCode", e.target.value)}
+            onChange={(event) => setFieldValue("bankDetails.ifscCode", event.target.value)}
             showError={showError}
           />
           <CustomInput
             label="GST Number"
             name="gstNumber"
             value={values.gstNumber}
-            onChange={(e) => setFieldValue("gstNumber", normalizeGstNumber(e.target.value))}
+            onChange={(event) => setFieldValue("gstNumber", normalizeGstNumber(event.target.value))}
             showError={showError}
           />
         </SimpleGrid>
-      </SectionCard>
+      </MerchantSectionCard>
 
-      {/* Policies */}
-      <SectionCard
+      <MerchantSectionCard
         icon={FiFileText}
         title="Business Policies"
-        description="Return policy and payment methods"
+        description="Return terms and accepted payment methods for buyers."
       >
-        <VStack spacing={4}>
+        <VStack spacing={5}>
           <CustomInput
             label="Return Policy"
             name="returnPolicy"
             type="textarea"
             rows={4}
             value={values.returnPolicy}
-            onChange={(e) => setFieldValue("returnPolicy", e.target.value)}
+            onChange={(event) => setFieldValue("returnPolicy", event.target.value)}
             showError={showError}
           />
-          {/* Simple payment methods input for now, could be tags input later */}
           <CustomInput
             label="Payment Methods (Comma separated)"
             name="paymentMethods"
             placeholder="e.g. UPI, Credit Card, COD"
-            value={values.paymentMethods ? values.paymentMethods.join(', ') : ''}
-            onChange={(e) => {
-              const methods = e.target.value.split(',').map((m) => m.trim());
+            value={values.paymentMethods ? values.paymentMethods.join(", ") : ""}
+            onChange={(event) => {
+              const methods = event.target.value
+                .split(",")
+                .map((method) => method.trim())
+                .filter(Boolean);
               setFieldValue("paymentMethods", methods);
             }}
             showError={showError}
           />
         </VStack>
-      </SectionCard>
+      </MerchantSectionCard>
     </VStack>
   );
 };

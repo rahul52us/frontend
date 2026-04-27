@@ -17,6 +17,7 @@ import {
   Box,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 
 interface CustomDateRangeProps {
   startDate: any;
@@ -25,6 +26,7 @@ interface CustomDateRangeProps {
   onEndDateChange: any;
   isMobile?: boolean;
   months?: number;
+  variant?: "default" | "merchant";
 }
 
 export default function CustomDateRange({
@@ -34,12 +36,39 @@ export default function CustomDateRange({
   onEndDateChange,
   isMobile = false,
   months = 2,
+  variant = "default",
 }: CustomDateRangeProps): any {
   const LargerThanMd = useBreakpointValue({ md: true });
   const formattedStartDate = startDate ? format(startDate, "d MMM yyyy") : "";
   const formattedEndDate = endDate ? format(endDate, "d MMM yyyy") : "";
+  const isMerchant = variant === "merchant";
 
   const textColor = useColorModeValue("gray.700", "gray.300");
+  const displayTextColor = isMerchant ? dashboardPalette.text : textColor;
+  const secondaryTextColor = isMerchant ? dashboardPalette.textSoft : "gray.500";
+  const calendarAccent = isMerchant ? dashboardPalette.accent : "#38B2AC";
+  const inputStyles = isMerchant
+    ? {
+        bg: dashboardPalette.surfaceAlt,
+        color: dashboardPalette.text,
+        borderColor: dashboardPalette.borderStrong,
+        borderRadius: "16px",
+        _placeholder: { color: dashboardPalette.textSoft },
+        _hover: { borderColor: dashboardPalette.accent },
+        _focusVisible: {
+          borderColor: dashboardPalette.accent,
+          boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+        },
+      }
+    : {};
+  const popoverStyles = isMerchant
+    ? {
+        bg: dashboardPalette.surface,
+        borderColor: dashboardPalette.border,
+        color: dashboardPalette.text,
+        boxShadow: "0 22px 44px rgba(0, 0, 0, 0.32)",
+      }
+    : {};
 
   return isMobile || !LargerThanMd ? (
     <Popover placement="auto-end">
@@ -60,6 +89,7 @@ export default function CustomDateRange({
             // width={{ base: "14rem", lg: "14rem" }}
             textAlign="center"
             readOnly
+            {...inputStyles}
           />
           <Box
             position="absolute"
@@ -71,31 +101,31 @@ export default function CustomDateRange({
             alignItems="center"
           >
             {startDate && (
-              <Text as="span" fontWeight="600" color={textColor}>
+              <Text as="span" fontWeight="600" color={displayTextColor}>
                 {formattedStartDate}
               </Text>
             )}
             {startDate && endDate && (
-              <Text as="span" fontWeight="500" color="gray.500" mx={1}>
+              <Text as="span" fontWeight="500" color={secondaryTextColor} mx={1}>
                 to
               </Text>
             )}
             {endDate && (
-              <Text as="span" fontWeight="600" color={textColor} mr={1}>
+              <Text as="span" fontWeight="600" color={displayTextColor} mr={1}>
                 {formattedEndDate}
               </Text>
             )}
             {!startDate && !endDate && (
-              <Text as="span" fontWeight="500" color="gray.500" mr={1}>
+              <Text as="span" fontWeight="500" color={secondaryTextColor} mr={1}>
                 Select Date Range
               </Text>
             )}
-            <IoMdCalendar fontSize={"20px"} color={"gray"} />
+            <IoMdCalendar fontSize={"20px"} color={isMerchant ? dashboardPalette.textSoft : "gray"} />
           </Box>
         </Box>
       </PopoverTrigger>
-      <PopoverContent width="auto">
-        <PopoverBody>
+      <PopoverContent width="auto" {...popoverStyles}>
+        <PopoverBody bg={isMerchant ? dashboardPalette.surface : undefined}>
           <DateRange
             onChange={(item: any) => {
               onStartDateChange(item.selection.startDate);
@@ -114,7 +144,7 @@ export default function CustomDateRange({
             months={1}
             direction="horizontal"
             className="calendarElementMobile"
-            rangeColors={["#38B2AC"]}
+            rangeColors={[calendarAccent]}
           />
         </PopoverBody>
       </PopoverContent>
@@ -132,10 +162,11 @@ export default function CustomDateRange({
           width={{ lg: "18rem" }}
           textAlign="center"
           readOnly
+          {...inputStyles}
         />
       </PopoverTrigger>
-      <PopoverContent width="auto">
-        <PopoverBody>
+      <PopoverContent width="auto" {...popoverStyles}>
+        <PopoverBody bg={isMerchant ? dashboardPalette.surface : undefined}>
           <DateRangePicker
             onChange={(item: any) => {
               onStartDateChange(item.selection.startDate);
@@ -154,7 +185,7 @@ export default function CustomDateRange({
             months={months}
             direction="horizontal"
             className="calendarElement"
-            rangeColors={["#38B2AC"]}
+            rangeColors={[calendarAccent]}
           />
         </PopoverBody>
       </PopoverContent>
