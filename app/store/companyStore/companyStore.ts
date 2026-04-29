@@ -127,6 +127,18 @@ class CompanyStores {
     }
   };
 
+  getSuperAdminDashboardSummary = async () => {
+    this.isLoading = true;
+    try {
+      const response = await axios.get("/company/super-admin/dashboard-summary");
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
   deleteShop = async (id: string) => {
     this.isLoading = true;
     try {
