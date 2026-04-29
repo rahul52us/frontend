@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Circle, Flex, Icon, Text } from "@chakra-ui/react";
-import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { dashboardFormPalette, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 
 export const merchantFormSx = {
   "--dashboard-shell-bg": dashboardPalette.shell,
@@ -17,25 +17,25 @@ export const merchantFormSx = {
   "--dashboard-text-soft": dashboardPalette.textSoft,
   "--dashboard-danger": dashboardPalette.danger,
   "--dashboard-success": dashboardPalette.success,
-  "--dashboard-input-bg": "#33312d",
-  "--dashboard-input-border": "#5a5448",
+  "--dashboard-input-bg": dashboardFormPalette.inputBg,
+  "--dashboard-input-border": dashboardFormPalette.inputBorder,
   "--dashboard-input-text": dashboardPalette.text,
-  "--dashboard-input-placeholder": "#8f8899",
-  "--dashboard-tag-bg": "rgba(214, 183, 114, 0.14)",
+  "--dashboard-input-placeholder": dashboardFormPalette.inputPlaceholder,
+  "--dashboard-tag-bg": dashboardFormPalette.tagBg,
   "--dashboard-tag-text": dashboardPalette.accentStrong,
-  "--dashboard-tag-button-bg": dashboardPalette.accentSoft,
+  "--dashboard-tag-button-bg": dashboardFormPalette.tagButtonBg,
   "--dashboard-tag-button-text": dashboardPalette.accentStrong,
-  "--dashboard-file-drop-bg": "#111018",
-  "--dashboard-file-drop-border": "#2e2940",
+  "--dashboard-file-drop-bg": dashboardFormPalette.fileDropBg,
+  "--dashboard-file-drop-border": dashboardFormPalette.fileDropBorder,
   "--dashboard-file-drop-text": dashboardPalette.textMuted,
   "--dashboard-file-drop-button-bg": "transparent",
   "--dashboard-file-drop-button-text": dashboardPalette.accentStrong,
-  "--dashboard-file-row-bg": "#181620",
-  "--dashboard-file-row-border": "#2b2538",
+  "--dashboard-file-row-bg": dashboardFormPalette.fileRowBg,
+  "--dashboard-file-row-border": dashboardFormPalette.fileRowBorder,
   "--dashboard-file-row-text": dashboardPalette.text,
-  "--dashboard-checkbox-bg": "#100f16",
-  "--dashboard-checkbox-border": "#49415e",
-  "--dashboard-checkbox-active-bg": "rgba(214, 183, 114, 0.16)",
+  "--dashboard-checkbox-bg": dashboardFormPalette.checkboxBg,
+  "--dashboard-checkbox-border": dashboardFormPalette.checkboxBorder,
+  "--dashboard-checkbox-active-bg": dashboardFormPalette.checkboxActiveBg,
   "& .chakra-form__label": {
     color: "var(--dashboard-text-muted)",
     fontSize: "0.72rem",
