@@ -26,6 +26,7 @@ import {
   DrawerOverlay,
   useBreakpointValue,
   useColorMode,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { getSidebarDataByRole, sidebarFooterData } from "./utils/SidebarItems";
@@ -54,7 +55,10 @@ interface SidebarProps {
 }
 
 const renderIcon = (depth: number, icon: any, colorMode: string) => {
-  const iconColor = depth === 0 ? dashboardPalette.accent : dashboardPalette.textMuted;
+  const isLight = colorMode === "light";
+  const accentColor = isLight ? "var(--chakra-colors-blue-600)" : dashboardPalette.accent;
+  const mutedColor = isLight ? "var(--chakra-colors-gray-400)" : dashboardPalette.textMuted;
+  const iconColor = depth === 0 ? accentColor : mutedColor;
 
   if (depth === 1) {
     return (
@@ -120,6 +124,16 @@ const SidebarPopover = observer(({
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { colorMode } = useColorMode();
+  
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cHoverBg = useColorModeValue("gray.100", "rgba(255,255,255,0.03)");
 
   const handleMouseEnter = () => {
     if (item.children && item.children.length > 0 && isCollapsed) {
@@ -173,14 +187,14 @@ const SidebarPopover = observer(({
             width={"100%"}
             cursor="pointer"
             py={depth === 0 ? 3 : 1}
-            bg={itemIsActive ? dashboardPalette.accentSoft : "transparent"}
+            bg={itemIsActive ? cAccentSoft : "transparent"}
             borderLeft={itemIsActive ? "2px solid" : "2px solid transparent"}
-            borderLeftColor={itemIsActive ? dashboardPalette.accent : "transparent"}
-            color={itemIsActive ? dashboardPalette.accentStrong : dashboardPalette.textMuted}
+            borderLeftColor={itemIsActive ? cAccent : "transparent"}
+            color={itemIsActive ? cAccentStrong : cTextMuted}
             fontWeight={itemIsActive ? "600" : "inherit"}
             _hover={{
-              bg: "rgba(255,255,255,0.03)",
-              color: dashboardPalette.text,
+              bg: cHoverBg,
+              color: cText,
             }}
           >
             {renderIcon(depth, item.icon, colorMode)}
@@ -192,7 +206,7 @@ const SidebarPopover = observer(({
                 {item.children && (
                   <ChevronRightIcon
                     ml={2}
-                    color={dashboardPalette.textMuted}
+                    color={cTextMuted}
                   />
                 )}
               </Flex>
@@ -206,13 +220,13 @@ const SidebarPopover = observer(({
             zIndex={15}
             w={"200px"}
             onMouseEnter={handleMouseEnter}
-            bg={dashboardPalette.surfaceAlt}
+            bg={cSurfaceAlt}
             border="1px solid"
-            borderColor={dashboardPalette.border}
+            borderColor={cBorder}
             boxShadow="0 18px 38px rgba(0, 0, 0, 0.35)"
           >
             <PopoverArrow />
-            <PopoverHeader bg={dashboardPalette.surfaceSoft} borderBottom="1px solid" borderBottomColor={dashboardPalette.border}>
+            <PopoverHeader bg={cSurfaceSoft} borderBottom="1px solid" borderBottomColor={cBorder}>
               <Flex
                 align="center"
                 justify="space-between"
@@ -223,7 +237,7 @@ const SidebarPopover = observer(({
               >
                 <Flex align="center" py={0}>
                   <Text
-                    color={dashboardPalette.accentStrong}
+                    color={cAccentStrong}
                     fontSize="sm"
                     fontWeight={600}
                     ml={depth === 0 ? 5 : 2}
@@ -233,7 +247,7 @@ const SidebarPopover = observer(({
                 </Flex>
                 {item.children && (
                   <ChevronDownIcon
-                    color={dashboardPalette.accentStrong}
+                    color={cAccentStrong}
                     fontSize="19px"
                     fontWeight={600}
                   />
@@ -278,10 +292,18 @@ const SidebarAccordion = observer(({
   expandedPath: number[];
 }) => {
   const { colorMode } = useColorMode();
-  const activeBg = dashboardPalette.accentSoft;
-  const hoverBg = "rgba(255,255,255,0.03)";
-  const hoverColor = dashboardPalette.text;
-  const primaryColor = dashboardPalette.accentStrong;
+  
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cHoverBg = useColorModeValue("gray.100", "rgba(255,255,255,0.03)");
+
+  const activeBg = cAccentSoft;
+  const hoverBg = cHoverBg;
+  const hoverColor = cText;
+  const primaryColor = cAccentStrong;
 
   const expandedIndex =
     expandedPath.length > depth ? expandedPath[depth] : null;
@@ -317,7 +339,7 @@ const SidebarAccordion = observer(({
                   color={itemIsActive ? primaryColor : "inherit"}
                   fontWeight={itemIsActive ? "600" : "inherit"}
                   borderLeft={itemIsActive ? "2px solid" : "2px solid transparent"}
-                  borderLeftColor={itemIsActive ? dashboardPalette.accent : "transparent"}
+                  borderLeftColor={itemIsActive ? cAccent : "transparent"}
                   _hover={{
                     bg: hoverBg,
                     color: hoverColor,
@@ -351,7 +373,7 @@ const SidebarAccordion = observer(({
                       {renderIcon(depth, item.icon, colorMode)}
                       <Text
                         fontSize="sm"
-                        color={itemIsActive ? dashboardPalette.text : dashboardPalette.textMuted}
+                        color={itemIsActive ? cText : cTextMuted}
                         ml={depth === 0 ? 5 : 2}
                       >
                         {item.name}
@@ -359,7 +381,7 @@ const SidebarAccordion = observer(({
                     </Flex>
                     {item.children && (
                       <AccordionIcon
-                        color={dashboardPalette.textMuted}
+                        color={cTextMuted}
                       />
                     )}
                   </Flex>
@@ -408,6 +430,17 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
     return 1;
   });
   const [isHovered, setIsHovered] = useState(false);
+
+  const cShell = useColorModeValue("white", dashboardPalette.shell);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const footerGradient = useColorModeValue(
+    `linear-gradient(180deg, rgba(255,255,255, 0) 0%, white 28%)`,
+    `linear-gradient(180deg, rgba(13, 11, 18, 0) 0%, ${dashboardPalette.shell} 28%)`
+  );
 
   useEffect(() => {
     const rawRoles = Array.isArray(user?.role)
@@ -462,13 +495,13 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
         onClose={() => setOpenMobileSideDrawer(false)} // Changed to false directly
       >
         <DrawerOverlay />
-        <DrawerContent bg={dashboardPalette.shell} color={dashboardPalette.text} borderLeft="1px solid" borderLeftColor={dashboardPalette.border}>
+        <DrawerContent bg={cShell} color={cText} borderLeft="1px solid" borderLeftColor={cBorder}>
           <DrawerCloseButton
             variant="ghost"
             fontSize="xl"
-            color={dashboardPalette.text}
-            _hover={{ color: dashboardPalette.accentStrong, bg: dashboardPalette.surfaceSoft }}
-            _active={{ bg: dashboardPalette.surfaceAlt }}
+            color={cText}
+            _hover={{ color: cAccentStrong, bg: cSurfaceSoft }}
+            _active={{ bg: cSurfaceAlt }}
             mt={2}
             _focus={{ boxShadow: "none" }}
           />
@@ -495,21 +528,21 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
           width={effectiveCollapsed ? mediumSidebarWidth : sidebarWidth}
           minH={"100vh"}
           transition="width 0.3s"
-          color={dashboardPalette.text}
+          color={cText}
           zIndex={50000}
-          bg={dashboardPalette.shell}
+          bg={cShell}
           borderRight="1px"
           boxShadow="0 18px 40px rgba(0, 0, 0, 0.34)"
-          borderRightColor={dashboardPalette.border}
+          borderRightColor={cBorder}
           className="customScrollBar"
         >
           <Box
             position="sticky"
             top={0}
             zIndex={11}
-            bg={dashboardPalette.shell}
+            bg={cShell}
             borderBottom={"1px solid"}
-            borderBottomColor={dashboardPalette.border}
+            borderBottomColor={cBorder}
             boxShadow="0 10px 18px -16px rgba(0, 0, 0, 0.5)"
           >
             <SidebarLogo />
@@ -554,7 +587,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
             py={4}
             zIndex={11}
             overflowX={"hidden"}
-            bg={`linear-gradient(180deg, rgba(13, 11, 18, 0) 0%, ${dashboardPalette.shell} 28%)`}
+            bg={footerGradient}
           >
             {effectiveCollapsed ? (
               <VStack align="start" spacing={3}>

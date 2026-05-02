@@ -1,205 +1,132 @@
-"use client"; // Add this for client-side component in Next.js
-
-import { useState } from "react";
+import { BellIcon, CheckIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import {
+  Avatar,
+  Badge,
   Box,
   Flex,
+  Icon,
   IconButton,
-  Avatar,
-  Text,
   Menu,
   MenuButton,
-  MenuList,
   MenuItem,
-  Badge,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanels,
-  TabIndicator,
-  TabPanel,
-  Image,
+  MenuList,
   Portal,
+  Spinner,
+  Tab,
+  TabIndicator,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+  useColorModeValue
 } from "@chakra-ui/react";
-import { BellIcon, CheckIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import { observer } from "mobx-react-lite";
+import { useState } from "react";
+// import stores from "../../../../../store/stores";
+// import { dashboardPalette } from "../../../../../layouts/dashboardLayout/dashboardPalette";
+import { formatDistanceToNow } from "date-fns";
+import stores from "../../../../../../store/stores";
+import { dashboardPalette } from "../../../../dashboardPalette";
 
-// Define the Notification interface
-interface Notification {
-  id: number;
-  userName: string;
-  userAvatar: string;
-  action: string;
-  target: string;
-  time: string;
-  designation: string;
-  read: boolean;
-  type: string;
-}
-
-// Define props interface if needed in the future
-
-const notifications: Notification[] = [
-  {
-    id: 1,
-    userName: "Sara Salah",
-    userAvatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    action: "raised issue on the",
-    target: "Purchase Order No:PR-0003",
-    time: "2m",
-    designation: "Software Engineer",
-    read: false,
-    type: "inbox",
-  },
-  {
-    id: 3,
-    userName: "Jane Doe",
-    userAvatar:
-      "https://images.unsplash.com/photo-1450297350677-623de575f31c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    action: "Liked your reply on",
-    target: "Test with TDD",
-    time: "1h",
-    designation: "QA Engineer",
-    read: false,
-    type: "inbox",
-  },
-  {
-    id: 4,
-    userName: "Abigail Bennett",
-    userAvatar:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=398&q=80",
-    action: "placed new Purchase Order",
-    target: "",
-    time: "3h",
-    designation: "Designer",
-    read: true,
-    type: "team",
-  },
-  {
-    id: 6,
-    userName: "Emily Johnson",
-    userAvatar:
-      "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80",
-    action: "placed new Purchase Order",
-    target: "",
-    time: "1h",
-    designation: "Product Manager",
-    read: true,
-    type: "inbox",
-  },
-  {
-    id: 7,
-    userName: "Jessica Williams",
-    userAvatar:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=398&q=80",
-    action: "placed new Purchase Order",
-    target: "",
-    time: "4h",
-    designation: "Designer",
-    read: true,
-    type: "inbox",
-  },
-  {
-    id: 8,
-    userName: "David Jones",
-    userAvatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    action: "raised issue on the",
-    target: "Purchase Order No:PR-0005",
-    time: "10m",
-    designation: "Software Engineer",
-    read: false,
-    type: "inbox",
-  },
-  {
-    id: 9,
-    userName: "Patricia Miller",
-    userAvatar:
-      "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80",
-    action: "placed new Purchase Order",
-    target: "",
-    time: "5h",
-    designation: "Product Manager",
-    read: true,
-    type: "inbox",
-  },
-  {
-    id: 10,
-    userName: "Anna Davis",
-    userAvatar:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=398&q=80",
-    action: "placed new Purchase Order",
-    target: "",
-    time: "7h",
-    designation: "Designer",
-    read: true,
-    type: "team",
-  },
-];
-
-const NotificationComponent = () => {
+const HeaderNotification = observer(() => {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<string>("All");
 
-  const filterNotifications = (
-    notifications: Notification[],
-    type: string
-  ): Notification[] => {
-    if (selectedItem === "Unread") {
-      return notifications.filter(
-        (notification) => !notification.read && notification.type === type
-      );
-    } else if (selectedItem === "Read") {
-      return notifications.filter(
-        (notification) => notification.read && notification.type === type
-      );
-    } else {
-      return notifications.filter((notification) => notification.type === type);
-    }
+  const {
+    notificationStore: {
+      items,
+      unreadCount,
+      loading,
+      fetchList,
+      fetchUnreadCount,
+      markRead,
+      markAllRead,
+    },
+  } = stores;
+
+  // Theme-aware tokens
+  const cShell = useColorModeValue("white", dashboardPalette.shell);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cAccentGlow = useColorModeValue("rgba(37, 99, 235, 0.1)", dashboardPalette.accentGlow);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+
+  const handleOpen = async () => {
+    setDropdownOpen(true);
+    await Promise.all([
+      fetchUnreadCount(),
+      fetchList({
+        status: selectedItem === "Unread" ? "unread" : "all",
+        page: 1,
+      }),
+    ]);
   };
 
-  const filteredInboxNotifications = filterNotifications(notifications, "inbox");
-  const filteredTeamNotifications = filterNotifications(notifications, "team");
-
-  const inboxCount = filteredInboxNotifications.length;
-  const teamCount = filteredTeamNotifications.length;
-
-  const handleModalClose = () => {
-    setDropdownOpen(false);
-    setSelectedItem("All");
+  const setFilter = async (filter: string) => {
+    setSelectedItem(filter);
+    await fetchList({
+      status: filter === "Unread" ? "unread" : "all",
+      page: 1,
+    });
   };
 
-  const renderNotificationItem = (notification: Notification, index: number) => (
+  const handleMarkRead = async (id: string) => {
+    await markRead(id);
+  };
+
+  const renderTime = (value?: string) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return formatDistanceToNow(date, { addSuffix: true });
+  };
+
+  const renderNotificationItem = (item: any, index: number) => (
     <MenuItem
-      key={index}
+      key={item._id}
       display="flex"
       alignItems="center"
-      py={3}
-      px={{ base: 4, md: 5 }}
-      borderBottom="1px solid"
-      borderColor="gray.200"
-      zIndex={999999}
+      py={4}
+      px={5}
+      bg="transparent"
+      _hover={{ bg: cSurfaceSoft }}
+      transition="all 0.2s"
+      onClick={() => handleMarkRead(item._id)}
     >
-      <Avatar src={notification.userAvatar} size="md" mr={3} />
-      <Box>
-        <Text fontSize="sm">
-          <Text as="span" fontWeight="bold" color="gray.700">
-            {notification.userName}
+      <Box position="relative">
+        <Avatar size="md" mr={4} border="2px solid" borderColor={cBorder} name={item.title} />
+        {!item.isRead && (
+          <Box 
+            position="absolute" 
+            top={0} 
+            right={3} 
+            boxSize="10px" 
+            bg={cAccent} 
+            borderRadius="full" 
+            border="2px solid" 
+            borderColor={cSurface} 
+          />
+        )}
+      </Box>
+      <Box flex={1}>
+        <Text fontSize="sm" color={cText} lineHeight="1.4">
+          <Text as="span" fontWeight="800" color={cAccent}>
+            {item.title}
           </Text>{" "}
-          {notification.action}{" "}
-          {notification.target && (
-            <Text as="span" fontWeight="bold" color="gray.700">
-              {notification.target}
-            </Text>
-          )}
-          .
+          <Text as="span" fontWeight="500">{item.message}</Text>
         </Text>
-        <Text fontSize="sm" color="gray.500">
-          {notification.time} {"  "} •
-          <Text as="span" ml={2}>
-            {notification.designation}
+        <Flex align="center" mt={1} gap={2}>
+          <Text fontSize="11px" fontWeight="600" color={cTextMuted}>
+            {renderTime(item.createdAt)}
           </Text>
-        </Text>
+        </Flex>
       </Box>
     </MenuItem>
   );
@@ -209,144 +136,170 @@ const NotificationComponent = () => {
       position="relative"
       justifyContent="center"
       alignItems="center"
-      mr={1}
-      zIndex={9999999999}
+      mr={2}
+      zIndex={999}
     >
-      <Menu isOpen={dropdownOpen} onClose={handleModalClose}>
+      <Menu isOpen={dropdownOpen} onClose={() => setDropdownOpen(false)} placement="bottom-end">
         <MenuButton
           as={IconButton}
           icon={<BellIcon />}
           isRound={true}
-          position="relative"
-          bg="transparent"
+          bg={cSurfaceAlt}
           variant="ghost"
-          fontSize="2xl"
-          color="white"
-          _hover={{ color: "blue.500", bg: "gray.700" }}
-          _active={{ bg: "gray.800" }}
-          aria-label="chat-message-icons"
-          _focus={{ boxShadow: "outline" }}
-          onClick={() => setDropdownOpen(!dropdownOpen)}
+          fontSize="xl"
+          color={cTextMuted}
+          _hover={{ 
+            color: cAccent, 
+            bg: cSurfaceSoft,
+            transform: "rotate(15deg)"
+          }}
+          _active={{ bg: cSurfaceSoft }}
+          aria-label="notifications"
+          onClick={handleOpen}
+          transition="all 0.2s"
+          border="1px solid"
+          borderColor={cBorder}
         />
-        <Badge
-          colorScheme="red"
-          borderRadius="full"
-          position="absolute"
-          top="-1px"
-          right="-1px"
-          px={1.5}
-        >
-          {notifications.length}
-        </Badge>
+        {unreadCount > 0 && (
+          <Badge
+            bg={cDanger}
+            color="white"
+            borderRadius="full"
+            position="absolute"
+            top="-2px"
+            right="-2px"
+            boxSize="18px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            fontSize="10px"
+            fontWeight="800"
+            border="2px solid"
+            borderColor={cShell}
+          >
+            {unreadCount}
+          </Badge>
+        )}
         <Portal>
           <MenuList
             py={0}
-            borderRadius="10px"
-            mx={1}
-            width={{ base: "22rem", md: "24rem" }}
-            zIndex={99999999}
+            borderRadius="24px"
+            width={{ base: "320px", md: "400px" }}
+            bg={cSurface}
+            border="1px solid"
+            borderColor={cBorder}
+            boxShadow={useColorModeValue(
+              "0 12px 40px rgba(0,0,0,0.12)",
+              "0 24px 60px rgba(0,0,0,0.45)"
+            )}
+            overflow="hidden"
+            zIndex={1000}
           >
             <Flex
-              p={2}
-              gap="4"
+              p={5}
               align="center"
               justify="space-between"
+              bg={cSurfaceAlt}
               borderBottom="1px solid"
-              borderColor="gray.200"
+              borderColor={cBorder}
             >
-              <Text fontSize="20px" fontWeight="600" px={2}>
+              <Text fontSize="lg" fontWeight="800" color={cText}>
                 Notifications
               </Text>
               <Menu placement="bottom-end">
-                <MenuButton>
-                  <Text fontSize="16px">
-                    {selectedItem} <ChevronDownIcon />{" "}
-                  </Text>
+                <MenuButton 
+                  as={Text} 
+                  fontSize="xs" 
+                  fontWeight="700" 
+                  color={cAccent} 
+                  cursor="pointer"
+                  _hover={{ opacity: 0.8 }}
+                >
+                  {selectedItem} <ChevronDownIcon />
                 </MenuButton>
-                <MenuList minW="8rem" fontSize="sm">
-                  <MenuItem
-                    justifyContent="space-between"
-                    onClick={() => setSelectedItem("All")}
-                    gap={6}
-                  >
-                    All {selectedItem === "All" && <CheckIcon />}
-                  </MenuItem>
-                  <MenuItem
-                    justifyContent="space-between"
-                    onClick={() => setSelectedItem("Unread")}
-                    gap={6}
-                  >
-                    Unread {selectedItem === "Unread" && <CheckIcon />}
-                  </MenuItem>
-                  <MenuItem
-                    justifyContent="space-between"
-                    onClick={() => setSelectedItem("Read")}
-                    gap={6}
-                  >
-                    Read {selectedItem === "Read" && <CheckIcon />}
-                  </MenuItem>
+                <MenuList 
+                  minW="120px" 
+                  borderRadius="16px" 
+                  p={1} 
+                  bg={cSurface}
+                  borderColor={cBorder}
+                  boxShadow="lg"
+                >
+                  {["All", "Unread", "Read"].map((item) => (
+                    <MenuItem
+                      key={item}
+                      fontSize="xs"
+                      fontWeight="700"
+                      borderRadius="10px"
+                      onClick={() => setFilter(item)}
+                      _hover={{ bg: cSurfaceSoft }}
+                      display="flex"
+                      justifyContent="space-between"
+                    >
+                      {item} {selectedItem === item && <CheckIcon color={cAccent} />}
+                    </MenuItem>
+                  ))}
                 </MenuList>
               </Menu>
             </Flex>
-            <Tabs position="relative" variant="unstyled" py={3}>
-              <TabList px={2}>
-                <Tab gap={2}>
-                  <Text>Inbox</Text>
-                  <Text px={1.5} bg="teal.100" borderRadius="8px">
-                    {inboxCount}
-                  </Text>
-                </Tab>
-                <Tab gap={2}>
-                  <Text>Team</Text>
-                  <Text px={1.5} bg="teal.100" borderRadius="5px">
-                    {teamCount}
-                  </Text>
+            
+            <Tabs position="relative" variant="unstyled">
+              <TabList px={4} pt={3} borderBottom="1px solid" borderColor={cBorder}>
+                <Tab 
+                  fontSize="xs" 
+                  fontWeight="800" 
+                  color={cTextMuted} 
+                  _selected={{ color: cAccent }}
+                  pb={3}
+                  gap={2}
+                >
+                  Activity
                 </Tab>
               </TabList>
-              <TabIndicator height="4px" bg="teal.500" borderTopRadius="10px" />
-              <TabPanels
-                mt={1}
-                borderTop="1px solid"
-                borderColor="gray.200"
-                h="18rem"
-                overflowY="auto"
-                className="customScrollBar"
-              >
-                <TabPanel py={2} px={0}>
-                  {inboxCount > 0 ? (
-                    filteredInboxNotifications.map((notification, index) =>
-                      renderNotificationItem(notification, index)
-                    )
-                  ) : (
-                    <Flex flexDirection="column" alignItems="center">
-                      <Image src={""} w="300px" alt=""/>
-                      <Text fontSize="lg" fontWeight="700">
-                        No Notifications
-                      </Text>
+              <TabIndicator 
+                mt="-1px" 
+                height="3px" 
+                bg={cAccent} 
+                borderRadius="full" 
+              />
+              
+              <TabPanels maxH="400px" overflowY="auto" className="customScrollBar">
+                <TabPanel p={0}>
+                  {loading ? (
+                    <Flex py={12} justify="center">
+                      <Spinner color={cAccent} />
                     </Flex>
-                  )}
-                </TabPanel>
-                <TabPanel py={2} px={0}>
-                  {teamCount > 0 ? (
-                    filteredTeamNotifications.map((notification, index) =>
-                      renderNotificationItem(notification, index)
-                    )
+                  ) : items.length > 0 ? (
+                    items.map((n: any, i: number) => renderNotificationItem(n, i))
                   ) : (
-                    <Flex flexDirection="column" alignItems="center">
-                      <Image src={""} w="220px" alt=""/>
-                      <Text fontSize="lg" fontWeight="700">
-                        No Notifications
+                    <Flex py={12} direction="column" align="center">
+                      <Icon as={BellIcon} boxSize={10} color={cSurfaceSoft} mb={3} />
+                      <Text fontSize="sm" fontWeight="700" color={cTextMuted}>
+                        No notifications yet
                       </Text>
                     </Flex>
                   )}
                 </TabPanel>
               </TabPanels>
             </Tabs>
+            
+            <Box p={4} bg={cSurfaceAlt} textAlign="center" borderTop="1px solid" borderColor={cBorder}>
+              <Text 
+                fontSize="xs" 
+                fontWeight="800" 
+                color={cAccent} 
+                cursor="pointer"
+                onClick={markAllRead}
+                _hover={{ textDecoration: "underline" }}
+              >
+                Mark all as read
+              </Text>
+            </Box>
           </MenuList>
         </Portal>
       </Menu>
     </Flex>
   );
-};
+});
 
-export default NotificationComponent;
+export default HeaderNotification;

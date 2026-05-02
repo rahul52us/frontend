@@ -1,15 +1,14 @@
 "use client"; // Add this for client-side component in Next.js
 
-import { Flex, IconButton, useMediaQuery } from "@chakra-ui/react";
+import { Flex, IconButton, useColorModeValue, useMediaQuery } from "@chakra-ui/react";
 import { FaBars } from "react-icons/fa";
 import { observer } from "mobx-react-lite";
 import HeaderProfile from "./HeaderProfile/HeaderProfile";
-// import HeaderNotification from "./HeaderNotification/HeaderNotification";
+import HeaderNotification from "./HeaderNotification/HeaderNotification";
 import HeaderThemeSwitch from "./HeaderThemeSwitch/HeaderThemeSwitch";
 // import HeaderChatMessage from "./HeaderChatMessage/HeaderChatMessage";
 // import CartContainer from "./CartContainer/CartContainer";
 import stores from "../../../../../store/stores";
-import NotificationBell from "../../../../../layouts/mainLayout/component/Header/Notification/NotificationBell";
 import { dashboardPalette } from "../../../dashboardPalette";
 
 const HeaderNavbar = observer(() => {
@@ -18,41 +17,45 @@ const HeaderNavbar = observer(() => {
   } = stores;
   const [isLargerThan1020] = useMediaQuery("(min-width: 1020px)");
 
+  // Theme-aware tokens
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+
   return (
     <Flex
       display="flex"
       justifyContent="space-around"
       alignItems="center"
       width={isLargerThan1020 ? "auto" : "10%"}
-      gap={2}
-      color={dashboardPalette.text}
+      gap={3}
+      color={cText}
     >
       {isLargerThan1020 ? (
         <>
-          {/* <HeaderLanguageSwitch /> */}
           <HeaderThemeSwitch />
-          <NotificationBell />
-          {/* <HeaderChatMessage />
           <HeaderNotification />
-          <CartContainer /> */}
           <HeaderProfile />
         </>
       ) : (
         <IconButton
-          aria-label="Arrow"
+          aria-label="Open Sidebar"
           fontSize="xl"
-          bg={dashboardPalette.surfaceAlt}
-          color={dashboardPalette.text}
+          bg={cSurfaceAlt}
+          color={cText}
           border="1px solid"
-          borderColor={dashboardPalette.border}
-          _hover={{ color: dashboardPalette.accentStrong, bg: dashboardPalette.surfaceSoft }}
-          _active={{ bg: dashboardPalette.surface }}
+          borderColor={cBorder}
+          _hover={{ color: cAccentStrong, bg: cSurfaceSoft }}
+          _active={{ bg: cSurfaceSoft }}
           icon={
             <FaBars
               cursor="pointer"
               onClick={() => setOpenMobileSideDrawer(true)}
             />
           }
+          borderRadius="12px"
         />
       )}
     </Flex>

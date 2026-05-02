@@ -1,191 +1,214 @@
-// Updated ShopForm with:
-// - Static sidebar on all screens
-// - Save Section button per step
-// - Clean buttons
-// - Supports both CREATE (POST) and UPDATE (PUT)
-
 "use client";
-
-import React, { useEffect, useState } from "react";
-import { Formik, Form } from "formik";
 import {
   Alert,
   AlertDescription,
   AlertIcon,
   AlertTitle,
+  Badge,
   Box,
   Button,
-  VStack,
-  Heading,
-  Flex,
-  Divider,
   Center,
-  Text,
   Container,
+  Divider,
+  Flex,
+  Heading,
   HStack,
   Icon,
   Progress,
-  Badge,
+  Text,
+  useColorModeValue,
+  VStack
 } from "@chakra-ui/react";
+import { Form, Formik } from "formik";
 import { observer } from "mobx-react-lite";
-import stores from "../../../store/stores";
-import { getStatusType } from "../../../component/config/utils/function";
-import ShopDetailsSection from "./ShopDetailsSection";
-import MainLocationSection from "./MainLocationSection";
-import AdditionalLocationsSection from "./AdditionalLocationsSection";
-import ContactInfoSection from "./ContactInfoSection";
-import OperatingHoursSection from "./OperatingHoursSection";
-import GallerySection from "./GallerySection";
-import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
-import { normalizeGstNumber } from "../../../config/utils/gstValidation";
 import { useParams } from "next/navigation";
-import { createEmptyShopFormData } from "./utils/constant";
+import { useEffect, useState } from "react";
 import {
-  FaStore,
-  FaMapMarkerAlt,
-  FaMap,
-  FaImages,
-  FaPhone,
   FaClock,
+  FaChevronLeft,
+  FaChevronRight,
+  FaImages,
+  FaMap,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaStore,
 } from "react-icons/fa";
 import { FiLayers } from "react-icons/fi";
-import { validationSchema } from "./utils/validation";
+import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
+import { getStatusType } from "../../../component/config/utils/function";
+import { normalizeGstNumber } from "../../../config/utils/gstValidation";
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
-import SellerOnboardingWizard from "./SellerOnboardingWizard";
-import { createCompanyCode } from "./utils/companyCode";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
-import { merchantFormSx } from "./merchantTheme";
+import stores from "../../../store/stores";
+import AdditionalLocationsSection from "./AdditionalLocationsSection";
+import ContactInfoSection from "./ContactInfoSection";
+import GallerySection from "./GallerySection";
+import MainLocationSection from "./MainLocationSection";
+import { useMerchantFormSx } from "./merchantTheme";
+import OperatingHoursSection from "./OperatingHoursSection";
+import SellerOnboardingWizard from "./SellerOnboardingWizard";
+import ShopDetailsSection from "./ShopDetailsSection";
+import { createCompanyCode } from "./utils/companyCode";
+import { createEmptyShopFormData } from "./utils/constant";
+import { validationSchema } from "./utils/validation";
+
+// Section accent colors — each step gets a unique but harmonious hue
+const SECTION_COLORS = [
+  { gradient: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)", glow: "rgba(59,130,246,0.22)", soft: "rgba(59,130,246,0.10)", text: "#60A5FA" },   // Shop Details — Blue
+  { gradient: "linear-gradient(135deg, #10B981 0%, #059669 100%)", glow: "rgba(16,185,129,0.22)", soft: "rgba(16,185,129,0.10)", text: "#34D399" },  // Main Location — Mint
+  { gradient: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)", glow: "rgba(139,92,246,0.22)", soft: "rgba(139,92,246,0.10)", text: "#A78BFA" }, // Additional — Violet
+  { gradient: "linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)", glow: "rgba(99,102,241,0.22)", soft: "rgba(99,102,241,0.10)",  text: "#818CF8" }, // Gallery — Indigo
+  { gradient: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)", glow: "rgba(6,182,212,0.22)",  soft: "rgba(6,182,212,0.10)",  text: "#22D3EE" },  // Contact — Cyan
+  { gradient: "linear-gradient(135deg, #F43F5E 0%, #E11D48 100%)", glow: "rgba(244,63,94,0.22)",  soft: "rgba(244,63,94,0.10)",  text: "#FB7185" },   // Hours — Rose
+];
 
 const SectionHeader = ({ activeSection, sections }) => {
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cPage = useColorModeValue("white", dashboardPalette.page);
+  const shellBg = useColorModeValue("white", dashboardPalette.shellElevated);
+  const currentColor = SECTION_COLORS[activeSection] || SECTION_COLORS[0];
+
   return (
     <Box
-      px={{ base: 5, md: 7 }}
+      px={{ base: 5, md: 6 }}
       py={{ base: 6, md: 7 }}
-      bg={dashboardPalette.shellElevated}
+      bg={shellBg}
       borderRadius="28px"
       border="1px solid"
-      borderColor={dashboardPalette.border}
-      boxShadow="0 28px 60px rgba(0, 0, 0, 0.28)"
+      borderColor={cBorder}
+      boxShadow={useColorModeValue(
+        `0 4px 24px ${currentColor.glow}`,
+        `0 28px 60px rgba(0,0,0,0.28), 0 0 0 1px ${currentColor.glow}`
+      )}
+      position="relative"
+      overflow="hidden"
     >
+      {/* Subtle colored top accent bar */}
+      <Box
+        position="absolute"
+        insetX={0}
+        top={0}
+        h="3px"
+        bgGradient={currentColor.gradient}
+        opacity={0.8}
+      />
+      {/* Soft radial glow in corner */}
+      <Box
+        position="absolute"
+        top="-40px"
+        right="-40px"
+        w="160px"
+        h="160px"
+        borderRadius="full"
+        bg={currentColor.soft}
+        filter="blur(28px)"
+        pointerEvents="none"
+      />
+
       <Flex
         justify="space-between"
         align={{ base: "start", lg: "center" }}
         direction={{ base: "column", lg: "row" }}
         gap={6}
+        position="relative"
+        zIndex={1}
       >
         <HStack spacing={4} align="center">
+          {/* Section icon with gradient background */}
           <Box
-            bg="rgba(214, 183, 114, 0.10)"
-            p={3}
-            rounded="2xl"
+            w="52px"
+            h="52px"
+            borderRadius="18px"
+            bgGradient={currentColor.gradient}
             display="flex"
             alignItems="center"
             justifyContent="center"
-            border="1px solid"
-            borderColor={dashboardPalette.border}
-            color={dashboardPalette.accent}
+            boxShadow={`0 8px 20px ${currentColor.glow}`}
+            flexShrink={0}
           >
-            <Icon as={sections[activeSection]?.icon || FiLayers} boxSize={6} />
+            <Icon as={sections[activeSection]?.icon || FiLayers} boxSize={6} color="white" />
           </Box>
-          <VStack align="start" spacing={1}>
+          <VStack align="start" spacing={0.5}>
             <Text
-              fontSize="xs"
+              fontSize="10px"
               textTransform="uppercase"
-              letterSpacing="0.28em"
-              color={dashboardPalette.textSoft}
+              letterSpacing="0.32em"
+              color={cTextSoft}
+              fontWeight="700"
             >
-              Shop Configuration
+              Shop Configuration · Step {activeSection + 1} of {sections.length}
             </Text>
             <Heading
-              fontSize={{ base: "2xl", md: "3xl" }}
-              fontWeight="500"
-              lineHeight="1"
-              color={dashboardPalette.text}
-              fontFamily='Georgia, "Times New Roman", serif'
+              fontSize={{ base: "xl", md: "2xl" }}
+              fontWeight="800"
+              lineHeight="1.1"
+              color={cText}
+              letterSpacing="-0.02em"
             >
-              Building Your Shop
-            </Heading>
-            <Text fontSize="sm" color={dashboardPalette.textMuted}>
               {sections[activeSection]?.title}
+            </Heading>
+            <Text fontSize="sm" color={cTextMuted} mt={0.5}>
+              Fill in the details below and click Next to continue.
             </Text>
           </VStack>
         </HStack>
 
+        {/* Colorful step badge */}
         <Badge
           px={4}
           py={2}
           borderRadius="full"
-          bg="rgba(214, 183, 114, 0.10)"
-          color={dashboardPalette.accentStrong}
-          border="1px solid"
-          borderColor={dashboardPalette.border}
+          bgGradient={currentColor.gradient}
+          color="white"
+          border="none"
           textTransform="uppercase"
-          letterSpacing="0.12em"
+          letterSpacing="0.14em"
+          fontSize="xs"
+          fontWeight="800"
           alignSelf={{ base: "flex-start", lg: "center" }}
+          boxShadow={`0 4px 14px ${currentColor.glow}`}
         >
           Step {activeSection + 1}
         </Badge>
       </Flex>
 
-      <HStack
-        mt={8}
-        spacing={{ base: 2, md: 4 }}
-        align="center"
-        flexWrap="wrap"
-      >
+      {/* Step progress dots */}
+      <HStack mt={6} spacing={2} position="relative" zIndex={1}>
         {sections.map((section, index) => {
           const isCurrent = index === activeSection;
           const isCompleted = index < activeSection;
+          const stepColor = SECTION_COLORS[index] || SECTION_COLORS[0];
 
           return (
-            <Flex key={section.title} align="center" gap={{ base: 2, md: 3 }}>
-              <HStack spacing={2.5}>
-                <Center
-                  w={{ base: "34px", md: "38px" }}
-                  h={{ base: "34px", md: "38px" }}
-                  borderRadius="full"
-                  border="1px solid"
-                  borderColor={
-                    isCurrent || isCompleted
-                      ? dashboardPalette.accent
-                      : dashboardPalette.borderStrong
-                  }
-                  bg={isCompleted ? dashboardPalette.accent : "transparent"}
-                  color={
-                    isCompleted
-                      ? dashboardPalette.page
-                      : isCurrent
-                        ? dashboardPalette.accentStrong
-                        : dashboardPalette.textSoft
-                  }
-                  fontWeight="700"
-                  fontSize="sm"
-                >
-                  {isCompleted ? "✓" : index + 1}
-                </Center>
-                <Text
-                  fontSize={{ base: "xs", md: "sm" }}
-                  textTransform="uppercase"
-                  letterSpacing="0.08em"
-                  color={
-                    isCurrent || isCompleted
-                      ? dashboardPalette.accentStrong
-                      : dashboardPalette.textSoft
-                  }
-                >
-                  {section.title}
-                </Text>
-              </HStack>
-              {index < sections.length - 1 ? (
-                <Box
-                  w={{ base: "18px", md: "34px" }}
-                  h="1px"
-                  bg={index < activeSection ? dashboardPalette.accent : dashboardPalette.borderStrong}
-                />
-              ) : null}
+            <Flex key={section.title} align="center" gap={2}>
+              <Box
+                w={isCurrent ? "32px" : "10px"}
+                h="10px"
+                borderRadius="full"
+                bg={
+                  isCompleted
+                    ? stepColor.gradient
+                    : isCurrent
+                      ? stepColor.gradient
+                      : useColorModeValue("gray.200", "rgba(255,255,255,0.08)")
+                }
+                bgGradient={isCurrent || isCompleted ? stepColor.gradient : undefined}
+                boxShadow={isCurrent ? `0 0 8px ${stepColor.glow}` : "none"}
+                transition="all 0.3s ease"
+                title={section.title}
+              />
             </Flex>
           );
         })}
+        <Text fontSize="xs" color={cTextSoft} fontWeight="600" ml={2}>
+          {sections.filter((_, i) => i < activeSection).length} of {sections.length} done
+        </Text>
       </HStack>
     </Box>
   );
@@ -492,6 +515,23 @@ const getSectionFieldLabels = (errors: any, sectionIndex: number) => {
 };
 
 const ShopForm = observer(() => {
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
+  const merchantFormSx = useMerchantFormSx();
+  const sidebarBg = useColorModeValue("white", dashboardPalette.shellElevated);
+  
+                            
   const [initialValues, setInitialValues] = useState(() => createEmptyShopFormData());
   const [activeSection, setActiveSection] = useState(0);
   const [showError, setShowError] = useState(false);
@@ -749,55 +789,61 @@ const ShopForm = observer(() => {
   }
 
   return (
-    <Container maxW="container.xl" py={{ base: 4, md: 6 }} sx={merchantFormSx}>
+    <Container maxW="100%" px={{ base: 4, md: 8, lg: 10 }} py={{ base: 4, md: 6 }} sx={merchantFormSx}>
       {reviewBanner ? (
         <Alert
           status={reviewBanner.status}
           borderRadius="22px"
           mb={5}
           alignItems="flex-start"
-          bg={dashboardPalette.surfaceAlt}
+          bg={cSurfaceAlt}
           border="1px solid"
-          borderColor={reviewBanner.status === "error" ? "rgba(239, 107, 107, 0.24)" : dashboardPalette.border}
-          color={dashboardPalette.text}
-          boxShadow="0 18px 34px rgba(0, 0, 0, 0.22)"
+          borderColor={reviewBanner.status === "error" ? "rgba(239, 107, 107, 0.24)" : cBorder}
+          color={cText}
+          shadow={'md'}
         >
-          <AlertIcon mt={1} color={reviewBanner.status === "error" ? dashboardPalette.danger : dashboardPalette.accentStrong} />
+          <AlertIcon mt={1} color={reviewBanner.status === "error" ? cDanger : cAccentStrong} />
           <Box>
-            <AlertTitle color={dashboardPalette.text}>{reviewBanner.title}</AlertTitle>
-            <AlertDescription color={dashboardPalette.textMuted}>{reviewBanner.description}</AlertDescription>
+            <AlertTitle color={cText}>{reviewBanner.title}</AlertTitle>
+            <AlertDescription color={cTextMuted}>{reviewBanner.description}</AlertDescription>
           </Box>
         </Alert>
       ) : null}
       <Flex direction={{ base: "column", lg: "row" }} gap={6}>
+        {/* ── Sidebar navigation ── */}
         <Box
-          w={{ base: "100%", lg: "280px" }}
+          w={{ base: "100%", lg: "300px" }}
           borderRadius="28px"
           p={5}
           border="1px solid"
-          borderColor={dashboardPalette.border}
-          bg={dashboardPalette.shellElevated}
-          boxShadow="0 24px 46px rgba(0, 0, 0, 0.26)"
+          borderColor={cBorder}
+          bg={sidebarBg}
+          boxShadow={useColorModeValue(
+            "0 4px 24px rgba(37,99,235,0.06)",
+            "0 24px 60px rgba(0,0,0,0.32)"
+          )}
           alignSelf="flex-start"
           position={{ base: "static", lg: "sticky" }}
-          top={{ lg: "104px" }}
+          top={{ lg: "24px" }}
         >
-          <VStack align="stretch" spacing={4}>
+          <VStack align="stretch" spacing={2}>
             <Text
-              fontWeight="600"
-              fontSize="xs"
-              color={dashboardPalette.textSoft}
+              fontWeight="800"
+              fontSize="10px"
+              color={cTextSoft}
               mb={1}
               textTransform="uppercase"
-              letterSpacing="0.22em"
+              letterSpacing="0.26em"
             >
-              {isUpdateMode ? "Edit Sections" : "Creation Steps"}
+              {isUpdateMode ? "Edit Sections" : "Setup Steps"}
             </Text>
-            <Divider borderColor={dashboardPalette.border} />
+            <Divider borderColor={cBorder} mb={1} />
 
             {sections.map((section, index) => {
               const isActive = activeSection === index;
+              const isCompleted = !isUpdateMode && index < activeSection;
               const isDisabled = !isUpdateMode && index > activeSection;
+              const stepColor = SECTION_COLORS[index] || SECTION_COLORS[0];
 
               return (
                 <Button
@@ -807,65 +853,98 @@ const ShopForm = observer(() => {
                   alignItems="center"
                   justifyContent="flex-start"
                   gap={3}
-                  minH="58px"
+                  minH="56px"
                   fontWeight={isActive ? "700" : "500"}
-                  color={isActive ? dashboardPalette.text : dashboardPalette.textMuted}
-                  bg={isActive ? dashboardPalette.accentSoft : "transparent"}
+                  color={isActive ? cText : cTextMuted}
+                  bg={isActive ? stepColor.soft : "transparent"}
                   _hover={{
-                    bg: "rgba(255,255,255,0.03)",
-                    transform: "translateX(2px)",
+                    bg: isActive ? stepColor.soft : useColorModeValue("gray.50", "rgba(255,255,255,0.03)"),
+                    transform: "translateX(3px)",
                   }}
                   onClick={() => !isDisabled && setActiveSection(index)}
-                  borderRadius="18px"
-                  px={4}
+                  borderRadius="16px"
+                  px={3}
                   py={3}
                   isDisabled={isDisabled}
                   transition="all 0.2s ease"
                   border="1px solid"
-                  borderColor={isActive ? dashboardPalette.border : "transparent"}
-                  opacity={isDisabled ? 0.42 : 1}
+                  borderColor={isActive ? stepColor.text : "transparent"}
+                  borderLeftWidth={isActive ? "3px" : "1px"}
+                  opacity={isDisabled ? 0.38 : 1}
                 >
-                  <Center
-                    w="34px"
-                    h="34px"
-                    borderRadius="full"
-                    border="1px solid"
-                    borderColor={isActive ? dashboardPalette.accent : dashboardPalette.borderStrong}
-                    color={isActive ? dashboardPalette.accentStrong : dashboardPalette.textSoft}
-                    bg={isActive ? "rgba(214, 183, 114, 0.08)" : "transparent"}
+                  {/* Colored icon circle */}
+                  <Box
+                    w="36px"
+                    h="36px"
+                    borderRadius="12px"
+                    bg={isActive ? stepColor.gradient : useColorModeValue("gray.100", "rgba(255,255,255,0.05)")}
+                    bgGradient={isActive ? stepColor.gradient : undefined}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
                     flexShrink={0}
+                    boxShadow={isActive ? `0 4px 12px ${stepColor.glow}` : "none"}
+                    transition="all 0.2s"
                   >
-                    <Text fontSize="xs" fontWeight="700">
-                      {index + 1}
+                    <Icon
+                      as={section.icon}
+                      boxSize={4}
+                      color={isActive ? "white" : isCompleted ? stepColor.text : cTextSoft}
+                    />
+                  </Box>
+                  <Box textAlign="left" flex={1} minW={0}>
+                    <Text fontSize="sm" fontWeight={isActive ? "700" : "500"} noOfLines={1}>
+                      {section.title}
                     </Text>
-                  </Center>
-                  <Box textAlign="left">
-                    <Text fontSize="sm">{section.title}</Text>
-                    <Text fontSize="xs" color={dashboardPalette.textSoft}>
-                      Section {index + 1}
+                    <Text fontSize="10px" color={isActive ? stepColor.text : cTextSoft} fontWeight="600">
+                      {isCompleted ? "✓ Completed" : isActive ? "In progress" : `Step ${index + 1}`}
                     </Text>
                   </Box>
+                  {isCompleted && (
+                    <Box
+                      w="8px" h="8px"
+                      borderRadius="full"
+                      bg={stepColor.gradient}
+                      bgGradient={stepColor.gradient}
+                      flexShrink={0}
+                    />
+                  )}
                 </Button>
               );
             })}
 
-            <Progress
-              mt={2}
-              size="sm"
-              value={(activeSection + 1) * (100 / sections.length)}
-              borderRadius="full"
-            />
+            {/* Progress bar with gradient */}
+            <Box mt={3} px={1}>
+              <Flex justify="space-between" mb={1.5}>
+                <Text fontSize="10px" color={cTextSoft} fontWeight="700" textTransform="uppercase" letterSpacing="0.12em">
+                  Progress
+                </Text>
+                <Text fontSize="10px" color={cTextSoft} fontWeight="700">
+                  {activeSection + 1}/{sections.length}
+                </Text>
+              </Flex>
+              <Box h="6px" borderRadius="full" bg={useColorModeValue("gray.100", "rgba(255,255,255,0.06)")} overflow="hidden">
+                <Box
+                  h="full"
+                  w={`${((activeSection + 1) / sections.length) * 100}%`}
+                  bgGradient="linear(to-r, #3B82F6, #8B5CF6)"
+                  borderRadius="full"
+                  transition="width 0.4s ease"
+                  boxShadow="0 0 8px rgba(99,102,241,0.5)"
+                />
+              </Box>
+            </Box>
           </VStack>
         </Box>
 
         <Box
           flex={1}
           borderRadius="30px"
-          boxShadow="0 30px 64px rgba(0, 0, 0, 0.32)"
-          p={{ base: 3, md: 5 }}
+          boxShadow="0 20px 28px rgba(0, 0, 0, 0.22)"
+          p={{ base: 1, md: 2 }}
           border="1px solid"
-          borderColor={dashboardPalette.border}
-          bg={dashboardPalette.shell}
+          borderColor={cBorder}
+          bg={useColorModeValue("white", dashboardPalette.shell)}
         >
           <Formik
             initialValues={initialValues}
@@ -914,15 +993,15 @@ const ShopForm = observer(() => {
                         status="warning"
                         borderRadius="22px"
                         alignItems="flex-start"
-                        bg={dashboardPalette.surfaceAlt}
+                        bg={cSurfaceAlt}
                         border="1px solid"
-                        borderColor={dashboardPalette.border}
-                        color={dashboardPalette.text}
+                        borderColor={cBorder}
+                        color={cText}
                       >
-                        <AlertIcon mt={1} color={dashboardPalette.accentStrong} />
+                        <AlertIcon mt={1} color={cAccentStrong} />
                         <Box>
-                          <AlertTitle color={dashboardPalette.text}>Please update these fields</AlertTitle>
-                          <AlertDescription color={dashboardPalette.textMuted}>
+                          <AlertTitle color={cText}>Please update these fields</AlertTitle>
+                          <AlertDescription color={cTextMuted}>
                             {currentSectionFieldLabels.join(", ")}
                           </AlertDescription>
                         </Box>
@@ -940,9 +1019,9 @@ const ShopForm = observer(() => {
                         size="md"
                         variant="outline"
                         borderRadius="18px"
-                        borderColor={dashboardPalette.borderStrong}
-                        color={dashboardPalette.accentStrong}
-                        _hover={{ bg: dashboardPalette.accentSoft, borderColor: dashboardPalette.accent }}
+                        borderColor={cBorderStrong}
+                        color={cAccentStrong}
+                        _hover={{ bg: cAccentSoft, borderColor: cAccent }}
                         isLoading={isSubmitting}
                         onClick={handleAttemptSubmit}
                       >
@@ -951,14 +1030,15 @@ const ShopForm = observer(() => {
                     </Flex>
 
                     <Flex justify="space-between" pt={4}>
-                      <Button
+                  <Button
                         onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
                         isDisabled={activeSection === 0}
                         variant="outline"
                         borderRadius="18px"
-                        borderColor={dashboardPalette.borderStrong}
-                        color={dashboardPalette.textMuted}
-                        _hover={{ bg: "rgba(255,255,255,0.03)", color: dashboardPalette.text }}
+                        borderColor={cBorderStrong}
+                        color={cTextMuted}
+                        leftIcon={<Icon as={FaChevronLeft} boxSize={3} />}
+                        _hover={{ bg: useColorModeValue("gray.50", "rgba(255,255,255,0.04)"), color: cText }}
                       >
                         Previous
                       </Button>
@@ -966,20 +1046,26 @@ const ShopForm = observer(() => {
                         <Button
                           onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
                           borderRadius="18px"
-                          bg={dashboardPalette.accent}
-                          color={dashboardPalette.page}
-                          _hover={{ bg: dashboardPalette.accentStrong }}
+                          bgGradient="linear(to-r, #3B82F6, #6366F1)"
+                          color="white"
+                          _hover={{ bgGradient: "linear(to-r, #2563EB, #4F46E5)", transform: "translateY(-1px)", boxShadow: "0 8px 20px rgba(59,130,246,0.34)" }}
+                          _active={{ transform: "scale(0.98)" }}
+                          rightIcon={<Icon as={FaChevronRight} boxSize={3} />}
+                          boxShadow="0 4px 14px rgba(59,130,246,0.26)"
                         >
-                          Next
+                          Next Section
                         </Button>
                       ) : (
                         <Button
                           isLoading={isSubmitting}
                           borderRadius="18px"
-                          bg={dashboardPalette.accent}
-                          color={dashboardPalette.page}
-                          _hover={{ bg: dashboardPalette.accentStrong }}
+                          bgGradient="linear(to-r, #2563EB, #3B82F6)"
+                          color="white"
+                          _hover={{ bgGradient: "linear(to-r, #1D4ED8, #2563EB)", transform: "translateY(-1px)", boxShadow: "0 8px 20px rgba(37,99,235,0.38)" }}
+                          _active={{ transform: "scale(0.98)" }}
+                          leftIcon={<Icon as={FaStore} boxSize={4} />}
                           onClick={handleAttemptSubmit}
+                          boxShadow="0 4px 14px rgba(37,99,235,0.30)"
                         >
                           {isUpdateMode ? "Save Shop" : "Create Shop"}
                         </Button>
@@ -995,5 +1081,4 @@ const ShopForm = observer(() => {
     </Container>
   );
 });
-
 export default ShopForm;

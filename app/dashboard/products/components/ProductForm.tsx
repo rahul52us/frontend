@@ -1,11 +1,13 @@
-import React, { useRef, useState } from "react";
+"use client";
+
 import {
   Box,
   Button,
+  Center,
   Checkbox,
-  Circle,
   CloseButton,
   Divider,
+  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -22,14 +24,28 @@ import {
   Switch,
   Text,
   Textarea,
-  VStack,
+  useColorModeValue,
+  VStack
 } from "@chakra-ui/react";
 import { Field, FieldArray, Form, Formik } from "formik";
-import { FaGift, FaPlus, FaTrash, FaUpload } from "react-icons/fa";
+import React, { useRef, useState } from "react";
+import {
+  FaBoxOpen,
+  FaCogs,
+  FaFileAlt,
+  FaGift,
+  FaImage,
+  FaInfoCircle,
+  FaPlus,
+  FaRupeeSign,
+  FaSave,
+  FaTrash,
+  FaUpload
+} from "react-icons/fa";
 import CustomDrawer from "../../../component/common/Drawer/CustomDrawer";
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
-import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
-import { merchantFormSx } from "../../shop/component/merchantTheme";
+import { dashboardHeroGradient, dashboardHeroGradientLight, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { useMerchantFormSx } from "../../shop/component/merchantTheme";
 import FreebieProductModal from "./FreebieProductModal";
 
 interface ProductFormProps {
@@ -44,15 +60,6 @@ interface ProductFormProps {
   isEdit: boolean;
 }
 
-const sectionCardSx = {
-  bg: dashboardPalette.surface,
-  border: "1px solid",
-  borderColor: dashboardPalette.border,
-  borderRadius: "24px",
-  p: { base: 4, md: 5 },
-  boxShadow: "0 16px 36px rgba(0, 0, 0, 0.18)",
-};
-
 const ProductForm: React.FC<ProductFormProps> = ({
   isOpen,
   onClose,
@@ -64,9 +71,80 @@ const ProductForm: React.FC<ProductFormProps> = ({
   products = [],
   isEdit,
 }) => {
+  const merchantFormSx = useMerchantFormSx();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const freebieModalTargetOfferRef = useRef<string | null>(null);
   const [isFreebieModalOpen, setIsFreebieModalOpen] = useState(false);
+
+  // Dynamic Theme Colors
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cShell = useColorModeValue("white", dashboardPalette.shell);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+
+  // Section accent colors
+const SECTION_COLORS = [
+  { id: 'basic', title: 'Basic Details', icon: FaInfoCircle, gradient: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)", glow: "rgba(59,130,246,0.12)", iconColor: "#3B82F6", soft: "rgba(59,130,246,0.05)", text: "#60A5FA" },
+  { id: 'pricing', title: 'Pricing & Stock', icon: FaRupeeSign, gradient: "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)", glow: "rgba(16,185,129,0.12)", iconColor: "#10B981", soft: "rgba(16,185,129,0.05)", text: "#34D399" },
+  { id: 'description', title: 'Description', icon: FaFileAlt, gradient: "linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 100%)", glow: "rgba(6,182,212,0.12)", iconColor: "#0891B2", soft: "rgba(6,182,212,0.05)", text: "#22D3EE" },
+  { id: 'promotions', title: 'Promotions', icon: FaGift, gradient: "linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)", glow: "rgba(139,92,246,0.12)", iconColor: "#8B5CF6", soft: "rgba(139,92,246,0.05)", text: "#A78BFA" },
+  { id: 'config', title: 'Variants & Tags', icon: FaCogs, gradient: "linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)", glow: "rgba(99,102,241,0.12)", iconColor: "#6366F1", soft: "rgba(99,102,241,0.05)", text: "#818CF8" },
+  { id: 'media', title: 'Product Media', icon: FaImage, gradient: "linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)", glow: "rgba(244,63,94,0.12)", iconColor: "#E11D48", soft: "rgba(244,63,94,0.05)", text: "#FB7185" },
+];
+
+  const sectionCardSx = {
+    bg: cSurface,
+    border: "1px solid",
+    borderColor: cBorder,
+    borderRadius: "24px",
+    p: { base: 5, md: 7 },
+    boxShadow: useColorModeValue(
+      "0 4px 20px rgba(0,0,0,0.04)", 
+      "0 16px 36px rgba(0, 0, 0, 0.22)"
+    ),
+    position: "relative",
+    overflow: "hidden",
+  };
+
+const SectionHeader = ({ index }: { index: number }) => {
+  const config = SECTION_COLORS[index];
+  
+  return (
+    <HStack spacing={4} mb={6} align="center">
+      <Box
+        w="48px"
+        h="48px"
+        borderRadius="16px"
+        bgGradient={config.gradient}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        // Softened the shadow blur and spread for a subtler look
+        boxShadow={`0 4px 12px ${config.glow}`} 
+      >
+        {/* Changed from "white" to config.iconColor for contrast */}
+        <Icon as={config.icon} boxSize={5} color={config.iconColor} />
+      </Box>
+      <VStack align="start" spacing={0}>
+        <Text fontSize="10px" fontWeight="800" color={cTextSoft} textTransform="uppercase" letterSpacing="0.2em">
+          Section {index + 1}
+        </Text>
+        <Heading size="md" color={cText} letterSpacing="-0.01em">
+          {config.title}
+        </Heading>
+      </VStack>
+    </HStack>
+  );
+};
 
   const handleImageUpload = async (
     event: any,
@@ -89,84 +167,100 @@ const ProductForm: React.FC<ProductFormProps> = ({
       alert(error?.message);
     }
   };
+  const heroBg = useColorModeValue(dashboardHeroGradientLight, dashboardHeroGradient);
 
   return (
     <CustomDrawer open={isOpen} close={onClose} width="85vw">
       <Box
-        bg={dashboardPalette.shell}
+        bg={cShell}
         border="1px solid"
-        borderColor={dashboardPalette.border}
+        borderColor={cBorder}
         borderRadius="28px"
         p={{ base: 4, md: 5 }}
         sx={{
           ...merchantFormSx,
           ".chakra-form__label": {
-            color: dashboardPalette.textMuted,
+            color: useColorModeValue("black", "whiteAlpha.900"),
             fontSize: "0.72rem",
-            fontWeight: 600,
+            fontWeight: 700,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
           },
           ".chakra-input, .chakra-textarea, .chakra-numberinput__field, .chakra-select": {
-            bg: dashboardPalette.surfaceAlt,
-            borderColor: dashboardPalette.borderStrong,
-            color: dashboardPalette.text,
+            bg: cSurfaceAlt,
+            borderColor: cBorderStrong,
+            color: cText,
             borderRadius: "16px",
           },
           ".chakra-input::placeholder, .chakra-textarea::placeholder, .chakra-numberinput__field::placeholder": {
-            color: dashboardPalette.textSoft,
+            color: cTextSoft,
           },
           ".chakra-checkbox__label": {
-            color: dashboardPalette.textMuted,
+            color: cTextMuted,
           },
           ".chakra-checkbox__control": {
-            bg: dashboardPalette.surfaceSoft,
-            borderColor: dashboardPalette.borderStrong,
+            bg: cSurfaceSoft,
+            borderColor: cBorderStrong,
           },
           ".chakra-checkbox__control[data-checked]": {
-            bg: dashboardPalette.accentSoft,
-            borderColor: dashboardPalette.accent,
-            color: dashboardPalette.accentStrong,
+            bg: cAccentSoft,
+            borderColor: cAccent,
+            color: cAccentStrong,
           },
           ".chakra-switch__track": {
-            bg: dashboardPalette.surfaceSoft,
+            bg: cSurfaceSoft,
           },
           ".chakra-switch__track[data-checked]": {
-            bg: dashboardPalette.accent,
+            bg: cAccent,
           },
         }}
       >
-        <HStack justify="space-between" align={{ base: "start", md: "center" }} mb={5}>
-          <HStack spacing={4} align="center">
-            <Circle size="46px" bg={dashboardPalette.accentSoft}>
-              <Icon as={FaGift} color={dashboardPalette.accentStrong} />
-            </Circle>
-            <Box>
-              <Heading
-                size="lg"
-                color={dashboardPalette.text}
-                fontWeight="500"
-                fontFamily='Georgia, "Times New Roman", serif'
-              >
-                {isEdit ? "Edit Product" : "Add New Product"}
-              </Heading>
-              <Text color={dashboardPalette.textMuted} fontSize="sm">
-                Manage pricing, images, variants, and offers with the same logic you already have.
-              </Text>
-            </Box>
-          </HStack>
-          <CloseButton
-            onClick={onClose}
-            color={dashboardPalette.text}
-            bg={dashboardPalette.surfaceSoft}
-            border="1px solid"
-            borderColor={dashboardPalette.border}
-            borderRadius="full"
-            _hover={{ bg: dashboardPalette.accentSoft, color: dashboardPalette.accentStrong }}
-          />
-        </HStack>
+        <Box position="relative">
+          {/* Main Hero Header */}
+          <Box 
+            bgGradient={heroBg}
+            borderRadius="24px"
+            p={6}
+            mb={6}
+            color="white"
+            position="relative"
+            overflow="hidden"
+            boxShadow="0 8px 20px rgba(37,99,235,0.10)"
+          >
+          
+            <HStack justify="space-between" align="center" position="relative" zIndex={1}>
+              <HStack spacing={5}>
+                <Box 
+                  p={4} 
+                  bg="whiteAlpha.200" 
+                  borderRadius="20px" 
+                  backdropFilter="blur(10px)"
+                  border="1px solid"
+                  borderColor="whiteAlpha.300"
+                >
+                  <Icon as={FaBoxOpen} boxSize={8} />
+                </Box>
+                <VStack align="start" spacing={0}>
+                  <Heading size="lg" fontWeight="800" letterSpacing="-0.02em">
+                    {isEdit ? "Refine Product" : "Launch New Product"}
+                  </Heading>
+                  <Text opacity={0.9} fontSize="sm" fontWeight="500">
+                    {isEdit ? "Update details, pricing, and inventory for your existing item." : "Complete the details below to add a new product to your inventory."}
+                  </Text>
+                </VStack>
+              </HStack>
+              <IconButton
+                aria-label="Close"
+                icon={<CloseButton />}
+                variant="ghost"
+                color="white"
+                _hover={{ bg: "whiteAlpha.200" }}
+                onClick={onClose}
+                borderRadius="full"
+              />
+            </HStack>
+          </Box>
 
-        <Divider borderColor={dashboardPalette.border} mb={6} />
 
         <Formik
           initialValues={initialValues}
@@ -229,8 +323,65 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
             return (
               <Form>
-                <VStack spacing={6} align="stretch">
-                  <Box {...sectionCardSx}>
+                <Flex direction={{ base: "column", lg: "row" }} gap={6} align="start">
+                  {/* Sidebar Navigation */}
+                  {/* <Box
+                    w={{ base: "100%", lg: "260px" }}
+                    bg={cSurface}
+                    borderRadius="24px"
+                    p={4}
+                    border="1px solid"
+                    borderColor={cBorder}
+                    position={{ base: "static", lg: "sticky" }}
+                    top="0"
+                    boxShadow="sm"
+                  >
+                    <VStack align="stretch" spacing={2}>
+                      {SECTION_COLORS.map((section, index) => {
+                        const isActive = activeTab === index;
+                        return (
+                          <Button
+                            key={section.id}
+                            variant="unstyled"
+                            display="flex"
+                            alignItems="center"
+                            gap={3}
+                            px={4}
+                            py={3}
+                            h="auto"
+                            borderRadius="16px"
+                            bg={isActive ? section.soft : "transparent"}
+                            color={isActive ? section.text : cTextMuted}
+                            border="1px solid"
+                            borderColor={isActive ? section.text : "transparent"}
+                            _hover={{ bg: isActive ? section.soft : cSurfaceAlt, transform: "translateX(4px)" }}
+                            transition="all 0.2s"
+                            onClick={() => {
+                              setActiveTab(index);
+                              const el = document.getElementById(`section-${section.id}`);
+                              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }}
+                          >
+                            <Box 
+                              w="32px" h="32px" 
+                              borderRadius="10px" 
+                              bgGradient={isActive ? section.gradient : "none"} 
+                              bg={isActive ? "none" : cSurfaceSoft}
+                              display="flex" alignItems="center" justifyContent="center"
+                            >
+                              <Icon as={section.icon} boxSize={isActive ? 4 : 3.5} color={isActive ? "white" : cTextSoft} />
+                            </Box>
+                            <Text fontSize="sm" fontWeight={isActive ? "700" : "500"}>{section.title}</Text>
+                          </Button>
+                        );
+                      })}
+                    </VStack>
+                  </Box> */}
+
+                  {/* Main Form Content */}
+                  <VStack spacing={6} align="stretch" flex={1} w="100%">
+                    <Box id="section-basic" {...(sectionCardSx as any)}>
+                      <SectionHeader index={0} />
                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
                       <Field name="name">
                         {({ field, form }: any) => (
@@ -251,54 +402,60 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         )}
                       </Field>
                     </SimpleGrid>
-                  </Box>
+                    </Box>
 
-                  <Box {...sectionCardSx}>
-                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                      <Field name="sku">
-                        {({ field, form }: any) => (
-                          <FormControl isInvalid={form.errors.sku && form.touched.sku}>
-                            <FormLabel>SKU</FormLabel>
-                            <Input {...field} placeholder="e.g. WH-1000XM4" />
-                            <FormErrorMessage>{form.errors.sku}</FormErrorMessage>
-                          </FormControl>
-                        )}
-                      </Field>
-                      <Field name="weight">
-                        {({ field, form }: any) => (
-                          <FormControl isInvalid={form.errors.weight && form.touched.weight}>
-                            <FormLabel>Weight</FormLabel>
-                            <Input {...field} placeholder="e.g. 250g" />
-                            <FormErrorMessage>{form.errors.weight}</FormErrorMessage>
-                          </FormControl>
-                        )}
-                      </Field>
-                      <Field name="category">
-                        {({ field, form }: any) => (
-                          <FormControl
-                            isInvalid={form.errors.category && form.touched.category}
-                            isRequired
-                          >
-                            <FormLabel>Category</FormLabel>
-                            <Select
-                              {...field}
-                              placeholder="Select Category"
-                              onChange={(event) => {
-                                field.onChange(event);
-                                form.setFieldValue("subCategories", []);
-                              }}
-                            >
-                              {rootCategories.map((cat) => (
-                                <option key={cat._id} value={cat._id}>
-                                  {cat.name}
-                                </option>
-                              ))}
-                            </Select>
-                            <FormErrorMessage>{form.errors.category}</FormErrorMessage>
-                          </FormControl>
-                        )}
-                      </Field>
-                    </SimpleGrid>
+                    <Box id="section-pricing" {...(sectionCardSx as any)}>
+                      <SectionHeader index={1} />
+                      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+                        <Field name="price">
+                          {({ field, form }: any) => (
+                            <FormControl isInvalid={form.errors.price && form.touched.price} isRequired>
+                              <FormLabel>Price (Rs)</FormLabel>
+                              <NumberInput
+                                min={0}
+                                onChange={(val) => form.setFieldValue(field.name, val)}
+                                value={field.value}
+                              >
+                                <NumberInputField placeholder="0.00" />
+                              </NumberInput>
+                              <FormErrorMessage>{form.errors.price}</FormErrorMessage>
+                            </FormControl>
+                          )}
+                        </Field>
+                        <Field name="taxRate">
+                          {({ field, form }: any) => (
+                            <FormControl isInvalid={form.errors.taxRate && form.touched.taxRate}>
+                              <FormLabel>Tax Rate (%)</FormLabel>
+                              <NumberInput
+                                min={0}
+                                max={100}
+                                onChange={(val) => form.setFieldValue(field.name, val)}
+                                value={field.value ?? 18}
+                              >
+                                <NumberInputField placeholder="18" />
+                              </NumberInput>
+                              <FormErrorMessage>{form.errors.taxRate}</FormErrorMessage>
+                            </FormControl>
+                          )}
+                        </Field>
+                        <Field name="stock">
+                          {({ field, form }: any) => (
+                            <FormControl isInvalid={form.errors.stock && form.touched.stock} isRequired>
+                              <FormLabel>Stock Quantity</FormLabel>
+                              <NumberInput
+                                min={0}
+                                onChange={(val) => form.setFieldValue(field.name, val)}
+                                value={field.value}
+                              >
+                                <NumberInputField placeholder="0" />
+                              </NumberInput>
+                              <FormErrorMessage>{form.errors.stock}</FormErrorMessage>
+                            </FormControl>
+                          )}
+                        </Field>
+                      </SimpleGrid>
+
+                      <Divider my={6} borderColor={cBorder} />
 
                     <Box mt={6}>
                       <FormLabel>Subcategories</FormLabel>
@@ -306,7 +463,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         {({ push, remove }) => {
                           if (!props.values.category) {
                             return (
-                              <Box color={dashboardPalette.textSoft} fontSize="sm">
+                              <Box color={cTextSoft} fontSize="sm">
                                 Select a category first
                               </Box>
                             );
@@ -314,7 +471,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                           if (availableSubCategories.length === 0) {
                             return (
-                              <Box color={dashboardPalette.textSoft} fontSize="sm">
+                              <Box color={cTextSoft} fontSize="sm">
                                 No subcategories found
                               </Box>
                             );
@@ -348,7 +505,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                   <IconButton
                                     aria-label="Remove"
                                     icon={<FaTrash />}
-                                    color={dashboardPalette.danger}
+                                    color={cDanger}
                                     bg="rgba(239, 107, 107, 0.12)"
                                     _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
                                     onClick={() => remove(index)}
@@ -359,9 +516,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 leftIcon={<FaPlus />}
                                 size="sm"
                                 variant="outline"
-                                borderColor={dashboardPalette.borderStrong}
-                                color={dashboardPalette.accentStrong}
-                                _hover={{ bg: dashboardPalette.accentSoft }}
+                                borderColor={cBorderStrong}
+                                color={cAccentStrong}
+                                _hover={{ bg: cAccentSoft }}
                                 onClick={() => push("")}
                                 alignSelf="flex-start"
                               >
@@ -374,80 +531,27 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     </Box>
                   </Box>
 
-                  <Box {...sectionCardSx}>
-                    <Field name="description">
-                      {({ field, form }: any) => (
-                        <FormControl
-                          isInvalid={form.errors.description && form.touched.description}
-                        >
-                          <FormLabel>Description</FormLabel>
-                          <Textarea {...field} placeholder="Detailed description..." rows={4} />
-                          <FormErrorMessage>{form.errors.description}</FormErrorMessage>
-                        </FormControl>
-                      )}
-                    </Field>
-                  </Box>
-
-                  <Box {...sectionCardSx}>
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                      <Field name="price">
+                    <Box id="section-description" {...(sectionCardSx as any)}>
+                      <SectionHeader index={2} />
+                      <Field name="description">
                         {({ field, form }: any) => (
-                          <FormControl isInvalid={form.errors.price && form.touched.price} isRequired>
-                            <FormLabel>Price (Rs)</FormLabel>
-                            <NumberInput
-                              min={0}
-                              onChange={(val) => form.setFieldValue(field.name, val)}
-                              value={field.value}
-                            >
-                              <NumberInputField placeholder="0.00" />
-                            </NumberInput>
-                            <FormErrorMessage>{form.errors.price}</FormErrorMessage>
+                          <FormControl
+                            isInvalid={form.errors.description && form.touched.description}
+                          >
+                            <FormLabel>Product Story / Description</FormLabel>
+                            <Textarea {...field} placeholder="Tell your customers about this amazing product..." rows={6} borderRadius="20px" />
+                            <FormErrorMessage>{form.errors.description}</FormErrorMessage>
                           </FormControl>
                         )}
                       </Field>
-                      <Field name="taxRate">
-                        {({ field, form }: any) => (
-                          <FormControl isInvalid={form.errors.taxRate && form.touched.taxRate}>
-                            <FormLabel>Tax Rate (%)</FormLabel>
-                            <NumberInput
-                              min={0}
-                              max={100}
-                              onChange={(val) => form.setFieldValue(field.name, val)}
-                              value={field.value ?? 18}
-                            >
-                              <NumberInputField placeholder="18" />
-                            </NumberInput>
-                            <FormErrorMessage>{form.errors.taxRate}</FormErrorMessage>
-                          </FormControl>
-                        )}
-                      </Field>
-                    </SimpleGrid>
-                  </Box>
+                    </Box>
 
-                  <Box {...sectionCardSx}>
-                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                      <Field name="stock">
-                        {({ field, form }: any) => (
-                          <FormControl isInvalid={form.errors.stock && form.touched.stock} isRequired>
-                            <FormLabel>Stock</FormLabel>
-                            <NumberInput
-                              min={0}
-                              onChange={(val) => form.setFieldValue(field.name, val)}
-                              value={field.value}
-                            >
-                              <NumberInputField placeholder="0" />
-                            </NumberInput>
-                            <FormErrorMessage>{form.errors.stock}</FormErrorMessage>
-                          </FormControl>
-                        )}
-                      </Field>
-                    </SimpleGrid>
-                  </Box>
 
-                  <Box {...sectionCardSx}>
-                    <FormLabel>Offers</FormLabel>
+                    <Box id="section-promotions" {...(sectionCardSx as any)}>
+                      <SectionHeader index={3} />
+                      <FormLabel>Active Offers</FormLabel>
                     {offersList.length === 0 ? (
-                      <Text color={dashboardPalette.textSoft} fontSize="sm">
+                      <Text color={cTextSoft} fontSize="sm">
                         No offers available.
                       </Text>
                     ) : (
@@ -463,8 +567,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                               p={4}
                               borderWidth="1px"
                               borderRadius="18px"
-                              borderColor={dashboardPalette.borderStrong}
-                              bg={dashboardPalette.surfaceAlt}
+                              borderColor={cBorderStrong}
+                              bg={cSurfaceAlt}
                             >
                               <HStack justify="space-between" align="start">
                                 <Checkbox isChecked={!!selected} onChange={() => toggleOffer(offer)}>
@@ -472,7 +576,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                 </Checkbox>
                                 {selected ? (
                                   <HStack>
-                                    <Text fontSize="sm" color={dashboardPalette.textSoft}>
+                                    <Text fontSize="sm" color={cTextSoft}>
                                       Enabled
                                     </Text>
                                     <Switch
@@ -584,11 +688,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                             borderRadius="md"
                                           />
                                           <Box>
-                                            <Text fontWeight="medium" fontSize="sm" color={dashboardPalette.text}>
+                                            <Text fontWeight="medium" fontSize="sm" color={cText}>
                                               {products.find((p) => p._id === selected.config?.freebieProductId)?.name ||
                                                 "Selected Product"}
                                             </Text>
-                                            <Text fontSize="xs" color={dashboardPalette.textSoft}>
+                                            <Text fontSize="xs" color={cTextSoft}>
                                               Rs {products.find((p) => p._id === selected.config?.freebieProductId)?.price || "--"}
                                             </Text>
                                           </Box>
@@ -596,9 +700,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          borderColor={dashboardPalette.borderStrong}
-                                          color={dashboardPalette.accentStrong}
-                                          _hover={{ bg: dashboardPalette.accentSoft }}
+                                          borderColor={cBorderStrong}
+                                          color={cAccentStrong}
+                                          _hover={{ bg: cAccentSoft }}
                                           onClick={() => openFreebieModal(offer.offerId)}
                                         >
                                           Change
@@ -610,9 +714,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                                         variant="outline"
                                         size="md"
                                         w="full"
-                                        borderColor={dashboardPalette.borderStrong}
-                                        color={dashboardPalette.accentStrong}
-                                        _hover={{ bg: dashboardPalette.accentSoft }}
+                                        borderColor={cBorderStrong}
+                                        color={cAccentStrong}
+                                        _hover={{ bg: cAccentSoft }}
                                         onClick={() => openFreebieModal(offer.offerId)}
                                       >
                                         Select Freebie Product
@@ -642,316 +746,226 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     )}
                   </Box>
 
-                  <Box {...sectionCardSx}>
-                    <Field name="tags">
-                      {({ form }: any) => (
-                        <FormControl>
-                          <FormLabel>Tags (Comma separated)</FormLabel>
-                          <Input
-                            placeholder="e.g. summer, sale, new"
-                            value={form.values.tags ? form.values.tags.join(", ") : ""}
-                            onChange={(event) => {
-                              const tags = event.target.value
-                                .split(",")
-                                .map((tag: string) => tag.trim())
-                                .filter(Boolean);
-                              form.setFieldValue("tags", tags);
-                            }}
-                          />
-                        </FormControl>
-                      )}
-                    </Field>
-                  </Box>
+                    <Box id="section-config" {...(sectionCardSx as any)}>
+                      <SectionHeader index={4} />
+                      <VStack spacing={6} align="stretch">
+                        <Field name="tags">
+                          {({ form }: any) => (
+                            <FormControl>
+                              <FormLabel>Search Tags</FormLabel>
+                              <Input
+                                placeholder="e.g. summer, sale, organic (press comma to separate)"
+                                value={form.values.tags ? form.values.tags.join(", ") : ""}
+                                onChange={(event) => {
+                                  const tags = event.target.value
+                                    .split(",")
+                                    .map((tag: string) => tag.trim())
+                                    .filter(Boolean);
+                                  form.setFieldValue("tags", tags);
+                                }}
+                              />
+                              <Text fontSize="xs" color={cTextSoft} mt={1.5}>
+                                Tags help customers find your product more easily in search results.
+                              </Text>
+                            </FormControl>
+                          )}
+                        </Field>
 
-                  <Box {...sectionCardSx}>
-                    <FormLabel>Variants</FormLabel>
-                    <FieldArray name="variants">
-                      {({ push, remove, form }: any) => (
-                        <VStack spacing={4} align="stretch" width="100%">
-                          {form.values.variants?.length > 0
-                            ? form.values.variants.map((variant: any, index: number) => (
-                                <Box
-                                  key={index}
-                                  p={4}
-                                  borderWidth="1px"
-                                  borderRadius="18px"
-                                  borderColor={dashboardPalette.borderStrong}
-                                  bg={dashboardPalette.surfaceAlt}
-                                >
-                                  <HStack justify="space-between" mb={2}>
-                                    <Text fontWeight="bold" color={dashboardPalette.text}>
-                                      Variant #{index + 1}
-                                    </Text>
-                                    <IconButton
-                                      aria-label="Remove variant"
-                                      icon={<FaTrash />}
-                                      size="sm"
-                                      color={dashboardPalette.danger}
-                                      bg="rgba(239, 107, 107, 0.12)"
-                                      _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
-                                      onClick={() => remove(index)}
-                                    />
-                                  </HStack>
+                        <Divider borderColor={cBorder} />
+                        <FormLabel>Variants</FormLabel>
+                        <FieldArray name="variants">
+                          {({ push, remove, form }: any) => (
+                            <VStack spacing={4} align="stretch" width="100%">
+                              {form.values.variants?.length > 0
+                                ? form.values.variants.map((variant: any, index: number) => (
+                                    <Box
+                                      key={index}
+                                      p={4}
+                                      borderWidth="1px"
+                                      borderRadius="18px"
+                                      borderColor={cBorderStrong}
+                                      bg={cSurfaceAlt}
+                                    >
+                                      <HStack justify="space-between" mb={2}>
+                                        <Text fontWeight="bold" color={cText}>
+                                          Variant #{index + 1}
+                                        </Text>
+                                        <IconButton
+                                          aria-label="Remove variant"
+                                          icon={<FaTrash />}
+                                          size="sm"
+                                          color={cDanger}
+                                          bg="rgba(239, 107, 107, 0.12)"
+                                          _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
+                                          onClick={() => remove(index)}
+                                        />
+                                      </HStack>
 
-                                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                                    <Field name={`variants.${index}.name`}>
-                                      {({ field }: any) => (
-                                        <FormControl isRequired>
-                                          <FormLabel fontSize="sm">Variant Name</FormLabel>
-                                          <Input {...field} placeholder="e.g. Size, Color" />
-                                        </FormControl>
-                                      )}
-                                    </Field>
-                                    <Field name={`variants.${index}.options`}>
-                                      {({ form }: any) => (
-                                        <FormControl isRequired>
-                                          <FormLabel fontSize="sm">Options (Comma separated)</FormLabel>
-                                          <Input
-                                            placeholder="e.g. S, M, L or Red, Blue"
-                                            value={
-                                              form.values.variants[index].options
-                                                ? form.values.variants[index].options.join(", ")
-                                                : ""
-                                            }
-                                            onChange={(event) => {
-                                              const options = event.target.value
-                                                .split(",")
-                                                .map((opt: string) => opt.trim())
-                                                .filter(Boolean);
-                                              form.setFieldValue(`variants.${index}.options`, options);
-                                            }}
-                                          />
-                                        </FormControl>
-                                      )}
-                                    </Field>
-                                  </SimpleGrid>
-                                </Box>
-                              ))
-                            : null}
+                                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                        <Field name={`variants.${index}.name`}>
+                                          {({ field }: any) => (
+                                            <FormControl isRequired>
+                                              <FormLabel fontSize="sm">Variant Name</FormLabel>
+                                              <Input {...field} placeholder="e.g. Size, Color" />
+                                            </FormControl>
+                                          )}
+                                        </Field>
+                                        <Field name={`variants.${index}.options`}>
+                                          {({ form }: any) => (
+                                            <FormControl isRequired>
+                                              <FormLabel fontSize="sm">Options (Comma separated)</FormLabel>
+                                              <Input
+                                                placeholder="e.g. S, M, L or Red, Blue"
+                                                value={
+                                                  form.values.variants[index].options
+                                                    ? form.values.variants[index].options.join(", ")
+                                                    : ""
+                                                }
+                                                onChange={(event) => {
+                                                  const options = event.target.value
+                                                    .split(",")
+                                                    .map((opt: string) => opt.trim())
+                                                    .filter(Boolean);
+                                                  form.setFieldValue(`variants.${index}.options`, options);
+                                                }}
+                                              />
+                                            </FormControl>
+                                          )}
+                                        </Field>
+                                      </SimpleGrid>
+                                    </Box>
+                                  ))
+                                : null}
 
-                          <Button
-                            leftIcon={<FaPlus />}
-                            onClick={() => push({ name: "", options: [] })}
-                            size="sm"
-                            alignSelf="flex-start"
-                            variant="outline"
-                            borderColor={dashboardPalette.borderStrong}
-                            color={dashboardPalette.accentStrong}
-                            _hover={{ bg: dashboardPalette.accentSoft }}
+                              <Button
+                                leftIcon={<FaPlus />}
+                                onClick={() => push({ name: "", options: [] })}
+                                size="sm"
+                                alignSelf="flex-start"
+                                variant="outline"
+                                borderColor={cBorderStrong}
+                                color={cAccentStrong}
+                                _hover={{ bg: cAccentSoft }}
+                              >
+                                Add Variant
+                              </Button>
+                            </VStack>
+                          )}
+                        </FieldArray>
+                      </VStack>
+                    </Box>
+
+                    <Box id="section-media" {...(sectionCardSx as any)}>
+                      <SectionHeader index={5} />
+                      <FormControl isInvalid={!!(props.errors.images && props.touched.images)}>
+                        <FormLabel>Product Showcase / Images</FormLabel>
+                        <HStack spacing={4} wrap="wrap">
+                          {props.values.images.map((img: any, index: number) => (
+                            <Box key={index} position="relative" boxSize="100px">
+                              <Image
+                                src={img.preview || img}
+                                alt={`Product ${index}`}
+                                boxSize="100%"
+                                objectFit="cover"
+                                borderRadius="20px"
+                                boxShadow="sm"
+                              />
+                              <IconButton
+                                aria-label="Remove image"
+                                icon={<FaTrash />}
+                                size="xs"
+                                bg="rgba(248, 113, 113, 0.12)"
+                                color={cDanger}
+                                _hover={{ bg: "rgba(248, 113, 113, 0.20)" }}
+                                position="absolute"
+                                top={-2}
+                                right={-2}
+                                onClick={() => {
+                                  const nextImages = props.values.images.filter(
+                                    (_: any, imageIndex: number) => imageIndex !== index
+                                  );
+                                  props.setFieldValue("images", nextImages);
+                                }}
+                                borderRadius="full"
+                              />
+                            </Box>
+                          ))}
+                          <Center
+                            boxSize="100px"
+                            border="2px dashed"
+                            borderColor={cBorderStrong}
+                            borderRadius="20px"
+                            cursor="pointer"
+                            bg={cSurfaceAlt}
+                            _hover={{ bg: cAccentSoft, borderColor: cAccent, color: cAccent }}
+                            onClick={() => fileInputRef.current?.click()}
+                            transition="all 0.2s"
                           >
-                            Add Variant
-                          </Button>
-                        </VStack>
-                      )}
-                    </FieldArray>
-                  </Box>
+                            <VStack spacing={1}>
+                              <Icon as={FaUpload} boxSize={5} />
+                              <Text fontSize="10px" fontWeight="700">UPLOAD</Text>
+                            </VStack>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              ref={fileInputRef}
+                              style={{ display: "none" }}
+                              onChange={(e) => handleImageUpload(e, props.setFieldValue, props.values.images)}
+                            />
+                          </Center>
+                        </HStack>
+                        {props.errors.images && props.touched.images && (
+                          <Text color={cDanger} fontSize="xs" mt={2}>
+                            {props.errors.images as string}
+                          </Text>
+                        )}
+                      </FormControl>
+                    </Box>
 
-                  <Box {...sectionCardSx}>
-                    <FormControl isInvalid={!!(props.errors.images && props.touched.images)}>
-                      <FormLabel>Product Images</FormLabel>
-                      <HStack spacing={4} wrap="wrap">
-                        {props.values.images.map((img: any, index: number) => (
-                          <Box key={index} position="relative" boxSize="100px">
-                            <Image
-                              src={img.preview || img}
-                              alt={`Product ${index}`}
-                              boxSize="100%"
-                              objectFit="cover"
-                              borderRadius="16px"
-                            />
-                            <IconButton
-                              aria-label="Remove image"
-                              icon={<FaTrash />}
-                              size="xs"
-                              bg="rgba(239, 107, 107, 0.12)"
-                              color={dashboardPalette.danger}
-                              _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
-                              position="absolute"
-                              top={-2}
-                              right={-2}
-                              onClick={() => {
-                                const nextImages = props.values.images.filter(
-                                  (_: any, imageIndex: number) => imageIndex !== index
-                                );
-                                props.setFieldValue("images", nextImages);
-                              }}
-                            />
-                          </Box>
-                        ))}
-                        <Box
-                          boxSize="100px"
-                          border="2px dashed"
-                          borderColor={dashboardPalette.borderStrong}
-                          borderRadius="16px"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          cursor="pointer"
-                          bg={dashboardPalette.surfaceAlt}
-                          _hover={{
-                            borderColor: dashboardPalette.accent,
-                            bg: dashboardPalette.surfaceSoft,
-                          }}
-                          onClick={() => fileInputRef.current?.click()}
+                    {/* Form Actions Footer */}
+                    <Box pt={4} pb={6}>
+                      <Divider mb={8} borderColor={cBorder} />
+                      <HStack justify="flex-end" spacing={4}>
+                        <Button
+                          variant="ghost"
+                          onClick={onClose}
+                          borderRadius="18px"
+                          h="54px"
+                          px={8}
+                          color={cTextMuted}
+                          _hover={{ bg: cSurfaceSoft, color: cText }}
                         >
-                          <Icon as={FaUpload} color={dashboardPalette.textSoft} boxSize={6} />
-                          <input
-                            type="file"
-                            multiple
-                            ref={fileInputRef}
-                            style={{ display: "none" }}
-                            onChange={(event) =>
-                              handleImageUpload(event, props.setFieldValue, props.values.images)
-                            }
-                            accept="image/*"
-                          />
-                        </Box>
+                          Discard
+                        </Button>
+                        <Button
+                          type="submit"
+                          isLoading={props.isSubmitting}
+                          bgGradient={dashboardHeroGradientLight}
+                          color="white"
+                          borderRadius="20px"
+                          h="54px"
+                          px={10}
+                          fontWeight="700"
+                          leftIcon={<Icon as={isEdit ? FaSave : FaPlus} />}
+                          boxShadow="0 10px 24px rgba(37,99,235,0.3)"
+                          _hover={{ 
+                            transform: "translateY(-2px)", 
+                            boxShadow: "0 14px 30px rgba(37,99,235,0.42)" 
+                          }}
+                          _active={{ transform: "scale(0.98)" }}
+                        >
+                          {isEdit ? "Update Changes" : "Publish Product"}
+                        </Button>
                       </HStack>
-                      <FormErrorMessage>
-                        {typeof props.errors.images === "string"
-                          ? props.errors.images
-                          : "Invalid images"}
-                      </FormErrorMessage>
-                    </FormControl>
-                  </Box>
-
-                  <Box {...sectionCardSx}>
-                    <FormLabel>Product Details</FormLabel>
-                    <FieldArray name="productDetails">
-                      {({ push, remove }) => (
-                        <VStack spacing={3} align="stretch">
-                          {props.values.productDetails.map((detail: any, index: number) => (
-                            <HStack key={index} align="start">
-                              <Field name={`productDetails[${index}].key`}>
-                                {({ field, form }: any) => (
-                                  <FormControl
-                                    isInvalid={
-                                      form.errors.productDetails?.[index]?.key &&
-                                      form.touched.productDetails?.[index]?.key
-                                    }
-                                  >
-                                    <Input {...field} placeholder="Attribute" />
-                                  </FormControl>
-                                )}
-                              </Field>
-                              <Field name={`productDetails[${index}].value`}>
-                                {({ field, form }: any) => (
-                                  <FormControl
-                                    isInvalid={
-                                      form.errors.productDetails?.[index]?.value &&
-                                      form.touched.productDetails?.[index]?.value
-                                    }
-                                  >
-                                    <Input {...field} placeholder="Value" />
-                                  </FormControl>
-                                )}
-                              </Field>
-                              <IconButton
-                                aria-label="Remove"
-                                icon={<FaTrash />}
-                                color={dashboardPalette.danger}
-                                bg="rgba(239, 107, 107, 0.12)"
-                                _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
-                                variant="ghost"
-                                onClick={() => remove(index)}
-                              />
-                            </HStack>
-                          ))}
-                          <Button
-                            leftIcon={<FaPlus />}
-                            size="sm"
-                            variant="outline"
-                            borderColor={dashboardPalette.borderStrong}
-                            color={dashboardPalette.accentStrong}
-                            _hover={{ bg: dashboardPalette.accentSoft }}
-                            onClick={() => push({ key: "", value: "" })}
-                            alignSelf="flex-start"
-                          >
-                            Add Detail
-                          </Button>
-                        </VStack>
-                      )}
-                    </FieldArray>
-                  </Box>
-
-                  <Box {...sectionCardSx}>
-                    <FormLabel>Extra Information</FormLabel>
-                    <FieldArray name="information">
-                      {({ push, remove }) => (
-                        <VStack spacing={3} align="stretch">
-                          {props.values.information.map((info: any, index: number) => (
-                            <HStack key={index} align="start">
-                              <Field name={`information[${index}].key`}>
-                                {({ field, form }: any) => (
-                                  <FormControl
-                                    isInvalid={
-                                      form.errors.information?.[index]?.key &&
-                                      form.touched.information?.[index]?.key
-                                    }
-                                  >
-                                    <Input {...field} placeholder="Key" />
-                                  </FormControl>
-                                )}
-                              </Field>
-                              <Field name={`information[${index}].value`}>
-                                {({ field, form }: any) => (
-                                  <FormControl
-                                    isInvalid={
-                                      form.errors.information?.[index]?.value &&
-                                      form.touched.information?.[index]?.value
-                                    }
-                                  >
-                                    <Input {...field} placeholder="Value" />
-                                  </FormControl>
-                                )}
-                              </Field>
-                              <IconButton
-                                aria-label="Remove"
-                                icon={<FaTrash />}
-                                color={dashboardPalette.danger}
-                                bg="rgba(239, 107, 107, 0.12)"
-                                _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
-                                variant="ghost"
-                                onClick={() => remove(index)}
-                              />
-                            </HStack>
-                          ))}
-                          <Button
-                            leftIcon={<FaPlus />}
-                            size="sm"
-                            variant="outline"
-                            borderColor={dashboardPalette.borderStrong}
-                            color={dashboardPalette.accentStrong}
-                            _hover={{ bg: dashboardPalette.accentSoft }}
-                            onClick={() => push({ key: "", value: "" })}
-                            alignSelf="flex-start"
-                          >
-                            Add Information
-                          </Button>
-                        </VStack>
-                      )}
-                    </FieldArray>
-                  </Box>
-
-                  <Box pt={2}>
-                    <Button
-                      type="submit"
-                      size="lg"
-                      isLoading={props.isSubmitting}
-                      width="full"
-                      borderRadius="18px"
-                      bg={dashboardPalette.accent}
-                      color={dashboardPalette.page}
-                      _hover={{ bg: dashboardPalette.accentStrong }}
-                    >
-                      {isEdit ? "Update Product" : "Create Product"}
-                    </Button>
-                  </Box>
-                </VStack>
+                    </Box>
+                  </VStack>
+                </Flex>
               </Form>
             );
           }}
         </Formik>
+        </Box>
       </Box>
     </CustomDrawer>
   );

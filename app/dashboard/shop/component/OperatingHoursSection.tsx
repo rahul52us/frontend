@@ -25,7 +25,7 @@ const OperatingHoursSection = ({ values, errors, setFieldValue, showError }) => 
             <VStack
               spacing={5}
               p={5}
-              bg="rgba(255,255,255,0.02)"
+              bg="var(--dashboard-surface-alt)"
               borderRadius="20px"
               border="1px solid"
               borderColor="var(--dashboard-border-strong)"

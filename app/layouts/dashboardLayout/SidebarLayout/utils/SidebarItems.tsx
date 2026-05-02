@@ -1,3 +1,4 @@
+import { BsBoxSeam, BsShop } from "react-icons/bs";
 import {
   FaChartPie,
   FaCog,
@@ -41,7 +42,7 @@ const sidebarDatas: SidebarItem[] = [
   {
     id: 103,
     name: "Shops",
-    icon: <FaChartPie />,
+    icon: <BsShop />,
     url: "/dashboard/super-admin/shops",
     role: ["superAdmin"],
   },
@@ -69,7 +70,7 @@ const sidebarDatas: SidebarItem[] = [
   {
     id: 2,
     name: "Shops",
-    icon: <FaChartPie />,
+    icon: <BsShop />,
     url: "/dashboard/shop",
     role: ["seller", "admin"],
   },
@@ -83,7 +84,7 @@ const sidebarDatas: SidebarItem[] = [
   {
     id: 7,
     name: "Orders",
-    icon: <FaChartPie />,
+    icon: <BsBoxSeam />,
     url: "/dashboard/orders",
     role: ["seller", "admin"],
   },

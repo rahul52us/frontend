@@ -24,6 +24,7 @@ import {
   Textarea,
   useToast,
   VStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { useRouter } from "next/navigation";
@@ -36,7 +37,7 @@ import {
 } from "../../../config/utils/gstValidation";
 import { createCompanyCode } from "./utils/companyCode";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
-import { merchantFormSx } from "./merchantTheme";
+import { useMerchantFormSx } from "./merchantTheme";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 const FALLBACK_CENTER = { lat: 28.6139, lng: 77.209 };
@@ -84,49 +85,6 @@ const onboardingSteps = [
   },
 ];
 
-const primaryButtonSx = {
-  bg: dashboardPalette.accent,
-  color: dashboardPalette.page,
-  _hover: { bg: dashboardPalette.accentStrong },
-  _active: { transform: "scale(0.98)" },
-  borderRadius: "18px",
-  h: "56px",
-  fontWeight: "700",
-};
-
-const getFieldShellStyles = () => ({
-  borderRadius: "24px",
-  borderWidth: "1px",
-  borderColor: dashboardPalette.border,
-  bg: dashboardPalette.surface,
-  boxShadow: "0 18px 42px rgba(0, 0, 0, 0.24)",
-});
-
-const fieldInputSx = {
-  h: "58px",
-  borderRadius: "16px",
-  bg: dashboardPalette.surfaceSoft,
-  borderColor: dashboardPalette.borderStrong,
-  color: dashboardPalette.text,
-  _placeholder: { color: dashboardPalette.textSoft },
-  _focusVisible: {
-    borderColor: dashboardPalette.accent,
-    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
-  },
-};
-
-const fieldTextareaSx = {
-  borderRadius: "16px",
-  bg: dashboardPalette.surfaceSoft,
-  borderColor: dashboardPalette.borderStrong,
-  color: dashboardPalette.text,
-  _placeholder: { color: dashboardPalette.textSoft },
-  _focusVisible: {
-    borderColor: dashboardPalette.accent,
-    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
-  },
-};
-
 const isValidEmail = (email: string) => {
   if (!email.trim()) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -167,110 +125,6 @@ const CenteredBox = ({ children, ...props }: any) => (
   </Flex>
 );
 
-const UploadCard = ({
-  title,
-  helper,
-  files,
-  onFileChange,
-  onRemove,
-}: {
-  title: string;
-  helper: string;
-  files: any;
-  onFileChange: (file: File | null) => void;
-  onRemove: () => void;
-}) => {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const hasFiles = Boolean(files && ((Array.isArray(files) && files.length) || !Array.isArray(files)));
-  const openPicker = () => inputRef.current?.click();
-
-  return (
-    <Box p={5} {...getFieldShellStyles()}>
-      <VStack align="stretch" spacing={4}>
-        <Box>
-          <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
-            {title}
-          </Text>
-          <Text fontSize="sm" color={dashboardPalette.textSoft}>
-            {helper}
-          </Text>
-        </Box>
-
-        {hasFiles ? (
-          <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
-        ) : (
-          <Box
-            role="button"
-            tabIndex={0}
-            borderWidth="1px"
-            borderStyle="dashed"
-            borderColor={dashboardPalette.borderStrong}
-            borderRadius="22px"
-            py={8}
-            px={6}
-            textAlign="center"
-            bg={dashboardPalette.shellElevated}
-            cursor="pointer"
-            transition="all 0.2s ease"
-            _hover={{ borderColor: dashboardPalette.accent, bg: dashboardPalette.surfaceSoft }}
-            _focusVisible={{ outline: "none", boxShadow: `0 0 0 3px ${dashboardPalette.accentSoft}` }}
-            onClick={openPicker}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                openPicker();
-              }
-            }}
-          >
-            <Text fontSize="sm" fontWeight="600" color={dashboardPalette.text}>
-              Tap to upload image
-            </Text>
-            <Text mt={1} fontSize="xs" color={dashboardPalette.textSoft}>
-              JPG, PNG or WEBP
-            </Text>
-          </Box>
-        )}
-
-        <Input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          display="none"
-          onChange={(event) => {
-            const file = event.target.files?.[0] || null;
-            onFileChange(file);
-            event.target.value = "";
-          }}
-        />
-
-        <HStack spacing={3}>
-          <Button
-            variant="outline"
-            borderRadius="16px"
-            borderColor={dashboardPalette.borderStrong}
-            color={dashboardPalette.accentStrong}
-            _hover={{ bg: dashboardPalette.accentSoft }}
-            onClick={openPicker}
-          >
-            {hasFiles ? "Replace" : "Upload"}
-          </Button>
-          {hasFiles ? (
-            <Button
-              variant="ghost"
-              borderRadius="16px"
-              color={dashboardPalette.danger}
-              _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
-              onClick={onRemove}
-            >
-              Remove
-            </Button>
-          ) : null}
-        </HStack>
-      </VStack>
-    </Box>
-  );
-};
-
 type SellerOnboardingWizardProps = {
   initialValues: any;
   accountPhone?: string;
@@ -284,6 +138,64 @@ const SellerOnboardingWizard = ({
   accountEmail,
   onSubmit,
 }: SellerOnboardingWizardProps) => {
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  const cSuccess = useColorModeValue("green.500", dashboardPalette.success);
+  const shellBg = useColorModeValue("white", dashboardPalette.shell);
+  const merchantFormSx = useMerchantFormSx();
+
+  const primaryButtonSx = {
+    bg: cAccent,
+    color: "white",
+    _hover: { bg: cAccentStrong },
+    _active: { transform: "scale(0.98)" },
+    borderRadius: "18px",
+    h: "56px",
+    fontWeight: "700",
+  };
+
+  const getFieldShellStyles = () => ({
+    borderRadius: "24px",
+    borderWidth: "1px",
+    borderColor: cBorder,
+    bg: shellBg,
+    boxShadow: useColorModeValue("sm", "0 18px 42px rgba(0, 0, 0, 0.24)"),
+  });
+
+  const fieldInputSx = {
+    h: "58px",
+    borderRadius: "16px",
+    bg: cSurfaceSoft,
+    borderColor: cBorderStrong,
+    color: cText,
+    _placeholder: { color: cTextSoft },
+    _focusVisible: {
+      borderColor: cAccent,
+      boxShadow: `0 0 0 1px ${cAccent}`,
+    },
+  };
+
+  const fieldTextareaSx = {
+    borderRadius: "16px",
+    bg: cSurfaceSoft,
+    borderColor: cBorderStrong,
+    color: cText,
+    _placeholder: { color: cTextSoft },
+    _focusVisible: {
+      borderColor: cAccent,
+      boxShadow: `0 0 0 1px ${cAccent}`,
+    },
+  };
+
   const router = useRouter();
   const toast = useToast({ position: "top-right", duration: 3000, isClosable: true });
   const [stepIndex, setStepIndex] = useState(0);
@@ -513,20 +425,124 @@ const SellerOnboardingWizard = ({
     setFieldValue("gallery", [...(formValues.gallery || []), ...nextItems]);
   };
 
+  const UploadCard = ({
+    title,
+    helper,
+    files,
+    onFileChange,
+    onRemove,
+  }: {
+    title: string;
+    helper: string;
+    files: any;
+    onFileChange: (file: File | null) => void;
+    onRemove: () => void;
+  }) => {
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const hasFiles = Boolean(files && ((Array.isArray(files) && files.length) || !Array.isArray(files)));
+    const openPicker = () => inputRef.current?.click();
+
+    return (
+      <Box p={5} {...getFieldShellStyles()}>
+        <VStack align="stretch" spacing={4}>
+          <Box>
+            <Text fontSize="md" fontWeight="700" color={cText}>
+              {title}
+            </Text>
+            <Text fontSize="sm" color={cTextSoft}>
+              {helper}
+            </Text>
+          </Box>
+
+          {hasFiles ? (
+            <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
+          ) : (
+            <Box
+              role="button"
+              tabIndex={0}
+              borderWidth="1px"
+              borderStyle="dashed"
+              borderColor={cBorderStrong}
+              borderRadius="22px"
+              py={8}
+              px={6}
+              textAlign="center"
+              bg={useColorModeValue("gray.50", "rgba(255,255,255,0.02)")}
+              cursor="pointer"
+              transition="all 0.2s ease"
+              _hover={{ borderColor: cAccent, bg: cSurfaceSoft }}
+              _focusVisible={{ outline: "none", boxShadow: `0 0 0 3px ${cAccentSoft}` }}
+              onClick={openPicker}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openPicker();
+                }
+              }}
+            >
+              <Text fontSize="sm" fontWeight="600" color={cText}>
+                Tap to upload image
+              </Text>
+              <Text mt={1} fontSize="xs" color={cTextSoft}>
+                JPG, PNG or WEBP
+              </Text>
+            </Box>
+          )}
+
+          <Input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            display="none"
+            onChange={(event) => {
+              const file = event.target.files?.[0] || null;
+              onFileChange(file);
+              event.target.value = "";
+            }}
+          />
+
+          <HStack spacing={3}>
+            <Button
+              variant="outline"
+              borderRadius="16px"
+              borderColor={cBorderStrong}
+              color={cAccentStrong}
+              _hover={{ bg: cAccentSoft }}
+              onClick={openPicker}
+            >
+              {hasFiles ? "Replace" : "Upload"}
+            </Button>
+            {hasFiles ? (
+              <Button
+                variant="ghost"
+                borderRadius="16px"
+                color={cDanger}
+                _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
+                onClick={onRemove}
+              >
+                Remove
+              </Button>
+            ) : null}
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
+
   return (
     <Box
       minH="100vh"
-      bg={dashboardPalette.page}
+      bg={cPage}
       py={{ base: 6, md: 10 }}
       sx={merchantFormSx}
     >
       <Container maxW="container.lg">
         <Box
-          bg={dashboardPalette.shell}
+          bg={shellBg}
           borderRadius="32px"
           borderWidth="1px"
-          borderColor={dashboardPalette.border}
-          boxShadow="0 30px 90px rgba(0, 0, 0, 0.30)"
+          borderColor={cBorder}
+          boxShadow={useColorModeValue("sm", "0 30px 90px rgba(0, 0, 0, 0.30)")}
           px={{ base: 5, md: 8 }}
           py={{ base: 6, md: 8 }}
         >
@@ -534,9 +550,9 @@ const SellerOnboardingWizard = ({
             <Flex justify="space-between" align="center">
               <Circle
                 size="42px"
-                bg={dashboardPalette.surfaceSoft}
+                bg={cSurfaceSoft}
                 borderWidth="1px"
-                borderColor={dashboardPalette.border}
+                borderColor={cBorder}
                 boxShadow="sm"
               >
                 <IconButton
@@ -545,20 +561,20 @@ const SellerOnboardingWizard = ({
                   variant="ghost"
                   borderRadius="full"
                   onClick={goBack}
-                  color={dashboardPalette.text}
-                  _hover={{ bg: dashboardPalette.accentSoft, color: dashboardPalette.accentStrong }}
+                  color={cText}
+                  _hover={{ bg: cAccentSoft, color: cAccentStrong }}
                 />
               </Circle>
               <Badge
                 bg="rgba(214, 183, 114, 0.10)"
-                color={dashboardPalette.accentStrong}
+                color={cAccentStrong}
                 borderRadius="md"
                 px={3}
                 py={1}
                 fontSize="xs"
                 fontWeight="700"
                 border="1px solid"
-                borderColor={dashboardPalette.border}
+                borderColor={cBorder}
                 letterSpacing="0.12em"
                 textTransform="uppercase"
               >
@@ -572,7 +588,7 @@ const SellerOnboardingWizard = ({
 
             <Stack spacing={4}>
               <HStack spacing={3} align="center">
-                <Circle size="50px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
+                <Circle size="50px" bg="rgba(214, 183, 114, 0.10)" color={cAccent}>
                   <Icon as={activeStep.icon} boxSize={5} />
                 </Circle>
                 <Box>
@@ -580,21 +596,20 @@ const SellerOnboardingWizard = ({
                     fontSize="xs"
                     textTransform="uppercase"
                     letterSpacing="0.28em"
-                    color={dashboardPalette.textSoft}
+                    color={cTextSoft}
                   >
                     Building Your Shop
                   </Text>
                   <Heading
                     mt={2}
                     fontSize={{ base: "3xl", md: "4xl" }}
-                    color={dashboardPalette.text}
+                    color={cText}
                     lineHeight="1.05"
                     fontWeight="500"
-                    fontFamily='Georgia, "Times New Roman", serif'
                   >
                     {activeStep.title}
                   </Heading>
-                  <Text color={dashboardPalette.textMuted} fontSize={{ base: "sm", md: "md" }}>
+                  <Text color={cTextMuted} fontSize={{ base: "sm", md: "md" }}>
                     {activeStep.subtitle}
                   </Text>
                 </Box>
@@ -605,7 +620,7 @@ const SellerOnboardingWizard = ({
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl isRequired>
-                    <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                    <FormLabel color={cTextMuted} fontWeight="600">
                       Store Name
                     </FormLabel>
                     <Input
@@ -628,7 +643,7 @@ const SellerOnboardingWizard = ({
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                      <FormLabel color={cTextMuted} fontWeight="600">
                         GST Number
                       </FormLabel>
                       <Input
@@ -642,13 +657,13 @@ const SellerOnboardingWizard = ({
                   </Box>
 
                   <Box p={5} {...getFieldShellStyles()}>
-                    <Text fontSize="sm" color={dashboardPalette.textSoft}>
+                    <Text fontSize="sm" color={cTextSoft}>
                       Company Code
                     </Text>
-                    <Text fontSize="lg" fontWeight="700" color={dashboardPalette.text}>
+                    <Text fontSize="lg" fontWeight="700" color={cText}>
                       {formValues.companyCode || "Will be generated"}
                     </Text>
-                    <Text mt={2} fontSize="sm" color={dashboardPalette.textSoft}>
+                    <Text mt={2} fontSize="sm" color={cTextSoft}>
                       We generate this automatically so sellers do not need to fill it manually.
                     </Text>
                   </Box>
@@ -656,7 +671,7 @@ const SellerOnboardingWizard = ({
 
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl>
-                    <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                    <FormLabel color={cTextMuted} fontWeight="600">
                       About Your Shop
                     </FormLabel>
                     <Textarea
@@ -686,10 +701,10 @@ const SellerOnboardingWizard = ({
                     gap={3}
                   >
                     <Box>
-                      <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
+                      <Text fontSize="md" fontWeight="700" color={cText}>
                         Choose shop location
                       </Text>
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
+                      <Text fontSize="sm" color={cTextSoft}>
                         Tap the map to place your shop. We will auto-fill the address when possible.
                       </Text>
                     </Box>
@@ -707,9 +722,9 @@ const SellerOnboardingWizard = ({
                       alignSelf={{ base: "stretch", lg: "center" }}
                       onClick={detectCurrentLocation}
                       isLoading={geocoding}
-                      borderColor={dashboardPalette.borderStrong}
-                      color={dashboardPalette.accentStrong}
-                      _hover={{ bg: dashboardPalette.accentSoft }}
+                      borderColor={cBorderStrong}
+                      color={cAccentStrong}
+                      _hover={{ bg: cAccentSoft }}
                     >
                       Use current location
                     </Button>
@@ -721,12 +736,12 @@ const SellerOnboardingWizard = ({
                     borderRadius="2xl"
                     overflow="hidden"
                     borderWidth="1px"
-                    borderColor={dashboardPalette.borderStrong}
-                    bg={dashboardPalette.surfaceSoft}
+                    borderColor={cBorderStrong}
+                    bg={cSurfaceSoft}
                   >
                     {!GOOGLE_MAPS_API_KEY ? (
                       <CenteredBox h="100%">
-                        <Text fontSize="sm" color={dashboardPalette.textMuted} textAlign="center">
+                        <Text fontSize="sm" color={cTextMuted} textAlign="center">
                           Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
                         </Text>
                       </CenteredBox>
@@ -738,7 +753,7 @@ const SellerOnboardingWizard = ({
                       </CenteredBox>
                     ) : !isLoaded ? (
                       <CenteredBox h="100%">
-                        <Text fontSize="sm" color={dashboardPalette.textSoft}>
+                        <Text fontSize="sm" color={cTextSoft}>
                           Loading map...
                         </Text>
                       </CenteredBox>
@@ -760,15 +775,15 @@ const SellerOnboardingWizard = ({
                       px={3}
                       py={1}
                       borderRadius="full"
-                      bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : dashboardPalette.accentSoft}
-                      color={selectedPoint ? dashboardPalette.success : dashboardPalette.accentStrong}
+                      bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : cAccentSoft}
+                      color={selectedPoint ? cSuccess : cAccentStrong}
                       border="1px solid"
-                      borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : dashboardPalette.border}
+                      borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : cBorder}
                     >
                       {selectedPoint ? "Pin selected" : "Pin not selected"}
                     </Badge>
                     {selectedPoint ? (
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
+                      <Text fontSize="sm" color={cTextSoft}>
                         {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
                       </Text>
                     ) : null}
@@ -779,7 +794,7 @@ const SellerOnboardingWizard = ({
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                      <FormLabel color={cTextMuted} fontWeight="600">
                         Address
                       </FormLabel>
                       <Input
@@ -794,7 +809,7 @@ const SellerOnboardingWizard = ({
 
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                      <FormLabel color={cTextMuted} fontWeight="600">
                         City
                       </FormLabel>
                       <Input
@@ -809,7 +824,7 @@ const SellerOnboardingWizard = ({
 
                   <Box p={5} {...getFieldShellStyles()}>
                     <FormControl isRequired>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                      <FormLabel color={cTextMuted} fontWeight="600">
                         State
                       </FormLabel>
                       <Input
@@ -823,31 +838,16 @@ const SellerOnboardingWizard = ({
                   </Box>
 
                   <Box p={5} {...getFieldShellStyles()}>
-                    <FormControl>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
+                    <FormControl isRequired>
+                      <FormLabel color={cTextMuted} fontWeight="600">
                         Postal Code
                       </FormLabel>
                       <Input
                         value={formValues.location?.postalCode || ""}
                         onChange={(event) => setFieldValue("location.postalCode", event.target.value)}
-                        placeholder="Postal code"
+                        placeholder="PIN Code"
                         sx={fieldInputSx}
                       />
-                    </FormControl>
-                  </Box>
-
-                  <Box p={5} {...getFieldShellStyles()} gridColumn={{ base: "span 1", md: "span 2" }}>
-                    <FormControl isRequired>
-                      <FormLabel color={dashboardPalette.textMuted} fontWeight="600">
-                        Country
-                      </FormLabel>
-                      <Input
-                        value={formValues.location?.country || ""}
-                        onChange={(event) => setFieldValue("location.country", event.target.value)}
-                        placeholder="Country"
-                        sx={fieldInputSx}
-                      />
-                      <FieldError message={stepErrors.country} />
                     </FormControl>
                   </Box>
                 </SimpleGrid>
@@ -857,251 +857,136 @@ const SellerOnboardingWizard = ({
             {stepIndex === 2 ? (
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
-                  <HStack spacing={3} mb={4}>
-                    <Circle size="42px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
-                      <Icon as={FiPhone} />
-                    </Circle>
-                    <Box>
-                      <Text fontWeight="700" color={dashboardPalette.text}>
-                        Contact phone
-                      </Text>
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
-                        This is what buyers will see on your shop profile.
-                      </Text>
-                    </Box>
-                  </HStack>
-                  <Input
-                    value={formValues.contactInfo?.phone || ""}
-                    onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
-                    placeholder="Phone number"
-                    sx={fieldInputSx}
-                  />
-                  <FieldError message={stepErrors.phone} />
+                  <FormControl isRequired>
+                    <FormLabel color={cTextMuted} fontWeight="600">
+                      Phone Number
+                    </FormLabel>
+                    <HStack>
+                      <Circle size="52px" bg={cSurfaceSoft} border="1px solid" borderColor={cBorder}>
+                        <Icon as={FiPhone} color={cAccent} />
+                      </Circle>
+                      <Input
+                        value={formValues.contactInfo?.phone || ""}
+                        onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
+                        placeholder="Contact phone"
+                        sx={fieldInputSx}
+                      />
+                    </HStack>
+                    <FieldError message={stepErrors.phone} />
+                  </FormControl>
                 </Box>
 
                 <Box p={5} {...getFieldShellStyles()}>
-                  <HStack spacing={3} mb={4}>
-                    <Circle size="42px" bg="rgba(214, 183, 114, 0.10)" color={dashboardPalette.accent}>
-                      <Icon as={FiMail} />
-                    </Circle>
-                    <Box>
-                      <Text fontWeight="700" color={dashboardPalette.text}>
-                        Email address
-                      </Text>
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
-                        Optional. Useful for invoices and buyer communication.
-                      </Text>
-                    </Box>
-                  </HStack>
-                  <Input
-                    value={formValues.contactInfo?.email || ""}
-                    onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
-                    placeholder="Optional email"
-                    sx={fieldInputSx}
-                  />
-                  <FieldError message={stepErrors.email} />
-                </Box>
-
-                <Box p={5} {...getFieldShellStyles()}>
-                  <Text fontWeight="700" color={dashboardPalette.text}>
-                    What buyers will get from this
-                  </Text>
-                  <Divider my={4} />
-                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
-                    <HStack align="start">
-                      <CheckIcon mt={1} color={dashboardPalette.success} />
-                      <Text fontSize="sm" color={dashboardPalette.textMuted}>
-                        Easier order follow-up and payment coordination
-                      </Text>
+                  <FormControl>
+                    <FormLabel color={cTextMuted} fontWeight="600">
+                      Email Address
+                    </FormLabel>
+                    <HStack>
+                      <Circle size="52px" bg={cSurfaceSoft} border="1px solid" borderColor={cBorder}>
+                        <Icon as={FiMail} color={cAccent} />
+                      </Circle>
+                      <Input
+                        value={formValues.contactInfo?.email || ""}
+                        onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
+                        placeholder="Business email (optional)"
+                        sx={fieldInputSx}
+                      />
                     </HStack>
-                    <HStack align="start">
-                      <CheckIcon mt={1} color={dashboardPalette.success} />
-                      <Text fontSize="sm" color={dashboardPalette.textMuted}>
-                        Better trust when buyers see verified contact details
-                      </Text>
-                    </HStack>
-                  </Grid>
+                    <FieldError message={stepErrors.email} />
+                  </FormControl>
                 </Box>
               </VStack>
             ) : null}
 
             {stepIndex === 3 ? (
-              <VStack align="stretch" spacing={5}>
+              <VStack align="stretch" spacing={6}>
                 <UploadCard
-                  title="Shop logo"
-                  helper="This appears across the dashboard and your shop listing."
+                  title="Shop Logo"
+                  helper="Upload a square logo for your shop brand."
                   files={formValues.logo?.file}
-                  onFileChange={(file) =>
-                    setFieldValue("logo", {
-                      ...formValues.logo,
-                      file: file ? [file] : [],
-                      isAdd: file ? 1 : 0,
-                      isDeleted: file ? 0 : 1,
-                    })
-                  }
-                  onRemove={() =>
-                    setFieldValue("logo", {
-                      ...formValues.logo,
-                      file: [],
-                      isAdd: 0,
-                      isDeleted: 1,
-                    })
-                  }
+                  onFileChange={(file) => setFieldValue("logo", { file: file ? [file] : [], isAdd: 1 })}
+                  onRemove={() => setFieldValue("logo", { file: [], isDeleted: 1 })}
                 />
 
                 <UploadCard
-                  title="Cover image"
-                  helper="A wide banner image for your shop profile."
+                  title="Cover Image"
+                  helper="Add a beautiful wide banner for your shop profile."
                   files={formValues.coverImage?.file}
-                  onFileChange={(file) =>
-                    setFieldValue("coverImage", {
-                      ...formValues.coverImage,
-                      file: file ? [file] : [],
-                      isAdd: file ? 1 : 0,
-                      isDeleted: file ? 0 : 1,
-                    })
-                  }
-                  onRemove={() =>
-                    setFieldValue("coverImage", {
-                      ...formValues.coverImage,
-                      file: [],
-                      isAdd: 0,
-                      isDeleted: 1,
-                    })
-                  }
+                  onFileChange={(file) => setFieldValue("coverImage", { file: file ? [file] : [], isAdd: 1 })}
+                  onRemove={() => setFieldValue("coverImage", { file: [], isDeleted: 1 })}
                 />
 
                 <Box p={5} {...getFieldShellStyles()}>
                   <VStack align="stretch" spacing={4}>
                     <Box>
-                      <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
-                        Shop gallery
+                      <Text fontSize="md" fontWeight="700" color={cText}>
+                        Shop Gallery
                       </Text>
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
-                        Optional photos of your store, shelves, or products.
+                      <Text fontSize="sm" color={cTextSoft}>
+                        Upload up to 10 photos of your products or store interior.
                       </Text>
                     </Box>
 
-                    <Input
+                    {formValues.gallery?.length > 0 ? (
+                      <ShowFileUploadFile
+                        files={formValues.gallery.map((g: any) => g.file)}
+                        removeFile={(index) => {
+                          const next = [...formValues.gallery];
+                          next.splice(index, 1);
+                          setFieldValue("gallery", next);
+                        }}
+                        edit={false}
+                      />
+                    ) : null}
+
+                    <input
                       ref={galleryInputRef}
                       type="file"
                       accept="image/*"
                       multiple
-                      display="none"
                       onChange={(event) => {
                         handleGalleryFilesSelected(Array.from(event.target.files || []));
                         event.target.value = "";
                       }}
+                      style={{ display: "none" }}
                     />
 
-                    <Box
-                      role="button"
-                      tabIndex={0}
-                      borderWidth="1px"
-                      borderStyle="dashed"
-                      borderColor={dashboardPalette.borderStrong}
-                      borderRadius="22px"
-                      py={7}
-                      px={6}
-                      bg={dashboardPalette.shellElevated}
-                      textAlign="center"
-                      cursor="pointer"
-                      transition="all 0.2s ease"
-                      _hover={{ borderColor: dashboardPalette.accent, bg: dashboardPalette.surfaceSoft }}
-                      _focusVisible={{ outline: "none", boxShadow: `0 0 0 3px ${dashboardPalette.accentSoft}` }}
+                    <Button
+                      variant="outline"
+                      borderRadius="16px"
+                      borderColor={cBorderStrong}
+                      color={cAccentStrong}
+                      _hover={{ bg: cAccentSoft }}
                       onClick={() => galleryInputRef.current?.click()}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          galleryInputRef.current?.click();
-                        }
-                      }}
                     >
-                      <Text fontSize="sm" fontWeight="600" color={dashboardPalette.text}>
-                        Tap to choose gallery images
-                      </Text>
-                      <Text mt={1} fontSize="xs" color={dashboardPalette.textSoft}>
-                        Upload multiple storefront or product photos
-                      </Text>
-                    </Box>
-
-                    <HStack spacing={3} flexWrap="wrap">
-                      <Button
-                        borderRadius="16px"
-                        bg={dashboardPalette.accent}
-                        color={dashboardPalette.page}
-                        _hover={{ bg: dashboardPalette.accentStrong }}
-                        onClick={() => galleryInputRef.current?.click()}
-                      >
-                        Add Photos
-                      </Button>
-                      <Text fontSize="sm" color={dashboardPalette.textSoft}>
-                        {(formValues.gallery || []).length
-                          ? `${formValues.gallery.length} photo${formValues.gallery.length > 1 ? "s" : ""} selected`
-                          : "No gallery images selected yet."}
-                      </Text>
-                    </HStack>
-
-                    {(formValues.gallery || []).length ? (
-                      <VStack spacing={3} align="stretch">
-                        {formValues.gallery.map((item: any, index: number) => (
-                          <Box
-                            key={`${item.title || "gallery"}-${index}`}
-                            borderWidth="1px"
-                            borderColor={dashboardPalette.borderStrong}
-                            bg="rgba(255,255,255,0.02)"
-                            borderRadius="2xl"
-                            px={4}
-                            py={3}
-                          >
-                            <Flex
-                              justify="space-between"
-                              align={{ base: "start", md: "center" }}
-                              direction={{ base: "column", md: "row" }}
-                              gap={3}
-                            >
-                              <Box>
-                                <Text fontWeight="600" color={dashboardPalette.text}>
-                                  {item.title || item.file?.name || `Photo ${index + 1}`}
-                                </Text>
-                                <Text fontSize="sm" color={dashboardPalette.textSoft}>
-                                  {item.file?.name || "Selected image"}
-                                </Text>
-                              </Box>
-                              <Button
-                                variant="ghost"
-                                borderRadius="16px"
-                                color={dashboardPalette.danger}
-                                _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
-                                onClick={() =>
-                                  setFieldValue(
-                                    "gallery",
-                                    formValues.gallery.filter((_: any, currentIndex: number) => currentIndex !== index),
-                                  )
-                                }
-                              >
-                                Remove
-                              </Button>
-                            </Flex>
-                          </Box>
-                        ))}
-                      </VStack>
-                    ) : null}
+                      Add Photos to Gallery
+                    </Button>
                   </VStack>
                 </Box>
               </VStack>
             ) : null}
 
-            <Box pt={4}>
+            <Flex justify="space-between" pt={4}>
               <Button
-                w="full"
-                {...primaryButtonSx}
-                onClick={stepIndex === onboardingSteps.length - 1 ? handleFinalSubmit : goNext}
-                isLoading={submitting}
+                variant="ghost"
+                borderRadius="18px"
+                px={8}
+                h="56px"
+                color={cTextMuted}
+                _hover={{ bg: cSurfaceSoft, color: cText }}
+                onClick={goBack}
               >
-                {stepIndex === onboardingSteps.length - 1 ? "Create shop" : "Continue"}
+                Back
               </Button>
-            </Box>
+              <Button
+                {...primaryButtonSx}
+                px={10}
+                isLoading={submitting}
+                onClick={stepIndex === onboardingSteps.length - 1 ? handleFinalSubmit : goNext}
+              >
+                {stepIndex === onboardingSteps.length - 1 ? "Finish & Launch" : "Continue"}
+              </Button>
+            </Flex>
           </VStack>
         </Box>
       </Container>

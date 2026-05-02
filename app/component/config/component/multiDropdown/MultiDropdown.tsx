@@ -12,12 +12,11 @@ import {
   Flex,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { debounce } from "lodash";
 import { MdFilterList } from "react-icons/md";
 import CustomDateRange from "../CustomDateRange/CustomDateRange";
 import dynamic from "next/dynamic";
 import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
-import { merchantFormSx } from "../../../../dashboard/shop/component/merchantTheme";
+import { useMerchantFormSx } from "../../../../dashboard/shop/component/merchantTheme";
 const CustomInput = dynamic(() => import('../../../../component/config/component/customInput/CustomInput'), { ssr: false });
 
 interface DropdownOption {
@@ -54,37 +53,53 @@ const MultiDropdown = ({
   actions,
   variant = "default",
 }: MultiDropdownProps) => {
+  const merchantFormSx = useMerchantFormSx();
   const [inputValue, setInputValue] = useState(search?.searchValue || "");
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
   const isMerchant = variant === "merchant";
 
-  // Use useColorModeValue to set colors for light and dark modes
-  const popoverBg = useColorModeValue("white", "gray.900");
-  const borderColor = useColorModeValue("gray.300", "gray.600");
+  // Dynamic Theme Colors
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
+
+  const popoverBg = isMerchant ? cSurface : useColorModeValue("white", "gray.900");
+  const borderColor = isMerchant ? cBorder : useColorModeValue("gray.300", "gray.600");
   const buttonTextColor = useColorModeValue("teal.400", "teal.200");
   const focusBorderColor = useColorModeValue("blue.500", "blue.300");
+
   const merchantButtonStyles = isMerchant
     ? {
-        bg: dashboardPalette.surfaceAlt,
-        color: dashboardPalette.accentStrong,
+        bg: cSurfaceAlt,
+        color: cAccentStrong,
         border: "1px solid",
-        borderColor: dashboardPalette.border,
+        borderColor: cBorder,
         borderRadius: "16px",
-        _hover: { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text },
-        _active: { bg: dashboardPalette.surfaceSoft },
+        _hover: { bg: cSurfaceSoft, color: cText },
+        _active: { bg: cSurfaceSoft },
       }
     : {};
+
   const merchantInputStyles = isMerchant
     ? {
-        bg: dashboardPalette.surfaceAlt,
-        borderColor: dashboardPalette.borderStrong,
-        color: dashboardPalette.text,
+        bg: cSurfaceAlt,
+        borderColor: cBorderStrong,
+        color: cText,
         borderRadius: "16px",
-        _placeholder: { color: dashboardPalette.textSoft },
-        _hover: { borderColor: dashboardPalette.accent },
+        _placeholder: { color: cTextSoft },
+        _hover: { borderColor: cAccent },
         _focusVisible: {
-          borderColor: dashboardPalette.accent,
-          boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+          borderColor: cAccent,
+          boxShadow: `0 0 0 1px ${cAccent}`,
         },
       }
     : {};
@@ -147,17 +162,17 @@ const MultiDropdown = ({
       </PopoverTrigger>
       <PopoverContent
         p={3}
-        bg={isMerchant ? dashboardPalette.surface : popoverBg}
-        borderColor={isMerchant ? dashboardPalette.border : borderColor}
-        boxShadow={isMerchant ? "0 24px 48px rgba(0, 0, 0, 0.36)" : "md"}
+        bg={popoverBg}
+        borderColor={borderColor}
+        boxShadow={isMerchant ? useColorModeValue("lg", "0 24px 48px rgba(0, 0, 0, 0.36)") : "md"}
         sx={isMerchant ? merchantFormSx : undefined}
       >
         <PopoverHeader
           mt={-1}
           fontWeight="bold"
           borderBottomWidth="1px"
-          color={isMerchant ? dashboardPalette.accentStrong : buttonTextColor}
-          borderBottomColor={isMerchant ? dashboardPalette.border : undefined}
+          color={isMerchant ? cAccentStrong : buttonTextColor}
+          borderBottomColor={isMerchant ? cBorder : undefined}
         >
           Select Options
         </PopoverHeader>
@@ -222,10 +237,10 @@ const MultiDropdown = ({
                 handlePopoverClose();
               }}
               mt={2}
-              bg={isMerchant ? dashboardPalette.accent : undefined}
-              color={isMerchant ? dashboardPalette.page : undefined}
+              bg={isMerchant ? cAccent : undefined}
+              color={isMerchant ? cPage : undefined}
               borderRadius={isMerchant ? "16px" : undefined}
-              _hover={isMerchant ? { bg: dashboardPalette.accentStrong } : undefined}
+              _hover={isMerchant ? { bg: cAccentStrong } : undefined}
             >
               Apply
             </Button>
@@ -236,10 +251,10 @@ const MultiDropdown = ({
                 onClick={() => resetFilterss()}
                 border="2px solid"
                 colorScheme={isMerchant ? undefined : "red"}
-                borderColor={isMerchant ? dashboardPalette.borderStrong : undefined}
-                color={isMerchant ? dashboardPalette.textMuted : undefined}
+                borderColor={isMerchant ? cBorderStrong : undefined}
+                color={isMerchant ? cTextMuted : undefined}
                 borderRadius={isMerchant ? "16px" : undefined}
-                _hover={isMerchant ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text } : undefined}
+                _hover={isMerchant ? { bg: cSurfaceSoft, color: cText } : undefined}
               >
                 Reset Filter
               </Button>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import {
-  Box,
+import { Box,
   Badge,
   useToast,
   Text,
@@ -10,14 +9,13 @@ import {
   VStack,
   Flex,
   SimpleGrid,
-  Icon,
-} from "@chakra-ui/react";
+  Icon, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { FaClipboardList, FaTruck, FaCheckCircle, FaSlidersH } from "react-icons/fa";
 import stores from "../../../../store/stores";
 import CustomTable from "../../../../component/config/component/CustomTable/CustomTable";
 import OrderDrawer from "./OrderDrawer";
-import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
+import { dashboardPalette, orderStatusPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 import {
   getMerchantTableProps,
   MerchantBadge,
@@ -36,45 +34,46 @@ const formatCurrency = (amount: any) => {
   }).format(numericAmount);
 };
 
-const getOrderStatusMeta = (status: string) => {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized === "delivered") {
-    return {
-      label: "Delivered",
-      bg: "rgba(70, 201, 139, 0.14)",
-      color: dashboardPalette.success,
-      borderColor: "rgba(70, 201, 139, 0.22)",
-    };
-  }
-
-  if (normalized === "cancelled") {
-    return {
-      label: "Cancelled",
-      bg: "rgba(239, 107, 107, 0.14)",
-      color: dashboardPalette.danger,
-      borderColor: "rgba(239, 107, 107, 0.24)",
-    };
-  }
-
-  if (normalized === "created") {
-    return {
-      label: "Placed",
-      bg: dashboardPalette.accentSoft,
-      color: dashboardPalette.accentStrong,
-      borderColor: dashboardPalette.border,
-    };
-  }
-
-  return {
-    label: status || "Pending",
-    bg: "rgba(214, 183, 114, 0.08)",
-    color: dashboardPalette.warning,
-    borderColor: dashboardPalette.border,
-  };
-};
-
 const OrdersTab = observer(() => {
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("blue.200", dashboardPalette.borderStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F0F6FF", dashboardPalette.page);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  // Orange-600 — no gold/amber
+  const cWarning = useColorModeValue("orange.600", dashboardPalette.warning);
+  const cSuccess = useColorModeValue("green.500", dashboardPalette.success);
+
+  // Full status color system — Blue/Cyan progress states, Mint delivered, Rose cancelled
+  const getOrderStatusMeta = (status: string) => {
+    const normalized = String(status || "").toLowerCase() as keyof typeof orderStatusPalette;
+    const paletteMeta = orderStatusPalette[normalized];
+
+    if (paletteMeta) {
+      return {
+        label: paletteMeta.label,
+        bg: useColorModeValue(`${paletteMeta.colorScheme}.50`, paletteMeta.bg),
+        color: useColorModeValue(`${paletteMeta.colorScheme}.700`, paletteMeta.color),
+        borderColor: useColorModeValue(`${paletteMeta.colorScheme}.100`, paletteMeta.border),
+      };
+    }
+
+    // Fallback: Blue (placed/unknown)
+    return {
+      label: status || "Placed",
+      bg: useColorModeValue("blue.50", dashboardPalette.accentSoft),
+      color: useColorModeValue("blue.700", dashboardPalette.accentStrong),
+      borderColor: useColorModeValue("blue.100", dashboardPalette.border),
+    };
+  };
+
   const { orderStore, auth } = stores;
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -208,10 +207,10 @@ const OrdersTab = observer(() => {
         metaData: {
           component: (row: any) => (
             <VStack align="start" spacing={0.5}>
-              <Text color={dashboardPalette.text} fontWeight="600">
+              <Text color={cText} fontWeight="600">
                 {row.user?.name || "N/A"}
               </Text>
-              <Text color={dashboardPalette.textSoft} fontSize="xs">
+              <Text color={cTextSoft} fontSize="xs">
                 {row.user?.phone || row.user?.email || "No contact details"}
               </Text>
             </VStack>
@@ -248,7 +247,7 @@ const OrdersTab = observer(() => {
         type: "component",
         metaData: {
           component: (row: any) => (
-            <Text color={dashboardPalette.accentStrong} fontWeight="700">
+            <Text color={cAccentStrong} fontWeight="700">
               {formatCurrency(row.quote?.price?.value || row.total)}
             </Text>
           ),
@@ -264,10 +263,10 @@ const OrdersTab = observer(() => {
               px={3}
               py={1.5}
               borderRadius="full"
-              bg={dashboardPalette.surfaceAlt}
-              color={dashboardPalette.textMuted}
+              bg={cSurfaceAlt}
+              color={cTextMuted}
               border="1px solid"
-              borderColor={dashboardPalette.borderStrong}
+              borderColor={cBorderStrong}
             >
               {row.items?.length || 0} Items
             </Badge>
@@ -275,7 +274,7 @@ const OrdersTab = observer(() => {
         },
       },
     ],
-    []
+    [cText, cTextSoft, cAccentStrong, cSurfaceAlt, cTextMuted, cBorderStrong]
   );
 
   const actions = useMemo(
@@ -380,10 +379,10 @@ const OrdersTab = observer(() => {
     return (
       <MerchantPageShell maxW="7xl">
         <MerchantPanel p={{ base: 6, md: 8 }}>
-            <Text color={dashboardPalette.text} fontSize="lg" fontWeight="600">
+            <Text color={cText} fontSize="lg" fontWeight="600">
               No company information found for this user.
             </Text>
-            <Text mt={2} color={dashboardPalette.textMuted}>
+            <Text mt={2} color={cTextMuted}>
               Orders are tied to a seller storefront, so this tab needs a company profile before it can load.
             </Text>
         </MerchantPanel>
@@ -411,20 +410,21 @@ const OrdersTab = observer(() => {
               label="Total Orders"
               value={metrics.totalOrders}
               icon={FaClipboardList}
-              iconColor={dashboardPalette.accentStrong}
+              iconColor={cAccentStrong}
             />
             <MerchantStatCard
               label="Open on Page"
               value={metrics.inTransitOrders}
               icon={FaTruck}
-              iconColor={dashboardPalette.warning}
+              iconColor={cWarning}
+              iconBg={dashboardPalette.warningSoft}
             />
             <MerchantStatCard
               label="Delivered on Page"
               value={metrics.deliveredOrders}
               icon={FaCheckCircle}
               iconColor={dashboardPalette.success}
-              iconBg="rgba(70, 201, 139, 0.10)"
+              iconBg={dashboardPalette.successSoft}
             />
           </SimpleGrid>
         }
@@ -439,10 +439,10 @@ const OrdersTab = observer(() => {
             mb={4}
           >
             <Box>
-              <Heading size="md" color={dashboardPalette.text} fontWeight="600">
+              <Heading size="md" color={cText} fontWeight="600">
                 All Orders
               </Heading>
-              <Text mt={1} color={dashboardPalette.textMuted}>
+              <Text mt={1} color={cTextMuted}>
                 Showing {metrics.visibleOrders} orders on this page.
               </Text>
             </Box>

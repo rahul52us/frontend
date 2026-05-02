@@ -1,4 +1,4 @@
-import { Flex, Heading, Tbody, Td, Tr } from "@chakra-ui/react";
+import { Flex, Heading, Tbody, Td, Tr, useColorModeValue } from "@chakra-ui/react";
 import SpinnerLoader from "../../../common/Loader/SpinnerLoader";
 import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 
@@ -16,6 +16,8 @@ const TableLoader: React.FC<TableLoaderProps> = ({
   variant = "default",
 }) => {
   const isMerchant = variant === "merchant";
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+
   if (loader) {
     return (
       <Tbody>
@@ -38,7 +40,7 @@ const TableLoader: React.FC<TableLoaderProps> = ({
             <Flex justifyContent="center">
               <Heading
                 fontSize="sm"
-                color={isMerchant ? dashboardPalette.textMuted : "red.400"}
+                color={isMerchant ? cTextMuted : "red.400"}
                 cursor="pointer"
                 fontWeight={isMerchant ? "medium" : undefined}
               >

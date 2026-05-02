@@ -152,7 +152,7 @@ const AdditionalLocationCard = ({
       border="1px solid"
       borderColor="var(--dashboard-border-strong)"
       borderRadius="20px"
-      bg="rgba(255,255,255,0.02)"
+      bg="var(--dashboard-surface-alt)"
     >
       <HStack justify="space-between" mb={4}>
         <Text fontSize="lg" fontWeight="semibold" color="var(--dashboard-accent-strong)">

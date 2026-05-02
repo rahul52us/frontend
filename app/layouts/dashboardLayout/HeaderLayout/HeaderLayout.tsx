@@ -1,6 +1,6 @@
 "use client"; // Add this for client-side component in Next.js
 
-import { Flex } from "@chakra-ui/react";
+import { Flex, useColorModeValue } from "@chakra-ui/react";
 import { useMediaQuery } from "@chakra-ui/react";
 import HeaderNavbar from "./component/HeaderNavbar/HeaderNavbar";
 import HeaderLogo from "./component/Logo/HeaderLogo";
@@ -11,6 +11,7 @@ import { dashboardPalette } from "../dashboardPalette";
 
 const HeaderLayout = observer(() => {
   const [isLargerThan1020] = useMediaQuery("(min-width: 1020px)");
+  const borderColor = useColorModeValue("gray.200", dashboardPalette.border);
 
   return (
     <Flex
@@ -21,7 +22,7 @@ const HeaderLayout = observer(() => {
       padding={headerPadding}
       bg="transparent"
       borderBottom="1px solid"
-      borderBottomColor={dashboardPalette.border}
+      borderBottomColor={borderColor}
     >
       <Flex width={isLargerThan1020 ? "85%" : "95%"}>
         <HeaderLogo />

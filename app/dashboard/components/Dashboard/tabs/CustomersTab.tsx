@@ -2,8 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
-import {
-  Badge,
+import { Badge,
   Box,
   Button,
   Checkbox,
@@ -45,8 +44,7 @@ import {
   useBreakpointValue,
   useDisclosure,
   useToast,
-  VStack,
-} from "@chakra-ui/react";
+  VStack, useColorModeValue } from "@chakra-ui/react";
 import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons";
 import { FileViewer } from "@capacitor/file-viewer";
 import { Directory, Filesystem } from "@capacitor/filesystem";
@@ -286,6 +284,21 @@ const getDefaultBuyerFormValues = () => ({
 });
 
 const CustomersTab: React.FC = observer(() => {
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
+  
+                            
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -2254,9 +2267,9 @@ const CustomersTab: React.FC = observer(() => {
                 {...merchantBadgeStyles}
                 px={2.5}
                 py={1}
-                bg={dashboardPalette.surfaceAlt}
-                color={dashboardPalette.textSoft}
-                borderColor={dashboardPalette.borderStrong}
+                bg={cSurfaceAlt}
+                color={cTextSoft}
+                borderColor={cBorderStrong}
               >
                 {tag}
               </Badge>
@@ -2347,7 +2360,7 @@ const CustomersTab: React.FC = observer(() => {
           insetX={0}
           top={0}
           h="220px"
-          bg="radial-gradient(circle at top right, rgba(139,89,255,0.14) 0%, rgba(139,89,255,0.04) 28%, rgba(16,16,24,0) 58%)"
+          bg="radial-gradient(circle at top right, rgba(79,70,229,0.14) 0%, rgba(79,70,229,0.04) 28%, rgba(7,11,20,0) 58%)"
           pointerEvents="none"
         />
         <VStack position="relative" align="stretch" spacing={4}>
@@ -2365,13 +2378,13 @@ const CustomersTab: React.FC = observer(() => {
               bg={mobileLedgerPalette.panel}
               color={mobileLedgerPalette.text}
               borderWidth="1px"
-              borderColor="rgba(122, 107, 255, 0.10)"
+              borderColor="rgba(59, 130, 246, 0.10)"
               fontSize="xs"
               fontWeight="600"
               _placeholder={{ color: mobileLedgerPalette.textSoft }}
               _focus={{
-                borderColor: "rgba(139, 89, 255, 0.28)",
-                boxShadow: "0 0 0 1px rgba(139, 89, 255, 0.16)",
+                borderColor: "rgba(59, 130, 246, 0.28)",
+                boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.16)",
               }}
             />
           </InputGroup>
@@ -2384,7 +2397,7 @@ const CustomersTab: React.FC = observer(() => {
                   px={2.5}
                   py={1.25}
                   bg={mobileLedgerPalette.panelSoft}
-                  color={mobileLedgerPalette.purpleText}
+                  color={mobileLedgerPalette.indigoText}
                   textTransform="uppercase"
                   fontSize="9px"
                   fontWeight="900"
@@ -2436,11 +2449,11 @@ const CustomersTab: React.FC = observer(() => {
               textAlign="center"
               bg={mobileLedgerPalette.panel}
               borderWidth="1px"
-              borderColor="rgba(122, 107, 255, 0.16)"
+              borderColor="rgba(59, 130, 246, 0.16)"
               boxShadow="inset 0 1px 0 rgba(255,255,255,0.03)"
             >
               <Flex justify="center" mb={1}>
-                <Icon as={FiUsers} boxSize={4} color={mobileLedgerPalette.purpleText} />
+                <Icon as={FiUsers} boxSize={4} color={mobileLedgerPalette.indigoText} />
               </Flex>
               <Text color={mobileLedgerPalette.text} fontSize="2xl" fontWeight="900" lineHeight="0.95">
                 {total}
@@ -2455,12 +2468,12 @@ const CustomersTab: React.FC = observer(() => {
             w="full"
             h="48px"
             borderRadius="18px"
-            bgGradient={mobileLedgerPalette.purpleGradient}
+            bgGradient={mobileLedgerPalette.indigoGradient}
             color="white"
             leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
             fontSize="sm"
             fontWeight="800"
-            boxShadow={mobileLedgerPalette.purpleGlow}
+            boxShadow={mobileLedgerPalette.indigoGlow}
             _hover={{ filter: "brightness(1.06)" }}
             _active={{ transform: "scale(0.98)" }}
             onClick={openManualBuyerModal}
@@ -2478,7 +2491,7 @@ const CustomersTab: React.FC = observer(() => {
                 color={normalizedActivePartyType === "customer" ? mobileLedgerPalette.text : mobileLedgerPalette.textSoft}
                 fontSize="sm"
                 fontWeight="800"
-                boxShadow={normalizedActivePartyType === "customer" ? "inset 0 -3px 0 #6D6CFF" : "none"}
+                boxShadow={normalizedActivePartyType === "customer" ? "inset 0 -3px 0 #4F46E5" : "none"}
                 _hover={{ bg: "transparent", color: mobileLedgerPalette.text }}
                 _active={{ bg: "transparent" }}
                 onClick={() => setActivePartyType("customer")}
@@ -2493,7 +2506,7 @@ const CustomersTab: React.FC = observer(() => {
                 color={normalizedActivePartyType === "supplier" ? mobileLedgerPalette.text : mobileLedgerPalette.textSoft}
                 fontSize="sm"
                 fontWeight="800"
-                boxShadow={normalizedActivePartyType === "supplier" ? "inset 0 -3px 0 #6D6CFF" : "none"}
+                boxShadow={normalizedActivePartyType === "supplier" ? "inset 0 -3px 0 #4F46E5" : "none"}
                 _hover={{ bg: "transparent", color: mobileLedgerPalette.text }}
                 _active={{ bg: "transparent" }}
                 onClick={() => setActivePartyType("supplier")}
@@ -2511,7 +2524,7 @@ const CustomersTab: React.FC = observer(() => {
               py={3.5}
               bg={mobileLedgerPalette.panel}
               borderWidth="1px"
-              borderColor="rgba(122, 107, 255, 0.18)"
+              borderColor="rgba(59, 130, 246, 0.18)"
             >
               <Text fontSize="10px" color={mobileLedgerPalette.textSoft} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                 {mobileLeftSummary.label}
@@ -2588,7 +2601,7 @@ const CustomersTab: React.FC = observer(() => {
               py={7}
             >
               <VStack spacing={3}>
-                <Spinner color={mobileLedgerPalette.purpleText} thickness="3px" />
+                <Spinner color={mobileLedgerPalette.indigoText} thickness="3px" />
                 <Text fontSize="sm" color={mobileLedgerPalette.textMuted}>
                   Loading {partyPluralLabel.toLowerCase()}...
                 </Text>
@@ -2604,7 +2617,7 @@ const CustomersTab: React.FC = observer(() => {
               py={7}
             >
               <VStack spacing={2}>
-                <Icon as={FiUsers} boxSize={8} color={mobileLedgerPalette.purpleText} />
+                <Icon as={FiUsers} boxSize={8} color={mobileLedgerPalette.indigoText} />
                 <Text fontWeight="700" color={mobileLedgerPalette.text}>
                   No {partyPluralLabel.toLowerCase()} found
                 </Text>
@@ -2719,12 +2732,12 @@ const CustomersTab: React.FC = observer(() => {
                     w="full"
                     h="44px"
                     borderRadius="16px"
-                    bgGradient={mobileLedgerPalette.purpleGradient}
+                    bgGradient={mobileLedgerPalette.indigoGradient}
                     color="white"
                     fontSize="md"
                     fontWeight="800"
                     rightIcon={<Icon as={FiChevronRight} boxSize={3.5} />}
-                    boxShadow={mobileLedgerPalette.purpleGlow}
+                    boxShadow={mobileLedgerPalette.indigoGlow}
                     onClick={() => openLedgerView(buyer)}
                     _hover={{ filter: "brightness(1.06)" }}
                     _active={{ transform: "scale(0.98)" }}
@@ -2802,11 +2815,11 @@ const CustomersTab: React.FC = observer(() => {
             onClick={openManualBuyerModal}
             h="46px"
             borderRadius="18px"
-            bgGradient={mobileLedgerPalette.purpleGradient}
+            bgGradient={mobileLedgerPalette.indigoGradient}
             color="white"
             fontSize="md"
             fontWeight="800"
-            boxShadow={mobileLedgerPalette.purpleGlow}
+            boxShadow={mobileLedgerPalette.indigoGlow}
             _hover={{ filter: "brightness(1.06)" }}
             _active={{ transform: "scale(0.98)" }}
           >
@@ -2851,7 +2864,7 @@ const CustomersTab: React.FC = observer(() => {
     ),
     amountDisplay: (
       <Text
-        color={entry.direction === "credit" ? dashboardPalette.success : dashboardPalette.accentStrong}
+        color={entry.direction === "credit" ? dashboardPalette.success : cAccentStrong}
         fontWeight="bold"
       >
         {formatCurrency(entry.amount || 0)}
@@ -2860,8 +2873,8 @@ const CustomersTab: React.FC = observer(() => {
     balanceText: formatCurrency(entry.balanceAfter || 0),
     referenceText: entry.referenceId ? (
       <HStack spacing={1}>
-        <Text color={dashboardPalette.textMuted}>{entry.referenceType || "manual"}:</Text>
-        <Text fontWeight="600" color={dashboardPalette.accentStrong} cursor="pointer" onClick={() => {
+        <Text color={cTextMuted}>{entry.referenceType || "manual"}:</Text>
+        <Text fontWeight="600" color={cAccentStrong} cursor="pointer" onClick={() => {
           navigator.clipboard.writeText(entry.referenceId || '');
           toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
         }}>
@@ -2869,12 +2882,12 @@ const CustomersTab: React.FC = observer(() => {
         </Text>
       </HStack>
     ) : (
-      <Text color={dashboardPalette.textMuted}>{entry.referenceType || "manual"}</Text>
+      <Text color={cTextMuted}>{entry.referenceType || "manual"}</Text>
     ),
     statusBadge: renderMerchantBadge(entry.status || "active", entry.status === "reversed" ? "danger" : "success"),
     reverseAction:
       entry.status === "reversed" ? (
-        <Text color={dashboardPalette.textSoft}>-</Text>
+        <Text color={cTextSoft}>-</Text>
       ) : (
         <HStack spacing={2}>
           {canDownloadLedgerInvoice(entry) && (
@@ -2887,7 +2900,7 @@ const CustomersTab: React.FC = observer(() => {
               h="32px"
               minW="auto"
               px={3}
-              color={dashboardPalette.accentStrong}
+              color={cAccentStrong}
             >
               Invoice
             </Button>
@@ -2912,7 +2925,7 @@ const CustomersTab: React.FC = observer(() => {
             h="32px"
             minW="auto"
             px={3}
-            color={dashboardPalette.danger}
+            color={cDanger}
           >
             Reverse
           </Button>
@@ -2983,7 +2996,7 @@ const CustomersTab: React.FC = observer(() => {
       idDisplay: (
         <Text
           fontWeight="600"
-          color={dashboardPalette.accentStrong}
+          color={cAccentStrong}
           cursor="pointer"
           textDecoration="underline"
           onClick={() => openSaleDetails(record)}
@@ -3008,12 +3021,12 @@ const CustomersTab: React.FC = observer(() => {
             h="32px"
             minW="auto"
             px={3}
-            color={dashboardPalette.accentStrong}
+            color={cAccentStrong}
           >
             Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
           </Button>
         ) : (
-          <Text color={dashboardPalette.textSoft}>-</Text>
+          <Text color={cTextSoft}>-</Text>
         ),
     };
   });
@@ -3525,8 +3538,8 @@ const CustomersTab: React.FC = observer(() => {
         ? {
           bg: "rgba(214, 183, 114, 0.10)",
           borderColor: "rgba(214, 183, 114, 0.20)",
-          labelColor: dashboardPalette.accentStrong,
-          amountColor: dashboardPalette.accent,
+          labelColor: cAccentStrong,
+          amountColor: cAccent,
           label: "You Will Get",
         }
         : {
@@ -3732,26 +3745,26 @@ const CustomersTab: React.FC = observer(() => {
             <HStack spacing={2}>
               <Button
                 {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 0 ? dashboardPalette.accent : "transparent"}
-                color={ledgerTabIndex === 0 ? dashboardPalette.page : "#33506D"}
+                bg={ledgerTabIndex === 0 ? cAccent : "transparent"}
+                color={ledgerTabIndex === 0 ? cPage : "#33506D"}
                 onClick={() => setLedgerTabIndex(0)}
-                _hover={{ bg: ledgerTabIndex === 0 ? dashboardPalette.accentStrong : "#FBF8F2" }}
+                _hover={{ bg: ledgerTabIndex === 0 ? cAccentStrong : "#FBF8F2" }}
                 _active={{
                   ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 0 ? dashboardPalette.accentStrong : "rgba(214, 183, 114, 0.10)",
+                  bg: ledgerTabIndex === 0 ? cAccentStrong : "rgba(214, 183, 114, 0.10)",
                 }}
               >
                 Entries ({ledgerTotal})
               </Button>
               <Button
                 {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 1 ? dashboardPalette.accent : "transparent"}
-                color={ledgerTabIndex === 1 ? dashboardPalette.page : "#33506D"}
+                bg={ledgerTabIndex === 1 ? cAccent : "transparent"}
+                color={ledgerTabIndex === 1 ? cPage : "#33506D"}
                 onClick={() => setLedgerTabIndex(1)}
-                _hover={{ bg: ledgerTabIndex === 1 ? dashboardPalette.accentStrong : "#FBF8F2" }}
+                _hover={{ bg: ledgerTabIndex === 1 ? cAccentStrong : "#FBF8F2" }}
                 _active={{
                   ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 1 ? dashboardPalette.accentStrong : "rgba(214, 183, 114, 0.10)",
+                  bg: ledgerTabIndex === 1 ? cAccentStrong : "rgba(214, 183, 114, 0.10)",
                 }}
               >
                 {isSelectedSupplier ? "Purchases" : "Sales"} ({saleTotal})
@@ -3775,12 +3788,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="52px"
               borderRadius="16px"
-              bg={dashboardPalette.accent}
-              color={dashboardPalette.page}
+              bg={cAccent}
+              color={cPage}
               leftIcon={<AddIcon />}
               onClick={onSaleRecordOpen}
-              _hover={{ bg: dashboardPalette.accentStrong }}
-              _active={{ ...androidTheme.button.primary._active, bg: dashboardPalette.accentStrong }}
+              _hover={{ bg: cAccentStrong }}
+              _active={{ ...androidTheme.button.primary._active, bg: cAccentStrong }}
             >
               Add {isSelectedSupplier ? "Purchase" : "Sale"}
             </Button>
@@ -3789,12 +3802,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="52px"
               borderRadius="16px"
-              bg={dashboardPalette.surfaceAlt}
-              color={dashboardPalette.text}
+              bg={cSurfaceAlt}
+              color={cText}
               leftIcon={<AddIcon />}
               onClick={onLedgerEntryOpen}
-              _hover={{ bg: dashboardPalette.surfaceSoft }}
-              _active={{ ...androidTheme.button.primary._active, bg: dashboardPalette.surfaceSoft }}
+              _hover={{ bg: cSurfaceSoft }}
+              _active={{ ...androidTheme.button.primary._active, bg: cSurfaceSoft }}
             >
               Add Entry
             </Button>
@@ -3810,7 +3823,7 @@ const CustomersTab: React.FC = observer(() => {
     if (saleDetailsLoading) {
       return (
         <Flex minH="240px" align="center" justify="center" direction="column" gap={3}>
-          <Spinner color={dashboardPalette.accent} thickness="3px" size="lg" />
+          <Spinner color={cAccent} thickness="3px" size="lg" />
           <Text fontSize="sm" color="gray.500">
             Loading {isSelectedSupplier ? "purchase" : "sale"} history{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
           </Text>
@@ -3844,10 +3857,10 @@ const CustomersTab: React.FC = observer(() => {
         >
           <HStack justify="space-between" align="start" spacing={3}>
             <Box>
-              <Text fontSize="xs" textTransform="uppercase" color={dashboardPalette.accent} fontWeight="700">
+              <Text fontSize="xs" textTransform="uppercase" color={cAccent} fontWeight="700">
                 {selectedTransactionSingularLabel} ID
               </Text>
-              <Text fontSize="lg" fontWeight="800" color={dashboardPalette.page} wordBreak="break-all">
+              <Text fontSize="lg" fontWeight="800" color={cPage} wordBreak="break-all">
                 {saleRecord._id}
               </Text>
               <HStack spacing={2} mt={2} wrap="wrap">
@@ -3924,10 +3937,10 @@ const CustomersTab: React.FC = observer(() => {
             borderRadius="xl"
             bg="rgba(214, 183, 114, 0.10)"
           >
-            <Text fontSize="xs" color={dashboardPalette.accent} textTransform="uppercase" fontWeight="700">
+            <Text fontSize="xs" color={cAccent} textTransform="uppercase" fontWeight="700">
               {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
             </Text>
-            <Text fontSize="lg" fontWeight="800" color={dashboardPalette.page}>
+            <Text fontSize="lg" fontWeight="800" color={cPage}>
               {formatCurrency(summary.remainingDue)}
             </Text>
           </Box>
@@ -4057,7 +4070,7 @@ const CustomersTab: React.FC = observer(() => {
                       Qty {item.quantity} x {formatCurrency(Number(item.unitPrice || 0))}
                     </Text>
                   </Box>
-                  <Text fontSize="sm" fontWeight="800" color={dashboardPalette.accent}>
+                  <Text fontSize="sm" fontWeight="800" color={cAccent}>
                     {formatCurrency(Number(item.lineTotal || 0))}
                   </Text>
                 </HStack>
@@ -4081,7 +4094,7 @@ const CustomersTab: React.FC = observer(() => {
                     {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
                   </Text>
                 </Box>
-                <Text fontSize="sm" fontWeight="800" color={dashboardPalette.accent}>
+                <Text fontSize="sm" fontWeight="800" color={cAccent}>
                   {formatCurrency(summary.saleAmount)}
                 </Text>
               </HStack>
@@ -4482,7 +4495,7 @@ const CustomersTab: React.FC = observer(() => {
             spacing={2}
             bg="rgba(255,255,255,0.04)"
             border="1px solid"
-            borderColor={dashboardPalette.border}
+            borderColor={cBorder}
             borderRadius="18px"
             p={1}
             alignSelf="flex-start"
@@ -4492,12 +4505,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="40px"
               borderRadius="14px"
-              bg={normalizedActivePartyType === "customer" ? dashboardPalette.accent : "transparent"}
-              color={normalizedActivePartyType === "customer" ? dashboardPalette.page : dashboardPalette.textMuted}
+              bg={normalizedActivePartyType === "customer" ? cAccent : "transparent"}
+              color={normalizedActivePartyType === "customer" ? cPage : cTextMuted}
               _hover={{
                 bg:
                   normalizedActivePartyType === "customer"
-                    ? dashboardPalette.accentStrong
+                    ? cAccentStrong
                     : "rgba(255,255,255,0.04)",
               }}
               _active={{ transform: "scale(0.98)" }}
@@ -4509,12 +4522,12 @@ const CustomersTab: React.FC = observer(() => {
               flex="1"
               h="40px"
               borderRadius="14px"
-              bg={normalizedActivePartyType === "supplier" ? dashboardPalette.accent : "transparent"}
-              color={normalizedActivePartyType === "supplier" ? dashboardPalette.page : dashboardPalette.textMuted}
+              bg={normalizedActivePartyType === "supplier" ? cAccent : "transparent"}
+              color={normalizedActivePartyType === "supplier" ? cPage : cTextMuted}
               _hover={{
                 bg:
                   normalizedActivePartyType === "supplier"
-                    ? dashboardPalette.accentStrong
+                    ? cAccentStrong
                     : "rgba(255,255,255,0.04)",
               }}
               _active={{ transform: "scale(0.98)" }}
@@ -4561,7 +4574,7 @@ const CustomersTab: React.FC = observer(() => {
           <MerchantStatCard
             label="You Will Give"
             value={formatCurrency(buyerOverview.payable)}
-            valueColor={buyerOverview.payable > 0 ? dashboardPalette.danger : dashboardPalette.accentStrong}
+            valueColor={buyerOverview.payable > 0 ? cDanger : cAccentStrong}
             variant="panel"
           />
         </SimpleGrid>
@@ -4643,7 +4656,7 @@ const CustomersTab: React.FC = observer(() => {
           <MerchantStatCard
             label={`Total ${isSelectedSupplier ? "Purchase" : "Sale"} Debit`}
             value={formatCurrency(ledgerSummary.totalDebit)}
-            valueColor={dashboardPalette.accentStrong}
+            valueColor={cAccentStrong}
             variant="panel"
           />
           <MerchantStatCard
@@ -4658,16 +4671,16 @@ const CustomersTab: React.FC = observer(() => {
             valueColor={
               Number(ledgerSummary.outstandingBalance || 0) >= 0
                 ? isSelectedSupplier
-                  ? dashboardPalette.danger
+                  ? cDanger
                   : dashboardPalette.success
-                : dashboardPalette.warning
+                : cWarning
             }
             variant="panel"
           />
           <MerchantStatCard
             label="Credit Limit"
             value={formatCurrency(ledgerSummary.creditLimit)}
-            valueColor={dashboardPalette.text}
+            valueColor={cText}
             variant="panel"
           />
         </SimpleGrid>
@@ -4675,9 +4688,9 @@ const CustomersTab: React.FC = observer(() => {
         <Tabs index={ledgerTabIndex} onChange={(index) => setLedgerTabIndex(index)} variant="unstyled">
           <TabList
             overflowX="auto"
-            bg={dashboardPalette.surfaceAlt}
+            bg={cSurfaceAlt}
             borderWidth="1px"
-            borderColor={dashboardPalette.border}
+            borderColor={cBorder}
             borderRadius="20px"
             p={1}
             gap={1}
@@ -4686,12 +4699,12 @@ const CustomersTab: React.FC = observer(() => {
               whiteSpace="nowrap"
               borderRadius="16px"
               fontWeight="700"
-              color={dashboardPalette.textMuted}
+              color={cTextMuted}
               _selected={{
-                bg: dashboardPalette.accentSoft,
-                color: dashboardPalette.accentStrong,
+                bg: cAccentSoft,
+                color: cAccentStrong,
                 borderWidth: "1px",
-                borderColor: dashboardPalette.border,
+                borderColor: cBorder,
               }}
             >
               Ledger Entries ({ledgerTotal})
@@ -4700,12 +4713,12 @@ const CustomersTab: React.FC = observer(() => {
               whiteSpace="nowrap"
               borderRadius="16px"
               fontWeight="700"
-              color={dashboardPalette.textMuted}
+              color={cTextMuted}
               _selected={{
-                bg: dashboardPalette.accentSoft,
-                color: dashboardPalette.accentStrong,
+                bg: cAccentSoft,
+                color: cAccentStrong,
                 borderWidth: "1px",
-                borderColor: dashboardPalette.border,
+                borderColor: cBorder,
               }}
             >
               {selectedTransactionPluralLabel} ({saleTotal})
@@ -4776,32 +4789,32 @@ const CustomersTab: React.FC = observer(() => {
             loading={saleDetailsLoading && !saleRecordDetails}
             showDivider={false}
             contentProps={{
-              bg: dashboardPalette.page,
-              color: dashboardPalette.text,
+              bg: cPage,
+              color: cText,
               borderLeft: "1px solid",
-              borderLeftColor: dashboardPalette.border,
+              borderLeftColor: cBorder,
             }}
             headerProps={{
               bg: dashboardPalette.shell,
-              color: dashboardPalette.text,
+              color: cText,
               borderBottom: "1px solid",
-              borderBottomColor: dashboardPalette.border,
+              borderBottomColor: cBorder,
               px: 6,
               py: 5,
             }}
             closeButtonProps={{
-              color: dashboardPalette.text,
-              bg: dashboardPalette.surfaceAlt,
+              color: cText,
+              bg: cSurfaceAlt,
               border: "1px solid",
-              borderColor: dashboardPalette.borderStrong,
+              borderColor: cBorderStrong,
               borderRadius: "12px",
               _hover: {
-                bg: dashboardPalette.surfaceSoft,
-                color: dashboardPalette.accentStrong,
+                bg: cSurfaceSoft,
+                color: cAccentStrong,
               },
             }}
             bodyProps={{
-              bg: dashboardPalette.page,
+              bg: cPage,
               px: { base: 3, md: 4 },
               py: 4,
             }}
@@ -4869,8 +4882,8 @@ const CustomersTab: React.FC = observer(() => {
                       px={6}
                       borderWidth="1.5px"
                       bg="rgba(214, 183, 114, 0.10)"
-                      borderColor={dashboardPalette.accent}
-                      color={dashboardPalette.accent}
+                      borderColor={cAccent}
+                      color={cAccent}
                       _hover={{ bg: "rgba(214, 183, 114, 0.16)", transform: "translateY(-1px)" }}
                       _active={{ transform: "translateY(0)" }}
                     >
@@ -4927,7 +4940,7 @@ const CustomersTab: React.FC = observer(() => {
                   h="74px"
                   borderRadius="20px"
                   borderWidth="2px"
-                  borderColor={dashboardPalette.accent}
+                  borderColor={cAccent}
                   bg="white"
                   fontSize="2xl"
                   fontWeight="500"
@@ -5012,11 +5025,11 @@ const CustomersTab: React.FC = observer(() => {
                 variant="ghost"
                 justifyContent="flex-start"
                 px={0}
-                color={dashboardPalette.accent}
+                color={cAccent}
                 fontSize="lg"
                 fontWeight="700"
                 onClick={() => setShowContactExtraFields((prev) => !prev)}
-                _hover={{ bg: "transparent", color: dashboardPalette.accentStrong }}
+                _hover={{ bg: "transparent", color: cAccentStrong }}
                 _active={{ bg: "transparent" }}
               >
                 {showContactExtraFields ? "- Hide extra details" : "+ Add address & notes (optional)"}

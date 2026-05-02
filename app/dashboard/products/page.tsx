@@ -21,8 +21,7 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Select,
-} from "@chakra-ui/react";
+  Select, useColorModeValue } from "@chakra-ui/react";
 import * as Yup from "yup";
 import {
   FaBoxOpen,
@@ -90,6 +89,21 @@ const ProductSchema = Yup.object().shape({
 });
 
 const ProductsPage = observer(() => {
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
+  
+                            
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const { showAddToCartToast } = useCartToast();
@@ -344,12 +358,12 @@ const ProductsPage = observer(() => {
           <Button
             size="lg"
             px={9}
-            bg={dashboardPalette.accent}
-            color={dashboardPalette.page}
+            bg={cAccent}
+            color={cPage}
             leftIcon={<FaPlus />}
             fontWeight="700"
             borderRadius="18px"
-            _hover={{ bg: dashboardPalette.accentStrong, transform: "translateY(-1px)" }}
+            _hover={{ bg: cAccentStrong, transform: "translateY(-1px)" }}
             transition="all 0.2s"
             onClick={onOpen}
           >
@@ -362,8 +376,8 @@ const ProductsPage = observer(() => {
           {loading ? (
             <Center py={20}>
               <VStack spacing={5}>
-                <Spinner size="xl" color={dashboardPalette.accent} thickness="4px" speed="0.7s" />
-                <Text fontSize="lg" color={dashboardPalette.textMuted} fontWeight="medium">
+                <Spinner size="xl" color={cAccent} thickness="4px" speed="0.7s" />
+                <Text fontSize="lg" color={cTextMuted} fontWeight="medium">
                   Loading products...
                 </Text>
               </VStack>
@@ -385,31 +399,31 @@ const ProductsPage = observer(() => {
                     alignItems="center"
                     justifyContent="center"
                   >
-                    <Icon as={FaSearch} color={dashboardPalette.textSoft} />
+                    <Icon as={FaSearch} color={cTextSoft} />
                   </InputLeftElement>
                   <Input
                     placeholder="Search by name, SKU, or description..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    bg={dashboardPalette.surfaceAlt}
+                    bg={cSurfaceAlt}
                     border="1px solid"
-                    borderColor={dashboardPalette.borderStrong}
-                    color={dashboardPalette.text}
+                    borderColor={cBorderStrong}
+                    color={cText}
                     borderRadius="16px"
-                    _placeholder={{ color: dashboardPalette.textSoft }}
-                    _hover={{ borderColor: dashboardPalette.accent }}
+                    _placeholder={{ color: cTextSoft }}
+                    _hover={{ borderColor: cAccent }}
                     _focusVisible={{
-                      borderColor: dashboardPalette.accent,
-                      boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+                      borderColor: cAccent,
+                      boxShadow: `0 0 0 1px ${cAccent}`,
                     }}
                   />
                 </InputGroup>
 
                 <HStack
                   spacing={2}
-                  bg={dashboardPalette.surfaceAlt}
+                  bg={cSurfaceAlt}
                   border="1px solid"
-                  borderColor={dashboardPalette.border}
+                  borderColor={cBorder}
                   borderRadius="18px"
                   p={1}
                   alignSelf={{ base: "stretch", xl: "center" }}
@@ -417,9 +431,9 @@ const ProductsPage = observer(() => {
                   <Button
                     size="sm"
                     borderRadius="14px"
-                    bg={!showInactive ? dashboardPalette.accent : "transparent"}
-                    color={!showInactive ? dashboardPalette.page : dashboardPalette.textMuted}
-                    _hover={{ bg: !showInactive ? dashboardPalette.accentStrong : "rgba(255,255,255,0.04)" }}
+                    bg={!showInactive ? cAccent : "transparent"}
+                    color={!showInactive ? cPage : cTextMuted}
+                    _hover={{ bg: !showInactive ? cAccentStrong : "rgba(255,255,255,0.04)" }}
                     onClick={() => setShowInactive(false)}
                   >
                     Active
@@ -428,7 +442,7 @@ const ProductsPage = observer(() => {
                     size="sm"
                     borderRadius="14px"
                     bg={showInactive ? "rgba(239, 107, 107, 0.14)" : "transparent"}
-                    color={showInactive ? dashboardPalette.danger : dashboardPalette.textMuted}
+                    color={showInactive ? cDanger : cTextMuted}
                     _hover={{ bg: showInactive ? "rgba(239, 107, 107, 0.20)" : "rgba(255,255,255,0.04)" }}
                     onClick={() => setShowInactive(true)}
                   >
@@ -440,25 +454,25 @@ const ProductsPage = observer(() => {
                   maxW={{ base: "full", xl: "250px" }}
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  bg={dashboardPalette.surfaceAlt}
+                  bg={cSurfaceAlt}
                   border="1px solid"
-                  borderColor={dashboardPalette.borderStrong}
-                  color={dashboardPalette.text}
+                  borderColor={cBorderStrong}
+                  color={cText}
                   borderRadius="16px"
-                  iconColor={dashboardPalette.textSoft}
-                  _hover={{ borderColor: dashboardPalette.accent }}
+                  iconColor={cTextSoft}
+                  _hover={{ borderColor: cAccent }}
                   _focusVisible={{
-                    borderColor: dashboardPalette.accent,
-                    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+                    borderColor: cAccent,
+                    boxShadow: `0 0 0 1px ${cAccent}`,
                   }}
                   sx={{
                     option: {
-                      color: dashboardPalette.page,
+                      color: cPage,
                       backgroundColor: "#ffffff",
                     },
                   }}
                 >
-                  <option value="" style={{ color: dashboardPalette.page, backgroundColor: "#ffffff" }}>
+                  <option value="" style={{ color: cPage, backgroundColor: "#ffffff" }}>
                     All Categories
                   </option>
                   {categoryStore.categories
@@ -467,7 +481,7 @@ const ProductsPage = observer(() => {
                       <option
                         key={cat._id}
                         value={cat._id}
-                        style={{ color: dashboardPalette.page, backgroundColor: "#ffffff" }}
+                        style={{ color: cPage, backgroundColor: "#ffffff" }}
                       >
                         {cat.name}
                       </option>
@@ -477,10 +491,10 @@ const ProductsPage = observer(() => {
                 <Badge
                   ml={{ xl: "auto" }}
                   alignSelf={{ base: "flex-start", xl: "center" }}
-                  bg={dashboardPalette.accentSoft}
-                  color={dashboardPalette.accentStrong}
+                  bg={cAccentSoft}
+                  color={cAccentStrong}
                   border="1px solid"
-                  borderColor={dashboardPalette.border}
+                  borderColor={cBorder}
                   fontSize="sm"
                   px={3}
                   py={1.5}
@@ -490,7 +504,7 @@ const ProductsPage = observer(() => {
                 </Badge>
               </Flex>
 
-              <Divider my={5} borderColor={dashboardPalette.border} />
+              <Divider my={5} borderColor={cBorder} />
 
               {filteredProducts.length === 0 ? (
                 <Center py={14}>
@@ -499,19 +513,19 @@ const ProductsPage = observer(() => {
                       size="88px"
                       bg="rgba(214, 183, 114, 0.10)"
                       border="1px solid"
-                      borderColor={dashboardPalette.border}
+                      borderColor={cBorder}
                     >
-                      <Icon as={FaBoxOpen} boxSize={9} color={dashboardPalette.accentStrong} />
+                      <Icon as={FaBoxOpen} boxSize={9} color={cAccentStrong} />
                     </Circle>
                     <VStack spacing={3}>
-                      <Heading size="lg" color={dashboardPalette.text} fontWeight="500">
+                      <Heading size="lg" color={cText} fontWeight="500">
                         {searchTerm || selectedCategory
                           ? "No products found"
                           : showInactive
                             ? "Trash is empty"
                             : "No products added yet"}
                       </Heading>
-                      <Text fontSize="md" color={dashboardPalette.textMuted}>
+                      <Text fontSize="md" color={cTextMuted}>
                         {searchTerm || selectedCategory
                           ? "No products match the current search or filter set."
                           : showInactive
@@ -525,9 +539,9 @@ const ProductsPage = observer(() => {
                         leftIcon={<FaPlus />}
                         px={8}
                         borderRadius="18px"
-                        bg={dashboardPalette.accent}
-                        color={dashboardPalette.page}
-                        _hover={{ bg: dashboardPalette.accentStrong }}
+                        bg={cAccent}
+                        color={cPage}
+                        _hover={{ bg: cAccentStrong }}
                         onClick={onOpen}
                       >
                         Add Your First Product
@@ -546,7 +560,7 @@ const ProductsPage = observer(() => {
                   >
                     <Heading
                       size="lg"
-                      color={dashboardPalette.text}
+                      color={cText}
                       display="flex"
                       alignItems="center"
                       gap={2}
@@ -554,7 +568,7 @@ const ProductsPage = observer(() => {
                     >
                       <Icon
                         as={showInactive ? FaTrash : FaFire}
-                        color={showInactive ? dashboardPalette.danger : dashboardPalette.warning}
+                        color={showInactive ? cDanger : cWarning}
                       />
                       {showInactive ? "Inactive Products" : "Active Products"}
                     </Heading>
@@ -564,9 +578,9 @@ const ProductsPage = observer(() => {
                         size="sm"
                         borderRadius="14px"
                         variant="outline"
-                        borderColor={!showInactive ? dashboardPalette.accent : dashboardPalette.borderStrong}
-                        color={!showInactive ? dashboardPalette.accentStrong : dashboardPalette.textMuted}
-                        bg={!showInactive ? dashboardPalette.accentSoft : "transparent"}
+                        borderColor={!showInactive ? cAccent : cBorderStrong}
+                        color={!showInactive ? cAccentStrong : cTextMuted}
+                        bg={!showInactive ? cAccentSoft : "transparent"}
                         _hover={{ bg: "rgba(255,255,255,0.04)" }}
                         onClick={() => setShowInactive(false)}
                       >
@@ -576,8 +590,8 @@ const ProductsPage = observer(() => {
                         size="sm"
                         borderRadius="14px"
                         variant="outline"
-                        borderColor={showInactive ? "rgba(239, 107, 107, 0.32)" : dashboardPalette.borderStrong}
-                        color={showInactive ? dashboardPalette.danger : dashboardPalette.textMuted}
+                        borderColor={showInactive ? "rgba(239, 107, 107, 0.32)" : cBorderStrong}
+                        color={showInactive ? cDanger : cTextMuted}
                         bg={showInactive ? "rgba(239, 107, 107, 0.12)" : "transparent"}
                         _hover={{ bg: "rgba(255,255,255,0.04)" }}
                         onClick={() => setShowInactive(true)}
@@ -605,13 +619,13 @@ const ProductsPage = observer(() => {
                         isDisabled={currentPage === 1}
                         variant="outline"
                         borderRadius="16px"
-                        borderColor={dashboardPalette.borderStrong}
-                        color={dashboardPalette.textMuted}
-                        _hover={{ bg: "rgba(255,255,255,0.04)", color: dashboardPalette.text }}
+                        borderColor={cBorderStrong}
+                        color={cTextMuted}
+                        _hover={{ bg: "rgba(255,255,255,0.04)", color: cText }}
                       >
                         Previous
                       </Button>
-                      <Text fontWeight="600" color={dashboardPalette.textMuted}>
+                      <Text fontWeight="600" color={cTextMuted}>
                         Page {currentPage} of {totalPages}
                       </Text>
                       <Button
@@ -619,9 +633,9 @@ const ProductsPage = observer(() => {
                         isDisabled={currentPage === totalPages}
                         variant="outline"
                         borderRadius="16px"
-                        borderColor={dashboardPalette.borderStrong}
-                        color={dashboardPalette.textMuted}
-                        _hover={{ bg: "rgba(255,255,255,0.04)", color: dashboardPalette.text }}
+                        borderColor={cBorderStrong}
+                        color={cTextMuted}
+                        _hover={{ bg: "rgba(255,255,255,0.04)", color: cText }}
                       >
                         Next
                       </Button>

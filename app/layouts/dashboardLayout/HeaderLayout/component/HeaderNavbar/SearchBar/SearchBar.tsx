@@ -9,16 +9,33 @@ import {
   ListItem,
   Flex,
   Text,
+  useColorModeValue,
+  Icon,
 } from "@chakra-ui/react";
 import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
 import Link from "next/link";
 import { sidebarData } from "../../../../SidebarLayout/utils/SidebarItems";
+import { dashboardPalette } from "../../../../dashboardPalette";
+// import { dashboardPalette } from "../../../../../layouts/dashboardLayout/dashboardPalette";
 
 const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Theme-aware tokens
+  const cShell = useColorModeValue("white", dashboardPalette.shell);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cAccentGlow = useColorModeValue("rgba(37, 99, 235, 0.1)", dashboardPalette.accentGlow);
+  const cHighlight = useColorModeValue("blue.600", dashboardPalette.success);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -57,7 +74,7 @@ const SearchBar = () => {
 
     return parts.map((part, index) =>
       part.toLowerCase() === query.toLowerCase() ? (
-        <Text as="span" key={index} color="yellow.500" fontWeight="bold">
+        <Text as="span" key={index} color={cHighlight} fontWeight="800">
           {part}
         </Text>
       ) : (
@@ -70,54 +87,68 @@ const SearchBar = () => {
 
 
   return (
-    <Box position="relative" width="300px" ref={dropdownRef}>
-      <InputGroup>
-        <InputLeftElement>
-          <FaSearch color="gray.400" />
+    <Box position="relative" width={{ base: "full", md: "320px" }} ref={dropdownRef}>
+      <InputGroup size="md">
+        <InputLeftElement pointerEvents="none" h="full" px={4}>
+          <Icon as={FaSearch} color={cTextMuted} boxSize={3.5} />
         </InputLeftElement>
         <Input
-          placeholder="Start typing to search..."
-          bg="white"
+          placeholder="Search features..."
+          bg={cSurfaceAlt}
           border="1px solid"
-          borderColor="gray.300"
-          _focus={{ borderColor: "teal.500", boxShadow: "0 0 4px teal" }}
-          _hover={{ borderColor: "gray.400" }}
-          borderRadius="full"
-          px={4}
-          py={2}
+          borderColor={cBorder}
+          color={cText}
+          _placeholder={{ color: cTextMuted, fontSize: "sm" }}
+          _focus={{ 
+            borderColor: cAccent, 
+            boxShadow: `0 0 0 1px ${cAccent}, 0 4px 20px ${cAccentGlow}`,
+            bg: cSurface
+          }}
+          _hover={{ borderColor: cBorderStrong }}
+          borderRadius="18px"
+          h="44px"
+          pl={10}
+          fontSize="sm"
+          fontWeight="500"
           value={searchQuery}
           onChange={(e) => handleSearchDebounced(e.target.value)}
+          transition="all 0.2s"
         />
       </InputGroup>
 
       {results.length > 0 && (
         <List
-          bg="white"
-          mt={2}
-          borderRadius="lg"
-          boxShadow="xl"
+          bg={cSurface}
+          mt={3}
+          borderRadius="22px"
+          boxShadow={useColorModeValue(
+            "0 12px 30px rgba(0,0,0,0.08)",
+            "0 24px 60px rgba(0,0,0,0.45)"
+          )}
           position="absolute"
           width="100%"
           zIndex={100}
           border="1px solid"
-          borderColor="gray.200"
-          maxHeight="300px"
+          borderColor={cBorder}
+          maxHeight="320px"
           overflowY="auto"
           overflowX="hidden"
+          p={2}
+          className="customScrollBar"
         >
           {results.map((result: any, index: number) => (
             <ListItem
               key={result.url}
               px={4}
               py={3}
+              borderRadius="14px"
               _hover={{
-                bg: "teal.50",
+                bg: cSurfaceSoft,
                 cursor: "pointer",
-                transform: "scale(1.01)",
-                transition: "transform 0.2s ease-in-out",
+                transform: "translateX(4px)",
               }}
-              borderBottom={index < results.length - 1 ? "1px solid" : "none"}
-              borderColor="gray.100"
+              transition="all 0.2s ease-in-out"
+              mb={index < results.length - 1 ? 1 : 0}
             >
               <Link
                 href={result.url}
@@ -127,12 +158,23 @@ const SearchBar = () => {
                 }}
               >
                 <Flex align="center" gap={4}>
-                  <Box fontSize="24px" color="teal.500">
+                  <Box 
+                    fontSize="20px" 
+                    color={cAccent}
+                    p={2}
+                    borderRadius="10px"
+                    bg={cAccentGlow}
+                  >
                     {result.icon}
                   </Box>
-                  <Text fontWeight="semibold" fontSize="md" color="gray.700">
-                    {highlightText(result.name, searchQuery)}
-                  </Text>
+                  <Box>
+                    <Text fontWeight="700" fontSize="sm" color={cText} lineHeight="1.2">
+                      {highlightText(result.name, searchQuery)}
+                    </Text>
+                    <Text fontSize="11px" color={cTextMuted} mt={0.5}>
+                      Navigation Menu
+                    </Text>
+                  </Box>
                 </Flex>
               </Link>
             </ListItem>

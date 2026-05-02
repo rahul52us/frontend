@@ -1,37 +1,37 @@
 'use client'
-import React from "react";
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Box,
-  useBreakpointValue,
-  Tooltip,
   Flex,
   Heading,
   IconButton,
-  Button,
+  Input,
   Menu,
   MenuButton,
-  MenuList,
   MenuItem,
-  Input,
-  useColorModeValue,
+  MenuList,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tooltip,
+  Tr,
+  useBreakpointValue,
+  useColorModeValue
 } from "@chakra-ui/react";
 import dynamic from "next/dynamic";
-import TableLoader from "./TableLoader";
-import Pagination from "../pagination/Pagination";
-const MultiDropdown = dynamic(() => import('../multiDropdown/MultiDropdown'), { ssr: false });
+import React from "react";
 import { FaEdit, FaEye } from "react-icons/fa";
+import { FcClearFilters } from "react-icons/fc";
+import { HiDotsVertical } from "react-icons/hi";
 import { IoMdAdd, IoMdInformationCircle } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
-import { FcClearFilters } from "react-icons/fc";
-import { formatDate } from "../../utils/dateUtils";
-const CustomDateRange = dynamic(() => import('../CustomDateRange/CustomDateRange'), { ssr: false });
 import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
+import { formatDate } from "../../utils/dateUtils";
+import Pagination from "../pagination/Pagination";
+import TableLoader from "./TableLoader";
+const MultiDropdown = dynamic(() => import('../multiDropdown/MultiDropdown'), { ssr: false });
+const CustomDateRange = dynamic(() => import('../CustomDateRange/CustomDateRange'), { ssr: false });
 
 interface Column {
   headerName?: string;
@@ -97,20 +97,24 @@ const TableActions: React.FC<TableActionsProps> = ({
   }
   const { actionBtn } = actions;
   const isMerchant = variant === "merchant";
-  // const cellProps = cells ? { border: "1px groove gray" } : {};
+
+  // Theme-aware colors
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
 
   const iconColor = isMerchant
-    ? dashboardPalette.textMuted
+    ? cTextMuted
     : useColorModeValue("gray.700", "gray.200");
   const deleteColor = isMerchant
-    ? dashboardPalette.danger
+    ? cDanger
     : useColorModeValue("red.500", "red.300");
 
   return (
     <Td
-      // position="sticky" right={0} bg="white" zIndex={9999}
       {...column?.props?.row}
-      // {...cellProps}
       position={column?.props?.isSticky ? "sticky" : "relative"}
       right={column?.props?.isSticky ? "0" : undefined}
       {...getSharedCellLayoutProps(column)}
@@ -118,72 +122,60 @@ const TableActions: React.FC<TableActionsProps> = ({
       bgColor={
         column?.props?.isSticky
           ? isMerchant
-            ? dashboardPalette.surface
-            : "white"
+            ? cSurface
+            : useColorModeValue("white", "gray.800")
           : undefined
       }
     >
       <Flex columnGap={0} justifyContent={"center"}>
-        {actionBtn?.editKey?.showEditButton && (
-          <IconButton
-            size="lg"
-            bgColor="transparent"
+        <Menu isLazy>
+          <MenuButton
+            as={IconButton}
+            icon={<HiDotsVertical />}
+            size="sm"
+            variant="ghost"
             color={iconColor}
-            _hover={
-              isMerchant
-                ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text }
-                : undefined
-            }
-            onClick={() => {
-              if (actionBtn?.editKey?.function)
-                actionBtn?.editKey.function(row);
-            }}
-            aria-label=""
-            title={actionBtn?.editKey?.title || "Edit Data"}
-          >
-            <FaEdit />
-          </IconButton>
-        )}
-        {actionBtn?.viewKey?.showViewButton && (
-          <IconButton
-            size="lg"
-            bgColor="transparent"
-            color={iconColor}
-            _hover={
-              isMerchant
-                ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text }
-                : undefined
-            }
-            onClick={() => {
-              if (actionBtn?.viewKey?.function)
-                actionBtn?.viewKey.function(row);
-            }}
-            aria-label=""
-            title={actionBtn?.viewKey?.title || "View Data"}
-          >
-            <FaEye />
-          </IconButton>
-        )}
-        {actionBtn?.deleteKey?.showDeleteButton && (
-          <IconButton
-            size="lg"
-            bgColor="transparent"
-            color={deleteColor}
-            _hover={
-              isMerchant
-                ? { bg: "rgba(239, 107, 107, 0.12)" }
-                : undefined
-            }
-            onClick={() => {
-              if (actionBtn?.deleteKey?.function)
-                actionBtn?.deleteKey.function(row);
-            }}
-            aria-label=""
-            title={actionBtn?.deleteKey?.title || "Delete Data"}
-          >
-            <MdDelete />
-          </IconButton>
-        )}
+            _hover={{ bg: cSurfaceSoft, color: cText }}
+            aria-label="Actions"
+          />
+          <MenuList zIndex={10} bg={cSurface} borderColor={cSurfaceSoft}>
+            {actionBtn?.editKey?.showEditButton && (
+              <MenuItem
+                icon={<FaEdit />}
+                onClick={() => {
+                  if (actionBtn?.editKey?.function)
+                    actionBtn?.editKey.function(row);
+                }}
+              >
+                {actionBtn?.editKey?.title || "Edit"}
+              </MenuItem>
+            )}
+            {actionBtn?.viewKey?.showViewButton && (
+              <MenuItem
+                icon={<FaEye />}
+                onClick={() => {
+                  if (actionBtn?.viewKey?.function)
+                    actionBtn?.viewKey.function(row);
+                }}
+              >
+                {actionBtn?.viewKey?.title || "View"}
+              </MenuItem>
+            )}
+            {actionBtn?.deleteKey?.showDeleteButton && (
+              <MenuItem
+                icon={<MdDelete />}
+                color={deleteColor}
+                _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
+                onClick={() => {
+                  if (actionBtn?.deleteKey?.function)
+                    actionBtn?.deleteKey.function(row);
+                }}
+              >
+                {actionBtn?.deleteKey?.title || "Delete"}
+              </MenuItem>
+            )}
+          </MenuList>
+        </Menu>
       </Flex>
     </Td>
   );
@@ -196,10 +188,9 @@ const GenerateRows: React.FC<{
   cells: boolean;
   variant?: "default" | "merchant";
 }> = ({ column, row, action, cells, variant }: any) => {
-  // Define cell border color based on color mode
   const cellBorder = useColorModeValue("gray.200", "gray.700");
   const cellProps = cells
-    ? { border: `1px solid ${cellBorder}` } // Conditional border only if cells prop is true
+    ? { border: `1px solid ${cellBorder}` }
     : {};
 
   switch (column.type) {
@@ -268,7 +259,7 @@ const GenerateRows: React.FC<{
               aria-label="array info"
               size="lg"
               bgColor="transparent"
-              color="gray.700"
+              color={useColorModeValue("gray.700", "gray.200")}
             >
               <IoMdInformationCircle />
             </IconButton>
@@ -345,36 +336,47 @@ const CustomTable: React.FC<CustomTableProps> = ({
   tableProps = {},
   onRowClick,
   variant = "default",
-  // isActions = false,
 }) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const isMerchant = variant === "merchant";
-  // const cellProps = cells ? { border: "1px solid gray" } : {};
+
+  // Dynamic Theme Colors
+  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cShell = useColorModeValue("white", dashboardPalette.shell);
+
   const headerBg = useColorModeValue("gray.700", "gray.800");
-  // const borderColor = useColorModeValue("gray.300", "gray.600");
-
-  const bodyBg = useColorModeValue("white", "gray.700");
-
+  const bodyBg = useColorModeValue("white", "gray.900");
   const hoverBg = useColorModeValue("blue.100", "blue.700");
   const menuItemHover = useColorModeValue("blue.100", "blue.700");
-  const menuListBg = useColorModeValue("white", "gray.700");
+  const menuListBg = useColorModeValue("white", "gray.800");
   const titleColor = useColorModeValue("blue.500", "white");
-
   const boxBorder = useColorModeValue("gray.200", "gray.700");
   const mainBox = useColorModeValue("white", "gray.900");
-  const activeHeaderBg = isMerchant ? dashboardPalette.surfaceAlt : headerBg;
-  const activeBodyBg = isMerchant ? dashboardPalette.surface : bodyBg;
-  const activeHoverBg = isMerchant ? "rgba(214, 183, 114, 0.10)" : hoverBg;
-  const activeMenuItemHover = isMerchant ? dashboardPalette.surfaceSoft : menuItemHover;
-  const activeMenuListBg = isMerchant ? dashboardPalette.surface : menuListBg;
-  const activeTitleColor = isMerchant ? dashboardPalette.text : titleColor;
-  const activeBoxBorder = isMerchant ? dashboardPalette.border : boxBorder;
-  const activeMainBox = isMerchant ? dashboardPalette.shell : mainBox;
-  const inputBorderColor = isMerchant ? dashboardPalette.borderStrong : "gray.300";
+
+  const activeHeaderBg = isMerchant ? cSurfaceAlt : headerBg;
+  const activeBodyBg = isMerchant ? cSurface : bodyBg;
+  const activeHoverBg = isMerchant ? useColorModeValue("rgba(214, 183, 114, 0.10)", "rgba(255,255,255,0.03)") : hoverBg;
+  const activeMenuItemHover = isMerchant ? cSurfaceSoft : menuItemHover;
+  const activeMenuListBg = isMerchant ? cSurface : menuListBg;
+  const activeTitleColor = isMerchant ? cText : titleColor;
+  const activeBoxBorder = isMerchant ? cBorder : boxBorder;
+  const activeMainBox = isMerchant ? cShell : mainBox;
+  const inputBorderColor = isMerchant ? cBorderStrong : useColorModeValue("gray.300", "gray.600");
+
   const inputFocusStyles = isMerchant
     ? {
-        borderColor: dashboardPalette.accent,
-        boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+        borderColor: cAccent,
+        boxShadow: `0 0 0 1px ${cAccent}`,
       }
     : { borderColor: "blue.500", boxShadow: "outline" };
 
@@ -382,7 +384,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
     <Box
       rounded={12}
       bg={activeMainBox}
-      boxShadow={isMerchant ? "0 28px 60px rgba(0, 0, 0, 0.24)" : "rgb(0 0 0 / 20%) 0px 0px 8px"}
+      boxShadow={isMerchant ? useColorModeValue("sm", "0 28px 60px rgba(0, 0, 0, 0.24)") : "rgb(0 0 0 / 20%) 0px 0px 8px"}
       border={"1px solid"}
       borderColor={activeBoxBorder}
       sx={
@@ -392,7 +394,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                 gap: "6px",
               },
               "& .pagination a": {
-                color: dashboardPalette.textMuted,
+                color: cTextMuted,
                 borderRadius: "12px",
                 minWidth: "38px",
                 minHeight: "38px",
@@ -400,26 +402,26 @@ const CustomTable: React.FC<CustomTableProps> = ({
                 transition: "all 0.2s ease",
               },
               "& .pagination a:hover": {
-                color: dashboardPalette.accentStrong,
-                background: "rgba(214, 183, 114, 0.08)",
+                color: cAccentStrong,
+                background: useColorModeValue("rgba(214, 183, 114, 0.08)", "rgba(255,255,255,0.05)"),
               },
               "& .paginationActive a": {
-                color: `${dashboardPalette.accentStrong} !important`,
-                background: "rgba(214, 183, 114, 0.12)",
-                border: `1px solid ${dashboardPalette.border}`,
+                color: `${cAccentStrong} !important`,
+                background: useColorModeValue("rgba(214, 183, 114, 0.12)", "rgba(255,255,255,0.08)"),
+                border: `1px solid ${cBorder}`,
               },
               "& .paginationDisabled": {
-                color: `${dashboardPalette.textSoft} !important`,
+                color: `${cTextSoft} !important`,
               },
               "& .custom-table-pagination .chakra-icon-button": {
-                bg: dashboardPalette.surfaceAlt,
-                color: dashboardPalette.textMuted,
+                bg: cSurfaceAlt,
+                color: cTextMuted,
                 border: "1px solid",
-                borderColor: dashboardPalette.borderStrong,
+                borderColor: cBorderStrong,
               },
               "& .custom-table-pagination .chakra-icon-button:hover": {
-                bg: dashboardPalette.surfaceSoft,
-                color: dashboardPalette.text,
+                bg: cSurfaceSoft,
+                color: cText,
               },
               "& .custom-table-pagination .chakra-icon-button[disabled]": {
                 opacity: 0.5,
@@ -434,7 +436,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
         alignItems="center"
         p={title ? 3 : 0}
         borderBottom={isMerchant && title ? "1px solid" : undefined}
-        borderColor={isMerchant ? dashboardPalette.border : undefined}
+        borderColor={isMerchant ? cBorder : undefined}
         gap={3}
         flexWrap="wrap"
       >
@@ -447,15 +449,17 @@ const CustomTable: React.FC<CustomTableProps> = ({
         <Flex alignItems="center" columnGap={2} ml="auto">
           {!isMobile && actions?.search && actions?.search?.show && (
             <Input
+              size="sm"
+              fontWeight="normal"
               placeholder={actions?.search?.placeholder || "Search"}
               value={actions?.search?.searchValue}
               onChange={actions?.search?.onSearchChange}
               borderRadius="5rem"
-              bg={isMerchant ? dashboardPalette.surfaceAlt : undefined}
-              color={isMerchant ? dashboardPalette.text : undefined}
+              bg={isMerchant ? cSurfaceAlt : undefined}
+              color={isMerchant ? cText : undefined}
               borderColor={inputBorderColor}
-              _placeholder={isMerchant ? { color: dashboardPalette.textSoft } : undefined}
-              _hover={isMerchant ? { borderColor: dashboardPalette.accent } : undefined}
+              _placeholder={isMerchant ? { color: cTextSoft } : undefined}
+              _hover={isMerchant ? { borderColor: cAccent } : undefined}
               _focus={inputFocusStyles}
               maxW="25rem"
             />
@@ -503,28 +507,26 @@ const CustomTable: React.FC<CustomTableProps> = ({
           {actions?.resetData?.show && (
             <Menu>
               <MenuButton
-                as={Button}
+                as={IconButton}
+                icon={<HiDotsVertical />}
                 variant="outline"
-                colorScheme={isMerchant ? undefined : "red"}
-                minW={{ base: "6rem", md: "10rem" }}
-                textAlign={"center"}
-                borderColor={isMerchant ? dashboardPalette.borderStrong : undefined}
-                color={isMerchant ? dashboardPalette.textMuted : undefined}
-                bg={isMerchant ? dashboardPalette.surfaceAlt : undefined}
-                _hover={isMerchant ? { bg: dashboardPalette.surfaceSoft, color: dashboardPalette.text } : undefined}
-              >
-                Actions
-              </MenuButton>
+                size="sm"
+                colorScheme={isMerchant ? undefined : "gray"}
+                borderColor={isMerchant ? cBorderStrong : undefined}
+                color={isMerchant ? cTextMuted : undefined}
+                bg={isMerchant ? cSurfaceAlt : undefined}
+                _hover={isMerchant ? { bg: cSurfaceSoft, color: cText } : undefined}
+                aria-label="Actions"
+              />
               <MenuList
                 zIndex={15}
                 bg={activeMenuListBg}
                 border="1px solid"
-                borderColor={isMerchant ? dashboardPalette.border : undefined}
-                // borderColor={useColorModeValue("gray.200", "gray.600")}
+                borderColor={isMerchant ? cBorder : undefined}
                 boxShadow={isMerchant ? "0 20px 40px rgba(0, 0, 0, 0.35)" : "md"}
                 minW={"10rem"}
                 py={0}
-                color={isMerchant ? dashboardPalette.text : undefined}
+                color={isMerchant ? cText : undefined}
               >
                 {actions?.actionBtn?.addKey?.showAddButton && (
                   <MenuItem
@@ -563,7 +565,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
         maxH={"65vh"}
         rounded={2}
         px={2}
-        bg={isMerchant ? dashboardPalette.shell : undefined}
+        bg={isMerchant ? cShell : undefined}
         {...tableProps.tableBox}
       >
         <Table
@@ -571,7 +573,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
           variant={isMerchant ? "simple" : "striped"}
           {...tableProps.table}
           bg={activeBodyBg}
-          color={isMerchant ? dashboardPalette.text : undefined}
+          color={isMerchant ? cText : undefined}
           borderRadius="md"
           overflow="hidden"
           sx={{
@@ -594,7 +596,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
             <Tr>
               {serial?.show && (
                 <Th
-                  color={isMerchant ? dashboardPalette.textMuted : "white"}
+                  color={isMerchant ? cTextMuted : "white"}
                   w={serial?.width || undefined}
                   border="none"
                   textTransform="uppercase"
@@ -618,12 +620,12 @@ const CustomTable: React.FC<CustomTableProps> = ({
                   fontSize="xs"
                   textTransform="uppercase"
                   letterSpacing="wider"
-                  color={isMerchant ? dashboardPalette.textMuted : "white"}
+                  color={isMerchant ? cTextMuted : "white"}
                   fontWeight="bold"
                   verticalAlign="middle"
                   px={4}
                   py={3}
-                  border="none" // No borders on header cells
+                  border="none"
                   {...column?.props?.column}
                 >
                   {column.headerName}
@@ -643,7 +645,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
                     cursor: "pointer",
                     transition: "0.3s",
                   }}
-                  bg={isMerchant ? dashboardPalette.surface : undefined}
+                  bg={isMerchant ? cSurface : undefined}
                 >
                   {serial?.show && (
                     <Td
@@ -654,8 +656,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       px={4}
                       py={3}
                       fontSize="sm"
-                      border="none" // No border on cells
-                      color={isMerchant ? dashboardPalette.textMuted : undefined}
+                      border="none"
+                      color={isMerchant ? cTextMuted : undefined}
                     >
                       {(actions?.pagination?.currentPage && actions?.pagination?.limit)
                         ? ((actions.pagination.currentPage - 1) * actions.pagination.limit + rowIndex + 1)
@@ -670,7 +672,6 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       action={actions}
                       cells={cells}
                       variant={variant}
-                    // border="none" // No border on cells
                     />
                   ))}
                 </Tr>

@@ -1,8 +1,6 @@
 'use client'
 import "react-date-range/dist/styles.css"; // main css file
 import "react-date-range/dist/theme/default.css"; // theme css file
-// import "./CustomDateRangeMobile.css";
-// import "./CustomDateRangePicker.css";
 import { DateRange, DateRangePicker } from "react-date-range";
 import { format } from "date-fns";
 import { IoMdCalendar } from "react-icons/io";
@@ -43,50 +41,51 @@ export default function CustomDateRange({
   const formattedEndDate = endDate ? format(endDate, "d MMM yyyy") : "";
   const isMerchant = variant === "merchant";
 
-  const textColor = useColorModeValue("gray.700", "gray.300");
-  const displayTextColor = isMerchant ? dashboardPalette.text : textColor;
-  const secondaryTextColor = isMerchant ? dashboardPalette.textSoft : "gray.500";
-  const calendarAccent = isMerchant ? dashboardPalette.accent : "#38B2AC";
+  // Dynamic Theme Colors
+  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cText = useColorModeValue("gray.800", dashboardPalette.text);
+  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
+  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
+  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
+
+  const displayTextColor = isMerchant ? cText : useColorModeValue("gray.700", "gray.300");
+  const secondaryTextColor = isMerchant ? cTextSoft : "gray.500";
+  const calendarAccent = isMerchant ? cAccent : "#38B2AC";
+
   const inputStyles = isMerchant
     ? {
-        bg: dashboardPalette.surfaceAlt,
-        color: dashboardPalette.text,
-        borderColor: dashboardPalette.borderStrong,
+        bg: cSurfaceAlt,
+        color: cText,
+        borderColor: cBorderStrong,
         borderRadius: "16px",
-        _placeholder: { color: dashboardPalette.textSoft },
-        _hover: { borderColor: dashboardPalette.accent },
+        _placeholder: { color: cTextSoft },
+        _hover: { borderColor: cAccent },
         _focusVisible: {
-          borderColor: dashboardPalette.accent,
-          boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
+          borderColor: cAccent,
+          boxShadow: `0 0 0 1px ${cAccent}`,
         },
       }
     : {};
+
   const popoverStyles = isMerchant
     ? {
-        bg: dashboardPalette.surface,
-        borderColor: dashboardPalette.border,
-        color: dashboardPalette.text,
-        boxShadow: "0 22px 44px rgba(0, 0, 0, 0.32)",
+        bg: cSurface,
+        borderColor: cBorder,
+        color: cText,
+        boxShadow: useColorModeValue("lg", "0 22px 44px rgba(0, 0, 0, 0.32)"),
       }
     : {};
 
   return isMobile || !LargerThanMd ? (
     <Popover placement="auto-end">
       <PopoverTrigger>
-        {/* <Input
-          name="datePicker"
-          value={startDate && endDate ? `${format(startDate, "d MMM yyyy")} to ${format(
-            endDate,
-            "d MMM yyyy"
-          )}` : ""}
-          width={{ base: "14rem", lg: "14rem" }}
-          textAlign="center"
-        /> */}
         <Box position="relative" width={{ base: "14.5rem", lg: "16rem" }}>
           <Input
+            size="sm"
             name="datePicker"
             value=""
-            // width={{ base: "14rem", lg: "14rem" }}
             textAlign="center"
             readOnly
             {...inputStyles}
@@ -99,19 +98,21 @@ export default function CustomDateRange({
             bottom="0"
             display="flex"
             alignItems="center"
+            px={3}
+            pointerEvents="none"
           >
             {startDate && (
-              <Text as="span" fontWeight="600" color={displayTextColor}>
+              <Text as="span" fontWeight="500" color={displayTextColor}>
                 {formattedStartDate}
               </Text>
             )}
             {startDate && endDate && (
-              <Text as="span" fontWeight="500" color={secondaryTextColor} mx={1}>
+              <Text as="span" fontWeight="400" color={secondaryTextColor} mx={1}>
                 to
               </Text>
             )}
             {endDate && (
-              <Text as="span" fontWeight="600" color={displayTextColor} mr={1}>
+              <Text as="span" fontWeight="500" color={displayTextColor} mr={1}>
                 {formattedEndDate}
               </Text>
             )}
@@ -120,12 +121,14 @@ export default function CustomDateRange({
                 Select Date Range
               </Text>
             )}
-            <IoMdCalendar fontSize={"20px"} color={isMerchant ? dashboardPalette.textSoft : "gray"} />
+            <Box ml="auto">
+              <IoMdCalendar fontSize={"20px"} color={isMerchant ? cTextSoft : "gray"} />
+            </Box>
           </Box>
         </Box>
       </PopoverTrigger>
       <PopoverContent width="auto" {...popoverStyles}>
-        <PopoverBody bg={isMerchant ? dashboardPalette.surface : undefined}>
+        <PopoverBody bg={isMerchant ? cSurface : undefined}>
           <DateRange
             onChange={(item: any) => {
               onStartDateChange(item.selection.startDate);
@@ -153,6 +156,7 @@ export default function CustomDateRange({
     <Popover placement="bottom-start">
       <PopoverTrigger>
         <Input
+          size="sm"
           name="datePicker"
           value={startDate && endDate ? `${format(startDate, "d MMM yyyy")} to ${format(
             endDate,
@@ -166,7 +170,7 @@ export default function CustomDateRange({
         />
       </PopoverTrigger>
       <PopoverContent width="auto" {...popoverStyles}>
-        <PopoverBody bg={isMerchant ? dashboardPalette.surface : undefined}>
+        <PopoverBody bg={isMerchant ? cSurface : undefined}>
           <DateRangePicker
             onChange={(item: any) => {
               onStartDateChange(item.selection.startDate);
