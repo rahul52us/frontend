@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Circle,
-  Container,
   Flex,
   FormControl,
   FormLabel,
@@ -13,15 +12,21 @@ import {
   HStack,
   Icon,
   IconButton,
+  Image,
   Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalOverlay,
   PinInput,
   PinInputField,
-  Progress,
   SimpleGrid,
   Spinner,
   Stack,
   Text,
   Textarea,
+  useDisclosure,
   useToast,
   VStack
 } from "@chakra-ui/react";
@@ -32,13 +37,17 @@ import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiCamera,
+  FiCheck,
   FiCheckCircle,
+  FiChevronDown,
+  FiChevronRight,
   FiImage,
   FiNavigation,
   FiPackage,
+  FiPhone,
   FiShoppingBag,
   FiShoppingCart,
-  FiUploadCloud
+  FiUser
 } from "react-icons/fi";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import {
@@ -48,7 +57,9 @@ import {
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
 import stores from "../../../store/stores";
-import { fieldCardStyles, inputStyles, mapOptions, panelStyles, primaryButtonStyles, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
+import GalleryBlock from "./GalleryBlock";
+import UploadBlock from "./UploadBlock";
+import { fieldCardStyles, inputStyles, mapOptions, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -63,6 +74,162 @@ const isValidEmail = (email: string) => {
   if (!email.trim()) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 };
+
+
+
+// Each step gets a color theme + left-panel content
+const stepMeta: Record<string, {
+  bg: string;
+  accent: string;
+  softAccent: string;
+  tagline: string;
+  points: { icon: any; text: string }[];
+  illustration: React.ReactNode;
+}> = {
+  "Let's get started": {
+    bg: "#EFF6FF",
+    accent: "#3B82F6",
+    softAccent: "#BFDBFE",
+    tagline: "Buy & sell, locally.",
+    points: [
+      { icon: FiShoppingCart, text: "Browse shops near you" },
+      { icon: FiCheck,        text: "Fast, secure checkout" },
+      { icon: FiPackage,      text: "Track your orders" },
+    ],
+    illustration: (
+      <Image
+        src="/images/register/step1.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Tell us about you": {
+    bg: "#F5F3FF",
+    accent: "#7C3AED",
+    softAccent: "#DDD6FE",
+    tagline: "Your profile, your identity.",
+    points: [
+      { icon: FiUser,  text: "Personalised experience" },
+      { icon: FiCheck, text: "Saved addresses & orders" },
+      { icon: FiPhone, text: "One number, everything" },
+    ],
+    illustration: (
+      <Image
+        src="/images/register/users.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Tell us about your shop": {
+    bg: "#ECFDF5",
+    accent: "#059669",
+    softAccent: "#A7F3D0",
+    tagline: "Build your storefront.",
+    points: [
+      { icon: FiShoppingBag, text: "Your shop, your brand" },
+      { icon: FiCheck,       text: "GST ready invoicing" },
+      { icon: FiPackage,     text: "Manage listings easily" },
+    ],
+    illustration: (
+      <Image
+        src="/images/register/about-shop.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Set your shop location": {
+    bg: "#F0FDFA",
+    accent: "#0D9488",
+    softAccent: "#99F6E4",
+    tagline: "Put your shop on the map.",
+    points: [
+      { icon: FiNavigation, text: "Auto-detect your location" },
+      { icon: FiCheck,      text: "Buyers find you faster" },
+      { icon: FiPhone,      text: "Accurate delivery zones" },
+    ],
+    illustration: (
+       <Image
+        src="/images/register/location.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Contact details": {
+    bg: "#ECFEFF",
+    accent: "#0891B2",
+    softAccent: "#A5F3FC",
+    tagline: "Stay connected with buyers.",
+    points: [
+      { icon: FiPhone, text: "Dedicated store number" },
+      { icon: FiCheck, text: "Order notifications" },
+      { icon: FiUser,  text: "Build buyer trust" },
+    ],
+    illustration: (
+       <Image
+        src="/images/register/contact.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Show your shop": {
+    bg: "#FFF7ED",
+    accent: "#EA580C",
+    softAccent: "#FED7AA",
+    tagline: "A picture sells a thousand words.",
+    points: [
+      { icon: FiImage,       text: "Logo & cover image" },
+      { icon: FiCamera,      text: "Real shop photos" },
+      { icon: FiCheckCircle, text: "Build instant trust" },
+    ],
+    illustration: (
+        <Image
+        src="/images/register/business.svg"
+        alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Verify OTP": {
+    bg: "#F0FDF4",
+    accent: "#16A34A",
+    softAccent: "#BBF7D0",
+    tagline: "Almost there!",
+    points: [
+      { icon: FiCheck,       text: "One-time verification" },
+      { icon: FiPhone,       text: "Sent to your mobile" },
+      { icon: FiCheckCircle, text: "Secure & instant" },
+    ],
+    illustration: (
+      <svg viewBox="0 0 260 220" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <circle cx="130" cy="100" r="72" fill="#DCFCE7" />
+        <circle cx="130" cy="100" r="50" fill="#BBF7D0" />
+        <circle cx="130" cy="100" r="32" fill="#16A34A" />
+        <path d="M114 100 L124 110 L146 88" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="60" y="178" width="140" height="12" rx="6" fill="#BBF7D0" />
+        <rect x="90" y="196" width="80" height="10" rx="5" fill="#DCFCE7" />
+      </svg>
+    ),
+  },
+};
+
+
 
 const hasPickedCoordinates = (coordinates: any) => {
   if (!Array.isArray(coordinates) || coordinates.length < 2) return false;
@@ -261,6 +428,17 @@ const SignUpForm = observer(() => {
   const otpInputRef = useRef<HTMLInputElement | null>(null);
   const otpAutoSubmitRef = useRef("");
   const autoLocationAttemptedRef = useRef(false);
+
+  const { isOpen: isImageModalOpen, onOpen: onImageModalOpen, onClose: onImageModalClose } = useDisclosure();
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
+  const handlePreviewImage = (file: File | null) => {
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviewImageUrl(url);
+      onImageModalOpen();
+    }
+  };
   const [userData, setUserData] = useState({
     phone: "",
     name: "",
@@ -295,6 +473,8 @@ const SignUpForm = observer(() => {
   const selectedPoint = hasPickedCoordinates(selectedCoordinates)
     ? { lng: Number(selectedCoordinates[0]), lat: Number(selectedCoordinates[1]) }
     : null;
+
+  const meta = stepMeta[activeStep.title] ?? stepMeta["Let's get started"];
 
   const mapCenter = useMemo(() => {
     if (selectedPoint) {
@@ -816,70 +996,6 @@ const SignUpForm = observer(() => {
     }));
   };
 
-// const renderPhoneStep = () => (
-//   <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
-//     <Box>
-//       <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="wider" color="gray.500" mb={3}>
-//         I want to join as
-//       </Text>
-//       <HStack spacing={3}>
-//         <Button
-//           flex={1}
-//           type="button"
-//           leftIcon={<FiUser />}
-//           variant={intent === "user" ? "solid" : "outline"}
-//           colorScheme="blue"
-//           borderRadius="xl"
-//           h={{ base: "40px", md: "48px" }}
-//           fontSize={{ base: "sm", md: "md" }}
-//           onClick={() => setIntentSelection("user")}
-//           bg={intent === "user" ? "blue.600" : "transparent"}
-//           color={intent === "user" ? "white" : "gray.600"}
-//           borderColor={intent === "user" ? "blue.600" : "gray.200"}
-//           _hover={{ bg: intent === "user" ? "blue.700" : "gray.50" }}
-//           transition="all 0.2s"
-//         >
-//           Buyer
-//         </Button>
-//         <Button
-//           flex={1}
-//           type="button"
-//           leftIcon={<FiShoppingBag />}
-//           variant={intent === "seller" ? "solid" : "outline"}
-//           colorScheme="blue"
-//           borderRadius="xl"
-//           h={{ base: "40px", md: "48px" }}
-//           fontSize={{ base: "sm", md: "md" }}
-//           onClick={() => setIntentSelection("seller")}
-//           bg={intent === "seller" ? "blue.600" : "transparent"}
-//           color={intent === "seller" ? "white" : "gray.600"}
-//           borderColor={intent === "seller" ? "blue.600" : "gray.200"}
-//           _hover={{ bg: intent === "seller" ? "blue.700" : "gray.50" }}
-//           transition="all 0.2s"
-//         >
-//           Seller
-//         </Button>
-//       </HStack>
-//     </Box>
-
-//     <FormControl isRequired>
-//       <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-//         Phone Number
-//       </FormLabel>
-//       <Input
-//         ref={phoneInputRef}
-//         type="tel"
-//         inputMode="numeric"
-//         pattern="[0-9]*"
-//         value={userData.phone}
-//         onChange={(event) => setUserData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }))}
-//         placeholder="Enter 10-digit mobile number"
-//         {...inputStyles}
-//       />
-//       <FieldError message={errors.phone} />
-//     </FormControl>
-//   </VStack>
-// );
 
 
 const [isPhoneFocused, setIsPhoneFocused] = useState(false);
@@ -918,23 +1034,20 @@ const roleOptions = [
 ];
 
  const renderPhoneStep = () => (
-  <VStack align="stretch" spacing={{ base: 4, md: 6 }}>
+  <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
 
     {/* ── Role Selector ── */}
     <Box>
       <Text
-        fontSize="11px"
+        fontSize="xs"
         fontWeight="700"
-        textTransform="uppercase"
-        letterSpacing="0.07em"
-        color="gray.400"
-        mb={2.5}
+        color="gray.500"
+        mb={3}
       >
         I want to join as
       </Text>
 
-      {/* Desktop cards */}
-      <HStack spacing={2.5} display={{ base: "none", sm: "flex" }}>
+      <HStack spacing={{ base: 3, md: 4 }}>
         {roleOptions.map(({ value, label, sub, icon: Icon, active: a }:any) => {
           const isActive = intent === value;
           return (
@@ -944,40 +1057,30 @@ const roleOptions = [
               type="button"
               flex={1}
               onClick={() => setIntentSelection(value)}
-              border="1.5px solid"
-              borderColor={isActive ? a.border : "gray.200"}
-              borderRadius="16px"
+              border="2px solid"
+              borderColor={isActive ? a.border : "gray.100"}
+              borderRadius="xl"
               bg={isActive ? a.bg : "white"}
-              p={{ base: 3, md: "14px" }}
+              p={{ base: 3, md: 4 }}
               cursor="pointer"
-              transition="border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease"
-              boxShadow={isActive ? `0 0 0 3px ${a.border}22` : "0 1px 3px rgba(0,0,0,0.05)"}
-              _hover={{
-                borderColor: isActive ? a.border : "gray.300",
-                boxShadow: isActive
-                  ? `0 0 0 3px ${a.border}22`
-                  : "0 2px 8px rgba(0,0,0,0.07)",
-              }}
-              _active={{ opacity: 0.85 }}
-              outline="none"
-              _focusVisible={{ ring: "2px", ringColor: a.border, ringOffset: "2px" }}
+              transition="all 0.2s ease"
+              boxShadow={isActive ? `0 2px 10px ${a.border}20` : "none"}
+              _hover={{ borderColor: isActive ? a.border : "gray.200" }}
               textAlign="left"
             >
-              <HStack spacing={3} align="center">
+              <HStack spacing={3}>
                 <Flex
-                  w="36px"
-                  h="36px"
-                  borderRadius="10px"
-                  bg={isActive ? a.iconBg : "gray.100"}
+                  w="40px"
+                  h="40px"
+                  borderRadius="lg"
+                  bg={isActive ? a.iconBg : "gray.50"}
                   align="center"
                   justify="center"
                   flexShrink={0}
-                  transition="background 0.18s ease"
                 >
                   <Icon
-                    size={16}
+                    size={20}
                     color={isActive ? a.iconColor : "#9CA3AF"}
-                    style={{ transition: "color 0.18s ease" }}
                   />
                 </Flex>
 
@@ -987,72 +1090,31 @@ const roleOptions = [
                     fontSize="sm"
                     color={isActive ? a.text : "gray.700"}
                     lineHeight="1.2"
-                    transition="color 0.18s ease"
                   >
                     {label}
                   </Text>
                   <Text
-                    fontSize="11px"
+                    fontSize="xs"
                     color={isActive ? a.subText : "gray.400"}
-                    fontWeight="500"
                     mt="2px"
-                    transition="color 0.18s ease"
+                    fontWeight="500"
                   >
                     {sub}
                   </Text>
                 </Box>
 
-                {/* Active dot indicator */}
-                <Box
-                  w="7px"
-                  h="7px"
+                {/* Custom radio circle */}
+                <Flex
+                  w="18px"
+                  h="18px"
                   borderRadius="full"
-                  bg={isActive ? a.dot : "gray.200"}
-                  flexShrink={0}
-                  transition="background 0.18s ease"
-                />
-              </HStack>
-            </Box>
-          );
-        })}
-      </HStack>
-
-      {/* Mobile: compact chips */}
-      <HStack spacing={2} display={{ base: "flex", sm: "none" }}>
-        {roleOptions.map(({ value, label, icon: Icon, active: a }:any) => {
-          const isActive = intent === value;
-          return (
-            <Box
-              key={value}
-              as="button"
-              type="button"
-              flex={1}
-              onClick={() => setIntentSelection(value)}
-              border="1.5px solid"
-              borderColor={isActive ? a.border : "gray.200"}
-              borderRadius="12px"
-              bg={isActive ? a.bg : "white"}
-              py="10px"
-              px={3}
-              cursor="pointer"
-              transition="border-color 0.18s ease, background 0.18s ease"
-              _active={{ opacity: 0.8 }}
-              outline="none"
-            >
-              <HStack justify="center" spacing={1.5}>
-                <Icon
-                  size={14}
-                  color={isActive ? a.iconColor : "#9CA3AF"}
-                  style={{ transition: "color 0.18s ease" }}
-                />
-                <Text
-                  fontSize="13px"
-                  fontWeight={isActive ? "700" : "500"}
-                  color={isActive ? a.text : "gray.500"}
-                  transition="color 0.18s ease"
+                  border="2px solid"
+                  borderColor={isActive ? a.border : "gray.200"}
+                  align="center"
+                  justify="center"
                 >
-                  {label}
-                </Text>
+                  {isActive && <Box w="8px" h="8px" borderRadius="full" bg={a.border} />}
+                </Flex>
               </HStack>
             </Box>
           );
@@ -1065,46 +1127,40 @@ const roleOptions = [
       <FormLabel
         color="gray.600"
         fontWeight="600"
-        fontSize={{ base: "xs", md: "sm" }}
-        mb={1.5}
+        fontSize="sm"
+        mb={2}
       >
         Phone Number
       </FormLabel>
 
-      {/*
-        Unified border wrapper — fixes the Chakra InputGroup issue where
-        only the Input gets the focus ring, leaving the addon visually disconnected.
-        We manage focus state manually and apply the border to the outer Box instead.
-      */}
       <HStack
         spacing={0}
         border="1.5px solid"
-        borderColor={isPhoneFocused ? "blue.400" : "gray.200"}
-        borderRadius="12px"
+        borderColor={isPhoneFocused ? "blue.500" : "gray.200"}
+        borderRadius="xl"
         overflow="hidden"
-        transition="border-color 0.15s ease, box-shadow 0.15s ease"
-        boxShadow={isPhoneFocused ? "0 0 0 3px rgba(59,130,246,0.12)" : "none"}
+        transition="all 0.2s ease"
         bg="white"
       >
         {/* Country code pill */}
         <Flex
           align="center"
-          px={3}
-          h={{ base: "44px", md: "46px" }}
+          px={4}
+          h="48px"
           bg={isPhoneFocused ? "blue.50" : "gray.50"}
           borderRight="1.5px solid"
           borderColor={isPhoneFocused ? "blue.200" : "gray.200"}
-          transition="background 0.15s ease, border-color 0.15s ease"
+          transition="all 0.2s ease"
           flexShrink={0}
-          gap={1.5}
+          gap={2}
         >
-          <Text fontSize="sm" lineHeight={1}>🇮🇳</Text>
-          <Text fontSize="sm" fontWeight="600" color={isPhoneFocused ? "blue.600" : "gray.500"} transition="color 0.15s ease">
-            +91
+          <Text fontSize="md" fontWeight="500" color={isPhoneFocused ? "blue.700" : "gray.600"}>
+            IN +91
           </Text>
+          <Icon as={FiChevronDown} color={isPhoneFocused ? "blue.500" : "gray.400"} />
         </Flex>
 
-        {/* Actual input — no individual border */}
+        {/* Actual input */}
         <Input
           ref={phoneInputRef}
           type="tel"
@@ -1122,11 +1178,11 @@ const roleOptions = [
           placeholder="Enter 10-digit mobile number"
           border="none"
           borderRadius={0}
-          h={{ base: "44px", md: "46px" }}
-          fontSize={{ base: "sm", md: "md" }}
+          h="48px"
+          fontSize="md"
           _focus={{ boxShadow: "none", border: "none" }}
-          _placeholder={{ color: "gray.300" }}
-          px={3}
+          _placeholder={{ color: "gray.300", fontSize: "sm" }}
+          px={4}
         />
       </HStack>
 
@@ -1227,195 +1283,17 @@ const renderSellerBasicsStep = () => (
   </VStack>
 );
 
-  // const renderSellerLocationStep = () => (
-  //   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-  //     <Box {...fieldCardStyles}>
-  //       <Flex
-  //         justify="space-between"
-  //         align={{ base: "start", lg: "center" }}
-  //         direction={{ base: "column", lg: "row" }}
-  //         gap={3}
-  //       >
-  //         <Box>
-  //           <Text fontSize="md" fontWeight="700" color="gray.900">
-  //             Choose shop location
-  //           </Text>
-  //           <Text fontSize="sm" color="gray.500">
-  //             Tap the map to place your shop. We will fill the address when possible.
-  //           </Text>
-  //         </Box>
-  //         <Button
-  //           leftIcon={<FiNavigation />}
-  //           variant="outline"
-  //           borderRadius="full"
-  //           w={{ base: "full", lg: "auto" }}
-  //           minH="48px"
-  //           px={5}
-  //           justifyContent="center"
-  //           textAlign="center"
-  //           whiteSpace="nowrap"
-  //           flexShrink={0}
-  //           alignSelf={{ base: "stretch", lg: "center" }}
-  //           onClick={() => detectCurrentLocation()}
-  //           isLoading={detectingLocation || geocoding}
-  //           loadingText="Detecting location"
-  //         >
-  //           Use current location
-  //         </Button>
-  //       </Flex>
-
-  //       <Box
-  //         mt={5}
-  //         h={{ base: "260px", md: "380px" }}
-  //         borderRadius="2xl"
-  //         overflow="hidden"
-  //         borderWidth="1px"
-  //         borderColor="blue.100"
-  //         bg="blue.50"
-  //         position="relative"
-  //       >
-  //         {!GOOGLE_MAPS_API_KEY ? (
-  //           <CenteredBox h="100%">
-  //             <Text fontSize="sm" color="gray.600" textAlign="center">
-  //               Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
-  //             </Text>
-  //           </CenteredBox>
-  //         ) : loadError ? (
-  //           <CenteredBox h="100%">
-  //             <Text fontSize="sm" color="red.500" textAlign="center">
-  //               Failed to load Google Maps.
-  //             </Text>
-  //           </CenteredBox>
-  //         ) : !isLoaded ? (
-  //           <CenteredBox h="100%">
-  //             <Text fontSize="sm" color="gray.500">
-  //               Loading map...
-  //             </Text>
-  //           </CenteredBox>
-  //         ) : (
-  //           <>
-  //             <Box position="absolute" top={3} left={3} right={3} zIndex={1} display="flex" justifyContent="center">
-  //               <Box w={{ base: "full", md: "80%" }} bg="white" borderRadius="lg" boxShadow="md" overflow="hidden">
-  //                 <Autocomplete onLoad={onLoadAutocomplete} onPlaceChanged={onPlaceChanged}>
-  //                   <Input
-  //                     placeholder="Search location..."
-  //                     h="48px"
-  //                     border="none"
-  //                     borderRadius="lg"
-  //                     fontSize="sm"
-  //                     _focus={{ boxShadow: "none" }}
-  //                   />
-  //                 </Autocomplete>
-  //               </Box>
-  //             </Box>
-  //             <GoogleMap
-  //               mapContainerStyle={mapContainerStyle}
-  //               center={mapCenter}
-  //               zoom={selectedPoint ? 15 : 11}
-  //               options={{ ...mapOptions, mapTypeControl: false, streetViewControl: false }}
-  //               onClick={handleMapClick}
-  //             >
-  //               {selectedPoint ? <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} /> : null}
-  //             </GoogleMap>
-  //           </>
-  //         )}
-  //       </Box>
-
-  //       <HStack mt={4} spacing={3} wrap="wrap">
-  //         <Badge colorScheme={selectedPoint ? "green" : "blue"} px={3} py={1} borderRadius="full">
-  //           {selectedPoint ? "Pin selected" : "Pin not selected"}
-  //         </Badge>
-  //         {selectedPoint ? (
-  //           <Text fontSize="sm" color="gray.500">
-  //             {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
-  //           </Text>
-  //         ) : null}
-  //       </HStack>
-  //       <FieldError message={errors.coordinates} />
-  //     </Box>
-
-  //     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 5 }}>
-  //       <FormControl isRequired>
-  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-  //           Address
-  //         </FormLabel>
-  //         <Input
-  //           value={sellerData.location.address}
-  //           onChange={(event) => setSellerFieldValue("location.address", event.target.value)}
-  //           placeholder="Shop address"
-  //           {...inputStyles}
-  //         />
-  //         <FieldError message={errors.address} />
-  //       </FormControl>
-
-  //       <FormControl isRequired>
-  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-  //           City
-  //         </FormLabel>
-  //         <Input
-  //           value={sellerData.location.city}
-  //           onChange={(event) => setSellerFieldValue("location.city", event.target.value)}
-  //           placeholder="City"
-  //           {...inputStyles}
-  //         />
-  //         <FieldError message={errors.city} />
-  //       </FormControl>
-
-  //       <FormControl isRequired>
-  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-  //           State
-  //         </FormLabel>
-  //         <Input
-  //           value={sellerData.location.state}
-  //           onChange={(event) => setSellerFieldValue("location.state", event.target.value)}
-  //           placeholder="State"
-  //           {...inputStyles}
-  //         />
-  //         <FieldError message={errors.state} />
-  //       </FormControl>
-
-  //       <FormControl>
-  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-  //           Postal Code
-  //         </FormLabel>
-  //         <Input
-  //           value={sellerData.location.postalCode}
-  //           onChange={(event) => setSellerFieldValue("location.postalCode", event.target.value)}
-  //           placeholder="Postal code"
-  //           {...inputStyles}
-  //         />
-  //       </FormControl>
-
-  //       <FormControl isRequired gridColumn={{ base: "span 1", md: "span 2" }}>
-  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-  //           Country
-  //         </FormLabel>
-  //         <Input
-  //           value={sellerData.location.country}
-  //           onChange={(event) => setSellerFieldValue("location.country", event.target.value)}
-  //           placeholder="Country"
-  //           {...inputStyles}
-  //         />
-  //         <FieldError message={errors.country} />
-  //       </FormControl>
-  //     </SimpleGrid>
-  //   </VStack>
-  // );
-
-
   const renderSellerLocationStep = () => (
-  <VStack align="stretch" spacing={4}>
+  <VStack align="stretch" spacing={6}>
     {/* Map Card */}
     <Box
-      bg="white"
       borderRadius="2xl"
-      borderWidth="1px"
-      borderColor="gray.100"
       overflow="hidden"
-      boxShadow="0 1px 3px rgba(0,0,0,0.06)"
+      border="1.5px solid"
+      borderColor="gray.200"
     >
       {/* Card Header */}
-      <Box px={4} pt={4} pb={3}>
+      <Box px={4} pt={4} pb={3} bg="gray.50">
         <Text fontSize="md" fontWeight="700" color="gray.900" lineHeight="1.3">
           Shop location
         </Text>
@@ -1430,8 +1308,7 @@ const renderSellerBasicsStep = () => (
         bg="blue.50"
         position="relative"
         borderTopWidth="1px"
-        borderBottomWidth="1px"
-        borderColor="gray.100"
+        borderColor="gray.200"
       >
         {!GOOGLE_MAPS_API_KEY ? (
           <CenteredBox h="100%">
@@ -1552,20 +1429,13 @@ const renderSellerBasicsStep = () => (
       )}
     </Box>
 
-    {/* Address Fields Card */}
-    <Box
-      bg="white"
-      borderRadius="2xl"
-      borderWidth="1px"
-      borderColor="gray.100"
-      p={4}
-      boxShadow="0 1px 3px rgba(0,0,0,0.06)"
-    >
-      <Text fontSize="sm" fontWeight="700" color="gray.900" mb={3}>
+    {/* Address Fields */}
+    <Box>
+      <Text fontSize="sm" fontWeight="700" color="gray.900" mb={4}>
         Address details
       </Text>
 
-      <VStack spacing={3} align="stretch">
+      <VStack spacing={4} align="stretch">
         {/* Address — full width */}
         <FormControl isRequired>
           <FormLabel
@@ -1764,80 +1634,44 @@ const renderSellerContactStep = () => (
       Number(Boolean(sellerData.gallery.length));
 
     return (
-      <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-        <Box
-          borderWidth="1px"
-          borderColor="blue.100"
-          borderRadius="3xl"
-          bgGradient="linear(to-br, blue.50, blue.50)"
-          px={{ base: 5, md: 6 }}
-          py={{ base: 5, md: 6 }}
-        >
-          <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-            <Stack
-              direction={{ base: "column", md: "row" }}
-              justify="space-between"
-              align={{ base: "flex-start", md: "center" }}
-              spacing={4}
-            >
-              <Box maxW="2xl">
-                <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
-                  Final touch
-                </Badge>
-                <Heading mt={3} fontSize={{ base: "xl", md: "2xl" }} color="gray.900">
-                  Show buyers what your shop looks like
-                </Heading>
-                <Text mt={2} color="gray.600">
-                  A clear logo, a wide cover image, and a few real photos help people trust your shop faster. You can update any of these later.
-                </Text>
-              </Box>
-              <Badge colorScheme={completedMediaCount >= 2 ? "green" : "blue"} borderRadius="full" px={4} py={2}>
-                {completedMediaCount}/3 sections added
-              </Badge>
-            </Stack>
+      <VStack align="stretch" spacing={6}>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={3}>
-              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
-                <Text fontSize="sm" fontWeight="700" color="gray.800">
-                  Logo
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  Best for your listing image and brand identity.
-                </Text>
-              </Box>
-              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
-                <Text fontSize="sm" fontWeight="700" color="gray.800">
-                  Cover image
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  Great for storefronts, shelves, or your signature setup.
-                </Text>
-              </Box>
-              <Box bg="whiteAlpha.800" borderRadius="2xl" px={4} py={3}>
-                <Text fontSize="sm" fontWeight="700" color="gray.800">
-                  Gallery
-                </Text>
-                <Text fontSize="sm" color="gray.500">
-                  Add 2-4 extra photos so buyers can quickly understand your shop.
-                </Text>
-              </Box>
-            </SimpleGrid>
-          </VStack>
+        {/* Header */}
+        <Box>
+          <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
+            Final step
+          </Badge>
+
+          <Heading mt={3} fontSize={{ base: "lg", md: "xl" }}>
+            Add photos to your shop
+          </Heading>
+
+          <Text mt={1} fontSize="sm" color="gray.500">
+            Shops with real images get more trust and clicks.
+          </Text>
+
+          <Text mt={2} fontSize="xs" color="gray.400">
+            {completedMediaCount}/3 completed
+          </Text>
         </Box>
 
-        <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={{ base: 4, md: 5 }}>
-          <UploadCard
+        {/* Upload sections */}
+        <VStack spacing={4} align="stretch">
+
+          <UploadBlock
             title="Shop logo"
-            helper="This appears across the dashboard and your shop listing."
-            files={sellerData.logo.file}
+            description="Used across your shop and listings"
             icon={FiShoppingBag}
-            badgeText="Recommended"
-            formatHint="Square logos with clean backgrounds look best. JPG, PNG or WEBP."
-            accentColor="blue"
+            files={sellerData.logo.file}
+            onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
             onFileChange={(file) =>
               setSellerData((prev) => ({
                 ...prev,
-                logo: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
+                logo: {
+                  file: file ? [file] : [],
+                  isAdd: file ? 1 : 0,
+                  isDeleted: file ? 0 : 1,
+                },
               }))
             }
             onRemove={() =>
@@ -1848,18 +1682,20 @@ const renderSellerContactStep = () => (
             }
           />
 
-          <UploadCard
+          <UploadBlock
             title="Cover image"
-            helper="A wide banner image for your shop profile."
-            files={sellerData.coverImage.file}
+            description="Wide image of your shop or setup"
             icon={FiImage}
-            badgeText="Recommended"
-            formatHint="Use a wide photo of your storefront, shelves, or key products."
-            accentColor="blue"
+            files={sellerData.coverImage.file}
+            onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
             onFileChange={(file) =>
               setSellerData((prev) => ({
                 ...prev,
-                coverImage: { file: file ? [file] : [], isAdd: file ? 1 : 0, isDeleted: file ? 0 : 1 },
+                coverImage: {
+                  file: file ? [file] : [],
+                  isAdd: file ? 1 : 0,
+                  isDeleted: file ? 0 : 1,
+                },
               }))
             }
             onRemove={() =>
@@ -1869,149 +1705,15 @@ const renderSellerContactStep = () => (
               }))
             }
           />
-        </SimpleGrid>
 
-        <Box {...fieldCardStyles} borderColor="blue.100" p={{ base: 3, md: 5 }}>
-          <VStack align="stretch" spacing={4}>
-            <Stack
-              direction={{ base: "column", sm: "row" }}
-              justify="space-between"
-              align={{ base: "flex-start", sm: "center" }}
-              spacing={3}
-            >
-              <HStack align="flex-start" spacing={4}>
-                <Circle size="46px" bg="blue.50" color="blue.600" flexShrink={0}>
-                  <Icon as={FiUploadCloud} boxSize={5} />
-                </Circle>
-                <Box>
-                  <Text fontSize="md" fontWeight="700" color="gray.900">
-                    Gallery photos
-                  </Text>
-                  <Text fontSize="sm" color="gray.500">
-                    Add real storefront or product shots to make your listing feel trustworthy and complete.
-                  </Text>
-                </Box>
-              </HStack>
-              <Badge colorScheme={sellerData.gallery.length ? "green" : "blue"} borderRadius="full" px={3} py={1}>
-                {sellerData.gallery.length ? `${sellerData.gallery.length} selected` : "Optional"}
-              </Badge>
-            </Stack>
-
-            <Input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              display="none"
-              onChange={(event) => {
-                handleGalleryFilesSelected(Array.from(event.target.files || []));
-                event.target.value = "";
-              }}
-            />
-
-            <Box
-              role="button"
-              tabIndex={0}
-              borderWidth="1px"
-              borderStyle="dashed"
-              borderColor="blue.200"
-              borderRadius="2xl"
-              py={8}
-              px={6}
-              bgGradient="linear(to-br, blue.50, blue.50)"
-              textAlign="center"
-              cursor="pointer"
-              transition="all 0.2s ease"
-              _hover={{ borderColor: "blue.400", bg: "blue.100" }}
-              _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
-              onClick={() => galleryInputRef.current?.click()}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  galleryInputRef.current?.click();
-                }
-              }}
-            >
-              <VStack spacing={3}>
-                <Circle size="50px" bg="white" color="blue.600" boxShadow="sm">
-                  <Icon as={FiCamera} boxSize={5} />
-                </Circle>
-                <Box>
-                  <Text fontSize="sm" fontWeight="700" color="gray.800">
-                    Add storefront or product photos
-                  </Text>
-                  <Text mt={1} fontSize="sm" color="gray.500">
-                    Upload multiple JPG, PNG, or WEBP images. Real photos usually work better than posters or flyers.
-                  </Text>
-                </Box>
-              </VStack>
-            </Box>
-
-            <Stack
-              direction="row" justify="space-between" align="center" spacing={2}
-            >
-              <Button size="xs" colorScheme="blue" borderRadius="full" onClick={() => galleryInputRef.current?.click()} h="32px">
-                {sellerData.gallery.length ? "Add more" : "Choose"}
-              </Button>
-              <Text fontSize="sm" color="gray.500">
-                Best results: 2-4 photos covering your storefront, shelves, team, or best-selling products.
-              </Text>
-            </Stack>
-
-            {sellerData.gallery.length ? (
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-                {sellerData.gallery.map((item, index) => (
-                  <Box
-                    key={`${item.title}-${index}`}
-                    borderWidth="1px"
-                    borderColor="blue.100"
-                    bg="blue.50"
-                    borderRadius="2xl"
-                    px={4}
-                    py={4}
-                  >
-                    <VStack align="stretch" spacing={3}>
-                      <HStack justify="space-between" align="center">
-                        <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
-                          Photo {index + 1}
-                        </Badge>
-                        <Icon as={FiCheckCircle} color="blue.600" boxSize={5} />
-                      </HStack>
-                      <Box>
-                        <Text fontWeight="600" color="gray.800">
-                          {item.title || item.file?.name || `Photo ${index + 1}`}
-                        </Text>
-                        <Text fontSize="sm" color="gray.500" noOfLines={2}>
-                          {item.file?.name || "Selected image"}
-                        </Text>
-                      </Box>
-                      <Button
-                        variant="ghost"
-                        colorScheme="red"
-                        borderRadius="full"
-                        alignSelf="flex-start"
-                        onClick={() =>
-                          setSellerData((prev) => ({
-                            ...prev,
-                            gallery: prev.gallery.filter((_, currentIndex) => currentIndex !== index),
-                          }))
-                        }
-                      >
-                        Remove
-                      </Button>
-                    </VStack>
-                  </Box>
-                ))}
-              </SimpleGrid>
-            ) : (
-              <Box borderWidth="1px" borderColor="gray.100" borderRadius="2xl" bg="gray.50" px={4} py={4}>
-                <Text fontSize="sm" color="gray.500">
-                  No gallery photos added yet. Even a couple of real shop photos can make your listing feel much stronger.
-                </Text>
-              </Box>
-            )}
-          </VStack>
-        </Box>
+          <GalleryBlock
+            gallery={sellerData.gallery}
+            setSellerData={setSellerData}
+            galleryInputRef={galleryInputRef}
+            handleGalleryFilesSelected={handleGalleryFilesSelected}
+            onPreview={(index) => handlePreviewImage(sellerData.gallery[index]?.file || null)}
+          />
+        </VStack>
       </VStack>
     );
   };
@@ -2068,133 +1770,429 @@ const renderSellerContactStep = () => (
   };
 
   return (
-    <MotionBox
-      w="full"
-      minH="100vh"
-      bgGradient={{ base: "none", md: "linear(to-b, #f8fafc 0%, #ffffff 45%, #eff6ff 100%)" }}
-      bg={{ base: "white", md: "transparent" }}
-      pt={{ base: "calc(env(safe-area-inset-top, 0px) + 4px)", md: 6 }}
-      pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 8px)", md: 6 }}
-      display="flex"
-      alignItems={{ base: "flex-start", md: "center" }}
-      initial={{ opacity: 0, y: 24, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+     <MotionBox
+    w="full"
+  minH="100vh"
+  h={{ base: "auto", md: "100vh" }}
+  overflow={{ base: "visible", md: "hidden" }}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <Container
-        maxW={{ base: "full", md: "container.lg", xl: "760px" }}
-        px={{ base: 0, md: 6 }}
-        display="flex"
-        alignItems={{ base: "flex-start", md: "center" }}
-        justifyContent="center"
-        minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
-        pt={{ base: "0px", md: 0 }}
-      >
+      <Flex minH="100vh" direction={{ base: "column", md: "row" }}>
+
+        {/* ─── LEFT PANEL (desktop only) ─── */}
         <Box
-          {...panelStyles}
-          boxShadow={panelStyles.boxShadow}
-          borderWidth={panelStyles.borderWidth}
-          px={{ base: 3, md: 8, xl: 9 }}
-          py={{ base: 3, md: 8, xl: 9 }}
-          w="full"
+          display={{ base: "none", md: "flex" }}
+          flexDirection="column"
+          w={{ md: "400px", xl: "42%" }}
+          flexShrink={0}
+          position="sticky"
+          top={0}
+          h="100vh"
+          bg={meta.bg}
+          transition="background 0.4s ease"
+          px={{ md: 10, xl: 14 }}
+          py={12}
+          overflow="hidden"
+          bgGradient={`linear(to-br, ${meta.bg}, ${meta.softAccent}30)`}
         >
-          <VStack align="stretch" spacing={{ base: 4, md: 8 }}>
-            <Flex justify="space-between" align="center" gap={2} mb={{ base: -2, md: 0 }} display={{ base: "none", md: "flex" }}>
-              <IconButton
-                aria-label="Go back"
-                icon={<ArrowBackIcon />}
-                variant="ghost"
-                size="sm"
-                borderRadius="full"
-                onClick={handleBack}
-                isDisabled={stepIndex === 0}
-                display={stepIndex === 0 ? "none" : "flex"}
-              />
-              <Box>
-                <Badge
-                  bg="blue.50"
-                  color="blue.600"
-                  borderRadius="md"
-                  px={3}
-                  py={1}
-                  fontSize="xs"
-                  fontWeight="700"
-                >
-                  Step {stepIndex + 1}/{steps.length}
-                </Badge>
-              </Box>
-            </Flex>
+          {/* Decorative Background Blobs */}
+          <Box
+            position="absolute"
+            top="-10%"
+            left="-10%"
+            w="350px"
+            h="350px"
+            bg={meta.accent}
+            opacity="0.08"
+            filter="blur(80px)"
+            borderRadius="full"
+            zIndex={0}
+          />
+          <Box
+            position="absolute"
+            bottom="-5%"
+            right="-10%"
+            w="400px"
+            h="400px"
+            bg={meta.accent}
+            opacity="0.1"
+            filter="blur(100px)"
+            borderRadius="full"
+            zIndex={0}
+          />
+          <Box
+            position="absolute"
+            top="45%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            w="500px"
+            h="500px"
+            bg="white"
+            opacity="0.5"
+            filter="blur(60px)"
+            borderRadius="full"
+            zIndex={0}
+          />
 
-            <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="blue" h="6px" display={{ base: "none", md: "block" }} />
-
-            <Stack
-              direction={isSellerPhotosStep ? { base: "row", md: "column" } : "row"}
-              spacing={{ base: 2, md: 4 }}
-              align="center"
-              justify={isSellerPhotosStep ? { base: "flex-start", md: "center" } : undefined}
+          {/* Top: logo / brand */}
+          <HStack spacing={2} mb="auto" zIndex={1}>
+            <Box
+              w="32px" h="32px" borderRadius="8px"
+              bg={meta.accent} display="flex" alignItems="center" justifyContent="center"
+              boxShadow={`0 4px 12px ${meta.accent}40`}
             >
-              <IconButton
-                aria-label="Go back"
-                icon={<ArrowBackIcon />}
-                variant="ghost"
-                size="sm"
-                borderRadius="full"
-                onClick={handleBack}
-                isDisabled={stepIndex === 0}
-                display={{ base: stepIndex === 0 ? "none" : "flex", md: "none" }}
-                mr={1}
-              />
-              <Circle size={{ base: "0px", md: "50px" }} bg="blue.50" color="blue.600" display={{ base: "none", md: "flex" }}>
-                <Icon as={activeStep.icon as any} boxSize={5} />
-              </Circle>
-              <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? { base: "left", md: "center" } : "left"}>
-                <Heading fontSize={{ base: "lg", sm: "xl", md: "3xl" }} color="gray.900" lineHeight="1.2">
-                  {activeStep.title}
-                </Heading>
-                <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} mt={1}>
-                  {activeStep.subtitle}
-                </Text>
-              </Box>
-            </Stack>
+              <Icon as={FiShoppingBag} color="white" boxSize={4} />
+            </Box>
+            <Text fontWeight="800" fontSize="lg" color="gray.800" letterSpacing="-0.02em">
+              YourApp
+            </Text>
+          </HStack>
+
+          {/* Center: illustration */}
+          <Box flex={1} display="flex" flexDirection="column" justifyContent="center" gap={10} zIndex={1} w="full">
+            <Box
+              w="100%" maxW={{ md: "300px", xl: "360px" }} mx="auto"
+              transition="all 0.4s ease"
+            >
+              <AnimatePresence mode="wait">
+                <MotionBox
+                  key={activeStep.title}
+                  initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -16, scale: 0.95 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  {meta.illustration}
+                </MotionBox>
+              </AnimatePresence>
+            </Box>
 
             <AnimatePresence mode="wait">
               <MotionBox
-                key={`${intent}-${stepIndex}`}
-                initial={{ opacity: 0, y: 20 }}
+                key={`text-${activeStep.title}`}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.24 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3, delay: 0.08 }}
               >
-                {renderCurrentStep()}
+                <Text
+                  fontSize={{ md: "2xl", xl: "3xl" }} fontWeight="800" color="gray.900"
+                  letterSpacing="-0.03em" lineHeight="1.2" mb={5}
+                >
+                  {meta.tagline}
+                </Text>
+                <VStack align="stretch" spacing={3.5}>
+                  {meta.points.map((point, i) => (
+                    <HStack key={i} spacing={4} align="center">
+                      <Flex
+                        w="32px" h="32px" borderRadius="10px" flexShrink={0}
+                        bg="white"
+                        boxShadow="0 2px 8px rgba(0,0,0,0.04)"
+                        align="center" justify="center"
+                      >
+                        <Icon as={point.icon} boxSize={4} color={meta.accent} />
+                      </Flex>
+                      <Text fontSize="md" fontWeight="600" color="gray.700">
+                        {point.text}
+                      </Text>
+                    </HStack>
+                  ))}
+                </VStack>
               </MotionBox>
             </AnimatePresence>
+          </Box>
 
-            <Button
-              w="full"
-              {...primaryButtonStyles}
-              onClick={isOtpStep ? () => void handleVerify() : handleContinue}
-              isLoading={loading}
-            >
-              {isOtpStep ? "Verify & Continue" : "Continue"}
-            </Button>
-
-            <Text textAlign="center" color="gray.600" fontSize={{ base: "xs", md: "sm" }} mt={{ base: -2, md: 0 }}>
-              Already have an account?{" "}
-              <Button
-                type="button"
-                variant="link"
-                color="blue.600"
-                fontSize={{ base: "xs", md: "sm" }}
-                isDisabled={isRouteTransitioning}
-                onClick={() => navigateWithAnimation("/login")}
-              >
-                Sign in
-              </Button>
-            </Text>
+          {/* Bottom: step dots */}
+          <VStack align="stretch" spacing={3} mt="auto" pt={8} zIndex={1}>
+            <HStack justify="space-between" align="center">
+              <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="0.05em">
+                Step {stepIndex + 1} of {steps.length}
+              </Text>
+              <Text fontSize="xs" fontWeight="600" color={meta.accent}>
+                {Math.round(progress)}% Completed
+              </Text>
+            </HStack>
+            <HStack spacing={1.5} w="full">
+              {steps.map((_, i) => (
+                <Box
+                  key={i}
+                  h="4px"
+                  flex={i === stepIndex ? 2 : 1}
+                  borderRadius="full"
+                  bg={i === stepIndex ? meta.accent : (i < stepIndex ? `${meta.accent}80` : "whiteAlpha.600")}
+                  transition="all 0.3s ease"
+                  boxShadow={i < stepIndex ? "inset 0 1px 2px rgba(0,0,0,0.1)" : "none"}
+                />
+              ))}
+            </HStack>
           </VStack>
         </Box>
-      </Container>
+
+        {/* ─── RIGHT PANEL (form) ─── */}
+        <Box
+          flex={1}
+          h={{ base: "auto", md: "100vh" }}
+          overflowY="auto"
+          bg="white"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="flex-start"
+          pt={{ base: "calc(env(safe-area-inset-top,0px) + 16px)", md: 10 }}
+          pb={{ base: "calc(env(safe-area-inset-bottom,0px) + 24px)", md: 12 }}
+          px={{ base: 5, md: 8 }}
+          sx={{
+            "&::-webkit-scrollbar": { display: "none" },
+            scrollbarWidth: "none",
+          }}
+        >
+          {/* Spacious layout for the form */}
+          <Box
+            w="full"
+            maxW={{ base: "full", md: "520px", xl: "650px" }}
+            display="flex"
+            flexDirection="column"
+            my="auto"
+          >
+            <VStack align="stretch" spacing={{ base: 6, md: 8 }}>
+              
+              {/* Text Stepper for Mobile Only */}
+              <Flex display={{ base: "flex", md: "none" }} justify="flex-end" mb={-2}>
+                <Text fontSize="sm" fontWeight="600" color="gray.500">
+                  Step {stepIndex + 1} of {steps.length}
+                </Text>
+              </Flex>
+
+              {/* Step Heading & Back Button */}
+              <HStack align="flex-start" spacing={3}>
+                {stepIndex > 0 && (
+                  <IconButton
+                    aria-label="Go back"
+                    icon={<ArrowBackIcon />}
+                    variant="ghost"
+                    size="md"
+                    borderRadius="full"
+                    onClick={handleBack}
+                    bg="gray.50"
+                    _hover={{ bg: "gray.100" }}
+                    mt={{ base: 0.5, md: 1.5 }}
+                    flexShrink={0}
+                  />
+                )}
+                <Box>
+                  <Heading fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em" mb={2}>
+                    {activeStep.title}
+                  </Heading>
+                  <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} fontWeight="500">
+                    {activeStep.subtitle}
+                  </Text>
+                </Box>
+              </HStack>
+
+              {/* Step Content */}
+              <AnimatePresence mode="wait">
+                <MotionBox
+                  key={`${intent}-${stepIndex}`}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  {renderCurrentStep()}
+                </MotionBox>
+              </AnimatePresence>
+
+              {/* CTA & Footer */}
+              <VStack spacing={5} mt={4}>
+                <Button
+                  w="full"
+                  h={{ base: "52px", md: "56px" }}
+                  bg={meta.accent}
+                  color="white"
+                  fontSize="md"
+                  fontWeight="600"
+                  borderRadius="xl"
+                  _hover={{ opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
+                  _active={{ transform: "translateY(0)" }}
+                  transition="all 0.2s"
+                  onClick={isOtpStep ? () => void handleVerify() : handleContinue}
+                  isLoading={loading}
+                >
+                  {isOtpStep ? "Verify & Continue" : "Continue"}
+                  {!isOtpStep && <Icon as={FiChevronRight} ml={2} />}
+                </Button>
+
+                <Text textAlign="center" color="gray.500" fontSize="sm" fontWeight="500">
+                  Already have an account?{" "}
+                  <Button
+                    type="button"
+                    variant="link"
+                    color={meta.accent}
+                    fontWeight="700"
+                    fontSize="sm"
+                    isDisabled={isRouteTransitioning}
+                    onClick={() => navigateWithAnimation("/login")}
+                  >
+                    Sign in
+                  </Button>
+                </Text>
+              </VStack>
+
+            </VStack>
+          </Box>
+        </Box>
+
+        {/* Image Preview Modal */}
+        <Modal isOpen={isImageModalOpen} onClose={onImageModalClose} isCentered size="xl">
+          <ModalOverlay bg="blackAlpha.700" backdropFilter="blur(8px)" />
+          <ModalContent bg="transparent" boxShadow="none" mx={4}>
+            <ModalCloseButton color="white" zIndex={10} bg="blackAlpha.500" borderRadius="full" />
+            <ModalBody p={0}>
+              <Flex justify="center" align="center">
+                {previewImageUrl && (
+                  <Image
+                    src={previewImageUrl}
+                    alt="Preview"
+                    maxH="80vh"
+                    objectFit="contain"
+                    borderRadius="2xl"
+                    boxShadow="2xl"
+                  />
+                )}
+              </Flex>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+
+      </Flex>
     </MotionBox>
+    //   minH="100vh"
+    //   bgGradient={{ base: "none", md: "linear(to-b, #f8fafc 0%, #ffffff 45%, #eff6ff 100%)" }}
+    //   bg={{ base: "white", md: "transparent" }}
+    //   pt={{ base: "calc(env(safe-area-inset-top, 0px) + 4px)", md: 6 }}
+    //   pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 8px)", md: 6 }}
+    //   display="flex"
+    //   alignItems={{ base: "flex-start", md: "center" }}
+    //   initial={{ opacity: 0, y: 24, scale: 0.98 }}
+    //   animate={{ opacity: 1, y: 0, scale: 1 }}
+    //   transition={{ duration: 0.4, ease: "easeOut" }}
+    // >
+    //   <Container
+    //     maxW={{ base: "full", md: "container.lg", xl: "760px" }}
+    //     px={{ base: 0, md: 6 }}
+    //     display="flex"
+    //     alignItems={{ base: "flex-start", md: "center" }}
+    //     justifyContent="center"
+    //     minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
+    //     pt={{ base: "0px", md: 0 }}
+    //   >
+    //     <Box
+    //       {...panelStyles}
+    //       boxShadow={panelStyles.boxShadow}
+    //       borderWidth={panelStyles.borderWidth}
+    //       px={{ base: 3, md: 8, xl: 9 }}
+    //       py={{ base: 3, md: 8, xl: 9 }}
+    //       w="full"
+    //     >
+    //       <VStack align="stretch" spacing={{ base: 4, md: 8 }}>
+    //         <Flex justify="space-between" align="center" gap={2} mb={{ base: -2, md: 0 }} display={{ base: "none", md: "flex" }}>
+    //           <IconButton
+    //             aria-label="Go back"
+    //             icon={<ArrowBackIcon />}
+    //             variant="ghost"
+    //             size="sm"
+    //             borderRadius="full"
+    //             onClick={handleBack}
+    //             isDisabled={stepIndex === 0}
+    //             display={stepIndex === 0 ? "none" : "flex"}
+    //           />
+    //           <Box>
+    //             <Badge
+    //               bg="blue.50"
+    //               color="blue.600"
+    //               borderRadius="md"
+    //               px={3}
+    //               py={1}
+    //               fontSize="xs"
+    //               fontWeight="700"
+    //             >
+    //               Step {stepIndex + 1}/{steps.length}
+    //             </Badge>
+    //           </Box>
+    //         </Flex>
+
+    //         <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="blue" h="6px" display={{ base: "none", md: "block" }} />
+
+    //         <Stack
+    //           direction={isSellerPhotosStep ? { base: "row", md: "column" } : "row"}
+    //           spacing={{ base: 2, md: 4 }}
+    //           align="center"
+    //           justify={isSellerPhotosStep ? { base: "flex-start", md: "center" } : undefined}
+    //         >
+    //           <IconButton
+    //             aria-label="Go back"
+    //             icon={<ArrowBackIcon />}
+    //             variant="ghost"
+    //             size="sm"
+    //             borderRadius="full"
+    //             onClick={handleBack}
+    //             isDisabled={stepIndex === 0}
+    //             display={{ base: stepIndex === 0 ? "none" : "flex", md: "none" }}
+    //             mr={1}
+    //           />
+    //           <Circle size={{ base: "0px", md: "50px" }} bg="blue.50" color="blue.600" display={{ base: "none", md: "flex" }}>
+    //             <Icon as={activeStep.icon as any} boxSize={5} />
+    //           </Circle>
+    //           <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? { base: "left", md: "center" } : "left"}>
+    //             <Heading fontSize={{ base: "lg", sm: "xl", md: "3xl" }} color="gray.900" lineHeight="1.2">
+    //               {activeStep.title}
+    //             </Heading>
+    //             <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} mt={1}>
+    //               {activeStep.subtitle}
+    //             </Text>
+    //           </Box>
+    //         </Stack>
+
+    //         <AnimatePresence mode="wait">
+    //           <MotionBox
+    //             key={`${intent}-${stepIndex}`}
+    //             initial={{ opacity: 0, y: 20 }}
+    //             animate={{ opacity: 1, y: 0 }}
+    //             exit={{ opacity: 0, y: -20 }}
+    //             transition={{ duration: 0.24 }}
+    //           >
+    //             {renderCurrentStep()}
+    //           </MotionBox>
+    //         </AnimatePresence>
+
+    //         <Button
+    //           w="full"
+    //           {...primaryButtonStyles}
+    //           onClick={isOtpStep ? () => void handleVerify() : handleContinue}
+    //           isLoading={loading}
+    //         >
+    //           {isOtpStep ? "Verify & Continue" : "Continue"}
+    //         </Button>
+
+    //         <Text textAlign="center" color="gray.600" fontSize={{ base: "xs", md: "sm" }} mt={{ base: -2, md: 0 }}>
+    //           Already have an account?{" "}
+    //           <Button
+    //             type="button"
+    //             variant="link"
+    //             color="blue.600"
+    //             fontSize={{ base: "xs", md: "sm" }}
+    //             isDisabled={isRouteTransitioning}
+    //             onClick={() => navigateWithAnimation("/login")}
+    //           >
+    //             Sign in
+    //           </Button>
+    //         </Text>
+    //       </VStack>
+    //     </Box>
+    //   </Container>
+    // </MotionBox>
   );
 });
 export default SignUpForm;
