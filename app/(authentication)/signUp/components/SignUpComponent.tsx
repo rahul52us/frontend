@@ -1,13 +1,11 @@
 "use client";
-
-import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Box,
   Button,
   Circle,
   Container,
-  Divider,
   Flex,
   FormControl,
   FormLabel,
@@ -16,34 +14,32 @@ import {
   Icon,
   IconButton,
   Input,
+  PinInput,
+  PinInputField,
   Progress,
   SimpleGrid,
+  Spinner,
   Stack,
   Text,
   Textarea,
   useToast,
-  VStack,
-  PinInput,
-  PinInputField,
+  VStack
 } from "@chakra-ui/react";
-import { ArrowBackIcon, CheckIcon } from "@chakra-ui/icons";
-import { motion, AnimatePresence } from "framer-motion";
-import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import { useRouter } from "next/navigation";
+import { Autocomplete, GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
+import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
+import { useRouter } from "next/navigation";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiCamera,
   FiCheckCircle,
   FiImage,
-  FiMail,
-  FiMapPin,
   FiNavigation,
-  FiPhone,
+  FiPackage,
   FiShoppingBag,
-  FiUploadCloud,
-  FiUser,
+  FiShoppingCart,
+  FiUploadCloud
 } from "react-icons/fi";
-import stores from "../../../store/stores";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import {
   getOptionalGstError,
@@ -51,126 +47,17 @@ import {
 } from "../../../config/utils/gstValidation";
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
+import stores from "../../../store/stores";
+import { fieldCardStyles, inputStyles, mapOptions, panelStyles, primaryButtonStyles, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 const FALLBACK_CENTER = { lat: 28.6139, lng: 77.209 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const phoneRegex = /^\d{10}$/;
 
-const mapOptions: google.maps.MapOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-  streetViewControl: false,
-  fullscreenControl: false,
-  mapTypeControl: false,
-  clickableIcons: false,
-  gestureHandling: "greedy",
-  styles: [
-    { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
-    { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
-    { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
-    { featureType: "poi", stylers: [{ visibility: "off" }] },
-    { featureType: "transit", stylers: [{ visibility: "off" }] },
-    { featureType: "road", elementType: "geometry", stylers: [{ color: "#dbeafe" }] },
-    { featureType: "water", elementType: "geometry", stylers: [{ color: "#bfdbfe" }] },
-  ],
-};
-
 type Intent = "user" | "seller";
-
-const userSteps = [
-  {
-    title: "Let's get started",
-    subtitle: "Enter your phone number to join the platform.",
-    icon: FiPhone,
-  },
-  {
-    title: "Tell us about you",
-    subtitle: "We just need a couple of details to create your account.",
-    icon: FiUser,
-  },
-  {
-    title: "Verify OTP",
-    subtitle: "Enter the OTP sent to your phone number.",
-    icon: CheckIcon,
-  },
-];
-
-const sellerSteps = [
-  {
-    title: "Let's get started",
-    subtitle: "Enter the phone number you want to use for seller access.",
-    icon: FiPhone,
-  },
-  {
-    title: "Tell us about your shop",
-    subtitle: "Add the basics buyers need to recognize your business.",
-    icon: FiShoppingBag,
-  },
-  {
-    title: "Set your shop location",
-    subtitle: "Drop a pin on the map so nearby buyers can find you.",
-    icon: FiMapPin,
-  },
-  {
-    title: "Contact details",
-    subtitle: "Add the public phone and optional email for your shop.",
-    icon: FiMail,
-  },
-  {
-    title: "Show your shop",
-    subtitle: "Upload your logo, storefront photo, or some product images.",
-    icon: FiCamera,
-  },
-  {
-    title: "Verify OTP",
-    subtitle: "We have sent an OTP to your phone number.",
-    icon: CheckIcon,
-  },
-];
-
-const panelStyles = {
-  bg: "white",
-  borderWidth: "1px",
-  borderColor: "gray.200",
-  borderRadius: "3xl",
-  boxShadow: "0 28px 90px rgba(15, 23, 42, 0.08)",
-};
-
-const primaryButtonStyles = {
-  bgGradient: "linear(to-r, teal.500, cyan.500)",
-  color: "white",
-  h: "56px",
-  borderRadius: "full",
-  fontWeight: "700",
-  _hover: { bgGradient: "linear(to-r, teal.600, cyan.600)" },
-  _active: { transform: "scale(0.98)" },
-};
-
-const inputStyles = {
-  h: "58px",
-  borderRadius: "2xl",
-  borderColor: "gray.200",
-  _focusVisible: { borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" },
-};
-
-const fieldCardStyles = {
-  borderWidth: "1px",
-  borderColor: "gray.200",
-  borderRadius: "2xl",
-  bg: "white",
-  boxShadow: "0 18px 48px rgba(15, 23, 42, 0.04)",
-  p: 5,
-};
-
-const textareaStyles = {
-  minH: "132px",
-  borderRadius: "18px",
-  borderColor: "#D9E2EC",
-  bg: "#F8FBFD",
-  _focusVisible: { borderColor: "teal.400", boxShadow: "0 0 0 1px #14b8a6" },
-};
 
 const isValidEmail = (email: string) => {
   if (!email.trim()) return true;
@@ -253,34 +140,35 @@ const UploadCard = ({
       {...fieldCardStyles}
       borderColor={hasFiles ? `${accentColor}.200` : fieldCardStyles.borderColor}
       bg={hasFiles ? "white" : `${accentColor}.50`}
+      p={{ base: 3, md: 5 }}
     >
-      <VStack align="stretch" spacing={4}>
+      <VStack align="stretch" spacing={{ base: 2, md: 4 }}>
         <Stack
-          direction={{ base: "column", sm: "row" }}
+          direction="row"
           justify="space-between"
-          align={{ base: "flex-start", sm: "center" }}
-          spacing={3}
+          align="center"
+          spacing={2}
         >
-          <HStack align="flex-start" spacing={4}>
-            <Circle size="46px" bg="white" color={`${accentColor}.600`} boxShadow="sm" flexShrink={0}>
-              <Icon as={icon} boxSize={5} />
+          <HStack align="center" spacing={3}>
+            <Circle size={{ base: "32px", md: "46px" }} bg="white" color={`${accentColor}.600`} boxShadow="sm" flexShrink={0}>
+              <Icon as={icon} boxSize={{ base: 3.5, md: 5 }} />
             </Circle>
             <Box>
-              <Text fontSize="md" fontWeight="700" color="gray.900">
+              <Text fontSize={{ base: "xs", md: "md" }} fontWeight="700" color="gray.900">
                 {title}
               </Text>
-              <Text fontSize="sm" color="gray.500">
+              <Text fontSize="xs" color="gray.500" display={{ base: "none", md: "block" }}>
                 {helper}
               </Text>
             </Box>
           </HStack>
-          <Badge colorScheme={hasFiles ? "green" : accentScheme} borderRadius="full" px={3} py={1}>
+          <Badge colorScheme={hasFiles ? "green" : accentScheme} borderRadius="full" px={{ base: 2, md: 3 }} py={0.5} fontSize={{ base: "9px", md: "xs" }}>
             {hasFiles ? "Added" : badgeText}
           </Badge>
         </Stack>
 
         {hasFiles ? (
-          <Box borderWidth="1px" borderColor={`${accentColor}.100`} borderRadius="2xl" bg="white" px={4} py={1}>
+          <Box borderWidth="1px" borderColor={`${accentColor}.100`} borderRadius="xl" bg="white" px={3} py={1}>
             <ShowFileUploadFile files={files} removeFile={onRemove} edit={false} />
           </Box>
         ) : (
@@ -290,9 +178,9 @@ const UploadCard = ({
             borderWidth="1px"
             borderStyle="dashed"
             borderColor={`${accentColor}.200`}
-            borderRadius="2xl"
-            py={8}
-            px={6}
+            borderRadius="xl"
+            py={{ base: 3, md: 8 }}
+            px={{ base: 3, md: 6 }}
             textAlign="center"
             bg="white"
             cursor="pointer"
@@ -307,18 +195,11 @@ const UploadCard = ({
               }
             }}
           >
-            <VStack spacing={3}>
-              <Circle size="50px" bg={`${accentColor}.50`} color={`${accentColor}.600`}>
-                <Icon as={icon} boxSize={5} />
-              </Circle>
-              <Box>
-                <Text fontSize="sm" fontWeight="700" color="gray.800">
-                  Upload an image
-                </Text>
-                <Text mt={1} fontSize="sm" color="gray.500">
-                  {formatHint}
-                </Text>
-              </Box>
+            <VStack spacing={1}>
+              <Icon as={icon} boxSize={{ base: 4, md: 5 }} color={`${accentColor}.600`} />
+              <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="700" color="gray.800">
+                Upload image
+              </Text>
             </VStack>
           </Box>
         )}
@@ -335,12 +216,12 @@ const UploadCard = ({
           }}
         />
 
-        <Stack direction={{ base: "column", sm: "row" }} spacing={3}>
-          <Button colorScheme="teal" variant={hasFiles ? "outline" : "solid"} borderRadius="full" onClick={openPicker}>
-            {hasFiles ? "Replace image" : "Choose image"}
+        <Stack direction="row" spacing={2}>
+          <Button size="xs" colorScheme="blue" variant={hasFiles ? "outline" : "solid"} borderRadius="full" onClick={openPicker} flex={1} h="32px">
+            {hasFiles ? "Replace" : "Choose"}
           </Button>
           {hasFiles ? (
-            <Button variant="ghost" colorScheme="red" borderRadius="full" onClick={onRemove}>
+            <Button size="xs" variant="ghost" colorScheme="red" borderRadius="full" onClick={onRemove} h="32px">
               Remove
             </Button>
           ) : null}
@@ -361,6 +242,7 @@ const SignUpForm = observer(() => {
   const { auth, companyStore } = stores;
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   const [intent, setIntent] = useState<Intent>("user");
@@ -379,13 +261,11 @@ const SignUpForm = observer(() => {
   const otpInputRef = useRef<HTMLInputElement | null>(null);
   const otpAutoSubmitRef = useRef("");
   const autoLocationAttemptedRef = useRef(false);
-
   const [userData, setUserData] = useState({
     phone: "",
     name: "",
     email: "",
   });
-
   const [sellerData, setSellerData] = useState({
     storeName: "",
     gstNumber: "",
@@ -403,6 +283,8 @@ const SignUpForm = observer(() => {
     coverImage: { file: [], isAdd: 0, isDeleted: 0 },
     gallery: [] as Array<{ file: File; title: string; isAdd: number }>,
   });
+
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
   const steps = intent === "seller" ? sellerSteps : userSteps;
   const activeStep = steps[stepIndex];
@@ -475,15 +357,25 @@ const SignUpForm = observer(() => {
   };
 
   useEffect(() => {
-    if (stepIndex === 0) {
-      focusPhoneInput(180);
-      return;
-    }
+  if (stepIndex === 0) {
+    focusPhoneInput(180);
+    return;
+  }
+  if (isOtpStep) {
+    focusOtpInput(220);
+  }
+}, [isOtpStep, stepIndex]);
 
-    if (isOtpStep) {
-      focusOtpInput(220);
-    }
-  }, [intent, isOtpStep, stepIndex]);
+  // useEffect(() => {
+  //   if (stepIndex === 0) {
+  //     focusPhoneInput(180);
+  //     return;
+  //   }
+
+  //   if (isOtpStep) {
+  //     focusOtpInput(220);
+  //   }
+  // }, [intent, isOtpStep, stepIndex]);
 
   useEffect(() => {
     const isSellerLocationStep = intent === "seller" && stepIndex === 2;
@@ -508,15 +400,24 @@ const SignUpForm = observer(() => {
     }
   }, [isOtpStep, otp]);
 
+  // const setIntentSelection = (nextIntent: Intent) => {
+  //   setIntent(nextIntent);
+  //   setStepIndex(0);
+  //   setToken("");
+  //   setOtp("");
+  //   setErrors({});
+  //   setIsContactPhoneCustomized(false);
+  //   focusPhoneInput();
+  // };
+
   const setIntentSelection = (nextIntent: Intent) => {
-    setIntent(nextIntent);
-    setStepIndex(0);
-    setToken("");
-    setOtp("");
-    setErrors({});
-    setIsContactPhoneCustomized(false);
-    focusPhoneInput();
-  };
+  setIntent(nextIntent);
+  setStepIndex(0);
+  setToken("");
+  setOtp("");
+  setErrors({});
+  setIsContactPhoneCustomized(false);
+};
 
   const navigateWithAnimation = (href: string) => {
     if (isRouteTransitioning) return;
@@ -619,6 +520,27 @@ const SignUpForm = observer(() => {
     hydrateSellerLocation(lat, lng);
   };
 
+  const onLoadAutocomplete = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  const onPlaceChanged = () => {
+    if (autocomplete !== null) {
+      const place = autocomplete.getPlace();
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        hydrateSellerLocation(lat, lng);
+      } else {
+        toast({
+          title: "Location not found",
+          description: "Please select a valid location from the dropdown.",
+          status: "warning",
+        });
+      }
+    }
+  };
+
   const validateCurrentStep = (otpValue = otp) => {
     const nextErrors: Record<string, string> = {};
 
@@ -654,15 +576,12 @@ const SignUpForm = observer(() => {
     if (isOtpStep && otpValue.trim().length < 6) {
       nextErrors.otp = "Enter the 6-digit OTP.";
     }
-
     return nextErrors;
   };
-
   const handleImageProcessing = async (file?: File | null) => {
     if (!file) return null;
     return buildBase64ImageUpload(file, { isAdd: 1, isDeleted: 0 });
   };
-
   const createSellerCompany = async () => {
     const basePayload: any = {
       name: sellerData.storeName.trim(),
@@ -897,59 +816,330 @@ const SignUpForm = observer(() => {
     }));
   };
 
-const renderPhoneStep = () => (
-  <VStack align="stretch" spacing={6}>
+// const renderPhoneStep = () => (
+//   <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
+//     <Box>
+//       <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="wider" color="gray.500" mb={3}>
+//         I want to join as
+//       </Text>
+//       <HStack spacing={3}>
+//         <Button
+//           flex={1}
+//           type="button"
+//           leftIcon={<FiUser />}
+//           variant={intent === "user" ? "solid" : "outline"}
+//           colorScheme="blue"
+//           borderRadius="xl"
+//           h={{ base: "40px", md: "48px" }}
+//           fontSize={{ base: "sm", md: "md" }}
+//           onClick={() => setIntentSelection("user")}
+//           bg={intent === "user" ? "blue.600" : "transparent"}
+//           color={intent === "user" ? "white" : "gray.600"}
+//           borderColor={intent === "user" ? "blue.600" : "gray.200"}
+//           _hover={{ bg: intent === "user" ? "blue.700" : "gray.50" }}
+//           transition="all 0.2s"
+//         >
+//           Buyer
+//         </Button>
+//         <Button
+//           flex={1}
+//           type="button"
+//           leftIcon={<FiShoppingBag />}
+//           variant={intent === "seller" ? "solid" : "outline"}
+//           colorScheme="blue"
+//           borderRadius="xl"
+//           h={{ base: "40px", md: "48px" }}
+//           fontSize={{ base: "sm", md: "md" }}
+//           onClick={() => setIntentSelection("seller")}
+//           bg={intent === "seller" ? "blue.600" : "transparent"}
+//           color={intent === "seller" ? "white" : "gray.600"}
+//           borderColor={intent === "seller" ? "blue.600" : "gray.200"}
+//           _hover={{ bg: intent === "seller" ? "blue.700" : "gray.50" }}
+//           transition="all 0.2s"
+//         >
+//           Seller
+//         </Button>
+//       </HStack>
+//     </Box>
+
+//     <FormControl isRequired>
+//       <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+//         Phone Number
+//       </FormLabel>
+//       <Input
+//         ref={phoneInputRef}
+//         type="tel"
+//         inputMode="numeric"
+//         pattern="[0-9]*"
+//         value={userData.phone}
+//         onChange={(event) => setUserData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }))}
+//         placeholder="Enter 10-digit mobile number"
+//         {...inputStyles}
+//       />
+//       <FieldError message={errors.phone} />
+//     </FormControl>
+//   </VStack>
+// );
+
+
+const [isPhoneFocused, setIsPhoneFocused] = useState(false);
+
+const roleOptions = [
+  {
+    value: "user",
+    label: "Buyer",
+    sub: "Browse & purchase",
+    icon: FiShoppingCart,
+    active: {
+      bg: "blue.50",
+      border: "#3B82F6",
+      iconBg: "#DBEAFE",
+      iconColor: "#2563EB",
+      text: "blue.800",
+      subText: "blue.500",
+      dot: "#3B82F6",
+    },
+  },
+  {
+    value: "seller",
+    label: "Seller",
+    sub: "List & sell",
+    icon: FiPackage,
+    active: {
+      bg: "teal.50",
+      border: "#0D9488",
+      iconBg: "#CCFBF1",
+      iconColor: "#0F766E",
+      text: "teal.800",
+      subText: "teal.500",
+      dot: "#0D9488",
+    },
+  },
+];
+
+ const renderPhoneStep = () => (
+  <VStack align="stretch" spacing={{ base: 4, md: 6 }}>
+
+    {/* ── Role Selector ── */}
     <Box>
-      <Text fontSize="sm" color="gray.500" mb={3}>
+      <Text
+        fontSize="11px"
+        fontWeight="700"
+        textTransform="uppercase"
+        letterSpacing="0.07em"
+        color="gray.400"
+        mb={2.5}
+      >
         I want to join as
       </Text>
-      <SimpleGrid columns={2} spacing={3}>
-        <Button
-          type="button"
-          variant={intent === "user" ? "solid" : "outline"}
-          colorScheme="teal"
-          borderRadius="2xl"
-          h="52px"
-          onClick={() => setIntentSelection("user")}
-        >
-          Buyer / User
-        </Button>
-        <Button
-          type="button"
-          variant={intent === "seller" ? "solid" : "outline"}
-          colorScheme="blue"
-          borderRadius="2xl"
-          h="52px"
-          onClick={() => setIntentSelection("seller")}
-        >
-          Seller
-        </Button>
-      </SimpleGrid>
+
+      {/* Desktop cards */}
+      <HStack spacing={2.5} display={{ base: "none", sm: "flex" }}>
+        {roleOptions.map(({ value, label, sub, icon: Icon, active: a }:any) => {
+          const isActive = intent === value;
+          return (
+            <Box
+              key={value}
+              as="button"
+              type="button"
+              flex={1}
+              onClick={() => setIntentSelection(value)}
+              border="1.5px solid"
+              borderColor={isActive ? a.border : "gray.200"}
+              borderRadius="16px"
+              bg={isActive ? a.bg : "white"}
+              p={{ base: 3, md: "14px" }}
+              cursor="pointer"
+              transition="border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease"
+              boxShadow={isActive ? `0 0 0 3px ${a.border}22` : "0 1px 3px rgba(0,0,0,0.05)"}
+              _hover={{
+                borderColor: isActive ? a.border : "gray.300",
+                boxShadow: isActive
+                  ? `0 0 0 3px ${a.border}22`
+                  : "0 2px 8px rgba(0,0,0,0.07)",
+              }}
+              _active={{ opacity: 0.85 }}
+              outline="none"
+              _focusVisible={{ ring: "2px", ringColor: a.border, ringOffset: "2px" }}
+              textAlign="left"
+            >
+              <HStack spacing={3} align="center">
+                <Flex
+                  w="36px"
+                  h="36px"
+                  borderRadius="10px"
+                  bg={isActive ? a.iconBg : "gray.100"}
+                  align="center"
+                  justify="center"
+                  flexShrink={0}
+                  transition="background 0.18s ease"
+                >
+                  <Icon
+                    size={16}
+                    color={isActive ? a.iconColor : "#9CA3AF"}
+                    style={{ transition: "color 0.18s ease" }}
+                  />
+                </Flex>
+
+                <Box flex={1}>
+                  <Text
+                    fontWeight="700"
+                    fontSize="sm"
+                    color={isActive ? a.text : "gray.700"}
+                    lineHeight="1.2"
+                    transition="color 0.18s ease"
+                  >
+                    {label}
+                  </Text>
+                  <Text
+                    fontSize="11px"
+                    color={isActive ? a.subText : "gray.400"}
+                    fontWeight="500"
+                    mt="2px"
+                    transition="color 0.18s ease"
+                  >
+                    {sub}
+                  </Text>
+                </Box>
+
+                {/* Active dot indicator */}
+                <Box
+                  w="7px"
+                  h="7px"
+                  borderRadius="full"
+                  bg={isActive ? a.dot : "gray.200"}
+                  flexShrink={0}
+                  transition="background 0.18s ease"
+                />
+              </HStack>
+            </Box>
+          );
+        })}
+      </HStack>
+
+      {/* Mobile: compact chips */}
+      <HStack spacing={2} display={{ base: "flex", sm: "none" }}>
+        {roleOptions.map(({ value, label, icon: Icon, active: a }:any) => {
+          const isActive = intent === value;
+          return (
+            <Box
+              key={value}
+              as="button"
+              type="button"
+              flex={1}
+              onClick={() => setIntentSelection(value)}
+              border="1.5px solid"
+              borderColor={isActive ? a.border : "gray.200"}
+              borderRadius="12px"
+              bg={isActive ? a.bg : "white"}
+              py="10px"
+              px={3}
+              cursor="pointer"
+              transition="border-color 0.18s ease, background 0.18s ease"
+              _active={{ opacity: 0.8 }}
+              outline="none"
+            >
+              <HStack justify="center" spacing={1.5}>
+                <Icon
+                  size={14}
+                  color={isActive ? a.iconColor : "#9CA3AF"}
+                  style={{ transition: "color 0.18s ease" }}
+                />
+                <Text
+                  fontSize="13px"
+                  fontWeight={isActive ? "700" : "500"}
+                  color={isActive ? a.text : "gray.500"}
+                  transition="color 0.18s ease"
+                >
+                  {label}
+                </Text>
+              </HStack>
+            </Box>
+          );
+        })}
+      </HStack>
     </Box>
 
+    {/* ── Phone Input ── */}
     <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel
+        color="gray.600"
+        fontWeight="600"
+        fontSize={{ base: "xs", md: "sm" }}
+        mb={1.5}
+      >
         Phone Number
       </FormLabel>
-      <Input
-        ref={phoneInputRef}
-        type="tel"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={userData.phone}
-        onChange={(event) => setUserData((prev) => ({ ...prev, phone: event.target.value.replace(/\D/g, "").slice(0, 10) }))}
-        placeholder="Enter 10-digit mobile number"
-        {...inputStyles}
-      />
+
+      {/*
+        Unified border wrapper — fixes the Chakra InputGroup issue where
+        only the Input gets the focus ring, leaving the addon visually disconnected.
+        We manage focus state manually and apply the border to the outer Box instead.
+      */}
+      <HStack
+        spacing={0}
+        border="1.5px solid"
+        borderColor={isPhoneFocused ? "blue.400" : "gray.200"}
+        borderRadius="12px"
+        overflow="hidden"
+        transition="border-color 0.15s ease, box-shadow 0.15s ease"
+        boxShadow={isPhoneFocused ? "0 0 0 3px rgba(59,130,246,0.12)" : "none"}
+        bg="white"
+      >
+        {/* Country code pill */}
+        <Flex
+          align="center"
+          px={3}
+          h={{ base: "44px", md: "46px" }}
+          bg={isPhoneFocused ? "blue.50" : "gray.50"}
+          borderRight="1.5px solid"
+          borderColor={isPhoneFocused ? "blue.200" : "gray.200"}
+          transition="background 0.15s ease, border-color 0.15s ease"
+          flexShrink={0}
+          gap={1.5}
+        >
+          <Text fontSize="sm" lineHeight={1}>🇮🇳</Text>
+          <Text fontSize="sm" fontWeight="600" color={isPhoneFocused ? "blue.600" : "gray.500"} transition="color 0.15s ease">
+            +91
+          </Text>
+        </Flex>
+
+        {/* Actual input — no individual border */}
+        <Input
+          ref={phoneInputRef}
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={userData.phone}
+          onChange={(e) =>
+            setUserData((prev) => ({
+              ...prev,
+              phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+            }))
+          }
+          onFocus={() => setIsPhoneFocused(true)}
+          onBlur={() => setIsPhoneFocused(false)}
+          placeholder="Enter 10-digit mobile number"
+          border="none"
+          borderRadius={0}
+          h={{ base: "44px", md: "46px" }}
+          fontSize={{ base: "sm", md: "md" }}
+          _focus={{ boxShadow: "none", border: "none" }}
+          _placeholder={{ color: "gray.300" }}
+          px={3}
+        />
+      </HStack>
+
       <FieldError message={errors.phone} />
     </FormControl>
   </VStack>
 );
 
+
 const renderUserProfileStep = () => (
-  <VStack align="stretch" spacing={5}>
+  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
     <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Full Name
       </FormLabel>
       <Input
@@ -962,7 +1152,7 @@ const renderUserProfileStep = () => (
     </FormControl>
 
     <FormControl>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Email
       </FormLabel>
       <Input
@@ -978,9 +1168,9 @@ const renderUserProfileStep = () => (
 );
 
 const renderSellerBasicsStep = () => (
-  <VStack align="stretch" spacing={5}>
+  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
     <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Owner Name
       </FormLabel>
       <Input
@@ -993,7 +1183,7 @@ const renderSellerBasicsStep = () => (
     </FormControl>
 
     <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Store Name
       </FormLabel>
       <Input
@@ -1006,7 +1196,7 @@ const renderSellerBasicsStep = () => (
     </FormControl>
 
     <FormControl>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         GST Number
       </FormLabel>
       <Input
@@ -1024,7 +1214,7 @@ const renderSellerBasicsStep = () => (
     </FormControl>
 
     <FormControl>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         About Your Shop
       </FormLabel>
       <Textarea
@@ -1037,168 +1227,499 @@ const renderSellerBasicsStep = () => (
   </VStack>
 );
 
-  const renderSellerLocationStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <Box {...fieldCardStyles}>
-        <Flex
-          justify="space-between"
-          align={{ base: "start", lg: "center" }}
-          direction={{ base: "column", lg: "row" }}
-          gap={3}
-        >
-          <Box>
-            <Text fontSize="md" fontWeight="700" color="gray.900">
-              Choose shop location
-            </Text>
-            <Text fontSize="sm" color="gray.500">
-              Tap the map to place your shop. We will fill the address when possible.
-            </Text>
-          </Box>
-          <Button
-            leftIcon={<FiNavigation />}
-            variant="outline"
-            borderRadius="full"
-            w={{ base: "full", lg: "auto" }}
-            minH="48px"
-            px={5}
-            justifyContent="center"
-            textAlign="center"
-            whiteSpace="nowrap"
-            flexShrink={0}
-            alignSelf={{ base: "stretch", lg: "center" }}
-            onClick={() => detectCurrentLocation()}
-            isLoading={detectingLocation || geocoding}
-            loadingText="Detecting location"
-          >
-            Use current location
-          </Button>
-        </Flex>
+  // const renderSellerLocationStep = () => (
+  //   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
+  //     <Box {...fieldCardStyles}>
+  //       <Flex
+  //         justify="space-between"
+  //         align={{ base: "start", lg: "center" }}
+  //         direction={{ base: "column", lg: "row" }}
+  //         gap={3}
+  //       >
+  //         <Box>
+  //           <Text fontSize="md" fontWeight="700" color="gray.900">
+  //             Choose shop location
+  //           </Text>
+  //           <Text fontSize="sm" color="gray.500">
+  //             Tap the map to place your shop. We will fill the address when possible.
+  //           </Text>
+  //         </Box>
+  //         <Button
+  //           leftIcon={<FiNavigation />}
+  //           variant="outline"
+  //           borderRadius="full"
+  //           w={{ base: "full", lg: "auto" }}
+  //           minH="48px"
+  //           px={5}
+  //           justifyContent="center"
+  //           textAlign="center"
+  //           whiteSpace="nowrap"
+  //           flexShrink={0}
+  //           alignSelf={{ base: "stretch", lg: "center" }}
+  //           onClick={() => detectCurrentLocation()}
+  //           isLoading={detectingLocation || geocoding}
+  //           loadingText="Detecting location"
+  //         >
+  //           Use current location
+  //         </Button>
+  //       </Flex>
 
-        <Box
-          mt={5}
-          h={{ base: "260px", md: "320px" }}
-          borderRadius="2xl"
-          overflow="hidden"
-          borderWidth="1px"
-          borderColor="teal.100"
-          bg="teal.50"
-        >
-          {!GOOGLE_MAPS_API_KEY ? (
-            <CenteredBox h="100%">
-              <Text fontSize="sm" color="gray.600" textAlign="center">
-                Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
-              </Text>
-            </CenteredBox>
-          ) : loadError ? (
-            <CenteredBox h="100%">
-              <Text fontSize="sm" color="red.500" textAlign="center">
-                Failed to load Google Maps.
-              </Text>
-            </CenteredBox>
-          ) : !isLoaded ? (
-            <CenteredBox h="100%">
-              <Text fontSize="sm" color="gray.500">
-                Loading map...
-              </Text>
-            </CenteredBox>
-          ) : (
+  //       <Box
+  //         mt={5}
+  //         h={{ base: "260px", md: "380px" }}
+  //         borderRadius="2xl"
+  //         overflow="hidden"
+  //         borderWidth="1px"
+  //         borderColor="blue.100"
+  //         bg="blue.50"
+  //         position="relative"
+  //       >
+  //         {!GOOGLE_MAPS_API_KEY ? (
+  //           <CenteredBox h="100%">
+  //             <Text fontSize="sm" color="gray.600" textAlign="center">
+  //               Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
+  //             </Text>
+  //           </CenteredBox>
+  //         ) : loadError ? (
+  //           <CenteredBox h="100%">
+  //             <Text fontSize="sm" color="red.500" textAlign="center">
+  //               Failed to load Google Maps.
+  //             </Text>
+  //           </CenteredBox>
+  //         ) : !isLoaded ? (
+  //           <CenteredBox h="100%">
+  //             <Text fontSize="sm" color="gray.500">
+  //               Loading map...
+  //             </Text>
+  //           </CenteredBox>
+  //         ) : (
+  //           <>
+  //             <Box position="absolute" top={3} left={3} right={3} zIndex={1} display="flex" justifyContent="center">
+  //               <Box w={{ base: "full", md: "80%" }} bg="white" borderRadius="lg" boxShadow="md" overflow="hidden">
+  //                 <Autocomplete onLoad={onLoadAutocomplete} onPlaceChanged={onPlaceChanged}>
+  //                   <Input
+  //                     placeholder="Search location..."
+  //                     h="48px"
+  //                     border="none"
+  //                     borderRadius="lg"
+  //                     fontSize="sm"
+  //                     _focus={{ boxShadow: "none" }}
+  //                   />
+  //                 </Autocomplete>
+  //               </Box>
+  //             </Box>
+  //             <GoogleMap
+  //               mapContainerStyle={mapContainerStyle}
+  //               center={mapCenter}
+  //               zoom={selectedPoint ? 15 : 11}
+  //               options={{ ...mapOptions, mapTypeControl: false, streetViewControl: false }}
+  //               onClick={handleMapClick}
+  //             >
+  //               {selectedPoint ? <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} /> : null}
+  //             </GoogleMap>
+  //           </>
+  //         )}
+  //       </Box>
+
+  //       <HStack mt={4} spacing={3} wrap="wrap">
+  //         <Badge colorScheme={selectedPoint ? "green" : "blue"} px={3} py={1} borderRadius="full">
+  //           {selectedPoint ? "Pin selected" : "Pin not selected"}
+  //         </Badge>
+  //         {selectedPoint ? (
+  //           <Text fontSize="sm" color="gray.500">
+  //             {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+  //           </Text>
+  //         ) : null}
+  //       </HStack>
+  //       <FieldError message={errors.coordinates} />
+  //     </Box>
+
+  //     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 5 }}>
+  //       <FormControl isRequired>
+  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+  //           Address
+  //         </FormLabel>
+  //         <Input
+  //           value={sellerData.location.address}
+  //           onChange={(event) => setSellerFieldValue("location.address", event.target.value)}
+  //           placeholder="Shop address"
+  //           {...inputStyles}
+  //         />
+  //         <FieldError message={errors.address} />
+  //       </FormControl>
+
+  //       <FormControl isRequired>
+  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+  //           City
+  //         </FormLabel>
+  //         <Input
+  //           value={sellerData.location.city}
+  //           onChange={(event) => setSellerFieldValue("location.city", event.target.value)}
+  //           placeholder="City"
+  //           {...inputStyles}
+  //         />
+  //         <FieldError message={errors.city} />
+  //       </FormControl>
+
+  //       <FormControl isRequired>
+  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+  //           State
+  //         </FormLabel>
+  //         <Input
+  //           value={sellerData.location.state}
+  //           onChange={(event) => setSellerFieldValue("location.state", event.target.value)}
+  //           placeholder="State"
+  //           {...inputStyles}
+  //         />
+  //         <FieldError message={errors.state} />
+  //       </FormControl>
+
+  //       <FormControl>
+  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+  //           Postal Code
+  //         </FormLabel>
+  //         <Input
+  //           value={sellerData.location.postalCode}
+  //           onChange={(event) => setSellerFieldValue("location.postalCode", event.target.value)}
+  //           placeholder="Postal code"
+  //           {...inputStyles}
+  //         />
+  //       </FormControl>
+
+  //       <FormControl isRequired gridColumn={{ base: "span 1", md: "span 2" }}>
+  //         <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
+  //           Country
+  //         </FormLabel>
+  //         <Input
+  //           value={sellerData.location.country}
+  //           onChange={(event) => setSellerFieldValue("location.country", event.target.value)}
+  //           placeholder="Country"
+  //           {...inputStyles}
+  //         />
+  //         <FieldError message={errors.country} />
+  //       </FormControl>
+  //     </SimpleGrid>
+  //   </VStack>
+  // );
+
+
+  const renderSellerLocationStep = () => (
+  <VStack align="stretch" spacing={4}>
+    {/* Map Card */}
+    <Box
+      bg="white"
+      borderRadius="2xl"
+      borderWidth="1px"
+      borderColor="gray.100"
+      overflow="hidden"
+      boxShadow="0 1px 3px rgba(0,0,0,0.06)"
+    >
+      {/* Card Header */}
+      <Box px={4} pt={4} pb={3}>
+        <Text fontSize="md" fontWeight="700" color="gray.900" lineHeight="1.3">
+          Shop location
+        </Text>
+        <Text fontSize="sm" color="gray.500" mt={0.5}>
+          Tap the map to pin your shop, or search below.
+        </Text>
+      </Box>
+
+      {/* Map Container */}
+      <Box
+        h={{ base: "280px", md: "380px" }}
+        bg="blue.50"
+        position="relative"
+        borderTopWidth="1px"
+        borderBottomWidth="1px"
+        borderColor="gray.100"
+      >
+        {!GOOGLE_MAPS_API_KEY ? (
+          <CenteredBox h="100%">
+            <Text fontSize="sm" color="gray.500" textAlign="center" px={6}>
+              Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to enable the map.
+            </Text>
+          </CenteredBox>
+        ) : loadError ? (
+          <CenteredBox h="100%">
+            <Text fontSize="sm" color="red.500" textAlign="center">
+              Failed to load Google Maps.
+            </Text>
+          </CenteredBox>
+        ) : !isLoaded ? (
+          <CenteredBox h="100%">
+            <Spinner size="sm" color="blue.400" />
+          </CenteredBox>
+        ) : (
+          <>
+            {/* Search Bar — floated top */}
+            <Box
+              position="absolute"
+              top={3}
+              left={3}
+              right={3}
+              zIndex={2}
+            >
+              <Box
+                bg="white"
+                borderRadius="xl"
+                boxShadow="0 2px 8px rgba(0,0,0,0.12)"
+                overflow="hidden"
+              >
+                <Autocomplete onLoad={onLoadAutocomplete} onPlaceChanged={onPlaceChanged}>
+                  <Input
+                    placeholder="Search for a location…"
+                    h="44px"
+                    border="none"
+                    fontSize="sm"
+                    bg="transparent"
+                    _focus={{ boxShadow: "none" }}
+                    px={4}
+                  />
+                </Autocomplete>
+              </Box>
+            </Box>
+
+            {/* Use Current Location — floated bottom-right */}
+            <Box position="absolute" bottom={3} right={3} zIndex={2}>
+              <IconButton
+                aria-label="Use current location"
+                icon={<FiNavigation />}
+                onClick={() => detectCurrentLocation()}
+                isLoading={detectingLocation || geocoding}
+                bg="white"
+                color="blue.600"
+                borderRadius="xl"
+                boxShadow="0 2px 8px rgba(0,0,0,0.15)"
+                h="44px"
+                w="44px"
+                minW="44px"
+                _hover={{ bg: "blue.50" }}
+                _active={{ bg: "blue.100" }}
+              />
+            </Box>
+
+            {/* Pin Status Badge — floated bottom-left */}
+            <Box position="absolute" bottom={3} left={3} zIndex={2}>
+              <HStack
+                bg="white"
+                borderRadius="full"
+                px={3}
+                py={1.5}
+                spacing={1.5}
+                boxShadow="0 1px 4px rgba(0,0,0,0.12)"
+              >
+                <Box
+                  w="7px"
+                  h="7px"
+                  borderRadius="full"
+                  bg={selectedPoint ? "green.400" : "gray.300"}
+                  flexShrink={0}
+                />
+                <Text fontSize="xs" fontWeight="600" color={selectedPoint ? "green.700" : "gray.500"}>
+                  {selectedPoint
+                    ? `${selectedPoint.lat.toFixed(4)}, ${selectedPoint.lng.toFixed(4)}`
+                    : "No pin selected"}
+                </Text>
+              </HStack>
+            </Box>
+
             <GoogleMap
               mapContainerStyle={mapContainerStyle}
               center={mapCenter}
               zoom={selectedPoint ? 15 : 11}
-              options={mapOptions}
+              options={{
+                ...mapOptions,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+              }}
               onClick={handleMapClick}
             >
-              {selectedPoint ? <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} /> : null}
+              {selectedPoint && (
+                <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
+              )}
             </GoogleMap>
-          )}
-        </Box>
-
-        <HStack mt={4} spacing={3} wrap="wrap">
-          <Badge colorScheme={selectedPoint ? "green" : "teal"} px={3} py={1} borderRadius="full">
-            {selectedPoint ? "Pin selected" : "Pin not selected"}
-          </Badge>
-          {selectedPoint ? (
-            <Text fontSize="sm" color="gray.500">
-              {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
-            </Text>
-          ) : null}
-        </HStack>
-        <FieldError message={errors.coordinates} />
+          </>
+        )}
       </Box>
 
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
+      {/* Coordinates error */}
+      {errors.coordinates && (
+        <Box px={4} pb={2}>
+          <FieldError message={errors.coordinates} />
+        </Box>
+      )}
+    </Box>
+
+    {/* Address Fields Card */}
+    <Box
+      bg="white"
+      borderRadius="2xl"
+      borderWidth="1px"
+      borderColor="gray.100"
+      p={4}
+      boxShadow="0 1px 3px rgba(0,0,0,0.06)"
+    >
+      <Text fontSize="sm" fontWeight="700" color="gray.900" mb={3}>
+        Address details
+      </Text>
+
+      <VStack spacing={3} align="stretch">
+        {/* Address — full width */}
         <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
+          <FormLabel
+            color="gray.600"
+            fontWeight="600"
+            fontSize="xs"
+            mb={1}
+            textTransform="uppercase"
+            letterSpacing="0.04em"
+          >
             Address
           </FormLabel>
           <Input
             value={sellerData.location.address}
-            onChange={(event) => setSellerFieldValue("location.address", event.target.value)}
-            placeholder="Shop address"
+            onChange={(e) => setSellerFieldValue("location.address", e.target.value)}
+            placeholder="Street address"
+            size="lg"
+            borderRadius="xl"
+            borderColor="gray.200"
+            bg="gray.50"
+            h="52px"
+            fontSize="sm"
+            _hover={{ borderColor: "gray.300", bg: "white" }}
+            _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
             {...inputStyles}
           />
           <FieldError message={errors.address} />
         </FormControl>
 
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            City
-          </FormLabel>
-          <Input
-            value={sellerData.location.city}
-            onChange={(event) => setSellerFieldValue("location.city", event.target.value)}
-            placeholder="City"
-            {...inputStyles}
-          />
-          <FieldError message={errors.city} />
-        </FormControl>
+        {/* City + State — side by side */}
+        <SimpleGrid columns={2} spacing={3}>
+          <FormControl isRequired>
+            <FormLabel
+              color="gray.600"
+              fontWeight="600"
+              fontSize="xs"
+              mb={1}
+              textTransform="uppercase"
+              letterSpacing="0.04em"
+            >
+              City
+            </FormLabel>
+            <Input
+              value={sellerData.location.city}
+              onChange={(e) => setSellerFieldValue("location.city", e.target.value)}
+              placeholder="City"
+              size="lg"
+              borderRadius="xl"
+              borderColor="gray.200"
+              bg="gray.50"
+              h="52px"
+              fontSize="sm"
+              _hover={{ borderColor: "gray.300", bg: "white" }}
+              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
+              {...inputStyles}
+            />
+            <FieldError message={errors.city} />
+          </FormControl>
 
-        <FormControl isRequired>
-          <FormLabel color="gray.700" fontWeight="600">
-            State
-          </FormLabel>
-          <Input
-            value={sellerData.location.state}
-            onChange={(event) => setSellerFieldValue("location.state", event.target.value)}
-            placeholder="State"
-            {...inputStyles}
-          />
-          <FieldError message={errors.state} />
-        </FormControl>
+          <FormControl isRequired>
+            <FormLabel
+              color="gray.600"
+              fontWeight="600"
+              fontSize="xs"
+              mb={1}
+              textTransform="uppercase"
+              letterSpacing="0.04em"
+            >
+              State
+            </FormLabel>
+            <Input
+              value={sellerData.location.state}
+              onChange={(e) => setSellerFieldValue("location.state", e.target.value)}
+              placeholder="State"
+              size="lg"
+              borderRadius="xl"
+              borderColor="gray.200"
+              bg="gray.50"
+              h="52px"
+              fontSize="sm"
+              _hover={{ borderColor: "gray.300", bg: "white" }}
+              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
+              {...inputStyles}
+            />
+            <FieldError message={errors.state} />
+          </FormControl>
+        </SimpleGrid>
 
-        <FormControl>
-          <FormLabel color="gray.700" fontWeight="600">
-            Postal Code
-          </FormLabel>
-          <Input
-            value={sellerData.location.postalCode}
-            onChange={(event) => setSellerFieldValue("location.postalCode", event.target.value)}
-            placeholder="Postal code"
-            {...inputStyles}
-          />
-        </FormControl>
+        {/* Postal Code + Country — side by side */}
+        <SimpleGrid columns={2} spacing={3}>
+          <FormControl>
+            <FormLabel
+              color="gray.600"
+              fontWeight="600"
+              fontSize="xs"
+              mb={1}
+              textTransform="uppercase"
+              letterSpacing="0.04em"
+            >
+              Postal code
+            </FormLabel>
+            <Input
+              value={sellerData.location.postalCode}
+              onChange={(e) => setSellerFieldValue("location.postalCode", e.target.value)}
+              placeholder="000000"
+              size="lg"
+              borderRadius="xl"
+              borderColor="gray.200"
+              bg="gray.50"
+              h="52px"
+              fontSize="sm"
+              _hover={{ borderColor: "gray.300", bg: "white" }}
+              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
+              {...inputStyles}
+            />
+          </FormControl>
 
-        <FormControl isRequired gridColumn={{ base: "span 1", md: "span 2" }}>
-          <FormLabel color="gray.700" fontWeight="600">
-            Country
-          </FormLabel>
-          <Input
-            value={sellerData.location.country}
-            onChange={(event) => setSellerFieldValue("location.country", event.target.value)}
-            placeholder="Country"
-            {...inputStyles}
-          />
-          <FieldError message={errors.country} />
-        </FormControl>
-      </SimpleGrid>
-    </VStack>
-  );
+          <FormControl isRequired>
+            <FormLabel
+              color="gray.600"
+              fontWeight="600"
+              fontSize="xs"
+              mb={1}
+              textTransform="uppercase"
+              letterSpacing="0.04em"
+            >
+              Country
+            </FormLabel>
+            <Input
+              value={sellerData.location.country}
+              onChange={(e) => setSellerFieldValue("location.country", e.target.value)}
+              placeholder="Country"
+              size="lg"
+              borderRadius="xl"
+              borderColor="gray.200"
+              bg="gray.50"
+              h="52px"
+              fontSize="sm"
+              _hover={{ borderColor: "gray.300", bg: "white" }}
+              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
+              {...inputStyles}
+            />
+            <FieldError message={errors.country} />
+          </FormControl>
+        </SimpleGrid>
+      </VStack>
+    </Box>
+  </VStack>
+);
 
 const renderSellerContactStep = () => (
-  <VStack align="stretch" spacing={5}>
+  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
     <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Store Phone
       </FormLabel>
       <Input
@@ -1221,7 +1742,7 @@ const renderSellerContactStep = () => (
     </FormControl>
 
     <FormControl>
-      <FormLabel color="gray.700" fontWeight="600">
+      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
         Email
       </FormLabel>
       <Input
@@ -1243,16 +1764,16 @@ const renderSellerContactStep = () => (
       Number(Boolean(sellerData.gallery.length));
 
     return (
-      <VStack align="stretch" spacing={5}>
+      <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
         <Box
           borderWidth="1px"
-          borderColor="teal.100"
+          borderColor="blue.100"
           borderRadius="3xl"
-          bgGradient="linear(to-br, teal.50, blue.50)"
+          bgGradient="linear(to-br, blue.50, blue.50)"
           px={{ base: 5, md: 6 }}
           py={{ base: 5, md: 6 }}
         >
-          <VStack align="stretch" spacing={5}>
+          <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
             <Stack
               direction={{ base: "column", md: "row" }}
               justify="space-between"
@@ -1260,7 +1781,7 @@ const renderSellerContactStep = () => (
               spacing={4}
             >
               <Box maxW="2xl">
-                <Badge colorScheme="teal" borderRadius="full" px={3} py={1}>
+                <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
                   Final touch
                 </Badge>
                 <Heading mt={3} fontSize={{ base: "xl", md: "2xl" }} color="gray.900">
@@ -1304,7 +1825,7 @@ const renderSellerContactStep = () => (
           </VStack>
         </Box>
 
-        <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={5}>
+        <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={{ base: 4, md: 5 }}>
           <UploadCard
             title="Shop logo"
             helper="This appears across the dashboard and your shop listing."
@@ -1312,7 +1833,7 @@ const renderSellerContactStep = () => (
             icon={FiShoppingBag}
             badgeText="Recommended"
             formatHint="Square logos with clean backgrounds look best. JPG, PNG or WEBP."
-            accentColor="teal"
+            accentColor="blue"
             onFileChange={(file) =>
               setSellerData((prev) => ({
                 ...prev,
@@ -1350,7 +1871,7 @@ const renderSellerContactStep = () => (
           />
         </SimpleGrid>
 
-        <Box {...fieldCardStyles} borderColor="teal.100">
+        <Box {...fieldCardStyles} borderColor="blue.100" p={{ base: 3, md: 5 }}>
           <VStack align="stretch" spacing={4}>
             <Stack
               direction={{ base: "column", sm: "row" }}
@@ -1359,7 +1880,7 @@ const renderSellerContactStep = () => (
               spacing={3}
             >
               <HStack align="flex-start" spacing={4}>
-                <Circle size="46px" bg="teal.50" color="teal.600" flexShrink={0}>
+                <Circle size="46px" bg="blue.50" color="blue.600" flexShrink={0}>
                   <Icon as={FiUploadCloud} boxSize={5} />
                 </Circle>
                 <Box>
@@ -1371,7 +1892,7 @@ const renderSellerContactStep = () => (
                   </Text>
                 </Box>
               </HStack>
-              <Badge colorScheme={sellerData.gallery.length ? "green" : "teal"} borderRadius="full" px={3} py={1}>
+              <Badge colorScheme={sellerData.gallery.length ? "green" : "blue"} borderRadius="full" px={3} py={1}>
                 {sellerData.gallery.length ? `${sellerData.gallery.length} selected` : "Optional"}
               </Badge>
             </Stack>
@@ -1393,15 +1914,15 @@ const renderSellerContactStep = () => (
               tabIndex={0}
               borderWidth="1px"
               borderStyle="dashed"
-              borderColor="teal.200"
+              borderColor="blue.200"
               borderRadius="2xl"
               py={8}
               px={6}
-              bgGradient="linear(to-br, teal.50, blue.50)"
+              bgGradient="linear(to-br, blue.50, blue.50)"
               textAlign="center"
               cursor="pointer"
               transition="all 0.2s ease"
-              _hover={{ borderColor: "teal.400", bg: "teal.100" }}
+              _hover={{ borderColor: "blue.400", bg: "blue.100" }}
               _focusVisible={{ outline: "none", boxShadow: "0 0 0 3px rgba(20, 184, 166, 0.22)" }}
               onClick={() => galleryInputRef.current?.click()}
               onKeyDown={(event) => {
@@ -1412,7 +1933,7 @@ const renderSellerContactStep = () => (
               }}
             >
               <VStack spacing={3}>
-                <Circle size="50px" bg="white" color="teal.600" boxShadow="sm">
+                <Circle size="50px" bg="white" color="blue.600" boxShadow="sm">
                   <Icon as={FiCamera} boxSize={5} />
                 </Circle>
                 <Box>
@@ -1427,13 +1948,10 @@ const renderSellerContactStep = () => (
             </Box>
 
             <Stack
-              direction={{ base: "column", md: "row" }}
-              justify="space-between"
-              align={{ base: "flex-start", md: "center" }}
-              spacing={3}
+              direction="row" justify="space-between" align="center" spacing={2}
             >
-              <Button colorScheme="teal" borderRadius="full" onClick={() => galleryInputRef.current?.click()}>
-                {sellerData.gallery.length ? "Add more photos" : "Choose photos"}
+              <Button size="xs" colorScheme="blue" borderRadius="full" onClick={() => galleryInputRef.current?.click()} h="32px">
+                {sellerData.gallery.length ? "Add more" : "Choose"}
               </Button>
               <Text fontSize="sm" color="gray.500">
                 Best results: 2-4 photos covering your storefront, shelves, team, or best-selling products.
@@ -1446,18 +1964,18 @@ const renderSellerContactStep = () => (
                   <Box
                     key={`${item.title}-${index}`}
                     borderWidth="1px"
-                    borderColor="teal.100"
-                    bg="teal.50"
+                    borderColor="blue.100"
+                    bg="blue.50"
                     borderRadius="2xl"
                     px={4}
                     py={4}
                   >
                     <VStack align="stretch" spacing={3}>
                       <HStack justify="space-between" align="center">
-                        <Badge colorScheme="teal" borderRadius="full" px={3} py={1}>
+                        <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
                           Photo {index + 1}
                         </Badge>
-                        <Icon as={FiCheckCircle} color="teal.600" boxSize={5} />
+                        <Icon as={FiCheckCircle} color="blue.600" boxSize={5} />
                       </HStack>
                       <Box>
                         <Text fontWeight="600" color="gray.800">
@@ -1499,8 +2017,8 @@ const renderSellerContactStep = () => (
   };
 
   const renderOtpStep = () => (
-    <VStack spacing={8} align="center">
-      <Text textAlign="center" color="gray.600">
+    <VStack spacing={{ base: 4, md: 8 }} align="center">
+      <Text textAlign="center" color="gray.600" fontSize={{ base: "sm", md: "md" }}>
         Enter the OTP sent to {userData.phone}
       </Text>
       <HStack>
@@ -1510,7 +2028,7 @@ const renderSellerContactStep = () => (
           value={otp}
           onChange={handleOtpChange}
           size="lg"
-          focusBorderColor="teal.500"
+          focusBorderColor="blue.500"
           autoFocus={isOtpStep}
         >
           <PinInputField ref={otpInputRef} inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" />
@@ -1522,96 +2040,118 @@ const renderSellerContactStep = () => (
         </PinInput>
       </HStack>
       <FieldError message={errors.otp} />
-      <Text fontSize="sm" color="gray.500" textAlign="center">
+      <Text fontSize="xs" color="gray.500" textAlign="center">
         You can go back if you want to change the phone number or signup details.
       </Text>
     </VStack>
   );
 
   const renderCurrentStep = () => {
-    if (stepIndex === 0) return renderPhoneStep();
-    if (intent === "user" && stepIndex === 1) return renderUserProfileStep();
-    if (intent === "seller" && stepIndex === 1) return renderSellerBasicsStep();
-    if (intent === "seller" && stepIndex === 2) return renderSellerLocationStep();
-    if (intent === "seller" && stepIndex === 3) return renderSellerContactStep();
-    if (intent === "seller" && stepIndex === 4) return renderSellerPhotosStep();
-    return renderOtpStep();
+    switch (activeStep.title) {
+      case "Let's get started":
+        return renderPhoneStep();
+      case "Tell us about you":
+        return renderUserProfileStep();
+      case "Tell us about your shop":
+        return renderSellerBasicsStep();
+      case "Set your shop location":
+        return renderSellerLocationStep();
+      case "Contact details":
+        return renderSellerContactStep();
+      case "Show your shop":
+        return renderSellerPhotosStep();
+      case "Verify OTP":
+        return renderOtpStep();
+      default:
+        return renderPhoneStep();
+    }
   };
 
   return (
     <MotionBox
+      w="full"
       minH="100vh"
-      bgGradient="linear(to-b, #f8fafc 0%, #ffffff 45%, #f0fdfa 100%)"
-      pt={{ base: "calc(env(safe-area-inset-top, 0px) + 18px)", md: 6 }}
-      pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 24px)", md: 6 }}
+      bgGradient={{ base: "none", md: "linear(to-b, #f8fafc 0%, #ffffff 45%, #eff6ff 100%)" }}
+      bg={{ base: "white", md: "transparent" }}
+      pt={{ base: "calc(env(safe-area-inset-top, 0px) + 4px)", md: 6 }}
+      pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 8px)", md: 6 }}
       display="flex"
-      alignItems="center"
+      alignItems={{ base: "flex-start", md: "center" }}
       initial={{ opacity: 0, y: 24, scale: 0.98 }}
-      animate={
-        isRouteTransitioning
-          ? { opacity: 0, x: 24, scale: 0.98 }
-          : { opacity: 1, x: 0, y: 0, scale: 1 }
-      }
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
     >
       <Container
         maxW={{ base: "full", md: "container.lg", xl: "760px" }}
-        px={{ base: 4, md: 6 }}
+        px={{ base: 0, md: 6 }}
         display="flex"
-        alignItems="center"
+        alignItems={{ base: "flex-start", md: "center" }}
         justifyContent="center"
-        minH={{ base: "calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 42px)", md: "calc(100vh - 48px)" }}
+        minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
+        pt={{ base: "0px", md: 0 }}
       >
         <Box
           {...panelStyles}
-          borderRadius={{ base: "3xl", md: "3xl" }}
           boxShadow={panelStyles.boxShadow}
           borderWidth={panelStyles.borderWidth}
-          px={{ base: 5, md: 8, xl: 9 }}
-          py={{ base: 6, md: 8, xl: 9 }}
+          px={{ base: 3, md: 8, xl: 9 }}
+          py={{ base: 3, md: 8, xl: 9 }}
           w="full"
         >
-          <VStack align="stretch" spacing={8}>
-            <Flex justify="space-between" align={{ base: "start", sm: "center" }} direction={{ base: "column", sm: "row" }} gap={3}>
-              <Circle size="42px" bg="white" borderWidth="1px" borderColor="gray.200" boxShadow="sm">
-                <IconButton
-                  aria-label="Go back"
-                  icon={<ArrowBackIcon />}
-                  variant="ghost"
-                  borderRadius="full"
-                  onClick={handleBack}
-                  isDisabled={stepIndex === 0}
-                />
-              </Circle>
-              <Badge
-                bg="teal.50"
-                color="teal.600"
-                borderRadius="md"
-                px={3}
-                py={1}
-                fontSize="xs"
-                fontWeight="700"
-              >
-                Step {stepIndex + 1}/{steps.length}
-              </Badge>
+          <VStack align="stretch" spacing={{ base: 4, md: 8 }}>
+            <Flex justify="space-between" align="center" gap={2} mb={{ base: -2, md: 0 }} display={{ base: "none", md: "flex" }}>
+              <IconButton
+                aria-label="Go back"
+                icon={<ArrowBackIcon />}
+                variant="ghost"
+                size="sm"
+                borderRadius="full"
+                onClick={handleBack}
+                isDisabled={stepIndex === 0}
+                display={stepIndex === 0 ? "none" : "flex"}
+              />
+              <Box>
+                <Badge
+                  bg="blue.50"
+                  color="blue.600"
+                  borderRadius="md"
+                  px={3}
+                  py={1}
+                  fontSize="xs"
+                  fontWeight="700"
+                >
+                  Step {stepIndex + 1}/{steps.length}
+                </Badge>
+              </Box>
             </Flex>
 
-            <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="teal" h="6px" />
+            <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="blue" h="6px" display={{ base: "none", md: "block" }} />
 
             <Stack
-              direction={isSellerPhotosStep ? "column" : { base: "column", sm: "row" }}
-              spacing={4}
-              align={isSellerPhotosStep ? "center" : { base: "flex-start", sm: "center" }}
-              justify={isSellerPhotosStep ? "center" : undefined}
+              direction={isSellerPhotosStep ? { base: "row", md: "column" } : "row"}
+              spacing={{ base: 2, md: 4 }}
+              align="center"
+              justify={isSellerPhotosStep ? { base: "flex-start", md: "center" } : undefined}
             >
-              <Circle size="50px" bg="teal.50" color="teal.600">
+              <IconButton
+                aria-label="Go back"
+                icon={<ArrowBackIcon />}
+                variant="ghost"
+                size="sm"
+                borderRadius="full"
+                onClick={handleBack}
+                isDisabled={stepIndex === 0}
+                display={{ base: stepIndex === 0 ? "none" : "flex", md: "none" }}
+                mr={1}
+              />
+              <Circle size={{ base: "0px", md: "50px" }} bg="blue.50" color="blue.600" display={{ base: "none", md: "flex" }}>
                 <Icon as={activeStep.icon as any} boxSize={5} />
               </Circle>
-              <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? "center" : "left"}>
-                <Heading fontSize={{ base: "2xl", sm: "3xl", lg: "4xl" }} color="gray.900" lineHeight="1.1">
+              <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? { base: "left", md: "center" } : "left"}>
+                <Heading fontSize={{ base: "lg", sm: "xl", md: "3xl" }} color="gray.900" lineHeight="1.2">
                   {activeStep.title}
                 </Heading>
-                <Text color="gray.500" fontSize={{ base: "sm", md: "md" }}>
+                <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} mt={1}>
                   {activeStep.subtitle}
                 </Text>
               </Box>
@@ -1638,12 +2178,13 @@ const renderSellerContactStep = () => (
               {isOtpStep ? "Verify & Continue" : "Continue"}
             </Button>
 
-            <Text textAlign="center" color="gray.600">
+            <Text textAlign="center" color="gray.600" fontSize={{ base: "xs", md: "sm" }} mt={{ base: -2, md: 0 }}>
               Already have an account?{" "}
               <Button
                 type="button"
                 variant="link"
-                color="teal.600"
+                color="blue.600"
+                fontSize={{ base: "xs", md: "sm" }}
                 isDisabled={isRouteTransitioning}
                 onClick={() => navigateWithAnimation("/login")}
               >
@@ -1656,5 +2197,4 @@ const renderSellerContactStep = () => (
     </MotionBox>
   );
 });
-
 export default SignUpForm;
