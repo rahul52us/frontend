@@ -1797,7 +1797,7 @@ const renderSellerContactStep = () => (
           overflow="hidden"
           bgGradient={`linear(to-br, ${meta.bg}, ${meta.softAccent}30)`}
         >
-          {/* Decorative Background Blobs */}
+        
           <Box
             position="absolute"
             top="-10%"
@@ -1836,7 +1836,7 @@ const renderSellerContactStep = () => (
             zIndex={0}
           />
 
-          {/* Top: logo / brand */}
+        
           <HStack spacing={2} mb="auto" zIndex={1}>
             <Box
               w="32px" h="32px" borderRadius="8px"
@@ -1850,7 +1850,7 @@ const renderSellerContactStep = () => (
             </Text>
           </HStack>
 
-          {/* Center: illustration */}
+    
           <Box flex={1} display="flex" flexDirection="column" justifyContent="center" gap={10} zIndex={1} w="full">
             <Box
               w="100%" maxW={{ md: "300px", xl: "360px" }} mx="auto"
@@ -1904,7 +1904,7 @@ const renderSellerContactStep = () => (
             </AnimatePresence>
           </Box>
 
-          {/* Bottom: step dots */}
+      
           <VStack align="stretch" spacing={3} mt="auto" pt={8} zIndex={1}>
             <HStack justify="space-between" align="center">
               <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="0.05em">
@@ -2068,6 +2068,7 @@ const renderSellerContactStep = () => (
 
       </Flex>
     </MotionBox>
+    
     //   minH="100vh"
     //   bgGradient={{ base: "none", md: "linear(to-b, #f8fafc 0%, #ffffff 45%, #eff6ff 100%)" }}
     //   bg={{ base: "white", md: "transparent" }}
