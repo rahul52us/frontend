@@ -1,6 +1,6 @@
 'use client'
 import Home from './(main)/home/page'
-// // comment
+// // // comment
 const page = () => {
   return (
     <Home />
