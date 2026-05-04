@@ -21,6 +21,7 @@ import {
   ModalOverlay,
   PinInput,
   PinInputField,
+  Progress,
   SimpleGrid,
   Spinner,
   Stack,
@@ -474,7 +475,7 @@ const SignUpForm = observer(() => {
     ? { lng: Number(selectedCoordinates[0]), lat: Number(selectedCoordinates[1]) }
     : null;
 
-  const meta = stepMeta[activeStep.title] ?? stepMeta["Let's get started"];
+  const meta = useMemo(() => stepMeta[activeStep.title] ?? stepMeta["Let's get started"], [activeStep.title]);
 
   const mapCenter = useMemo(() => {
     if (selectedPoint) {
@@ -1047,8 +1048,8 @@ const roleOptions = [
         I want to join as
       </Text>
 
-      <HStack spacing={{ base: 3, md: 4 }}>
-        {roleOptions.map(({ value, label, sub, icon: Icon, active: a }:any) => {
+      <HStack spacing={{ base: 2, md: 4 }}>
+        {roleOptions.map(({ value, label, sub, icon: Icon, active: a }: any) => {
           const isActive = intent === value;
           return (
             <Box
@@ -1061,17 +1062,17 @@ const roleOptions = [
               borderColor={isActive ? a.border : "gray.100"}
               borderRadius="xl"
               bg={isActive ? a.bg : "white"}
-              p={{ base: 3, md: 4 }}
+              p={{ base: 2.5, md: 4 }}
               cursor="pointer"
               transition="all 0.2s ease"
               boxShadow={isActive ? `0 2px 10px ${a.border}20` : "none"}
               _hover={{ borderColor: isActive ? a.border : "gray.200" }}
               textAlign="left"
             >
-              <HStack spacing={3}>
+              <HStack spacing={{ base: 2, md: 3 }}>
                 <Flex
-                  w="40px"
-                  h="40px"
+                  w={{ base: "32px", md: "40px" }}
+                  h={{ base: "32px", md: "40px" }}
                   borderRadius="lg"
                   bg={isActive ? a.iconBg : "gray.50"}
                   align="center"
@@ -1079,7 +1080,7 @@ const roleOptions = [
                   flexShrink={0}
                 >
                   <Icon
-                    size={20}
+                    size={isActive ? 18 : 16}
                     color={isActive ? a.iconColor : "#9CA3AF"}
                   />
                 </Flex>
@@ -1087,13 +1088,14 @@ const roleOptions = [
                 <Box flex={1}>
                   <Text
                     fontWeight="700"
-                    fontSize="sm"
+                    fontSize={{ base: "xs", md: "sm" }}
                     color={isActive ? a.text : "gray.700"}
                     lineHeight="1.2"
                   >
                     {label}
                   </Text>
                   <Text
+                    display={{ base: "none", md: "block" }}
                     fontSize="xs"
                     color={isActive ? a.subText : "gray.400"}
                     mt="2px"
@@ -1102,19 +1104,6 @@ const roleOptions = [
                     {sub}
                   </Text>
                 </Box>
-
-                {/* Custom radio circle */}
-                <Flex
-                  w="18px"
-                  h="18px"
-                  borderRadius="full"
-                  border="2px solid"
-                  borderColor={isActive ? a.border : "gray.200"}
-                  align="center"
-                  justify="center"
-                >
-                  {isActive && <Box w="8px" h="8px" borderRadius="full" bg={a.border} />}
-                </Flex>
               </HStack>
             </Box>
           );
@@ -1934,53 +1923,84 @@ const renderSellerContactStep = () => (
         <Box
           flex={1}
           h={{ base: "auto", md: "100vh" }}
-          overflowY="auto"
+          overflowY={{ base: "visible", md: "auto" }}
           bg="white"
           display="flex"
           flexDirection="column"
           alignItems="center"
           justifyContent="flex-start"
-          pt={{ base: "calc(env(safe-area-inset-top,0px) + 16px)", md: 10 }}
-          pb={{ base: "calc(env(safe-area-inset-bottom,0px) + 24px)", md: 12 }}
-          px={{ base: 5, md: 8 }}
+          position="relative"
           sx={{
             "&::-webkit-scrollbar": { display: "none" },
             scrollbarWidth: "none",
           }}
         >
-          {/* Spacious layout for the form */}
+          {/* ─── Mobile Header ─── */}
           <Box
+            display={{ base: "block", md: "none" }}
             w="full"
-            maxW={{ base: "full", md: "520px", xl: "650px" }}
-            display="flex"
-            flexDirection="column"
-            my="auto"
+            bg="white"
+            position="sticky"
+            top={0}
+            zIndex={20}
+            pt="calc(env(safe-area-inset-top, 0px) + 8px)"
+            px={5}
+            pb={2}
           >
-            <VStack align="stretch" spacing={{ base: 6, md: 8 }}>
-              
-              {/* Text Stepper for Mobile Only */}
-              <Flex display={{ base: "flex", md: "none" }} justify="flex-end" mb={-2}>
-                <Text fontSize="sm" fontWeight="600" color="gray.500">
-                  Step {stepIndex + 1} of {steps.length}
-                </Text>
-              </Flex>
-
-              {/* Step Heading & Back Button */}
-              <HStack align="flex-start" spacing={3}>
+            <Flex justify="space-between" align="center" mb={2}>
+              <Box>
                 {stepIndex > 0 && (
                   <IconButton
                     aria-label="Go back"
                     icon={<ArrowBackIcon />}
                     variant="ghost"
-                    size="md"
+                    size="sm"
                     borderRadius="full"
                     onClick={handleBack}
                     bg="gray.50"
-                    _hover={{ bg: "gray.100" }}
-                    mt={{ base: 0.5, md: 1.5 }}
-                    flexShrink={0}
                   />
                 )}
+              </Box>
+              <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="0.05em" ml="auto">
+                Step {stepIndex + 1} of {steps.length}
+              </Text>
+            </Flex>
+            <Progress
+              value={progress}
+              size="xs"
+              borderRadius="full"
+              colorScheme={intent === "seller" ? "teal" : "blue"}
+              bg="gray.100"
+            />
+          </Box>
+
+          <Box
+            w="full"
+            maxW={{ base: "full", md: "520px", xl: "650px" }}
+            display="flex"
+            flexDirection="column"
+            pt={{ base: 4, md: 10 }}
+            pb={{ base: "140px", md: 12 }}
+            px={{ base: 5, md: 8 }}
+            my={{ md: "auto" }}
+          >
+            <VStack align="stretch" spacing={{ base: 6, md: 8 }}>
+              
+              {/* Desktop Header / Mobile Title */}
+              <HStack align="flex-start" spacing={3}>
+                <IconButton
+                  aria-label="Go back"
+                  icon={<ArrowBackIcon />}
+                  variant="ghost"
+                  size="md"
+                  borderRadius="full"
+                  onClick={handleBack}
+                  bg="gray.50"
+                  _hover={{ bg: "gray.100" }}
+                  mt={1.5}
+                  flexShrink={0}
+                  display={{ base: "none", md: stepIndex > 0 ? "flex" : "none" }}
+                />
                 <Box>
                   <Heading fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em" mb={2}>
                     {activeStep.title}
@@ -2004,19 +2024,19 @@ const renderSellerContactStep = () => (
                 </MotionBox>
               </AnimatePresence>
 
-              {/* CTA & Footer */}
-              <VStack spacing={5} mt={4}>
+              {/* Desktop CTA & Footer */}
+              <VStack spacing={5} mt={4} display={{ base: "none", md: "flex" }}>
                 <Button
                   w="full"
-                  h={{ base: "52px", md: "56px" }}
+                  h="56px"
                   bg={meta.accent}
                   color="white"
                   fontSize="md"
                   fontWeight="600"
                   borderRadius="xl"
-                  _hover={{ opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
-                  _active={{ transform: "translateY(0)" }}
-                  transition="all 0.2s"
+                  _hover={{ bg: meta.accent, opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
+                  _active={{ bg: meta.accent, transform: "translateY(0)" }}
+                  transition="all 0.3s ease"
                   onClick={isOtpStep ? () => void handleVerify() : handleContinue}
                   isLoading={loading}
                 >
@@ -2040,6 +2060,53 @@ const renderSellerContactStep = () => (
                 </Text>
               </VStack>
 
+            </VStack>
+          </Box>
+
+          {/* ─── Mobile Sticky Footer ─── */}
+          <Box
+            display={{ base: "block", md: "none" }}
+            position="fixed"
+            bottom={0}
+            left={0}
+            right={0}
+            bg="white"
+            px={5}
+            pt={3}
+            pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
+            zIndex={30}
+          >
+            <VStack spacing={2}>
+              <Button
+                w="full"
+                h="46px"
+                bg={meta.accent}
+                color="white"
+                fontSize="sm"
+                fontWeight="700"
+                borderRadius="lg"
+                onClick={isOtpStep ? () => void handleVerify() : handleContinue}
+                isLoading={loading}
+                _hover={{ bg: meta.accent, opacity: 0.9 }}
+                _active={{ bg: meta.accent, transform: "scale(0.98)" }}
+                transition="all 0.3s ease"
+              >
+                {isOtpStep ? "Verify & Continue" : "Continue"}
+                {!isOtpStep && <Icon as={FiChevronRight} ml={2} />}
+              </Button>
+              <Text textAlign="center" color="gray.500" fontSize="xs" fontWeight="600">
+                Already have an account?{" "}
+                <Button
+                  type="button"
+                  variant="link"
+                  color={meta.accent}
+                  fontWeight="700"
+                  fontSize="xs"
+                  onClick={() => navigateWithAnimation("/login")}
+                >
+                  Sign in
+                </Button>
+              </Text>
             </VStack>
           </Box>
         </Box>
