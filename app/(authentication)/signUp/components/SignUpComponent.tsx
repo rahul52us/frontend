@@ -26,7 +26,6 @@ import {
   Spinner,
   Stack,
   Text,
-  Textarea,
   useDisclosure,
   useToast,
   VStack
@@ -60,9 +59,8 @@ import { createCompanyCode } from "../../../dashboard/shop/component/utils/compa
 import stores from "../../../store/stores";
 import GalleryBlock from "./GalleryBlock";
 import RegisterInput from "./RegisterInput";
-import UploadBlock from "./UploadBlock";
-import { fieldCardStyles, inputStyles, mapOptions, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
 import UploadTile from "./UploadBlock";
+import { fieldCardStyles, mapOptions, sellerSteps, userSteps } from "./utils/constant";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
