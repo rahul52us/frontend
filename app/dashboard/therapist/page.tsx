@@ -10,7 +10,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { readFileAsBase64 } from "../../config/utils/utils";
+import { buildBase64ImageUpload } from "../../config/utils/imageUpload";
 import stores from "../../store/stores";
 import Form from "./component/Form";
 import TherapistsTable from "./component/Therapists/TherapistsTable";
@@ -39,13 +39,9 @@ const TherapistPage = () => {
 
   const handleAddSubmit = async(formData: any) => {
     try {
-
-      const buffer = await readFileAsBase64(thumbnail[0]);
-        const fileData = {
-          buffer: buffer,
-          filename: thumbnail[0].name,
-          type: thumbnail[0].type,
-        };
+      const fileData = thumbnail[0]
+        ? await buildBase64ImageUpload(thumbnail[0], { isAdd: 1, isDeleted: 0 })
+        : null;
 
       createUser({
         ...formData,
