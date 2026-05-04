@@ -1,123 +1,69 @@
-import { Box, VStack, HStack, Flex, Input, SimpleGrid, Button, Text } from "@chakra-ui/react";
-import { FiCamera } from "react-icons/fi";
+import { Box, VStack, HStack, Flex, Input, SimpleGrid, Button, Text, Image, IconButton } from "@chakra-ui/react";
+import { FiCamera, FiPlus, FiX } from "react-icons/fi";
 
-const GalleryBlock = ({
-  gallery,
-  setSellerData,
-  galleryInputRef,
-  handleGalleryFilesSelected,
-  onPreview,
-}) => {
+const GalleryBlock = ({ gallery, setSellerData, handleGalleryFilesSelected, onPreview }) => {
   return (
-    <Box
-      borderWidth="1px"
-      borderColor="gray.200"
-      borderRadius="xl"
-      p={4}
-    >
-      <VStack align="stretch" spacing={4}>
+    <Box>
+      <Text fontSize="sm" fontWeight="medium" mb={2}>
+        Gallery
+      </Text>
 
-        {/* Header */}
-        <HStack spacing={3}>
-          <Flex
-            w="44px"
-            h="44px"
-            borderRadius="lg"
-            bg="blue.50"
-            align="center"
-            justify="center"
-          >
-            <FiCamera size={20} />
-          </Flex>
+      <SimpleGrid columns={3} spacing={2}>
+        {gallery.map((item, index) => (
+          <Box key={index} position="relative">
+            <Image
+              src={URL.createObjectURL(item.file)}
+              borderRadius="lg"
+              objectFit="cover"
+              w="100%"
+              h="80px"
+              onClick={() => onPreview(index)}
+            />
 
-          <Box>
-            <Text fontWeight="600">Gallery photos</Text>
-            <Text fontSize="sm" color="gray.500">
-              Add 2–4 real photos of your shop
-            </Text>
+            <IconButton
+            aria-label="fix"
+              icon={<FiX />}
+              size="xs"
+              position="absolute"
+              top={1}
+              right={1}
+              colorScheme="red"
+              borderRadius="full"
+              onClick={() => {
+                setSellerData((prev) => ({
+                  ...prev,
+                  gallery: prev.gallery.filter((_, i) => i !== index),
+                }));
+              }}
+            />
           </Box>
-        </HStack>
+        ))}
 
-        {/* Input */}
-        <Input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          display="none"
-          onChange={(e) => {
-            handleGalleryFilesSelected(Array.from(e.target.files || []));
-            e.target.value = "";
-          }}
-        />
-
-        {/* Upload Area */}
+        {/* Add button */}
         <Box
-          border="1px dashed"
-          borderColor="gray.300"
+          border="2px dashed"
+          borderColor="gray.200"
           borderRadius="lg"
-          py={6}
-          textAlign="center"
-          cursor="pointer"
-          _hover={{ bg: "gray.50", borderColor: "blue.400" }}
-          onClick={() => galleryInputRef.current?.click()}
+          h="80px"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          position="relative"
+          bg="gray.50"
         >
-          <Text fontSize="sm" fontWeight="500">
-            {gallery.length ? "Add more photos" : "Upload photos"}
-          </Text>
-          <Text fontSize="xs" color="gray.400">
-            Multiple images supported
-          </Text>
+          <Input
+            type="file"
+            multiple
+            accept="image/*"
+            position="absolute"
+            inset={0}
+            opacity={0}
+            onChange={handleGalleryFilesSelected}
+          />
+
+          <FiPlus />
         </Box>
-
-        {/* Preview Grid */}
-        {gallery.length > 0 && (
-          <SimpleGrid columns={{ base: 2, md: 3 }} spacing={3}>
-            {gallery.map((item, index) => (
-              <Box
-                key={index}
-                borderRadius="lg"
-                borderWidth="1px"
-                p={2}
-              >
-                <VStack spacing={2}>
-                  <Text fontSize="xs" noOfLines={1}>
-                    {item.file?.name}
-                  </Text>
-
-                  <HStack spacing={2} w="full">
-                    <Button
-                      size="xs"
-                      colorScheme="blue"
-                      variant="ghost"
-                      flex={1}
-                      onClick={() => onPreview(index)}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      size="xs"
-                      colorScheme="red"
-                      variant="ghost"
-                      flex={1}
-                      onClick={() =>
-                        setSellerData((prev) => ({
-                          ...prev,
-                          gallery: prev.gallery.filter(
-                            (_, i) => i !== index
-                          ),
-                        }))
-                      }
-                    >
-                      Remove
-                    </Button>
-                  </HStack>
-                </VStack>
-              </Box>
-            ))}
-          </SimpleGrid>
-        )}
-      </VStack>
+      </SimpleGrid>
     </Box>
   );
 };

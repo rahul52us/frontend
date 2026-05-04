@@ -61,6 +61,7 @@ import stores from "../../../store/stores";
 import GalleryBlock from "./GalleryBlock";
 import UploadBlock from "./UploadBlock";
 import { fieldCardStyles, inputStyles, mapOptions, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
+import UploadTile from "./UploadBlock";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -1616,96 +1617,193 @@ const renderSellerContactStep = () => (
   </VStack>
 );
 
+  // const renderSellerPhotosStep = () => {
+  //   const completedMediaCount =
+  //     Number(Boolean(sellerData.logo.file.length)) +
+  //     Number(Boolean(sellerData.coverImage.file.length)) +
+  //     Number(Boolean(sellerData.gallery.length));
+
+  //   return (
+  //     <VStack align="stretch" spacing={6}>
+
+  //       {/* Header */}
+  //       <Box>
+  //         <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
+  //           Final step
+  //         </Badge>
+
+  //         <Heading mt={3} fontSize={{ base: "lg", md: "xl" }}>
+  //           Add photos to your shop
+  //         </Heading>
+
+  //         <Text mt={1} fontSize="sm" color="gray.500">
+  //           Shops with real images get more trust and clicks.
+  //         </Text>
+
+  //         <Text mt={2} fontSize="xs" color="gray.400">
+  //           {completedMediaCount}/3 completed
+  //         </Text>
+  //       </Box>
+
+  //       {/* Upload sections */}
+  //       <VStack spacing={4} align="stretch">
+
+  //         <UploadBlock
+  //           title="Shop logo"
+  //           description="Used across your shop and listings"
+  //           icon={FiShoppingBag}
+  //           files={sellerData.logo.file}
+  //           onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
+  //           onFileChange={(file) =>
+  //             setSellerData((prev) => ({
+  //               ...prev,
+  //               logo: {
+  //                 file: file ? [file] : [],
+  //                 isAdd: file ? 1 : 0,
+  //                 isDeleted: file ? 0 : 1,
+  //               },
+  //             }))
+  //           }
+  //           onRemove={() =>
+  //             setSellerData((prev) => ({
+  //               ...prev,
+  //               logo: { file: [], isAdd: 0, isDeleted: 1 },
+  //             }))
+  //           }
+  //         />
+
+  //         <UploadBlock
+  //           title="Cover image"
+  //           description="Wide image of your shop or setup"
+  //           icon={FiImage}
+  //           files={sellerData.coverImage.file}
+  //           onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
+  //           onFileChange={(file) =>
+  //             setSellerData((prev) => ({
+  //               ...prev,
+  //               coverImage: {
+  //                 file: file ? [file] : [],
+  //                 isAdd: file ? 1 : 0,
+  //                 isDeleted: file ? 0 : 1,
+  //               },
+  //             }))
+  //           }
+  //           onRemove={() =>
+  //             setSellerData((prev) => ({
+  //               ...prev,
+  //               coverImage: { file: [], isAdd: 0, isDeleted: 1 },
+  //             }))
+  //           }
+  //         />
+
+  //         <GalleryBlock
+  //           gallery={sellerData.gallery}
+  //           setSellerData={setSellerData}
+  //           galleryInputRef={galleryInputRef}
+  //           handleGalleryFilesSelected={handleGalleryFilesSelected}
+  //           onPreview={(index) => handlePreviewImage(sellerData.gallery[index]?.file || null)}
+  //         />
+  //       </VStack>
+  //     </VStack>
+  //   );
+  // };
+
   const renderSellerPhotosStep = () => {
-    const completedMediaCount =
-      Number(Boolean(sellerData.logo.file.length)) +
-      Number(Boolean(sellerData.coverImage.file.length)) +
-      Number(Boolean(sellerData.gallery.length));
+  const completedMediaCount =
+    Number(Boolean(sellerData.logo.file.length)) +
+    Number(Boolean(sellerData.coverImage.file.length)) +
+    Number(Boolean(sellerData.gallery.length));
 
-    return (
-      <VStack align="stretch" spacing={6}>
+  return (
+    <VStack align="stretch" spacing={5} px={1}>
 
-        {/* Header */}
-        <Box>
-          <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
-            Final step
-          </Badge>
+      {/* Header */}
+      <Box>
+        <Text fontSize="xs" color="gray.500">
+          Step 3 of 3
+        </Text>
 
-          <Heading mt={3} fontSize={{ base: "lg", md: "xl" }}>
-            Add photos to your shop
-          </Heading>
+        <Heading fontSize="lg" mt={1}>
+          Add photos
+        </Heading>
 
-          <Text mt={1} fontSize="sm" color="gray.500">
-            Shops with real images get more trust and clicks.
-          </Text>
+        <Text fontSize="sm" color="gray.500">
+          Better photos = more trust 📈
+        </Text>
 
-          <Text mt={2} fontSize="xs" color="gray.400">
-            {completedMediaCount}/3 completed
-          </Text>
-        </Box>
+        {/* Progress */}
+        <Progress
+          value={(completedMediaCount / 3) * 100}
+          size="xs"
+          mt={3}
+          borderRadius="full"
+        />
+      </Box>
 
-        {/* Upload sections */}
-        <VStack spacing={4} align="stretch">
+      {/* Upload tiles */}
+      <VStack spacing={4} align="stretch">
 
-          <UploadBlock
-            title="Shop logo"
-            description="Used across your shop and listings"
-            icon={FiShoppingBag}
-            files={sellerData.logo.file}
-            onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
-            onFileChange={(file) =>
-              setSellerData((prev) => ({
-                ...prev,
-                logo: {
-                  file: file ? [file] : [],
-                  isAdd: file ? 1 : 0,
-                  isDeleted: file ? 0 : 1,
-                },
-              }))
-            }
-            onRemove={() =>
-              setSellerData((prev) => ({
-                ...prev,
-                logo: { file: [], isAdd: 0, isDeleted: 1 },
-              }))
-            }
-          />
+        <UploadTile
+          title="Shop logo"
+          subtitle="Used across your shop"
+          icon={FiShoppingBag}
+          file={sellerData.logo.file}
+          onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
+          onFileChange={(file) =>
+            setSellerData((prev) => ({
+              ...prev,
+              logo: {
+                file: file ? [file] : [],
+                isAdd: file ? 1 : 0,
+                isDeleted: file ? 0 : 1,
+              },
+            }))
+          }
+          onRemove={() =>
+            setSellerData((prev) => ({
+              ...prev,
+              logo: { file: [], isAdd: 0, isDeleted: 1 },
+            }))
+          }
+        />
 
-          <UploadBlock
-            title="Cover image"
-            description="Wide image of your shop or setup"
-            icon={FiImage}
-            files={sellerData.coverImage.file}
-            onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
-            onFileChange={(file) =>
-              setSellerData((prev) => ({
-                ...prev,
-                coverImage: {
-                  file: file ? [file] : [],
-                  isAdd: file ? 1 : 0,
-                  isDeleted: file ? 0 : 1,
-                },
-              }))
-            }
-            onRemove={() =>
-              setSellerData((prev) => ({
-                ...prev,
-                coverImage: { file: [], isAdd: 0, isDeleted: 1 },
-              }))
-            }
-          />
+        <UploadTile
+          title="Cover image"
+          subtitle="Your shop banner"
+          icon={FiImage}
+          file={sellerData.coverImage.file}
+          onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
+          onFileChange={(file) =>
+            setSellerData((prev) => ({
+              ...prev,
+              coverImage: {
+                file: file ? [file] : [],
+                isAdd: file ? 1 : 0,
+                isDeleted: file ? 0 : 1,
+              },
+            }))
+          }
+          onRemove={() =>
+            setSellerData((prev) => ({
+              ...prev,
+              coverImage: { file: [], isAdd: 0, isDeleted: 1 },
+            }))
+          }
+        />
 
-          <GalleryBlock
-            gallery={sellerData.gallery}
-            setSellerData={setSellerData}
-            galleryInputRef={galleryInputRef}
-            handleGalleryFilesSelected={handleGalleryFilesSelected}
-            onPreview={(index) => handlePreviewImage(sellerData.gallery[index]?.file || null)}
-          />
-        </VStack>
+        <GalleryBlock
+          gallery={sellerData.gallery}
+          setSellerData={setSellerData}
+          handleGalleryFilesSelected={handleGalleryFilesSelected}
+          onPreview={(index) =>
+            handlePreviewImage(sellerData.gallery[index]?.file || null)
+          }
+        />
       </VStack>
-    );
-  };
+    </VStack>
+  );
+};
+
 
   const renderOtpStep = () => (
     <VStack spacing={{ base: 4, md: 8 }} align="center">
