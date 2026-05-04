@@ -1,8 +1,18 @@
-import { Box, Button, Flex, HStack, IconButton, Image, Input, Text, VStack } from "@chakra-ui/react";
-import { useRef } from "react";
+import { Box, IconButton, Image, Text, VStack } from "@chakra-ui/react";
+import React, { useRef } from "react";
 import { FiX } from "react-icons/fi";
 
-const UploadTile = ({
+interface UploadTileProps {
+  title: string;
+  subtitle: string;
+  file: any[];
+  onFileChange: (file: File) => void;
+  onRemove: () => void;
+  onPreview: () => void;
+  icon: any;
+}
+
+const UploadTile: React.FC<UploadTileProps> = ({
   title,
   subtitle,
   file,
@@ -11,6 +21,12 @@ const UploadTile = ({
   onPreview,
   icon: Icon,
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleClick = () => {
+    inputRef.current?.click();
+  };
+
   return (
     <Box>
       <Text fontSize="sm" fontWeight="medium" mb={2}>
@@ -31,14 +47,18 @@ const UploadTile = ({
         _active={{ bg: "gray.100" }}
         cursor="pointer"
         transition="all 0.3s ease"
+        onClick={handleClick}
       >
-        <Input
+        <input
+          ref={inputRef}
           type="file"
           accept="image/*"
-          position="absolute"
-          inset={0}
-          opacity={0}
-          onChange={(e) => onFileChange(e.target.files[0])}
+          style={{ display: "none" }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.files && e.target.files[0]) {
+              onFileChange(e.target.files[0]);
+            }
+          }}
         />
 
         {file?.length ? (
@@ -49,11 +69,14 @@ const UploadTile = ({
               w="100%"
               h="100%"
               borderRadius="lg"
-              onClick={onPreview}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreview();
+              }}
             />
 
             <IconButton
-            aria-label="fix"
+              aria-label="Remove image"
               icon={<FiX />}
               size="xs"
               position="absolute"
@@ -68,7 +91,7 @@ const UploadTile = ({
             />
           </Box>
         ) : (
-          <VStack spacing={1}>
+          <VStack spacing={1} pointerEvents="none">
             <Box
               p={2}
               borderRadius="full"

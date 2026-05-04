@@ -35,7 +35,7 @@ import { Autocomplete, GoogleMap, MarkerF, useLoadScript } from "@react-google-m
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiCamera,
   FiCheck,
@@ -59,6 +59,7 @@ import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
 import stores from "../../../store/stores";
 import GalleryBlock from "./GalleryBlock";
+import RegisterInput from "./RegisterInput";
 import UploadBlock from "./UploadBlock";
 import { fieldCardStyles, inputStyles, mapOptions, sellerSteps, textareaStyles, userSteps } from "./utils/constant";
 import UploadTile from "./UploadBlock";
@@ -1125,18 +1126,19 @@ const roleOptions = [
 
       <HStack
         spacing={0}
-        border="1.5px solid"
+        border={isPhoneFocused ? "2px solid" : "1.5px solid"}
         borderColor={isPhoneFocused ? "blue.500" : "gray.200"}
-        borderRadius="xl"
+        borderRadius="14px"
         overflow="hidden"
-        transition="all 0.2s ease"
-        bg="white"
+        transition="all 0.18s ease"
+        bg={isPhoneFocused ? "white" : "#F8FAFD"}
+        boxShadow={isPhoneFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "0 1px 2px rgba(0,0,0,0.03)"}
       >
         {/* Country code pill */}
         <Flex
           align="center"
           px={4}
-          h="48px"
+          h="44px"
           bg={isPhoneFocused ? "blue.50" : "gray.50"}
           borderRight="1.5px solid"
           borderColor={isPhoneFocused ? "blue.200" : "gray.200"}
@@ -1144,10 +1146,10 @@ const roleOptions = [
           flexShrink={0}
           gap={2}
         >
-          <Text fontSize="md" fontWeight="500" color={isPhoneFocused ? "blue.700" : "gray.600"}>
+          <Text fontSize="14px" fontWeight="600" color={isPhoneFocused ? "blue.700" : "gray.600"}>
             IN +91
           </Text>
-          <Icon as={FiChevronDown} color={isPhoneFocused ? "blue.500" : "gray.400"} />
+          <Icon as={FiChevronDown} boxSize={3} color={isPhoneFocused ? "blue.500" : "gray.400"} />
         </Flex>
 
         {/* Actual input */}
@@ -1168,10 +1170,10 @@ const roleOptions = [
           placeholder="Enter 10-digit mobile number"
           border="none"
           borderRadius={0}
-          h="48px"
-          fontSize="md"
+          h="44px"
+          fontSize="14px"
           _focus={{ boxShadow: "none", border: "none" }}
-          _placeholder={{ color: "gray.300", fontSize: "sm" }}
+          _placeholder={{ color: "#B0BAC9", fontSize: "sm" }}
           px={4}
         />
       </HStack>
@@ -1184,92 +1186,91 @@ const roleOptions = [
 
 const renderUserProfileStep = () => (
   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Full Name
-      </FormLabel>
-      <Input
-        value={userData.name}
-        onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-        placeholder="Your name"
-        {...inputStyles}
-      />
-      <FieldError message={errors.name} />
-    </FormControl>
+    <RegisterInput
+      label="Full Name"
+      required
+      name="name"
+      type="text"
+      value={userData.name}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+      placeholder="Your name"
+      error={errors.name}
+      accentColor="#7C3AED"
+      leftIcon={<FiUser size={15} />}
+      autoComplete="name"
+    />
 
-    <FormControl>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Email
-      </FormLabel>
-      <Input
-        type="email"
-        value={userData.email}
-        onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-        placeholder="Optional email"
-        {...inputStyles}
-      />
-      <FieldError message={errors.email} />
-    </FormControl>
+    <RegisterInput
+      label="Email"
+      name="email"
+      type="email"
+      value={userData.email}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
+      placeholder="Optional email"
+      error={errors.email}
+      accentColor="#7C3AED"
+      hint="We'll send important updates here"
+      autoComplete="email"
+    />
   </VStack>
 );
 
 const renderSellerBasicsStep = () => (
   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Owner Name
-      </FormLabel>
-      <Input
-        value={userData.name}
-        onChange={(event) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-        placeholder="Your full name"
-        {...inputStyles}
-      />
-      <FieldError message={errors.name} />
-    </FormControl>
+    <RegisterInput
+      label="Owner Name"
+      required
+      name="name"
+      type="text"
+      value={userData.name}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+      placeholder="Your full name"
+      error={errors.name}
+      accentColor="#059669"
+      leftIcon={<FiUser size={15} />}
+      autoComplete="name"
+    />
 
-    <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Store Name
-      </FormLabel>
-      <Input
-        value={sellerData.storeName}
-        onChange={(event) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
-        placeholder="Ex. Sharma Electronics"
-        {...inputStyles}
-      />
-      <FieldError message={errors.storeName} />
-    </FormControl>
+    <RegisterInput
+      label="Store Name"
+      required
+      name="storeName"
+      type="text"
+      value={sellerData.storeName}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
+      placeholder="Ex. Sharma Electronics"
+      error={errors.storeName}
+      accentColor="#059669"
+      leftIcon={<FiShoppingBag size={15} />}
+    />
 
-    <FormControl>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        GST Number
-      </FormLabel>
-      <Input
-        value={sellerData.gstNumber}
-        onChange={(event) =>
-          setSellerData((prev) => ({
-            ...prev,
-            gstNumber: normalizeGstNumber(event.target.value),
-          }))
-        }
-        placeholder="Optional"
-        {...inputStyles}
-      />
-      <FieldError message={errors.gstNumber} />
-    </FormControl>
+    <RegisterInput
+      label="GST Number"
+      name="gstNumber"
+      type="text"
+      value={sellerData.gstNumber}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+        setSellerData((prev) => ({
+          ...prev,
+          gstNumber: normalizeGstNumber(event.target.value),
+        }))
+      }
+      placeholder="Optional — e.g. 22AAAAA0000A1Z5"
+      error={errors.gstNumber}
+      hint="Leave blank if you don't have one"
+      accentColor="#059669"
+    />
 
-    <FormControl>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        About Your Shop
-      </FormLabel>
-      <Textarea
-        value={sellerData.description}
-        onChange={(event) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
-        placeholder="What do you sell? What makes your store special?"
-        {...textareaStyles}
-      />
-    </FormControl>
+    <RegisterInput
+      as="textarea"
+      label="About Your Shop"
+      name="description"
+      value={sellerData.description}
+      onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
+      placeholder="What do you sell? What makes your store special?"
+      accentColor="#059669"
+      rows={3}
+    />
   </VStack>
 );
 
@@ -1427,149 +1428,68 @@ const renderSellerBasicsStep = () => (
 
       <VStack spacing={4} align="stretch">
         {/* Address — full width */}
-        <FormControl isRequired>
-          <FormLabel
-            color="gray.600"
-            fontWeight="600"
-            fontSize="xs"
-            mb={1}
-            textTransform="uppercase"
-            letterSpacing="0.04em"
-          >
-            Address
-          </FormLabel>
-          <Input
-            value={sellerData.location.address}
-            onChange={(e) => setSellerFieldValue("location.address", e.target.value)}
-            placeholder="Street address"
-            size="lg"
-            borderRadius="xl"
-            borderColor="gray.200"
-            bg="gray.50"
-            h="52px"
-            fontSize="sm"
-            _hover={{ borderColor: "gray.300", bg: "white" }}
-            _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
-            {...inputStyles}
-          />
-          <FieldError message={errors.address} />
-        </FormControl>
+        <RegisterInput
+          label="Address"
+          required
+          name="address"
+          type="text"
+          value={sellerData.location.address}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.address", e.target.value)}
+          placeholder="Street address"
+          error={errors.address}
+          accentColor="#0D9488"
+        />
 
         {/* City + State — side by side */}
         <SimpleGrid columns={2} spacing={3}>
-          <FormControl isRequired>
-            <FormLabel
-              color="gray.600"
-              fontWeight="600"
-              fontSize="xs"
-              mb={1}
-              textTransform="uppercase"
-              letterSpacing="0.04em"
-            >
-              City
-            </FormLabel>
-            <Input
-              value={sellerData.location.city}
-              onChange={(e) => setSellerFieldValue("location.city", e.target.value)}
-              placeholder="City"
-              size="lg"
-              borderRadius="xl"
-              borderColor="gray.200"
-              bg="gray.50"
-              h="52px"
-              fontSize="sm"
-              _hover={{ borderColor: "gray.300", bg: "white" }}
-              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
-              {...inputStyles}
-            />
-            <FieldError message={errors.city} />
-          </FormControl>
+          <RegisterInput
+            label="City"
+            required
+            name="city"
+            type="text"
+            value={sellerData.location.city}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.city", e.target.value)}
+            placeholder="City"
+            error={errors.city}
+            accentColor="#0D9488"
+          />
 
-          <FormControl isRequired>
-            <FormLabel
-              color="gray.600"
-              fontWeight="600"
-              fontSize="xs"
-              mb={1}
-              textTransform="uppercase"
-              letterSpacing="0.04em"
-            >
-              State
-            </FormLabel>
-            <Input
-              value={sellerData.location.state}
-              onChange={(e) => setSellerFieldValue("location.state", e.target.value)}
-              placeholder="State"
-              size="lg"
-              borderRadius="xl"
-              borderColor="gray.200"
-              bg="gray.50"
-              h="52px"
-              fontSize="sm"
-              _hover={{ borderColor: "gray.300", bg: "white" }}
-              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
-              {...inputStyles}
-            />
-            <FieldError message={errors.state} />
-          </FormControl>
+          <RegisterInput
+            label="State"
+            required
+            name="state"
+            type="text"
+            value={sellerData.location.state}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.state", e.target.value)}
+            placeholder="State"
+            error={errors.state}
+            accentColor="#0D9488"
+          />
         </SimpleGrid>
 
         {/* Postal Code + Country — side by side */}
         <SimpleGrid columns={2} spacing={3}>
-          <FormControl>
-            <FormLabel
-              color="gray.600"
-              fontWeight="600"
-              fontSize="xs"
-              mb={1}
-              textTransform="uppercase"
-              letterSpacing="0.04em"
-            >
-              Postal code
-            </FormLabel>
-            <Input
-              value={sellerData.location.postalCode}
-              onChange={(e) => setSellerFieldValue("location.postalCode", e.target.value)}
-              placeholder="000000"
-              size="lg"
-              borderRadius="xl"
-              borderColor="gray.200"
-              bg="gray.50"
-              h="52px"
-              fontSize="sm"
-              _hover={{ borderColor: "gray.300", bg: "white" }}
-              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
-              {...inputStyles}
-            />
-          </FormControl>
+          <RegisterInput
+            label="Postal code"
+            name="postalCode"
+            type="text"
+            value={sellerData.location.postalCode}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.postalCode", e.target.value)}
+            placeholder="000000"
+            accentColor="#0D9488"
+          />
 
-          <FormControl isRequired>
-            <FormLabel
-              color="gray.600"
-              fontWeight="600"
-              fontSize="xs"
-              mb={1}
-              textTransform="uppercase"
-              letterSpacing="0.04em"
-            >
-              Country
-            </FormLabel>
-            <Input
-              value={sellerData.location.country}
-              onChange={(e) => setSellerFieldValue("location.country", e.target.value)}
-              placeholder="Country"
-              size="lg"
-              borderRadius="xl"
-              borderColor="gray.200"
-              bg="gray.50"
-              h="52px"
-              fontSize="sm"
-              _hover={{ borderColor: "gray.300", bg: "white" }}
-              _focus={{ borderColor: "blue.400", bg: "white", boxShadow: "0 0 0 3px rgba(66,153,225,0.12)" }}
-              {...inputStyles}
-            />
-            <FieldError message={errors.country} />
-          </FormControl>
+          <RegisterInput
+            label="Country"
+            required
+            name="country"
+            type="text"
+            value={sellerData.location.country}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.country", e.target.value)}
+            placeholder="Country"
+            error={errors.country}
+            accentColor="#0D9488"
+          />
         </SimpleGrid>
       </VStack>
     </Box>
@@ -1578,42 +1498,42 @@ const renderSellerBasicsStep = () => (
 
 const renderSellerContactStep = () => (
   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <FormControl isRequired>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Store Phone
-      </FormLabel>
-      <Input
-        type="tel"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={sellerData.contactPhone}
-        onChange={(event) => {
-          const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
-          setSellerData((prev) => ({
-            ...prev,
-            contactPhone: nextPhone,
-          }));
-          setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
-        }}
-        placeholder="Public shop phone"
-        {...inputStyles}
-      />
-      <FieldError message={errors.contactPhone} />
-    </FormControl>
+    <RegisterInput
+      label="Store Phone"
+      required
+      name="contactPhone"
+      type="tel"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={sellerData.contactPhone}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
+        setSellerData((prev) => ({
+          ...prev,
+          contactPhone: nextPhone,
+        }));
+        setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
+      }}
+      placeholder="10-digit public shop number"
+      error={errors.contactPhone}
+      accentColor="#0891B2"
+      leftIcon={<FiPhone size={15} />}
+      hint="Shown to buyers on your storefront"
+      autoComplete="tel"
+    />
 
-    <FormControl>
-      <FormLabel color="gray.700" fontWeight="600" fontSize={{ base: "xs", md: "sm" }} mb={1}>
-        Email
-      </FormLabel>
-      <Input
-        type="email"
-        value={userData.email}
-        onChange={(event) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-        placeholder="Optional email"
-        {...inputStyles}
-      />
-      <FieldError message={errors.email} />
-    </FormControl>
+    <RegisterInput
+      label="Email"
+      name="email"
+      type="email"
+      value={userData.email}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
+      placeholder="Optional email"
+      error={errors.email}
+      accentColor="#0891B2"
+      hint="We'll use this for order notifications"
+      autoComplete="email"
+    />
   </VStack>
 );
 
@@ -1719,9 +1639,9 @@ const renderSellerContactStep = () => (
 
       {/* Header */}
       <Box>
-        <Text fontSize="xs" color="gray.500">
+        {/* <Text fontSize="xs" color="gray.500">
           Step 3 of 3
-        </Text>
+        </Text> */}
 
         <Heading fontSize="lg" mt={1}>
           Add photos
@@ -1816,16 +1736,30 @@ const renderSellerContactStep = () => (
           type="number"
           value={otp}
           onChange={handleOtpChange}
-          size="lg"
-          focusBorderColor="blue.500"
+          size="md"
+          focusBorderColor={intent === "seller" ? "teal.500" : "blue.500"}
           autoFocus={isOtpStep}
         >
-          <PinInputField ref={otpInputRef} inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" />
-          <PinInputField inputMode="numeric" pattern="[0-9]*" />
-          <PinInputField inputMode="numeric" pattern="[0-9]*" />
-          <PinInputField inputMode="numeric" pattern="[0-9]*" />
-          <PinInputField inputMode="numeric" pattern="[0-9]*" />
-          <PinInputField inputMode="numeric" pattern="[0-9]*" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <PinInputField
+              key={i}
+              ref={i === 0 ? otpInputRef : undefined}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="one-time-code"
+              borderRadius="12px"
+              bg="#F8FAFD"
+              border="1.5px solid"
+              borderColor="gray.200"
+              h="48px"
+              w="42px"
+              _focus={{
+                borderWidth: "2px",
+                bg: "white",
+                boxShadow: `0 0 0 3px ${intent === "seller" ? "rgba(20, 184, 166, 0.15)" : "rgba(59, 130, 246, 0.15)"}`
+              }}
+            />
+          ))}
         </PinInput>
       </HStack>
       <FieldError message={errors.otp} />

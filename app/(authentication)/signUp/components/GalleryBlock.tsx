@@ -1,7 +1,29 @@
-import { Box, VStack, HStack, Flex, Input, SimpleGrid, Button, Text, Image, IconButton } from "@chakra-ui/react";
-import { FiCamera, FiPlus, FiX } from "react-icons/fi";
+import { Box, SimpleGrid, Text, Image, IconButton, Icon } from "@chakra-ui/react";
+import React, { useRef } from "react";
+import { FiPlus, FiX } from "react-icons/fi";
 
-const GalleryBlock = ({ gallery, setSellerData, handleGalleryFilesSelected, onPreview }) => {
+interface GalleryBlockProps {
+  gallery: any[];
+  setSellerData: React.Dispatch<React.SetStateAction<any>>;
+  handleGalleryFilesSelected: (files: File[]) => void;
+  onPreview: (index: number) => void;
+}
+
+const GalleryBlock: React.FC<GalleryBlockProps> = ({ gallery, setSellerData, handleGalleryFilesSelected, onPreview }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddClick = () => {
+    inputRef.current?.click();
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleGalleryFilesSelected(Array.from(e.target.files));
+      // Reset input value to allow selecting same file again if needed
+      e.target.value = "";
+    }
+  };
+
   return (
     <Box>
       <Text fontSize="sm" fontWeight="medium" mb={2}>
@@ -17,11 +39,12 @@ const GalleryBlock = ({ gallery, setSellerData, handleGalleryFilesSelected, onPr
               objectFit="cover"
               w="100%"
               h="80px"
+              cursor="pointer"
               onClick={() => onPreview(index)}
             />
 
             <IconButton
-            aria-label="fix"
+              aria-label="Remove image"
               icon={<FiX />}
               size="xs"
               position="absolute"
@@ -29,7 +52,8 @@ const GalleryBlock = ({ gallery, setSellerData, handleGalleryFilesSelected, onPr
               right={1}
               colorScheme="red"
               borderRadius="full"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setSellerData((prev) => ({
                   ...prev,
                   gallery: prev.gallery.filter((_, i) => i !== index),
@@ -50,18 +74,21 @@ const GalleryBlock = ({ gallery, setSellerData, handleGalleryFilesSelected, onPr
           justifyContent="center"
           position="relative"
           bg="gray.50"
+          cursor="pointer"
+          _hover={{ bg: "gray.100", borderColor: "gray.300" }}
+          onClick={handleAddClick}
+          transition="all 0.2s ease"
         >
-          <Input
+          <input
+            ref={inputRef}
             type="file"
             multiple
             accept="image/*"
-            position="absolute"
-            inset={0}
-            opacity={0}
-            onChange={handleGalleryFilesSelected}
+            style={{ display: "none" }}
+            onChange={onFileChange}
           />
 
-          <FiPlus />
+          <Icon as={FiPlus} color="gray.500" boxSize={5} />
         </Box>
       </SimpleGrid>
     </Box>
