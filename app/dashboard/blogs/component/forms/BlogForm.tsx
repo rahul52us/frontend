@@ -28,6 +28,7 @@ import { CloseIcon, WarningIcon } from "@chakra-ui/icons";
 import RichTextEditor from "../../../../component/common/Editor/RichQuillEditor";
 import FormModel from "../../../../component/common/FormModel/FormModel";
 import CustomInput from "../../../../component/config/component/customInput/CustomInput";
+import { buildBase64ImageUpload } from "../../../../config/utils/imageUpload";
 
 const BlogForm = observer(({ initialValues, submitForm, loading }: any) => {
   const [formState, setFormState] = useState<any>(initialValues);
@@ -320,19 +321,14 @@ const BlogForm = observer(({ initialValues, submitForm, loading }: any) => {
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0]; // Get the selected file
                       if (file) {
-                        const reader = new FileReader(); // Create FileReader to read file
-                        reader.onload = () => {
-                          handleStateChange("coverImage", {
-                            filename: file.name,
-                            buffer: reader.result, // Base64 representation of image
-                            type: file.type,
-                            isAdd: 1
-                          });
-                        };
-                        reader.readAsDataURL(file); // Read the file as Base64
+                        const normalizedImage = await buildBase64ImageUpload(file, {
+                          isAdd: 1,
+                          isDeleted: 0,
+                        });
+                        handleStateChange("coverImage", normalizedImage);
                       }
                     }}
                   />

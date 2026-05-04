@@ -317,6 +317,12 @@ const normalizeStringArray = (source: any) => {
 
 const normalizeShopDataForForm = (shopData: any) => {
   const defaults = createEmptyShopFormData();
+  const description =
+    typeof shopData?.description === "string" ? shopData.description : defaults.description;
+  const rawAbout =
+    typeof shopData?.about === "string" ? shopData.about : defaults.about;
+  const about =
+    rawAbout.trim() && rawAbout.trim() === description.trim() ? defaults.about : rawAbout;
 
   return {
     ...defaults,
@@ -324,8 +330,8 @@ const normalizeShopDataForForm = (shopData: any) => {
     tags: normalizeStringArray(shopData?.tags),
     categories: normalizeStringArray(shopData?.categories),
     paymentMethods: normalizeStringArray(shopData?.paymentMethods),
-    description: shopData?.description || defaults.description,
-    about: shopData?.about || shopData?.description || defaults.about,
+    description,
+    about,
     gstNumber: shopData?.gstNumber || defaults.gstNumber,
     returnPolicy: shopData?.returnPolicy || defaults.returnPolicy,
     location: normalizeLocationForForm(shopData?.location, defaults.location),
@@ -670,7 +676,7 @@ const ShopForm = observer(() => {
 
       return hasText || hasCoordinates;
     });
-    formData.about = formData.about || formData.description || "";
+    formData.about = typeof formData.about === "string" ? formData.about.trim() : "";
     formData.gstNumber = normalizeGstNumber(formData.gstNumber) || undefined;
 
     return formData;

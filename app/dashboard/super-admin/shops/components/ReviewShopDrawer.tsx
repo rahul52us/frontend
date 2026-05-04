@@ -104,6 +104,14 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
 
   if (!shop) return null;
 
+  const canReviewSubmission = shop.reviewStatus !== "approved";
+  const remarksLabel = canReviewSubmission
+    ? "Remarks for the seller (required for request changes or reject)"
+    : "Remarks for future visibility updates";
+  const remarksPlaceholder = canReviewSubmission
+    ? "Add approval notes, change requests, or rejection reason..."
+    : "Add optional notes for future inactive or suspended updates...";
+
   return (
     <CustomDrawer title="Review Shop Submission" open={isOpen} close={onClose} size="xl">
       <Stack spacing={5} pb={6}>
@@ -220,17 +228,22 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
         </Box>
 
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="2xl" p={5} bg="white">
-          <Text fontWeight="700" color="gray.800" mb={3}>
-            Review Feedback
-          </Text>
+          <HStack justify="space-between" align="start" spacing={3} mb={3}>
+            <Text fontWeight="700" color="gray.800">
+              {canReviewSubmission ? "Review Feedback" : "Remarks"}
+            </Text>
+            {!canReviewSubmission ? (
+              <Badge colorScheme="green">Review completed</Badge>
+            ) : null}
+          </HStack>
           <FormControl>
             <FormLabel fontSize="sm" color="gray.600">
-              Remarks for the seller (required for request changes or reject)
+              {remarksLabel}
             </FormLabel>
             <Textarea
               value={remarks}
               onChange={(event) => setRemarks(event.target.value)}
-              placeholder="Add approval notes, change requests, or rejection reason..."
+              placeholder={remarksPlaceholder}
               minH="140px"
               resize="vertical"
             />
@@ -314,28 +327,32 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
           <Button variant="outline" onClick={onClose} isDisabled={isSubmitting}>
             Close
           </Button>
-          <Button
-            colorScheme="red"
-            variant="outline"
-            onClick={() => handleSubmit("reject")}
-            isLoading={isSubmitting && activeAction === "reject"}
-          >
-            Reject
-          </Button>
-          <Button
-            colorScheme="orange"
-            onClick={() => handleSubmit("request_changes")}
-            isLoading={isSubmitting && activeAction === "request_changes"}
-          >
-            Request Changes
-          </Button>
-          <Button
-            colorScheme="green"
-            onClick={() => handleSubmit("approve")}
-            isLoading={isSubmitting && activeAction === "approve"}
-          >
-            Approve
-          </Button>
+          {canReviewSubmission ? (
+            <>
+              <Button
+                colorScheme="red"
+                variant="outline"
+                onClick={() => handleSubmit("reject")}
+                isLoading={isSubmitting && activeAction === "reject"}
+              >
+                Reject
+              </Button>
+              <Button
+                colorScheme="orange"
+                onClick={() => handleSubmit("request_changes")}
+                isLoading={isSubmitting && activeAction === "request_changes"}
+              >
+                Request Changes
+              </Button>
+              <Button
+                colorScheme="green"
+                onClick={() => handleSubmit("approve")}
+                isLoading={isSubmitting && activeAction === "approve"}
+              >
+                Approve
+              </Button>
+            </>
+          ) : null}
         </HStack>
       </Stack>
     </CustomDrawer>
