@@ -22,14 +22,22 @@ import {
   useColorModeValue
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import stores from "../../../../../store/stores";
 // import { dashboardPalette } from "../../../../../layouts/dashboardLayout/dashboardPalette";
 import { formatDistanceToNow } from "date-fns";
 import stores from "../../../../../../store/stores";
 import { dashboardPalette } from "../../../../dashboardPalette";
 
-const HeaderNotification = observer(() => {
+type HeaderNotificationProps = {
+  buttonVariant?: "round" | "mobileSquare";
+  badgeVariant?: "count" | "dot";
+};
+
+const HeaderNotification = observer(({
+  buttonVariant = "round",
+  badgeVariant = "count",
+}: HeaderNotificationProps) => {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [selectedItem, setSelectedItem] = useState<string>("All");
 
@@ -57,6 +65,11 @@ const HeaderNotification = observer(() => {
   const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
   const cAccentGlow = useColorModeValue("rgba(37, 99, 235, 0.1)", dashboardPalette.accentGlow);
   const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
+  const isMobileSquare = buttonVariant === "mobileSquare";
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
   const handleOpen = async () => {
     setDropdownOpen(true);
@@ -136,22 +149,23 @@ const HeaderNotification = observer(() => {
       position="relative"
       justifyContent="center"
       alignItems="center"
-      mr={2}
+      mr={isMobileSquare ? 0 : 2}
       zIndex={999}
     >
       <Menu isOpen={dropdownOpen} onClose={() => setDropdownOpen(false)} placement="bottom-end">
         <MenuButton
           as={IconButton}
           icon={<BellIcon />}
-          isRound={true}
+          isRound={!isMobileSquare}
+          borderRadius={isMobileSquare ? "14px" : "full"}
           bg={cSurfaceAlt}
           variant="ghost"
-          fontSize="xl"
-          color={cTextMuted}
+          fontSize={isMobileSquare ? "lg" : "xl"}
+          color={isMobileSquare ? cText : cTextMuted}
           _hover={{ 
             color: cAccent, 
             bg: cSurfaceSoft,
-            transform: "rotate(15deg)"
+            transform: isMobileSquare ? "none" : "rotate(15deg)"
           }}
           _active={{ bg: cSurfaceSoft }}
           aria-label="notifications"
@@ -159,6 +173,8 @@ const HeaderNotification = observer(() => {
           transition="all 0.2s"
           border="1px solid"
           borderColor={cBorder}
+          boxSize={isMobileSquare ? "40px" : undefined}
+          minW={isMobileSquare ? "40px" : undefined}
         />
         {unreadCount > 0 && (
           <Badge
@@ -166,18 +182,18 @@ const HeaderNotification = observer(() => {
             color="white"
             borderRadius="full"
             position="absolute"
-            top="-2px"
-            right="-2px"
-            boxSize="18px"
+            top={isMobileSquare ? "7px" : "-2px"}
+            right={isMobileSquare ? "7px" : "-2px"}
+            boxSize={badgeVariant === "dot" ? "10px" : "18px"}
             display="flex"
             alignItems="center"
             justifyContent="center"
-            fontSize="10px"
+            fontSize={badgeVariant === "dot" ? "0px" : "10px"}
             fontWeight="800"
             border="2px solid"
             borderColor={cShell}
           >
-            {unreadCount}
+            {badgeVariant === "dot" ? "" : unreadCount}
           </Badge>
         )}
         <Portal>

@@ -6,8 +6,6 @@ import {
   Button,
   Circle,
   Flex,
-  FormControl,
-  FormLabel,
   Heading,
   HStack,
   Icon,
@@ -39,7 +37,6 @@ import {
   FiCamera,
   FiCheck,
   FiCheckCircle,
-  FiChevronDown,
   FiChevronRight,
   FiImage,
   FiNavigation,
@@ -68,6 +65,9 @@ const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 const FALLBACK_CENTER = { lat: 28.6139, lng: 77.209 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const phoneRegex = /^\d{10}$/;
+const PRIMARY_COLOR = "#3B82F6";
+const SOFT_PRIMARY_COLOR = "#DBEAFE";
+
 
 type Intent = "user" | "seller";
 
@@ -1009,12 +1009,12 @@ const roleOptions = [
     icon: FiShoppingCart,
     active: {
       bg: "blue.50",
-      border: "#3B82F6",
+      border: PRIMARY_COLOR,
       iconBg: "#DBEAFE",
       iconColor: "#2563EB",
       text: "blue.800",
       subText: "blue.500",
-      dot: "#3B82F6",
+      dot: PRIMARY_COLOR,
     },
   },
   {
@@ -1023,13 +1023,13 @@ const roleOptions = [
     sub: "List & sell",
     icon: FiPackage,
     active: {
-      bg: "teal.50",
-      border: "#0D9488",
-      iconBg: "#CCFBF1",
-      iconColor: "#0F766E",
-      text: "teal.800",
-      subText: "teal.500",
-      dot: "#0D9488",
+      bg: "blue.50",
+      border: PRIMARY_COLOR,
+      iconBg: "#DBEAFE",
+      iconColor: "#2563EB",
+      text: "blue.800",
+      subText: "blue.500",
+      dot: PRIMARY_COLOR,
     },
   },
 ];
@@ -1112,72 +1112,27 @@ const roleOptions = [
     </Box>
 
     {/* ── Phone Input ── */}
-    <FormControl isRequired>
-      <FormLabel
-        color="gray.600"
-        fontWeight="600"
-        fontSize="sm"
-        mb={2}
-      >
-        Phone Number
-      </FormLabel>
-
-      <HStack
-        spacing={0}
-        border={isPhoneFocused ? "2px solid" : "1.5px solid"}
-        borderColor={isPhoneFocused ? "blue.500" : "gray.200"}
-        borderRadius="14px"
-        overflow="hidden"
-        transition="all 0.18s ease"
-        bg={isPhoneFocused ? "white" : "#F8FAFD"}
-        boxShadow={isPhoneFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "0 1px 2px rgba(0,0,0,0.03)"}
-      >
-        {/* Country code pill */}
-        <Flex
-          align="center"
-          px={4}
-          h="44px"
-          bg={isPhoneFocused ? "blue.50" : "gray.50"}
-          borderRight="1.5px solid"
-          borderColor={isPhoneFocused ? "blue.200" : "gray.200"}
-          transition="all 0.2s ease"
-          flexShrink={0}
-          gap={2}
-        >
-          <Text fontSize="14px" fontWeight="600" color={isPhoneFocused ? "blue.700" : "gray.600"}>
-            IN +91
-          </Text>
-          <Icon as={FiChevronDown} boxSize={3} color={isPhoneFocused ? "blue.500" : "gray.400"} />
-        </Flex>
-
-        {/* Actual input */}
-        <Input
-          ref={phoneInputRef}
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={userData.phone}
-          onChange={(e) =>
-            setUserData((prev) => ({
-              ...prev,
-              phone: e.target.value.replace(/\D/g, "").slice(0, 10),
-            }))
-          }
-          onFocus={() => setIsPhoneFocused(true)}
-          onBlur={() => setIsPhoneFocused(false)}
-          placeholder="Enter 10-digit mobile number"
-          border="none"
-          borderRadius={0}
-          h="44px"
-          fontSize="14px"
-          _focus={{ boxShadow: "none", border: "none" }}
-          _placeholder={{ color: "#B0BAC9", fontSize: "sm" }}
-          px={4}
-        />
-      </HStack>
-
-      <FieldError message={errors.phone} />
-    </FormControl>
+    <RegisterInput
+      ref={phoneInputRef}
+      label="Phone Number"
+      required
+      type="tel"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={userData.phone}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+        setUserData((prev) => ({
+          ...prev,
+          phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+        }))
+      }
+      placeholder="Enter 10-digit mobile number"
+      error={errors.phone}
+      accentColor={PRIMARY_COLOR}
+      leftIcon={<FiPhone size={15} />}
+      maxLength={10}
+      autoFocus
+    />
   </VStack>
 );
 
@@ -1193,7 +1148,7 @@ const renderUserProfileStep = () => (
       onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
       placeholder="Your name"
       error={errors.name}
-      accentColor="#7C3AED"
+      accentColor={PRIMARY_COLOR}
       leftIcon={<FiUser size={15} />}
       autoComplete="name"
     />
@@ -1206,7 +1161,7 @@ const renderUserProfileStep = () => (
       onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
       placeholder="Optional email"
       error={errors.email}
-      accentColor="#7C3AED"
+      accentColor={PRIMARY_COLOR}
       hint="We'll send important updates here"
       autoComplete="email"
     />
@@ -1224,7 +1179,7 @@ const renderSellerBasicsStep = () => (
       onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
       placeholder="Your full name"
       error={errors.name}
-      accentColor="#059669"
+      accentColor={PRIMARY_COLOR}
       leftIcon={<FiUser size={15} />}
       autoComplete="name"
     />
@@ -1238,7 +1193,7 @@ const renderSellerBasicsStep = () => (
       onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
       placeholder="Ex. Sharma Electronics"
       error={errors.storeName}
-      accentColor="#059669"
+      accentColor={PRIMARY_COLOR}
       leftIcon={<FiShoppingBag size={15} />}
     />
 
@@ -1256,7 +1211,7 @@ const renderSellerBasicsStep = () => (
       placeholder="Optional — e.g. 22AAAAA0000A1Z5"
       error={errors.gstNumber}
       hint="Leave blank if you don't have one"
-      accentColor="#059669"
+      accentColor={PRIMARY_COLOR}
     />
 
     <RegisterInput
@@ -1266,7 +1221,7 @@ const renderSellerBasicsStep = () => (
       value={sellerData.description}
       onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
       placeholder="What do you sell? What makes your store special?"
-      accentColor="#059669"
+      accentColor={PRIMARY_COLOR}
       rows={3}
     />
   </VStack>
@@ -1435,7 +1390,7 @@ const renderSellerBasicsStep = () => (
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.address", e.target.value)}
           placeholder="Street address"
           error={errors.address}
-          accentColor="#0D9488"
+          accentColor={PRIMARY_COLOR}
         />
 
         {/* City + State — side by side */}
@@ -1449,7 +1404,7 @@ const renderSellerBasicsStep = () => (
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.city", e.target.value)}
             placeholder="City"
             error={errors.city}
-            accentColor="#0D9488"
+            accentColor={PRIMARY_COLOR}
           />
 
           <RegisterInput
@@ -1461,7 +1416,7 @@ const renderSellerBasicsStep = () => (
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.state", e.target.value)}
             placeholder="State"
             error={errors.state}
-            accentColor="#0D9488"
+            accentColor={PRIMARY_COLOR}
           />
         </SimpleGrid>
 
@@ -1474,7 +1429,7 @@ const renderSellerBasicsStep = () => (
             value={sellerData.location.postalCode}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.postalCode", e.target.value)}
             placeholder="000000"
-            accentColor="#0D9488"
+            accentColor={PRIMARY_COLOR}
           />
 
           <RegisterInput
@@ -1486,7 +1441,7 @@ const renderSellerBasicsStep = () => (
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.country", e.target.value)}
             placeholder="Country"
             error={errors.country}
-            accentColor="#0D9488"
+            accentColor={PRIMARY_COLOR}
           />
         </SimpleGrid>
       </VStack>
@@ -1514,7 +1469,7 @@ const renderSellerContactStep = () => (
       }}
       placeholder="10-digit public shop number"
       error={errors.contactPhone}
-      accentColor="#0891B2"
+      accentColor={PRIMARY_COLOR}
       leftIcon={<FiPhone size={15} />}
       hint="Shown to buyers on your storefront"
       autoComplete="tel"
@@ -1528,7 +1483,7 @@ const renderSellerContactStep = () => (
       onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
       placeholder="Optional email"
       error={errors.email}
-      accentColor="#0891B2"
+      accentColor={PRIMARY_COLOR}
       hint="We'll use this for order notifications"
       autoComplete="email"
     />
@@ -1654,6 +1609,7 @@ const renderSellerContactStep = () => (
           value={(completedMediaCount / 3) * 100}
           size="xs"
           mt={3}
+          colorScheme="blue"
           borderRadius="full"
         />
       </Box>
@@ -1735,7 +1691,8 @@ const renderSellerContactStep = () => (
           value={otp}
           onChange={handleOtpChange}
           size="md"
-          focusBorderColor={intent === "seller" ? "teal.500" : "blue.500"}
+          focusBorderColor="blue.500"
+
           autoFocus={isOtpStep}
         >
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -1999,7 +1956,7 @@ const renderSellerContactStep = () => (
               value={progress}
               size="xs"
               borderRadius="full"
-              colorScheme={intent === "seller" ? "teal" : "blue"}
+              colorScheme="blue"
               bg="gray.100"
             />
           </Box>
@@ -2059,13 +2016,13 @@ const renderSellerContactStep = () => (
                 <Button
                   w="full"
                   h="56px"
-                  bg={meta.accent}
+                  bg={PRIMARY_COLOR}
                   color="white"
                   fontSize="md"
                   fontWeight="600"
                   borderRadius="xl"
-                  _hover={{ bg: meta.accent, opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
-                  _active={{ bg: meta.accent, transform: "translateY(0)" }}
+                  _hover={{ bg: PRIMARY_COLOR, opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
+                  _active={{ bg: PRIMARY_COLOR, transform: "translateY(0)" }}
                   transition="all 0.3s ease"
                   onClick={isOtpStep ? () => void handleVerify() : handleContinue}
                   isLoading={loading}
@@ -2079,7 +2036,7 @@ const renderSellerContactStep = () => (
                   <Button
                     type="button"
                     variant="link"
-                    color={meta.accent}
+                    color={PRIMARY_COLOR}
                     fontWeight="700"
                     fontSize="sm"
                     isDisabled={isRouteTransitioning}
@@ -2097,7 +2054,7 @@ const renderSellerContactStep = () => (
           <Box
             display={{ base: "block", md: "none" }}
             position="fixed"
-            bottom={0}
+            bottom={4}
             left={0}
             right={0}
             bg="white"
@@ -2110,15 +2067,15 @@ const renderSellerContactStep = () => (
               <Button
                 w="full"
                 h="46px"
-                bg={meta.accent}
+                bg={PRIMARY_COLOR}
                 color="white"
                 fontSize="sm"
                 fontWeight="700"
                 borderRadius="lg"
                 onClick={isOtpStep ? () => void handleVerify() : handleContinue}
                 isLoading={loading}
-                _hover={{ bg: meta.accent, opacity: 0.9 }}
-                _active={{ bg: meta.accent, transform: "scale(0.98)" }}
+                _hover={{ bg: PRIMARY_COLOR, opacity: 0.9 }}
+                _active={{ bg: PRIMARY_COLOR, transform: "scale(0.98)" }}
                 transition="all 0.3s ease"
               >
                 {isOtpStep ? "Verify & Continue" : "Continue"}

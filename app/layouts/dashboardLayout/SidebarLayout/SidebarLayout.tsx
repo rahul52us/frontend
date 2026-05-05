@@ -19,11 +19,6 @@ import {
   Portal,
   Text,
   VStack,
-  Drawer,
-  DrawerBody,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerOverlay,
   useBreakpointValue,
   useColorMode,
   useColorModeValue,
@@ -421,6 +416,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
   } = stores;
   const router = useRouter(); // Replace useNavigate with useRouter
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
+  void openMobileSideDrawer;
   const [sidebarData, setSidebarData] = useState<SidebarItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<number | null>(() => {
     if (typeof window !== "undefined") { // Add check for client-side
@@ -434,9 +430,6 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
   const cShell = useColorModeValue("white", dashboardPalette.shell);
   const cText = useColorModeValue("gray.800", dashboardPalette.text);
   const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
   const footerGradient = useColorModeValue(
     `linear-gradient(180deg, rgba(255,255,255, 0) 0%, white 28%)`,
     `linear-gradient(180deg, rgba(13, 11, 18, 0) 0%, ${dashboardPalette.shell} 28%)`
@@ -489,34 +482,6 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
 
   return (
     <>
-      <Drawer
-        isOpen={openMobileSideDrawer}
-        placement="right"
-        onClose={() => setOpenMobileSideDrawer(false)} // Changed to false directly
-      >
-        <DrawerOverlay />
-        <DrawerContent bg={cShell} color={cText} borderLeft="1px solid" borderLeftColor={cBorder}>
-          <DrawerCloseButton
-            variant="ghost"
-            fontSize="xl"
-            color={cText}
-            _hover={{ color: cAccentStrong, bg: cSurfaceSoft }}
-            _active={{ bg: cSurfaceAlt }}
-            mt={2}
-            _focus={{ boxShadow: "none" }}
-          />
-          <SidebarLogo />
-          <DrawerBody px={2} className="customScrollBar">
-            <SidebarAccordion
-              items={sidebarData}
-              onClick={onItemClick}
-              onLeafClick={handleLeafItemClick}
-              activeItemId={activeItemId}
-              expandedPath={expandedPath}
-            />
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
       {!isMobile && (
         <Box
           onMouseEnter={() => setIsHovered(true)}

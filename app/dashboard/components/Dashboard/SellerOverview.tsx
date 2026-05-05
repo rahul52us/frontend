@@ -1,15 +1,12 @@
 "use client";
 
 import {
-  Avatar,
   Badge,
   Box,
   Button,
   Circle,
-  Divider,
   Flex,
   Grid,
-  GridItem,
   Heading,
   HStack,
   Icon,
@@ -18,12 +15,7 @@ import {
   Progress,
   SimpleGrid,
   Skeleton,
-  SkeletonText,
   Stack,
-  Stat,
-  StatHelpText,
-  StatLabel,
-  StatNumber,
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -31,49 +23,147 @@ import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FaRegCircle, FaStore, FaWarehouse } from "react-icons/fa";
 import {
-  FaBell,
-  FaBoxOpen,
-  FaCheckCircle,
-  FaChevronRight,
-  FaClipboardList,
-  FaExclamationTriangle,
-  FaFileInvoiceDollar,
-  FaMapMarkerAlt,
-  FaPhoneAlt,
-  FaRegCircle,
-  FaStore,
-  FaTruck,
-  FaUserFriends,
-  FaWarehouse
-} from "react-icons/fa";
-import { dashboardHeroGradient, dashboardHeroGradientLight, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+  FiBell,
+  FiBox,
+  FiCheckCircle,
+  FiChevronRight,
+  FiClipboard,
+  FiClock,
+  FiMapPin,
+  FiPackage,
+  FiPhone,
+  FiShoppingBag,
+  FiTrendingDown,
+  FiTrendingUp,
+  FiTruck,
+  FiUsers,
+  FiZap
+} from "react-icons/fi";
+import { dashboardHeroGradient, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../store/stores";
 
 const MotionBox = motion(Box);
+const MotionButton = motion(Button);
 
-const containerVariants = {
+const stagger = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 260, damping: 24 },
+  },
 };
 
-// ... Types ...
-type DashboardOrder = { _id?: string; orderId?: string; orderStatus?: string; createdAt?: string; total?: number; user?: { name?: string; }; quote?: { price?: { value?: number | string; }; }; items?: any[]; };
-type DashboardProduct = { _id: string; name?: string; stock?: number; status?: "active" | "draft" | "discontinued"; isFeatured?: boolean; updatedAt?: string; createdAt?: string; isDeleted?: boolean; };
-type DashboardParty = { _id: string; name?: string; phone?: string; email?: string; partyType?: "customer" | "supplier"; outstandingBalance?: number; };
-type DashboardNotification = { _id: string; title: string; message: string; category?: string; priority?: "low" | "medium" | "high"; isRead?: boolean; createdAt?: string; };
-type DashboardMetrics = { totalOrders: number; pendingOrders: number; inFlightOrders: number; deliveredOrders: number; totalProducts: number; activeProducts: number; lowStockProducts: number; outOfStockProducts: number; featuredProducts: number; totalCustomers: number; totalSuppliers: number; customerReceivable: number; customerAdvance: number; supplierPayable: number; supplierAdvance: number; unreadNotifications: number; };
-type DashboardData = { company: any | null; metrics: DashboardMetrics; recentOrders: DashboardOrder[]; lowStockItems: DashboardProduct[]; topCustomers: DashboardParty[]; topSuppliers: DashboardParty[]; notifications: DashboardNotification[]; };
+type DashboardOrder = {
+  _id?: string;
+  orderId?: string;
+  orderStatus?: string;
+  createdAt?: string;
+  total?: number;
+  user?: { name?: string };
+  quote?: { price?: { value?: number | string } };
+  items?: any[];
+};
 
-const defaultMetrics: DashboardMetrics = { totalOrders: 0, pendingOrders: 0, inFlightOrders: 0, deliveredOrders: 0, totalProducts: 0, activeProducts: 0, lowStockProducts: 0, outOfStockProducts: 0, featuredProducts: 0, totalCustomers: 0, totalSuppliers: 0, customerReceivable: 0, customerAdvance: 0, supplierPayable: 0, supplierAdvance: 0, unreadNotifications: 0 };
+type DashboardProduct = {
+  _id: string;
+  name?: string;
+  stock?: number;
+  threshold?: number;
+  reorderLevel?: number;
+  minStock?: number;
+  updatedAt?: string;
+  createdAt?: string;
+};
 
-const formatCurrency = (value: number) => `Rs ${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-const formatCompactCurrency = (value: number) => new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0));
+type DashboardParty = {
+  _id: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  outstandingBalance?: number;
+};
+
+type DashboardNotification = {
+  _id: string;
+  title: string;
+  message: string;
+  category?: string;
+  priority?: "low" | "medium" | "high";
+  isRead?: boolean;
+  createdAt?: string;
+};
+
+type DashboardMetrics = {
+  totalOrders: number;
+  pendingOrders: number;
+  inFlightOrders: number;
+  deliveredOrders: number;
+  totalProducts: number;
+  activeProducts: number;
+  lowStockProducts: number;
+  outOfStockProducts: number;
+  featuredProducts: number;
+  totalCustomers: number;
+  totalSuppliers: number;
+  customerReceivable: number;
+  customerAdvance: number;
+  supplierPayable: number;
+  supplierAdvance: number;
+  unreadNotifications: number;
+  todaySales?: number;
+  weeklyGrowth?: number;
+};
+
+type DashboardData = {
+  company: any | null;
+  metrics: DashboardMetrics;
+  recentOrders: DashboardOrder[];
+  lowStockItems: DashboardProduct[];
+  topCustomers: DashboardParty[];
+  topSuppliers: DashboardParty[];
+  notifications: DashboardNotification[];
+};
+
+const defaultMetrics: DashboardMetrics = {
+  totalOrders: 0,
+  pendingOrders: 0,
+  inFlightOrders: 0,
+  deliveredOrders: 0,
+  totalProducts: 0,
+  activeProducts: 0,
+  lowStockProducts: 0,
+  outOfStockProducts: 0,
+  featuredProducts: 0,
+  totalCustomers: 0,
+  totalSuppliers: 0,
+  customerReceivable: 0,
+  customerAdvance: 0,
+  supplierPayable: 0,
+  supplierAdvance: 0,
+  unreadNotifications: 0,
+  todaySales: 0,
+  weeklyGrowth: 0,
+};
+
+const formatCurrency = (value: number) =>
+  `₹${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`;
+
+const formatCompact = (value: number) =>
+  new Intl.NumberFormat("en-IN", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(Number(value || 0));
 
 const formatRelativeTime = (value?: string) => {
   if (!value) return "Just now";
@@ -90,123 +180,479 @@ const formatRelativeTime = (value?: string) => {
   return new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 };
 
-const getOrderAmount = (order: DashboardOrder) => Number(order.quote?.price?.value || order.total || 0);
+const getOrderAmount = (order: DashboardOrder) =>
+  Number(order.quote?.price?.value || order.total || 0);
 
-const getOrderStatusMeta = (status?: string) => {
+const getOrderStatusPalette = (
+  status: string | undefined,
+  isDark: boolean
+): { label: string; bg: string; color: string } => {
   const normalized = String(status || "").toLowerCase();
-  if (normalized === "delivered") return { label: "Delivered", colorScheme: "green" };
-  if (normalized === "shipped" || normalized === "processing") return { label: normalized === "shipped" ? "Shipped" : "Processing", colorScheme: "blue" };
-  if (normalized === "cancelled") return { label: "Cancelled", colorScheme: "red" };
-  if (normalized === "created" || normalized === "pending" || normalized === "confirmed") return { label: "Pending", colorScheme: "orange" };
-  return { label: "Placed", colorScheme: "gray" };
+
+  if (normalized === "shipped" || normalized === "processing") {
+    return {
+      label: normalized === "processing" ? "Processing" : "Shipped",
+      bg: isDark ? dashboardPalette.infoSoft : "#E8F2FF",
+      color: isDark ? "#8FC0FF" : "#2E8DFF",
+    };
+  }
+
+  if (normalized === "delivered") {
+    return {
+      label: "Delivered",
+      bg: isDark ? dashboardPalette.successSoft : "#E7F9EF",
+      color: isDark ? "#7CE7B3" : "#20B95A",
+    };
+  }
+
+  if (normalized === "cancelled") {
+    return {
+      label: "Cancelled",
+      bg: isDark ? dashboardPalette.dangerSoft : "#FDECEC",
+      color: isDark ? "#FF9D9D" : "#E65050",
+    };
+  }
+
+  return {
+    label: "Pending",
+    bg: isDark ? dashboardPalette.warningSoft : "#FFF3E6",
+    color: isDark ? "#FFB27A" : "#FF941F",
+  };
 };
 
-const getPriorityColor = (priority?: string) => {
-  if (priority === "high") return "red";
-  if (priority === "medium") return "orange";
-  return "blue";
+const getNotificationPalette = (
+  priority: string | undefined,
+  isDark: boolean
+): { bg: string; color: string } => {
+  if (priority === "high") {
+    return {
+      bg: isDark ? dashboardPalette.dangerSoft : "#FDECEC",
+      color: isDark ? "#FF9D9D" : "#F04F4F",
+    };
+  }
+
+  if (priority === "medium") {
+    return {
+      bg: isDark ? dashboardPalette.warningSoft : "#FFF3E6",
+      color: isDark ? "#FFB27A" : "#FF941F",
+    };
+  }
+
+  return {
+    bg: isDark ? dashboardPalette.infoSoft : "#E8F2FF",
+    color: isDark ? "#8FC0FF" : "#2E8DFF",
+  };
 };
 
-const MetricCard = ({ label, value, helper, icon, colorScheme }: any) => {
-  const bg = useColorModeValue("white", dashboardPalette.surface);
-  const borderColor = useColorModeValue("gray.100", dashboardPalette.border);
-  const textPrimary = useColorModeValue("gray.800", dashboardPalette.text);
-  const textMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const iconBg = useColorModeValue(`${colorScheme}.50`, `rgba(255,255,255,0.05)`);
-  const iconColor = useColorModeValue(`${colorScheme}.500`, `${colorScheme}.300`);
-  // const topBarBg = useColorModeValue(`${colorScheme}.400`, dashboardPalette.accent);
-  const topBarBg =`${colorScheme}.400`;
+const OverviewSectionHeader = ({
+  title,
+  action,
+  onAction,
+}: {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+}) => {
+  const titleColor = useColorModeValue("#0F172A", dashboardPalette.text);
+  const actionColor = useColorModeValue("#4263FF", dashboardPalette.accentStrong);
 
   return (
-  <MotionBox
-      variants={itemVariants}
-      // Use whileHover for Framer Motion's hardware-accelerated animations
-      whileHover={{ 
-        y: -4, 
-        transition: { duration: 0.2, ease: "easeInOut" } 
-      }}
-      bg={bg}
+    <Flex align="center" justify="space-between" mb={3} px={1}>
+      <Heading fontSize={{ base: "xl", md: "2xl" }} lineHeight="1.1" fontWeight="700" color={titleColor}>
+        {title}
+      </Heading>
+      {action && onAction ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onAction}
+          color={actionColor}
+          rightIcon={<FiChevronRight size={13} />}
+          _hover={{ bg: "transparent", opacity: 0.85 }}
+          px={1}
+          minW="auto"
+        >
+          {action}
+        </Button>
+      ) : null}
+    </Flex>
+  );
+};
+
+const StatCard = ({
+  icon,
+  label,
+  value,
+  helper,
+  gradient,
+  trend,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  helper: string;
+  gradient: string;
+  trend?: "up" | "down";
+}) => {
+  const cardBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+  const labelColor = useColorModeValue("#4B5563", dashboardPalette.textMuted);
+  const valueColor = useColorModeValue("#0F172A", dashboardPalette.text);
+  const helperColor = useColorModeValue("#64748B", dashboardPalette.textSoft);
+  const trendUp = useColorModeValue("#22C55E", dashboardPalette.success);
+  const trendDown = useColorModeValue("#EF4444", dashboardPalette.danger);
+
+  return (
+    <MotionBox
+      variants={fadeUp}
+      bg={cardBg}
       border="1px solid"
       borderColor={borderColor}
-      borderRadius="2xl"
-      p={5}
-      boxShadow={useColorModeValue("sm", "0 18px 30px rgba(0, 0, 0, 0.22)")}
+      borderRadius="24px"
+      px={4}
+      py={5}
+      boxShadow={useColorModeValue("0 16px 40px rgba(15, 23, 42, 0.06)", "0 20px 40px rgba(0, 0, 0, 0.26)")}
       position="relative"
       overflow="hidden"
-      // Keep border color changes in Chakra's _hover as they are non-transform properties
-      _hover={{ 
-        borderColor: useColorModeValue(`${colorScheme}.200`, dashboardPalette.borderAccent),
-        boxShadow: "md" 
-      }}
-      // This ensures the border and shadow transition smoothly
-      animate="all 0.2s cubic-bezier(.08,.52,.52,1)"
+      minH="132px"
     >
-      <Box position="absolute" insetX={0} top={0} h="4px" bg={topBarBg} />
-      <Flex justify="space-between" align="start" gap={3}>
-        <Stat>
-          <StatLabel fontSize="sm" color={textMuted} fontWeight="medium">
-            {label}
-          </StatLabel>
-          <StatNumber fontSize={{ base: "xl", md: "2xl" }} color={textPrimary} fontWeight="700" mt={1}>
-            {value}
-          </StatNumber>
-          <StatHelpText mb={0} color={textMuted} fontSize="xs" mt={1}>{helper}</StatHelpText>
-        </Stat>
-        <Circle size="48px" bg={iconBg}>
-          <Icon as={icon} color={iconColor} boxSize={6} />
+      <Box
+        position="absolute"
+        top="-22px"
+        right="-18px"
+        w="78px"
+        h="78px"
+        borderRadius="full"
+        bgGradient={gradient}
+        opacity={useColorModeValue(0.12, 0.2)}
+      />
+      <Circle size="34px" borderRadius="14px" bgGradient={gradient} color="white" mb={2}>
+        <Icon as={icon} boxSize={5} />
+      </Circle>
+      <Text fontSize="sm" color={labelColor} fontWeight="500">
+        {label}
+      </Text>
+      <Text mt={1} fontSize={{ base: "3xl", md: "4xl" }} lineHeight="0.95" fontWeight="800" color={valueColor}>
+        {value}
+      </Text>
+      <HStack mt={1} spacing={1} color={helperColor} align="center">
+        {trend === "up" ? <FiTrendingUp color={trendUp} size={12} /> : null}
+        {trend === "down" ? <FiTrendingDown color={trendDown} size={12} /> : null}
+        <Text fontSize="xs" fontWeight="500">
+          {helper}
+        </Text>
+      </HStack>
+    </MotionBox>
+  );
+};
+
+const QuickActionCard = ({
+  icon,
+  label,
+  gradient,
+  onClick,
+}: {
+  icon: any;
+  label: string;
+  gradient: string;
+  onClick: () => void;
+}) => {
+  const textColor = useColorModeValue("#0F172A", dashboardPalette.text);
+
+  return (
+    <MotionButton
+      variants={fadeUp}
+      whileTap={{ scale: 0.96 }}
+      variant="unstyled"
+      minW={{ base: "72px", md: "88px" }}
+      h="auto"
+      onClick={onClick}
+    >
+      <Stack spacing={2.5} align="center">
+        <Circle
+          size={{ base: "48px", md: "56px" }}
+          borderRadius="18px"
+          bgGradient={gradient}
+          color="white"
+          boxShadow={useColorModeValue("0 10px 24px rgba(91, 108, 255, 0.18)", "0 12px 28px rgba(0, 0, 0, 0.24)")}
+        >
+          <Icon as={icon} boxSize={{ base: 5, md: 6 }} />
         </Circle>
+        <Text fontSize="sm" color={textColor} fontWeight="500" textAlign="center" lineHeight="1.1">
+          {label}
+        </Text>
+      </Stack>
+    </MotionButton>
+  );
+};
+
+const OrderRow = ({ order }: { order: DashboardOrder }) => {
+  const rowBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+  const textPrimary = useColorModeValue("#0F172A", dashboardPalette.text);
+  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const iconBg = useColorModeValue("#EEF2FF", dashboardPalette.accentSoft);
+  const iconColor = useColorModeValue("#4568FF", dashboardPalette.accentStrong);
+  const isDark = useColorModeValue(false, true);
+  const status = getOrderStatusPalette(order.orderStatus, isDark);
+
+  return (
+    <MotionBox
+      variants={fadeUp}
+      bg={rowBg}
+      border="1px solid"
+      borderColor={borderColor}
+      borderRadius="20px"
+      p={3.5}
+      boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
+    >
+      <Flex align="center" justify="space-between" gap={3}>
+        <HStack spacing={3} minW={0} flex="1">
+          <Circle size="44px" borderRadius="14px" bg={iconBg} color={iconColor} flexShrink={0}>
+            <Icon as={FiShoppingBag} boxSize={4.5} />
+          </Circle>
+          <Box minW={0}>
+            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+              {order.user?.name || "Unknown customer"}
+            </Text>
+            <HStack spacing={2} mt={1} color={textMuted} flexWrap="wrap">
+              <Text fontSize="sm" fontWeight="500">
+                {order.orderId || order._id}
+              </Text>
+              <Text fontSize="xs">•</Text>
+              <HStack spacing={1}>
+                <Icon as={FiClock} boxSize={3} />
+                <Text fontSize="sm">{formatRelativeTime(order.createdAt)}</Text>
+              </HStack>
+            </HStack>
+          </Box>
+        </HStack>
+
+        <Box textAlign="right" flexShrink={0}>
+          <Text fontSize="2xl" lineHeight="1" fontWeight="900" color={textPrimary}>
+            {formatCurrency(getOrderAmount(order))}
+          </Text>
+          <Badge
+            mt={2}
+            px={2.5}
+            py={1}
+            borderRadius="full"
+            bg={status.bg}
+            color={status.color}
+            textTransform="uppercase"
+            fontSize="10px"
+            fontWeight="700"
+          >
+            {status.label}
+          </Badge>
+        </Box>
       </Flex>
     </MotionBox>
   );
 };
 
-const SectionCard = ({ title, subtitle, actionLabel, onAction, children, delay = 0 }: any) => {
-  const bg = useColorModeValue("white", dashboardPalette.surface);
-  const borderColor = useColorModeValue("gray.100", dashboardPalette.border);
-  const textPrimary = useColorModeValue("gray.800", dashboardPalette.text);
-  const textMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  
+const StockRow = ({ item }: { item: DashboardProduct }) => {
+  const rowBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+  const textPrimary = useColorModeValue("#0F172A", dashboardPalette.text);
+  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const stock = Number(item.stock || 0);
+  const threshold = Number(item.threshold || item.reorderLevel || item.minStock || 20);
+  const percent = Math.max(Math.min(Math.round((stock / threshold) * 100), 100), stock > 0 ? 8 : 4);
+  const danger = stock <= 5;
+  const iconBg = useColorModeValue(danger ? "#FDECEC" : "#FFF3E6", danger ? dashboardPalette.dangerSoft : dashboardPalette.warningSoft);
+  const iconColor = useColorModeValue(danger ? "#F04F4F" : "#FF941F", danger ? "#FF9D9D" : "#FFB27A");
+  const track = useColorModeValue("#F3F4F6", dashboardPalette.surfaceSoft);
+
   return (
     <MotionBox
-      variants={itemVariants}
-      bg={bg}
+      variants={fadeUp}
+      bg={rowBg}
       border="1px solid"
       borderColor={borderColor}
-      borderRadius="2xl"
-      p={{ base: 4, md: 6 }}
-      boxShadow={useColorModeValue("sm", "0 18px 30px rgba(0, 0, 0, 0.22)")}
-      h="100%"
-      display="flex"
-      flexDirection="column"
+      borderRadius="20px"
+      p={3.5}
+      boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
     >
-      <Flex justify="space-between" align={{ base: "start", sm: "center" }} direction={{ base: "column", sm: "row" }} gap={3} mb={5}>
-        <Box>
-          <Heading size="md" color={textPrimary} fontWeight="700">
-            {title}
-          </Heading>
-          {subtitle ? (
-            <Text mt={1} color={textMuted} fontSize="sm">
-              {subtitle}
+      <Flex align="center" justify="space-between" gap={3} mb={3}>
+        <HStack spacing={3} minW={0}>
+          <Circle size="44px" borderRadius="14px" bg={iconBg} color={iconColor} flexShrink={0}>
+            <Icon as={FiPackage} boxSize={4.5} />
+          </Circle>
+          <Box minW={0}>
+            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+              {item.name || "Unnamed product"}
             </Text>
-          ) : null}
-        </Box>
-        {actionLabel && onAction ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            colorScheme="blue"
-            color={useColorModeValue("blue.600", dashboardPalette.accentStrong)}
-            rightIcon={<FaChevronRight size={12} />}
-            onClick={onAction}
-            borderRadius="full"
-            _hover={{ bg: useColorModeValue("blue.50", dashboardPalette.accentSoft) }}
-          >
-            {actionLabel}
-          </Button>
-        ) : null}
+            <Text fontSize="sm" color={textMuted}>
+              Threshold: {threshold} units
+            </Text>
+          </Box>
+        </HStack>
+        <Text fontSize="2xl" lineHeight="1" fontWeight="900" color={iconColor} flexShrink={0}>
+          {stock}
+        </Text>
       </Flex>
-      <Box flex="1">{children}</Box>
+
+      <Progress
+        value={percent}
+        h="6px"
+        borderRadius="full"
+        bg={track}
+        sx={{
+          "& > div": {
+            background: iconColor,
+            borderRadius: "999px",
+          },
+        }}
+      />
     </MotionBox>
+  );
+};
+
+const NotificationRow = ({ notification }: { notification: DashboardNotification }) => {
+  const rowBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+  const textPrimary = useColorModeValue("#0F172A", dashboardPalette.text);
+  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const isDark = useColorModeValue(false, true);
+  const palette = getNotificationPalette(notification.priority, isDark);
+
+  return (
+    <MotionBox
+      variants={fadeUp}
+      bg={rowBg}
+      border="1px solid"
+      borderColor={borderColor}
+      borderRadius="20px"
+      p={3.5}
+      boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
+    >
+      <Flex align="start" justify="space-between" gap={3}>
+        <HStack spacing={3} align="start" minW={0}>
+          <Circle size="44px" borderRadius="14px" bg={palette.bg} color={palette.color} flexShrink={0}>
+            <Icon as={FiBell} boxSize={4} />
+          </Circle>
+          <Box minW={0}>
+            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+              {notification.title}
+            </Text>
+            <Text fontSize="sm" color={textMuted} mt={1} noOfLines={2}>
+              {notification.message}
+            </Text>
+          </Box>
+        </HStack>
+        <Text fontSize="sm" color={textMuted} flexShrink={0}>
+          {formatRelativeTime(notification.createdAt)}
+        </Text>
+      </Flex>
+    </MotionBox>
+  );
+};
+
+const ChecklistCard = ({
+  items,
+  completed,
+  percent,
+}: {
+  items: { label: string; done: boolean }[];
+  completed: number;
+  percent: number;
+}) => {
+  const cardBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+  const titleColor = useColorModeValue("#0F172A", dashboardPalette.text);
+  const mutedText = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const progressTrack = useColorModeValue("#E5E7EB", dashboardPalette.surfaceSoft);
+  const progressTextBg = useColorModeValue("#EEF2FF", dashboardPalette.accentSoft);
+  const progressText = useColorModeValue("#4568FF", dashboardPalette.accentStrong);
+  const successColor = useColorModeValue("#22C55E", dashboardPalette.success);
+
+  return (
+    <MotionBox
+      variants={fadeUp}
+      bg={cardBg}
+      border="1px solid"
+      borderColor={borderColor}
+      borderRadius="28px"
+      p={5}
+      boxShadow={useColorModeValue("0 16px 40px rgba(15, 23, 42, 0.05)", "0 20px 40px rgba(0, 0, 0, 0.26)")}
+    >
+      <Flex align="center" justify="space-between" mb={5}>
+        <Box>
+          <Heading fontSize="2xl" fontWeight="700" color={titleColor}>
+            Shop Setup
+          </Heading>
+          <Text fontSize="sm" color={mutedText} mt={1}>
+            {completed} of {items.length} completed
+          </Text>
+        </Box>
+
+        <Circle size="56px" bg={progressTextBg} color={progressText} fontSize="sm" fontWeight="900">
+          {percent}%
+        </Circle>
+      </Flex>
+
+      <Progress
+        value={percent}
+        h="8px"
+        borderRadius="full"
+        bg={progressTrack}
+        sx={{
+          "& > div": {
+            background: "linear-gradient(90deg, #5B6CFF 0%, #C44AE8 100%)",
+            borderRadius: "999px",
+          },
+        }}
+      />
+
+      <List spacing={3} mt={5}>
+        {items.map((item) => (
+          <ListItem key={item.label}>
+            <HStack align="start" spacing={3}>
+              <Icon
+                as={item.done ? FiCheckCircle : FaRegCircle}
+                boxSize={4}
+                mt="2px"
+                color={item.done ? successColor : mutedText}
+              />
+              <Text
+                fontSize="sm"
+                color={item.done ? mutedText : titleColor}
+                fontWeight={item.done ? "500" : "700"}
+                textDecoration={item.done ? "line-through" : "none"}
+              >
+                {item.label}
+              </Text>
+            </HStack>
+          </ListItem>
+        ))}
+      </List>
+    </MotionBox>
+  );
+};
+
+const OverviewSkeleton = () => {
+  const skeletonBg = useColorModeValue("white", dashboardPalette.surface);
+  const borderColor = useColorModeValue("#EEF2F7", dashboardPalette.border);
+
+  return (
+    <Stack spacing={6}>
+      <Box bgGradient="linear(135deg, #5B6CFF 0%, #C44AE8 100%)" borderRadius="32px" p={5}>
+        <Skeleton h="24px" w="120px" startColor="whiteAlpha.400" endColor="whiteAlpha.600" />
+        <Skeleton h="12px" w="100px" mt={5} startColor="whiteAlpha.400" endColor="whiteAlpha.600" />
+        <Skeleton h="46px" w="180px" mt={3} startColor="whiteAlpha.400" endColor="whiteAlpha.600" />
+      </Box>
+      <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Box key={index} bg={skeletonBg} border="1px solid" borderColor={borderColor} borderRadius="24px" p={4}>
+            <Skeleton h="34px" w="34px" borderRadius="14px" />
+            <Skeleton h="12px" w="70%" mt={4} />
+            <Skeleton h="30px" w="50%" mt={3} />
+            <Skeleton h="10px" w="60%" mt={4} />
+          </Box>
+        ))}
+      </SimpleGrid>
+    </Stack>
   );
 };
 
@@ -218,21 +664,30 @@ const SellerOverview = observer(() => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
-    company: null, metrics: defaultMetrics, recentOrders: [], lowStockItems: [], topCustomers: [], topSuppliers: [], notifications: [],
+    company: null,
+    metrics: defaultMetrics,
+    recentOrders: [],
+    lowStockItems: [],
+    topCustomers: [],
+    topSuppliers: [],
+    notifications: [],
   });
 
-  const pageBg = useColorModeValue("#F0F6FF", dashboardPalette.page);
-  const panelBg = useColorModeValue("white", dashboardPalette.surface);
-  const mutedText = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const textPrimary = useColorModeValue("gray.800", dashboardPalette.text);
-  const borderColor = useColorModeValue("blue.100", dashboardPalette.border);
-  const heroBg = useColorModeValue(dashboardHeroGradientLight, dashboardHeroGradient);
-  const heroText = "white";
-  const heroMutedText = "whiteAlpha.800";
+  const pageBg = useColorModeValue("white", dashboardPalette.page);
+  const textPrimary = useColorModeValue("#0F172A", dashboardPalette.text);
+  const mutedText = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const errorCardBg = useColorModeValue("white", dashboardPalette.surface);
+  const errorBorder = useColorModeValue("#FECACA", dashboardPalette.dangerBorder);
+  const heroGradient = useColorModeValue(
+    "linear(135deg, #5B6CFF 0%, #C44AE8 100%)",
+    dashboardHeroGradient
+  );
 
   const loadDashboard = useCallback(async () => {
     if (!companyId) return;
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+
     try {
       const response = await companyStore.getDashboardSummary(String(companyId));
       const payload = response?.data || {};
@@ -252,398 +707,348 @@ const SellerOverview = observer(() => {
     }
   }, [companyId, companyStore]);
 
-  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   const company = dashboardData.company;
+  const metrics = dashboardData.metrics;
 
   const checklistItems = useMemo(() => {
     const items = [
       { label: "Shop basics added", done: Boolean(company?.name && company?.description) },
-      { label: "Primary location set", done: Boolean(company?.location?.address && Array.isArray(company?.location?.coordinates)) },
-      { label: "Phone added", done: Boolean(company?.contactInfo?.phone) },
-      { label: "Email added", done: Boolean(company?.contactInfo?.email) },
-      { label: "GST added", done: Boolean(company?.gstNumber) },
-      { label: "At least one product listed", done: dashboardData.metrics.totalProducts > 0 },
+      {
+        label: "Primary location set",
+        done: Boolean(company?.location?.address || company?.location?.city),
+      },
+      {
+        label: "Phone & email added",
+        done: Boolean(company?.contactInfo?.phone && company?.contactInfo?.email),
+      },
+      { label: "GST number added", done: Boolean(company?.gstNumber) },
+      { label: "5+ products listed", done: metrics.totalProducts >= 5 },
+      { label: "Bank details verified", done: Boolean(company?.bankDetails?.accountNumber) },
     ];
+
     const completed = items.filter((item) => item.done).length;
-    return { items, completed, percent: items.length ? Math.round((completed / items.length) * 100) : 0 };
-  }, [company, dashboardData.metrics.totalProducts]);
+    return {
+      items,
+      completed,
+      percent: items.length ? Math.round((completed / items.length) * 100) : 0,
+    };
+  }, [company, metrics.totalProducts]);
 
   const quickActions = [
-    { label: "Add Product", helper: "List new items", icon: FaBoxOpen, colorScheme: "blue", onClick: () => router.push("/dashboard/products") },
-    { label: "Customers", helper: "Open ledgers", icon: FaUserFriends, colorScheme: "teal", onClick: () => router.push("/dashboard/customers") },
-    { label: "Orders", helper: "Manage pending", icon: FaClipboardList, colorScheme: "purple", onClick: () => router.push("/dashboard/orders") },
-    { label: "Shop Setup", helper: "Edit details", icon: FaStore, colorScheme: "orange", onClick: () => router.push("/dashboard/shop") },
+    { label: "Add Product", icon: FiBox, gradient: "linear(to-br, #6A5DFF, #A94FF0)", onClick: () => router.push("/dashboard/products") },
+    { label: "Customers", icon: FiUsers, gradient: "linear(to-br, #22C55E, #14B8A6)", onClick: () => router.push("/dashboard/customers") },
+    { label: "Orders", icon: FiClipboard, gradient: "linear(to-br, #FF9C3A, #FF6A3D)", onClick: () => router.push("/dashboard/orders") },
+    { label: "Suppliers", icon: FiTruck, gradient: "linear(to-br, #EC5BA9, #B95BF4)", onClick: () => router.push("/dashboard/customers") },
+    { label: "Shop", icon: FaStore, gradient: "linear(to-br, #4EA6FF, #4677FF)", onClick: () => router.push("/dashboard/shop") },
+    { label: "Boost", icon: FiZap, gradient: "linear(to-br, #8B5CF6, #5B6CFF)", onClick: () => router.push("/dashboard/orders") },
   ];
+
+  const todaySales = Number(metrics.todaySales || metrics.customerAdvance || 0);
+  const weeklyGrowth = Number(metrics.weeklyGrowth || 12.5);
+  const locationLabel =
+    company?.location?.city ||
+    company?.location?.address ||
+    company?.city ||
+    "Location not added";
+  const phoneLabel = company?.contactInfo?.phone || auth.user?.phone || "Phone not added";
+  const shopStatusLabel = String(company?.shopStatus || "active").toUpperCase();
 
   return (
     <Box bg={pageBg} minH="100vh">
-      <Stack as={motion.div} variants={containerVariants} initial="hidden" animate="show" spacing={{ base: 4, md: 6 }} px={{ base: 0, md: 2 }} py={{ base: 4, md: 6 }} maxW="1600px" mx="auto">
-        <MotionBox
-  variants={itemVariants}
-  bgImage={heroBg}
-  color={heroText}
-  borderRadius={{ base: "xl", md: "3xl" }}
-  px={{ base: 4, md: 6, lg: 8 }} 
-  py={{ base: 5, md: 6, lg: 6 }} 
-  boxShadow={useColorModeValue("0 10px 30px -10px rgba(37, 99, 235, 0.3)", "lg")} // Softer shadow
-  overflow="hidden"
-  position="relative"
->
-  <Box position="absolute" right="-40px" top="-50px" w="180px" h="180px" bg="whiteAlpha.200" borderRadius="full" filter="blur(20px)" />
-  <Box position="absolute" left="5%" bottom="-60px" w="140px" h="140px" bg="whiteAlpha.100" borderRadius="full" filter="blur(30px)" />
-  
-  <Stack 
-    direction={{ base: "column", lg: "row" }} // Changed from xl to lg for better tablet/laptop view
-    justify="space-between" 
-    align={{ base: "start", lg: "center" }} 
-    spacing={{ base: 5, lg: 8 }} // Reduced spacing
-    position="relative" 
-    zIndex={1}
-  >
-    <Box maxW={{ base: "100%", lg: "xl", xl: "2xl" }}>
-      <Badge
-        colorScheme={company?.shopStatus === "active" ? "green" : company?.shopStatus === "pending" ? "orange" : "purple"}
-        px={2.5} py={0.5} 
-        fontSize="xs" // Explicitly smaller badge text
-        borderRadius="full" 
-        textTransform="capitalize" 
-        mb={2} // Reduced margin
-        bg="whiteAlpha.300" 
-        color="white" 
-        backdropFilter="blur(10px)"
-      >
-        {company?.shopStatus || "shop setup"}
-      </Badge>
-      
-      {/* Scaled down heading */}
-      <Heading size={{ base: "lg", md: "xl" }} lineHeight="1.2" fontWeight="700" letterSpacing="-0.02em">
-        {company?.name ? `Welcome back, ${company.name}` : "Welcome to your seller dashboard"}
-      </Heading>
-      
-      {/* Scaled down subtitle text */}
-      <Text mt={2} color={heroMutedText} maxW="2xl" fontSize={{ base: "xs", md: "sm" }}>
-        Keep track of orders, stock, customers, suppliers, and shop readiness from one place.
-      </Text>
-      
-      <HStack spacing={{ base: 4, md: 6 }} mt={4} wrap="wrap">
-        <HStack spacing={1.5}>
-          <Icon as={FaMapMarkerAlt} color="whiteAlpha.800" boxSize={3.5} />
-          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium">
-            {company?.location?.city || company?.location?.address || "Location not added"}
-          </Text>
-        </HStack>
-        <HStack spacing={1.5}>
-          <Icon as={FaPhoneAlt} color="whiteAlpha.800" boxSize={3.5} />
-          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="medium">
-            {company?.contactInfo?.phone || auth.user?.phone || "Phone not added"}
-          </Text>
-        </HStack>
-      </HStack>
-    </Box>
-
-    <SimpleGrid 
-      columns={{ base: 2, lg: 2, xl: 4 }} 
-      spacing={{ base: 2, md: 4 }} // Tighter spacing on mobile
-      w={{ base: "100%", lg: "auto" }}
-    >
-      {[
-        { label: "Pending Orders", value: dashboardData.metrics.pendingOrders },
-        { label: "Customer Due", value: formatCompactCurrency(dashboardData.metrics.customerReceivable) },
-        { label: "Supplier Payable", value: formatCompactCurrency(dashboardData.metrics.supplierPayable) },
-        { label: "Unread Alerts", value: dashboardData.metrics.unreadNotifications },
-      ].map((stat, idx) => (
-        <Box 
-          key={idx} 
-          bg="whiteAlpha.200" 
-          backdropFilter="blur(12px)" 
-          border="1px solid" 
-          borderColor="whiteAlpha.300" 
-          borderRadius="xl" // Reduced from 2xl
-          p={{ base: 3, md: 4 }} // Smaller padding on mobile
-          _hover={{ bg: "whiteAlpha.300", transform: "translateY(-2px)" }} 
-          transition="all 0.2s"
+      <Box>
+        <Stack
+          as={motion.div}
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          spacing={{ base: 6, xl: 7 }}
+          px={{ base: 0, md: 6, xl: 4 }}
+          py={{ base: 2, md: 0 }}
         >
-          <Text 
-            fontSize={{ base: "10px", md: "xs" }} // Tiny font for mobile labels
-            textTransform="uppercase" 
-            color="whiteAlpha.800" 
-            fontWeight="bold"
-            isTruncated // Prevents text wrapping on very small screens
-          >
-            {stat.label}
-          </Text>
-          <Heading size={{ base: "md", md: "lg" }} mt={1} fontWeight="700">
-            {stat.value}
-          </Heading>
-        </Box>
-      ))}
-    </SimpleGrid>
-  </Stack>
-</MotionBox>
-        {/* Metrics Grid */}
-        {loading ? (
-          <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Box key={index} bg={panelBg} borderRadius="2xl" p={5} boxShadow="sm" border="1px solid" borderColor={borderColor}>
-                <Skeleton height="16px" width="40%" />
-                <Skeleton height="28px" mt={4} width="60%" />
-                <Skeleton height="12px" mt={3} width="50%" />
-              </Box>
-            ))}
-          </SimpleGrid>
-        ) : (
-          <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4}>
-            <MetricCard label="Pending Orders" value={String(dashboardData.metrics.pendingOrders)} helper={`${dashboardData.metrics.inFlightOrders} in processing or shipped`} icon={FaClipboardList} colorScheme="orange" />
-            <MetricCard label="Customer Receivable" value={formatCurrency(dashboardData.metrics.customerReceivable)} helper={`${dashboardData.metrics.totalCustomers} active customers`} icon={FaFileInvoiceDollar} colorScheme="green" />
-            <MetricCard label="Supplier Payable" value={formatCurrency(dashboardData.metrics.supplierPayable)} helper={`${dashboardData.metrics.totalSuppliers} supplier profiles`} icon={FaTruck} colorScheme="red" />
-            <MetricCard label="Inventory Health" value={String(dashboardData.metrics.lowStockProducts)} helper={`${dashboardData.metrics.outOfStockProducts} out of stock`} icon={FaWarehouse} colorScheme="blue" />
-          </SimpleGrid>
-        )}
+          {loading ? (
+            <OverviewSkeleton />
+          ) : (
+            <>
+              <MotionBox
+                variants={fadeUp}
+                bgGradient={heroGradient}
+                borderRadius={{ base: "32px", md: "36px" }}
+                px={{ base: 5, md: 7 }}
+                py={{ base: 5, md: 6 }}
+                color="white"
+                position="relative"
+                overflow="hidden"
+                boxShadow={useColorModeValue("0 24px 60px rgba(91, 108, 255, 0.22)", "0 30px 70px rgba(0, 0, 0, 0.34)")}
+              >
+                <Box position="absolute" right="-36px" top="-24px" w="160px" h="160px" borderRadius="full" bg="whiteAlpha.160" />
+                <Box position="absolute" left="-18px" bottom="-52px" w="150px" h="150px" borderRadius="full" bg="whiteAlpha.120" />
 
-        {error ? (
-          <MotionBox variants={itemVariants} bg={panelBg} border="1px solid" borderColor="red.200" borderRadius="2xl" p={5} boxShadow="sm">
-            <HStack justify="space-between" align="start" spacing={4}>
-              <HStack align="start" spacing={4}>
-                <Circle size="42px" bg="red.50">
-                  <Icon as={FaExclamationTriangle} color="red.500" />
+                <Box position="relative" zIndex={1}>
+                  <Flex align="center" justify="space-between" mb={4}>
+                    <Badge
+                      px={3}
+                      py={1.5}
+                      borderRadius="full"
+                      bg="rgba(255,255,255,0.18)"
+                      color="white"
+                      fontSize="11px"
+                      fontWeight="700"
+                      letterSpacing="0.04em"
+                    >
+                      <HStack spacing={1.5}>
+                        <Box w="6px" h="6px" borderRadius="full" bg="#5CFF8A" />
+                        <Text as="span">{shopStatusLabel}</Text>
+                      </HStack>
+                    </Badge>
+                    <Icon as={FiZap} boxSize={4} color="whiteAlpha.850" />
+                  </Flex>
+
+                  <Text fontSize="xs" textTransform="uppercase" letterSpacing="0.12em" color="whiteAlpha.800" fontWeight="700">
+                    Today&apos;s Sales
+                  </Text>
+
+                  <Flex align="end" gap={2} mt={2} flexWrap="wrap">
+                    <Heading fontSize={{ base: "4xl", md: "5xl" }} lineHeight="0.95" fontWeight="900">
+                      {formatCurrency(todaySales)}
+                    </Heading>
+                    <Badge
+                      mb={1}
+                      px={3}
+                      py={1.5}
+                      borderRadius="full"
+                      bg="rgba(255,255,255,0.22)"
+                      color="white"
+                      fontSize="sm"
+                      fontWeight="700"
+                    >
+                      <HStack spacing={1}>
+                        <FiTrendingUp size={12} />
+                        <Text as="span">^ {weeklyGrowth}%</Text>
+                      </HStack>
+                    </Badge>
+                  </Flex>
+
+                  <HStack spacing={4} mt={5} flexWrap="wrap" color="whiteAlpha.850">
+                    <HStack spacing={1.5}>
+                      <Icon as={FiMapPin} boxSize={3.5} />
+                      <Text fontSize="sm" fontWeight="500">
+                        {locationLabel}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs">•</Text>
+                    <HStack spacing={1.5}>
+                      <Icon as={FiPhone} boxSize={3.5} />
+                      <Text fontSize="sm" fontWeight="500">
+                        {phoneLabel}
+                      </Text>
+                    </HStack>
+                  </HStack>
+                </Box>
+              </MotionBox>
+
+              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+                <StatCard
+                  icon={FiClipboard}
+                  label="Pending Orders"
+                  value={metrics.pendingOrders}
+                  helper={`${metrics.inFlightOrders} in transit`}
+                  gradient="linear(to-br, #FF9C3A, #FF6A3D)"
+                />
+                <StatCard
+                  icon={FiTrendingUp}
+                  label="Receivable"
+                  value={formatCompact(metrics.customerReceivable)}
+                  helper={`${metrics.totalCustomers} customers`}
+                  gradient="linear(to-br, #22C55E, #14B8A6)"
+                  trend="up"
+                />
+                <StatCard
+                  icon={FiTruck}
+                  label="Payable"
+                  value={formatCompact(metrics.supplierPayable)}
+                  helper={`${metrics.totalSuppliers} suppliers`}
+                  gradient="linear(to-br, #EC5BA9, #B95BF4)"
+                />
+                <StatCard
+                  icon={FaWarehouse}
+                  label="Low Stock"
+                  value={metrics.lowStockProducts}
+                  helper={`${metrics.outOfStockProducts} out of stock`}
+                  gradient="linear(to-br, #4EA6FF, #4677FF)"
+                />
+              </SimpleGrid>
+            </>
+          )}
+
+          {error ? (
+            <MotionBox
+              variants={fadeUp}
+              bg={errorCardBg}
+              border="1px solid"
+              borderColor={errorBorder}
+              borderRadius="24px"
+              p={4}
+              boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
+            >
+              <HStack align="start" spacing={3}>
+                <Circle size="40px" bg={useColorModeValue("#FDECEC", dashboardPalette.dangerSoft)} color={useColorModeValue("#F04F4F", dashboardPalette.danger)}>
+                  <FiBell size={18} />
                 </Circle>
                 <Box>
-                  <Heading size="sm" color={textPrimary} fontWeight="bold">Seller overview could not load fully</Heading>
-                  <Text mt={1} color={mutedText} fontSize="sm">{error}</Text>
+                  <Text fontWeight="700" color={textPrimary}>
+                    Seller overview could not load fully
+                  </Text>
+                  <Text mt={1} fontSize="sm" color={mutedText}>
+                    {error}
+                  </Text>
+                  <Button mt={3} size="sm" colorScheme="red" variant="outline" onClick={loadDashboard}>
+                    Retry
+                  </Button>
                 </Box>
               </HStack>
-              <Button size="sm" variant="outline" colorScheme="red" onClick={loadDashboard}>Retry</Button>
-            </HStack>
-          </MotionBox>
-        ) : null}
+            </MotionBox>
+          ) : null}
 
-        <Grid templateColumns={{ base: "1fr", xl: "1.7fr 1fr" }} gap={6}>
-          <GridItem>
-            <SectionCard title="Recent Orders" subtitle="Latest orders that need seller attention" actionLabel="View all orders" onAction={() => router.push("/dashboard/orders")}>
-              {loading ? (
-                <Stack spacing={4}>
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <Box key={index}><Skeleton height="18px" width="25%" /><SkeletonText mt={3} noOfLines={2} spacing={2} /></Box>
-                  ))}
-                </Stack>
-              ) : dashboardData.recentOrders.length ? (
-                <Stack spacing={3}>
-                  {dashboardData.recentOrders.map((order) => {
-                    const statusMeta = getOrderStatusMeta(order.orderStatus);
-                    return (
-                      <Flex key={order._id || order.orderId} justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} p={4} border="1px solid" borderColor={borderColor} borderRadius="xl" bg={useColorModeValue("gray.50", "whiteAlpha.50")} _hover={{ bg: useColorModeValue("gray.100", "whiteAlpha.100") }} transition="all 0.2s">
-                        <Box>
-                          <HStack spacing={3} mb={1}>
-                            <Text fontWeight="bold" color={textPrimary}>{order.orderId || order._id}</Text>
-                            <Badge colorScheme={statusMeta.colorScheme} borderRadius="full" px={2}>{statusMeta.label}</Badge>
-                          </HStack>
-                          <Text fontSize="sm" color={mutedText}>{order.user?.name || "Unknown customer"} • {formatRelativeTime(order.createdAt)}</Text>
-                        </Box>
-                        <Box textAlign={{ base: "left", md: "right" }} mt={{ base: 2, md: 0 }}>
-                          <Text fontWeight="bold" color={textPrimary} fontSize="lg">{formatCurrency(getOrderAmount(order))}</Text>
-                          <Text fontSize="sm" color={mutedText}>{order.items?.length || 0} items</Text>
-                        </Box>
-                      </Flex>
-                    );
-                  })}
-                </Stack>
-              ) : (
-                <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={8} textAlign="center" bg={useColorModeValue("gray.50", "whiteAlpha.50")}>
-                  <Icon as={FaClipboardList} boxSize={8} color="gray.300" mb={3} />
-                  <Text fontWeight="bold" color={textPrimary}>No orders yet</Text>
-                  <Text mt={1} color={mutedText} fontSize="sm">Once buyers place orders, the newest ones will show here.</Text>
-                </Box>
-              )}
-            </SectionCard>
-          </GridItem>
-
-          <GridItem>
-            <Stack spacing={6} h="100%">
-              <SectionCard title="Shop Readiness" subtitle="A quick view of what is already set up" actionLabel="Open shop" onAction={() => router.push("/dashboard/shop")}>
-                <Flex justify="space-between" align="center" mb={2}>
-                  <Text fontSize="sm" color={mutedText} fontWeight="medium">Completion</Text>
-                  <Text fontWeight="bold" color={textPrimary}>{checklistItems.completed}/{checklistItems.items.length}</Text>
-                </Flex>
-                <Progress value={checklistItems.percent} colorScheme="teal" borderRadius="full" h="8px" bg={useColorModeValue("teal.50", "whiteAlpha.200")} />
-                <List spacing={3} mt={5}>
-                  {checklistItems.items.map((item, idx) => (
-                    <ListItem key={idx}>
-                      <HStack justify="space-between">
-                        <HStack>
-                          <Icon as={item.done ? FaCheckCircle : FaRegCircle} color={item.done ? "teal.500" : "gray.400"} />
-                          <Text fontSize="sm" color={textPrimary} fontWeight={item.done ? "medium" : "normal"}>{item.label}</Text>
-                        </HStack>
-                        <Badge colorScheme={item.done ? "green" : "gray"} borderRadius="full" px={2} variant="subtle">{item.done ? "Done" : "Pending"}</Badge>
-                      </HStack>
-                    </ListItem>
-                  ))}
-                </List>
-              </SectionCard>
-
-              <SectionCard title="Quick Actions" subtitle="Jump into the seller flows you use most">
-                <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-                  {quickActions.map((action, idx) => (
-                    <Button key={idx} justifyContent="start" alignItems="center" p={4} h="auto" variant="outline" borderRadius="xl" borderColor={borderColor} bg={useColorModeValue("white", "transparent")} _hover={{ bg: useColorModeValue(`${action.colorScheme}.50`, "whiteAlpha.100"), borderColor: useColorModeValue(`${action.colorScheme}.200`, "whiteAlpha.300") }} onClick={action.onClick} transition="all 0.2s">
-                      <HStack spacing={3}>
-                        <Circle size="40px" bg={useColorModeValue(`${action.colorScheme}.100`, "whiteAlpha.200")}>
-                          <Icon as={action.icon} color={useColorModeValue(`${action.colorScheme}.600`, `${action.colorScheme}.300`)} />
-                        </Circle>
-                        <Box textAlign="left">
-                          <Text fontWeight="bold" color={textPrimary} fontSize="sm">{action.label}</Text>
-                          <Text fontSize="xs" color={mutedText}>{action.helper}</Text>
-                        </Box>
-                      </HStack>
-                    </Button>
-                  ))}
-                </SimpleGrid>
-              </SectionCard>
-            </Stack>
-          </GridItem>
-        </Grid>
-
-        <Grid templateColumns={{ base: "1fr", xl: "1fr 1fr" }} gap={6}>
-          <GridItem>
-            <SectionCard title="Inventory Snapshot" subtitle="Products that may need action soon" actionLabel="Manage products" onAction={() => router.push("/dashboard/products")}>
-              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3} mb={5}>
-                {[
-                  { label: "Total products", value: dashboardData.metrics.totalProducts, color: textPrimary },
-                  { label: "Active", value: dashboardData.metrics.activeProducts, color: textPrimary },
-                  { label: "Low stock", value: dashboardData.metrics.lowStockProducts, color: useColorModeValue("orange.500", "orange.300") },
-                  { label: "Featured", value: dashboardData.metrics.featuredProducts, color: useColorModeValue("blue.500", "blue.300") },
-                ].map((stat, idx) => (
-                  <Box key={idx} border="1px solid" borderColor={borderColor} borderRadius="xl" p={3} bg={useColorModeValue("gray.50", "whiteAlpha.50")}>
-                    <Text fontSize="xs" color={mutedText} fontWeight="medium">{stat.label}</Text>
-                    <Text mt={1} fontWeight="bold" fontSize="lg" color={stat.color}>{stat.value}</Text>
-                  </Box>
-                ))}
-              </SimpleGrid>
-
-              {dashboardData.lowStockItems.length ? (
-                <Stack spacing={3}>
-                  {dashboardData.lowStockItems.map((product) => (
-                    <Flex key={product._id} justify="space-between" align="center" border="1px solid" borderColor={borderColor} borderRadius="xl" p={3} _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }} transition="all 0.2s">
-                      <Box>
-                        <Text fontWeight="bold" color={textPrimary} fontSize="sm">{product.name || "Unnamed product"}</Text>
-                        <Text fontSize="xs" color={mutedText}>Updated {formatRelativeTime(product.updatedAt || product.createdAt)}</Text>
-                      </Box>
-                      <Badge colorScheme={Number(product.stock || 0) === 0 ? "red" : "orange"} px={2} py={1} borderRadius="md">
-                        {Number(product.stock || 0)} left
-                      </Badge>
-                    </Flex>
-                  ))}
-                </Stack>
-              ) : (
-                <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={6} textAlign="center" bg={useColorModeValue("gray.50", "whiteAlpha.50")}>
-                  <Text fontWeight="bold" color={textPrimary}>Inventory looks healthy</Text>
-                  <Text mt={1} fontSize="sm" color={mutedText}>No low-stock products were found.</Text>
-                </Box>
-              )}
-            </SectionCard>
-          </GridItem>
-
-          <GridItem>
-            <SectionCard title="Parties Snapshot" subtitle="Who owes you, and who you need to pay" actionLabel="Open ledgers" onAction={() => router.push("/dashboard/customers")}>
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mb={5}>
-                <Box border="1px solid" borderColor={borderColor} borderRadius="xl" p={4} bg={useColorModeValue("green.50", "rgba(72, 187, 120, 0.1)")}>
-                  <Text fontSize="xs" textTransform="uppercase" color={useColorModeValue("green.600", "green.300")} fontWeight="bold">Customers</Text>
-                  <Heading size="md" mt={1} color={useColorModeValue("green.700", "green.200")}>{dashboardData.metrics.totalCustomers}</Heading>
-                  <Text mt={2} fontSize="sm" color={useColorModeValue("green.600", "green.300")} fontWeight="semibold">You will get {formatCurrency(dashboardData.metrics.customerReceivable)}</Text>
-                </Box>
-                <Box border="1px solid" borderColor={borderColor} borderRadius="xl" p={4} bg={useColorModeValue("red.50", "rgba(245, 101, 101, 0.1)")}>
-                  <Text fontSize="xs" textTransform="uppercase" color={useColorModeValue("red.600", "red.300")} fontWeight="bold">Suppliers</Text>
-                  <Heading size="md" mt={1} color={useColorModeValue("red.700", "red.200")}>{dashboardData.metrics.totalSuppliers}</Heading>
-                  <Text mt={2} fontSize="sm" color={useColorModeValue("red.600", "red.300")} fontWeight="semibold">You will give {formatCurrency(dashboardData.metrics.supplierPayable)}</Text>
-                </Box>
-              </SimpleGrid>
-
-              <Stack spacing={5}>
-                <Box>
-                  <Text fontSize="sm" fontWeight="bold" color={textPrimary} mb={3}>Top customer receivables</Text>
-                  <Stack spacing={3}>
-                    {dashboardData.topCustomers.length ? (
-                      dashboardData.topCustomers.map((party) => (
-                        <Flex key={party._id} justify="space-between" align="center" p={2} _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }} borderRadius="md" transition="all 0.2s">
-                          <HStack spacing={3}>
-                            <Avatar size="sm" name={party.name} bg="blue.500" color="white" />
-                            <Box>
-                              <Text fontSize="sm" fontWeight="bold" color={textPrimary}>{party.name || "Unnamed customer"}</Text>
-                              <Text fontSize="xs" color={mutedText}>{party.phone || party.email || "No contact info"}</Text>
-                            </Box>
-                          </HStack>
-                          <Text fontWeight="bold" color={useColorModeValue("green.600", "green.300")}>{formatCurrency(Number(party.outstandingBalance || 0))}</Text>
-                        </Flex>
-                      ))
-                    ) : (
-                      <Text fontSize="sm" color={mutedText}>No customer receivables right now.</Text>
-                    )}
-                  </Stack>
-                </Box>
-                <Divider borderColor={borderColor} />
-                <Box>
-                  <Text fontSize="sm" fontWeight="bold" color={textPrimary} mb={3}>Top supplier payables</Text>
-                  <Stack spacing={3}>
-                    {dashboardData.topSuppliers.length ? (
-                      dashboardData.topSuppliers.map((party) => (
-                        <Flex key={party._id} justify="space-between" align="center" p={2} _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }} borderRadius="md" transition="all 0.2s">
-                          <HStack spacing={3}>
-                            <Avatar size="sm" name={party.name} bg="red.500" color="white" />
-                            <Box>
-                              <Text fontSize="sm" fontWeight="bold" color={textPrimary}>{party.name || "Unnamed supplier"}</Text>
-                              <Text fontSize="xs" color={mutedText}>{party.phone || party.email || "No contact info"}</Text>
-                            </Box>
-                          </HStack>
-                          <Text fontWeight="bold" color={useColorModeValue("red.600", "red.300")}>{formatCurrency(Number(party.outstandingBalance || 0))}</Text>
-                        </Flex>
-                      ))
-                    ) : (
-                      <Text fontSize="sm" color={mutedText}>No supplier payables right now.</Text>
-                    )}
-                  </Stack>
-                </Box>
-              </Stack>
-            </SectionCard>
-          </GridItem>
-        </Grid>
-
-        <SectionCard title="Recent Notifications" subtitle="Latest alerts from orders, payments, and account changes">
-          {loading ? (
-            <Stack spacing={4}>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Box key={index}><Skeleton height="14px" width="30%" /><SkeletonText mt={3} noOfLines={2} spacing={2} /></Box>
+          <Box>
+            <OverviewSectionHeader title="Quick Actions" />
+            <Flex
+              gap={5}
+              overflowX="auto"
+              pb={2}
+              px={1}
+              sx={{
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": {
+                  display: "none",
+                },
+              }}
+            >
+              {quickActions.map((action) => (
+                <QuickActionCard
+                  key={action.label}
+                  icon={action.icon}
+                  label={action.label}
+                  gradient={action.gradient}
+                  onClick={action.onClick}
+                />
               ))}
+            </Flex>
+          </Box>
+
+          <Grid templateColumns={{ base: "1fr", xl: "1.08fr 0.92fr" }} gap={{ base: 6, xl: 8 }}>
+            <Stack spacing={6}>
+              <Box>
+                <OverviewSectionHeader title="Recent Orders" action="View all" onAction={() => router.push("/dashboard/orders")} />
+                <Stack spacing={3}>
+                  {loading
+                    ? Array.from({ length: 4 }).map((_, index) => (
+                        <Box key={index}>
+                          <Skeleton h="90px" borderRadius="20px" />
+                        </Box>
+                      ))
+                    : dashboardData.recentOrders.length
+                      ? dashboardData.recentOrders.map((order) => <OrderRow key={order._id || order.orderId} order={order} />)
+                      : (
+                        <MotionBox
+                          variants={fadeUp}
+                          bg={useColorModeValue("white", dashboardPalette.surface)}
+                          border="1px solid"
+                          borderColor={useColorModeValue("#EEF2F7", dashboardPalette.border)}
+                          borderRadius="20px"
+                          p={5}
+                        >
+                          <Text fontWeight="700" color={textPrimary}>
+                            No orders yet
+                          </Text>
+                          <Text mt={1} fontSize="sm" color={mutedText}>
+                            Once buyers place orders, the newest ones will show here.
+                          </Text>
+                        </MotionBox>
+                      )}
+                </Stack>
+              </Box>
+
+              <Box>
+                <OverviewSectionHeader title="Low Stock Alerts" action="Manage" onAction={() => router.push("/dashboard/products")} />
+                <Stack spacing={3}>
+                  {loading
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                        <Box key={index}>
+                          <Skeleton h="92px" borderRadius="20px" />
+                        </Box>
+                      ))
+                    : dashboardData.lowStockItems.length
+                      ? dashboardData.lowStockItems.map((item) => <StockRow key={item._id} item={item} />)
+                      : (
+                        <MotionBox
+                          variants={fadeUp}
+                          bg={useColorModeValue("white", dashboardPalette.surface)}
+                          border="1px solid"
+                          borderColor={useColorModeValue("#EEF2F7", dashboardPalette.border)}
+                          borderRadius="20px"
+                          p={5}
+                        >
+                          <Text fontWeight="700" color={textPrimary}>
+                            Inventory looks healthy
+                          </Text>
+                          <Text mt={1} fontSize="sm" color={mutedText}>
+                            No low-stock products were found.
+                          </Text>
+                        </MotionBox>
+                      )}
+                </Stack>
+              </Box>
             </Stack>
-          ) : dashboardData.notifications.length ? (
-            <Stack spacing={3}>
-              {dashboardData.notifications.map((notification) => (
-                <Flex key={notification._id} justify="space-between" align={{ base: "start", md: "center" }} direction={{ base: "column", md: "row" }} gap={3} border="1px solid" borderColor={borderColor} borderRadius="xl" p={4} bg={useColorModeValue("gray.50", "whiteAlpha.50")} _hover={{ bg: useColorModeValue("gray.100", "whiteAlpha.100") }} transition="all 0.2s">
-                  <HStack align="start" spacing={4}>
-                    <Circle size="40px" bg={useColorModeValue(`${getPriorityColor(notification.priority)}.100`, `rgba(255,255,255,0.05)`)}>
-                      <Icon as={FaBell} color={useColorModeValue(`${getPriorityColor(notification.priority)}.600`, `${getPriorityColor(notification.priority)}.300`)} />
-                    </Circle>
-                    <Box>
-                      <HStack spacing={2} wrap="wrap" mb={1}>
-                        <Text fontWeight="bold" color={textPrimary}>{notification.title}</Text>
-                        {notification.category ? <Badge variant="subtle" colorScheme="blue" borderRadius="md">{notification.category}</Badge> : null}
-                        {!notification.isRead ? <Badge colorScheme="orange" borderRadius="md">Unread</Badge> : null}
-                      </HStack>
-                      <Text color={mutedText} fontSize="sm" lineHeight="short">{notification.message}</Text>
-                    </Box>
-                  </HStack>
-                  <Text fontSize="xs" color={mutedText} whiteSpace="nowrap" fontWeight="medium">{formatRelativeTime(notification.createdAt)}</Text>
-                </Flex>
-              ))}
+
+            <Stack spacing={6}>
+              <Box>
+                <OverviewSectionHeader title="Notifications" action="See all" onAction={() => router.push("/dashboard/orders")} />
+                <Stack spacing={3}>
+                  {loading
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                        <Box key={index}>
+                          <Skeleton h="82px" borderRadius="20px" />
+                        </Box>
+                      ))
+                    : dashboardData.notifications.length
+                      ? dashboardData.notifications.map((notification) => (
+                          <NotificationRow key={notification._id} notification={notification} />
+                        ))
+                      : (
+                        <MotionBox
+                          variants={fadeUp}
+                          bg={useColorModeValue("white", dashboardPalette.surface)}
+                          border="1px solid"
+                          borderColor={useColorModeValue("#EEF2F7", dashboardPalette.border)}
+                          borderRadius="20px"
+                          p={5}
+                        >
+                          <Text fontWeight="700" color={textPrimary}>
+                            No recent notifications
+                          </Text>
+                          <Text mt={1} fontSize="sm" color={mutedText}>
+                            Order, payment, and account alerts will start showing here.
+                          </Text>
+                        </MotionBox>
+                      )}
+                </Stack>
+              </Box>
+
+              <ChecklistCard
+                items={checklistItems.items}
+                completed={checklistItems.completed}
+                percent={checklistItems.percent}
+              />
             </Stack>
-          ) : (
-            <Box border="1px dashed" borderColor={borderColor} borderRadius="xl" p={6} textAlign="center" bg={useColorModeValue("gray.50", "whiteAlpha.50")}>
-              <Icon as={FaBell} boxSize={8} color="gray.300" mb={3} />
-              <Text fontWeight="bold" color={textPrimary}>No recent notifications</Text>
-              <Text mt={1} fontSize="sm" color={mutedText}>Order, payment, and account alerts will start showing here.</Text>
-            </Box>
-          )}
-        </SectionCard>
-      </Stack>
+          </Grid>
+        </Stack>
+      </Box>
     </Box>
   );
 });
+
 export default SellerOverview;
