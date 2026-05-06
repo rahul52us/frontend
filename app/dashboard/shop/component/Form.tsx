@@ -14,7 +14,6 @@ import {
   Heading,
   HStack,
   Icon,
-  Progress,
   Text,
   useColorModeValue,
   VStack
@@ -24,9 +23,9 @@ import { observer } from "mobx-react-lite";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  FaClock,
   FaChevronLeft,
   FaChevronRight,
+  FaClock,
   FaImages,
   FaMap,
   FaMapMarkerAlt,

@@ -777,8 +777,8 @@ const SellerOverview = observer(() => {
                 variants={fadeUp}
                 bgGradient={heroGradient}
                 borderRadius={{ base: "32px", md: "36px" }}
-                px={{ base: 5, md: 7 }}
-                py={{ base: 5, md: 6 }}
+                px={{ base: 4, md: 7 }}
+                py={{ base: 4, md: 6 }}
                 color="white"
                 position="relative"
                 overflow="hidden"
@@ -788,7 +788,7 @@ const SellerOverview = observer(() => {
                 <Box position="absolute" left="-18px" bottom="-52px" w="150px" h="150px" borderRadius="full" bg="whiteAlpha.120" />
 
                 <Box position="relative" zIndex={1}>
-                  <Flex align="center" justify="space-between" mb={4}>
+                  <Flex align="center" justify="space-between" mb={{base:2,md:4}}>
                     <Badge
                       px={3}
                       py={1.5}
@@ -832,7 +832,7 @@ const SellerOverview = observer(() => {
                     </Badge>
                   </Flex>
 
-                  <HStack spacing={4} mt={5} flexWrap="wrap" color="whiteAlpha.850">
+                  <HStack spacing={4} mt={{base:3,md:5}} flexWrap="wrap" color="whiteAlpha.850">
                     <HStack spacing={1.5}>
                       <Icon as={FiMapPin} boxSize={3.5} />
                       <Text fontSize="sm" fontWeight="500">
