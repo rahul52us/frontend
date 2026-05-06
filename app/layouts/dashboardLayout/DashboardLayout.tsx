@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, Flex, HStack, Icon, IconButton, Spinner, Text, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
+import { Alert, AlertIcon, Box, Flex, HStack, Icon, IconButton, Spinner, Text, useBreakpointValue, useColorModeValue, useMediaQuery, useTheme } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -10,12 +10,12 @@ import stores from '../../store/stores';
 import HeaderLayout from './HeaderLayout/HeaderLayout';
 import SidebarLayout from './SidebarLayout/SidebarLayout';
 // import PermissionDeniedPage from '../../component/common/Loader/PermissionDeniedPage';
+import { ChevronRightIcon, CloseIcon } from '@chakra-ui/icons';
 import { FaClipboardList, FaHome, FaPlus, FaStore, FaUsers } from 'react-icons/fa';
 import PageLoader from '../../component/common/Loader/PageLoader';
 import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
 import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
 import { dashboardPalette } from './dashboardPalette';
-import { ChevronRightIcon, CloseIcon } from '@chakra-ui/icons';
 
 const MainContainer = styled.div<{ $isMobile: boolean; $bgPattern: string }>`
   display: flex;
@@ -198,7 +198,7 @@ const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
               color={item.active ? activeColor : mutedColor}
               transition="color 0.18s ease"
             >
-              <Icon as={item.icon} boxSize={item.active ? 5.5 : 5} />
+              <Icon as={item.icon} boxSize={5} />
               <Text fontSize="10px" fontWeight={item.active ? '800' : '600'}>
                 {item.label}
               </Text>
@@ -221,7 +221,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
 
   const [sizeStatus] = useMediaQuery(`(max-width: ${theme.breakpoints.xl})`);
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
-  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const sidebarRef = useRef<any>(null);
   const normalizedRoles = Array.isArray(user?.role)
     ? user.role.filter(Boolean)
     : [user?.role].filter(Boolean);
@@ -276,6 +276,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
 
   const [isMounted, setIsMounted] = useState(false);
   const [runtimeTopInset, setRuntimeTopInset] = useState(0);
+  const [dismissedBannerKey, setDismissedBannerKey] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -310,6 +311,12 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isCallapse, openDashSidebarFun]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedKey = window.localStorage.getItem('dismissedShopStatusBannerKey');
+    setDismissedBannerKey(storedKey);
+  }, []);
 
   if (!isMounted) {
     return (
@@ -376,7 +383,41 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
         return null;
     }
   })();
+  const shopStatusBannerKey = shopStatusBanner
+    ? JSON.stringify({
+        reviewStatus: reviewStatus || null,
+        shopStatus: shopStatus || null,
+        reviewRemarks: reviewRemarks || '',
+      })
+    : null;
   const shouldShowLayoutShopBanner = !pathname?.startsWith('/dashboard/shop');
+
+  const closeShopStatusBanner = () => {
+    if (!shopStatusBannerKey || typeof window === 'undefined') return;
+    window.localStorage.setItem('dismissedShopStatusBannerKey', shopStatusBannerKey);
+    setDismissedBannerKey(shopStatusBannerKey);
+  };
+
+  const shouldRenderShopStatusBanner =
+    Boolean(shopStatusBanner) &&
+    shouldShowLayoutShopBanner &&
+    dismissedBannerKey !== shopStatusBannerKey;
+  const isErrorBanner = shopStatusBanner?.status === 'error';
+  const shopBannerBg = useColorModeValue("white", dashboardPalette.surfaceAlt || "gray.800");
+  const shopBannerBorder = useColorModeValue(
+    isErrorBanner ? "red.100" : "orange.200",
+    isErrorBanner ? "rgba(248, 113, 113, 0.15)" : "rgba(234, 88, 12, 0.15)"
+  );
+  const shopBannerShadow = useColorModeValue(
+    "0 4px 12px rgba(0, 0, 0, 0.02)",
+    "0 8px 24px rgba(0, 0, 0, 0.2)"
+  );
+  const shopBannerGlowOpacity = useColorModeValue(0.15, 0.1);
+  const shopBannerIconBg = useColorModeValue(
+    isErrorBanner ? "red.50" : "orange.50",
+    isErrorBanner ? "rgba(248, 113, 113, 0.1)" : "rgba(234, 88, 12, 0.1)"
+  );
+  const shopBannerDescriptionColor = useColorModeValue("gray.600", "gray.400");
 
   return user ? (
     <Box bg={pageBg}>
@@ -415,31 +456,23 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   $bgContent={bgContent}
   $hasMobileBottomNav={showMobileSellerNav}
 >
-  {shopStatusBanner && shouldShowLayoutShopBanner ? (
+  {shouldRenderShopStatusBanner ? (
     <Alert
       status={shopStatusBanner.status}
-      variant="unstyled" // Strips default bulky styling
+      variant="unstyled"
       mb={2}
       display="flex"
       flexDirection="row"
       alignItems="center"
-      bg={useColorModeValue("white", dashboardPalette?.surfaceAlt || "gray.800")}
+      bg={shopBannerBg}
       border="1px solid"
-      borderColor={
-        shopStatusBanner.status === "error"
-          ? useColorModeValue("red.100", "rgba(248, 113, 113, 0.15)")
-          : useColorModeValue("orange.200", "rgba(234, 88, 12, 0.15)")
-      }
+      borderColor={shopBannerBorder}
       borderRadius={{ base: "xl", md: "2xl" }}
       p={{ base: 2, md: 4 }}
-      boxShadow={useColorModeValue(
-        "0 4px 12px rgba(0, 0, 0, 0.02)",
-        "0 8px 24px rgba(0, 0, 0, 0.2)"
-      )}
+      boxShadow={shopBannerShadow}
       position="relative"
       overflow="hidden"
     >
-      {/* Decorative subtle background glow */}
       <Box
         position="absolute"
         top="-20px"
@@ -448,29 +481,23 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
         h="80px"
         bg={shopStatusBanner.status === "error" ? "red.400" : "orange.400"}
         filter="blur(40px)"
-        opacity={useColorModeValue(0.15, 0.1)}
+        opacity={shopBannerGlowOpacity}
         zIndex={0}
       />
 
       <Flex w="full" align="center" gap={{ base: 3, md: 4 }} zIndex={1}>
-        {/* Modern Icon Container */}
         <Flex
           justify="center"
           align="center"
           w={{ base: "36px", md: "44px" }}
           h={{ base: "36px", md: "44px" }}
           borderRadius="full"
-          bg={
-            shopStatusBanner.status === "error"
-              ? useColorModeValue("red.50", "rgba(248, 113, 113, 0.1)")
-              : useColorModeValue("orange.50", "rgba(234, 88, 12, 0.1)")
-          }
+          bg={shopBannerIconBg}
           flexShrink={0}
         >
           <AlertIcon w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} m={0} />
         </Flex>
 
-        {/* Text Content */}
         <Box flex="1" minW={0}>
           <Text
             fontWeight="700"
@@ -483,24 +510,33 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
           </Text>
           <Text
             fontSize={{ base: "xs", md: "sm" }}
-            color={useColorModeValue("gray.600", "gray.400")}
+            color={shopBannerDescriptionColor}
             mt={0.5}
-            noOfLines={{ base: 1, md: 2 }} // Truncates on mobile to save massive space
+            noOfLines={{ base: 1, md: 2 }}
           >
             {shopStatusBanner.description}
           </Text>
         </Box>
 
-        {/* Action Indicator (Shows the user they can interact with it) */}
-        <IconButton
-          aria-label="View details"
-          icon={<ChevronRightIcon w={5} h={5} />}
-          size="sm"
-          variant="ghost"
-          colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
-          borderRadius="full"
-          flexShrink={0}
-        />
+        <HStack spacing={1} flexShrink={0}>
+          <IconButton
+            aria-label="Banner details"
+            icon={<ChevronRightIcon w={5} h={5} />}
+            size="sm"
+            variant="ghost"
+            colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
+            borderRadius="full"
+          />
+          <IconButton
+            aria-label="Dismiss status banner"
+            icon={<CloseIcon boxSize={2.5} />}
+            size="sm"
+            variant="ghost"
+            onClick={closeShopStatusBanner}
+            colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
+            borderRadius="full"
+          />
+        </HStack>
       </Flex>
     </Alert>
   ) : null}

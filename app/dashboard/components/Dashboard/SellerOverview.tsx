@@ -258,7 +258,7 @@ const OverviewSectionHeader = ({
 
   return (
     <Flex align="center" justify="space-between" mb={3} px={1}>
-      <Heading fontSize={{ base: "xl", md: "2xl" }} lineHeight="1.1" fontWeight="700" color={titleColor}>
+      <Heading fontSize={{ base: "md", md: "2xl" }} lineHeight="1.1" fontWeight="700" color={titleColor}>
         {title}
       </Heading>
       {action && onAction ? (
@@ -309,8 +309,8 @@ const StatCard = ({
       border="1px solid"
       borderColor={borderColor}
       borderRadius="24px"
-      px={4}
-      py={5}
+      px={{ base: 3, md: 5 }}
+      py={{ base: 4, md: 5 }}
       boxShadow={useColorModeValue("0 16px 40px rgba(15, 23, 42, 0.06)", "0 20px 40px rgba(0, 0, 0, 0.26)")}
       position="relative"
       overflow="hidden"
@@ -320,19 +320,19 @@ const StatCard = ({
         position="absolute"
         top="-22px"
         right="-18px"
-        w="78px"
-        h="78px"
+        w={{ base: "70px", md: "78px" }}
+        h={{ base: "70px", md: "78px" }}
         borderRadius="full"
         bgGradient={gradient}
         opacity={useColorModeValue(0.12, 0.2)}
       />
-      <Circle size="34px" borderRadius="14px" bgGradient={gradient} color="white" mb={2}>
+      <Circle size={{ base: "30px", md: "40px" }} borderRadius="14px" bgGradient={gradient} color="white" mb={2}>
         <Icon as={icon} boxSize={5} />
       </Circle>
       <Text fontSize="sm" color={labelColor} fontWeight="500">
         {label}
       </Text>
-      <Text mt={1} fontSize={{ base: "3xl", md: "4xl" }} lineHeight="0.95" fontWeight="800" color={valueColor}>
+      <Text mt={1} fontSize={{ base: "2xl", md: "4xl" }} lineHeight="0.95" fontWeight="800" color={valueColor}>
         {value}
       </Text>
       <HStack mt={1} spacing={1} color={helperColor} align="center">
@@ -529,14 +529,14 @@ const NotificationRow = ({ notification }: { notification: DashboardNotification
     >
       <Flex align="start" justify="space-between" gap={3}>
         <HStack spacing={3} align="start" minW={0}>
-          <Circle size="44px" borderRadius="14px" bg={palette.bg} color={palette.color} flexShrink={0}>
+          <Circle size={{base:"32px",md:"44px"}} borderRadius="14px" bg={palette.bg} color={palette.color} flexShrink={0}>
             <Icon as={FiBell} boxSize={4} />
           </Circle>
           <Box minW={0}>
-            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+            <Text fontSize={{md:"lg"}} fontWeight="700" color={textPrimary} noOfLines={1}>
               {notification.title}
             </Text>
-            <Text fontSize="sm" color={textMuted} mt={1} noOfLines={2}>
+            <Text fontSize="sm" color={textMuted} mt={{base: 0, md: 1}} noOfLines={2}>
               {notification.message}
             </Text>
           </Box>
@@ -579,7 +579,7 @@ const ChecklistCard = ({
     >
       <Flex align="center" justify="space-between" mb={5}>
         <Box>
-          <Heading fontSize="2xl" fontWeight="700" color={titleColor}>
+          <Heading fontSize={{base:"md",md:"2xl"}} fontWeight="700" color={titleColor}>
             Shop Setup
           </Heading>
           <Text fontSize="sm" color={mutedText} mt={1}>
@@ -811,12 +811,12 @@ const SellerOverview = observer(() => {
                     Today&apos;s Sales
                   </Text>
 
-                  <Flex align="end" gap={2} mt={2} flexWrap="wrap">
-                    <Heading fontSize={{ base: "4xl", md: "5xl" }} lineHeight="0.95" fontWeight="900">
+                  <Flex align="center" gap={2} mt={2} flexWrap="wrap">
+                    <Heading fontSize={{ base: "3xl", md: "5xl" }} lineHeight="0.95" fontWeight="800">
                       {formatCurrency(todaySales)}
                     </Heading>
                     <Badge
-                      mb={1}
+                      // mb={1}
                       px={3}
                       py={1.5}
                       borderRadius="full"
@@ -850,7 +850,7 @@ const SellerOverview = observer(() => {
                 </Box>
               </MotionBox>
 
-              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+              <SimpleGrid columns={{ base: 2, md: 4 }} spacing={{base:2,md:4}}>
                 <StatCard
                   icon={FiClipboard}
                   label="Pending Orders"
@@ -964,7 +964,7 @@ const SellerOverview = observer(() => {
                           <Text fontWeight="700" color={textPrimary}>
                             No orders yet
                           </Text>
-                          <Text mt={1} fontSize="sm" color={mutedText}>
+                          <Text mt={0.5} fontSize="xs" color={mutedText}>
                             Once buyers place orders, the newest ones will show here.
                           </Text>
                         </MotionBox>
