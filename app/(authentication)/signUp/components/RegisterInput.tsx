@@ -1,7 +1,7 @@
 "use client";
 
+import { Box, FormControl, Text, useColorModeValue } from "@chakra-ui/react";
 import React, { forwardRef, useId, useState } from "react";
-import { Box, FormControl, Text } from "@chakra-ui/react";
 
 /* ─────────────────────────────────────────────────────────────
    Types
@@ -40,7 +40,20 @@ export type RegisterInputProps = RegisterTextInputProps | RegisterTextareaProps;
 /* ─────────────────────────────────────────────────────────────
    Design tokens
 ───────────────────────────────────────────────────────────────*/
-const T = {
+type InputTokens = {
+  borderIdle: string;
+  bgIdle: string;
+  bgFocus: string;
+  textMain: string;
+  textLabel: string;
+  textMuted: string;
+  placeholder: string;
+  iconIdle: string;
+  errorColor: string;
+  errorBorder: string;
+};
+
+const LIGHT_TOKENS: InputTokens = {
   borderIdle: "#E2E8F0",
   bgIdle: "#F8FAFD",
   bgFocus: "#FFFFFF",
@@ -48,9 +61,23 @@ const T = {
   textLabel: "#4A5568",
   textMuted: "#718096",
   placeholder: "#B0BAC9",
+  iconIdle: "#B0BAC9",
   errorColor: "#E53E3E",
   errorBorder: "#FC8181",
-};
+} as const;
+
+const DARK_TOKENS: InputTokens = {
+  borderIdle: "rgba(138, 170, 200, 0.22)",
+  bgIdle: "rgba(10, 18, 32, 0.88)",
+  bgFocus: "rgba(15, 25, 41, 0.98)",
+  textMain: "#EDF2FF",
+  textLabel: "#C2D5EA",
+  textMuted: "#8AAAC8",
+  placeholder: "#6C86A4",
+  iconIdle: "#6C86A4",
+  errorColor: "#F87171",
+  errorBorder: "rgba(248, 113, 113, 0.58)",
+} as const;
 
 /* ─────────────────────────────────────────────────────────────
    Style helpers – pure inline styles, no Chakra sx overhead
@@ -62,26 +89,27 @@ const getInputStyle = (opts: {
   hasLeft: boolean;
   hasRight: boolean;
   accent: string;
+  tokens: InputTokens;
 }): React.CSSProperties => {
-  const { isFocused, hasError, hasLeft, hasRight, accent } = opts;
+  const { isFocused, hasError, hasLeft, hasRight, accent, tokens } = opts;
 
   const borderColor = hasError
-    ? T.errorBorder
+    ? tokens.errorBorder
     : isFocused
       ? accent
-      : T.borderIdle;
+      : tokens.borderIdle;
 
   const borderWidth = isFocused ? "2px" : "1.5px";
 
   const boxShadow = isFocused
-    ? `0 0 0 3px ${accent}1a, 0 1px 4px rgba(0,0,0,0.04)`
+    ? `0 0 0 3px ${accent}1f, 0 8px 24px rgba(15, 23, 42, 0.08)`
     : hasError
-      ? `0 0 0 2px ${T.errorBorder}30`
-      : "0 1px 2px rgba(0,0,0,0.03)";
+      ? `0 0 0 2px ${tokens.errorBorder}36`
+      : "none";
 
   return {
     width: "100%",
-    background: isFocused ? T.bgFocus : T.bgIdle,
+    background: isFocused ? tokens.bgFocus : tokens.bgIdle,
     border: `${borderWidth} solid ${borderColor}`,
     borderRadius: "14px",
     paddingTop: "10px",
@@ -90,7 +118,7 @@ const getInputStyle = (opts: {
     paddingRight: hasRight ? "42px" : "14px",
     fontSize: "14px",
     lineHeight: "1.55",
-    color: T.textMain,
+    color: tokens.textMain,
     outline: "none",
     transition: "border 0.18s ease, background 0.18s ease, box-shadow 0.18s ease",
     boxShadow,
@@ -107,6 +135,7 @@ const getTextareaStyle = (opts: {
   hasLeft: boolean;
   rows: number;
   accent: string;
+  tokens: InputTokens;
 }): React.CSSProperties => ({
   ...getInputStyle({ ...opts, hasRight: false }),
   resize: "none",
@@ -121,7 +150,7 @@ const getTextareaStyle = (opts: {
    (inline styles cannot target ::placeholder)
 ───────────────────────────────────────────────────────────────*/
 const PLACEHOLDER_CSS = `
-.reg-field::placeholder { color: ${T.placeholder}; }
+.reg-field::placeholder { color: var(--reg-placeholder-color); }
 `;
 
 let placeholderStyleInjected = false;
@@ -154,6 +183,7 @@ const RegisterInput = forwardRef<
 
   const uid = useId();
   const [isFocused, setIsFocused] = useState(false);
+  const tokens = useColorModeValue(LIGHT_TOKENS, DARK_TOKENS);
 
   // Inject placeholder style once on first render
   React.useEffect(ensurePlaceholderStyle, []);
@@ -173,6 +203,7 @@ const RegisterInput = forwardRef<
           hasLeft,
           rows,
           accent: accentColor,
+          tokens,
         })
       : getInputStyle({
           isFocused,
@@ -180,6 +211,7 @@ const RegisterInput = forwardRef<
           hasLeft,
           hasRight,
           accent: accentColor,
+          tokens,
         });
 
   const sharedEventProps = {
@@ -199,8 +231,8 @@ const RegisterInput = forwardRef<
   const labelColor = isFocused
     ? accentColor
     : hasError
-      ? T.errorColor
-      : T.textLabel;
+      ? tokens.errorColor
+      : tokens.textLabel;
 
   return (
     <FormControl isInvalid={hasError} w="full">
@@ -219,7 +251,7 @@ const RegisterInput = forwardRef<
       >
         {label}
         {required && (
-          <Box as="span" ml="2px" style={{ color: T.errorColor }}>
+          <Box as="span" ml="2px" style={{ color: tokens.errorColor }}>
             *
           </Box>
         )}
@@ -238,7 +270,7 @@ const RegisterInput = forwardRef<
             zIndex={1}
             pointerEvents="none"
             style={{
-              color: isFocused ? accentColor : "#B0BAC9",
+              color: isFocused ? accentColor : tokens.iconIdle,
               transition: "color 0.18s ease",
               display: "flex",
               alignItems: "center",
@@ -255,12 +287,20 @@ const RegisterInput = forwardRef<
             rows={rows || 3}
             {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
             {...sharedEventProps}
+            style={{
+              ...fieldStyle,
+              ["--reg-placeholder-color" as string]: tokens.placeholder,
+            }}
           />
         ) : (
           <input
             ref={ref as React.Ref<HTMLInputElement>}
             {...(rest as React.InputHTMLAttributes<HTMLInputElement>)}
             {...sharedEventProps}
+            style={{
+              ...fieldStyle,
+              ["--reg-placeholder-color" as string]: tokens.placeholder,
+            }}
           />
         )}
 
@@ -273,7 +313,7 @@ const RegisterInput = forwardRef<
             transform="translateY(-50%)"
             zIndex={1}
             style={{
-              color: isFocused ? accentColor : "#B0BAC9",
+              color: isFocused ? accentColor : tokens.iconIdle,
               transition: "color 0.18s ease",
               display: "flex",
               alignItems: "center",
@@ -291,7 +331,7 @@ const RegisterInput = forwardRef<
           fontSize={{ base: "11px", md: "12px" }}
           fontWeight="500"
           lineHeight="1.4"
-          style={{ color: T.errorColor }}
+          style={{ color: tokens.errorColor }}
           display="flex"
           alignItems="flex-start"
           gap="4px"
@@ -304,7 +344,7 @@ const RegisterInput = forwardRef<
           mt="5px"
           fontSize={{ base: "11px", md: "12px" }}
           lineHeight="1.4"
-          style={{ color: T.textMuted }}
+          style={{ color: tokens.textMuted }}
         >
           {hint}
         </Text>

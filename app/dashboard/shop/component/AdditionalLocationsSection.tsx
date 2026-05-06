@@ -2,21 +2,19 @@ import React from "react";
 import {
   Badge,
   Box,
-  VStack,
   Button,
-  IconButton,
-  Grid,
-  GridItem,
-  HStack,
-  Text,
   Flex,
+  HStack,
+  IconButton,
+  SimpleGrid,
+  Text,
+  VStack,
   useToast,
 } from "@chakra-ui/react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import { FaPlus, FaMinus } from "react-icons/fa";
-import { FiMapPin, FiNavigation } from "react-icons/fi";
 import { FieldArray } from "formik";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
+import { FaPlus } from "react-icons/fa";
+import { FiMap, FiMapPin, FiNavigation, FiTrash2 } from "react-icons/fi";
 import {
   FALLBACK_CENTER,
   getSelectedPoint,
@@ -25,9 +23,13 @@ import {
   mapOptions,
   parseAddressComponents,
 } from "./utils/locationPicker";
-import { MerchantSectionCard } from "./merchantTheme";
+import {
+  MerchantSectionCard,
+  MerchantTextField,
+  useMerchantTone,
+} from "./merchantTheme";
 
-const AdditionalLocationCard = ({
+const BranchCard = ({
   index,
   location,
   errors,
@@ -38,6 +40,7 @@ const AdditionalLocationCard = ({
   loadError,
 }) => {
   const toast = useToast();
+  const tone = useMerchantTone("violet");
   const coordinates = location.coordinates || ["", ""];
   const coordinateErrors = errors?.coordinates || [];
   const selectedPoint = getSelectedPoint(coordinates);
@@ -148,83 +151,76 @@ const AdditionalLocationCard = ({
 
   return (
     <Box
-      p={4}
       border="1px solid"
-      borderColor="var(--dashboard-border-strong)"
-      borderRadius="20px"
-      bg="var(--dashboard-surface-alt)"
+      borderColor={tone.border}
+      borderRadius="24px"
+      bg={tone.soft}
+      px={{ base: 4, md: 5 }}
+      py={{ base: 4, md: 5 }}
     >
-      <HStack justify="space-between" mb={4}>
-        <Text fontSize="lg" fontWeight="semibold" color="var(--dashboard-accent-strong)">
-          Location {index + 1}
-        </Text>
-        <IconButton
-          aria-label="Remove Location"
-          icon={<FaMinus />}
-          size="sm"
-          variant="ghost"
-          color="#ef6b6b"
-          _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
-          onClick={() => remove(index)}
-        />
-      </HStack>
-
       <VStack spacing={5} align="stretch">
-        <Box>
-          <Flex
-            justify="space-between"
-            align={{ base: "start", md: "center" }}
-            direction={{ base: "column", md: "row" }}
-            gap={3}
-            mb={4}
+        <Flex justify="space-between" align="center">
+          <Badge
+            px={3}
+            py={1.5}
+            borderRadius="full"
+            bg="rgba(255,255,255,0.78)"
+            color={tone.text}
+            border="1px solid"
+            borderColor={tone.border}
           >
-            <Box>
-              <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
-                Pick this branch on the map
-              </Text>
-              <Text fontSize="xs" color="var(--dashboard-text-soft)">
-                Click the map to drop a pin or use your current location.
-              </Text>
-            </Box>
-            <Button
-              leftIcon={<FiNavigation />}
-              variant="outline"
-              size="sm"
-              borderRadius="16px"
-              borderColor="var(--dashboard-border-strong)"
-              color="var(--dashboard-accent-strong)"
-              _hover={{ bg: "var(--dashboard-accent-soft)" }}
-              onClick={detectCurrentLocation}
-              isLoading={detectingLocation || geocoding}
-            >
-              Use current location
-            </Button>
-          </Flex>
+            Branch {index + 1}
+          </Badge>
+          <IconButton
+            aria-label="Remove branch"
+            icon={<FiTrash2 />}
+            variant="ghost"
+            color="var(--dashboard-danger)"
+            borderRadius="full"
+            _hover={{ bg: "rgba(239, 68, 68, 0.10)" }}
+            onClick={() => remove(index)}
+          />
+        </Flex>
 
+        <Box
+          overflow="hidden"
+          borderRadius="22px"
+          border="1px solid"
+          borderColor={tone.border}
+          bg="rgba(255,255,255,0.52)"
+        >
           <Box
-            h={{ base: "220px", md: "280px" }}
-            borderRadius="2xl"
-            overflow="hidden"
-            borderWidth="1px"
-            borderColor="var(--dashboard-border-strong)"
-            bg="var(--dashboard-surface-soft)"
+            position="relative"
+            h={{ base: "190px", md: "230px" }}
+            bg={tone.soft}
           >
-            {!GOOGLE_MAPS_API_KEY ? (
-              <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="var(--dashboard-text-muted)" textAlign="center">
-                  Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
-                </Text>
-              </Flex>
-            ) : loadError ? (
-              <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="var(--dashboard-danger, #ef6b6b)" textAlign="center">
-                  Failed to load Google Maps.
-                </Text>
-              </Flex>
-            ) : !isLoaded ? (
-              <Flex h="100%" align="center" justify="center" px={6}>
-                <Text fontSize="sm" color="var(--dashboard-text-soft)" textAlign="center">
-                  Loading map...
+            {!GOOGLE_MAPS_API_KEY || loadError || !isLoaded ? (
+              <Flex
+                h="100%"
+                direction="column"
+                align="center"
+                justify="center"
+                px={6}
+                gap={3}
+                textAlign="center"
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  h="46px"
+                  w="46px"
+                  borderRadius="full"
+                  bg="rgba(255,255,255,0.92)"
+                >
+                  <FiMap size={20} color={tone.iconColor} />
+                </Box>
+                <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
+                  {!GOOGLE_MAPS_API_KEY
+                    ? "Map picker is unavailable until the Google Maps key is configured."
+                    : loadError
+                      ? "Google Maps failed to load."
+                      : "Loading map..."}
                 </Text>
               </Flex>
             ) : (
@@ -240,144 +236,154 @@ const AdditionalLocationCard = ({
                 ) : null}
               </GoogleMap>
             )}
-          </Box>
 
-          <HStack mt={3} spacing={3} flexWrap="wrap">
-            <Badge
-              px={3}
-              py={1}
+            <Button
+              size="sm"
+              leftIcon={<FiNavigation />}
+              position="absolute"
+              bottom={3}
+              right={3}
               borderRadius="full"
-              bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : "var(--dashboard-accent-soft)"}
-              color={selectedPoint ? "var(--dashboard-success, #46c98b)" : "var(--dashboard-accent-strong)"}
+              px={4}
+              bg="rgba(255,255,255,0.95)"
+              color={tone.text}
               border="1px solid"
-              borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : "var(--dashboard-border)"}
+              borderColor="rgba(255,255,255,0.42)"
+              _hover={{ bg: "white" }}
+              _active={{ transform: "scale(0.98)" }}
+              onClick={detectCurrentLocation}
+              isLoading={detectingLocation || geocoding}
             >
-              {selectedPoint ? "Pin selected" : "Pin not selected"}
-            </Badge>
-            {selectedPoint ? (
-              <Text fontSize="sm" color="var(--dashboard-text-soft)">
-                {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
-              </Text>
-            ) : null}
-          </HStack>
+              Use my location
+            </Button>
+          </Box>
         </Box>
 
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="Address"
+        <HStack spacing={3} flexWrap="wrap">
+          <Badge
+            px={3}
+            py={1.5}
+            borderRadius="full"
+            bg={selectedPoint ? "rgba(34, 197, 94, 0.14)" : "rgba(255,255,255,0.82)"}
+            color={selectedPoint ? "var(--dashboard-success)" : tone.text}
+            border="1px solid"
+            borderColor={selectedPoint ? "rgba(34, 197, 94, 0.24)" : tone.border}
+          >
+            {selectedPoint ? "Pin selected" : "Pin not selected"}
+          </Badge>
+          {selectedPoint ? (
+            <Text fontSize="sm" color="var(--dashboard-text-soft)">
+              {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+            </Text>
+          ) : null}
+        </HStack>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <Box gridColumn={{ md: "span 2" }}>
+            <MerchantTextField
+              label="Address line"
               name={`multipleLocations[${index}].address`}
-              required
-              error={errors?.address}
+              placeholder="Street, building, landmark"
               value={location.address || ""}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].address`, e.target.value)
+              onChange={(event) =>
+                setFieldValue(`multipleLocations[${index}].address`, event.target.value)
               }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
               showError={showError}
-              label="City"
-              name={`multipleLocations[${index}].city`}
-              required
-              error={errors?.city}
-              value={location.city || ""}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].city`, e.target.value)
-              }
+              error={errors?.address}
             />
-          </GridItem>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="State"
-              name={`multipleLocations[${index}].state`}
-              required
-              error={errors?.state}
-              value={location.state || ""}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].state`, e.target.value)
-              }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="Postal Code"
-              name={`multipleLocations[${index}].postalCode`}
-              required
-              error={errors?.postalCode}
-              value={location.postalCode || ""}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].postalCode`, e.target.value)
-              }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="Country"
-              name={`multipleLocations[${index}].country`}
-              required
-              error={errors?.country}
-              value={location.country || ""}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].country`, e.target.value)
-              }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="Longitude"
-              name={`multipleLocations[${index}].coordinates[0]`}
-              required
-              error={coordinateErrors?.[0]}
-              value={longitudeValue}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].coordinates[0]`, e.target.value)
-              }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
-              showError={showError}
-              label="Latitude"
-              name={`multipleLocations[${index}].coordinates[1]`}
-              required
-              error={coordinateErrors?.[1]}
-              value={latitudeValue}
-              onChange={(e) =>
-                setFieldValue(`multipleLocations[${index}].coordinates[1]`, e.target.value)
-              }
-            />
-          </GridItem>
-        </Grid>
+          </Box>
+          <MerchantTextField
+            label="City"
+            name={`multipleLocations[${index}].city`}
+            placeholder="City"
+            value={location.city || ""}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].city`, event.target.value)
+            }
+            showError={showError}
+            error={errors?.city}
+          />
+          <MerchantTextField
+            label="State"
+            name={`multipleLocations[${index}].state`}
+            placeholder="State"
+            value={location.state || ""}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].state`, event.target.value)
+            }
+            showError={showError}
+            error={errors?.state}
+          />
+          <MerchantTextField
+            label="Postal code"
+            name={`multipleLocations[${index}].postalCode`}
+            placeholder="000000"
+            inputMode="numeric"
+            value={location.postalCode || ""}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].postalCode`, event.target.value)
+            }
+            showError={showError}
+            error={errors?.postalCode}
+          />
+          <MerchantTextField
+            label="Country"
+            name={`multipleLocations[${index}].country`}
+            placeholder="Country"
+            value={location.country || ""}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].country`, event.target.value)
+            }
+            showError={showError}
+            error={errors?.country}
+          />
+          <MerchantTextField
+            label="Latitude"
+            name={`multipleLocations[${index}].coordinates[1]`}
+            placeholder="28.6139"
+            value={latitudeValue}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].coordinates[1]`, event.target.value)
+            }
+            showError={showError}
+            error={coordinateErrors?.[1]}
+          />
+          <MerchantTextField
+            label="Longitude"
+            name={`multipleLocations[${index}].coordinates[0]`}
+            placeholder="77.2090"
+            value={longitudeValue}
+            onChange={(event) =>
+              setFieldValue(`multipleLocations[${index}].coordinates[0]`, event.target.value)
+            }
+            showError={showError}
+            error={coordinateErrors?.[0]}
+          />
+        </SimpleGrid>
       </VStack>
     </Box>
   );
 };
 
 const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }) => {
+  const tone = useMerchantTone("violet");
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   return (
     <MerchantSectionCard
-      icon={FiMapPin}
-      title="Additional Locations"
-      description="Add multiple branches or delivery points"
+      icon={FiMap}
+      title="Additional Branches"
+      description="Add other outlets or pickup points if you operate from multiple locations."
+      tint="violet"
     >
       <FieldArray name="multipleLocations">
         {({ push, remove }) => (
-          <VStack spacing={6} align="stretch">
-            {values.multipleLocations &&
-              values.multipleLocations.length > 0 &&
+          <VStack spacing={4} align="stretch">
+            {values.multipleLocations?.length ? (
               values.multipleLocations.map((location, index) => (
-                <AdditionalLocationCard
+                <BranchCard
                   key={index}
                   index={index}
                   location={location}
@@ -388,16 +394,50 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                   isLoaded={isLoaded}
                   loadError={loadError}
                 />
-              ))}
+              ))
+            ) : (
+              <Box
+                border="1px dashed"
+                borderColor={tone.border}
+                borderRadius="24px"
+                bg={tone.soft}
+                px={6}
+                py={8}
+                textAlign="center"
+              >
+                <Flex justify="center" mb={3}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    h="48px"
+                    w="48px"
+                    borderRadius="full"
+                    bg="rgba(255,255,255,0.82)"
+                  >
+                    <FiMapPin size={22} color={tone.iconColor} />
+                  </Box>
+                </Flex>
+                <Text fontSize="md" fontWeight="700" color="var(--dashboard-text)">
+                  No branches yet
+                </Text>
+                <Text mt={1} fontSize="sm" color="var(--dashboard-text-soft)">
+                  Add a branch if you have other pickup points or extra storefronts.
+                </Text>
+              </Box>
+            )}
+
             <Button
               leftIcon={<FaPlus />}
               variant="outline"
-              size="md"
-              w="fit-content"
-              borderRadius="16px"
-              borderColor="var(--dashboard-border-strong)"
-              color="var(--dashboard-accent-strong)"
-              _hover={{ bg: "var(--dashboard-accent-soft)" }}
+              borderRadius="18px"
+              borderStyle="dashed"
+              borderColor={tone.border}
+              color={tone.text}
+              w="full"
+              minH="52px"
+              bg="transparent"
+              _hover={{ bg: tone.soft }}
               onClick={() =>
                 push({
                   address: "",
@@ -409,7 +449,7 @@ const AdditionalLocationsSection = ({ values, errors, setFieldValue, showError }
                 })
               }
             >
-              Add Location
+              Add branch
             </Button>
           </VStack>
         )}

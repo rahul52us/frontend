@@ -4,6 +4,7 @@ import {
   Button,
   Flex,
   IconButton,
+  SimpleGrid,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -12,9 +13,15 @@ import { FiImage } from "react-icons/fi";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import CustomInput from "../../../component/config/component/customInput/CustomInput";
 import { removeDataByIndex } from "../../../config/utils/utils";
-import { MerchantSectionCard } from "./merchantTheme";
+import {
+  MerchantSectionCard,
+  MerchantTextField,
+  useMerchantTone,
+} from "./merchantTheme";
 
 const GallerySection = ({ values, errors, setFieldValue, showError }) => {
+  const tone = useMerchantTone("rose");
+
   const handleAddGalleryItem = () => {
     setFieldValue("gallery", [...values.gallery, { file: null, title: "" }]);
   };
@@ -34,7 +41,7 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
   const handleRemoveGalleryItem = (index) => {
     const item = values.gallery[index];
     if (item?.file && !item?.isAdd) {
-      setFieldValue("deletedFiles", (prev = []) => [...prev, item.file.name]);
+      setFieldValue("deletedFiles", [...(values.deletedFiles || []), item.file.name]);
     }
     setFieldValue("gallery", removeDataByIndex(values.gallery, index));
   };
@@ -43,82 +50,101 @@ const GallerySection = ({ values, errors, setFieldValue, showError }) => {
     <MerchantSectionCard
       icon={FiImage}
       title="Shop Gallery"
-      description="Add supporting photos for your storefront, products, or workspace."
+      description="Upload photos of your storefront, products, or workspace."
+      tint="rose"
     >
-      <VStack spacing={6} align="stretch">
-        {values?.gallery?.map((item, index) => (
-          <Flex
-            key={index}
-            gap={4}
-            p={4}
-            borderRadius="20px"
-            border="1px solid"
-            borderColor="var(--dashboard-border-strong)"
-            bg="rgba(255,255,255,0.02)"
-            wrap="wrap"
-            align="center"
+      <VStack spacing={4} align="stretch">
+        {values?.gallery?.length ? (
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            {values.gallery.map((item, index) => (
+              <Box
+                key={index}
+                border="1px solid"
+                borderColor={tone.border}
+                borderRadius="24px"
+                bg={tone.soft}
+                p={4}
+              >
+                <VStack spacing={4} align="stretch">
+                  {item.file ? (
+                    <ShowFileUploadFile
+                      files={item.file}
+                      removeFile={() => handleRemoveGalleryItem(index)}
+                      edit
+                    />
+                  ) : (
+                    <CustomInput
+                      type="file-drag"
+                      name={`gallery[${index}].file`}
+                      isMulti={false}
+                      accept="image/*"
+                      onChange={(event) => handleFileChange(index, event.target.files[0])}
+                      showError={showError}
+                      error={errors?.gallery?.[index]?.file}
+                    />
+                  )}
+
+                  <Flex align="start" gap={2}>
+                    <Box flex={1}>
+                      <MerchantTextField
+                        label="Caption"
+                        name={`gallery[${index}].title`}
+                        placeholder="Caption (optional)"
+                        value={item.title || ""}
+                        onChange={(event) => handleTitleChange(index, event.target.value)}
+                        showError={showError}
+                        error={errors?.gallery?.[index]?.title}
+                      />
+                    </Box>
+                    <IconButton
+                      aria-label="Remove image"
+                      icon={<DeleteIcon />}
+                      mt={7}
+                      borderRadius="16px"
+                      variant="ghost"
+                      color="var(--dashboard-danger)"
+                      _hover={{ bg: "rgba(239, 68, 68, 0.10)" }}
+                      onClick={() => handleRemoveGalleryItem(index)}
+                    />
+                  </Flex>
+                </VStack>
+              </Box>
+            ))}
+          </SimpleGrid>
+        ) : (
+          <Box
+            border="1px dashed"
+            borderColor={tone.border}
+            borderRadius="24px"
+            bg={tone.soft}
+            px={6}
+            py={8}
+            textAlign="center"
           >
-            <Box flex="1" minW={{ base: "100%", md: "240px" }}>
-              {item.file ? (
-                <ShowFileUploadFile
-                  files={item.file}
-                  removeFile={() => handleRemoveGalleryItem(index)}
-                  edit
-                />
-              ) : (
-                <CustomInput
-                  type="file-drag"
-                  name={`gallery[${index}].file`}
-                  isMulti={false}
-                  accept="image/*"
-                  onChange={(event) => handleFileChange(index, event.target.files[0])}
-                  showError={showError}
-                  error={errors?.gallery?.[index]?.file}
-                />
-              )}
-            </Box>
-
-            <Box flex="1" minW={{ base: "100%", md: "220px" }}>
-              <CustomInput
-                label="Image Title"
-                name={`gallery[${index}].title`}
-                placeholder="Enter image title"
-                value={item.title}
-                onChange={(event) => handleTitleChange(index, event.target.value)}
-                showError={showError}
-                error={errors?.gallery?.[index]?.title}
-              />
-            </Box>
-
-            <IconButton
-              icon={<DeleteIcon />}
-              onClick={() => handleRemoveGalleryItem(index)}
-              aria-label="Remove Image"
-              variant="ghost"
-              color="#ef6b6b"
-              _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
-            />
-          </Flex>
-        ))}
-
-        <Box>
-          <Button
-            leftIcon={<AddIcon />}
-            variant="outline"
-            borderRadius="16px"
-            borderColor="var(--dashboard-border-strong)"
-            color="var(--dashboard-accent-strong)"
-            _hover={{ bg: "var(--dashboard-accent-soft)" }}
-            onClick={handleAddGalleryItem}
-          >
-            Add Image
-          </Button>
-          {!values?.gallery?.length ? (
-            <Text mt={3} fontSize="sm" color="var(--dashboard-text-soft)">
-              Start with a few strong visuals. You can always add more later.
+            <Text fontSize="md" fontWeight="700" color="var(--dashboard-text)">
+              Start with a few strong visuals
             </Text>
-          ) : null}
-        </Box>
+            <Text mt={1} fontSize="sm" color="var(--dashboard-text-soft)">
+              Showcase your storefront, products, or workspace. You can always add more later.
+            </Text>
+          </Box>
+        )}
+
+        <Button
+          leftIcon={<AddIcon />}
+          variant="outline"
+          borderRadius="18px"
+          borderStyle="dashed"
+          borderColor={tone.border}
+          color={tone.text}
+          w="full"
+          minH="52px"
+          bg="transparent"
+          _hover={{ bg: tone.soft }}
+          onClick={handleAddGalleryItem}
+        >
+          Add another photo
+        </Button>
       </VStack>
     </MerchantSectionCard>
   );

@@ -1,18 +1,17 @@
 import React from "react";
 import {
-  Box,
-  VStack,
-  Text,
-  SimpleGrid,
-  Flex,
-  Button,
   Badge,
+  Box,
+  Button,
+  Flex,
   HStack,
+  SimpleGrid,
+  Text,
+  VStack,
   useToast,
 } from "@chakra-ui/react";
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
-import { FiNavigation } from "react-icons/fi";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
+import { FiMapPin, FiNavigation } from "react-icons/fi";
 import {
   FALLBACK_CENTER,
   getSelectedPoint,
@@ -22,10 +21,15 @@ import {
   mapOptions,
   parseAddressComponents,
 } from "./utils/locationPicker";
-import { MerchantSectionCard } from "./merchantTheme";
+import {
+  MerchantSectionCard,
+  MerchantTextField,
+  useMerchantTone,
+} from "./merchantTheme";
 
 const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
   const toast = useToast();
+  const tone = useMerchantTone("green");
   const location = values.location || {};
   const locationErrors = errors.location || {};
   const coordinates = location.coordinates || ["", ""];
@@ -199,182 +203,196 @@ const MainLocationSection = ({ values, errors, setFieldValue, showError }) => {
   }, [coordinates, isLoaded, savedAddress, setFieldValue]);
 
   return (
-    <VStack spacing={8} align="stretch">
-      <MerchantSectionCard
-        icon={FiNavigation}
-        title="Main Location"
-        description="Pick your location on the map and fine-tune the address if needed"
-      >
-        <VStack spacing={6} align="stretch">
-          <Box>
-            <Flex
-              justify="space-between"
-              align={{ base: "start", md: "center" }}
-              direction={{ base: "column", md: "row" }}
-              gap={3}
-              mb={4}
-            >
-              <Box>
-                <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
-                  Choose your shop location
-                </Text>
-                <Text fontSize="xs" color="var(--dashboard-text-soft)">
-                  Tap the map to drop a pin, just like registration.
-                </Text>
-              </Box>
-              <Button
-                leftIcon={<FiNavigation />}
-                variant="outline"
-                size="sm"
-                borderRadius="16px"
-                borderColor="var(--dashboard-border-strong)"
-                color="var(--dashboard-accent-strong)"
-                _hover={{ bg: "var(--dashboard-accent-soft)" }}
-                onClick={detectCurrentLocation}
-                isLoading={detectingLocation || geocoding}
-              >
-                Use current location
-              </Button>
-            </Flex>
-
+    <MerchantSectionCard
+      icon={FiMapPin}
+      title="Main Location"
+      description="Drop a pin so nearby buyers can find you, then fine-tune the address if needed."
+      tint="green"
+    >
+      <VStack spacing={6} align="stretch">
+        <Box
+          overflow="hidden"
+          borderRadius={{ base: "22px", md: "24px" }}
+          border="1px solid"
+          borderColor={tone.border}
+          bg={tone.soft}
+        >
+          <Box
+            position="relative"
+            h={{ base: "220px", sm: "250px", md: "300px" }}
+            bg={tone.soft}
+          >
             <Box
-              h={{ base: "240px", md: "300px" }}
-              borderRadius="2xl"
-              overflow="hidden"
-              borderWidth="1px"
-              borderColor="var(--dashboard-border-strong)"
-              bg="var(--dashboard-surface-soft)"
-            >
-              {!GOOGLE_MAPS_API_KEY ? (
-                <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="var(--dashboard-text-muted)" textAlign="center">
-                    Add `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to enable the map picker.
-                  </Text>
-                </Flex>
-              ) : loadError ? (
-                <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="var(--dashboard-danger, #ef6b6b)" textAlign="center">
-                    Failed to load Google Maps.
-                  </Text>
-                </Flex>
-              ) : !isLoaded ? (
-                <Flex h="100%" align="center" justify="center" px={6}>
-                  <Text fontSize="sm" color="var(--dashboard-text-soft)" textAlign="center">
-                    Loading map...
-                  </Text>
-                </Flex>
-              ) : (
-                <GoogleMap
-                  mapContainerStyle={mapContainerStyle}
-                  center={mapCenter}
-                  zoom={selectedPoint ? 15 : 11}
-                  options={mapOptions}
-                  onClick={handleMapClick}
-                >
-                  {selectedPoint ? (
-                    <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
-                  ) : null}
-                </GoogleMap>
-              )}
-            </Box>
+              position="absolute"
+              inset={0}
+              opacity={0.55}
+              backgroundImage="linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.24) 49%, rgba(255,255,255,0.24) 51%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.14) 49%, rgba(255,255,255,0.14) 51%, transparent 52%)"
+              backgroundSize="38px 38px"
+              pointerEvents="none"
+            />
 
-            <HStack mt={3} spacing={3} flexWrap="wrap">
-              <Badge
-                px={3}
-                py={1}
-                borderRadius="full"
-                bg={selectedPoint ? "rgba(70, 201, 139, 0.14)" : "var(--dashboard-accent-soft)"}
-                color={selectedPoint ? "var(--dashboard-success, #46c98b)" : "var(--dashboard-accent-strong)"}
-                border="1px solid"
-                borderColor={selectedPoint ? "rgba(70, 201, 139, 0.24)" : "var(--dashboard-border)"}
+            {!GOOGLE_MAPS_API_KEY || loadError || !isLoaded ? (
+              <Flex
+                h="100%"
+                direction="column"
+                align="center"
+                justify="center"
+                px={6}
+                gap={3}
+                textAlign="center"
+                position="relative"
+                zIndex={1}
               >
-                {selectedPoint ? "Pin selected" : "Pin not selected"}
-              </Badge>
-              {selectedPoint ? (
-                <Text fontSize="sm" color="var(--dashboard-text-soft)">
-                  {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  h="54px"
+                  w="54px"
+                  borderRadius="full"
+                  bg="rgba(255,255,255,0.92)"
+                >
+                  <FiMapPin size={24} color={tone.iconColor} />
+                </Box>
+                <Text fontSize="sm" fontWeight="600" color="var(--dashboard-text)">
+                  {!GOOGLE_MAPS_API_KEY
+                    ? "Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable the live map picker."
+                    : loadError
+                      ? "Google Maps failed to load. You can still fill the address manually."
+                      : "Loading map..."}
                 </Text>
-              ) : null}
-            </HStack>
-          </Box>
+              </Flex>
+            ) : (
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={mapCenter}
+                zoom={selectedPoint ? 15 : 11}
+                options={mapOptions}
+                onClick={handleMapClick}
+              >
+                {selectedPoint ? (
+                  <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
+                ) : null}
+              </GoogleMap>
+            )}
 
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <CustomInput
-              showError={showError}
-              label="Address"
+            <Button
+              size="sm"
+              leftIcon={<FiNavigation />}
+              position="absolute"
+              bottom={3}
+              right={3}
+              borderRadius="full"
+              px={4}
+              bg="rgba(255,255,255,0.95)"
+              color={tone.text}
+              border="1px solid"
+              borderColor="rgba(255,255,255,0.42)"
+              _hover={{ bg: "white" }}
+              _active={{ transform: "scale(0.98)" }}
+              onClick={detectCurrentLocation}
+              isLoading={detectingLocation || geocoding}
+              zIndex={2}
+            >
+              Use my location
+            </Button>
+          </Box>
+        </Box>
+
+        <HStack spacing={3} flexWrap="wrap">
+          <Badge
+            px={3}
+            py={1.5}
+            borderRadius="full"
+            bg={selectedPoint ? "rgba(34, 197, 94, 0.14)" : tone.soft}
+            color={selectedPoint ? "var(--dashboard-success)" : tone.text}
+            border="1px solid"
+            borderColor={selectedPoint ? "rgba(34, 197, 94, 0.24)" : tone.border}
+          >
+            {selectedPoint ? "Pin selected" : "Pin not selected"}
+          </Badge>
+          {selectedPoint ? (
+            <Text fontSize="sm" color="var(--dashboard-text-soft)">
+              {selectedPoint.lat.toFixed(6)}, {selectedPoint.lng.toFixed(6)}
+            </Text>
+          ) : null}
+        </HStack>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <Box gridColumn={{ md: "span 2" }}>
+            <MerchantTextField
+              label="Address line"
               name="location.address"
               required
-              error={locationErrors.address}
+              placeholder="Street, building, landmark"
               value={location.address || ""}
-              onChange={(e) => setFieldValue("location.address", e.target.value)}
-            />
-            <CustomInput
+              onChange={(event) => setFieldValue("location.address", event.target.value)}
               showError={showError}
-              label="City"
-              name="location.city"
-              required
-              error={locationErrors.city}
-              value={location.city || ""}
-              onChange={(e) => setFieldValue("location.city", e.target.value)}
+              error={locationErrors.address}
             />
-            <CustomInput
-              showError={showError}
-              label="State"
-              name="location.state"
-              required
-              error={locationErrors.state}
-              value={location.state || ""}
-              onChange={(e) => setFieldValue("location.state", e.target.value)}
-            />
-            <CustomInput
-              showError={showError}
-              label="Postal Code"
-              name="location.postalCode"
-              required
-              error={locationErrors.postalCode}
-              value={location.postalCode || ""}
-              onChange={(e) =>
-                setFieldValue("location.postalCode", e.target.value)
-              }
-            />
-            <CustomInput
-              showError={showError}
-              label="Country"
-              name="location.country"
-              required
-              error={locationErrors.country}
-              value={location.country || ""}
-              onChange={(e) => setFieldValue("location.country", e.target.value)}
-            />
-          </SimpleGrid>
-
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-            <CustomInput
-              showError={showError}
-              label="Longitude"
-              name="location.coordinates[0]"
-              required
-              error={coordinatesErrors[0]}
-              value={longitudeValue}
-              onChange={(e) =>
-                setFieldValue("location.coordinates[0]", e.target.value)
-              }
-            />
-            <CustomInput
-              showError={showError}
-              label="Latitude"
-              name="location.coordinates[1]"
-              required
-              error={coordinatesErrors[1]}
-              value={latitudeValue}
-              onChange={(e) =>
-                setFieldValue("location.coordinates[1]", e.target.value)
-              }
-            />
-          </SimpleGrid>
-        </VStack>
-      </MerchantSectionCard>
-    </VStack>
+          </Box>
+          <MerchantTextField
+            label="City"
+            name="location.city"
+            required
+            placeholder="City"
+            value={location.city || ""}
+            onChange={(event) => setFieldValue("location.city", event.target.value)}
+            showError={showError}
+            error={locationErrors.city}
+          />
+          <MerchantTextField
+            label="State"
+            name="location.state"
+            required
+            placeholder="State"
+            value={location.state || ""}
+            onChange={(event) => setFieldValue("location.state", event.target.value)}
+            showError={showError}
+            error={locationErrors.state}
+          />
+          <MerchantTextField
+            label="Postal code"
+            name="location.postalCode"
+            required
+            placeholder="000000"
+            inputMode="numeric"
+            value={location.postalCode || ""}
+            onChange={(event) => setFieldValue("location.postalCode", event.target.value)}
+            showError={showError}
+            error={locationErrors.postalCode}
+          />
+          <MerchantTextField
+            label="Country"
+            name="location.country"
+            required
+            placeholder="Country"
+            value={location.country || ""}
+            onChange={(event) => setFieldValue("location.country", event.target.value)}
+            showError={showError}
+            error={locationErrors.country}
+          />
+          <MerchantTextField
+            label="Latitude"
+            name="location.coordinates[1]"
+            placeholder="28.6139"
+            value={latitudeValue}
+            onChange={(event) => setFieldValue("location.coordinates[1]", event.target.value)}
+            showError={showError}
+            error={coordinatesErrors[1]}
+          />
+          <MerchantTextField
+            label="Longitude"
+            name="location.coordinates[0]"
+            placeholder="77.2090"
+            value={longitudeValue}
+            onChange={(event) => setFieldValue("location.coordinates[0]", event.target.value)}
+            showError={showError}
+            error={coordinatesErrors[0]}
+          />
+        </SimpleGrid>
+      </VStack>
+    </MerchantSectionCard>
   );
 };
 

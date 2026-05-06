@@ -44,7 +44,7 @@ const WhatsAppButton = () => {
   return (
     <Box
       position="fixed"
-      bottom={{ base: "80px", md: "40px" }} // Adjusted to 40px for standard desktop spacing
+      bottom={{ base: "140px", md: "120px" }} // Adjusted to 40px for standard desktop spacing
       right={{ base: "16px", md: "24px" }}
       zIndex={1000}
     >
@@ -74,8 +74,8 @@ const WhatsAppButton = () => {
           {/* 🔥 2. The relative container holds the animated pseudo-element */}
           <Box
             position="relative"
-            w={{ base: "50px", md: "64px" }}
-            h={{ base: "50px", md: "64px" }}
+            w={{ base: "44px", md: "64px" }}
+            h={{ base: "44px", md: "64px" }}
             display="flex"
             justifyContent="center"
             alignItems="center"

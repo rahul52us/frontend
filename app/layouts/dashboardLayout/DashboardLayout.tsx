@@ -70,7 +70,7 @@ const ContentContainer = styled.div<{
   padding: ${({ $isMobile }) =>
     $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
   padding-bottom: ${({ $isMobile, $hasMobileBottomNav }) =>
-    $isMobile && $hasMobileBottomNav ? '96px' : $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
+    $isMobile && $hasMobileBottomNav ? '60px' : $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
   width: ${({ $isMobile }) =>
     $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
   overflow-x: hidden;

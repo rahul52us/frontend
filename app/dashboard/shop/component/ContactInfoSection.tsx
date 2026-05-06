@@ -1,122 +1,131 @@
 import React from "react";
-import { Grid, GridItem, VStack } from "@chakra-ui/react";
-import { FiPhone, FiUsers } from "react-icons/fi";
-import CustomInput from "../../../component/config/component/customInput/CustomInput";
-import { MerchantSectionCard } from "./merchantTheme";
+import { Box, SimpleGrid, Text, VStack } from "@chakra-ui/react";
+import { FiPhone } from "react-icons/fi";
+import { MerchantSectionCard, MerchantTextField } from "./merchantTheme";
 
 const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
   return (
-    <VStack spacing={8} align="stretch">
-      <MerchantSectionCard
-        icon={FiPhone}
-        title="Contact Details"
-        description="Phone, email, and website details that buyers can use to reach you."
-      >
-        <VStack spacing={5}>
-          <CustomInput
-            showError={showError}
+    <MerchantSectionCard
+      icon={FiPhone}
+      title="Contact"
+      description="How buyers reach you and discover you online."
+      tint="cyan"
+    >
+      <VStack spacing={6} align="stretch">
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <MerchantTextField
             label="Phone"
             name="contactInfo.phone"
+            type="tel"
             required
-            error={errors.contactInfo?.phone}
-            value={values?.contactInfo?.phone}
+            placeholder="+91 98765 43210"
+            value={values?.contactInfo?.phone || ""}
             onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
-          />
-          <CustomInput
             showError={showError}
+            error={errors.contactInfo?.phone}
+          />
+          <MerchantTextField
             label="Email"
             name="contactInfo.email"
-            type="text"
-            error={errors?.contactInfo?.email}
-            value={values?.contactInfo?.email}
+            type="email"
+            placeholder="hello@yourshop.com"
+            value={values?.contactInfo?.email || ""}
             onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
-          />
-          <CustomInput
             showError={showError}
-            label="Website"
-            name="contactInfo.website"
-            type="url"
-            error={errors.contactInfo?.website}
-            value={values?.contactInfo?.website}
-            onChange={(event) => setFieldValue("contactInfo.website", event.target.value)}
+            error={errors?.contactInfo?.email}
           />
-        </VStack>
-      </MerchantSectionCard>
-
-      <MerchantSectionCard
-        icon={FiUsers}
-        title="Social Media"
-        description="Optional social profiles to build trust and help buyers discover you."
-      >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={5}>
-          <GridItem>
-            <CustomInput
+          <Box gridColumn={{ md: "span 2" }}>
+            <MerchantTextField
+              label="Website"
+              name="contactInfo.website"
+              type="url"
+              placeholder="https://yourshop.com"
+              value={values?.contactInfo?.website || ""}
+              onChange={(event) => setFieldValue("contactInfo.website", event.target.value)}
               showError={showError}
+              error={errors.contactInfo?.website}
+            />
+          </Box>
+        </SimpleGrid>
+
+        <Box>
+          <Text
+            mb={3}
+            fontSize="xs"
+            fontWeight="700"
+            letterSpacing="0.12em"
+            textTransform="uppercase"
+            color="var(--dashboard-text-soft)"
+          >
+            Social
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+            <MerchantTextField
               label="Facebook"
               name="contactInfo.socialMedia.facebook"
               type="url"
-              error={errors.contactInfo?.socialMedia?.facebook}
-              value={values?.contactInfo?.socialMedia?.facebook}
+              placeholder="Facebook URL"
+              value={values?.contactInfo?.socialMedia?.facebook || ""}
               onChange={(event) =>
                 setFieldValue("contactInfo.socialMedia.facebook", event.target.value)
               }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
               showError={showError}
+              error={errors.contactInfo?.socialMedia?.facebook}
+            />
+            <MerchantTextField
               label="Instagram"
               name="contactInfo.socialMedia.instagram"
               type="url"
-              error={errors.contactInfo?.socialMedia?.instagram}
-              value={values?.contactInfo?.socialMedia?.instagram}
+              placeholder="Instagram URL"
+              value={values?.contactInfo?.socialMedia?.instagram || ""}
               onChange={(event) =>
                 setFieldValue("contactInfo.socialMedia.instagram", event.target.value)
               }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
               showError={showError}
-              label="Twitter"
+              error={errors.contactInfo?.socialMedia?.instagram}
+            />
+            <MerchantTextField
+              label="X / Twitter"
               name="contactInfo.socialMedia.twitter"
               type="url"
-              error={errors.contactInfo?.socialMedia?.twitter}
-              value={values?.contactInfo?.socialMedia?.twitter}
+              placeholder="X / Twitter URL"
+              value={values?.contactInfo?.socialMedia?.twitter || ""}
               onChange={(event) =>
                 setFieldValue("contactInfo.socialMedia.twitter", event.target.value)
               }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
               showError={showError}
+              error={errors.contactInfo?.socialMedia?.twitter}
+            />
+            <MerchantTextField
               label="LinkedIn"
               name="contactInfo.socialMedia.linkedin"
               type="url"
-              error={errors.contactInfo?.socialMedia?.linkedin}
-              value={values?.contactInfo?.socialMedia?.linkedin}
+              placeholder="LinkedIn URL"
+              value={values?.contactInfo?.socialMedia?.linkedin || ""}
               onChange={(event) =>
                 setFieldValue("contactInfo.socialMedia.linkedin", event.target.value)
               }
-            />
-          </GridItem>
-          <GridItem>
-            <CustomInput
               showError={showError}
-              label="YouTube"
-              name="contactInfo.socialMedia.youtube"
-              type="url"
-              error={errors.contactInfo?.socialMedia?.youtube}
-              value={values?.contactInfo?.socialMedia?.youtube}
-              onChange={(event) =>
-                setFieldValue("contactInfo.socialMedia.youtube", event.target.value)
-              }
+              error={errors.contactInfo?.socialMedia?.linkedin}
             />
-          </GridItem>
-        </Grid>
-      </MerchantSectionCard>
-    </VStack>
+            <Box gridColumn={{ md: "span 2" }}>
+              <MerchantTextField
+                label="YouTube"
+                name="contactInfo.socialMedia.youtube"
+                type="url"
+                placeholder="YouTube URL"
+                value={values?.contactInfo?.socialMedia?.youtube || ""}
+                onChange={(event) =>
+                  setFieldValue("contactInfo.socialMedia.youtube", event.target.value)
+                }
+                showError={showError}
+                error={errors.contactInfo?.socialMedia?.youtube}
+              />
+            </Box>
+          </SimpleGrid>
+        </Box>
+      </VStack>
+    </MerchantSectionCard>
   );
 };
 

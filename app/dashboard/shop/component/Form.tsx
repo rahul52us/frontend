@@ -1,4 +1,6 @@
 "use client";
+
+import { CheckIcon } from "@chakra-ui/icons";
 import {
   Alert,
   AlertDescription,
@@ -8,15 +10,12 @@ import {
   Box,
   Button,
   Center,
-  Container,
-  Divider,
   Flex,
-  Heading,
   HStack,
   Icon,
   Text,
-  useColorModeValue,
-  VStack
+  VStack,
+  useColorModeValue
 } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import { observer } from "mobx-react-lite";
@@ -32,7 +31,6 @@ import {
   FaPhone,
   FaStore,
 } from "react-icons/fa";
-import { FiLayers } from "react-icons/fi";
 import SpinnerLoader from "../../../component/common/Loader/SpinnerLoader";
 import { getStatusType } from "../../../component/config/utils/function";
 import { normalizeGstNumber } from "../../../config/utils/gstValidation";
@@ -43,175 +41,83 @@ import AdditionalLocationsSection from "./AdditionalLocationsSection";
 import ContactInfoSection from "./ContactInfoSection";
 import GallerySection from "./GallerySection";
 import MainLocationSection from "./MainLocationSection";
-import { useMerchantFormSx } from "./merchantTheme";
+import {
+  type MerchantSectionTint,
+  useMerchantFormSx,
+  useMerchantTone,
+} from "./merchantTheme";
 import OperatingHoursSection from "./OperatingHoursSection";
-import SellerOnboardingWizard from "./SellerOnboardingWizard";
 import ShopDetailsSection from "./ShopDetailsSection";
 import { createCompanyCode } from "./utils/companyCode";
 import { createEmptyShopFormData } from "./utils/constant";
 import { validationSchema } from "./utils/validation";
 
-// Section accent colors — each step gets a unique but harmonious hue
-const SECTION_COLORS = [
-  { gradient: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)", glow: "rgba(59,130,246,0.22)", soft: "rgba(59,130,246,0.10)", text: "#60A5FA" },   // Shop Details — Blue
-  { gradient: "linear-gradient(135deg, #10B981 0%, #059669 100%)", glow: "rgba(16,185,129,0.22)", soft: "rgba(16,185,129,0.10)", text: "#34D399" },  // Main Location — Mint
-  { gradient: "linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)", glow: "rgba(139,92,246,0.22)", soft: "rgba(139,92,246,0.10)", text: "#A78BFA" }, // Additional — Violet
-  { gradient: "linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)", glow: "rgba(99,102,241,0.22)", soft: "rgba(99,102,241,0.10)",  text: "#818CF8" }, // Gallery — Indigo
-  { gradient: "linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)", glow: "rgba(6,182,212,0.22)",  soft: "rgba(6,182,212,0.10)",  text: "#22D3EE" },  // Contact — Cyan
-  { gradient: "linear-gradient(135deg, #F43F5E 0%, #E11D48 100%)", glow: "rgba(244,63,94,0.22)",  soft: "rgba(244,63,94,0.10)",  text: "#FB7185" },   // Hours — Rose
-];
-
-const SectionHeader = ({ activeSection, sections }) => {
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
-  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
-  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
-  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
-  const cPage = useColorModeValue("white", dashboardPalette.page);
-  const shellBg = useColorModeValue("white", dashboardPalette.shellElevated);
-  const currentColor = SECTION_COLORS[activeSection] || SECTION_COLORS[0];
-
-  return (
-    <Box
-      px={{ base: 5, md: 6 }}
-      py={{ base: 6, md: 7 }}
-      bg={shellBg}
-      borderRadius="28px"
-      border="1px solid"
-      borderColor={cBorder}
-      boxShadow={useColorModeValue(
-        `0 4px 24px ${currentColor.glow}`,
-        `0 28px 60px rgba(0,0,0,0.28), 0 0 0 1px ${currentColor.glow}`
-      )}
-      position="relative"
-      overflow="hidden"
-    >
-      {/* Subtle colored top accent bar */}
-      <Box
-        position="absolute"
-        insetX={0}
-        top={0}
-        h="3px"
-        bgGradient={currentColor.gradient}
-        opacity={0.8}
-      />
-      {/* Soft radial glow in corner */}
-      <Box
-        position="absolute"
-        top="-40px"
-        right="-40px"
-        w="160px"
-        h="160px"
-        borderRadius="full"
-        bg={currentColor.soft}
-        filter="blur(28px)"
-        pointerEvents="none"
-      />
-
-      <Flex
-        justify="space-between"
-        align={{ base: "start", lg: "center" }}
-        direction={{ base: "column", lg: "row" }}
-        gap={6}
-        position="relative"
-        zIndex={1}
-      >
-        <HStack spacing={4} align="center">
-          {/* Section icon with gradient background */}
-          <Box
-            w="52px"
-            h="52px"
-            borderRadius="18px"
-            bgGradient={currentColor.gradient}
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            boxShadow={`0 8px 20px ${currentColor.glow}`}
-            flexShrink={0}
-          >
-            <Icon as={sections[activeSection]?.icon || FiLayers} boxSize={6} color="white" />
-          </Box>
-          <VStack align="start" spacing={0.5}>
-            <Text
-              fontSize="10px"
-              textTransform="uppercase"
-              letterSpacing="0.32em"
-              color={cTextSoft}
-              fontWeight="700"
-            >
-              Shop Configuration · Step {activeSection + 1} of {sections.length}
-            </Text>
-            <Heading
-              fontSize={{ base: "xl", md: "2xl" }}
-              fontWeight="800"
-              lineHeight="1.1"
-              color={cText}
-              letterSpacing="-0.02em"
-            >
-              {sections[activeSection]?.title}
-            </Heading>
-            <Text fontSize="sm" color={cTextMuted} mt={0.5}>
-              Fill in the details below and click Next to continue.
-            </Text>
-          </VStack>
-        </HStack>
-
-        {/* Colorful step badge */}
-        <Badge
-          px={4}
-          py={2}
-          borderRadius="full"
-          bgGradient={currentColor.gradient}
-          color="white"
-          border="none"
-          textTransform="uppercase"
-          letterSpacing="0.14em"
-          fontSize="xs"
-          fontWeight="800"
-          alignSelf={{ base: "flex-start", lg: "center" }}
-          boxShadow={`0 4px 14px ${currentColor.glow}`}
-        >
-          Step {activeSection + 1}
-        </Badge>
-      </Flex>
-
-      {/* Step progress dots */}
-      <HStack mt={6} spacing={2} position="relative" zIndex={1}>
-        {sections.map((section, index) => {
-          const isCurrent = index === activeSection;
-          const isCompleted = index < activeSection;
-          const stepColor = SECTION_COLORS[index] || SECTION_COLORS[0];
-
-          return (
-            <Flex key={section.title} align="center" gap={2}>
-              <Box
-                w={isCurrent ? "32px" : "10px"}
-                h="10px"
-                borderRadius="full"
-                bg={
-                  isCompleted
-                    ? stepColor.gradient
-                    : isCurrent
-                      ? stepColor.gradient
-                      : useColorModeValue("gray.200", "rgba(255,255,255,0.08)")
-                }
-                bgGradient={isCurrent || isCompleted ? stepColor.gradient : undefined}
-                boxShadow={isCurrent ? `0 0 8px ${stepColor.glow}` : "none"}
-                transition="all 0.3s ease"
-                title={section.title}
-              />
-            </Flex>
-          );
-        })}
-        <Text fontSize="xs" color={cTextSoft} fontWeight="600" ml={2}>
-          {sections.filter((_, i) => i < activeSection).length} of {sections.length} done
-        </Text>
-      </HStack>
-    </Box>
-  );
+type ShopSection = {
+  id: string;
+  label: string;
+  headline: string;
+  description: string;
+  icon: any;
+  component: any;
+  tint: MerchantSectionTint;
 };
+
+const sections: ShopSection[] = [
+  {
+    id: "shop",
+    label: "Shop",
+    headline: "Set up your shop",
+    description: "Tell buyers what your business is called and what you sell.",
+    icon: FaStore,
+    component: ShopDetailsSection,
+    tint: "blue",
+  },
+  {
+    id: "location",
+    label: "Location",
+    headline: "Main Location",
+    description: "Drop a pin so nearby buyers can discover and reach your store.",
+    icon: FaMapMarkerAlt,
+    component: MainLocationSection,
+    tint: "green",
+  },
+  {
+    id: "branches",
+    label: "Branches",
+    headline: "Additional Branches",
+    description: "Add other outlets or pickup points when your shop operates in more than one place.",
+    icon: FaMap,
+    component: AdditionalLocationsSection,
+    tint: "violet",
+  },
+  {
+    id: "contact",
+    label: "Contact",
+    headline: "Contact",
+    description: "Share the best ways for buyers to reach you and discover you online.",
+    icon: FaPhone,
+    component: ContactInfoSection,
+    tint: "cyan",
+  },
+  {
+    id: "hours",
+    label: "Hours",
+    headline: "Operating Hours",
+    description: "Set when you are open and mark any closed days.",
+    icon: FaClock,
+    component: OperatingHoursSection,
+    tint: "amber",
+  },
+  {
+    id: "gallery",
+    label: "Gallery",
+    headline: "Shop Gallery",
+    description: "Upload a few visuals so buyers can quickly recognize your shop.",
+    icon: FaImages,
+    component: GallerySection,
+    tint: "rose",
+  },
+];
 
 const isFiniteCoordinate = (value: any) => {
   const numberValue = Number(value);
@@ -380,15 +286,15 @@ const sectionErrorMatchers = [
   },
   {
     index: 3,
-    matches: (errors: any) => Boolean(errors?.gallery),
-  },
-  {
-    index: 4,
     matches: (errors: any) => Boolean(errors?.contactInfo),
   },
   {
-    index: 5,
+    index: 4,
     matches: (errors: any) => Boolean(errors?.operatingHours || errors?.closedDates),
+  },
+  {
+    index: 5,
+    matches: (errors: any) => Boolean(errors?.gallery),
   },
 ];
 
@@ -462,8 +368,7 @@ const flattenErrorPaths = (errors: any, parentPath = ""): string[] => {
   return [];
 };
 
-const normalizeErrorPath = (path: string) =>
-  path.replace(/\.\d+/g, "");
+const normalizeErrorPath = (path: string) => path.replace(/\.\d+/g, "");
 
 const getFriendlyFieldLabel = (path: string) => {
   const normalized = normalizeErrorPath(path);
@@ -476,7 +381,10 @@ const getFriendlyFieldLabel = (path: string) => {
     if (locationMatch) {
       const locationNumber = Number(locationMatch[1]) + 1;
       const fieldPath = `multipleLocations.${locationMatch[2].replace(/\.\d+/g, "")}`;
-      const fieldName = fieldLabelMap[fieldPath] || fieldLabelMap[locationMatch[2].replace(/\.\d+/g, "")] || "Location Field";
+      const fieldName =
+        fieldLabelMap[fieldPath] ||
+        fieldLabelMap[locationMatch[2].replace(/\.\d+/g, "")] ||
+        "Location Field";
       return `Location ${locationNumber}: ${fieldName}`;
     }
 
@@ -499,17 +407,22 @@ const getSectionFieldLabels = (errors: any, sectionIndex: number) => {
     .filter(({ path }) => {
       switch (sectionIndex) {
         case 0:
-          return !path.startsWith("location") && !path.startsWith("multipleLocations") && !path.startsWith("gallery") && !path.startsWith("contactInfo") && !path.startsWith("operatingHours") && !path.startsWith("closedDates");
+          return !path.startsWith("location") &&
+            !path.startsWith("multipleLocations") &&
+            !path.startsWith("contactInfo") &&
+            !path.startsWith("operatingHours") &&
+            !path.startsWith("closedDates") &&
+            !path.startsWith("gallery");
         case 1:
           return path.startsWith("location");
         case 2:
           return path.startsWith("multipleLocations");
         case 3:
-          return path.startsWith("gallery");
-        case 4:
           return path.startsWith("contactInfo");
-        case 5:
+        case 4:
           return path.startsWith("operatingHours") || path.startsWith("closedDates");
+        case 5:
+          return path.startsWith("gallery");
         default:
           return false;
       }
@@ -519,29 +432,285 @@ const getSectionFieldLabels = (errors: any, sectionIndex: number) => {
   return Array.from(new Set(labels));
 };
 
+const scrollToTop = () => {
+  if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
+const ShopFormHero = ({
+  activeSection,
+  activeSectionIndex,
+  onSelect,
+}: {
+  activeSection: ShopSection;
+  activeSectionIndex: number;
+  onSelect: (index: number) => void;
+}) => {
+  const tone = useMerchantTone(activeSection.tint);
+  const bg = useColorModeValue("white", dashboardPalette.shell);
+  const borderColor = useColorModeValue("#E2E8F0", dashboardPalette.border);
+  const titleColor = useColorModeValue("#0F172A", dashboardPalette.text);
+  const mutedText = useColorModeValue("#64748B", dashboardPalette.textSoft);
+  const stepText = useColorModeValue("#475569", dashboardPalette.textMuted);
+  // const inactiveTrack = useColorModeValue("#E2E8F0", "rgba(138,170,200,0.20)");
+  const total = sections.length;
+
+  return (
+    <Box
+      as="header"
+      bg={bg}
+      rounded={'xl'}
+      borderBottom="1px solid"
+      borderColor={borderColor}
+      boxShadow={{ base: "none", md: "0 6px 20px rgba(15, 23, 42, 0.04)" }}
+    >
+      <Box px={{ base: 4, md: 4 }} py={{ base: 3, md: 4 }}>
+        <Flex align="center" justify="space-between" gap={3}>
+          <HStack spacing={2} fontSize="xs" fontWeight="600" color={stepText}>
+            <Icon as={activeSection.icon} boxSize={3.5} color={tone.text} />
+            <Text>Shop setup</Text>
+          </HStack>
+          <Badge
+            px={3}
+            py={1}
+            borderRadius="full"
+            bg={tone.soft}
+            color={tone.text}
+            border="1px solid"
+            borderColor={tone.border}
+            fontSize="11px"
+            fontWeight="700"
+            textTransform="none"
+          >
+            Step {activeSectionIndex + 1} of {total}
+          </Badge>
+        </Flex>
+
+        <Flex
+          mt={3}
+          align={{ base: "start", md: "center" }}
+          justify="space-between"
+          direction={{ base: "column", md: "row" }}
+          gap={2}
+        >
+          <Box>
+            <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color={titleColor} letterSpacing="-0.02em">
+              {activeSection.headline}
+            </Text>
+            <Text display={{ base: "none", md: "block" }} mt={0.5} fontSize="sm" color={mutedText}>
+              {activeSection.description}
+            </Text>
+          </Box>
+          <Text fontSize="xs" fontWeight="600" color={mutedText}>
+            {activeSectionIndex + 1}/{total}
+          </Text>
+        </Flex>
+
+        {/* <HStack mt={3} spacing={1.5}>
+          {sections.map((section, index) => {
+            const isActive = index === activeSectionIndex;
+            const isCompleted = index < activeSectionIndex;
+
+            return (
+              <Button
+                key={section.id}
+                variant="unstyled"
+                flex={1}
+                h="6px"
+                minW={0}
+                borderRadius="full"
+                bg={isActive || isCompleted ? tone.text : inactiveTrack}
+                opacity={isCompleted ? 0.9 : 1}
+                transition="all 0.2s ease"
+                onClick={() => onSelect(index)}
+                aria-label={`Go to step ${index + 1}: ${section.label}`}
+              />
+            );
+          })}
+        </HStack> */}
+
+        <Flex mt={3} align="center" gap={{ base: 1.5, md: 2 }} display={{base:"none",md:"flex"}}>
+          {sections.map((section, index) => {
+            const isActive = index === activeSectionIndex;
+            const isCompleted = index < activeSectionIndex;
+
+            return (
+              <Button
+                key={section.id}
+                variant="unstyled"
+                minW={0}
+                flex={1}
+                display="flex"
+                alignItems="center"
+                justifyContent={{ base: "center", md: "flex-start" }}
+                gap={2}
+                px={{ base: 0, md: 2 }}
+                py={1}
+                color={isActive ? titleColor : stepText}
+                onClick={() => onSelect(index)}
+              >
+                <Flex
+                  align="center"
+                  justify="center"
+                  h={{ base: "28px", md: "30px" }}
+                  w={{ base: "28px", md: "30px" }}
+                  borderRadius="full"
+                  bg={isActive ? tone.soft : isCompleted ? tone.soft : "transparent"}
+                  border="1px solid"
+                  borderColor={isActive || isCompleted ? tone.border : borderColor}
+                  color={isCompleted || isActive ? tone.text : mutedText}
+                  transition="all 0.2s ease"
+                  flexShrink={0}
+                >
+                  {isCompleted ? (
+                    <CheckIcon boxSize={3} />
+                  ) : (
+                    <Icon as={section.icon} boxSize={3} />
+                  )}
+                </Flex>
+                <Text display={{ base: "none", lg: "block" }} fontSize="xs" fontWeight="600" noOfLines={1}>
+                  {section.label}
+                </Text>
+              </Button>
+            );
+          })}
+        </Flex>
+      </Box>
+    </Box>
+  );
+};
+
+const StickyActionBar = ({
+  activeSection,
+  activeSectionIndex,
+  isLastStep,
+  isSubmitting,
+  onBack,
+  onNext,
+  onSubmit,
+  isUpdateMode,
+}: {
+  activeSection: ShopSection;
+  activeSectionIndex: number;
+  isLastStep: boolean;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onNext: () => void;
+  onSubmit: () => void;
+  isUpdateMode: boolean;
+}) => {
+  const tone = useMerchantTone(activeSection.tint);
+  const borderColor = useColorModeValue("rgba(226, 232, 240, 0.92)", dashboardPalette.border);
+  const backBg = useColorModeValue("#FFFFFF", "rgba(23,37,64,0.92)");
+  const backColor = useColorModeValue("#0F172A", dashboardPalette.text);
+  const stepInfoColor = useColorModeValue("#64748B", dashboardPalette.textSoft);
+
+  return (
+    <Box
+      insetX={0}
+      bottom={0}
+      borderTop="1px solid"
+      borderColor={borderColor}
+    >
+      <Box px={{ base: 4, md: 0 }}>
+        <Flex
+          align="center"
+          justify="space-between"
+          gap={{ base: 2, md: 3 }}
+          py={{ base: 2.5, md: 3 }}
+          // pb={{"calc(env(safe-area-inset-bottom) + 0.65rem)"}}
+          wrap="nowrap"
+        >
+          <Button
+            variant="outline"
+            borderRadius="16px"
+            minH={{ base: "42px", md: "44px" }}
+            minW={{ base: "86px", sm: "96px" }}
+            px={{ base: 3.5, md: 4 }}
+            bg={backBg}
+            borderColor="var(--dashboard-border-strong)"
+            color={backColor}
+            leftIcon={<FaChevronLeft size={13} />}
+            onClick={onBack}
+            isDisabled={activeSectionIndex === 0 || isSubmitting}
+            _hover={{ bg: "var(--dashboard-surface-alt)", color: "var(--dashboard-text)" }}
+            _disabled={{
+              opacity: 0.5,
+              color: stepInfoColor,
+              borderColor: "var(--dashboard-border)",
+            }}
+          >
+            Back
+          </Button>
+
+          <Text
+            flex="0 1 auto"
+            textAlign="center"
+            fontSize="11px"
+            fontWeight="600"
+            color={stepInfoColor}
+            display={{ base: "none", md: "block" }}
+            px={2}
+          >
+            Step {activeSectionIndex + 1} / {sections.length} · {activeSection.label}
+          </Text>
+
+          {isLastStep ? (
+            <Button
+              minH={{ base: "42px", md: "44px" }}
+              px={{ base: 4, sm: 6 }}
+              minW={{ base: "112px", sm: "132px" }}
+              borderRadius="16px"
+              bg={tone.gradient}
+              color="white"
+              flexShrink={0}
+              onClick={onSubmit}
+              isLoading={isSubmitting}
+              _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+              _active={{ transform: "scale(0.98)" }}
+            >
+              {isUpdateMode ? "Save shop" : "Publish shop"}
+            </Button>
+          ) : (
+            <Button
+              minH={{ base: "36px", md: "44px" }}
+              px={{ base: 4, sm: 6 }}
+              minW={{ base: "112px", sm: "132px" }}
+              borderRadius="16px"
+              bg={tone.gradient}
+              color="white"
+              flexShrink={0}
+              rightIcon={<FaChevronRight size={13} />}
+              onClick={onNext}
+              isDisabled={isSubmitting}
+              _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+              _active={{ transform: "scale(0.98)" }}
+            >
+              Next
+            </Button>
+          )}
+        </Flex>
+      </Box>
+    </Box>
+  );
+};
+
 const ShopForm = observer(() => {
-  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
-  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
-  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
-  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
-  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
-  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
+  const cSurfaceAlt = useColorModeValue("#F8FAFC", dashboardPalette.surfaceAlt);
+  const cBorder = useColorModeValue("#E2E8F0", dashboardPalette.border);
+  const cText = useColorModeValue("#0F172A", dashboardPalette.text);
+  const cTextMuted = useColorModeValue("#475569", dashboardPalette.textMuted);
+  const cPage = useColorModeValue("white", dashboardPalette.page);
+  const cDanger = useColorModeValue("#EF4444", dashboardPalette.danger);
+  const cAccentStrong = useColorModeValue("#1D4ED8", dashboardPalette.accentStrong);
   const merchantFormSx = useMerchantFormSx();
-  const sidebarBg = useColorModeValue("white", dashboardPalette.shellElevated);
-  
-                            
+
   const [initialValues, setInitialValues] = useState(() => createEmptyShopFormData());
-  const [activeSection, setActiveSection] = useState(0);
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isUpdateMode, setIsUpdateMode] = useState(false); // Track mode
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [reviewMeta, setReviewMeta] = useState({
     reviewStatus: null as string | null,
     reviewRemarks: "",
@@ -555,15 +724,6 @@ const ShopForm = observer(() => {
 
   const { shopTitle } = useParams();
 
-  const sections = [
-    { title: "Shop Details", icon: FaStore, component: ShopDetailsSection },
-    { title: "Main Location", icon: FaMapMarkerAlt, component: MainLocationSection },
-    { title: "Additional Locations", icon: FaMap, component: AdditionalLocationsSection },
-    { title: "Gallery", icon: FaImages, component: GallerySection },
-    { title: "Contact Info", icon: FaPhone, component: ContactInfoSection },
-    { title: "Operating Hours", icon: FaClock, component: OperatingHoursSection },
-  ];
-
   useEffect(() => {
     if (user?.company && typeof user.company === "object") {
       setReviewMeta({
@@ -575,23 +735,24 @@ const ShopForm = observer(() => {
 
   useEffect(() => {
     const fetchShopData = async () => {
-      // If user has no company linked, assume creation mode
+      const emptyData = createEmptyShopFormData();
+      const baseInitialValues = {
+        ...emptyData,
+        companyCode: createCompanyCode("", user?.phone || ""),
+        contactInfo: {
+          ...emptyData.contactInfo,
+          phone: user?.phone || "",
+          email: user?.email || "",
+        },
+      };
+
       if (!user?.company) {
-        const emptyData = createEmptyShopFormData();
         setIsUpdateMode(false);
-        setInitialValues({
-          ...emptyData,
-          contactInfo: {
-            ...emptyData.contactInfo,
-            phone: user?.phone || "",
-            email: user?.email || "",
-          },
-        });
+        setInitialValues(baseInitialValues);
         setLoading(false);
         return;
       }
 
-      // If user has company, fetch data and switch to update mode
       try {
         const companyId = user?.company?._id || (typeof user?.company === "string" ? user.company : "");
         const data = companyId
@@ -602,8 +763,8 @@ const ShopForm = observer(() => {
             });
 
         if (!data?.data) {
-          // Fallback to creation mode if not found (shouldn't happen if user.company exists, but safe fallback)
           setIsUpdateMode(false);
+          setInitialValues(baseInitialValues);
         } else {
           setIsUpdateMode(true);
           const shopData = normalizeShopDataForForm(data.data);
@@ -614,15 +775,24 @@ const ShopForm = observer(() => {
           const coverImage = shopData.coverImage?.url ? { file: [shopData.coverImage] } : { file: [] };
           const logo = shopData.logo?.url ? { file: [shopData.logo] } : { file: [] };
           const gallery = Array.isArray(shopData.gallery)
-            ? shopData.gallery.map((item) => ({ file: item.file?.url ? [item.file] : [], title: item.title || "" }))
+            ? shopData.gallery.map((item) => ({
+                file: item.file?.url ? [item.file] : [],
+                title: item.title || "",
+              }))
             : [];
 
-          setInitialValues({ ...shopData, coverImage, logo, gallery });
+          setInitialValues({
+            ...baseInitialValues,
+            ...shopData,
+            companyCode: shopData.companyCode || createCompanyCode(shopData.name || "", shopData.contactInfo?.phone || user?.phone || ""),
+            coverImage,
+            logo,
+            gallery,
+          });
         }
       } catch {
-        // If error (e.g. 404), assume creation mode is safer than blocking
         setIsUpdateMode(false);
-        // setError("Failed to fetch shop data."); 
+        setInitialValues(baseInitialValues);
       } finally {
         setLoading(false);
       }
@@ -639,17 +809,28 @@ const ShopForm = observer(() => {
         isDeleted: isDeleted || 0,
         isAdd: isAdd || 0,
       });
-    } else if (isDeleted) {
+    }
+
+    if (isDeleted) {
       return { isDeleted, isAdd: isAdd || 0 };
     }
+
     return null;
   };
 
   const buildCompanyPayload = async (values) => {
     const formData = { ...values };
 
-    const logoData = await handleImageProcessing(formData.logo?.file, formData.logo?.isAdd, formData.logo?.isDeleted);
-    const coverImageData = await handleImageProcessing(formData.coverImage?.file, formData.coverImage?.isAdd, formData.coverImage?.isDeleted);
+    const logoData = await handleImageProcessing(
+      formData.logo?.file,
+      formData.logo?.isAdd,
+      formData.logo?.isDeleted
+    );
+    const coverImageData = await handleImageProcessing(
+      formData.coverImage?.file,
+      formData.coverImage?.isAdd,
+      formData.coverImage?.isDeleted
+    );
 
     if (logoData) formData.logo = logoData;
     if (coverImageData) formData.coverImage = coverImageData;
@@ -681,10 +862,7 @@ const ShopForm = observer(() => {
     return formData;
   };
 
-  const createCompanyFromOnboarding = async (values) => {
-    const createData = await buildCompanyPayload(values);
-    delete createData._id;
-
+  const createCompanyWithRetry = async (createData) => {
     const contactPhone = createData?.contactInfo?.phone || user?.phone || "";
     let lastError: any = null;
 
@@ -733,16 +911,18 @@ const ShopForm = observer(() => {
       } else {
         const createData = { ...formData };
         delete createData._id;
-        await createCompany({ ...createData, userId: user?._id });
-        openNotification({ title: "Congratulations!", message: "Shop created successfully!", type: "success" });
-        // Hard reload or redirect to ensure user state is refreshed
+        await createCompanyWithRetry(createData);
+        openNotification({
+          title: "Congratulations!",
+          message: "Shop created successfully!",
+          type: "success",
+        });
         window.location.reload();
       }
-
     } catch (err) {
       openNotification({
         title: isUpdateMode ? "Update Failed" : "Creation Failed",
-        message: err?.data?.message || "Something went wrong",
+        message: err?.data?.message || err?.message || "Something went wrong",
         type: getStatusType(err.status || 500),
       });
     } finally {
@@ -750,7 +930,13 @@ const ShopForm = observer(() => {
     }
   };
 
-  if (loading) return <Center minH="80vh"><SpinnerLoader size="xl" /></Center>;
+  if (loading) {
+    return (
+      <Center minH="80vh">
+        <SpinnerLoader size="xl" />
+      </Center>
+    );
+  }
 
   const reviewBanner = (() => {
     switch (reviewMeta.reviewStatus) {
@@ -782,226 +968,89 @@ const ShopForm = observer(() => {
     }
   })();
 
-  if (!isUpdateMode) {
-    return (
-      <SellerOnboardingWizard
-        initialValues={initialValues}
-        accountPhone={user?.phone}
-        accountEmail={user?.email}
-        onSubmit={createCompanyFromOnboarding}
-      />
-    );
-  }
-
   return (
-    <Container maxW="100%" px={{ base: 4, md: 8, lg: 10 }} py={{ base: 4, md: 6 }} sx={merchantFormSx}>
+    <Box minH="100vh" bg={cPage} pb={{ base: "4px", md: "10px" }} sx={merchantFormSx}>
       {reviewBanner ? (
-        <Alert
-          status={reviewBanner.status}
-          borderRadius="22px"
-          mb={5}
-          alignItems="flex-start"
-          bg={cSurfaceAlt}
-          border="1px solid"
-          borderColor={reviewBanner.status === "error" ? "rgba(239, 107, 107, 0.24)" : cBorder}
-          color={cText}
-          shadow={'md'}
-        >
-          <AlertIcon mt={1} color={reviewBanner.status === "error" ? cDanger : cAccentStrong} />
-          <Box>
-            <AlertTitle color={cText}>{reviewBanner.title}</AlertTitle>
-            <AlertDescription color={cTextMuted}>{reviewBanner.description}</AlertDescription>
-          </Box>
-        </Alert>
-      ) : null}
-      <Flex direction={{ base: "column", lg: "row" }} gap={6}>
-        {/* ── Sidebar navigation ── */}
-        <Box
-          w={{ base: "100%", lg: "300px" }}
-          borderRadius="28px"
-          p={5}
-          border="1px solid"
-          borderColor={cBorder}
-          bg={sidebarBg}
-          boxShadow={useColorModeValue(
-            "0 4px 24px rgba(37,99,235,0.06)",
-            "0 24px 60px rgba(0,0,0,0.32)"
-          )}
-          alignSelf="flex-start"
-          position={{ base: "static", lg: "sticky" }}
-          top={{ lg: "24px" }}
-        >
-          <VStack align="stretch" spacing={2}>
-            <Text
-              fontWeight="800"
-              fontSize="10px"
-              color={cTextSoft}
-              mb={1}
-              textTransform="uppercase"
-              letterSpacing="0.26em"
-            >
-              {isUpdateMode ? "Edit Sections" : "Setup Steps"}
-            </Text>
-            <Divider borderColor={cBorder} mb={1} />
-
-            {sections.map((section, index) => {
-              const isActive = activeSection === index;
-              const isCompleted = !isUpdateMode && index < activeSection;
-              const isDisabled = !isUpdateMode && index > activeSection;
-              const stepColor = SECTION_COLORS[index] || SECTION_COLORS[0];
-
-              return (
-                <Button
-                  key={index}
-                  variant="unstyled"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="flex-start"
-                  gap={3}
-                  minH="56px"
-                  fontWeight={isActive ? "700" : "500"}
-                  color={isActive ? cText : cTextMuted}
-                  bg={isActive ? stepColor.soft : "transparent"}
-                  _hover={{
-                    bg: isActive ? stepColor.soft : useColorModeValue("gray.50", "rgba(255,255,255,0.03)"),
-                    transform: "translateX(3px)",
-                  }}
-                  onClick={() => !isDisabled && setActiveSection(index)}
-                  borderRadius="16px"
-                  px={3}
-                  py={3}
-                  isDisabled={isDisabled}
-                  transition="all 0.2s ease"
-                  border="1px solid"
-                  borderColor={isActive ? stepColor.text : "transparent"}
-                  borderLeftWidth={isActive ? "3px" : "1px"}
-                  opacity={isDisabled ? 0.38 : 1}
-                >
-                  {/* Colored icon circle */}
-                  <Box
-                    w="36px"
-                    h="36px"
-                    borderRadius="12px"
-                    bg={isActive ? stepColor.gradient : useColorModeValue("gray.100", "rgba(255,255,255,0.05)")}
-                    bgGradient={isActive ? stepColor.gradient : undefined}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    flexShrink={0}
-                    boxShadow={isActive ? `0 4px 12px ${stepColor.glow}` : "none"}
-                    transition="all 0.2s"
-                  >
-                    <Icon
-                      as={section.icon}
-                      boxSize={4}
-                      color={isActive ? "white" : isCompleted ? stepColor.text : cTextSoft}
-                    />
-                  </Box>
-                  <Box textAlign="left" flex={1} minW={0}>
-                    <Text fontSize="sm" fontWeight={isActive ? "700" : "500"} noOfLines={1}>
-                      {section.title}
-                    </Text>
-                    <Text fontSize="10px" color={isActive ? stepColor.text : cTextSoft} fontWeight="600">
-                      {isCompleted ? "✓ Completed" : isActive ? "In progress" : `Step ${index + 1}`}
-                    </Text>
-                  </Box>
-                  {isCompleted && (
-                    <Box
-                      w="8px" h="8px"
-                      borderRadius="full"
-                      bg={stepColor.gradient}
-                      bgGradient={stepColor.gradient}
-                      flexShrink={0}
-                    />
-                  )}
-                </Button>
-              );
-            })}
-
-            {/* Progress bar with gradient */}
-            <Box mt={3} px={1}>
-              <Flex justify="space-between" mb={1.5}>
-                <Text fontSize="10px" color={cTextSoft} fontWeight="700" textTransform="uppercase" letterSpacing="0.12em">
-                  Progress
-                </Text>
-                <Text fontSize="10px" color={cTextSoft} fontWeight="700">
-                  {activeSection + 1}/{sections.length}
-                </Text>
-              </Flex>
-              <Box h="6px" borderRadius="full" bg={useColorModeValue("gray.100", "rgba(255,255,255,0.06)")} overflow="hidden">
-                <Box
-                  h="full"
-                  w={`${((activeSection + 1) / sections.length) * 100}%`}
-                  bgGradient="linear(to-r, #3B82F6, #8B5CF6)"
-                  borderRadius="full"
-                  transition="width 0.4s ease"
-                  boxShadow="0 0 8px rgba(99,102,241,0.5)"
-                />
-              </Box>
-            </Box>
-          </VStack>
-        </Box>
-
-        <Box
-          flex={1}
-          borderRadius="30px"
-          boxShadow="0 20px 28px rgba(0, 0, 0, 0.22)"
-          p={{ base: 1, md: 2 }}
-          border="1px solid"
-          borderColor={cBorder}
-          bg={useColorModeValue("white", dashboardPalette.shell)}
-        >
-          <Formik
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            enableReinitialize
-            onSubmit={onSubmit}
+        <Box px={{ base: 4, md: 0 }} pt={{ base: 3, md: 4 }}>
+          <Alert
+            status={reviewBanner.status}
+            borderRadius={{ base: "20px", md: "24px" }}
+            alignItems="flex-start"
+            bg={cSurfaceAlt}
+            border="1px solid"
+            borderColor={reviewBanner.status === "error" ? "rgba(239, 68, 68, 0.24)" : cBorder}
+            color={cText}
+            boxShadow={{ base: "none", md: "sm" }}
           >
-            {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm }) => {
-              const ActiveSectionComponent = sections[activeSection].component;
-              const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSection);
+            <AlertIcon mt={1} color={reviewBanner.status === "error" ? cDanger : cAccentStrong} />
+            <Box>
+              <AlertTitle color={cText}>{reviewBanner.title}</AlertTitle>
+              <AlertDescription color={cTextMuted}>{reviewBanner.description}</AlertDescription>
+            </Box>
+          </Alert>
+        </Box>
+      ) : null}
 
-              const handleAttemptSubmit = async () => {
-                setShowError(true);
-                const validationErrors = await validateForm();
-                const firstErrorSection = resolveFirstErrorSection(validationErrors);
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        enableReinitialize
+        onSubmit={onSubmit}
+      >
+        {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm }) => {
+          const activeSection = sections[activeSectionIndex];
+          const ActiveSectionComponent = activeSection.component;
+          const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSectionIndex);
+          const isLastStep = activeSectionIndex === sections.length - 1;
 
-                if (firstErrorSection !== null) {
-                  setActiveSection(firstErrorSection);
-                  const fieldLabels = getSectionFieldLabels(validationErrors, firstErrorSection);
-                  openNotification({
-                    title: "Please review the highlighted fields",
-                    message:
-                      fieldLabels.length > 0
-                        ? `Missing or invalid: ${fieldLabels.slice(0, 4).join(", ")}${fieldLabels.length > 4 ? "..." : ""}`
-                        : `Some required details are missing in ${sections[firstErrorSection]?.title}.`,
-                    type: "warning",
-                  });
-                  return;
-                }
+          const goToSection = (index: number) => {
+            setActiveSectionIndex(Math.min(Math.max(index, 0), sections.length - 1));
+            scrollToTop();
+          };
 
-                submitForm();
-              };
+          const handleFinalSubmit = async () => {
+            setShowError(true);
+            const validationErrors = await validateForm();
+            const firstErrorSection = resolveFirstErrorSection(validationErrors);
 
-              // Debug validation errors
-              if (Object.keys(errors).length > 0 && showError) {
-                // eslint-disable-next-line no-console
-                console.log("Validation Errors:", errors);
-              }
+            if (firstErrorSection !== null) {
+              goToSection(firstErrorSection);
+              const fieldLabels = getSectionFieldLabels(validationErrors, firstErrorSection);
+              openNotification({
+                title: "Please review the highlighted fields",
+                message:
+                  fieldLabels.length > 0
+                    ? `Missing or invalid: ${fieldLabels.slice(0, 4).join(", ")}${fieldLabels.length > 4 ? "..." : ""}`
+                    : `Some required details are missing in ${sections[firstErrorSection]?.headline}.`,
+                type: "warning",
+              });
+              return;
+            }
 
-              return (
-                <Form>
-                  <VStack spacing={5} align="stretch">
-                    <SectionHeader activeSection={activeSection} sections={sections} />
-                    {showError && currentSectionFieldLabels.length > 0 ? (
+            submitForm();
+          };
+
+          return (
+            <Form>
+              <ShopFormHero
+                activeSection={activeSection}
+                activeSectionIndex={activeSectionIndex}
+                onSelect={goToSection}
+              />
+
+              <Box px={{ base: 0, md: 4 }} pt={{ base: 2, md: 4 }}>
+                <VStack spacing={4} align="stretch">
+                  {showError && currentSectionFieldLabels.length > 0 ? (
+                    <Box px={{ base: 4, md: 0 }}>
                       <Alert
                         status="warning"
-                        borderRadius="22px"
+                        borderRadius={{ base: "20px", md: "24px" }}
                         alignItems="flex-start"
                         bg={cSurfaceAlt}
                         border="1px solid"
                         borderColor={cBorder}
                         color={cText}
+                        boxShadow={{ base: "none", md: "sm" }}
                       >
                         <AlertIcon mt={1} color={cAccentStrong} />
                         <Box>
@@ -1011,79 +1060,35 @@ const ShopForm = observer(() => {
                           </AlertDescription>
                         </Box>
                       </Alert>
-                    ) : null}
-                    <ActiveSectionComponent
-                      values={values}
-                      errors={errors}
-                      setFieldValue={setFieldValue}
-                      showError={showError}
-                    />
+                    </Box>
+                  ) : null}
 
-                    <Flex justify="flex-end">
-                      <Button
-                        size="md"
-                        variant="outline"
-                        borderRadius="18px"
-                        borderColor={cBorderStrong}
-                        color={cAccentStrong}
-                        _hover={{ bg: cAccentSoft, borderColor: cAccent }}
-                        isLoading={isSubmitting}
-                        onClick={handleAttemptSubmit}
-                      >
-                        Save Section
-                      </Button>
-                    </Flex>
+                  <ActiveSectionComponent
+                    values={values}
+                    errors={errors}
+                    setFieldValue={setFieldValue}
+                    showError={showError}
+                    isUpdateMode={isUpdateMode}
+                  />
+                </VStack>
+              </Box>
 
-                    <Flex justify="space-between" pt={4}>
-                  <Button
-                        onClick={() => setActiveSection((prev) => Math.max(0, prev - 1))}
-                        isDisabled={activeSection === 0}
-                        variant="outline"
-                        borderRadius="18px"
-                        borderColor={cBorderStrong}
-                        color={cTextMuted}
-                        leftIcon={<Icon as={FaChevronLeft} boxSize={3} />}
-                        _hover={{ bg: useColorModeValue("gray.50", "rgba(255,255,255,0.04)"), color: cText }}
-                      >
-                        Previous
-                      </Button>
-                      {activeSection < sections.length - 1 ? (
-                        <Button
-                          onClick={() => setActiveSection((prev) => Math.min(sections.length - 1, prev + 1))}
-                          borderRadius="18px"
-                          bgGradient="linear(to-r, #3B82F6, #6366F1)"
-                          color="white"
-                          _hover={{ bgGradient: "linear(to-r, #2563EB, #4F46E5)", transform: "translateY(-1px)", boxShadow: "0 8px 20px rgba(59,130,246,0.34)" }}
-                          _active={{ transform: "scale(0.98)" }}
-                          rightIcon={<Icon as={FaChevronRight} boxSize={3} />}
-                          boxShadow="0 4px 14px rgba(59,130,246,0.26)"
-                        >
-                          Next Section
-                        </Button>
-                      ) : (
-                        <Button
-                          isLoading={isSubmitting}
-                          borderRadius="18px"
-                          bgGradient="linear(to-r, #2563EB, #3B82F6)"
-                          color="white"
-                          _hover={{ bgGradient: "linear(to-r, #1D4ED8, #2563EB)", transform: "translateY(-1px)", boxShadow: "0 8px 20px rgba(37,99,235,0.38)" }}
-                          _active={{ transform: "scale(0.98)" }}
-                          leftIcon={<Icon as={FaStore} boxSize={4} />}
-                          onClick={handleAttemptSubmit}
-                          boxShadow="0 4px 14px rgba(37,99,235,0.30)"
-                        >
-                          {isUpdateMode ? "Save Shop" : "Create Shop"}
-                        </Button>
-                      )}
-                    </Flex>
-                  </VStack>
-                </Form>
-              );
-            }}
-          </Formik>
-        </Box>
-      </Flex>
-    </Container>
+              <StickyActionBar
+                activeSection={activeSection}
+                activeSectionIndex={activeSectionIndex}
+                isLastStep={isLastStep}
+                isSubmitting={isSubmitting}
+                onBack={() => goToSection(activeSectionIndex - 1)}
+                onNext={() => goToSection(activeSectionIndex + 1)}
+                onSubmit={handleFinalSubmit}
+                isUpdateMode={isUpdateMode}
+              />
+            </Form>
+          );
+        }}
+      </Formik>
+    </Box>
   );
 });
+
 export default ShopForm;
