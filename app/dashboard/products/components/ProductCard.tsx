@@ -17,6 +17,7 @@ import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPale
 
 interface ProductCardProps {
   product: any;
+  onView: (product: any) => void;
   onEdit: (product: any) => void;
   onDelete: (product: any) => void;
 }
@@ -29,7 +30,7 @@ const getProductImage = (product: any) =>
 const getCategoryName = (category: any) =>
   typeof category === "object" ? category?.name || "Uncategorized" : category || "Uncategorized";
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onView, onEdit, onDelete }) => {
   const surface = useColorModeValue("white", dashboardPalette.surface);
   const surfaceMuted = useColorModeValue("#F8FAFC", dashboardPalette.surfaceAlt);
   const border = useColorModeValue("#E2E8F0", dashboardPalette.border);
@@ -56,6 +57,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
   return (
     <Box
       role="group"
+      cursor="pointer"
+      tabIndex={0}
       overflow="hidden"
       borderRadius={{ base: "18px", md: "22px" }}
       border="1px solid"
@@ -63,6 +66,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
       bg={surface}
       boxShadow={{ base: "none", md: shadow }}
       transition="transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease"
+      onClick={() => onView(product)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onView(product);
+        }
+      }}
       _hover={{
         transform: { base: "none", md: "translateY(-2px)" },
         boxShadow: { base: "none", md: hoverShadow },
@@ -139,7 +149,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
             // iconSpacing={1.5}
             icon={<FaEdit />}
             _hover={{ bg: "blue.50",color:"blue.500" }}
-            onClick={() => onEdit(product)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(product);
+            }}
           />
           <IconButton
             aria-label="Delete product"
@@ -152,7 +165,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
             bg="rgba(255,255,255,0.94)"
             color={danger}
             _hover={{ bg: danger, color: "white" }}
-            onClick={() => onDelete(product)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(product);
+            }}
           />
         </HStack>
       </Box>
@@ -206,7 +222,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
             iconSpacing={1}
             leftIcon={<FaEdit />}
             _active={{ transform: "scale(0.98)" }}
-            onClick={() => onEdit(product)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(product);
+            }}
           >
             Edit
           </Button>
@@ -220,7 +239,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
             bg={dangerSoft}
             color={danger}
             _active={{ transform: "scale(0.96)" }}
-            onClick={() => onDelete(product)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(product);
+            }}
           />
         </HStack>
 

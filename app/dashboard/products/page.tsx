@@ -5,6 +5,10 @@ import {
   Box,
   Button,
   Center,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerOverlay,
   Flex,
   Grid,
   HStack,
@@ -23,6 +27,7 @@ import {
   SkeletonCircle,
   SkeletonText,
   Text,
+  useBreakpointValue,
   useColorModeValue,
   useDisclosure,
   useToast,
@@ -47,6 +52,7 @@ import stores from "../../store/stores";
 import CompanyRequiredState from "../components/common/CompanyRequiredState";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 import ProductCard from "./components/ProductCard";
+import ProductDetailView from "./components/ProductDetailView";
 import ProductForm from "./components/ProductForm";
 import { ProductStatCard } from "./components/ProductStatCard";
 
@@ -235,6 +241,7 @@ const ProductsPage = observer(() => {
   const [loading, setLoading] = useState(true);
   const [productToDelete, setProductToDelete] = useState<any | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [detailProductId, setDetailProductId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -244,6 +251,7 @@ const ProductsPage = observer(() => {
 
   const hasCompany = Boolean(auth.user?.company?._id || auth.user?.company || auth.company);
   const isSuperAdmin = auth.user?.type === "superAdmin" || auth.user?.role === "superAdmin";
+  const isDesktop = useBreakpointValue({ base: false, md: true }) ?? false;
 
   const pageBg = useColorModeValue("transparent", "transparent");
   const surface = useColorModeValue("white", dashboardPalette.surface);
@@ -263,6 +271,11 @@ const ProductsPage = observer(() => {
   const selectedProduct = useMemo(
     () => products.find((product) => product._id === selectedProductId) || null,
     [products, selectedProductId]
+  );
+
+  const detailProduct = useMemo(
+    () => products.find((product) => product._id === detailProductId) || null,
+    [products, detailProductId]
   );
 
   const rootCategories = useMemo(
@@ -355,6 +368,7 @@ const ProductsPage = observer(() => {
 
   const handleOpenCreate = () => {
     setSelectedProductId(null);
+    setDetailProductId(null);
     onOpen();
   };
 
@@ -365,11 +379,20 @@ const ProductsPage = observer(() => {
 
   const handleEdit = (product: any) => {
     setSelectedProductId(product?._id || null);
+    setDetailProductId(null);
     onOpen();
   };
 
   const handleDelete = (product: any) => {
     setProductToDelete(product);
+  };
+
+  const handleView = (product: any) => {
+    setDetailProductId(product?._id || null);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailProductId(null);
   };
 
   const confirmDelete = async () => {
@@ -388,6 +411,9 @@ const ProductsPage = observer(() => {
         duration: 3000,
         isClosable: true,
       });
+      if (detailProductId === productToDelete._id) {
+        setDetailProductId(null);
+      }
       setProductToDelete(null);
       await fetchProducts(nextPage, searchTerm, selectedCategory);
     } catch (error: any) {
@@ -469,6 +495,10 @@ const ProductsPage = observer(() => {
   };
 
   const showFirstProductAction = !searchTerm && !selectedCategory && !showInactive;
+
+  if (!isDesktop && detailProduct) {
+    return <ProductDetailView product={detailProduct} onBack={handleCloseDetail} mode="page" />;
+  }
 
   return (
     <Box bg={pageBg}>
@@ -698,6 +728,7 @@ const ProductsPage = observer(() => {
                 <ProductCard
                   key={product._id}
                   product={product}
+                  onView={handleView}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
@@ -781,6 +812,20 @@ const ProductsPage = observer(() => {
         onConfirm={confirmDelete}
         data={productToDelete}
       />
+
+      <Drawer
+        isOpen={Boolean(isDesktop && detailProduct)}
+        placement="right"
+        onClose={handleCloseDetail}
+        size="xl"
+      >
+        <DrawerOverlay bg="rgba(15, 23, 42, 0.28)" backdropFilter="blur(10px)" />
+        <DrawerContent maxW="720px" bg="transparent" boxShadow="none">
+          <DrawerBody p={0}>
+            {detailProduct ? <ProductDetailView product={detailProduct} onBack={handleCloseDetail} /> : null}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </Box>
   );
 });
