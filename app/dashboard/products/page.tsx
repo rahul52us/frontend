@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Center,
+  Circle,
   Flex,
   Grid,
   HStack,
@@ -26,7 +27,7 @@ import {
   useColorModeValue,
   useDisclosure,
   useToast,
-  VStack
+  VStack,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { observer } from "mobx-react-lite";
@@ -49,6 +50,8 @@ import CompanyRequiredState from "../components/common/CompanyRequiredState";
 import DeleteProductDialog from "./components/DeleteProductDialog";
 import ProductCard from "./components/ProductCard";
 import ProductForm from "./components/ProductForm";
+import { ProductStatCard } from "./components/ProductStatCard";
+import { FiAlertCircle, FiCheckCircle, FiClock, FiPackage } from "react-icons/fi";
 
 const emptyToUndefined = (value: any, originalValue: any) =>
   originalValue === "" || originalValue === null || originalValue === undefined ? undefined : value;
@@ -529,10 +532,14 @@ const ProductsPage = observer(() => {
             Array.from({ length: 4 }).map((_, index) => <StatCardSkeleton key={index} />)
           ) : (
             <>
-              <StatCard icon={FaBoxOpen} label="Total products" value={stats.total} tint="sage" />
-              <StatCard icon={FaChartLine} label="In stock" value={stats.inStock} tint="green" />
-              <StatCard icon={FaFire} label="Featured" value={stats.featured} tint="rose" />
-              <StatCard icon={FaLayerGroup} label="Low stock" value={stats.low} tint="warning" />
+             {/* <ProductStatCard icon={FiPackage} label="Total Products" value={1284} tint="sage" trend={12} />
+  <ProductStatCard icon={FiCheckCircle} label="In Stock"       value={847}  tint="green" trend={5} />
+  <ProductStatCard icon={FiAlertCircle} label="Out of Stock"  value={39}   tint="rose" trend={-3} />
+  <ProductStatCard icon={FiClock}       label="Low Stock"     value={62}   tint="warning" trend={-8} /> */}
+              <ProductStatCard icon={FaBoxOpen} label="Total products" value={stats.total} tint="sage" />
+              <ProductStatCard icon={FaChartLine} label="In stock" value={stats.inStock} tint="green" />
+              <ProductStatCard icon={FaFire} label="Featured" value={stats.featured} tint="rose" />
+              <ProductStatCard icon={FaLayerGroup} label="Low stock" value={stats.low} tint="warning" />
             </>
           )}
         </Grid>
@@ -844,7 +851,7 @@ function StatCard({
       boxShadow={{ base: "sm", md: shadow }}
       transition="all 0.25s ease"
       _hover={{
-        transform: "translateY(-2px)",
+        // transform: "translateY(-2px)",
         boxShadow: shadow,
       }}
     >
