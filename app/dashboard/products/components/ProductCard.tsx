@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Badge,
   Box,
@@ -11,6 +10,7 @@ import {
   Text,
   Tooltip,
 } from "@chakra-ui/react";
+import React from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 

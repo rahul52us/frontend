@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Badge,
   Box,
@@ -9,6 +8,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
+import React from "react";
 import FormModel from "../../../component/common/FormModel/FormModel";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 

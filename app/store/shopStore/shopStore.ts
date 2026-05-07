@@ -1,5 +1,5 @@
-import { makeAutoObservable } from "mobx";
 import axios from "axios";
+import { makeAutoObservable } from "mobx";
 class ShopStore {
   shop: any = {
     loading: true,
@@ -98,6 +98,7 @@ class ShopStore {
   };
 
   getShopProducts = async (sendData: any, forceRefresh: boolean = false) => {
+
     const currentPayload = JSON.stringify(sendData);
 
     if (!forceRefresh && this.productsCache && this.lastProductsPayload === currentPayload) {

@@ -964,7 +964,7 @@ const SellerOverview = observer(() => {
                           <Text fontWeight="700" color={textPrimary}>
                             No orders yet
                           </Text>
-                          <Text mt={0.5} fontSize="xs" color={mutedText}>
+                          <Text mt={0.5} fontSize="sm" color={mutedText}>
                             Once buyers place orders, the newest ones will show here.
                           </Text>
                         </MotionBox>

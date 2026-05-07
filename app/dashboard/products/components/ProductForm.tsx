@@ -25,6 +25,7 @@ import {
   Text,
   Textarea,
   useColorModeValue,
+  useToast,
   VStack
 } from "@chakra-ui/react";
 import { Field, FieldArray, Form, Formik } from "formik";
@@ -75,6 +76,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const freebieModalTargetOfferRef = useRef<string | null>(null);
   const [isFreebieModalOpen, setIsFreebieModalOpen] = useState(false);
+  const toast = useToast();
 
   // Dynamic Theme Colors
   const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
@@ -128,10 +130,8 @@ const SectionHeader = ({ index }: { index: number }) => {
         display="flex"
         alignItems="center"
         justifyContent="center"
-        // Softened the shadow blur and spread for a subtler look
         boxShadow={`0 4px 12px ${config.glow}`} 
       >
-        {/* Changed from "white" to config.iconColor for contrast */}
         <Icon as={config.icon} boxSize={5} color={config.iconColor} />
       </Box>
       <VStack align="start" spacing={0}>
@@ -168,6 +168,52 @@ const SectionHeader = ({ index }: { index: number }) => {
     }
   };
   const heroBg = useColorModeValue(dashboardHeroGradientLight, dashboardHeroGradient);
+
+  // ─── FIX 1: Flatten Formik errors into readable messages for toast ───
+  const collectErrorMessages = (errors: Record<string, any>, prefix = ""): string[] => {
+    const messages: string[] = [];
+    for (const key in errors) {
+      const val = errors[key];
+      const fieldName = prefix ? `${prefix}.${key}` : key;
+      if (typeof val === "string") {
+        messages.push(val);
+      } else if (Array.isArray(val)) {
+        val.forEach((item, idx) => {
+          if (typeof item === "string") {
+            messages.push(item);
+          } else if (item && typeof item === "object") {
+            messages.push(...collectErrorMessages(item, `${fieldName}[${idx}]`));
+          }
+        });
+      } else if (val && typeof val === "object") {
+        messages.push(...collectErrorMessages(val, fieldName));
+      }
+    }
+    return messages;
+  };
+
+  const showValidationToast = (errors: Record<string, any>) => {
+    const messages = collectErrorMessages(errors);
+    if (messages.length === 0) return;
+
+    toast({
+      title: "Please fix the following errors",
+      description: (
+        <VStack align="start" spacing={1} mt={1}>
+          {messages.slice(0, 5).map((msg, i) => (
+            <Text key={i} fontSize="sm">• {msg}</Text>
+          ))}
+          {messages.length > 5 && (
+            <Text fontSize="sm" opacity={0.7}>...and {messages.length - 5} more</Text>
+          )}
+        </VStack>
+      ),
+      status: "error",
+      duration: 6000,
+      isClosable: true,
+      position: "top-right",
+    });
+  };
 
   return (
     <CustomDrawer open={isOpen} close={onClose} width="85vw">
@@ -227,7 +273,6 @@ const SectionHeader = ({ index }: { index: number }) => {
             overflow="hidden"
             boxShadow="0 8px 20px rgba(37,99,235,0.10)"
           >
-          
             <HStack justify="space-between" align="center" position="relative" zIndex={1}>
               <HStack spacing={5}>
                 <Box 
@@ -321,63 +366,40 @@ const SectionHeader = ({ index }: { index: number }) => {
               setIsFreebieModalOpen(true);
             };
 
+            // ─── FIX 1: handleSubmitClick — validates first, shows toast on error ───
+            const handleSubmitClick = async () => {
+              // Touch all fields so inline errors show too
+              props.setSubmitting(true);
+              const errors = await props.validateForm();
+              props.setSubmitting(false);
+
+              if (Object.keys(errors).length > 0) {
+                // Mark all fields as touched so inline errors render
+                const touchAll = (obj: any, prefix = ""): Record<string, boolean> => {
+                  const touched: Record<string, boolean> = {};
+                  for (const key in obj) {
+                    const val = obj[key];
+                    const path = prefix ? `${prefix}.${key}` : key;
+                    if (val && typeof val === "object" && !Array.isArray(val)) {
+                      Object.assign(touched, touchAll(val, path));
+                    } else {
+                      touched[path] = true;
+                    }
+                  }
+                  return touched;
+                };
+                props.setTouched(touchAll(errors) as any);
+                showValidationToast(errors);
+                return;
+              }
+
+              // No errors — submit normally
+              props.submitForm();
+            };
+
             return (
               <Form>
                 <Flex direction={{ base: "column", lg: "row" }} gap={6} align="start">
-                  {/* Sidebar Navigation */}
-                  {/* <Box
-                    w={{ base: "100%", lg: "260px" }}
-                    bg={cSurface}
-                    borderRadius="24px"
-                    p={4}
-                    border="1px solid"
-                    borderColor={cBorder}
-                    position={{ base: "static", lg: "sticky" }}
-                    top="0"
-                    boxShadow="sm"
-                  >
-                    <VStack align="stretch" spacing={2}>
-                      {SECTION_COLORS.map((section, index) => {
-                        const isActive = activeTab === index;
-                        return (
-                          <Button
-                            key={section.id}
-                            variant="unstyled"
-                            display="flex"
-                            alignItems="center"
-                            gap={3}
-                            px={4}
-                            py={3}
-                            h="auto"
-                            borderRadius="16px"
-                            bg={isActive ? section.soft : "transparent"}
-                            color={isActive ? section.text : cTextMuted}
-                            border="1px solid"
-                            borderColor={isActive ? section.text : "transparent"}
-                            _hover={{ bg: isActive ? section.soft : cSurfaceAlt, transform: "translateX(4px)" }}
-                            transition="all 0.2s"
-                            onClick={() => {
-                              setActiveTab(index);
-                              const el = document.getElementById(`section-${section.id}`);
-                              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }}
-                          >
-                            <Box 
-                              w="32px" h="32px" 
-                              borderRadius="10px" 
-                              bgGradient={isActive ? section.gradient : "none"} 
-                              bg={isActive ? "none" : cSurfaceSoft}
-                              display="flex" alignItems="center" justifyContent="center"
-                            >
-                              <Icon as={section.icon} boxSize={isActive ? 4 : 3.5} color={isActive ? "white" : cTextSoft} />
-                            </Box>
-                            <Text fontSize="sm" fontWeight={isActive ? "700" : "500"}>{section.title}</Text>
-                          </Button>
-                        );
-                      })}
-                    </VStack>
-                  </Box> */}
-
                   {/* Main Form Content */}
                   <VStack spacing={6} align="stretch" flex={1} w="100%">
                     <Box id="section-basic" {...(sectionCardSx as any)}>
@@ -398,6 +420,23 @@ const SectionHeader = ({ index }: { index: number }) => {
                             <FormLabel>Brand</FormLabel>
                             <Input {...field} placeholder="e.g. Sony" />
                             <FormErrorMessage>{form.errors.brand}</FormErrorMessage>
+                          </FormControl>
+                        )}
+                      </Field>
+
+                      {/* Category field — kept here from original basic section */}
+                      <Field name="category">
+                        {({ field, form }: any) => (
+                          <FormControl isInvalid={form.errors.category && form.touched.category} isRequired>
+                            <FormLabel>Category</FormLabel>
+                            <Select {...field} placeholder="Select Category">
+                              {rootCategories.map((cat) => (
+                                <option key={cat._id} value={cat._id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </Select>
+                            <FormErrorMessage>{form.errors.category}</FormErrorMessage>
                           </FormControl>
                         )}
                       </Field>
@@ -773,11 +812,13 @@ const SectionHeader = ({ index }: { index: number }) => {
 
                         <Divider borderColor={cBorder} />
                         <FormLabel>Variants</FormLabel>
+
+                        {/* ─── FIX 2: Variant options — use controlled local raw string per row ─── */}
                         <FieldArray name="variants">
-                          {({ push, remove, form }: any) => (
+                          {({ push, remove }) => (
                             <VStack spacing={4} align="stretch" width="100%">
-                              {form.values.variants?.length > 0
-                                ? form.values.variants.map((variant: any, index: number) => (
+                              {props.values.variants?.length > 0
+                                ? props.values.variants.map((variant: any, index: number) => (
                                     <Box
                                       key={index}
                                       p={4}
@@ -802,36 +843,105 @@ const SectionHeader = ({ index }: { index: number }) => {
                                       </HStack>
 
                                       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                        {/* Variant Name — uses Field properly */}
                                         <Field name={`variants.${index}.name`}>
-                                          {({ field }: any) => (
-                                            <FormControl isRequired>
+                                          {({ field, form: f }: any) => (
+                                            <FormControl
+                                              isRequired
+                                              isInvalid={
+                                                f.errors.variants?.[index]?.name &&
+                                                f.touched.variants?.[index]?.name
+                                              }
+                                            >
                                               <FormLabel fontSize="sm">Variant Name</FormLabel>
                                               <Input {...field} placeholder="e.g. Size, Color" />
+                                              <FormErrorMessage>
+                                                {f.errors.variants?.[index]?.name}
+                                              </FormErrorMessage>
                                             </FormControl>
                                           )}
                                         </Field>
-                                        <Field name={`variants.${index}.options`}>
-                                          {({ form }: any) => (
-                                            <FormControl isRequired>
-                                              <FormLabel fontSize="sm">Options (Comma separated)</FormLabel>
-                                              <Input
-                                                placeholder="e.g. S, M, L or Red, Blue"
-                                                value={
-                                                  form.values.variants[index].options
-                                                    ? form.values.variants[index].options.join(", ")
-                                                    : ""
-                                                }
-                                                onChange={(event) => {
-                                                  const options = event.target.value
-                                                    .split(",")
-                                                    .map((opt: string) => opt.trim())
-                                                    .filter(Boolean);
-                                                  form.setFieldValue(`variants.${index}.options`, options);
-                                                }}
-                                              />
-                                            </FormControl>
-                                          )}
-                                        </Field>
+
+                                        {/*
+                                          FIX 2: Options input.
+                                          The old code used <Field> without binding `field` to the input,
+                                          so the input value was derived from form.values but onChange called
+                                          setFieldValue — this caused a one-keystroke lag and broken comma splits.
+
+                                          Fix: Use a plain controlled <Input> driven directly by
+                                          props.values (the outer Formik bag) and call props.setFieldValue.
+                                          This is intentional — we avoid wrapping in <Field> because we
+                                          need to display a comma-joined string while storing an array.
+                                        */}
+                                        <FormControl
+                                          isRequired
+                                          isInvalid={
+                                            !!(props.errors as any).variants?.[index]?.options &&
+                                            !!(props.touched as any).variants?.[index]?.options
+                                          }
+                                        >
+                                          <FormLabel fontSize="sm">Options (comma separated)</FormLabel>
+                                          <Input
+                                            placeholder="e.g. S, M, L or Red, Blue"
+                                            value={
+                                              // Show the raw comma-joined string while typing
+                                              Array.isArray(props.values.variants[index]?.options)
+                                                ? props.values.variants[index].options.join(", ")
+                                                : ""
+                                            }
+                                            onChange={(e) => {
+                                              const raw = e.target.value;
+                                              // Only split on commas; keep trailing comma/space so user can keep typing
+                                              // We split but preserve the raw string as display via the joined array trick.
+                                              // To avoid cutting off mid-word, we only commit full tokens (non-empty after trim).
+                                              const options = raw
+                                                .split(",")
+                                                .map((opt: string) => opt.trim())
+                                                .filter(Boolean);
+                                              // If raw ends with ", " or "," keep an empty trailing slot so cursor stays right
+                                              const trailingComma = raw.trimEnd().endsWith(",");
+                                              props.setFieldValue(
+                                                `variants.${index}.options`,
+                                                trailingComma ? [...options, ""] : options
+                                              );
+                                            }}
+                                            onBlur={() => {
+                                              // On blur, clean up any empty trailing slots
+                                              const cleaned = (props.values.variants[index]?.options || []).filter(
+                                                (o: string) => o.trim() !== ""
+                                              );
+                                              props.setFieldValue(`variants.${index}.options`, cleaned);
+                                              props.setFieldTouched(`variants.${index}.options`, true);
+                                            }}
+                                          />
+                                          <FormErrorMessage>
+                                            {(props.errors as any).variants?.[index]?.options}
+                                          </FormErrorMessage>
+                                          {/* Live preview of parsed options */}
+                                          {Array.isArray(props.values.variants[index]?.options) &&
+                                            props.values.variants[index].options.filter((o: string) => o).length > 0 && (
+                                              <HStack mt={2} spacing={1} flexWrap="wrap">
+                                                {props.values.variants[index].options
+                                                  .filter((o: string) => o)
+                                                  .map((opt: string, oi: number) => (
+                                                    <Box
+                                                      key={oi}
+                                                      px={2}
+                                                      py={0.5}
+                                                      bg={cAccentSoft}
+                                                      color={cAccentStrong}
+                                                      borderRadius="8px"
+                                                      fontSize="11px"
+                                                      fontWeight="600"
+                                                      border="1px solid"
+                                                      borderColor={cBorder}
+                                                    >
+                                                      {opt}
+                                                    </Box>
+                                                  ))}
+                                              </HStack>
+                                            )}
+                                        </FormControl>
                                       </SimpleGrid>
                                     </Box>
                                   ))
@@ -938,8 +1048,15 @@ const SectionHeader = ({ index }: { index: number }) => {
                         >
                           Discard
                         </Button>
+
+                        {/*
+                          FIX 1: Changed type="submit" → type="button" with onClick={handleSubmitClick}
+                          This lets us run validateForm() first, show the toast if errors exist,
+                          and only call submitForm() when the form is actually valid.
+                        */}
                         <Button
-                          type="submit"
+                          type="button"
+                          onClick={handleSubmitClick}
                           isLoading={props.isSubmitting}
                           bgGradient={dashboardHeroGradientLight}
                           color="white"
@@ -970,5 +1087,4 @@ const SectionHeader = ({ index }: { index: number }) => {
     </CustomDrawer>
   );
 };
-
 export default ProductForm;

@@ -1,51 +1,51 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import {
+  Badge,
   Box,
   Button,
+  Center,
   Circle,
+  Divider,
   Flex,
   Heading,
-  Text,
-  useToast,
-  SimpleGrid,
-  Icon,
-  Spinner,
-  useDisclosure,
-  VStack,
   HStack,
-  Badge,
-  Divider,
-  Center,
+  Icon,
   Input,
   InputGroup,
   InputLeftElement,
-  Select, useColorModeValue } from "@chakra-ui/react";
-import * as Yup from "yup";
-import {
-  FaBoxOpen,
-  FaPlus,
-  FaSearch,
-  FaFire,
-  FaTrash,
-} from "react-icons/fa";
+  Select,
+  SimpleGrid,
+  Spinner,
+  Text,
+  useColorModeValue,
+  useDisclosure,
+  useToast,
+  VStack
+} from "@chakra-ui/react";
 import axios from "axios";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
-import ProductCard from "./components/ProductCard";
-import ProductForm from "./components/ProductForm";
-import DeleteProductDialog from "./components/DeleteProductDialog";
+import { useEffect, useState } from "react";
+import {
+  FaBoxOpen,
+  FaFire,
+  FaPlus,
+  FaSearch,
+  FaTrash,
+} from "react-icons/fa";
+import * as Yup from "yup";
 import { useCartToast } from "../../hooks/useCartToast";
-import CompanyRequiredState from "../components/common/CompanyRequiredState";
 import { dashboardPalette } from "../../layouts/dashboardLayout/dashboardPalette";
+import stores from "../../store/stores";
+import CompanyRequiredState from "../components/common/CompanyRequiredState";
 import {
   MerchantHeroSection,
   MerchantPageShell,
   MerchantPanel,
 } from "../components/common/merchantDashboardUI";
-
-
+import DeleteProductDialog from "./components/DeleteProductDialog";
+import ProductCard from "./components/ProductCard";
+import ProductForm from "./components/ProductForm";
 
 const ProductSchema = Yup.object().shape({
   name: Yup.string().required("Product Name is required"),
@@ -98,16 +98,12 @@ const ProductsPage = observer(() => {
   const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
   const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
   const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
   const cPage = useColorModeValue("#F4F7FE", dashboardPalette.page);
   const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
-  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
-  
-                            
+  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);      
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const { showAddToCartToast } = useCartToast();
-
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +115,6 @@ const ProductsPage = observer(() => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [showInactive, setShowInactive] = useState(false);
-
   const { shopStore, auth, categoryStore, offerStore } = stores;
   const hasCompany = Boolean(auth.user?.company?._id || auth.user?.company);
   const isSuperAdmin = auth.user?.type === "superAdmin" || auth.user?.role === "superAdmin";
@@ -306,11 +301,6 @@ const ProductsPage = observer(() => {
         response.statusCode === 200 ||
         response.statusCode === 201
       ) {
-        // Use custom image toast
-        // selectedProduct is the ID or object during edit? In this scope, selectedProduct is state ID.
-        // We need the image object/url for the toast.
-        // payload.images is 'cleanImages'. array of objects or strings.
-
         const isEdit = !!selectedProduct;
         const toastTitle = isEdit ? "Product Updated" : "Product Created";
         const toastMsg = isEdit ? "Product updated successfully." : "Product created successfully.";
@@ -318,7 +308,6 @@ const ProductsPage = observer(() => {
         // Construct a temp product object for the toast to consume
         const toastProduct = {
           name: payload.name,
-          // No image for product creation/update as requested
           image: "",
           images: []
         };
@@ -672,5 +661,4 @@ const ProductsPage = observer(() => {
     </MerchantPageShell>
   );
 });
-
 export default ProductsPage;
