@@ -1,183 +1,262 @@
 "use client";
 
 import {
-  Badge,
   Box,
-  Flex,
+  Button,
   HStack,
+  Icon,
   IconButton,
   Image,
   Text,
-  Tooltip,
+  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
 import React from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaChartLine, FaEdit, FaFire, FaTrash } from "react-icons/fa";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 
 interface ProductCardProps {
   product: any;
-  onEdit: any;
-  onDelete: any;
+  onEdit: (product: any) => void;
+  onDelete: (product: any) => void;
 }
 
+const getProductImage = (product: any) =>
+  product?.images?.[0]?.preview ||
+  product?.images?.[0] ||
+  "https://via.placeholder.com/600x600?text=Product";
+
+const getCategoryName = (category: any) =>
+  typeof category === "object" ? category?.name || "Uncategorized" : category || "Uncategorized";
+
 const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
-  const inStock = product.stock > 0;
-  const imageSrc =
-    product.images?.[0]?.preview ||
-    product.images?.[0] ||
-    "https://via.placeholder.com/300x300?text=Product";
+  const surface = useColorModeValue("white", dashboardPalette.surface);
+  const surfaceMuted = useColorModeValue("#F8FAFC", dashboardPalette.surfaceAlt);
+  const border = useColorModeValue("#E2E8F0", dashboardPalette.border);
+  const text = useColorModeValue("#0F172A", dashboardPalette.text);
+  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const textSoft = useColorModeValue("#94A3B8", dashboardPalette.textSoft);
+  const successSoft = useColorModeValue("rgba(34, 197, 94, 0.12)", dashboardPalette.successSoft);
+  const success = useColorModeValue("#15803D", dashboardPalette.success);
+  const warningSoft = useColorModeValue("rgba(234, 88, 12, 0.12)", dashboardPalette.warningSoft);
+  const warning = useColorModeValue("#C2410C", dashboardPalette.warning);
+  const dangerSoft = useColorModeValue("rgba(239, 68, 68, 0.12)", dashboardPalette.dangerSoft);
+  const danger = useColorModeValue("#DC2626", dashboardPalette.danger);
+  const accent = useColorModeValue("#2563EB", dashboardPalette.accentStrong);
+  const accentSoft = useColorModeValue("rgba(37, 99, 235, 0.08)", dashboardPalette.accentSoft);
+  const shadow = useColorModeValue("0 14px 28px rgba(37, 99, 235, 0.08)", "0 22px 42px rgba(2, 6, 23, 0.26)");
+  const hoverShadow = useColorModeValue("0 20px 34px rgba(37, 99, 235, 0.12)", "0 28px 52px rgba(2, 6, 23, 0.34)");
+
+  const imageSrc = getProductImage(product);
+  const categoryName = getCategoryName(product?.category);
+  const inStock = Number(product?.stock || 0) > 0;
+  const lowStock = inStock && Number(product?.stock || 0) < 10;
+  const isFeatured = Boolean(product?.isFeatured);
 
   return (
     <Box
-      bg={dashboardPalette.surface}
-      borderRadius="24px"
-      overflow="hidden"
-      border="1px solid"
-      borderColor={dashboardPalette.border}
-      boxShadow="0 18px 42px rgba(0, 0, 0, 0.20)"
-      transition="all 0.25s ease"
       role="group"
+      overflow="hidden"
+      borderRadius={{ base: "18px", md: "22px" }}
+      border="1px solid"
+      borderColor={border}
+      bg={surface}
+      boxShadow={{ base: "none", md: shadow }}
+      transition="transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease"
       _hover={{
-        transform: "translateY(-6px)",
-        boxShadow: "0 26px 56px rgba(0, 0, 0, 0.28)",
-        borderColor: dashboardPalette.accent,
+        transform: { base: "none", md: "translateY(-2px)" },
+        boxShadow: { base: "none", md: hoverShadow },
+        // borderColor: { base: border, md: accent },
       }}
     >
-      <Box position="relative" h="220px" bg={dashboardPalette.surfaceSoft}>
+      <Box position="relative" aspectRatio={0.96} overflow="hidden" bg={surfaceMuted}>
         <Image
           src={imageSrc}
-          alt={product.name}
+          alt={product?.name || "Product image"}
           w="100%"
           h="100%"
           objectFit="cover"
-          transition="transform 0.3s ease"
-          _groupHover={{ transform: "scale(1.05)" }}
+          transition="transform 0.45s ease"
+          _groupHover={{ transform: { base: "none", md: "scale(1.05)" } }}
         />
 
-        <Badge
+        {isFeatured ? (
+          <HStack
+            position="absolute"
+            left={1.5}
+            top={1.5}
+            spacing={1}
+            px={2}
+            py={0.75}
+            borderRadius="full"
+            bg="rgba(255,255,255,0.92)"
+            color={warning}
+            backdropFilter="blur(10px)"
+            fontSize="10px"
+            fontWeight="700"
+          >
+            <Icon as={FaFire} boxSize={2.5} />
+            <Text>Featured</Text>
+          </HStack>
+        ) : null}
+
+        <Box
           position="absolute"
-          top={3}
-          left={3}
-          px={3}
-          py={1}
+          right={1.5}
+          top={1.5}
+          px={2}
+          py={0.75}
           borderRadius="full"
-          fontSize="xs"
-          bg={inStock ? "rgba(70, 201, 139, 0.14)" : "rgba(239, 107, 107, 0.14)"}
-          color={inStock ? dashboardPalette.success : dashboardPalette.danger}
-          border="1px solid"
-          borderColor={inStock ? "rgba(70, 201, 139, 0.24)" : "rgba(239, 107, 107, 0.24)"}
+          fontSize="10px"
+          fontWeight="700"
+          backdropFilter="blur(10px)"
+          bg={inStock ? (lowStock ? warningSoft : successSoft) : dangerSoft}
+          color={inStock ? (lowStock ? warning : success) : danger}
         >
-          {inStock ? `${product.stock} in stock` : "Out of stock"}
-        </Badge>
+          {inStock ? `${product?.stock} left` : "Out"}
+        </Box>
 
         <HStack
           position="absolute"
-          top={3}
-          right={3}
-          spacing={2}
-          opacity={0}
-          _groupHover={{ opacity: 1 }}
-          transition="opacity 0.2s ease"
+          // left={1.5}
+          right={1.5}
+          bottom={1.5}
+          spacing={1.5}
+          opacity={{ base: 1, md: 0 }}
+          transform={{ base: "none", md: "translateY(6px)" }}
+          transition="all 0.22s ease"
+          _groupHover={{ opacity: 1, transform: "translateY(0)" }}
+          display={{ base: "none", md: "flex" }}
         >
-          <Tooltip label="Edit" hasArrow>
-            <IconButton
-              aria-label="Edit product"
-              icon={<FaEdit />}
-              size="sm"
-              bg={dashboardPalette.accentSoft}
-              color={dashboardPalette.accentStrong}
-              border="1px solid"
-              borderColor={dashboardPalette.border}
-              _hover={{ bg: dashboardPalette.accent, color: dashboardPalette.page }}
-              onClick={() => onEdit(product)}
-            />
-          </Tooltip>
-          <Tooltip label="Delete" hasArrow>
-            <IconButton
-              aria-label="Delete product"
-              icon={<FaTrash />}
-              size="sm"
-              bg="rgba(239, 107, 107, 0.12)"
-              color={dashboardPalette.danger}
-              border="1px solid"
-              borderColor="rgba(239, 107, 107, 0.24)"
-              _hover={{ bg: "rgba(239, 107, 107, 0.20)" }}
-              onClick={() => onDelete(product)}
-            />
-          </Tooltip>
+          <IconButton
+            aria-label="Edit product"
+            size="sm"
+            // h="32px"
+            borderRadius="full"
+            color={text}
+            fontSize="11px"
+            fontWeight="700"
+            // iconSpacing={1.5}
+            icon={<FaEdit />}
+            _hover={{ bg: "blue.50",color:"blue.500" }}
+            onClick={() => onEdit(product)}
+          />
+          <IconButton
+            aria-label="Delete product"
+            icon={<FaTrash />}
+            size="sm"
+            h="32px"
+            w="32px"
+            minW="32px"
+            borderRadius="full"
+            bg="rgba(255,255,255,0.94)"
+            color={danger}
+            _hover={{ bg: danger, color: "white" }}
+            onClick={() => onDelete(product)}
+          />
         </HStack>
       </Box>
 
-      <Box p={4}>
-        <Text fontWeight="600" fontSize="md" color={dashboardPalette.text} noOfLines={2} mb={1}>
-          {product.name}
+      <VStack align="stretch" spacing={0} p={{ base: 2.5, md: 3.5 }}>
+        <Text
+          fontSize="9px"
+          fontWeight="700"
+          textTransform="uppercase"
+          letterSpacing="0.12em"
+          color={textSoft}
+        >
+          {product?.brand || categoryName}
         </Text>
 
-        <Text fontSize="xl" fontWeight="700" color={dashboardPalette.accentStrong} mb={2}>
-          Rs {Number(product.price).toLocaleString()}
+        <Text mt={1} fontSize={{ base: "13px", md: "sm" }} fontWeight="600" color={text} noOfLines={2} lineHeight="1.35">
+          {product?.name || "Untitled product"}
         </Text>
 
-        <Flex justify="space-between" align="center" gap={3}>
-          <Badge
-            bg={dashboardPalette.accentSoft}
-            color={dashboardPalette.accentStrong}
-            fontSize="xs"
-            px={2.5}
-            py={1}
-            borderRadius="md"
-            textTransform="uppercase"
-          >
-            {typeof product.category === "object" ? product.category.name : product.category}
-          </Badge>
+        <HStack mt={{base:0.5,md:2}} justify="space-between" align="center" spacing={2}>
+          <Text fontSize={{ base: "sm", md: "md" }} fontWeight="700" color={text}>
+            Rs {Number(product?.price || 0).toLocaleString("en-IN")}
+          </Text>
 
-          {product.brand ? (
-            <Text fontSize="xs" color={dashboardPalette.textSoft}>
-              {product.brand}
+          {product?.discountPrice ? (
+            <HStack spacing={1} color={success} fontSize="10px" fontWeight="700">
+              <Icon as={FaChartLine} boxSize={2.5} />
+              <Text>
+                Save Rs{" "}
+                {Math.max(Number(product?.price || 0) - Number(product?.discountPrice || 0), 0).toLocaleString(
+                  "en-IN"
+                )}
+              </Text>
+            </HStack>
+          ) : (
+            <Text fontSize="9px" color={textMuted} noOfLines={1}>
+              {categoryName}
             </Text>
-          ) : null}
-        </Flex>
+          )}
+        </HStack>
 
-        {product.subCategories?.length > 0
-          ? (() => {
-              const maxShow = 3;
-              const extraCount = product.subCategories.length - maxShow;
+        <HStack mt={2.5} spacing={1.5} display={{ base: "flex", md: "none" }}>
+          <Button
+            flex="1"
+            h="30px"
+            borderRadius="lg"
+            bg={surfaceMuted}
+            color={text}
+            fontSize="11px"
+            fontWeight="700"
+            iconSpacing={1}
+            leftIcon={<FaEdit />}
+            _active={{ transform: "scale(0.98)" }}
+            onClick={() => onEdit(product)}
+          >
+            Edit
+          </Button>
+          <IconButton
+            aria-label="Delete product"
+            icon={<FaTrash />}
+            h="30px"
+            w="30px"
+            minW="30px"
+            borderRadius="lg"
+            bg={dangerSoft}
+            color={danger}
+            _active={{ transform: "scale(0.96)" }}
+            onClick={() => onDelete(product)}
+          />
+        </HStack>
 
-              return (
-                <HStack spacing={1} mt={3} flexWrap="wrap">
-                  {product.subCategories.slice(0, maxShow).map((sub: any) => (
-                    <Badge
-                      key={typeof sub === "object" ? sub._id : sub}
-                      variant="outline"
-                      color={dashboardPalette.textMuted}
-                      borderColor={dashboardPalette.borderStrong}
-                      fontSize="xx-small"
-                      px={2}
-                      py={0.5}
-                      borderRadius="md"
-                    >
-                      {typeof sub === "object" ? sub.name : sub}
-                    </Badge>
-                  ))}
-                  {extraCount > 0 ? (
-                    <Badge
-                      variant="outline"
-                      color={dashboardPalette.textSoft}
-                      borderColor={dashboardPalette.borderStrong}
-                      fontSize="xx-small"
-                      px={2}
-                      py={0.5}
-                      borderRadius="md"
-                    >
-                      +{extraCount} more
-                    </Badge>
-                  ) : null}
-                </HStack>
-              );
-            })()
-          : null}
-      </Box>
+        {Array.isArray(product?.subCategories) && product.subCategories.length > 0 ? (
+          <HStack mt={2.5} spacing={1.5} flexWrap="wrap">
+            {product.subCategories.slice(0, 2).map((subCategory: any) => (
+              <Box
+                key={typeof subCategory === "object" ? subCategory?._id : subCategory}
+                px={2}
+                py={0.75}
+                borderRadius="full"
+                bg={accentSoft}
+                color={accent}
+                fontSize="9px"
+                fontWeight="700"
+              >
+                {typeof subCategory === "object" ? subCategory?.name : subCategory}
+              </Box>
+            ))}
+            {product.subCategories.length > 2 ? (
+              <Box
+                px={2}
+                py={0.75}
+                borderRadius="full"
+                bg={surfaceMuted}
+                color={textMuted}
+                fontSize="9px"
+                fontWeight="700"
+              >
+                +{product.subCategories.length - 2}
+              </Box>
+            ) : null}
+          </HStack>
+        ) : null}
+      </VStack>
     </Box>
   );
 };
-
 export default ProductCard;
