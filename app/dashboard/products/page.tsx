@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Center,
-  Circle,
   Flex,
   Grid,
   HStack,
@@ -27,12 +26,11 @@ import {
   useColorModeValue,
   useDisclosure,
   useToast,
-  VStack,
+  VStack
 } from "@chakra-ui/react";
 import axios from "axios";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { IconType } from "react-icons";
 import {
   FaBoxOpen,
   FaChartLine,
@@ -51,7 +49,6 @@ import DeleteProductDialog from "./components/DeleteProductDialog";
 import ProductCard from "./components/ProductCard";
 import ProductForm from "./components/ProductForm";
 import { ProductStatCard } from "./components/ProductStatCard";
-import { FiAlertCircle, FiCheckCircle, FiClock, FiPackage } from "react-icons/fi";
 
 const emptyToUndefined = (value: any, originalValue: any) =>
   originalValue === "" || originalValue === null || originalValue === undefined ? undefined : value;
@@ -532,10 +529,6 @@ const ProductsPage = observer(() => {
             Array.from({ length: 4 }).map((_, index) => <StatCardSkeleton key={index} />)
           ) : (
             <>
-             {/* <ProductStatCard icon={FiPackage} label="Total Products" value={1284} tint="sage" trend={12} />
-  <ProductStatCard icon={FiCheckCircle} label="In Stock"       value={847}  tint="green" trend={5} />
-  <ProductStatCard icon={FiAlertCircle} label="Out of Stock"  value={39}   tint="rose" trend={-3} />
-  <ProductStatCard icon={FiClock}       label="Low Stock"     value={62}   tint="warning" trend={-8} /> */}
               <ProductStatCard icon={FaBoxOpen} label="Total products" value={stats.total} tint="sage" />
               <ProductStatCard icon={FaChartLine} label="In stock" value={stats.inStock} tint="green" />
               <ProductStatCard icon={FaFire} label="Featured" value={stats.featured} tint="rose" />
@@ -791,131 +784,6 @@ const ProductsPage = observer(() => {
     </Box>
   );
 });
-
-function StatCard({
-  icon,
-  label,
-  value,
-  tint,
-}: {
-  icon: IconType;
-  label: string;
-  value: number;
-  tint: "sage" | "green" | "rose" | "warning";
-}) {
-  const surface = useColorModeValue("white", dashboardPalette.surface);
-  const border = useColorModeValue("#E2E8F0", dashboardPalette.border);
-  const text = useColorModeValue("#0F172A", dashboardPalette.text);
-  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
-
-  const shadow = useColorModeValue(
-    "0 10px 30px rgba(15, 23, 42, 0.06)",
-    "0 16px 40px rgba(0, 0, 0, 0.28)"
-  );
-
-  const toneMap = {
-    sage: {
-      bg: useColorModeValue("#E8F7F1", "rgba(45, 212, 191, 0.14)"),
-      color: useColorModeValue("#1D7A61", "#7DD3C7"),
-    },
-    green: {
-      bg: useColorModeValue("#ECFDF5", "rgba(16, 185, 129, 0.14)"),
-      color: useColorModeValue("#15803D", "#6EE7B7"),
-    },
-    rose: {
-      bg: useColorModeValue("#FFF1F2", "rgba(244, 63, 94, 0.14)"),
-      color: useColorModeValue("#BE123C", "#FDA4AF"),
-    },
-    warning: {
-      bg: useColorModeValue("#FFF7ED", "rgba(234, 88, 12, 0.16)"),
-      color: useColorModeValue("#C2410C", "#FDBA74"),
-    },
-  } as const;
-
-  const tone = toneMap[tint];
-
-  return (
-    <Flex
-      direction={{ base: "row", md: "column" }}
-      align={{ base: "center", md: "flex-start" }}
-      justify="space-between"
-      gap={{ base: 2, md: 4 }}
-      w="full"
-      minW={{ base: "100%", sm: "180px", md: "unset" }}
-      borderRadius="16px"
-      borderWidth="1px"
-      borderColor={border}
-      bg={surface}
-      px={{ base: 2, md: 5 }}
-      py={{ base: 3, md: 5 }}
-      boxShadow={{ base: "sm", md: shadow }}
-      transition="all 0.25s ease"
-      _hover={{
-        // transform: "translateY(-2px)",
-        boxShadow: shadow,
-      }}
-    >
-      {/* Left Section */}
-      <HStack spacing={3} align="center">
-        <Flex
-          align="center"
-          justify="center"
-          boxSize={{ base: "38px", md: "52px" }}
-          borderRadius="16px"
-          bg={tone.bg}
-          color={tone.color}
-          flexShrink={0}
-        >
-          <Icon as={icon} boxSize={{ base: 4, md: 5 }} />
-        </Flex>
-
-        {/* Mobile Content */}
-        <Box display={{ base: "block", md: "none" }}>
-          <Text
-            fontSize="sm"
-            color={textMuted}
-            fontWeight="500"
-            lineHeight="short"
-          >
-            {label}
-          </Text>
-
-          <Text
-            fontSize="xl"
-            fontWeight="800"
-            color={text}
-            lineHeight="1"
-            mt={1}
-          >
-            {value}
-          </Text>
-        </Box>
-      </HStack>
-
-      {/* Desktop Content */}
-      <Box display={{ base: "none", md: "block" }}>
-        <Text
-          fontSize="3xl"
-          fontWeight="800"
-          color={text}
-          lineHeight="1"
-          mt={1}
-        >
-          {value}
-        </Text>
-
-        <Text
-          mt={2}
-          fontSize="sm"
-          color={textMuted}
-          fontWeight="500"
-        >
-          {label}
-        </Text>
-      </Box>
-    </Flex>
-  );
-}
 
 function StatCardSkeleton() {
   return (
