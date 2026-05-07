@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Center,
-  Circle,
   Flex,
   Grid,
   HStack,
@@ -27,7 +26,7 @@ import {
   useColorModeValue,
   useDisclosure,
   useToast,
-  VStack,
+  VStack
 } from "@chakra-ui/react";
 import axios from "axios";
 import { observer } from "mobx-react-lite";

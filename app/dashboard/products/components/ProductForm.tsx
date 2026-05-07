@@ -7,6 +7,12 @@ import {
   Center,
   Checkbox,
   Divider,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerFooter,
+  DrawerOverlay,
   Flex,
   FormControl,
   FormErrorMessage,
@@ -1434,287 +1440,405 @@ const ProductForm: React.FC<ProductFormProps> = ({
             };
             const isLastMobileStep = sectionIndex === FORM_SECTIONS.length - 1;
             const mobileProgress = ((sectionIndex + 1) / FORM_SECTIONS.length) * 100;
-
             return (
-              <Box
-                position="fixed"
-                inset={0}
-                zIndex={1400}
-                bg={overlayBg}
-                backdropFilter="blur(14px)"
-                display="flex"
-                alignItems={{ base: "flex-end", md: "stretch" }}
-                justifyContent={{ base: "stretch", md: "flex-end" }}
-                opacity={isVisible ? 1 : 0}
-                transition={`opacity ${DRAWER_TRANSITION_MS}ms ease`}
-                onClick={onClose}
+              <Drawer
+  isOpen={isVisible}
+  placement={isDesktop ? "right" : "bottom"}
+  onClose={onClose}
+  size={isDesktop ? "2xl" : "full"}
+  trapFocus={false}
+  blockScrollOnMount={false}
+  preserveScrollBarGap
+>
+  <DrawerOverlay
+    bg={overlayBg}
+    backdropFilter="blur(14px)"
+  />
+
+  <DrawerContent
+    bg={shell}
+    borderRadius={{ base: "28px 28px 0 0", md: "32px 0 0 32px" }}
+    borderWidth="1px"
+    borderColor={border}
+    boxShadow={{ base: "none", md: sheetShadow }}
+    overflow="hidden"
+    maxW={{ base: "100%", md: "760px" }}
+    h={{ base: "92dvh", md: "100dvh" }}
+    ml="auto"
+    sx={merchantFormSx}
+  >
+    <Form style={{ height: "100%" }}>
+      <Flex direction="column" h="100%">
+        
+        {/* HEADER */}
+        <Box
+          px={{ base: 4, md: 6 }}
+          pt={{ base: 3, md: 5 }}
+          pb={{ base: 2, md: 4.5 }}
+          borderBottomWidth="1px"
+          borderBottomColor={border}
+          bg={surface}
+        >
+          {!isDesktop && (
+            <Box
+              mx="auto"
+              mb={3}
+              h="5px"
+              w="44px"
+              borderRadius="full"
+              bg={border}
+            />
+          )}
+
+          <HStack justify="space-between" align="start" spacing={3}>
+            <HStack
+              spacing={{ base: 3, md: 4 }}
+              align="start"
+              flex="1"
+            >
+              <Center
+                boxSize={{ base: "42px", md: "52px" }}
+                borderRadius={{ base: "16px", md: "18px" }}
+                bgGradient={heroGradient}
+                color="white"
+                boxShadow={{
+                  base: "0 10px 20px rgba(37, 99, 235, 0.16)",
+                  md: "0 18px 34px rgba(37, 99, 235, 0.18)",
+                }}
               >
-                <Box
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label={isEdit ? "Edit product form" : "Create product form"}
-                  w="full"
-                  maxW={{ base: "100%", md: "760px" }}
-                  h={{ base: "92dvh", md: "100dvh" }}
-                  bg={shell}
-                  borderRadius={{ base: "28px 28px 0 0", md: "32px 0 0 32px" }}
-                  borderWidth="1px"
-                  borderColor={border}
-                  boxShadow={{ base: "none", md: sheetShadow }}
-                  overflow="hidden"
-                  sx={merchantFormSx}
-                  opacity={isVisible ? 1 : 0}
-                  transform={
-                    isVisible
-                      ? "translate3d(0, 0, 0)"
-                      : isDesktop
-                        ? "translate3d(56px, 0, 0)"
-                        : "translate3d(0, 40px, 0)"
-                  }
-                  transition={`transform ${DRAWER_TRANSITION_MS}ms cubic-bezier(0.22, 1, 0.36, 1), opacity ${DRAWER_TRANSITION_MS}ms ease`}
-                  onClick={(event) => event.stopPropagation()}
+                <Icon as={FaBoxOpen} boxSize={{ base: 4, md: 5 }} />
+              </Center>
+
+              <Box minW={0}>
+                <Text
+                  fontSize="11px"
+                  fontWeight="700"
+                  textTransform="uppercase"
+                  letterSpacing="0.14em"
+                  color={accentStrong}
                 >
-                  <Form style={{ height: "100%" }}>
-                    <Flex direction="column" h="100%">
-                      <Box px={{ base: 4, md: 6 }} pt={{ base: 3, md: 5 }} pb={{ base: 2, md: 4.5 }} borderBottomWidth="1px" borderBottomColor={border} bg={surface}>
-                        <Box
-                          mx="auto"
-                          mb={3}
-                          display={{ base: "block", md: "none" }}
-                          h="5px"
-                          w="44px"
-                          borderRadius="full"
-                          bg={border}
-                        />
+                  {isEdit ? "Edit product" : "New product"}
+                </Text>
 
-                        <HStack justify="space-between" align="start" spacing={3}>
-                          <HStack spacing={{ base: 3, md: 4 }} align="start" flex="1">
-                            <Center
-                              boxSize={{ base: "42px", md: "52px" }}
-                              borderRadius={{ base: "16px", md: "18px" }}
-                              bgGradient={heroGradient}
-                              color="white"
-                              boxShadow={{ base: "0 10px 20px rgba(37, 99, 235, 0.16)", md: "0 18px 34px rgba(37, 99, 235, 0.18)" }}
-                            >
-                              <Icon as={FaBoxOpen} boxSize={{ base: 4, md: 5 }} />
-                            </Center>
+                <Text
+                  mt={1}
+                  fontSize={{ base: "lg", md: "2xl" }}
+                  fontWeight="700"
+                  color={text}
+                  lineHeight="1.15"
+                >
+                  {isEdit
+                    ? "Refine this item"
+                    : "Launch a new item"}
+                </Text>
 
-                            <Box minW={0}>
-                              <Text fontSize="11px" fontWeight="700" textTransform="uppercase" letterSpacing="0.14em" color={accentStrong}>
-                                {isEdit ? "Edit product" : "New product"}
-                              </Text>
-                              <Text mt={1} fontSize={{ base: "lg", md: "2xl" }} fontWeight="700" color={text} lineHeight="1.15">
-                                {isEdit ? "Refine this item" : "Launch a new item"}
-                              </Text>
-                              <Text mt={1.5} fontSize={{ base: "xs", md: "sm" }} color={textMuted} maxW="2xl">
-                                {isDesktop
-                                  ? "All sections stay visible here so you can review everything in one pass."
-                                  : `${activeSectionConfig.title} • Step ${sectionIndex + 1} of ${FORM_SECTIONS.length}`}
-                              </Text>
-                            </Box>
-                          </HStack>
-
-                          <IconButton
-                            aria-label="Close product form"
-                            icon={<CloseIcon boxSize={3} />}
-                            size="sm"
-                            borderRadius="full"
-                            variant="ghost"
-                            color={textMuted}
-                            _hover={{ bg: surfaceMuted, color: text }}
-                            onClick={onClose}
-                          />
-                        </HStack>
-                      </Box>
-
-                      {!isDesktop ? (
-                        <Box px={4} py={3.5} borderBottomWidth="1px" borderBottomColor={border} bg={surface}>
-                          <Flex justify="space-between" align="center" gap={3}>
-                            <Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.12em" color={textSoft}>
-                              Step {sectionIndex + 1} of {FORM_SECTIONS.length}
-                            </Text>
-                            <Text fontSize="xs" color={textMuted} noOfLines={1}>
-                              {activeSectionConfig.subtitle}
-                            </Text>
-                          </Flex>
-                          <Box mt={3} h="6px" borderRadius="full" bg={surfaceMuted} overflow="hidden">
-                            <Box
-                              h="100%"
-                              w={`${mobileProgress}%`}
-                              borderRadius="full"
-                              bg={accent}
-                              transition="width 0.28s ease"
-                            />
-                          </Box>
-                        </Box>
-                      ) : null}
-
-                      <Box flex="1" overflowY="auto" px={{ base: 4, md: 5 }} py={{ base: 2, md: 5 }} bg={shell}>
-                        {isDesktop ? (
-                          <VStack align="stretch" spacing={4}>
-                            {FORM_SECTIONS.map((section) => {
-                              const tone = sectionTone(section.tint);
-
-                              return (
-                                <Box
-                                  key={section.id}
-                                  borderRadius="26px"
-                                  borderWidth="1px"
-                                  borderColor={border}
-                                  bg={surface}
-                                  px={{ base: 4, md: 5 }}
-                                  py={{ base: 4, md: 5 }}
-                                  boxShadow="0 16px 32px rgba(15, 23, 42, 0.05)"
-                                >
-                                  <HStack align="start" spacing={4} mb={5}>
-                                    <Center boxSize="42px" borderRadius="16px" bg={tone.bg} color={tone.color}>
-                                      <Icon as={section.icon} boxSize={4.5} />
-                                    </Center>
-                                    <Box>
-                                      <Text fontSize="lg" fontWeight="700" color={text}>
-                                        {section.title}
-                                      </Text>
-                                      <Text mt={1} fontSize="sm" color={textMuted}>
-                                        {section.subtitle}
-                                      </Text>
-                                    </Box>
-                                  </HStack>
-
-                                  {renderSectionContent(section.id)}
-                                </Box>
-                              );
-                            })}
-                          </VStack>
-                        ) : (
-                          <SlideFade in key={activeSection} offsetY="14px">
-                            <Box
-                              borderRadius="24px"
-                              // borderWidth="1px"
-                              // borderColor={border}
-                              bg={surface}
-                              // px={4}
-                              py={4}
-                              boxShadow="0 14px 28px rgba(15, 23, 42, 0.06)"
-                            >
-                              <HStack align="start" spacing={3} mb={5}>
-                                <Center boxSize="40px" borderRadius="15px" bg={activeTone.bg} color={activeTone.color}>
-                                  <Icon as={activeSectionConfig.icon} boxSize={4} />
-                                </Center>
-                                <Box>
-                                  <Text fontSize="md" fontWeight="700" color={text}>
-                                    {activeSectionConfig.title}
-                                  </Text>
-                                  <Text mt={1} fontSize="sm" color={textMuted}>
-                                    {activeSectionConfig.subtitle}
-                                  </Text>
-                                </Box>
-                              </HStack>
-
-                              {renderSectionContent(activeSection)}
-                            </Box>
-                          </SlideFade>
-                        )}
-                      </Box>
-
-                      <Box px={{ base: 4, md: 5 }} py={{ base: 3.5, md: 4 }} borderTopWidth="1px" borderTopColor={border} bg={surface}>
-                        {isDesktop ? (
-                          <Flex justify="space-between" align="center" gap={3}>
-                            <Text fontSize="sm" color={textMuted}>
-                              Review every section in the drawer, then save when you are ready.
-                            </Text>
-
-                            <HStack spacing={3}>
-                              <Button
-                                type="button"
-                                h="44px"
-                                px={5}
-                                borderRadius="full"
-                                variant="outline"
-                                borderColor={border}
-                                color={text}
-                                bg={surface}
-                                _hover={{ bg: surfaceMuted }}
-                                onClick={onClose}
-                              >
-                                Cancel
-                              </Button>
-
-                              <Button
-                                type="button"
-                                h="44px"
-                                px={6}
-                                borderRadius="full"
-                                bg={accent}
-                                color="white"
-                                fontWeight="700"
-                                isLoading={formik.isSubmitting}
-                                leftIcon={<Icon as={isEdit ? FaSave : FaPlus} />}
-                                _hover={{ bg: accentStrong }}
-                                _active={{ transform: "scale(0.98)" }}
-                                onClick={handleSubmitClick}
-                              >
-                                {isEdit ? "Save changes" : "Save product"}
-                              </Button>
-                            </HStack>
-                          </Flex>
-                        ) : (
-                          <VStack align="stretch" spacing={2.5}>
-                            {/* <HStack justify="space-between" align="center">
-                              <Text fontSize="xs" color={textMuted}>
-                                {activeSectionConfig.title}
-                              </Text>
-                              <Text fontSize="xs" fontWeight="700" color={text}>
-                                {isLastMobileStep ? "Final step" : "Continue"}
-                              </Text>
-                            </HStack> */}
-
-                            <HStack spacing={2}>
-                              <Button
-                                type="button"
-                                flex="1"
-                                h="40px"
-                                borderRadius="full"
-                                variant="outline"
-                                borderColor={border}
-                                color={text}
-                                bg={surface}
-                                fontSize="sm"
-                                _hover={{ bg: surfaceMuted }}
-                                onClick={sectionIndex === 0 ? onClose : goToPreviousSection}
-                              >
-                                {sectionIndex === 0 ? "Cancel" : "Previous"}
-                              </Button>
-
-                              <Button
-                                type="button"
-                                flex="1"
-                                h="40px"
-                                px={4}
-                                borderRadius="full"
-                                bg={accent}
-                                color="white"
-                                fontSize="sm"
-                                fontWeight="700"
-                                isLoading={isLastMobileStep ? formik.isSubmitting : false}
-                                rightIcon={!isLastMobileStep ? <FaChevronRight /> : undefined}
-                                _hover={{ bg: accentStrong }}
-                                _active={{ transform: "scale(0.98)" }}
-                                onClick={isLastMobileStep ? handleSubmitClick : goToNextSection}
-                              >
-                                {isLastMobileStep
-                                  ? isEdit
-                                    ? "Save changes"
-                                    : "Save product"
-                                  : "Next"}
-                              </Button>
-                            </HStack>
-                          </VStack>
-                        )}
-                      </Box>
-                    </Flex>
-                  </Form>
-                </Box>
+                <Text
+                  mt={1.5}
+                  fontSize={{ base: "xs", md: "sm" }}
+                  color={textMuted}
+                  maxW="2xl"
+                >
+                  {isDesktop
+                    ? "All sections stay visible here so you can review everything in one pass."
+                    : `${activeSectionConfig.title} • Step ${
+                        sectionIndex + 1
+                      } of ${FORM_SECTIONS.length}`}
+                </Text>
               </Box>
+            </HStack>
+
+            <DrawerCloseButton
+              position="relative"
+              top="unset"
+              right="unset"
+              borderRadius="full"
+            />
+          </HStack>
+        </Box>
+
+        {/* MOBILE PROGRESS */}
+        {!isDesktop ? (
+          <Box
+            px={4}
+            py={3.5}
+            borderBottomWidth="1px"
+            borderBottomColor={border}
+            bg={surface}
+          >
+            <Flex justify="space-between" align="center" gap={3}>
+              <Text
+                fontSize="xs"
+                fontWeight="700"
+                textTransform="uppercase"
+                letterSpacing="0.12em"
+                color={textSoft}
+              >
+                Step {sectionIndex + 1} of {FORM_SECTIONS.length}
+              </Text>
+
+              <Text
+                fontSize="xs"
+                color={textMuted}
+                noOfLines={1}
+              >
+                {activeSectionConfig.subtitle}
+              </Text>
+            </Flex>
+
+            <Box
+              mt={3}
+              h="6px"
+              borderRadius="full"
+              bg={surfaceMuted}
+              overflow="hidden"
+            >
+              <Box
+                h="100%"
+                w={`${mobileProgress}%`}
+                borderRadius="full"
+                bg={accent}
+                transition="width 0.28s ease"
+              />
+            </Box>
+          </Box>
+        ) : null}
+
+        {/* BODY */}
+        <DrawerBody
+          px={{ base: 4, md: 5 }}
+          py={{ base: 2, md: 5 }}
+          bg={shell}
+        >
+          {isDesktop ? (
+            <VStack align="stretch" spacing={4}>
+              {FORM_SECTIONS.map((section) => {
+                const tone = sectionTone(section.tint);
+
+                return (
+                  <Box
+                    key={section.id}
+                    borderRadius="26px"
+                    borderWidth="1px"
+                    borderColor={border}
+                    bg={surface}
+                    px={{ base: 4, md: 5 }}
+                    py={{ base: 4, md: 5 }}
+                    boxShadow="0 16px 32px rgba(15, 23, 42, 0.05)"
+                  >
+                    <HStack align="start" spacing={4} mb={5}>
+                      <Center
+                        boxSize="42px"
+                        borderRadius="16px"
+                        bg={tone.bg}
+                        color={tone.color}
+                      >
+                        <Icon
+                          as={section.icon}
+                          boxSize={5}
+                        />
+                      </Center>
+
+                      <Box>
+                        <Text
+                          fontSize="lg"
+                          fontWeight="700"
+                          color={text}
+                        >
+                          {section.title}
+                        </Text>
+
+                        <Text
+                          mt={1}
+                          fontSize="sm"
+                          color={textMuted}
+                        >
+                          {section.subtitle}
+                        </Text>
+                      </Box>
+                    </HStack>
+
+                    {renderSectionContent(section.id)}
+                  </Box>
+                );
+              })}
+            </VStack>
+          ) : (
+            <SlideFade
+              in
+              key={activeSection}
+              offsetY="14px"
+            >
+              <Box
+                borderRadius="24px"
+                bg={surface}
+                py={4}
+                boxShadow="0 14px 28px rgba(15, 23, 42, 0.06)"
+              >
+                <HStack align="start" spacing={3} mb={5}>
+                  <Center
+                    boxSize="40px"
+                    borderRadius="15px"
+                    bg={activeTone.bg}
+                    color={activeTone.color}
+                  >
+                    <Icon
+                      as={activeSectionConfig.icon}
+                      boxSize={4}
+                    />
+                  </Center>
+
+                  <Box>
+                    <Text
+                      fontSize="md"
+                      fontWeight="700"
+                      color={text}
+                    >
+                      {activeSectionConfig.title}
+                    </Text>
+
+                    <Text
+                      mt={1}
+                      fontSize="sm"
+                      color={textMuted}
+                    >
+                      {activeSectionConfig.subtitle}
+                    </Text>
+                  </Box>
+                </HStack>
+
+                {renderSectionContent(activeSection)}
+              </Box>
+            </SlideFade>
+          )}
+        </DrawerBody>
+
+        {/* FOOTER */}
+        <DrawerFooter
+          px={{ base: 4, md: 5 }}
+          py={{ base: 3.5, md: 4 }}
+          borderTopWidth="1px"
+          borderTopColor={border}
+          bg={surface}
+        >
+          {isDesktop ? (
+            <Flex
+              justify="space-between"
+              align="center"
+              gap={3}
+              w="full"
+            >
+              <Text fontSize="sm" color={textMuted}>
+                Review every section in the drawer, then save
+                when you are ready.
+              </Text>
+
+              <HStack spacing={3}>
+                <Button
+                  type="button"
+                  h="44px"
+                  px={5}
+                  borderRadius="full"
+                  variant="outline"
+                  borderColor={border}
+                  color={text}
+                  bg={surface}
+                  _hover={{ bg: surfaceMuted }}
+                  onClick={onClose}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="button"
+                  h="44px"
+                  px={6}
+                  borderRadius="full"
+                  bg={accent}
+                  color="white"
+                  fontWeight="700"
+                  isLoading={formik.isSubmitting}
+                  leftIcon={
+                    <Icon as={isEdit ? FaSave : FaPlus} />
+                  }
+                  _hover={{ bg: accentStrong }}
+                  _active={{ transform: "scale(0.98)" }}
+                  onClick={handleSubmitClick}
+                >
+                  {isEdit
+                    ? "Save changes"
+                    : "Save product"}
+                </Button>
+              </HStack>
+            </Flex>
+          ) : (
+            <VStack align="stretch" spacing={2.5} w="full">
+              <HStack spacing={2}>
+                <Button
+                  type="button"
+                  flex="1"
+                  h="40px"
+                  borderRadius="full"
+                  variant="outline"
+                  borderColor={border}
+                  color={text}
+                  bg={surface}
+                  fontSize="sm"
+                  _hover={{ bg: surfaceMuted }}
+                  onClick={
+                    sectionIndex === 0
+                      ? onClose
+                      : goToPreviousSection
+                  }
+                >
+                  {sectionIndex === 0
+                    ? "Cancel"
+                    : "Previous"}
+                </Button>
+
+                <Button
+                  type="button"
+                  flex="1"
+                  h="40px"
+                  px={4}
+                  borderRadius="full"
+                  bg={accent}
+                  color="white"
+                  fontSize="sm"
+                  fontWeight="700"
+                  isLoading={
+                    isLastMobileStep
+                      ? formik.isSubmitting
+                      : false
+                  }
+                  rightIcon={
+                    !isLastMobileStep ? (
+                      <FaChevronRight />
+                    ) : undefined
+                  }
+                  _hover={{ bg: accentStrong }}
+                  _active={{
+                    transform: "scale(0.98)",
+                  }}
+                  onClick={
+                    isLastMobileStep
+                      ? handleSubmitClick
+                      : goToNextSection
+                  }
+                >
+                  {isLastMobileStep
+                    ? isEdit
+                      ? "Save changes"
+                      : "Save product"
+                    : "Next"}
+                </Button>
+              </HStack>
+            </VStack>
+          )}
+        </DrawerFooter>
+      </Flex>
+    </Form>
+  </DrawerContent>
+</Drawer>
             );
           }}
       </Formik>
