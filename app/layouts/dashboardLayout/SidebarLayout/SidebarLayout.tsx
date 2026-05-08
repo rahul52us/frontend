@@ -26,7 +26,7 @@ import {
 import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import { getSidebarDataByRole, sidebarFooterData } from "./utils/SidebarItems";
 import { observer } from "mobx-react-lite";
-import { useRouter } from "next/navigation"; // Replace useNavigate with Next.js useRouter
+import { usePathname, useRouter } from "next/navigation"; // Replace useNavigate with Next.js useRouter
 import SidebarLogo from "./component/SidebarLogo";
 import stores from "../../../store/stores";
 import { mediumSidebarWidth, sidebarWidth } from "../../../component/config/utils/variable";
@@ -100,6 +100,35 @@ const findPathToActiveItem = (
 
   findPath(items, activeItemId, []);
   return path;
+};
+
+const findActiveItemIdByPathname = (
+  items: SidebarItem[],
+  pathname: string | null
+): number | null => {
+  if (!pathname) return null;
+
+  const normalizedPath = pathname.replace(/\/$/, "") || "/";
+
+  for (const item of items) {
+    const itemPath = item.url.replace(/\/$/, "") || "/";
+    const isActivePath =
+      normalizedPath === itemPath ||
+      (itemPath !== "/dashboard" && normalizedPath.startsWith(`${itemPath}/`));
+
+    if (isActivePath) {
+      return item.id;
+    }
+
+    if (item.children) {
+      const childId = findActiveItemIdByPathname(item.children, normalizedPath);
+      if (childId !== null) {
+        return childId;
+      }
+    }
+  }
+
+  return null;
 };
 
 const SidebarPopover = observer(({
@@ -415,6 +444,7 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
     auth: { user },
   } = stores;
   const router = useRouter(); // Replace useNavigate with useRouter
+  const pathname = usePathname();
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
   void openMobileSideDrawer;
   const [sidebarData, setSidebarData] = useState<SidebarItem[]>([]);
@@ -459,6 +489,17 @@ const SidebarLayout: React.FC<SidebarProps> = observer(({
       localStorage.setItem("activeSidebarItemId", activeItemId.toString());
     }
   }, [activeItemId]);
+
+  useEffect(() => {
+    const nextActiveItemId = findActiveItemIdByPathname(
+      [...sidebarData, ...sidebarFooterData],
+      pathname
+    );
+
+    if (nextActiveItemId !== null) {
+      setActiveItemId(nextActiveItemId);
+    }
+  }, [pathname, sidebarData]);
 
   const handleLeafItemClick = (item: SidebarItem) => {
     setActiveItemId(item.id);

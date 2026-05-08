@@ -339,9 +339,9 @@ const LoginFormContent = observer(() => {
       if (dt?.role === "superAdmin") {
         router.push("/dashboard/super-admin/index");
       } else if (dt?.role === "seller") {
-        router.push("/dashboard/shop");
+        router.push("/dashboard");
       } else if (nextAction === "complete_seller_shop" || onboardingState === "seller_pending_shop") {
-        router.push("/dashboard/shop");
+        router.push("/dashboard");
       } else if (redirect?.startsWith("/")) {
         router.push(redirect);
       } else {

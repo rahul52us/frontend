@@ -112,7 +112,7 @@ const HeaderProfile = observer(() => {
                   <FaHome style={{ marginRight: "8px" }} /> Home
                 </MenuItem>
               )}
-              <MenuItem onClick={() => router.push(isBuyerOnlyUser ? dashboard.home : dashboard.shop)} bg="transparent" borderRadius="xl" _hover={{ bg: cSurfaceSoft }}>
+              <MenuItem onClick={() => router.push(dashboard.home)} bg="transparent" borderRadius="xl" _hover={{ bg: cSurfaceSoft }}>
                 <FaCog style={{ marginRight: "8px" }} /> {isBuyerOnlyUser ? "Dashboard" : user?.company?.name}
               </MenuItem>
               <MenuItem onClick={onOpen} bg="transparent" borderRadius="xl" _hover={{ bg: cSurfaceSoft }}>

@@ -188,6 +188,13 @@ type BuyerSaleRecordDetails = {
   summary: SaleRecordDetailsSummary;
 };
 
+type PendingSaleInvoiceDownload = {
+  saleId: string;
+  source: "sale" | "ledger";
+  saleRecord?: BuyerSaleRecord;
+  ledgerEntry?: BuyerLedgerEntry;
+};
+
 const isValidImportEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email);
 const isValidImportPhone = (phone: string) => /^[0-9+\-\s()]{7,20}$/.test(phone);
 
@@ -221,6 +228,7 @@ const getReadableErrorMessage = (error: any, fallback = "Please try again.") => 
 
 const isMissingImportEndpointError = (error: any) => {
   const text = getReadableErrorMessage(error, "").toLowerCase();
+
   return (
     text.includes("cannot post /api/buyer/import-contacts") ||
     text.includes("cannot post /buyer/import-contacts") ||
@@ -285,6 +293,7 @@ const CustomersTab: React.FC = observer(() => {
   const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
   const cText = useColorModeValue("gray.800", dashboardPalette.text);
   const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const cSurface = useColorModeValue("white", dashboardPalette.surface);
   const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
   const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
   const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
@@ -336,6 +345,11 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onSaleDetailsOpen,
     onClose: onSaleDetailsClose,
   } = useDisclosure();
+  const {
+    isOpen: isInvoiceOptionsOpen,
+    onOpen: onInvoiceOptionsOpen,
+    onClose: onInvoiceOptionsClose,
+  } = useDisclosure();
   const { auth, buyerStore, shopStore } = stores;
 
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
@@ -366,6 +380,7 @@ const CustomersTab: React.FC = observer(() => {
   const [saleDetailsLoading, setSaleDetailsLoading] = useState(false);
   const [invoiceDownloadingSaleId, setInvoiceDownloadingSaleId] = useState("");
   const [invoiceDownloadingLedgerEntryId, setInvoiceDownloadingLedgerEntryId] = useState("");
+  const [pendingSaleInvoiceDownload, setPendingSaleInvoiceDownload] = useState<PendingSaleInvoiceDownload | null>(null);
   const [activeSaleItemIndex, setActiveSaleItemIndex] = useState<number | null>(null);
   const [saleItemSuggestions, setSaleItemSuggestions] = useState<InventoryProductSuggestion[]>([]);
   const [saleItemSuggestionsLoading, setSaleItemSuggestionsLoading] = useState(false);
@@ -1197,18 +1212,49 @@ const CustomersTab: React.FC = observer(() => {
     return "downloaded" as const;
   };
 
-  const handleDownloadSaleInvoice = async (details: BuyerSaleRecordDetails) => {
-    const saleRecord = details?.saleRecord;
-    if (!selectedLedgerBuyer?._id || !saleRecord?._id) {
+  const openSaleInvoiceOptions = (download: PendingSaleInvoiceDownload) => {
+    if (!selectedLedgerBuyer?._id || !download.saleId) {
       return;
     }
 
-    setInvoiceDownloadingSaleId(saleRecord._id);
+    setPendingSaleInvoiceDownload(download);
+    onInvoiceOptionsOpen();
+  };
+
+  const closeInvoiceOptions = () => {
+    setPendingSaleInvoiceDownload(null);
+    onInvoiceOptionsClose();
+  };
+
+  const downloadSaleInvoiceById = async ({
+    saleId,
+    includeLedgerHistory,
+    saleLoadingId,
+    ledgerLoadingId,
+  }: {
+    saleId: string;
+    includeLedgerHistory: boolean;
+    saleLoadingId?: string;
+    ledgerLoadingId?: string;
+  }) => {
+    if (!selectedLedgerBuyer?._id || !saleId) {
+      return;
+    }
+
+    if (saleLoadingId) {
+      setInvoiceDownloadingSaleId(saleLoadingId);
+    }
+    if (ledgerLoadingId) {
+      setInvoiceDownloadingLedgerEntryId(ledgerLoadingId);
+    }
+
     try {
-      const response = await buyerStore.downloadBuyerSaleRecordInvoice(selectedLedgerBuyer._id, saleRecord._id);
+      const response = await buyerStore.downloadBuyerSaleRecordInvoice(selectedLedgerBuyer._id, saleId, {
+        includeLedgerHistory,
+      });
       const fileName = getFileNameFromContentDisposition(
         response?.headers?.["content-disposition"],
-        `INV-${formatShortId(saleRecord._id).toUpperCase() || saleRecord._id}.pdf`,
+        `INV-${formatShortId(saleId).toUpperCase() || saleId}.pdf`,
       );
       const deliveryResult = await deliverPdfBlob(response.data, fileName);
       if (deliveryResult !== "cancelled") {
@@ -1224,6 +1270,8 @@ const CustomersTab: React.FC = observer(() => {
           description:
             deliveryResult === "savedPrompted" || deliveryResult === "saved"
               ? "Saved in Documents/BusinessSahayata/Invoices."
+              : includeLedgerHistory
+                ? "Invoice includes linked ledger history."
               : undefined,
           status: "success",
           duration: 2600,
@@ -1239,8 +1287,41 @@ const CustomersTab: React.FC = observer(() => {
         isClosable: true,
       });
     } finally {
-      setInvoiceDownloadingSaleId("");
+      if (saleLoadingId) {
+        setInvoiceDownloadingSaleId("");
+      }
+      if (ledgerLoadingId) {
+        setInvoiceDownloadingLedgerEntryId("");
+      }
     }
+  };
+
+  const handleDownloadSaleInvoice = async (details: BuyerSaleRecordDetails) => {
+    const saleRecord = details?.saleRecord;
+    if (!selectedLedgerBuyer?._id || !saleRecord?._id) {
+      return;
+    }
+
+    openSaleInvoiceOptions({
+      saleId: saleRecord._id,
+      saleRecord,
+      source: "sale",
+    });
+  };
+
+  const handleInvoiceOptionConfirm = async (includeLedgerHistory: boolean) => {
+    const download = pendingSaleInvoiceDownload;
+    if (!download) {
+      return;
+    }
+
+    closeInvoiceOptions();
+    await downloadSaleInvoiceById({
+      saleId: download.saleId,
+      includeLedgerHistory,
+      saleLoadingId: download.source === "sale" ? download.saleId : undefined,
+      ledgerLoadingId: download.source === "ledger" ? download.ledgerEntry?._id : undefined,
+    });
   };
 
   const handleDownloadLedgerEntryInvoice = async (entry: BuyerLedgerEntry) => {
@@ -1248,37 +1329,34 @@ const CustomersTab: React.FC = observer(() => {
       return;
     }
 
+    const saleRecordId = getLinkedSaleRecordIdFromEntry(entry);
+    if (saleRecordId) {
+      openSaleInvoiceOptions({
+        saleId: saleRecordId,
+        ledgerEntry: entry,
+        source: "ledger",
+      });
+      return;
+    }
+
     setInvoiceDownloadingLedgerEntryId(entry._id);
     try {
-      const saleRecordId = getLinkedSaleRecordIdFromEntry(entry);
-      const response = saleRecordId
-        ? await buyerStore.downloadBuyerSaleRecordInvoice(selectedLedgerBuyer._id, saleRecordId)
-        : await buyerStore.downloadBuyerLedgerEntryInvoice(selectedLedgerBuyer._id, entry._id);
+      const response = await buyerStore.downloadBuyerLedgerEntryInvoice(selectedLedgerBuyer._id, entry._id);
       const fileName = getFileNameFromContentDisposition(
         response?.headers?.["content-disposition"],
-        saleRecordId
-          ? `INV-${formatShortId(saleRecordId).toUpperCase() || saleRecordId}.pdf`
-          : `INV-MANUAL-${formatShortId(entry._id).toUpperCase() || entry._id}.pdf`,
+        `INV-MANUAL-${formatShortId(entry._id).toUpperCase() || entry._id}.pdf`,
       );
       const deliveryResult = await deliverPdfBlob(response.data, fileName);
       if (deliveryResult !== "cancelled") {
         toast({
           title:
             deliveryResult === "shared"
-              ? saleRecordId
-                ? "Invoice ready to share"
-                : "Ledger invoice ready to share"
+              ? "Ledger invoice ready to share"
               : deliveryResult === "savedPrompted"
-                ? saleRecordId
-                  ? "Invoice saved and ready to open"
-                  : "Ledger invoice saved and ready to open"
+                ? "Ledger invoice saved and ready to open"
                 : deliveryResult === "saved"
-                  ? saleRecordId
-                    ? "Invoice saved to device"
-                    : "Ledger invoice saved to device"
-                  : saleRecordId
-                    ? "Invoice downloaded"
-                    : "Ledger invoice downloaded",
+                  ? "Ledger invoice saved to device"
+                  : "Ledger invoice downloaded",
           description:
             deliveryResult === "savedPrompted" || deliveryResult === "saved"
               ? "Saved in Documents/BusinessSahayata/Invoices."
@@ -1290,7 +1368,7 @@ const CustomersTab: React.FC = observer(() => {
       }
     } catch (error: any) {
       toast({
-        title: getLinkedSaleRecordIdFromEntry(entry) ? "Failed to generate invoice" : "Failed to generate ledger invoice",
+        title: "Failed to generate ledger invoice",
         description: await readBlobErrorMessage(error),
         status: "error",
         duration: 3000,
@@ -4751,6 +4829,11 @@ const CustomersTab: React.FC = observer(() => {
     </VStack>
   );
 
+  const pendingInvoiceHistoryCount =
+    pendingSaleInvoiceDownload?.source === "sale"
+      ? saleRecordDetails?.summary?.eventCount
+      : pendingSaleInvoiceDownload?.ledgerEntry?.linkedSaleSummary?.eventCount;
+
   return (
     <>
       {showMobileBuyerManagement || showMobileLedgerDetail ? (
@@ -4828,6 +4911,77 @@ const CustomersTab: React.FC = observer(() => {
           {renderSaleDetailsContent()}
         </CustomDrawer>
       )}
+
+      <Modal isOpen={isInvoiceOptionsOpen} onClose={closeInvoiceOptions} isCentered size="md">
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
+        <ModalContent
+          borderRadius={{ base: "24px 24px 0 0", md: "24px" }}
+          mb={{ base: 0, md: "auto" }}
+          mt={{ base: "auto", md: "auto" }}
+          mx={{ base: 0, md: "auto" }}
+          overflow="hidden"
+          bg={cSurface}
+          color={cText}
+        >
+          <ModalHeader pb={2}>
+            Include ledger history?
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack align="stretch" spacing={4}>
+              <Text fontSize="sm" color={cTextSoft}>
+                Do you want this invoice to also show the linked ledger timeline, including posting,
+                payments received, corrections, and remaining balance?
+              </Text>
+              <Box
+                border="1px solid"
+                borderColor={cBorder}
+                bg={cSurfaceAlt}
+                borderRadius="2xl"
+                p={4}
+              >
+                <Text fontSize="xs" textTransform="uppercase" letterSpacing="0.08em" color={cTextSoft} fontWeight="800">
+                  Ledger history
+                </Text>
+                <Text mt={1} fontSize="sm" color={cText} fontWeight="700">
+                  {pendingInvoiceHistoryCount
+                    ? `${pendingInvoiceHistoryCount} linked ${pendingInvoiceHistoryCount === 1 ? "entry" : "entries"} found`
+                    : "No linked entries found yet"}
+                </Text>
+                <Text mt={1} fontSize="xs" color={cTextSoft}>
+                  Invoice-only keeps the PDF shorter. Include history when the customer needs payment proof.
+                </Text>
+              </Box>
+            </VStack>
+          </ModalBody>
+          <ModalFooter gap={3} flexDirection={{ base: "column-reverse", sm: "row" }} alignItems="stretch">
+            <Button
+              variant="outline"
+              w={{ base: "full", sm: "auto" }}
+              minH="44px"
+              borderRadius="16px"
+              onClick={() => void handleInvoiceOptionConfirm(false)}
+              isLoading={Boolean(invoiceDownloadingSaleId || invoiceDownloadingLedgerEntryId)}
+            >
+              Invoice Only
+            </Button>
+            <Button
+              w={{ base: "full", sm: "auto" }}
+              minH="44px"
+              borderRadius="16px"
+              bgGradient="linear(135deg, #2563EB 0%, #14B8A6 100%)"
+              color="white"
+              boxShadow="0 14px 28px rgba(37, 99, 235, 0.24)"
+              _hover={{ bgGradient: "linear(135deg, #1D4ED8 0%, #0F766E 100%)" }}
+              _active={{ transform: "scale(0.98)" }}
+              onClick={() => void handleInvoiceOptionConfirm(true)}
+              isLoading={Boolean(invoiceDownloadingSaleId || invoiceDownloadingLedgerEntryId)}
+            >
+              Include Ledger History
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={isImportOpen} onClose={closeImportModal} isCentered size="xl">
         <ModalOverlay />

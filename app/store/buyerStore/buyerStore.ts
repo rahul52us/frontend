@@ -123,9 +123,14 @@ class BuyerStore {
     }
   };
 
-  downloadBuyerSaleRecordInvoice = async (profileId: string, saleId: string) => {
+  downloadBuyerSaleRecordInvoice = async (
+    profileId: string,
+    saleId: string,
+    options: { includeLedgerHistory?: boolean } = {},
+  ) => {
     try {
       return await axios.get(`/buyer/${profileId}/sales/${saleId}/invoice`, {
+        params: options.includeLedgerHistory ? { includeLedgerHistory: "true" } : undefined,
         responseType: "blob",
       });
     } catch (err: any) {
