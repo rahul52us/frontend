@@ -69,6 +69,8 @@ const mapContainerStyle = { width: "100%", height: "100%" };
 const phoneRegex = /^\d{10}$/;
 const PRIMARY_COLOR = "#3B82F6";
 const SOFT_PRIMARY_COLOR = "#DBEAFE";
+const STORE_NAME_DUPLICATE_ERROR = "This shop name already exists. Please use another shop name.";
+const STORE_NAME_CHECK_MIN_LENGTH = 2;
 
 
 type Intent = "user" | "seller";
@@ -447,11 +449,16 @@ const SignUpForm = observer(() => {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
+  const [isSellerAccountVerified, setIsSellerAccountVerified] = useState(false);
+  const [duplicateShopName, setDuplicateShopName] = useState("");
+  const [storeNameChecking, setStoreNameChecking] = useState(false);
+  const [isStoreNameAvailable, setIsStoreNameAvailable] = useState<boolean | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const navigationTimeoutRef = useRef<number | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
   const otpInputRef = useRef<HTMLInputElement | null>(null);
   const otpAutoSubmitRef = useRef("");
+  const storeNameCheckRequestRef = useRef(0);
   const autoLocationAttemptedRef = useRef(false);
 
   const { isOpen: isImageModalOpen, onOpen: onImageModalOpen, onClose: onImageModalClose } = useDisclosure();
@@ -650,13 +657,151 @@ const SignUpForm = observer(() => {
   // };
 
   const setIntentSelection = (nextIntent: Intent) => {
-  setIntent(nextIntent);
-  setStepIndex(0);
-  setToken("");
-  setOtp("");
-  setErrors({});
-  setIsContactPhoneCustomized(false);
-};
+    setIntent(nextIntent);
+    setStepIndex(0);
+    setToken("");
+    setOtp("");
+    setErrors({});
+    setIsContactPhoneCustomized(false);
+    setIsSellerAccountVerified(false);
+    setDuplicateShopName("");
+    setStoreNameChecking(false);
+    setIsStoreNameAvailable(null);
+  };
+
+  const clearStoreNameDuplicateError = () => {
+    setErrors((prev) => {
+      if (prev.storeName !== STORE_NAME_DUPLICATE_ERROR) {
+        return prev;
+      }
+
+      const { storeName, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const markStoreNameUnavailable = (name: string) => {
+    setDuplicateShopName(name.trim().toLowerCase());
+    setIsStoreNameAvailable(false);
+    setErrors((prev) => ({
+      ...prev,
+      storeName: STORE_NAME_DUPLICATE_ERROR,
+    }));
+  };
+
+  const markStoreNameAvailable = () => {
+    setDuplicateShopName("");
+    setIsStoreNameAvailable(true);
+    clearStoreNameDuplicateError();
+  };
+
+  const checkStoreNameAvailabilityNow = async (
+    name = sellerData.storeName,
+    { showWarning = false }: { showWarning?: boolean } = {},
+  ) => {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      setIsStoreNameAvailable(null);
+      return false;
+    }
+
+    const requestId = storeNameCheckRequestRef.current + 1;
+    storeNameCheckRequestRef.current = requestId;
+    setStoreNameChecking(true);
+
+    try {
+      const availability = await companyStore.checkCompanyNameAvailability(trimmedName);
+      const isCurrentRequest = storeNameCheckRequestRef.current === requestId;
+      const isAvailable = availability?.available !== false;
+
+      if (isCurrentRequest) {
+        if (isAvailable) {
+          markStoreNameAvailable();
+        } else {
+          markStoreNameUnavailable(trimmedName);
+        }
+      }
+
+      return isAvailable;
+    } catch (error: any) {
+      if (showWarning) {
+        toast({
+          title: "Could not check shop name",
+          description: error?.message || "We'll verify the name again when the shop is created.",
+          status: "warning",
+          duration: 3500,
+        });
+      }
+      setIsStoreNameAvailable(null);
+      return true;
+    } finally {
+      if (storeNameCheckRequestRef.current === requestId) {
+        setStoreNameChecking(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (intent !== "seller") {
+      storeNameCheckRequestRef.current += 1;
+      setStoreNameChecking(false);
+      setIsStoreNameAvailable(null);
+      return;
+    }
+
+    const trimmedName = sellerData.storeName.trim();
+
+    if (!trimmedName) {
+      storeNameCheckRequestRef.current += 1;
+      setDuplicateShopName("");
+      setStoreNameChecking(false);
+      setIsStoreNameAvailable(null);
+      clearStoreNameDuplicateError();
+      return;
+    }
+
+    if (trimmedName.length < STORE_NAME_CHECK_MIN_LENGTH) {
+      storeNameCheckRequestRef.current += 1;
+      setStoreNameChecking(false);
+      setIsStoreNameAvailable(null);
+      return;
+    }
+
+    const requestId = storeNameCheckRequestRef.current + 1;
+    storeNameCheckRequestRef.current = requestId;
+    setStoreNameChecking(true);
+    setIsStoreNameAvailable(null);
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const availability = await companyStore.checkCompanyNameAvailability(trimmedName);
+
+        if (storeNameCheckRequestRef.current !== requestId) {
+          return;
+        }
+
+        if (availability?.available === false) {
+          markStoreNameUnavailable(trimmedName);
+          return;
+        }
+
+        markStoreNameAvailable();
+      } catch {
+        if (storeNameCheckRequestRef.current === requestId) {
+          setIsStoreNameAvailable(null);
+        }
+      } finally {
+        if (storeNameCheckRequestRef.current === requestId) {
+          setStoreNameChecking(false);
+        }
+      }
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [companyStore, intent, sellerData.storeName]);
 
   const navigateWithAnimation = (href: string) => {
     if (isRouteTransitioning) return;
@@ -795,6 +940,15 @@ const SignUpForm = observer(() => {
     if (intent === "seller" && activeStep.title === "Tell us about your shop") {
       if (!userData.name.trim()) nextErrors.name = "Owner name is required.";
       if (!sellerData.storeName.trim()) nextErrors.storeName = "Store name is required.";
+      if (
+        duplicateShopName &&
+        sellerData.storeName.trim().toLowerCase() === duplicateShopName
+      ) {
+        nextErrors.storeName = STORE_NAME_DUPLICATE_ERROR;
+      }
+      if (isStoreNameAvailable === false) {
+        nextErrors.storeName = STORE_NAME_DUPLICATE_ERROR;
+      }
       const gstError = getOptionalGstError(sellerData.gstNumber);
       if (gstError) nextErrors.gstNumber = gstError;
     }
@@ -878,6 +1032,58 @@ const SignUpForm = observer(() => {
     throw lastError;
   };
 
+  const handleSellerCompanyCreationError = (companyError: any) => {
+    const errorText = getErrorText(companyError);
+    const isDuplicateName =
+      errorText.includes("company name already exists") ||
+      errorText.includes("shop name already exists") ||
+      errorText.includes("name already exists");
+
+    if (isDuplicateName) {
+      const normalizedName = sellerData.storeName.trim().toLowerCase();
+      setDuplicateShopName(normalizedName);
+      setIsStoreNameAvailable(false);
+      setErrors({
+        storeName: STORE_NAME_DUPLICATE_ERROR,
+      });
+      setStepIndex(1);
+      toast({
+        title: "Shop name already exists",
+        description: "Your account is verified. Please choose a different shop name to finish setup.",
+        status: "warning",
+        duration: 4500,
+      });
+      return;
+    }
+
+    toast({
+      title: "Shop was not created",
+      description:
+        companyError?.message ||
+        companyError?.data?.message ||
+        "Your account is verified, but shop creation failed. Please review the details and try again.",
+      status: "error",
+      duration: 4500,
+    });
+  };
+
+  const finishSellerCompanyCreation = async () => {
+    setLoading(true);
+    try {
+      await createSellerCompany();
+      toast({
+        title: "Seller onboarding complete",
+        description: "Your shop has been created and is now pending review.",
+        status: "success",
+      });
+      router.push("/dashboard");
+    } catch (companyError: any) {
+      handleSellerCompanyCreationError(companyError);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const submitRegistration = async () => {
     setLoading(true);
     try {
@@ -926,6 +1132,11 @@ const SignUpForm = observer(() => {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
+    if (intent === "seller" && activeStep.title === "Tell us about your shop") {
+      const isAvailable = await checkStoreNameAvailabilityNow(sellerData.storeName, { showWarning: true });
+      if (!isAvailable) return;
+    }
+
     if (stepIndex === 0) {
       setLoading(true);
       try {
@@ -953,6 +1164,10 @@ const SignUpForm = observer(() => {
 
     const isLastPreOtpStep = stepIndex === steps.length - 2;
     if (isLastPreOtpStep) {
+      if (intent === "seller" && isSellerAccountVerified) {
+        await finishSellerCompanyCreation();
+        return;
+      }
       await submitRegistration();
       return;
     }
@@ -998,27 +1213,9 @@ const SignUpForm = observer(() => {
       });
 
       if (intent === "seller") {
-        try {
-          await createSellerCompany();
-          toast({
-            title: "Seller onboarding complete",
-            description: "Your seller account is ready.",
-            status: "success",
-          });
-          router.push("/dashboard");
-          return;
-        } catch (companyError: any) {
-          toast({
-            title: "Account verified",
-            description:
-              companyError?.message ||
-              "Your account is ready. Please finish shop setup from the seller dashboard.",
-            status: "warning",
-            duration: 4000,
-          });
-          router.push("/dashboard/shop");
-          return;
-        }
+        setIsSellerAccountVerified(true);
+        await finishSellerCompanyCreation();
+        return;
       }
 
       toast({
@@ -1231,7 +1428,16 @@ const renderUserProfileStep = () => (
   </VStack>
 );
 
-const renderSellerBasicsStep = () => (
+const renderSellerBasicsStep = () => {
+  const trimmedStoreName = sellerData.storeName.trim();
+  const canShowAvailability = trimmedStoreName.length >= STORE_NAME_CHECK_MIN_LENGTH;
+  const storeNameHint = storeNameChecking
+    ? "Checking shop name..."
+    : canShowAvailability && isStoreNameAvailable
+      ? "Shop name is available."
+      : "This name should be unique for your storefront.";
+
+  return (
   <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
     <RegisterInput
       label="Owner Name"
@@ -1253,11 +1459,27 @@ const renderSellerBasicsStep = () => (
       name="storeName"
       type="text"
       value={sellerData.storeName}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setSellerData((prev) => ({ ...prev, storeName: event.target.value }))}
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextStoreName = event.target.value;
+        setSellerData((prev) => ({ ...prev, storeName: nextStoreName }));
+        setIsStoreNameAvailable(null);
+        if (duplicateShopName && nextStoreName.trim().toLowerCase() !== duplicateShopName) {
+          setDuplicateShopName("");
+          clearStoreNameDuplicateError();
+        }
+      }}
       placeholder="Ex. Sharma Electronics"
       error={errors.storeName}
+      hint={storeNameHint}
       accentColor={PRIMARY_COLOR}
       leftIcon={<FiShoppingBag size={15} />}
+      rightIcon={
+        storeNameChecking ? (
+          <Spinner size="xs" color={PRIMARY_COLOR} />
+        ) : canShowAvailability && isStoreNameAvailable ? (
+          <FiCheckCircle size={16} color="#16A34A" />
+        ) : undefined
+      }
     />
 
     <RegisterInput
@@ -1288,7 +1510,8 @@ const renderSellerBasicsStep = () => (
       rows={3}
     />
   </VStack>
-);
+  );
+};
 
 const renderSellerCategoriesStep = () => (
   <VStack align="stretch" spacing={5}>

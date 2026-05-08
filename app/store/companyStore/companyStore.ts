@@ -69,6 +69,15 @@ class CompanyStores {
     }
   };
 
+  checkCompanyNameAvailability = async (name: string) => {
+    try {
+      const response = await axios.post("/company/check-name", { name });
+      return response.data?.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
   getPageContent = (name: string) => {
     if (Object.keys(this.companyDetails || {}).length) {
       const dt = this.companyDetails.details?.filter((it: any) => it.name === name)
