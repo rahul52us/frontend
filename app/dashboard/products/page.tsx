@@ -33,7 +33,6 @@ import {
   useToast,
   VStack
 } from "@chakra-ui/react";
-import axios from "axios";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -279,9 +278,82 @@ const ProductsPage = observer(() => {
   );
 
   const rootCategories = useMemo(
-    () => categoryStore.categories.filter((category: any) => !category.parent),
+    () => categoryStore.categories.filter((category: any) => !category.parent && category.isActive !== false),
     [categoryStore.categories]
   );
+
+  const getParentCategoryId = (category: any) =>
+    typeof category?.parent === "object" ? category.parent?._id : category?.parent;
+
+  const getParentCategoryName = (category: any) =>
+    typeof category?.parent === "object" ? category.parent?.name : "";
+
+  const shopCategoryTokens = useMemo(() => {
+    const company =
+      [auth.company, auth.user?.company].find(
+        (candidate: any) => candidate && typeof candidate === "object" && Array.isArray(candidate.categories)
+      ) ||
+      auth.company ||
+      auth.user?.company;
+    const rawCategories = Array.isArray(company?.categories) ? company.categories : [];
+
+    return new Set(
+      rawCategories
+        .map((category: any) => {
+          if (typeof category === "string") {
+            return category.trim().toLowerCase();
+          }
+
+          return String(category?.name || category?._id || "").trim().toLowerCase();
+        })
+        .filter(Boolean)
+    );
+  }, [auth.company, auth.user?.company]);
+
+  const allowedRootCategories = useMemo(() => {
+    if (shopCategoryTokens.size === 0) {
+      return rootCategories;
+    }
+
+    return rootCategories.filter(
+      (category: any) =>
+        shopCategoryTokens.has(String(category._id || "").toLowerCase()) ||
+        shopCategoryTokens.has(String(category.name || "").toLowerCase())
+    );
+  }, [rootCategories, shopCategoryTokens]);
+
+  const allowedRootCategoryIds = useMemo(
+    () => new Set(allowedRootCategories.map((category: any) => String(category._id))),
+    [allowedRootCategories]
+  );
+
+  const allowedRootCategoryNames = useMemo(
+    () => new Set(allowedRootCategories.map((category: any) => String(category.name || "").toLowerCase())),
+    [allowedRootCategories]
+  );
+
+  const sellerProductCategories = useMemo(() => {
+    const activeCategories = categoryStore.categories.filter((category: any) => category.isActive !== false);
+
+    if (shopCategoryTokens.size === 0) {
+      return activeCategories;
+    }
+
+    return activeCategories.filter((category: any) => {
+      const parentId = getParentCategoryId(category);
+      const parentName = getParentCategoryName(category);
+      const isAllowedRoot =
+        !parentId &&
+        (allowedRootCategoryIds.has(String(category._id)) ||
+          allowedRootCategoryNames.has(String(category.name || "").toLowerCase()));
+      const isAllowedChild =
+        Boolean(parentId) &&
+        (allowedRootCategoryIds.has(String(parentId)) ||
+          allowedRootCategoryNames.has(String(parentName || "").toLowerCase()));
+
+      return isAllowedRoot || isAllowedChild;
+    });
+  }, [allowedRootCategoryIds, allowedRootCategoryNames, categoryStore.categories, shopCategoryTokens]);
 
   const stats = useMemo(
     () => ({
@@ -296,7 +368,7 @@ const ProductsPage = observer(() => {
   const initialValues = useMemo(() => mapProductToFormValues(selectedProduct), [selectedProduct]);
 
   const fetchProducts = useCallback(
-    async (page = 1, search = searchTerm, category = selectedCategory) => {
+    async (page = 1, search = searchTerm, category = selectedCategory, inactiveView = showInactive) => {
       const companyId =
         auth.company?._id ||
         auth.company ||
@@ -321,7 +393,7 @@ const ProductsPage = observer(() => {
           limit: 12,
           search,
           category,
-          isDeleted: showInactive ? true : undefined,
+          isDeleted: inactiveView ? true : undefined,
         });
 
         const nextProducts = response.data?.products || [];
@@ -361,6 +433,17 @@ const ProductsPage = observer(() => {
       window.clearTimeout(timer);
     };
   }, [fetchProducts, searchTerm, selectedCategory, showInactive]);
+
+  useEffect(() => {
+    if (!selectedCategory) {
+      return;
+    }
+
+    const stillAllowed = allowedRootCategories.some((category: any) => category._id === selectedCategory);
+    if (!stillAllowed) {
+      setSelectedCategory("");
+    }
+  }, [allowedRootCategories, selectedCategory]);
 
   if (!isSuperAdmin && !hasCompany) {
     return <CompanyRequiredState />;
@@ -453,7 +536,7 @@ const ProductsPage = observer(() => {
       if (selectedProductId) {
         response = await shopStore.updateProduct(selectedProductId, payload);
       } else {
-        response = await axios.post("/product/create", payload);
+        response = await shopStore.createProduct(payload);
       }
 
       if (
@@ -478,8 +561,12 @@ const ProductsPage = observer(() => {
         );
 
         actions.resetForm();
+        const nextPage = selectedProductId ? currentPage : 1;
+        if (!selectedProductId) {
+          setShowInactive(false);
+        }
         handleCloseForm();
-        await fetchProducts(currentPage, searchTerm, selectedCategory);
+        await fetchProducts(nextPage, searchTerm, selectedCategory, selectedProductId ? showInactive : false);
       }
     } catch (error: any) {
       toast({
@@ -605,7 +692,7 @@ const ProductsPage = observer(() => {
                 border={border}
                 text={text}
               />
-              {rootCategories.map((category: any) => (
+              {allowedRootCategories.map((category: any) => (
                 <CategoryPill
                   key={category._id}
                   active={selectedCategory === category._id}
@@ -636,7 +723,7 @@ const ProductsPage = observer(() => {
               <MenuList bg={surface} borderColor={border} color={text} boxShadow={shadow}>
                 <MenuItem onClick={() => setSelectedCategory("")}>All categories</MenuItem>
                 <MenuDivider />
-                {rootCategories.map((category: any) => (
+                {allowedRootCategories.map((category: any) => (
                   <MenuItem key={category._id} onClick={() => setSelectedCategory(category._id)}>
                     {category.name}
                   </MenuItem>
@@ -800,7 +887,7 @@ const ProductsPage = observer(() => {
         initialValues={initialValues}
         validationSchema={ProductSchema}
         onSubmit={handleSubmit}
-        categories={categoryStore.categories}
+        categories={sellerProductCategories}
         offersList={offerStore.offers}
         products={products}
         isEdit={Boolean(selectedProductId)}
