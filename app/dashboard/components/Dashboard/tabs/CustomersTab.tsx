@@ -718,6 +718,10 @@ const CustomersTab: React.FC = observer(() => {
     }
     return formatCurrency(remainingDue);
   };
+  const getEntryPaidText = (entry?: BuyerLedgerEntry | null) => {
+    const paidAmount = Number(entry?.linkedSaleSummary?.paidAmount);
+    return Number.isFinite(paidAmount) ? formatCurrency(paidAmount) : "-";
+  };
   const canPayEntry = (entry?: BuyerLedgerEntry | null) => {
     if (!entry || entry.status === "reversed" || entry.direction !== "debit") {
       return false;
@@ -3018,6 +3022,7 @@ const CustomersTab: React.FC = observer(() => {
       </Text>
     ),
     remainingText: getEntryRemainingText(entry),
+    paidText: getEntryPaidText(entry),
     referenceText: entry.referenceId ? (
       <HStack spacing={1}>
         <Text color={cTextMuted}>{entry.referenceType || "manual"}:</Text>
@@ -3096,6 +3101,7 @@ const CustomersTab: React.FC = observer(() => {
       type: "component",
       metaData: { component: (row: any) => row.amountDisplay },
     },
+    { headerName: "Paid", key: "paidText" },
     { headerName: "Remaining", key: "remainingText" },
     { headerName: "Notes", key: "notes" },
     {
@@ -3320,13 +3326,21 @@ const CustomersTab: React.FC = observer(() => {
                 </Flex>
               </Box>
               <VStack align="stretch" spacing={3.5} p={4}>
-                <SimpleGrid columns={2} spacing={3}>
+                <SimpleGrid columns={{ base: 2, sm: 3 }} spacing={3}>
                   <Box {...androidTheme.infoCard}>
                     <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
                       Date
                     </Text>
                     <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="700" mt={1}>
                       {formatDateTime(entry.entryDate)}
+                    </Text>
+                  </Box>
+                  <Box {...androidTheme.infoCard}>
+                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
+                      Paid
+                    </Text>
+                    <Text fontSize="13px" color={dashboardPalette.success} fontWeight="900" mt={1}>
+                      {getEntryPaidText(entry)}
                     </Text>
                   </Box>
                   <Box {...androidTheme.infoCard}>
