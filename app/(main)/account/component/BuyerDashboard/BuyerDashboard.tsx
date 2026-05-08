@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import {
   Avatar,
-  Box,
   Badge,
+  Box,
   Divider,
   Drawer,
   DrawerCloseButton,
@@ -25,8 +24,9 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import { FiShoppingBag, FiMapPin, FiPhone, FiAlertCircle } from "react-icons/fi";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { FiAlertCircle, FiMapPin, FiPhone, FiShoppingBag } from "react-icons/fi";
 
 type SellerShop = {
   _id: string;

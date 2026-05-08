@@ -53,7 +53,7 @@ type Tint = keyof typeof toneConfig;
 interface ProductStatCardProps {
   icon: IconType;
   label: string;
-  value: number;
+  value: number | string;
   tint: Tint;
 }
 
@@ -99,7 +99,7 @@ export function ProductStatCard({
         {/* Number */}
         <Text
           fontFamily="'Space Grotesk', 'DM Sans', sans-serif"
-          fontSize={{ base: "18px", md: "28px" }}
+          fontSize={{ base: "16px", md: "28px" }}
           fontWeight="700"
           color={text}
           lineHeight="1"

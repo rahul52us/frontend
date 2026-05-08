@@ -111,7 +111,7 @@ export const MerchantPageShell = ({
   children: React.ReactNode;
   maxW?: any;
 }) => {
-  const pageBg = useColorModeValue("#F0F6FF", dashboardPalette.page);
+  const pageBg = useColorModeValue("white", dashboardPalette.page);
 
   // CSS variables — blue-tinted tokens for all child components
   const themeVars = {
@@ -122,7 +122,7 @@ export const MerchantPageShell = ({
     "--merchant-text": useColorModeValue("var(--chakra-colors-gray-800)", dashboardPalette.text),
     "--merchant-accent": useColorModeValue("var(--chakra-colors-blue-600)", dashboardPalette.accent),
     "--merchant-accent-strong": useColorModeValue("var(--chakra-colors-blue-700)", dashboardPalette.accentStrong),
-    "--merchant-page-bg": useColorModeValue("#F0F6FF", dashboardPalette.page),
+    "--merchant-page-bg": useColorModeValue("white", dashboardPalette.page),
   };
 
   return (

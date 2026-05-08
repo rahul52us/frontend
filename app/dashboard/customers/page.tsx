@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
 import { observer } from "mobx-react-lite";
-import CustomersTab from "../components/Dashboard/tabs/CustomersTab";
 import stores from "../../store/stores";
 import CompanyRequiredState from "../components/common/CompanyRequiredState";
+import CustomersTab from "../components/Dashboard/tabs/CustomersTab";
 
 const CustomersPage = observer(() => {
   const { user } = stores.auth;
