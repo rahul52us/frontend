@@ -4,6 +4,8 @@ import {
   Badge,
   Box,
   Button,
+  Checkbox,
+  CheckboxGroup,
   Circle,
   Flex,
   Heading,
@@ -141,6 +143,26 @@ const stepMeta: Record<string, {
       <Image
         src="/images/register/about-shop.svg"
         alt="Get started"
+        w="full"
+        maxH="280px"
+        objectFit="contain"
+      />
+    ),
+  },
+  "Choose categories": {
+    bg: "#F0FDF4",
+    accent: "#16A34A",
+    softAccent: "#BBF7D0",
+    tagline: "Sell where buyers browse.",
+    points: [
+      { icon: FiShoppingBag, text: "Choose your main product areas" },
+      { icon: FiCheck, text: "Keep product filters focused later" },
+      { icon: FiPackage, text: "Help buyers discover your shop" },
+    ],
+    illustration: (
+      <Image
+        src="/images/register/business.svg"
+        alt="Choose categories"
         w="full"
         maxH="280px"
         objectFit="contain"
@@ -407,7 +429,7 @@ const SignUpForm = observer(() => {
     isClosable: true,
   });
 
-  const { auth, companyStore } = stores;
+  const { auth, companyStore, categoryStore } = stores;
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: GOOGLE_MAPS_LIBRARIES,
@@ -421,6 +443,8 @@ const SignUpForm = observer(() => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [geocoding, setGeocoding] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
@@ -449,6 +473,7 @@ const SignUpForm = observer(() => {
     storeName: "",
     gstNumber: "",
     description: "",
+    categories: [] as string[],
     location: {
       address: "",
       city: "",
@@ -469,13 +494,17 @@ const SignUpForm = observer(() => {
   const activeStep = steps[stepIndex];
   const progress = ((stepIndex + 1) / steps.length) * 100;
   const isOtpStep = stepIndex === steps.length - 1;
-  const isSellerPhotosStep = intent === "seller" && stepIndex === 4;
+  const isSellerPhotosStep = intent === "seller" && activeStep.title === "Show your shop";
   const selectedCoordinates = sellerData.location.coordinates;
   const selectedPoint = hasPickedCoordinates(selectedCoordinates)
     ? { lng: Number(selectedCoordinates[0]), lat: Number(selectedCoordinates[1]) }
     : null;
 
   const meta = useMemo(() => stepMeta[activeStep.title] ?? stepMeta["Let's get started"], [activeStep.title]);
+  const rootCategoryOptions = useMemo(
+    () => categoryOptions.filter((category) => !category.parent && category.isActive !== false),
+    [categoryOptions],
+  );
 
   const mapCenter = useMemo(() => {
     if (selectedPoint) {
@@ -559,7 +588,7 @@ const SignUpForm = observer(() => {
   // }, [intent, isOtpStep, stepIndex]);
 
   useEffect(() => {
-    const isSellerLocationStep = intent === "seller" && stepIndex === 2;
+    const isSellerLocationStep = intent === "seller" && activeStep.title === "Set your shop location";
     const canAttemptAutoLocation = !GOOGLE_MAPS_API_KEY || isLoaded || Boolean(loadError);
 
     if (!isSellerLocationStep || !canAttemptAutoLocation) {
@@ -573,7 +602,36 @@ const SignUpForm = observer(() => {
     autoLocationAttemptedRef.current = true;
     detectCurrentLocation({ silent: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intent, stepIndex, isLoaded, loadError, sellerData.location.coordinates]);
+  }, [activeStep.title, intent, isLoaded, loadError, sellerData.location.coordinates]);
+
+  useEffect(() => {
+    if (intent !== "seller") {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadCategories = async () => {
+      setCategoryLoading(true);
+      try {
+        const response = await categoryStore.getAllCategories();
+        const nextCategories = response?.data || categoryStore.categories || [];
+        if (isMounted) {
+          setCategoryOptions(Array.isArray(nextCategories) ? nextCategories : []);
+        }
+      } finally {
+        if (isMounted) {
+          setCategoryLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryStore, intent]);
 
   useEffect(() => {
     if (!isOtpStep || otp.trim().length < 6) {
@@ -734,14 +792,18 @@ const SignUpForm = observer(() => {
       if (!isValidEmail(userData.email)) nextErrors.email = "Enter a valid email address.";
     }
 
-    if (intent === "seller" && stepIndex === 1) {
+    if (intent === "seller" && activeStep.title === "Tell us about your shop") {
       if (!userData.name.trim()) nextErrors.name = "Owner name is required.";
       if (!sellerData.storeName.trim()) nextErrors.storeName = "Store name is required.";
       const gstError = getOptionalGstError(sellerData.gstNumber);
       if (gstError) nextErrors.gstNumber = gstError;
     }
 
-    if (intent === "seller" && stepIndex === 2) {
+    if (intent === "seller" && activeStep.title === "Choose categories") {
+      if (!sellerData.categories.length) nextErrors.categories = "Select at least one category.";
+    }
+
+    if (intent === "seller" && activeStep.title === "Set your shop location") {
       if (!hasPickedCoordinates(sellerData.location.coordinates)) nextErrors.coordinates = "Pick your shop location on the map.";
       if (!sellerData.location.address.trim()) nextErrors.address = "Address is required.";
       if (!sellerData.location.city.trim()) nextErrors.city = "City is required.";
@@ -749,7 +811,7 @@ const SignUpForm = observer(() => {
       if (!sellerData.location.country.trim()) nextErrors.country = "Country is required.";
     }
 
-    if (intent === "seller" && stepIndex === 3) {
+    if (intent === "seller" && activeStep.title === "Contact details") {
       if (!phoneRegex.test(sellerData.contactPhone.trim())) nextErrors.contactPhone = "Enter a valid 10-digit store phone number.";
       if (!isValidEmail(userData.email)) nextErrors.email = "Enter a valid email address.";
     }
@@ -767,6 +829,7 @@ const SignUpForm = observer(() => {
     const basePayload: any = {
       name: sellerData.storeName.trim(),
       description: sellerData.description.trim(),
+      categories: sellerData.categories,
       // about: sellerData.description.trim(),
       gstNumber: normalizeGstNumber(sellerData.gstNumber) || undefined,
       location: sellerData.location,
@@ -1224,6 +1287,85 @@ const renderSellerBasicsStep = () => (
       accentColor={PRIMARY_COLOR}
       rows={3}
     />
+  </VStack>
+);
+
+const renderSellerCategoriesStep = () => (
+  <VStack align="stretch" spacing={5}>
+    <Box
+      border="1.5px solid"
+      borderColor="gray.200"
+      borderRadius="2xl"
+      bg="gray.50"
+      p={{ base: 4, md: 5 }}
+    >
+      <Text fontSize="md" fontWeight="700" color="gray.900">
+        Select shop categories
+      </Text>
+      <Text fontSize="sm" color="gray.500" mt={1}>
+        These categories will decide what the seller can choose while adding products later.
+      </Text>
+
+      <Box mt={5}>
+        {categoryLoading ? (
+          <HStack color="gray.500">
+            <Spinner size="sm" color={PRIMARY_COLOR} />
+            <Text fontSize="sm">Loading categories...</Text>
+          </HStack>
+        ) : rootCategoryOptions.length === 0 ? (
+          <Box borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200" p={4}>
+            <Text fontSize="sm" color="gray.500">
+              No categories are available yet. Please ask superadmin to add categories first.
+            </Text>
+          </Box>
+        ) : (
+          <CheckboxGroup
+            value={sellerData.categories}
+            onChange={(selected) =>
+              setSellerData((prev) => ({
+                ...prev,
+                categories: selected.map(String),
+              }))
+            }
+          >
+            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+              {rootCategoryOptions.map((category) => {
+                const isSelected = sellerData.categories.includes(category.name);
+                return (
+                  <Checkbox
+                    key={category._id}
+                    value={category.name}
+                    border="1.5px solid"
+                    borderColor={isSelected ? PRIMARY_COLOR : "gray.200"}
+                    borderRadius="xl"
+                    bg={isSelected ? SOFT_PRIMARY_COLOR : "white"}
+                    color={isSelected ? "blue.700" : "gray.600"}
+                    px={4}
+                    py={3}
+                    fontWeight="700"
+                    _hover={{ borderColor: PRIMARY_COLOR, bg: SOFT_PRIMARY_COLOR }}
+                  >
+                    {category.name}
+                  </Checkbox>
+                );
+              })}
+            </SimpleGrid>
+          </CheckboxGroup>
+        )}
+      </Box>
+
+      <FieldError message={errors.categories} />
+    </Box>
+
+    {sellerData.categories.length ? (
+      <HStack spacing={2} flexWrap="wrap">
+        {sellerData.categories.map((categoryName) => (
+          <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
+            {categoryName}
+          </Badge>
+        ))}
+      </HStack>
+    ) : null}
   </VStack>
 );
 
@@ -1732,6 +1874,8 @@ const renderSellerContactStep = () => (
         return renderUserProfileStep();
       case "Tell us about your shop":
         return renderSellerBasicsStep();
+      case "Choose categories":
+        return renderSellerCategoriesStep();
       case "Set your shop location":
         return renderSellerLocationStep();
       case "Contact details":

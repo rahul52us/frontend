@@ -32,6 +32,11 @@ export const sellerSteps = [
     icon: FiShoppingBag,
   },
   {
+    title: "Choose categories",
+    subtitle: "Pick the product categories your shop will sell in.",
+    icon: FiShoppingBag,
+  },
+  {
     title: "Set your shop location",
     subtitle: "Drop a pin on the map so nearby buyers can find you.",
     icon: FiMapPin,
