@@ -97,6 +97,18 @@ class ShopStore {
     }
   };
 
+  createProduct = async (sendData: any) => {
+    try {
+      const response = await axios.post(`/product/create`, sendData);
+      this.productsCache = null;
+      this.lastProductsPayload = null;
+      this.allShopProductsCache = null;
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
   getShopProducts = async (sendData: any, forceRefresh: boolean = false) => {
 
     const currentPayload = JSON.stringify(sendData);

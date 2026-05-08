@@ -767,7 +767,7 @@ const SignUpForm = observer(() => {
     const basePayload: any = {
       name: sellerData.storeName.trim(),
       description: sellerData.description.trim(),
-      about: sellerData.description.trim(),
+      // about: sellerData.description.trim(),
       gstNumber: normalizeGstNumber(sellerData.gstNumber) || undefined,
       location: sellerData.location,
       contactInfo: {

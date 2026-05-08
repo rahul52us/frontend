@@ -5,6 +5,8 @@ import {
   Badge,
   Box,
   Button,
+  Checkbox,
+  CheckboxGroup,
   Circle,
   Container,
   Divider,
@@ -19,6 +21,7 @@ import {
   Input,
   Progress,
   SimpleGrid,
+  Spinner,
   Stack,
   Text,
   Textarea,
@@ -29,7 +32,7 @@ import {
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiCamera, FiMail, FiMapPin, FiNavigation, FiPhone, FiShoppingBag } from "react-icons/fi";
+import { FiCamera, FiLayers, FiMail, FiMapPin, FiNavigation, FiPhone, FiShoppingBag } from "react-icons/fi";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import {
   getOptionalGstError,
@@ -37,6 +40,7 @@ import {
 } from "../../../config/utils/gstValidation";
 import { createCompanyCode } from "./utils/companyCode";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import stores from "../../../store/stores";
 import { useMerchantFormSx } from "./merchantTheme";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -64,21 +68,31 @@ const mapOptions: google.maps.MapOptions = {
 
 const onboardingSteps = [
   {
+    id: "identity",
     title: "Identity",
     subtitle: "Tell buyers what your shop is called and add business details.",
     icon: FiShoppingBag,
   },
   {
+    id: "categories",
+    title: "Categories",
+    subtitle: "Choose the product categories your shop will sell in.",
+    icon: FiLayers,
+  },
+  {
+    id: "location",
     title: "Location",
     subtitle: "Drop a pin on the map so nearby buyers can discover your store.",
     icon: FiMapPin,
   },
   {
+    id: "contact",
     title: "Contact",
     subtitle: "Add the phone and optional email buyers can use to reach you.",
     icon: FiMail,
   },
   {
+    id: "media",
     title: "Media",
     subtitle: "Upload your logo, cover, or product photos. You can skip and add them later.",
     icon: FiCamera,
@@ -198,11 +212,14 @@ const SellerOnboardingWizard = ({
 
   const router = useRouter();
   const toast = useToast({ position: "top-right", duration: 3000, isClosable: true });
+  const { categoryStore } = stores;
   const [stepIndex, setStepIndex] = useState(0);
   const [formValues, setFormValues] = useState(initialValues);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const { isLoaded, loadError } = useLoadScript({
@@ -212,6 +229,7 @@ const SellerOnboardingWizard = ({
   useEffect(() => {
     setFormValues({
       ...initialValues,
+      categories: Array.isArray(initialValues.categories) ? initialValues.categories : [],
       companyCode:
         initialValues.companyCode ||
         createCompanyCode(initialValues.name || "", initialValues.contactInfo?.phone || accountPhone || ""),
@@ -223,8 +241,38 @@ const SellerOnboardingWizard = ({
     });
   }, [accountEmail, accountPhone, initialValues]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCategories = async () => {
+      setCategoryLoading(true);
+      try {
+        const response = await categoryStore.getAllCategories();
+        const nextCategories = response?.data || categoryStore.categories || [];
+        if (isMounted) {
+          setCategoryOptions(Array.isArray(nextCategories) ? nextCategories : []);
+        }
+      } finally {
+        if (isMounted) {
+          setCategoryLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryStore]);
+
   const activeStep = onboardingSteps[stepIndex];
+  const activeStepId = activeStep.id;
   const progress = ((stepIndex + 1) / onboardingSteps.length) * 100;
+  const rootCategoryOptions = useMemo(
+    () => categoryOptions.filter((category) => !category.parent && category.isActive !== false),
+    [categoryOptions],
+  );
   const coordinates = formValues.location?.coordinates || [0, 0];
   const selectedPoint = hasPickedCoordinates(coordinates)
     ? { lng: Number(coordinates[0]), lat: Number(coordinates[1]) }
@@ -320,17 +368,21 @@ const SellerOnboardingWizard = ({
   const validateCurrentStep = () => {
     const errors: Record<string, string> = {};
 
-    if (stepIndex === 0 && !formValues.name?.trim()) {
+    if (activeStepId === "identity" && !formValues.name?.trim()) {
       errors.name = "Store name is required.";
     }
-    if (stepIndex === 0) {
+    if (activeStepId === "identity") {
       const gstError = getOptionalGstError(formValues.gstNumber);
       if (gstError) {
         errors.gstNumber = gstError;
       }
     }
 
-    if (stepIndex === 1) {
+    if (activeStepId === "categories" && !(formValues.categories || []).length) {
+      errors.categories = "Select at least one category.";
+    }
+
+    if (activeStepId === "location") {
       if (!hasPickedCoordinates(formValues.location?.coordinates)) {
         errors.coordinates = "Pick your shop location on the map.";
       }
@@ -348,7 +400,7 @@ const SellerOnboardingWizard = ({
       }
     }
 
-    if (stepIndex === 2) {
+    if (activeStepId === "contact") {
       if (!formValues.contactInfo?.phone?.trim()) {
         errors.phone = "Contact phone is required.";
       }
@@ -616,7 +668,7 @@ const SellerOnboardingWizard = ({
               </HStack>
             </Stack>
 
-            {stepIndex === 0 ? (
+            {activeStepId === "identity" ? (
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl isRequired>
@@ -691,7 +743,92 @@ const SellerOnboardingWizard = ({
               </VStack>
             ) : null}
 
-            {stepIndex === 1 ? (
+            {activeStepId === "categories" ? (
+              <VStack align="stretch" spacing={5}>
+                <Box p={5} {...getFieldShellStyles()}>
+                  <VStack align="stretch" spacing={4}>
+                    <Box>
+                      <Text fontSize="md" fontWeight="700" color={cText}>
+                        Select shop categories
+                      </Text>
+                      <Text fontSize="sm" color={cTextSoft}>
+                        These categories will control what you can select while adding products later.
+                      </Text>
+                    </Box>
+
+                    {categoryLoading ? (
+                      <HStack color={cTextMuted}>
+                        <Spinner size="sm" color={cAccent} />
+                        <Text fontSize="sm">Loading categories...</Text>
+                      </HStack>
+                    ) : rootCategoryOptions.length === 0 ? (
+                      <Box
+                        borderWidth="1px"
+                        borderColor={cBorderStrong}
+                        borderRadius="20px"
+                        p={5}
+                        bg={cSurfaceSoft}
+                      >
+                        <Text fontSize="sm" color={cTextMuted}>
+                          No categories are available yet. Please ask superadmin to add categories before completing seller onboarding.
+                        </Text>
+                      </Box>
+                    ) : (
+                      <CheckboxGroup
+                        value={formValues.categories || []}
+                        onChange={(selected) => setFieldValue("categories", selected)}
+                      >
+                        <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={3}>
+                          {rootCategoryOptions.map((category) => {
+                            const isSelected = (formValues.categories || []).includes(category.name);
+                            return (
+                              <Checkbox
+                                key={category._id}
+                                value={category.name}
+                                borderWidth="1px"
+                                borderColor={isSelected ? cAccent : cBorderStrong}
+                                bg={isSelected ? cAccentSoft : cSurfaceSoft}
+                                borderRadius="18px"
+                                px={4}
+                                py={3}
+                                color={isSelected ? cAccentStrong : cTextMuted}
+                                fontWeight="700"
+                                _hover={{ borderColor: cAccent, color: cAccentStrong }}
+                              >
+                                {category.name}
+                              </Checkbox>
+                            );
+                          })}
+                        </SimpleGrid>
+                      </CheckboxGroup>
+                    )}
+
+                    <FieldError message={stepErrors.categories} />
+
+                    {(formValues.categories || []).length ? (
+                      <HStack spacing={2} flexWrap="wrap">
+                        {(formValues.categories || []).map((categoryName: string) => (
+                          <Badge
+                            key={categoryName}
+                            bg="rgba(214, 183, 114, 0.12)"
+                            color={cAccentStrong}
+                            border="1px solid"
+                            borderColor={cBorder}
+                            borderRadius="full"
+                            px={3}
+                            py={1}
+                          >
+                            {categoryName}
+                          </Badge>
+                        ))}
+                      </HStack>
+                    ) : null}
+                  </VStack>
+                </Box>
+              </VStack>
+            ) : null}
+
+            {activeStepId === "location" ? (
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <Flex
@@ -854,7 +991,7 @@ const SellerOnboardingWizard = ({
               </VStack>
             ) : null}
 
-            {stepIndex === 2 ? (
+            {activeStepId === "contact" ? (
               <VStack align="stretch" spacing={5}>
                 <Box p={5} {...getFieldShellStyles()}>
                   <FormControl isRequired>
@@ -898,7 +1035,7 @@ const SellerOnboardingWizard = ({
               </VStack>
             ) : null}
 
-            {stepIndex === 3 ? (
+            {activeStepId === "media" ? (
               <VStack align="stretch" spacing={6}>
                 <UploadCard
                   title="Shop Logo"

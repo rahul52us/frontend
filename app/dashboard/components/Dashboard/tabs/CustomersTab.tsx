@@ -5,7 +5,6 @@ import { observer } from "mobx-react-lite";
 import { Badge,
   Box,
   Button,
-  Checkbox,
   Circle,
   Divider,
   Flex,
@@ -33,11 +32,6 @@ import { Badge,
   StatNumber,
   Radio,
   RadioGroup,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
   Text,
   Textarea,
   Spinner,
@@ -112,6 +106,7 @@ type BuyerLedgerEntry = {
   reversedAt?: string;
   relationType?: "direct" | "reversal";
   isPrimarySaleLedgerEntry?: boolean;
+  linkedSaleSummary?: SaleRecordDetailsSummary;
 };
 
 type BuyerSaleRecordStatus = "draft" | "posted" | "void";
@@ -365,6 +360,7 @@ const CustomersTab: React.FC = observer(() => {
 
   const [selectedBuyer, setSelectedBuyer] = useState<BuyerProfile | null>(null);
   const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<BuyerLedgerEntry | null>(null);
+  const [paymentContextEntry, setPaymentContextEntry] = useState<BuyerLedgerEntry | null>(null);
   const [selectedSaleRecord, setSelectedSaleRecord] = useState<BuyerSaleRecord | null>(null);
   const [saleRecordDetails, setSaleRecordDetails] = useState<BuyerSaleRecordDetails | null>(null);
   const [saleDetailsLoading, setSaleDetailsLoading] = useState(false);
@@ -384,7 +380,6 @@ const CustomersTab: React.FC = observer(() => {
   const [salePage, setSalePage] = useState(1);
   const [saleTotalPages, setSaleTotalPages] = useState(1);
   const [saleTotal, setSaleTotal] = useState(0);
-  const [ledgerTabIndex, setLedgerTabIndex] = useState(0);
 
   const limit = 10;
   const ledgerLimit = 10;
@@ -396,9 +391,9 @@ const CustomersTab: React.FC = observer(() => {
   const [lastCreatedBuyer, setLastCreatedBuyer] = useState<BuyerProfile | null>(null);
 
   const [ledgerFormValues, setLedgerFormValues] = useState({
-    entryType: "sale" as LedgerEntryType,
+    entryType: "payment" as LedgerEntryType,
     amount: "",
-    direction: "debit" as LedgerDirection,
+    direction: "credit" as LedgerDirection,
     referenceType: "manual" as LedgerReferenceType,
     referenceId: "",
     linkedLedgerEntryId: "",
@@ -694,6 +689,32 @@ const CustomersTab: React.FC = observer(() => {
       (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "")
     );
   };
+  const getLinkedSaleRemainingDue = (entry?: BuyerLedgerEntry | null) => {
+    const remainingDue = Number(entry?.linkedSaleSummary?.remainingDue);
+    return Number.isFinite(remainingDue) ? remainingDue : null;
+  };
+  const getEntryRemainingText = (entry?: BuyerLedgerEntry | null) => {
+    const remainingDue = getLinkedSaleRemainingDue(entry);
+    if (remainingDue === null) {
+      return "-";
+    }
+    if (remainingDue < 0) {
+      return `Overpaid ${formatCurrency(Math.abs(remainingDue))}`;
+    }
+    return formatCurrency(remainingDue);
+  };
+  const canPayEntry = (entry?: BuyerLedgerEntry | null) => {
+    if (!entry || entry.status === "reversed" || entry.direction !== "debit") {
+      return false;
+    }
+
+    const remainingDue = getLinkedSaleRemainingDue(entry);
+    return remainingDue === null || remainingDue > 0;
+  };
+  const isEntryFullySettled = (entry?: BuyerLedgerEntry | null) => {
+    const remainingDue = getLinkedSaleRemainingDue(entry);
+    return remainingDue !== null && remainingDue <= 0;
+  };
 
   const canDownloadLedgerInvoice = (entry?: BuyerLedgerEntry | null) =>
     Boolean(
@@ -745,6 +766,24 @@ const CustomersTab: React.FC = observer(() => {
     }
     return "red";
   };
+  const getLedgerEffectLabel = (entry: BuyerLedgerEntry) => {
+    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
+      return selectedPartyType === "supplier" ? "Payment sent" : "Payment received";
+    }
+    return getBuyerLedgerDirectionLabel(entry.direction, entry.entryType);
+  };
+  const getLedgerEffectColorScheme = (entry: BuyerLedgerEntry) => {
+    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
+      return "green";
+    }
+    return getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType);
+  };
+  const getLedgerAmountColor = (entry: BuyerLedgerEntry) => {
+    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
+      return dashboardPalette.success;
+    }
+    return entry.direction === "credit" ? dashboardPalette.success : cAccentStrong;
+  };
   const getBuyerLedgerDirectionTextColor = (
     direction: LedgerDirection,
     entryType?: LedgerEntryType,
@@ -775,11 +814,11 @@ const CustomersTab: React.FC = observer(() => {
     if (entryType === "payment") {
       return "Payment";
     }
-    return "Adjustment";
+    return "Correction";
   };
   const getTimelineTitle = (entry: BuyerLedgerEntry) => {
     if (entry.relationType === "reversal") {
-      return "Reversal Adjustment";
+      return "Reversal Correction";
     }
     if (entry.isPrimarySaleLedgerEntry) {
       return "Posted To Ledger";
@@ -788,7 +827,7 @@ const CustomersTab: React.FC = observer(() => {
       return isSelectedSupplier ? "Payment Sent" : "Payment Received";
     }
     if (entry.entryType === "adjustment") {
-      return "Manual Adjustment";
+      return "Balance Correction";
     }
     return isSelectedSupplier ? "Purchase Ledger Entry" : "Sale Ledger Entry";
   };
@@ -910,8 +949,7 @@ const CustomersTab: React.FC = observer(() => {
     setSelectedLedgerBuyer(buyer);
     setLedgerPage(1);
     setSalePage(1);
-    setLedgerTabIndex(0);
-    await Promise.all([fetchLedgerEntries(buyer._id, 1), fetchSaleRecords(buyer._id, 1)]);
+    await fetchLedgerEntries(buyer._id, 1);
   };
 
   const closeLedgerView = () => {
@@ -925,9 +963,9 @@ const CustomersTab: React.FC = observer(() => {
     setSalePage(1);
     setSaleTotalPages(1);
     setSaleTotal(0);
-    setLedgerTabIndex(0);
     setSelectedSaleRecord(null);
     setSaleRecordDetails(null);
+    setPaymentContextEntry(null);
     onSaleDetailsClose();
     resetSaleForm();
   };
@@ -936,6 +974,26 @@ const CustomersTab: React.FC = observer(() => {
     setSelectedSaleRecord(null);
     setSaleRecordDetails(null);
     onSaleDetailsClose();
+  };
+
+  const closeLedgerEntryModal = () => {
+    setPaymentContextEntry(null);
+    resetLedgerForm();
+    onLedgerEntryClose();
+  };
+
+  const openSaleDetailsFromLedgerEntry = (entry: BuyerLedgerEntry) => {
+    const saleRecordId = getLinkedSaleRecordIdFromEntry(entry);
+    if (!saleRecordId) {
+      return;
+    }
+
+    void openSaleDetails({
+      _id: saleRecordId,
+      grandTotal: Number(entry.amount || 0),
+      status: "posted",
+      saleDate: entry.entryDate,
+    } as BuyerSaleRecord);
   };
 
   const blobToBase64 = (blob: Blob) =>
@@ -1286,9 +1344,9 @@ const CustomersTab: React.FC = observer(() => {
 
   const resetLedgerForm = () => {
     setLedgerFormValues({
-      entryType: "sale",
+      entryType: "payment",
       amount: "",
-      direction: "debit",
+      direction: "credit",
       referenceType: "manual",
       referenceId: "",
       linkedLedgerEntryId: "",
@@ -1805,12 +1863,24 @@ const CustomersTab: React.FC = observer(() => {
       return;
     }
 
-    if (ledgerFormValues.entryType === "adjustment" && !ledgerFormValues.direction) {
+    const contextRemainingDue = getLinkedSaleRemainingDue(paymentContextEntry);
+    if (contextRemainingDue !== null && contextRemainingDue <= 0) {
       toast({
-        title: "Validation failed",
-        description: "Direction is required for adjustment entries.",
-        status: "warning",
+        title: "Nothing left to pay",
+        description: `This ${selectedTransactionSingularLabel.toLowerCase()} is already fully settled.`,
+        status: "info",
         duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (contextRemainingDue !== null && parsedAmount > contextRemainingDue) {
+      toast({
+        title: "Payment is more than remaining due",
+        description: `Remaining for this ${selectedTransactionSingularLabel.toLowerCase()} is ${formatCurrency(contextRemainingDue)}.`,
+        status: "warning",
+        duration: 3500,
         isClosable: true,
       });
       return;
@@ -1819,7 +1889,7 @@ const CustomersTab: React.FC = observer(() => {
     setLedgerSubmitting(true);
     try {
       const payload: any = {
-        entryType: ledgerFormValues.entryType,
+        entryType: "payment",
         amount: parsedAmount,
         referenceType: ledgerFormValues.referenceType || undefined,
         referenceId: ledgerFormValues.referenceId.trim() || undefined,
@@ -1831,20 +1901,17 @@ const CustomersTab: React.FC = observer(() => {
           : undefined,
       };
 
-      if (ledgerFormValues.entryType === "adjustment") {
-        payload.direction = ledgerFormValues.direction;
-      }
-
       await buyerStore.createBuyerLedgerEntry(selectedLedgerBuyer._id, payload);
 
       toast({
-        title: "Ledger entry saved",
+        title: isSelectedSupplier ? "Payment sent" : "Payment received",
         status: "success",
         duration: 2500,
         isClosable: true,
       });
 
       resetLedgerForm();
+      setPaymentContextEntry(null);
       onLedgerEntryClose();
       setLedgerPage(1);
       await fetchLedgerEntries(selectedLedgerBuyer._id, 1);
@@ -1999,7 +2066,7 @@ const CustomersTab: React.FC = observer(() => {
       await buyerStore.createBuyerSaleRecord(selectedLedgerBuyer._id, {
         saleDate: saleFormValues.saleDate ? new Date(saleFormValues.saleDate).toISOString() : undefined,
         notes: saleFormValues.notes.trim() || undefined,
-        postToLedger: Boolean(saleFormValues.postToLedger),
+        postToLedger: true,
         source: "manual",
         items: sanitizedItems,
       });
@@ -2012,14 +2079,9 @@ const CustomersTab: React.FC = observer(() => {
       });
 
       closeSaleRecordModal();
-      setSalePage(1);
-      await fetchSaleRecords(selectedLedgerBuyer._id, 1);
-
-      if (saleFormValues.postToLedger) {
-        setLedgerPage(1);
-        await fetchLedgerEntries(selectedLedgerBuyer._id, 1);
-        await fetchBuyers(page, search);
-      }
+      setLedgerPage(1);
+      await fetchLedgerEntries(selectedLedgerBuyer._id, 1);
+      await fetchBuyers(page, search);
     } catch (error: any) {
       toast({
         title: `Failed to save ${selectedTransactionSingularLabel.toLowerCase()} record`,
@@ -2076,17 +2138,24 @@ const CustomersTab: React.FC = observer(() => {
     const linkedSaleRecordId =
       entry.linkedSaleRecordId ||
       (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "");
+    const remainingDue = getLinkedSaleRemainingDue(entry);
+    const suggestedPaymentAmount = remainingDue !== null && remainingDue > 0
+      ? remainingDue
+      : Number(entry.amount || 0);
 
+    setPaymentContextEntry(entry);
     setLedgerFormValues({
       entryType: "payment",
-      amount: String(entry.amount),
+      amount: String(suggestedPaymentAmount),
       direction: "credit",
       referenceType: entry.referenceType || "manual",
       referenceId: entry.referenceId || entry._id || "",
       linkedLedgerEntryId: entry._id || "",
       linkedSaleRecordId,
       entryDate: new Date().toISOString().split("T")[0],
-      notes: `Payment for ${entry.referenceType || 'entry'} ${entry.referenceId || entry._id}`,
+      notes: linkedSaleRecordId
+        ? `${isSelectedSupplier ? "Payment sent for" : "Payment received for"} ${selectedTransactionSingularLabel.toLowerCase()} ${formatShortId(linkedSaleRecordId)}`
+        : `${isSelectedSupplier ? "Payment sent for" : "Payment received for"} ledger entry ${formatShortId(entry._id)}`,
     });
     onLedgerEntryOpen();
   };
@@ -2859,18 +2928,18 @@ const CustomersTab: React.FC = observer(() => {
           : "soft",
     ),
     directionBadge: renderMerchantBadge(
-      getBuyerLedgerDirectionLabel(entry.direction, entry.entryType),
-      entry.direction === "credit" ? "success" : "danger",
+      getLedgerEffectLabel(entry),
+      getLedgerEffectColorScheme(entry) === "green" ? "success" : "danger",
     ),
     amountDisplay: (
       <Text
-        color={entry.direction === "credit" ? dashboardPalette.success : cAccentStrong}
+        color={getLedgerAmountColor(entry)}
         fontWeight="bold"
       >
         {formatCurrency(entry.amount || 0)}
       </Text>
     ),
-    balanceText: formatCurrency(entry.balanceAfter || 0),
+    remainingText: getEntryRemainingText(entry),
     referenceText: entry.referenceId ? (
       <HStack spacing={1}>
         <Text color={cTextMuted}>{entry.referenceType || "manual"}:</Text>
@@ -2885,11 +2954,24 @@ const CustomersTab: React.FC = observer(() => {
       <Text color={cTextMuted}>{entry.referenceType || "manual"}</Text>
     ),
     statusBadge: renderMerchantBadge(entry.status || "active", entry.status === "reversed" ? "danger" : "success"),
-    reverseAction:
+    activityAction:
       entry.status === "reversed" ? (
         <Text color={cTextSoft}>-</Text>
       ) : (
         <HStack spacing={2}>
+          {getLinkedSaleRecordIdFromEntry(entry) && (
+            <Button
+              size="xs"
+              onClick={() => openSaleDetailsFromLedgerEntry(entry)}
+              {...merchantGhostButtonProps}
+              h="32px"
+              minW="auto"
+              px={3}
+              color={cAccentStrong}
+            >
+              Details
+            </Button>
+          )}
           {canDownloadLedgerInvoice(entry) && (
             <Button
               size="xs"
@@ -2905,7 +2987,7 @@ const CustomersTab: React.FC = observer(() => {
               Invoice
             </Button>
           )}
-          {entry.direction === "debit" && (
+          {canPayEntry(entry) && (
             <Button
               size="xs"
               onClick={() => openPayModal(entry)}
@@ -2918,17 +3000,6 @@ const CustomersTab: React.FC = observer(() => {
               Pay
             </Button>
           )}
-          <Button
-            size="xs"
-            onClick={() => openReverseModal(entry)}
-            {...merchantGhostButtonProps}
-            h="32px"
-            minW="auto"
-            px={3}
-            color={cDanger}
-          >
-            Reverse
-          </Button>
         </HStack>
       ),
   }));
@@ -2936,13 +3007,7 @@ const CustomersTab: React.FC = observer(() => {
   const ledgerColumns = [
     { headerName: "Date", key: "entryDate", type: "date" },
     {
-      headerName: "Type",
-      key: "typeBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.typeBadge },
-    },
-    {
-      headerName: "Due Impact",
+      headerName: "Effect",
       key: "directionBadge",
       type: "component",
       metaData: { component: (row: any) => row.directionBadge },
@@ -2953,8 +3018,7 @@ const CustomersTab: React.FC = observer(() => {
       type: "component",
       metaData: { component: (row: any) => row.amountDisplay },
     },
-    { headerName: "Balance", key: "balanceText" },
-    { headerName: "Reference", key: "referenceText" },
+    { headerName: "Remaining", key: "remainingText" },
     { headerName: "Notes", key: "notes" },
     {
       headerName: "Status",
@@ -2964,9 +3028,9 @@ const CustomersTab: React.FC = observer(() => {
     },
     {
       headerName: "Action",
-      key: "reverseAction",
+      key: "activityAction",
       type: "component",
-      metaData: { component: (row: any) => row.reverseAction },
+      metaData: { component: (row: any) => row.activityAction },
     },
   ];
 
@@ -3092,12 +3156,12 @@ const CustomersTab: React.FC = observer(() => {
           bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
         >
           <Text fontSize="sm" fontWeight="800" color="#1E3A5F">
-            No ledger entries yet
+            No activity yet
           </Text>
           <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
             {isSelectedSupplier
-              ? "Purchases, payments, and adjustments for this supplier will appear here."
-              : "Sales, payments, and adjustments for this customer will appear here."}
+              ? "Purchases and payments for this supplier will appear here."
+              : "Sales and payments for this customer will appear here."}
           </Text>
         </VStack>
       ) : (
@@ -3143,10 +3207,10 @@ const CustomersTab: React.FC = observer(() => {
                       </Badge>
                       <Badge
                         {...androidTheme.badge}
-                        colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                        colorScheme={getLedgerEffectColorScheme(entry)}
                         textTransform="none"
                       >
-                        {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
+                        {getLedgerEffectLabel(entry)}
                       </Badge>
                     </HStack>
                     <Text fontSize="11px" fontWeight="700" color={androidTheme.colors.textMuted} letterSpacing="0.01em">
@@ -3170,7 +3234,7 @@ const CustomersTab: React.FC = observer(() => {
                       fontWeight="900"
                       fontSize="md"
                       lineHeight="1.1"
-                      color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
+                      color={getLedgerAmountColor(entry)}
                     >
                       {formatCurrency(entry.amount || 0)}
                     </Text>
@@ -3189,10 +3253,10 @@ const CustomersTab: React.FC = observer(() => {
                   </Box>
                   <Box {...androidTheme.infoCard}>
                     <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Balance
+                      Remaining
                     </Text>
                     <Text fontSize="13px" color="#0F172A" fontWeight="900" mt={1}>
-                      {formatCurrency(entry.balanceAfter || 0)}
+                      {getEntryRemainingText(entry)}
                     </Text>
                   </Box>
                 </SimpleGrid>
@@ -3244,6 +3308,17 @@ const CustomersTab: React.FC = observer(() => {
                   </Badge>
                   {entry.status !== "reversed" ? (
                     <Flex flex="1" justify="flex-end" gap={2} wrap="wrap">
+                      {getLinkedSaleRecordIdFromEntry(entry) && (
+                        <Button
+                          {...androidTheme.button.small}
+                          bg={androidTheme.colors.primarySoft}
+                          color={androidTheme.colors.primary}
+                          onClick={() => openSaleDetailsFromLedgerEntry(entry)}
+                          _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
+                        >
+                          Details
+                        </Button>
+                      )}
                       {canDownloadLedgerInvoice(entry) && (
                         <Button
                           {...androidTheme.button.small}
@@ -3256,7 +3331,7 @@ const CustomersTab: React.FC = observer(() => {
                           Invoice
                         </Button>
                       )}
-                      {entry.direction === "debit" && (
+                      {canPayEntry(entry) && (
                         <Button
                           {...androidTheme.button.small}
                           bg={androidTheme.colors.success}
@@ -3267,17 +3342,6 @@ const CustomersTab: React.FC = observer(() => {
                           Pay
                         </Button>
                       )}
-                      <Button
-                        {...androidTheme.button.small}
-                        variant="outline"
-                        borderColor={androidTheme.colors.danger}
-                        color={androidTheme.colors.danger}
-                        bg="transparent"
-                        onClick={() => openReverseModal(entry)}
-                        _hover={{ bg: androidTheme.colors.dangerSoft }}
-                      >
-                        Reverse
-                      </Button>
                     </Flex>
                   ) : null}
                 </Flex>
@@ -3741,38 +3805,18 @@ const CustomersTab: React.FC = observer(() => {
             </SimpleGrid>
           </Box>
 
-          <Box {...androidTheme.sectionCard} p={1.5}>
-            <HStack spacing={2}>
-              <Button
-                {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 0 ? cAccent : "transparent"}
-                color={ledgerTabIndex === 0 ? cPage : "#33506D"}
-                onClick={() => setLedgerTabIndex(0)}
-                _hover={{ bg: ledgerTabIndex === 0 ? cAccentStrong : "#FBF8F2" }}
-                _active={{
-                  ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 0 ? cAccentStrong : "rgba(214, 183, 114, 0.10)",
-                }}
-              >
-                Entries ({ledgerTotal})
-              </Button>
-              <Button
-                {...androidTheme.button.segment}
-                bg={ledgerTabIndex === 1 ? cAccent : "transparent"}
-                color={ledgerTabIndex === 1 ? cPage : "#33506D"}
-                onClick={() => setLedgerTabIndex(1)}
-                _hover={{ bg: ledgerTabIndex === 1 ? cAccentStrong : "#FBF8F2" }}
-                _active={{
-                  ...androidTheme.button.segment._active,
-                  bg: ledgerTabIndex === 1 ? cAccentStrong : "rgba(214, 183, 114, 0.10)",
-                }}
-              >
-                {isSelectedSupplier ? "Purchases" : "Sales"} ({saleTotal})
-              </Button>
+          <Box {...androidTheme.sectionCard} px={4} py={3}>
+            <HStack justify="space-between" align="center">
+              <Text fontSize="sm" fontWeight="900" color={androidTheme.colors.text}>
+                Activity
+              </Text>
+              <Badge {...androidTheme.badge} colorScheme="purple" textTransform="none">
+                {ledgerTotal} entries
+              </Badge>
             </HStack>
           </Box>
 
-          {ledgerTabIndex === 0 ? renderLedgerMobile() : renderSaleRecordsMobile()}
+          {renderLedgerMobile()}
         </VStack>
 
         <Box
@@ -3796,20 +3840,6 @@ const CustomersTab: React.FC = observer(() => {
               _active={{ ...androidTheme.button.primary._active, bg: cAccentStrong }}
             >
               Add {isSelectedSupplier ? "Purchase" : "Sale"}
-            </Button>
-            <Button
-              {...androidTheme.button.primary}
-              flex="1"
-              h="52px"
-              borderRadius="16px"
-              bg={cSurfaceAlt}
-              color={cText}
-              leftIcon={<AddIcon />}
-              onClick={onLedgerEntryOpen}
-              _hover={{ bg: cSurfaceSoft }}
-              _active={{ ...androidTheme.button.primary._active, bg: cSurfaceSoft }}
-            >
-              Add Entry
             </Button>
           </HStack>
         </Box>
@@ -3924,7 +3954,7 @@ const CustomersTab: React.FC = observer(() => {
           </Box>
           <Box p={3} borderWidth="1px" borderColor="orange.200" borderRadius="xl" bg="orange.50">
             <Text fontSize="xs" color="orange.700" textTransform="uppercase" fontWeight="700">
-              {isSelectedSupplier ? "Debit Adjustments" : "Debit Adjustments"}
+              Debit Corrections
             </Text>
             <Text fontSize="lg" fontWeight="800" color="orange.800">
               {formatCurrency(summary.adjustmentDebitAmount)}
@@ -4036,7 +4066,7 @@ const CustomersTab: React.FC = observer(() => {
               </Flex>
               <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
                 <Text fontSize="sm" color="gray.600">
-                  Credit Adjustments
+                  Credit Corrections
                 </Text>
                 <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
                   {formatCurrency(summary.adjustmentCreditAmount)}
@@ -4084,22 +4114,6 @@ const CustomersTab: React.FC = observer(() => {
             History
           </Text>
           <VStack align="stretch" spacing={3}>
-            <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="gray.50">
-              <HStack justify="space-between" align="start">
-                <Box>
-                  <Text fontSize="sm" fontWeight="700" color="gray.900">
-                    {selectedTransactionSingularLabel} Record Created
-                  </Text>
-                  <Text fontSize="sm" color="gray.500">
-                    {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
-                  </Text>
-                </Box>
-                <Text fontSize="sm" fontWeight="800" color={cAccent}>
-                  {formatCurrency(summary.saleAmount)}
-                </Text>
-              </HStack>
-            </Box>
-
             {timeline.length === 0 ? (
               <Text fontSize="sm" color="gray.500">
                 No ledger activity linked to this {selectedTransactionSingularLabel.toLowerCase()} yet.
@@ -4117,10 +4131,10 @@ const CustomersTab: React.FC = observer(() => {
                           {getLedgerEntryTypeLabel(entry.entryType)}
                         </Badge>
                         <Badge
-                          colorScheme={getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType)}
+                          colorScheme={getLedgerEffectColorScheme(entry)}
                           textTransform="none"
                         >
-                          {getBuyerLedgerDirectionLabel(entry.direction, entry.entryType)}
+                          {getLedgerEffectLabel(entry)}
                         </Badge>
                         {entry.status ? (
                           <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
@@ -4145,125 +4159,170 @@ const CustomersTab: React.FC = observer(() => {
                       <Text
                         fontSize="sm"
                         fontWeight="800"
-                        color={getBuyerLedgerDirectionTextColor(entry.direction, entry.entryType)}
+                        color={getLedgerAmountColor(entry)}
                       >
                         {formatSignedAmount(entry)}
                       </Text>
                       <Text fontSize="xs" color="gray.500" mt={1}>
-                        Balance {formatCurrency(Number(entry.balanceAfter || 0))}
+                        Customer balance {formatCurrency(Number(entry.balanceAfter || 0))}
                       </Text>
                     </Box>
                   </HStack>
                 </Box>
               ))
             )}
+
+            <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="gray.50">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" fontWeight="700" color="gray.900">
+                    {selectedTransactionSingularLabel} Record Created
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
+                  </Text>
+                </Box>
+                <Text fontSize="sm" fontWeight="800" color={cAccent}>
+                  {formatCurrency(summary.saleAmount)}
+                </Text>
+              </HStack>
+            </Box>
           </VStack>
         </Box>
       </VStack>
     );
   };
 
-  const renderLedgerEntryFormFields = () => (
-    <VStack spacing={3}>
-      <FormControl>
-        <FormLabel>Entry Type</FormLabel>
-        <Select
-          value={ledgerFormValues.entryType}
-          onChange={(e) => {
-            const nextType = e.target.value as LedgerEntryType;
-            setLedgerFormValues((prev) => ({
-              ...prev,
-              entryType: nextType,
-              direction: nextType === "payment" ? "credit" : nextType === "sale" ? "debit" : prev.direction,
-            }));
-          }}
+  const renderLedgerEntryFormFields = () => {
+    const contextSummary = paymentContextEntry?.linkedSaleSummary;
+    const contextRemainingDue = getLinkedSaleRemainingDue(paymentContextEntry);
+    const parsedPaymentAmount = Number(ledgerFormValues.amount || 0);
+    const paymentAmount = Number.isFinite(parsedPaymentAmount) ? Math.max(parsedPaymentAmount, 0) : 0;
+    const remainingAfterPayment =
+      contextRemainingDue !== null ? Math.max(contextRemainingDue - paymentAmount, 0) : null;
+
+    return (
+    <VStack spacing={4} align="stretch">
+      {paymentContextEntry ? (
+        <Box
+          borderWidth="1px"
+          borderColor={cBorder}
+          bg={cAccentSoft}
+          borderRadius="lg"
+          p={4}
         >
-          <option value="sale">{isSelectedSupplier ? "Purchase" : "Sale"}</option>
-          <option value="payment">{isSelectedSupplier ? "Payment Sent" : "Payment"}</option>
-          <option value="adjustment">Adjustment</option>
-        </Select>
-      </FormControl>
+          <HStack justify="space-between" align="start" spacing={3}>
+            <Box flex="1" minW={0}>
+              <Text fontSize="xs" fontWeight="800" color={cTextMuted} textTransform="uppercase">
+                Paying this {selectedTransactionSingularLabel.toLowerCase()}
+              </Text>
+              <Text fontSize="md" fontWeight="800" color={cText} mt={1}>
+                {getLedgerEntryTypeLabel(paymentContextEntry.entryType)} of {formatCurrency(paymentContextEntry.amount || 0)}
+              </Text>
+              <Text fontSize="sm" color={cTextMuted} mt={1}>
+                {formatDateTime(paymentContextEntry.entryDate)}
+              </Text>
+              <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={2.5} mt={3}>
+                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
+                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
+                    Total
+                  </Text>
+                  <Text fontSize="sm" fontWeight="900" color={cText} mt={1}>
+                    {formatCurrency(contextSummary?.saleAmount ?? paymentContextEntry.amount ?? 0)}
+                  </Text>
+                </Box>
+                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
+                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
+                    Paid
+                  </Text>
+                  <Text fontSize="sm" fontWeight="900" color={dashboardPalette.success} mt={1}>
+                    {formatCurrency(contextSummary?.paidAmount ?? 0)}
+                  </Text>
+                </Box>
+                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
+                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
+                    Remaining
+                  </Text>
+                  <Text fontSize="sm" fontWeight="900" color={cAccentStrong} mt={1}>
+                    {contextRemainingDue !== null ? getEntryRemainingText(paymentContextEntry) : "Calculated after save"}
+                  </Text>
+                </Box>
+              </SimpleGrid>
+              {remainingAfterPayment !== null ? (
+                <Text fontSize="sm" color={cTextMuted} mt={3}>
+                  After this payment, remaining will be {formatCurrency(remainingAfterPayment)}.
+                </Text>
+              ) : (
+                <Text fontSize="sm" color={cTextMuted} mt={3}>
+                  This payment is linked to this entry and will reduce its due amount.
+                </Text>
+              )}
+              {paymentContextEntry.notes ? (
+                <Text fontSize="sm" color={cTextMuted} mt={2}>
+                  {paymentContextEntry.notes}
+                </Text>
+              ) : null}
+            </Box>
+            {getLinkedSaleRecordIdFromEntry(paymentContextEntry) ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openSaleDetailsFromLedgerEntry(paymentContextEntry)}
+                {...merchantGhostButtonProps}
+              >
+                History
+              </Button>
+            ) : null}
+          </HStack>
+        </Box>
+      ) : (
+        <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="lg" p={4}>
+          <Text fontSize="sm" color={cTextMuted}>
+            This records money {isSelectedSupplier ? "sent to the supplier" : "received from the customer"} and reduces the open balance.
+          </Text>
+        </Box>
+      )}
 
-      <FormControl isDisabled={ledgerFormValues.entryType !== "adjustment"}>
-        <FormLabel>Direction</FormLabel>
-        <Select
-          value={
-            ledgerFormValues.entryType === "adjustment"
-              ? ledgerFormValues.direction
-              : ledgerFormValues.entryType === "payment"
-                ? "credit"
-                : "debit"
-          }
-          onChange={(e) =>
-            setLedgerFormValues((prev) => ({
-              ...prev,
-              direction: e.target.value as LedgerDirection,
-            }))
-          }
-        >
-          <option value="debit">{isSelectedSupplier ? "You will give more" : "You will get more"}</option>
-          <option value="credit">{isSelectedSupplier ? "You will pay / reduce due" : "You will give credit / reduce due"}</option>
-        </Select>
-      </FormControl>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
+        <FormControl>
+          <FormLabel>Payment Amount</FormLabel>
+          <Input
+            type="number"
+            min="0"
+            max={contextRemainingDue !== null ? contextRemainingDue : undefined}
+            step="0.01"
+            value={ledgerFormValues.amount}
+            onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
+            placeholder="Enter payment amount"
+          />
+          {contextRemainingDue !== null ? (
+            <Text fontSize="xs" color={cTextMuted} mt={1}>
+              Maximum: {formatCurrency(Math.max(contextRemainingDue, 0))}
+            </Text>
+          ) : null}
+        </FormControl>
 
-      <FormControl>
-        <FormLabel>Amount</FormLabel>
-        <Input
-          type="number"
-          min="0"
-          step="0.01"
-          value={ledgerFormValues.amount}
-          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
-          placeholder="Enter amount"
-        />
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Reference Type</FormLabel>
-        <Select
-          value={ledgerFormValues.referenceType}
-          onChange={(e) =>
-            setLedgerFormValues((prev) => ({
-              ...prev,
-              referenceType: e.target.value as LedgerReferenceType,
-            }))
-          }
-        >
-          <option value="manual">Manual</option>
-          <option value="order">Order</option>
-          <option value="refund">Refund</option>
-          <option value="import">Import</option>
-        </Select>
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Reference ID (optional)</FormLabel>
-        <Input
-          value={ledgerFormValues.referenceId}
-          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, referenceId: e.target.value }))}
-          placeholder="orderId / refundId / rowId"
-        />
-      </FormControl>
-
-      <FormControl>
-        <FormLabel>Entry Date (optional)</FormLabel>
-        <Input
-          type="datetime-local"
-          value={ledgerFormValues.entryDate}
-          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
-        />
-      </FormControl>
+        <FormControl>
+          <FormLabel>Payment Date</FormLabel>
+          <Input
+            type="date"
+            value={ledgerFormValues.entryDate}
+            onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
+          />
+        </FormControl>
+      </SimpleGrid>
 
       <FormControl>
         <FormLabel>Notes (optional)</FormLabel>
         <Input
           value={ledgerFormValues.notes}
           onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-          placeholder="Optional remarks"
+          placeholder="Payment mode, receipt number, or short note"
         />
       </FormControl>
     </VStack>
-  );
+    );
+  };
 
   const renderSaleRecordFormFields = () => (
     <VStack spacing={4} align="stretch">
@@ -4287,14 +4346,11 @@ const CustomersTab: React.FC = observer(() => {
         </FormControl>
       </SimpleGrid>
 
-      <Checkbox
-        isChecked={saleFormValues.postToLedger}
-        onChange={(e) => setSaleFormValues((prev) => ({ ...prev, postToLedger: e.target.checked }))}
-      >
-        Post {isSelectedSupplier ? "purchase" : "sale"} to ledger now
-      </Checkbox>
-
-      <Divider />
+      <Box borderWidth="1px" borderColor={cBorder} bg={cAccentSoft} borderRadius="lg" p={3}>
+        <Text fontSize="sm" color={cTextMuted}>
+          This will appear immediately in the activity list with its item details.
+        </Text>
+      </Box>
 
       <VStack align="stretch" spacing={4}>
         {saleFormValues.items.map((item, index) => (
@@ -4604,7 +4660,7 @@ const CustomersTab: React.FC = observer(() => {
         primaryBadge={isSelectedSupplier ? "Supplier Ledger" : "Customer Ledger"}
         extraBadges={renderMerchantBadge(selectedLedgerBuyer?.isBlocked ? "Blocked" : "Active", selectedLedgerBuyer?.isBlocked ? "danger" : "success")}
         title={selectedBuyerName}
-        description={`Track ${isSelectedSupplier ? "purchases, payouts, and supplier adjustments" : "sales, collections, and customer adjustments"} for this relationship in one ledger view.`}
+        description={`Track ${isSelectedSupplier ? "purchases and payouts" : "sales and payments"} for this relationship in one simple activity view.`}
         glowProps={{ top: "-84px", right: "-34px", w: "220px", h: "220px" }}
         leftFooter={
           <HStack spacing={3} flexWrap="wrap">
@@ -4638,14 +4694,6 @@ const CustomersTab: React.FC = observer(() => {
               {...merchantPrimaryButtonProps}
             >
               Add {isSelectedSupplier ? "Purchase" : "Sale"} Record
-            </Button>
-            <Button
-              leftIcon={<AddIcon />}
-              onClick={onLedgerEntryOpen}
-              size="lg"
-              {...merchantGhostButtonProps}
-            >
-              Add Ledger Entry
             </Button>
           </Stack>
         }
@@ -4685,70 +4733,20 @@ const CustomersTab: React.FC = observer(() => {
           />
         </SimpleGrid>
 
-        <Tabs index={ledgerTabIndex} onChange={(index) => setLedgerTabIndex(index)} variant="unstyled">
-          <TabList
-            overflowX="auto"
-            bg={cSurfaceAlt}
-            borderWidth="1px"
-            borderColor={cBorder}
-            borderRadius="20px"
-            p={1}
-            gap={1}
-          >
-            <Tab
-              whiteSpace="nowrap"
-              borderRadius="16px"
-              fontWeight="700"
-              color={cTextMuted}
-              _selected={{
-                bg: cAccentSoft,
-                color: cAccentStrong,
-                borderWidth: "1px",
-                borderColor: cBorder,
-              }}
-            >
-              Ledger Entries ({ledgerTotal})
-            </Tab>
-            <Tab
-              whiteSpace="nowrap"
-              borderRadius="16px"
-              fontWeight="700"
-              color={cTextMuted}
-              _selected={{
-                bg: cAccentSoft,
-                color: cAccentStrong,
-                borderWidth: "1px",
-                borderColor: cBorder,
-              }}
-            >
-              {selectedTransactionPluralLabel} ({saleTotal})
-            </Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel px={0} pt={5}>
-              <CustomTable
-                title={`Ledger Entries (${ledgerTotal})`}
-                columns={ledgerColumns}
-                data={ledgerTableData}
-                loading={ledgerLoading}
-                actions={ledgerTableActions}
-                serial={{ show: true, text: "S.No." }}
-                {...getMerchantTableProps("58vh")}
-              />
-            </TabPanel>
-            <TabPanel px={0} pt={5}>
-              <CustomTable
-                title={`${selectedTransactionPluralLabel} (${saleTotal})`}
-                columns={saleColumns}
-                data={saleTableData}
-                loading={saleLoading}
-                actions={saleTableActions}
-                serial={{ show: true, text: "S.No." }}
-                {...getMerchantTableProps("58vh")}
-              />
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+        <HStack spacing={3} mb={5} flexWrap="wrap">
+          {renderMerchantBadge(`Activity (${ledgerTotal})`, "accent")}
+          {renderMerchantBadge(`${isSelectedSupplier ? "Purchases" : "Sales"} and payments together`, "soft")}
+        </HStack>
+
+        <CustomTable
+          title={`Activity (${ledgerTotal})`}
+          columns={ledgerColumns}
+          data={ledgerTableData}
+          loading={ledgerLoading}
+          actions={ledgerTableActions}
+          serial={{ show: true, text: "S.No." }}
+          {...getMerchantTableProps("58vh")}
+        />
       </MerchantPanel>
     </VStack>
   );
@@ -4774,9 +4772,16 @@ const CustomersTab: React.FC = observer(() => {
       {useCompactLedgerView ? (
         <Modal isOpen={isSaleDetailsOpen} onClose={closeSaleDetails} size="full" scrollBehavior="inside">
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>{selectedTransactionSingularLabel} Details</ModalHeader>
-            <ModalCloseButton />
+          <ModalContent bg={cPage} color={cText}>
+            <ModalHeader
+              bg="linear-gradient(135deg, rgba(22, 20, 27, 0.98) 0%, rgba(35, 31, 39, 0.98) 100%)"
+              color={cAccentStrong}
+              borderBottom="1px solid"
+              borderBottomColor={cAccent}
+            >
+              {selectedTransactionSingularLabel} Details
+            </ModalHeader>
+            <ModalCloseButton color={cAccentStrong} />
             <ModalBody pb={6}>{renderSaleDetailsContent()}</ModalBody>
           </ModalContent>
         </Modal>
@@ -4795,10 +4800,11 @@ const CustomersTab: React.FC = observer(() => {
               borderLeftColor: cBorder,
             }}
             headerProps={{
-              bg: dashboardPalette.shell,
-              color: cText,
+              bg: "linear-gradient(135deg, rgba(22, 20, 27, 0.98) 0%, rgba(35, 31, 39, 0.98) 100%)",
+              color: cAccentStrong,
               borderBottom: "1px solid",
-              borderBottomColor: cBorder,
+              borderBottomColor: cAccent,
+              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.28)",
               px: 6,
               py: 5,
             }}
@@ -5345,15 +5351,15 @@ const CustomersTab: React.FC = observer(() => {
         <>
           <BottomSheetDrawer
             isOpen={isLedgerEntryOpen}
-            onClose={onLedgerEntryClose}
-            title="Add Ledger Entry"
+            onClose={closeLedgerEntryModal}
+            title="Record Payment"
             footer={
               <>
-                <Button variant="ghost" onClick={onLedgerEntryClose}>
+                <Button variant="ghost" onClick={closeLedgerEntryModal}>
                   Cancel
                 </Button>
                 <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting} flex="1" h="52px">
-                  Save Entry
+                  Save Payment
                 </Button>
               </>
             }
@@ -5383,18 +5389,18 @@ const CustomersTab: React.FC = observer(() => {
         </>
       ) : (
         <>
-          <Modal isOpen={isLedgerEntryOpen} onClose={onLedgerEntryClose} isCentered size="lg">
+          <Modal isOpen={isLedgerEntryOpen} onClose={closeLedgerEntryModal} isCentered size="lg">
             <ModalOverlay />
             <ModalContent>
-              <ModalHeader>Add Ledger Entry</ModalHeader>
+              <ModalHeader>Record Payment</ModalHeader>
               <ModalCloseButton />
               <ModalBody>{renderLedgerEntryFormFields()}</ModalBody>
               <ModalFooter>
-                <Button variant="ghost" mr={3} onClick={onLedgerEntryClose}>
+                <Button variant="ghost" mr={3} onClick={closeLedgerEntryModal}>
                   Cancel
                 </Button>
                 <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
-                  Save Entry
+                  Save Payment
                 </Button>
               </ModalFooter>
             </ModalContent>
@@ -5444,7 +5450,7 @@ const CustomersTab: React.FC = observer(() => {
         message={
           <Text>
             Reverse this entry of <strong>{formatCurrency(selectedLedgerEntry?.amount || 0)}</strong>? This will
-            create a compensating adjustment entry.
+            create a compensating correction entry.
           </Text>
         }
         confirmText="Reverse"
