@@ -36,6 +36,7 @@ import {
   Text,
   Textarea,
   useBreakpointValue,
+  useColorMode,
   useColorModeValue,
   useDisclosure,
   useToast,
@@ -301,6 +302,7 @@ const getDefaultBuyerFormValues = () => ({
 });
 
 const CustomersTab: React.FC = observer(() => {
+  const { colorMode } = useColorMode();
   const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
   const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
   const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
@@ -315,7 +317,6 @@ const CustomersTab: React.FC = observer(() => {
   const cPage = useColorModeValue("white", dashboardPalette.page);
   const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
   const cSuccess = useColorModeValue("green.500", dashboardPalette.success);
-  const cWarning = useColorModeValue("orange.500", dashboardPalette.warning);
   const cHeroGradient = useColorModeValue(
     "white",
     dashboardHeroGradient,
@@ -336,6 +337,15 @@ const CustomersTab: React.FC = observer(() => {
   const cSuccessSoftBg = useColorModeValue("green.50", dashboardPalette.successSoft);
   const cDangerSoftBg = useColorModeValue("red.50", dashboardPalette.dangerSoft);
   const cFormInfoBg = useColorModeValue("rgba(69, 104, 255, 0.06)", "rgba(59, 130, 246, 0.12)");
+  const cSurfaceElevated = useColorModeValue("white", dashboardPalette.shellElevated);
+  const cSurfaceMuted = useColorModeValue("gray.50", dashboardPalette.shell);
+  const cBadgeBg = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
+  const cDangerAccentSoft = useColorModeValue("red.50", dashboardPalette.dangerSoft);
+  const cSuccessAccentSoft = useColorModeValue("green.50", dashboardPalette.successSoft);
+  const cIconButtonHover = useColorModeValue("blackAlpha.100", "whiteAlpha.120");
+  const cIconButtonMutedBg = useColorModeValue("gray.50", dashboardPalette.surfaceSoft);
+  const cCardShadow = useColorModeValue("0 1px 6px rgba(0,0,0,0.04)", "0 16px 32px rgba(0,0,0,0.22)");
+  const cFabShadow = useColorModeValue("0 4px 16px rgba(0,0,0,0.18)", "0 18px 36px rgba(0,0,0,0.34)");
   
                             
   const toast = useToast();
@@ -495,6 +505,12 @@ const CustomersTab: React.FC = observer(() => {
       window.removeEventListener("resize", updateMobileDeviceState);
     };
   }, []);
+
+  useEffect(() => {
+    if (!selectedLedgerBuyer || typeof window === "undefined") return;
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [selectedLedgerBuyer]);
 
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime || isMobileDevice;
   const useCompactBuyerView = !isDesktopBuyerView;
@@ -4682,7 +4698,6 @@ const CustomersTab: React.FC = observer(() => {
             <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={{base:1,md:3}}>
               {filteredBuyers.map((buyer) => {
                 const balanceMeta = getBuyerBalanceMeta(buyer);
-                const avatarHue = getBuyerAvatarHue(buyer);
                 const tagList = buyer.tags?.length
                   ? buyer.tags.slice(0, 2)
                   : [buyer.source ? buyer.source.charAt(0).toUpperCase() + buyer.source.slice(1) : "Manual"];
@@ -4861,395 +4876,9 @@ const CustomersTab: React.FC = observer(() => {
     );
   };
 
-// const renderCustomersReferenceDetail = (isCompact: boolean) => {
-//   if (!selectedLedgerBuyer) {
-//     return null;
-//   }
-
-//   const sectionX = { base: 0, md: 6, xl: 4 };
-//   const balanceMeta = getBuyerBalanceMeta(selectedLedgerBuyer);
-//   const phone = getBuyerActionPhone(selectedLedgerBuyer);
-//   const email = String(selectedLedgerBuyer.buyerId?.emailNormalized || "").trim();
-//   const whatsappHref = getWhatsAppHref(phone);
-//   const avatarHue = getBuyerAvatarHue(selectedLedgerBuyer);
-//   const tagList = selectedLedgerBuyer.tags?.length
-//     ? selectedLedgerBuyer.tags.slice(0, 3)
-//     : selectedLedgerBuyer.source
-//       ? [selectedLedgerBuyer.source.charAt(0).toUpperCase() + selectedLedgerBuyer.source.slice(1)]
-//       : [];
-
-//   return (
-//     <MotionBox
-//       initial={{ opacity: 0, x: 24 }}
-//       animate={{ opacity: 1, x: 0 }}
-//       exit={{ opacity: 0, x: 24 }}
-//       transition={{ duration: 0.22 }}
-//       bg="white"
-//       borderRadius={{ base: "none", md: "24px" }}
-//       overflow="hidden"
-//       minH={isCompact ? "100dvh" : "auto"}
-//       position="relative"
-//     >
-//       {/* HEADER SECTION */}
-//       <Box px={sectionX} pt={4} pb={4} borderBottom="1px solid" borderColor="gray.100">
-//         <Flex justify="space-between" align="center" mb={4}>
-//           <IconButton
-//             aria-label={`Back to ${partyPluralLabel}`}
-//             icon={<ArrowBackIcon />}
-//             onClick={closeLedgerView}
-//             size="sm"
-//             variant="ghost"
-//             borderRadius="full"
-//           />
-//           <IconButton
-//             aria-label={`Delete ${partySingularLabel}`}
-//             icon={<FiTrash2 />}
-//             onClick={() => openDeleteModal(selectedLedgerBuyer)}
-//             size="sm"
-//             variant="ghost"
-//             colorScheme="red"
-//             borderRadius="full"
-//           />
-//         </Flex>
-
-//         <Flex align="center" gap={4}>
-//           <Box position="relative">
-//             <Flex
-//               h={{ base: "56px", md: "64px" }}
-//               w={{ base: "56px", md: "64px" }}
-//               borderRadius="full"
-//               align="center"
-//               justify="center"
-//               fontWeight="bold"
-//               fontSize={{ base: "xl", md: "2xl" }}
-//               bg={`hsl(${avatarHue}, 60%, 90%)`}
-//               color={`hsl(${avatarHue}, 70%, 30%)`}
-//             >
-//               {getBuyerInitials(selectedLedgerBuyer)}
-//             </Flex>
-//             {selectedLedgerBuyer.isBlocked ? (
-//               <Circle
-//                 position="absolute"
-//                 bottom="-2px"
-//                 right="-2px"
-//                 size="20px"
-//                 bg="red.500"
-//                 color="white"
-//                 border="2px solid white"
-//                 fontSize="10px"
-//                 fontWeight="900"
-//               >
-//                 !
-//               </Circle>
-//             ) : null}
-//           </Box>
-
-//           <Box flex="1">
-//             <Heading color="gray.900" fontSize={{ base: "lg", md: "xl" }} lineHeight="1.2">
-//               {selectedBuyerName}
-//             </Heading>
-//             <Text mt={0.5} color="gray.500" fontSize="sm">
-//               {getBuyerPrimaryContact(selectedLedgerBuyer)}
-//             </Text>
-//             {tagList.length > 0 && (
-//               <Flex mt={2} gap={2} flexWrap="wrap">
-//                 {tagList.map((tag) => (
-//                   <Badge
-//                     key={`${selectedLedgerBuyer._id}-${tag}`}
-//                     px={2}
-//                     py={0.5}
-//                     borderRadius="md"
-//                     bg="gray.100"
-//                     color="gray.700"
-//                     textTransform="none"
-//                     fontWeight="600"
-//                     fontSize="xs"
-//                   >
-//                     {tag}
-//                   </Badge>
-//                 ))}
-//               </Flex>
-//             )}
-//           </Box>
-//         </Flex>
-
-//         <Flex
-//           mt={5}
-//           p={3}
-//           bg="gray.50"
-//           border="1px solid"
-//           borderColor="gray.100"
-//           borderRadius="16px"
-//           align="center"
-//           justify="space-between"
-//           gap={3}
-//           wrap={{ base: "wrap", md: "nowrap" }}
-//         >
-//           <Box flex="1">
-//             <Text fontSize="10px" color="gray.500" textTransform="uppercase" fontWeight="700" letterSpacing="wide">
-//               {balanceMeta.detailLabel}
-//             </Text>
-//             <Text mt={0.5} fontSize={{ base: "lg", md: "xl" }} fontWeight="800" color="gray.900">
-//               {balanceMeta.state === "settled" ? "Rs 0.00" : formatCurrency(balanceMeta.amount)}
-//             </Text>
-//           </Box>
-
-//           <HStack spacing={2}>
-//             <IconButton
-//               aria-label="Call"
-//               icon={<FiPhone />}
-//               onClick={() => openExternalLink(phone ? `tel:${phone}` : "")}
-//               isDisabled={!phone}
-//               size="sm"
-//               bg="white"
-//               border="1px solid"
-//               borderColor="gray.200"
-//               boxShadow="sm"
-//             />
-//             <IconButton
-//               aria-label="WhatsApp"
-//               icon={<FaWhatsapp />}
-//               onClick={() => openExternalLink(whatsappHref)}
-//               isDisabled={!whatsappHref}
-//               size="sm"
-//               bg="white"
-//               border="1px solid"
-//               borderColor="gray.200"
-//               colorScheme="whatsapp"
-//               color="green.500"
-//               boxShadow="sm"
-//             />
-//             <IconButton
-//               aria-label="Email"
-//               icon={<FiMail />}
-//               onClick={() => openExternalLink(email ? `mailto:${email}` : "")}
-//               isDisabled={!email}
-//               size="sm"
-//               bg="white"
-//               border="1px solid"
-//               borderColor="gray.200"
-//               boxShadow="sm"
-//             />
-//           </HStack>
-//         </Flex>
-//       </Box>
-
-//       {/* LEDGER ACTIVITY SECTION */}
-//       <Box px={sectionX} pt={4} pb={isCompact ? "100px" : "80px"} maxW="5xl">
-//         <Flex justify="space-between" align="center" mb={4}>
-//           <Box>
-//             <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="wide">
-//               Activity ({ledgerTotal})
-//             </Text>
-//           </Box>
-//           <Button
-//             size="sm"
-//             variant="outline"
-//             borderRadius="full"
-//             borderColor="gray.200"
-//             bg="white"
-//             _hover={{ bg: "gray.50" }}
-//             onClick={() => {
-//               resetLedgerForm();
-//               onLedgerEntryOpen();
-//             }}
-//           >
-//             Record payment
-//           </Button>
-//         </Flex>
-
-//         {ledgerLoading ? (
-//           <VStack spacing={3} align="stretch">
-//             {Array.from({ length: 4 }).map((_, index) => (
-//               <Box key={`ledger-skeleton-${index}`} bg="white" border="1px solid" borderColor="gray.100" borderRadius="12px" p={3}>
-//                 <HStack spacing={3} align="start">
-//                   <SkeletonCircle size="8" />
-//                   <Box flex="1">
-//                     <Skeleton h="12px" w="50%" />
-//                     <Skeleton h="10px" w="38%" mt={2} />
-//                   </Box>
-//                 </HStack>
-//               </Box>
-//             ))}
-//           </VStack>
-//         ) : ledgerEntries.length === 0 ? (
-//           <Box textAlign="center" py={10} px={5} bg="gray.50" border="1px solid" borderColor="gray.100" borderRadius="16px">
-//             <Circle mx="auto" size="10" bg="white" border="1px solid" borderColor="gray.200" color="gray.400">
-//               <Icon as={FiUsers} boxSize={5} />
-//             </Circle>
-//             <Text mt={3} fontSize="sm" fontWeight="600" color="gray.700">
-//               No activity yet
-//             </Text>
-//             <Text mt={1} fontSize="xs" color="gray.500">
-//               {isSelectedSupplier
-//                 ? "Purchases and payouts for this supplier will appear here."
-//                 : "Sales and payments for this customer will appear here."}
-//             </Text>
-//           </Box>
-//         ) : (
-//           <VStack align="stretch" spacing={3}>
-//             {ledgerEntries.map((entry) => {
-//               const note = entry.notes?.trim() || getTimelineTitle(entry);
-//               const linkedSaleRecordId = getLinkedSaleRecordIdFromEntry(entry);
-
-//               return (
-//                 <Box
-//                   key={entry._id}
-//                   bg="white"
-//                   border="1px solid"
-//                   borderColor="gray.100"
-//                   borderRadius="12px"
-//                   p={3}
-//                   boxShadow="0 2px 4px rgba(0,0,0,0.02)"
-//                 >
-//                   <Flex align="start" gap={3}>
-//                     <Circle
-//                       size="32px"
-//                       bg={entry.direction === "debit" ? "red.50" : "green.50"}
-//                       color={entry.direction === "debit" ? "red.500" : "green.500"}
-//                       flexShrink={0}
-//                     >
-//                       <Icon as={entry.direction === "debit" ? FiArrowUpRight : FiArrowDownLeft} boxSize={4} />
-//                     </Circle>
-
-//                     <Box flex="1" minW={0}>
-//                       <Flex justify="space-between" gap={3} align="start">
-//                         <Box minW={0}>
-//                           <Text fontSize="sm" fontWeight="600" color="gray.800" noOfLines={1}>
-//                             {note}
-//                           </Text>
-//                           <Text mt={0.5} fontSize="xs" color="gray.500" textTransform="capitalize">
-//                             {getLedgerEntryTypeLabel(entry.entryType)} · {formatDateOnly(entry.entryDate || entry.createdAt)}
-//                           </Text>
-//                         </Box>
-//                         <Box textAlign="right" flexShrink={0}>
-//                           <Text fontSize="sm" fontWeight="700" color={getLedgerAmountColor(entry)}>
-//                             {formatSignedAmount(entry)}
-//                           </Text>
-//                           <Text mt={0.5} fontSize="10px" color="gray.400">
-//                             {entry.status === "reversed" ? "reversed" : getLedgerEffectLabel(entry).toLowerCase()}
-//                           </Text>
-//                         </Box>
-//                       </Flex>
-
-//                       {entry.notes && (
-//                         <Text mt={2} fontSize="xs" color="gray.500" lineHeight="1.4">
-//                           {formatLedgerReference(entry)}
-//                         </Text>
-//                       )}
-
-//                       {entry.status !== "reversed" && (linkedSaleRecordId || canDownloadLedgerInvoice(entry) || canPayEntry(entry)) ? (
-//                         <Flex mt={3} gap={2} flexWrap="wrap">
-//                           {linkedSaleRecordId && (
-//                             <Button
-//                               size="xs"
-//                               variant="outline"
-//                               borderRadius="full"
-//                               borderColor="gray.200"
-//                               onClick={() => openSaleDetailsFromLedgerEntry(entry)}
-//                             >
-//                               Details
-//                             </Button>
-//                           )}
-//                           {canDownloadLedgerInvoice(entry) && (
-//                             <Button
-//                               size="xs"
-//                               variant="outline"
-//                               borderRadius="full"
-//                               borderColor="gray.200"
-//                               isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-//                               onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-//                             >
-//                               Invoice
-//                             </Button>
-//                           )}
-//                           {canPayEntry(entry) && (
-//                             <Button
-//                               size="xs"
-//                               bg={dashboardPalette.accent}
-//                               color="white"
-//                               borderRadius="full"
-//                               _hover={{ bg: "gray.800" }}
-//                               onClick={() => openPayModal(entry)}
-//                             >
-//                               Pay
-//                             </Button>
-//                           )}
-//                         </Flex>
-//                       ) : null}
-//                     </Box>
-//                   </Flex>
-//                 </Box>
-//               );
-//             })}
-//           </VStack>
-//         )}
-
-//         {/* PAGINATION */}
-//         {(ledgerTotalPages || 1) > 1 && (
-//           <Flex justify="space-between" align="center" mt={5}>
-//             <Button
-//               size="sm"
-//               variant="outline"
-//               borderRadius="full"
-//               isDisabled={ledgerPage <= 1 || ledgerLoading}
-//               onClick={() => {
-//                 if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
-//                 const nextPage = ledgerPage - 1;
-//                 setLedgerPage(nextPage);
-//                 fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
-//               }}
-//             >
-//               Previous
-//             </Button>
-//             <Text fontSize="xs" color="gray.500" fontWeight="600">
-//               Page {ledgerPage} of {ledgerTotalPages || 1}
-//             </Text>
-//             <Button
-//               size="sm"
-//               variant="outline"
-//               borderRadius="full"
-//               isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
-//               onClick={() => {
-//                 if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;
-//                 const nextPage = ledgerPage + 1;
-//                 setLedgerPage(nextPage);
-//                 fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
-//               }}
-//             >
-//               Next
-//             </Button>
-//           </Flex>
-//         )}
-//       </Box>
-
-//       {/* FLOATING ACTION BUTTON */}
-//       <Button
-//         // position={isCompact ? "fixed" : "absolute"}
-//         // right="20px"
-//         // bottom={isCompact ? "calc(60px + env(safe-area-inset-bottom, 0px))" : "20px"}
-//         zIndex={30}
-//         h={{base:"40px",md:"48px"}}
-//         px={{base:3,md:5}}
-//         borderRadius="full"
-//         bg={dashboardPalette.accent}
-//         color="white"
-//         leftIcon={<AddIcon fontSize="10px" />}
-//         fontWeight="600"
-//         boxShadow="0 4px 12px rgba(0,0,0,0.15)"
-//         _hover={{ bg: "gray.800" }}
-//         _active={{ transform: "scale(0.97)" }}
-//         onClick={onSaleRecordOpen}
-//       >
-//         New entry
-//       </Button>
-//     </MotionBox>
-//   );
-// };
 
   const renderCustomersReferenceDetail = (isCompact: boolean) => {
   if (!selectedLedgerBuyer) return null;
-  window.scrollTo({ top: 0, behavior: "smooth" });
 
   const balanceMeta :any= getBuyerBalanceMeta(selectedLedgerBuyer);
   const phone = getBuyerActionPhone(selectedLedgerBuyer);
@@ -5262,9 +4891,19 @@ const CustomersTab: React.FC = observer(() => {
       ? [selectedLedgerBuyer.source.charAt(0).toUpperCase() + selectedLedgerBuyer.source.slice(1)]
       : [];
 
-  const accentBg = `hsl(${avatarHue}, 60%, 92%)`;
-  const accentColor = `hsl(${avatarHue}, 70%, 28%)`;
-  const accentMid = `hsl(${avatarHue}, 55%, 96%)`;
+  const isDarkMode = colorMode === "dark";
+  const accentBg = isDarkMode
+    ? `hsla(${avatarHue}, 72%, 56%, 0.18)`
+    : `hsl(${avatarHue}, 60%, 92%)`;
+  const accentColor = isDarkMode
+    ? `hsl(${avatarHue}, 88%, 78%)`
+    : `hsl(${avatarHue}, 70%, 28%)`;
+  const accentMid = isDarkMode
+    ? `hsla(${avatarHue}, 72%, 56%, 0.12)`
+    : `hsl(${avatarHue}, 55%, 96%)`;
+  const headerGradient = isDarkMode
+    ? `linear-gradient(160deg, ${accentMid} 0%, ${cSurface} 70%)`
+    : `linear-gradient(160deg, ${accentMid} 0%, white 70%)`;
 
   return (
     <MotionBox
@@ -5272,7 +4911,7 @@ const CustomersTab: React.FC = observer(() => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 24 }}
       transition={{ duration: 0.2 }}
-      bg="white"
+      bg={cSurface}
       borderRadius={{ base: "none", md: "20px" }}
       overflow="hidden"
       minH={isCompact ? "100dvh" : "auto"}
@@ -5282,12 +4921,12 @@ const CustomersTab: React.FC = observer(() => {
     >
       {/* ── HERO HEADER ────────────────────────────────── */}
       <Box
-        bg={`linear-gradient(160deg, ${accentMid} 0%, white 70%)`}
+        bg={headerGradient}
         px={{ base: 3, md: 6 }}
         pt={2}
         pb={2}
         borderBottom="1px solid"
-        borderColor="gray.100"
+        borderColor={cBorder}
       >
         {/* Top nav row */}
         <Flex justify="space-between" align="center" mb={2}>
@@ -5298,8 +4937,8 @@ const CustomersTab: React.FC = observer(() => {
             size="sm"
             variant="ghost"
             borderRadius="full"
-            color="gray.600"
-            _hover={{ bg: "blackAlpha.100" }}
+            color={cTextMuted}
+            _hover={{ bg: cIconButtonHover }}
           />
           <IconButton
             aria-label={`Delete ${partySingularLabel}`}
@@ -5338,7 +4977,8 @@ const CustomersTab: React.FC = observer(() => {
                 size="18px"
                 bg="red.500"
                 color="white"
-                border="2px solid white"
+                border="2px solid"
+                borderColor={cSurface}
                 fontSize="9px"
                 fontWeight="900"
               >
@@ -5349,7 +4989,7 @@ const CustomersTab: React.FC = observer(() => {
 
           <Box flex="1" minW={0}>
             <Heading
-              color="gray.900"
+              color={cText}
               fontSize={{ base: "md", md: "lg" }}
               fontWeight="700"
               lineHeight="1.2"
@@ -5357,7 +4997,7 @@ const CustomersTab: React.FC = observer(() => {
             >
               {selectedBuyerName}
             </Heading>
-            <Text color="gray.500" fontSize="xs" mt={0.5} noOfLines={1}>
+            <Text color={cTextSoft} fontSize="xs" mt={0.5} noOfLines={1}>
               {getBuyerPrimaryContact(selectedLedgerBuyer)}
             </Text>
             {tagList.length > 0 && (
@@ -5385,18 +5025,18 @@ const CustomersTab: React.FC = observer(() => {
 
         {/* Balance + action strip */}
         <Box
-          bg="white"
+          bg={cSurfaceElevated}
           border="1px solid"
-          borderColor="gray.100"
+          borderColor={cBorder}
           borderRadius="14px"
           p={3}
-          boxShadow="0 1px 6px rgba(0,0,0,0.04)"
+          boxShadow={cCardShadow}
         >
           <Flex align="center" justify="space-between" gap={2}>
             <Box>
               <Text
                 fontSize="9px"
-                color="gray.400"
+                color={cTextSoft}
                 textTransform="uppercase"
                 fontWeight="700"
                 letterSpacing="0.08em"
@@ -5409,7 +5049,7 @@ const CustomersTab: React.FC = observer(() => {
                 fontWeight="800"
                 color={
                   balanceMeta.state === "settled"
-                    ? "gray.400"
+                    ? cTextSoft
                     : balanceMeta.state === "credit"
                       ? "green.600"
                       : "red.500"
@@ -5456,11 +5096,11 @@ const CustomersTab: React.FC = observer(() => {
                   size="sm"
                   variant="ghost"
                   borderRadius="10px"
-                  bg="gray.50"
-                  color={disabled ? "gray.300" : color}
-                  _hover={{ bg: "gray.100" }}
+                  bg={cIconButtonMutedBg}
+                  color={disabled ? cTextSoft : color}
+                  _hover={{ bg: cBadgeBg }}
                   border="1px solid"
-                  borderColor="gray.100"
+                  borderColor={cBorder}
                 />
               ))}
             </HStack>
@@ -5481,7 +5121,7 @@ const CustomersTab: React.FC = observer(() => {
           <Text
             fontSize="10px"
             fontWeight="700"
-            color="gray.400"
+            color={cTextSoft}
             textTransform="uppercase"
             letterSpacing="0.08em"
           >
@@ -5491,9 +5131,9 @@ const CustomersTab: React.FC = observer(() => {
               ml={1.5}
               px={1.5}
               py="1px"
-              bg="gray.100"
+              bg={cBadgeBg}
               borderRadius="5px"
-              color="gray.500"
+              color={cTextSoft}
               fontSize="9px"
             >
               {ledgerTotal}
@@ -5503,14 +5143,14 @@ const CustomersTab: React.FC = observer(() => {
             size="xs"
             variant="outline"
             borderRadius="full"
-            borderColor="gray.200"
-            color="gray.600"
+            borderColor={cBorderStrong}
+            color={cTextMuted}
             fontWeight="600"
             fontSize="xs"
             h="28px"
             px={3}
-            bg="white"
-            _hover={{ bg: "gray.50" }}
+            bg={cSurfaceElevated}
+            _hover={{ bg: cSurfaceMuted }}
             onClick={() => {
               resetLedgerForm();
               onLedgerEntryOpen();
@@ -5526,7 +5166,7 @@ const CustomersTab: React.FC = observer(() => {
             {Array.from({ length: 4 }).map((_, i) => (
               <Box
                 key={`skel-${i}`}
-                bg="gray.50"
+                bg={cSurfaceMuted}
                 borderRadius="12px"
                 p={3}
               >
@@ -5547,18 +5187,18 @@ const CustomersTab: React.FC = observer(() => {
             align="center"
             justify="center"
             py={10}
-            bg="gray.50"
+            bg={cSurfaceMuted}
             borderRadius="14px"
             border="1px dashed"
-            borderColor="gray.200"
+            borderColor={cBorderStrong}
           >
-            <Circle size="40px" bg="white" border="1px solid" borderColor="gray.200" mb={3}>
-              <Icon as={FiUsers} boxSize={4} color="gray.400" />
+            <Circle size="40px" bg={cSurfaceElevated} border="1px solid" borderColor={cBorderStrong} mb={3}>
+              <Icon as={FiUsers} boxSize={4} color={cTextSoft} />
             </Circle>
-            <Text fontSize="sm" fontWeight="600" color="gray.600">
+            <Text fontSize="sm" fontWeight="600" color={cTextMuted}>
               No activity yet
             </Text>
-            <Text mt={1} fontSize="xs" color="gray.400" textAlign="center" px={6}>
+            <Text mt={1} fontSize="xs" color={cTextSoft} textAlign="center" px={6}>
               {isSelectedSupplier
                 ? "Purchases and payouts will appear here."
                 : "Sales and payments will appear here."}
@@ -5575,9 +5215,9 @@ const CustomersTab: React.FC = observer(() => {
               return (
                 <Box
                   key={entry._id}
-                  bg="white"
+                  bg={cSurfaceElevated}
                   border="1px solid"
-                  borderColor="gray.100"
+                  borderColor={cBorder}
                   borderRadius="12px"
                   p={3}
                   opacity={isReversed ? 0.6 : 1}
@@ -5602,7 +5242,7 @@ const CustomersTab: React.FC = observer(() => {
                     {/* Icon */}
                     <Circle
                       size="30px"
-                      bg={isDebit ? "red.50" : "green.50"}
+                      bg={isDebit ? cDangerAccentSoft : cSuccessAccentSoft}
                       color={isDebit ? "red.500" : "green.500"}
                       flexShrink={0}
                     >
@@ -5619,13 +5259,13 @@ const CustomersTab: React.FC = observer(() => {
                           <Text
                             fontSize="sm"
                             fontWeight="600"
-                            color="gray.800"
+                            color={cText}
                             noOfLines={1}
                             lineHeight="1.3"
                           >
                             {note}
                           </Text>
-                          <Text mt={0.5} fontSize="10px" color="gray.400">
+                          <Text mt={0.5} fontSize="10px" color={cTextSoft}>
                             {getLedgerEntryTypeLabel(entry.entryType)}
                             {" · "}
                             {formatDateOnly(entry.entryDate || entry.createdAt)}
@@ -5642,7 +5282,7 @@ const CustomersTab: React.FC = observer(() => {
                           >
                             {formatSignedAmount(entry)}
                           </Text>
-                          <Text mt={0.5} fontSize="9px" color="gray.400" textTransform="capitalize">
+                          <Text mt={0.5} fontSize="9px" color={cTextSoft} textTransform="capitalize">
                             {isReversed ? "reversed" : getLedgerEffectLabel(entry).toLowerCase()}
                           </Text>
                         </Box>
@@ -5652,7 +5292,7 @@ const CustomersTab: React.FC = observer(() => {
                         <Text
                           mt={1.5}
                           fontSize="xs"
-                          color="gray.500"
+                          color={cTextMuted}
                           lineHeight="1.4"
                           noOfLines={2}
                         >
@@ -5670,8 +5310,8 @@ const CustomersTab: React.FC = observer(() => {
                                 size="xs"
                                 variant="outline"
                                 borderRadius="full"
-                                borderColor="gray.200"
-                                color="gray.600"
+                                borderColor={cBorderStrong}
+                                color={cTextMuted}
                                 fontWeight="600"
                                 h="24px"
                                 fontSize="10px"
@@ -5686,8 +5326,8 @@ const CustomersTab: React.FC = observer(() => {
                                 size="xs"
                                 variant="outline"
                                 borderRadius="full"
-                                borderColor="gray.200"
-                                color="gray.600"
+                                borderColor={cBorderStrong}
+                                color={cTextMuted}
                                 fontWeight="600"
                                 h="24px"
                                 fontSize="10px"
@@ -5731,8 +5371,8 @@ const CustomersTab: React.FC = observer(() => {
               size="xs"
               variant="outline"
               borderRadius="full"
-              borderColor="gray.200"
-              color="gray.600"
+              borderColor={cBorderStrong}
+              color={cTextMuted}
               fontWeight="600"
               h="28px"
               isDisabled={ledgerPage <= 1 || ledgerLoading}
@@ -5745,15 +5385,15 @@ const CustomersTab: React.FC = observer(() => {
             >
               ← Prev
             </Button>
-            <Text fontSize="10px" color="gray.400" fontWeight="600">
+            <Text fontSize="10px" color={cTextSoft} fontWeight="600">
               {ledgerPage} / {ledgerTotalPages || 1}
             </Text>
             <Button
               size="xs"
               variant="outline"
               borderRadius="full"
-              borderColor="gray.200"
-              color="gray.600"
+              borderColor={cBorderStrong}
+              color={cTextMuted}
               fontWeight="600"
               h="28px"
               isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
@@ -5790,7 +5430,7 @@ const CustomersTab: React.FC = observer(() => {
           leftIcon={<AddIcon fontSize="9px" />}
           fontWeight="700"
           fontSize="sm"
-          boxShadow="0 4px 16px rgba(0,0,0,0.18)"
+          boxShadow={cFabShadow}
           _hover={{ opacity: 0.92 }}
           _active={{ transform: "scale(0.96)" }}
           onClick={onSaleRecordOpen}
@@ -5819,7 +5459,7 @@ const CustomersTab: React.FC = observer(() => {
           px={{ base: 0, md: 4 }}
           pt={{ base: 2, md: 4 }}
           pb={0}
-          bg={showMobileBuyerManagement ? mobileLedgerPalette.page : androidTheme.colors.surface}
+          bg={showMobileBuyerManagement ? mobileLedgerPalette.page : cPage}
           minH="100dvh"
         >
           {showMobileBuyerManagement ? renderBuyerProfilesMobile() : renderLedgerDetailMobile()}
