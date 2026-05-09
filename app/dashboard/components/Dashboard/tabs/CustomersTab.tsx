@@ -4403,7 +4403,7 @@ const CustomersTab: React.FC = observer(() => {
     return (
       <Box
         bg={isCompact ? cPage : "transparent"}
-        borderRadius={{ base: "none", md: "34px" }}
+        // borderRadius={{ base: "none", md: "14px" }}
         overflow="hidden"
         mt={{base:-2,md:0}}
         mx={isCompact ? -2 : 0}

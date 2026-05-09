@@ -1,512 +1,536 @@
-import React, { useState } from "react";
 import {
-  Box,
-  Text,
-  VStack,
-  HStack,
   Badge,
-  Select,
-  Image,
-  useToast,
-  Grid,
-  GridItem,
+  Box,
+  Button,
+  Drawer,
+  DrawerContent,
+  DrawerOverlay,
   Flex,
-  Heading,
-  Circle,
   Icon,
-  Divider,
+  Image,
+  Select,
+  Text,
+  useBreakpointValue,
+  useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
-import { observer } from "mobx-react-lite";
-import { FaUser, FaMapMarkerAlt, FaShoppingBag, FaCreditCard } from "react-icons/fa";
-import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import { format } from "date-fns";
+import { useState } from "react";
+import {
+  FiArrowRight,
+  FiCheck,
+  FiCheckCircle,
+  FiClock,
+  FiCreditCard,
+  FiDollarSign,
+  FiGift,
+  FiMapPin,
+  FiPackage,
+  FiPhone,
+  FiPrinter,
+  FiTruck,
+  FiX,
+} from "react-icons/fi";
 import stores from "../../../../store/stores";
-import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
+import { getStatusMeta } from "./OrdersTab";
 
-interface OrderDrawerProps {
+interface Props {
   isOpen: boolean;
   onClose: () => void;
   order: any;
 }
 
-const formatCurrency = (amount: any) => {
-  const numericAmount = Number(amount || 0);
-  return new Intl.NumberFormat("en-IN", {
+const flow = ["created", "pending", "confirmed", "processing", "shipped", "delivered"];
+
+const STATUS_ALIAS: Record<string, string> = {
+  "in-progress": "processing",
+  initialized: "created",
+};
+
+const normalizeStatus = (s: string) =>
+  STATUS_ALIAS[String(s ?? "").toLowerCase()] ?? String(s ?? "").toLowerCase();
+
+const fmt = (amount: any) =>
+  new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(numericAmount);
+  }).format(Number(amount || 0));
+
+const stepIcon: Record<string, any> = {
+  created: FiClock,
+  pending: FiClock,
+  confirmed: FiCheckCircle,
+  processing: FiPackage,
+  shipped: FiTruck,
+  delivered: FiCheck,
 };
 
-const getOrderStatusMeta = (status: string) => {
-  const normalized = String(status || "").toLowerCase();
+function SectionLabel({
+  children,
+  right,
+  muted,
+}: {
+  children: string;
+  right?: React.ReactNode;
+  muted: string;
+}) {
+  return (
+    <Flex align="center" justify="space-between" mb={3}>
+      <Text fontSize="10px" fontWeight="700" letterSpacing="0.1em" textTransform="uppercase" color={muted}>
+        {children}
+      </Text>
+      {right}
+    </Flex>
+  );
+}
 
-  if (normalized === "delivered") {
-    return {
-      label: "Delivered",
-      bg: "rgba(70, 201, 139, 0.14)",
-      color: dashboardPalette.success,
-      borderColor: "rgba(70, 201, 139, 0.22)",
-    };
-  }
+export default function OrderDrawer({ isOpen, onClose, order }: Props) {
+  const { orderStore } = stores;
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const toast = useToast();
 
-  if (normalized === "cancelled") {
-    return {
-      label: "Cancelled",
-      bg: "rgba(239, 107, 107, 0.14)",
-      color: dashboardPalette.danger,
-      borderColor: "rgba(239, 107, 107, 0.24)",
-    };
-  }
+  const placement = useBreakpointValue<any>({ base: "bottom", md: "right" });
 
-  if (normalized === "created") {
-    return {
-      label: "Placed",
-      bg: dashboardPalette.accentSoft,
-      color: dashboardPalette.accentStrong,
-      borderColor: dashboardPalette.border,
-    };
-  }
+  const bg        = useColorModeValue("white", "#0F1117");
+  const sectionBg = useColorModeValue("#F7F8FA", "#181B24");
+  const border    = useColorModeValue("#E8EAF0", "#252836");
+  const text      = useColorModeValue("#0D1117", "#F0F2F8");
+  const muted     = useColorModeValue("#6B7280", "#9CA3AF");
+  const sub       = useColorModeValue("#9CA3AF", "#6B7280");
+  const inputBg   = useColorModeValue("#F3F4F6", "#1E2130");
+  const accent    = "#3B6FFF";
+  const accentBg  = useColorModeValue("#EEF2FF", "rgba(59,111,255,0.14)");
+  const accentTxt = useColorModeValue("#3B6FFF", "#7BA3FF");
+  const greenBg   = useColorModeValue("#ECFDF3", "rgba(52,211,153,0.1)");
+  const greenTxt  = useColorModeValue("#027A48", "#34D399");
+  const warnBg    = useColorModeValue("#FFFBEB", "rgba(251,191,36,0.1)");
+  const warnTxt   = useColorModeValue("#92400E", "#FBBF24");
 
-  return {
-    label: status || "Pending",
-    bg: "rgba(214, 183, 114, 0.08)",
-    color: dashboardPalette.warning,
-    borderColor: dashboardPalette.border,
+  if (!order) return null;
+
+  const rawStatus     = String(order.orderStatus ?? "");
+  const curStatus     = normalizeStatus(rawStatus);
+  const meta          = getStatusMeta(rawStatus);
+  const stepIdx       = flow.indexOf(curStatus);
+  const cancelled     = rawStatus.toLowerCase() === "cancelled";
+  const totalValue    = Number(order.quote?.price?.value || order.total || 0);
+  const breakup: any[] = order.quote?.breakup ?? [];
+  const taxValue      = Number(breakup.find((b: any) => b.title_type === "tax")?.price?.value ?? 0);
+  const hasFreebies   = breakup.some((b: any) => b.title_type === "item" && Number(b.price?.value) === 0);
+  const isOnline      = order.paymentMethod?.toLowerCase() === "online";
+  const isPaid        = order.paymentStatus === "paid";
+
+  const addressStr = [
+    order.shippingAddress?.addressLine1,
+    order.shippingAddress?.addressLine2,
+    order.shippingAddress?.city,
+    order.shippingAddress?.state,
+    order.shippingAddress?.postalCode,
+  ].filter(Boolean).join(", ");
+
+  const initials = (order.user?.name || "UK")
+    .split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
+
+  const doStatusChange = async (s: string) => {
+    setIsUpdating(true);
+    try {
+      const d = await orderStore.updateOrderStatus(order._id, s);
+      if (d.success) toast({ title: "Status updated", status: "success", duration: 2000 });
+      else toast({ title: "Failed", description: d.message, status: "error" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message, status: "error" });
+    } finally { setIsUpdating(false); }
   };
-};
 
-const selectStyles = {
-  bg: dashboardPalette.surfaceAlt,
-  border: "1px solid",
-  borderColor: dashboardPalette.borderStrong,
-  color: dashboardPalette.text,
-  borderRadius: "16px",
-  iconColor: dashboardPalette.textSoft,
-  _hover: { borderColor: dashboardPalette.accent },
-  _focusVisible: {
-    borderColor: dashboardPalette.accent,
-    boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
-  },
-  sx: {
-    option: {
-      backgroundColor: "#ffffff",
-      color: dashboardPalette.page,
-    },
-  },
-};
+  const doItemStatus = async (fid: string, s: string) => {
+    if (!fid) return;
+    setIsUpdating(true);
+    try {
+      const d = await orderStore.updateOrderItemStatus(order._id, fid, s);
+      if (d.success) toast({ title: "Item updated", status: "success", duration: 2000 });
+      else toast({ title: "Failed", description: d.message, status: "error" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message, status: "error" });
+    } finally { setIsUpdating(false); }
+  };
 
-const infoCardStyles = {
-  bg: dashboardPalette.shell,
-  border: "1px solid",
-  borderColor: dashboardPalette.border,
-  borderRadius: "24px",
-  boxShadow: "0 18px 40px rgba(0, 0, 0, 0.28)",
-};
-
-const OrderDrawer: React.FC<OrderDrawerProps> = observer(
-  ({ isOpen, onClose, order }) => {
-    const [isUpdating, setIsUpdating] = useState(false);
-    const toast = useToast();
-    const { orderStore } = stores;
-
-    if (!order) return null;
-
-    const handleStatusUpdate = async (newStatus: string) => {
-      setIsUpdating(true);
-      try {
-        const data = await orderStore.updateOrderStatus(order._id, newStatus);
-        if (data.success) {
-          toast({ title: "Status updated", status: "success" });
-        } else {
-          toast({
-            title: "Failed update",
-            description: data.message,
-            status: "error",
-          });
-        }
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description:
-            error?.response?.data?.message || "Something went wrong",
-          status: "error",
-        });
-      } finally {
-        setIsUpdating(false);
-      }
-    };
-
-    const handleItemStatusUpdate = async (
-      itemId: string,
-      newStatus: string
-    ) => {
-      setIsUpdating(true);
-      try {
-        const data = await orderStore.updateOrderItemStatus(
-          order._id,
-          itemId,
-          newStatus
-        );
-        if (data.success) {
-          toast({ title: "Item Status updated", status: "success" });
-        } else {
-          toast({
-            title: "Failed update",
-            description: data.message,
-            status: "error",
-          });
-        }
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description:
-            error?.response?.data?.message || "Something went wrong",
-          status: "error",
-        });
-      } finally {
-        setIsUpdating(false);
-      }
-    };
-
-    const currentOrder = order;
-    const orderStatusMeta = getOrderStatusMeta(currentOrder?.orderStatus);
-    const shippingAddress = [
-      currentOrder?.shippingAddress?.addressLine1,
-      currentOrder?.shippingAddress?.addressLine2,
-      currentOrder?.shippingAddress?.city,
-      currentOrder?.shippingAddress?.state,
-      currentOrder?.shippingAddress?.pincode,
-    ]
-      .filter(Boolean)
-      .join(", ");
-
-    return (
-      <CustomDrawer
-        open={isOpen}
-        close={onClose}
-        title={`Order #${currentOrder?.orderId}`}
-        size="xl"
-        loading={!currentOrder}
-        showDivider={false}
-        contentProps={{
-          bg: dashboardPalette.page,
-          color: dashboardPalette.text,
-          borderLeft: "1px solid",
-          borderLeftColor: dashboardPalette.border,
-        }}
-        headerProps={{
-          bg: dashboardPalette.shell,
-          color: dashboardPalette.text,
-          borderBottom: "1px solid",
-          borderBottomColor: dashboardPalette.border,
-          px: 6,
-          py: 5,
-        }}
-        closeButtonProps={{
-          color: dashboardPalette.text,
-          bg: dashboardPalette.surfaceAlt,
-          border: "1px solid",
-          borderColor: dashboardPalette.borderStrong,
-          borderRadius: "12px",
-          _hover: {
-            bg: dashboardPalette.surfaceSoft,
-            color: dashboardPalette.accentStrong,
-          },
-        }}
-        bodyProps={{
-          bg: dashboardPalette.page,
-          px: { base: 3, md: 4 },
-          py: 4,
-        }}
+  return (
+    <Drawer isOpen={isOpen} placement={placement} onClose={onClose} isFullHeight={false}>
+      <DrawerOverlay backdropFilter="blur(3px)" bg="blackAlpha.500" />
+      <DrawerContent
+        maxH={{ base: "94vh", md: "100vh" }}
+        w={{ md: "50vw" }}
+        px={{md:4}}
+        maxW={{ md: "50vw" }}
+        borderTopRadius={{ base: "22px", md: "0" }}
+        bg={bg}
+        boxShadow={{ base: "0 -8px 40px rgba(0,0,0,0.18)", md: "-8px 0 40px rgba(0,0,0,0.12)" }}
+        display="flex"
+        flexDirection="column"
+        overflow="hidden"
       >
-        <VStack spacing={5} align="stretch">
-          <Box {...infoCardStyles} p={{ base: 4, md: 5 }}>
-            <Flex
-              justify="space-between"
-              align={{ base: "start", md: "center" }}
-              direction={{ base: "column", md: "row" }}
-              gap={4}
-            >
-              <Box>
-                <HStack spacing={3} mb={3}>
-                  <Circle size="11" bg="rgba(214, 183, 114, 0.12)">
-                    <Icon as={FaShoppingBag} color={dashboardPalette.accentStrong} />
-                  </Circle>
-                  <Badge
-                    px={3}
-                    py={1.5}
-                    borderRadius="full"
-                    bg={orderStatusMeta.bg}
-                    color={orderStatusMeta.color}
-                    border="1px solid"
-                    borderColor={orderStatusMeta.borderColor}
-                    textTransform="capitalize"
-                  >
-                    {orderStatusMeta.label}
-                  </Badge>
-                </HStack>
-                <Heading
-                  size="md"
-                  color={dashboardPalette.text}
-                  fontWeight="600"
-                  mb={1}
-                >
-                  {formatCurrency(
-                    currentOrder?.quote?.price?.value || currentOrder?.total
-                  )}
-                </Heading>
-                <Text color={dashboardPalette.textMuted}>
-                  {currentOrder?.items?.length || 0} items in this order
-                </Text>
-              </Box>
+        {/* Handle */}
+        <Flex justify="center" pt={2.5} display={{ base: "flex", md: "none" }}>
+          <Box h="4px" w="32px" borderRadius="full" bg={border} />
+        </Flex>
 
-              <Box minW={{ md: "240px" }}>
-                <Text
-                  fontSize="xs"
-                  fontWeight="700"
-                  color={dashboardPalette.textSoft}
-                  textTransform="uppercase"
-                  letterSpacing="0.14em"
-                  mb={2}
-                >
-                  Update Order Status
+        {/* ── Header ────────────────────────────────────────────────────────── */}
+        <Box px={4} pt={{ base: 3, md: 5 }} pb={3.5} borderBottom="1px solid" borderColor={border}>
+          <Flex align="start" justify="space-between" gap={3}>
+            <Box flex={1} minW={0}>
+              <Flex align="center" gap={2} flexWrap="wrap">
+                <Text fontSize="10.5px" fontWeight="600" color={sub} letterSpacing="0.02em">
+                  {order.orderId}
                 </Text>
-                <Select
-                  size="md"
-                  isDisabled={isUpdating}
-                  value={currentOrder?.orderStatus}
-                  onChange={(e) => handleStatusUpdate(e.target.value)}
-                  {...selectStyles}
-                >
-                  <option value="created">Created</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </Select>
+                <Badge px={2} py={0.5} borderRadius="md" fontSize="10px" fontWeight="700"
+                  colorScheme={meta.colorScheme} textTransform="capitalize">
+                  {rawStatus}
+                </Badge>
+              </Flex>
+              <Text mt={1} fontSize="18px" fontWeight="800" color={text} letterSpacing="-0.03em">
+                Order Details
+              </Text>
+              <Text fontSize="11.5px" color={muted} mt={0.5}>
+                {order.createdAt ? format(new Date(order.createdAt), "d MMM yyyy · h:mm a") : "—"}
+              </Text>
+            </Box>
+            <Flex as="button" onClick={onClose} h={8} w={8} align="center" justify="center"
+              borderRadius="full" bg={inputBg} color={muted} flexShrink={0}
+              transition="background 0.15s" _hover={{ bg: sectionBg }}>
+              <Icon as={FiX} boxSize={4} />
+            </Flex>
+          </Flex>
+
+          <Flex mt={2.5} gap={1.5} flexWrap="wrap">
+            {[
+              { icon: FiPackage, label: `${order.items?.length ?? 0} items`, warn: false },
+              { icon: isOnline ? FiCreditCard : FiDollarSign, label: isOnline ? "Online" : "Cash on delivery", warn: false },
+              { icon: isPaid ? FiCheck : FiClock, label: isPaid ? "Payment received" : "Payment pending", warn: !isPaid },
+            ].map((c, i) => (
+              <Flex key={i} align="center" gap={1.5}
+                bg={c.warn ? warnBg : accentBg}
+                color={c.warn ? warnTxt : accentTxt}
+                borderRadius="full" px={2.5} py={1} fontSize="10.5px" fontWeight="600">
+                <Icon as={c.icon} boxSize={3} />
+                {c.label}
+              </Flex>
+            ))}
+          </Flex>
+        </Box>
+
+        <Box flex={1} overflowY="auto" css={{ "&::-webkit-scrollbar": { display: "none" } }}>
+          <Box px={4} py={4}>
+            <SectionLabel muted={muted}>Fulfillment</SectionLabel>
+            {cancelled ? (
+              <Flex align="center" gap={3} bg="red.50" borderRadius="xl" px={3.5} py={3} color="red.600">
+                <Icon as={FiX} boxSize={4} flexShrink={0} />
+                <Text fontSize="sm" fontWeight="700">Order Cancelled</Text>
+              </Flex>
+            ) : (
+              <Box overflowX="auto" css={{ "&::-webkit-scrollbar": { display: "none" } }}>
+                <Flex align="flex-start" gap={0} minW="max-content">
+                  {flow.map((s, i) => {
+                    const done = i <= stepIdx;
+                    const active = i === stepIdx;
+                    const Ic = stepIcon[s] ?? FiClock;
+                    return (
+                      <Flex key={s} align="center">
+                        <Flex direction="column" align="center" gap={1.5} w="52px">
+                          <Flex h={8} w={8} align="center" justify="center" borderRadius="full"
+                            bg={done ? accent : inputBg}
+                            color={done ? "white" : sub}
+                            boxShadow={active ? `0 0 0 3px ${accent}28` : "none"}
+                            transition="all 0.2s">
+                            <Icon as={Ic} boxSize={3.5} strokeWidth={2.5} />
+                          </Flex>
+                          <Text fontSize="9px" fontWeight={active ? "700" : "500"}
+                            color={done ? accent : sub} textAlign="center" textTransform="capitalize">
+                            {s}
+                          </Text>
+                        </Flex>
+                        {i < flow.length - 1 && (
+                          <Box h="1.5px" w="12px" mb="14px" borderRadius="full"
+                            bg={done && i < stepIdx ? accent : border} flexShrink={0} transition="background 0.2s" />
+                        )}
+                      </Flex>
+                    );
+                  })}
+                </Flex>
               </Box>
+            )}
+
+            <Flex align="center" gap={2.5} mt={4}>
+              <Text fontSize="12px" fontWeight="600" color={muted} flexShrink={0}>Update to</Text>
+              <Select value={curStatus} onChange={(e) => doStatusChange(e.target.value)}
+                isDisabled={isUpdating} bg={inputBg} border="1px solid" borderColor={border}
+                borderRadius="xl" h="38px" fontSize="13px" fontWeight="600" color={text} flex={1}
+                _focus={{ boxShadow: `0 0 0 3px ${accent}25`, borderColor: accent }}>
+                <option value="created">Created</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </Select>
             </Flex>
           </Box>
 
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={5}>
-            <GridItem>
-              <Box {...infoCardStyles} p={{ base: 4, md: 5 }} h="100%">
-                <HStack spacing={3} mb={4}>
-                  <Circle size="10" bg="rgba(214, 183, 114, 0.12)">
-                    <Icon as={FaUser} color={dashboardPalette.accentStrong} />
-                  </Circle>
-                  <Box>
-                    <Text color={dashboardPalette.text} fontWeight="600">
-                      Customer Details
-                    </Text>
-                    <Text color={dashboardPalette.textSoft} fontSize="sm">
-                      Contact information for this order
-                    </Text>
-                  </Box>
-                </HStack>
-                <VStack align="start" spacing={1}>
-                  <Text color={dashboardPalette.text} fontWeight="600">
-                    {currentOrder?.user?.name || "Unknown customer"}
-                  </Text>
-                  <Text color={dashboardPalette.textMuted} fontSize="sm">
-                    {currentOrder?.user?.email || "No email available"}
-                  </Text>
-                  <Text color={dashboardPalette.textMuted} fontSize="sm">
-                    {currentOrder?.user?.phone || "No phone number available"}
-                  </Text>
-                </VStack>
-              </Box>
-            </GridItem>
+          <Box h="8px" bg={sectionBg} />
 
-            <GridItem>
-              <Box {...infoCardStyles} p={{ base: 4, md: 5 }} h="100%">
-                <HStack spacing={3} mb={4}>
-                  <Circle size="10" bg="rgba(214, 183, 114, 0.12)">
-                    <Icon
-                      as={FaMapMarkerAlt}
-                      color={dashboardPalette.accentStrong}
-                    />
-                  </Circle>
-                  <Box>
-                    <Text color={dashboardPalette.text} fontWeight="600">
-                      Shipping Address
-                    </Text>
-                    <Text color={dashboardPalette.textSoft} fontSize="sm">
-                      Delivery location saved with the order
-                    </Text>
-                  </Box>
-                </HStack>
-                <Text color={dashboardPalette.textMuted} fontSize="sm" lineHeight="1.7">
-                  {shippingAddress || "No shipping address available"}
+          {/* Customer */}
+          <Box px={4} py={4}>
+            <SectionLabel muted={muted}>Customer</SectionLabel>
+            <Flex align="center" gap={3}>
+              <Flex h={10} w={10} align="center" justify="center" borderRadius="xl"
+                bg={accent} color="white" fontSize="13px" fontWeight="800" flexShrink={0}>
+                {initials}
+              </Flex>
+              <Box flex={1} minW={0}>
+                <Text fontSize="14px" fontWeight="700" color={text} isTruncated>
+                  {order.user?.name ?? "Unknown"}
                 </Text>
+                <Flex align="center" gap={1.5} mt={0.5}>
+                  <Icon as={FiPhone} boxSize={3} color={sub} />
+                  <Text fontSize="12px" color={muted}>{order.user?.phone ?? "—"}</Text>
+                </Flex>
               </Box>
-            </GridItem>
-          </Grid>
-
-          <Box {...infoCardStyles} p={{ base: 4, md: 5 }}>
-            <Flex
-              justify="space-between"
-              align={{ base: "start", md: "center" }}
-              direction={{ base: "column", md: "row" }}
-              gap={2}
-              mb={4}
-            >
-              <Box>
-                <Heading size="sm" color={dashboardPalette.text}>
-                  Order Items
-                </Heading>
-                <Text color={dashboardPalette.textSoft} fontSize="sm" mt={1}>
-                  Update fulfillment status per item when needed.
-                </Text>
-              </Box>
-              <Badge
-                px={3}
-                py={1.5}
-                borderRadius="full"
-                bg={dashboardPalette.surfaceAlt}
-                color={dashboardPalette.textMuted}
-                border="1px solid"
-                borderColor={dashboardPalette.borderStrong}
-              >
-                {currentOrder?.items?.length || 0} Items
-              </Badge>
             </Flex>
+            {addressStr && (
+              <Flex align="start" gap={2} mt={3}>
+                <Icon as={FiMapPin} boxSize={3.5} color={sub} mt="2px" flexShrink={0} />
+                <Text fontSize="12.5px" color={muted} lineHeight="1.6">{addressStr}</Text>
+              </Flex>
+            )}
+          </Box>
 
-            <VStack spacing={3} align="stretch">
-              {currentOrder?.items?.map((item: any, index: number) => {
-                const fulfillment = currentOrder?.fulfillments?.find(
-                  (f: any) => f.id === item.fulfillment_id
-                );
-                const itemStatus = fulfillment?.status || "pending";
-                const itemStatusMeta = getOrderStatusMeta(itemStatus);
+          <Box h="8px" bg={sectionBg} />
+
+          {/* Items */}
+          <Box px={4} py={4}>
+            <SectionLabel
+              muted={muted}
+              right={
+                <Flex align="center" justify="center" h={5} minW={5} px={1.5} borderRadius="full" bg={accentBg}>
+                  <Text fontSize="10px" fontWeight="700" color={accentTxt}>{order.items?.length ?? 0}</Text>
+                </Flex>
+              }
+            >
+              Items
+            </SectionLabel>
+
+            <Flex direction="column">
+              {order.items?.map((it: any, i: number) => {
+                const fulfillment = order.fulfillments?.find((f: any) => f.id === it.fulfillment_id);
+                const itemStatus  = normalizeStatus(fulfillment?.status ?? "pending");
+                const isFreebie   = it.unitPrice === 0 || it.productName?.startsWith("[FREE]");
+                const name        = it.productName
+                  ?.replace(/^\[FREE\]\s*/i, "")
+                  ?.replace(/\s*\(Freebie\)\s*$/i, "")
+                  ?.trim();
+                const lineTotal   = isFreebie ? 0 : it.quantity * it.unitPrice;
 
                 return (
-                  <Box
-                    key={index}
-                    bg={dashboardPalette.surface}
-                    border="1px solid"
-                    borderColor={dashboardPalette.borderStrong}
-                    borderRadius="20px"
-                    p={{ base: 3, md: 4 }}
-                  >
-                    <Flex
-                      justify="space-between"
-                      align={{ base: "start", lg: "center" }}
-                      direction={{ base: "column", lg: "row" }}
-                      gap={4}
-                    >
-                      <HStack spacing={4} align="start">
-                        <Image
-                          src={
-                            item.productImage || "https://via.placeholder.com/72"
-                          }
-                          boxSize="72px"
-                          objectFit="cover"
-                          borderRadius="16px"
-                          alt={item.productName}
-                          bg={dashboardPalette.surfaceAlt}
-                        />
-                        <Box>
-                          <Text
-                            color={dashboardPalette.text}
-                            fontWeight="700"
-                            mb={1}
-                          >
-                            {item.productName}
-                          </Text>
-                          <Text color={dashboardPalette.textMuted} fontSize="sm">
-                            Qty: {item.quantity} | Variant:{" "}
-                            {Array.isArray(item.variant) && item.variant.length > 0
-                              ? item.variant.join(", ")
-                              : "N/A"}
-                          </Text>
-                          <Text
-                            mt={2}
-                            color={dashboardPalette.accentStrong}
-                            fontWeight="700"
-                          >
-                            {formatCurrency(item.total)}
-                          </Text>
-                        </Box>
-                      </HStack>
+                  <Box key={i}>
+                    {i > 0 && <Box borderTop="1px solid" borderColor={border} my={3} />}
+                    <Flex gap={3} align="start">
+                      {/* Thumbnail */}
+                      <Box h="52px" w="52px" borderRadius="12px" overflow="hidden"
+                        flexShrink={0} border="1px solid" borderColor={border} bg={inputBg}>
+                        {it.productImage
+                          ? <Image src={it.productImage} alt="" h="100%" w="100%" objectFit="cover" />
+                          : <Flex h="full" align="center" justify="center"><Icon as={FiPackage} boxSize={5} color={sub} /></Flex>}
+                      </Box>
 
-                      <Box minW={{ lg: "180px" }} w={{ base: "full", lg: "auto" }}>
-                        <Badge
-                          px={3}
-                          py={1.5}
-                          borderRadius="full"
-                          bg={itemStatusMeta.bg}
-                          color={itemStatusMeta.color}
-                          border="1px solid"
-                          borderColor={itemStatusMeta.borderColor}
-                          mb={2}
-                          textTransform="capitalize"
-                        >
-                          {itemStatusMeta.label}
-                        </Badge>
-                        <Select
-                          size="sm"
-                          isDisabled={isUpdating}
-                          value={itemStatus}
-                          onChange={(e) =>
-                            handleItemStatusUpdate(
-                              item.fulfillment_id,
-                              e.target.value
-                            )
-                          }
-                          {...selectStyles}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="in-progress">In Progress</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </Select>
+                      <Box flex={1} minW={0}>
+                        {/* Name + total */}
+                        <Flex align="start" justify="space-between" gap={2}>
+                          <Text fontSize="13px" fontWeight="700" color={text}
+                            noOfLines={1} flex={1} title={name} lineHeight="1.4">
+                            {name}
+                          </Text>
+                          <Text fontSize="13px" fontWeight="800" flexShrink={0} letterSpacing="-0.02em"
+                            color={isFreebie ? greenTxt : text}>
+                            {isFreebie ? "FREE" : fmt(lineTotal)}
+                          </Text>
+                        </Flex>
+
+                        {/* Qty + freebie badge */}
+                        <Flex align="center" gap={1.5} mt={0.5} flexWrap="wrap">
+                          <Text fontSize="11.5px" color={muted}>
+                            Qty {it.quantity}{it.unitPrice > 0 ? ` · ${fmt(it.unitPrice)}` : ""}
+                          </Text>
+                          {isFreebie && (
+                            <Flex align="center" gap={1} bg={greenBg} color={greenTxt}
+                              borderRadius="full" px={1.5} py={0.5} fontSize="9px" fontWeight="700"
+                              textTransform="uppercase" letterSpacing="0.05em">
+                              <Icon as={FiGift} boxSize={2.5} />
+                              Freebie
+                            </Flex>
+                          )}
+                        </Flex>
+
+                        {/* Status inline */}
+                        <Flex align="center" gap={2} mt={1.5}>
+                          <Text fontSize="11px" color={sub} fontWeight="500" flexShrink={0}>Status</Text>
+                          <Select size="xs" value={itemStatus}
+                            onChange={(e) => doItemStatus(it.fulfillment_id, e.target.value)}
+                            isDisabled={isUpdating || !it.fulfillment_id}
+                            bg={inputBg} border="1px solid" borderColor={border}
+                            borderRadius="lg" h="26px" fontSize="11px" fontWeight="600"
+                            color={text} flex={1} maxW="140px"
+                            _focus={{ boxShadow: `0 0 0 2px ${accent}25` }}>
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </Select>
+                        </Flex>
                       </Box>
                     </Flex>
                   </Box>
                 );
               })}
-            </VStack>
+            </Flex>
           </Box>
 
-          <Box {...infoCardStyles} p={{ base: 4, md: 5 }}>
-            <HStack spacing={3} mb={4}>
-              <Circle size="10" bg="rgba(214, 183, 114, 0.12)">
-                <Icon as={FaCreditCard} color={dashboardPalette.accentStrong} />
-              </Circle>
-              <Box>
-                <Text color={dashboardPalette.text} fontWeight="600">
-                  Payment Summary
+          <Box h="8px" bg={sectionBg} />
+
+          {/* Payment */}
+          <Box px={4} py={4}>
+            <SectionLabel
+              muted={muted}
+              right={
+                <Flex align="center" gap={1.5} bg={inputBg} borderRadius="full"
+                  px={2} py={0.5} fontSize="10.5px" fontWeight="600" color={muted}>
+                  <Icon as={isOnline ? FiCreditCard : FiDollarSign} boxSize={3} />
+                  {isOnline ? "Online" : "COD"}
+                </Flex>
+              }
+            >
+              Payment Summary
+            </SectionLabel>
+
+            <Flex direction="column" gap={0}>
+              {breakup
+                .filter((b: any) => b.title_type === "item" && Number(b.price?.value) > 0)
+                .map((b: any, i: number) => (
+                  <Flex key={i} justify="space-between" align="start" gap={3}
+                    py={2.5} borderBottom="1px solid" borderColor={border}>
+                    <Text fontSize="12.5px" color={muted} flex={1} noOfLines={1} title={b.title}>
+                      {b.title}
+                    </Text>
+                    <Text fontSize="12.5px" fontWeight="700" color={text} flexShrink={0}>
+                      {fmt(b.price?.value)}
+                    </Text>
+                  </Flex>
+                ))}
+
+              {hasFreebies && (
+                <Flex justify="space-between" align="center" py={2.5} borderBottom="1px solid" borderColor={border}>
+                  <Flex align="center" gap={1.5}>
+                    <Icon as={FiGift} boxSize={3.5} color={greenTxt} />
+                    <Text fontSize="12.5px" color={greenTxt} fontWeight="600">Freebie included</Text>
+                  </Flex>
+                  <Text fontSize="12.5px" fontWeight="700" color={greenTxt}>FREE</Text>
+                </Flex>
+              )}
+
+              {taxValue > 0 && (
+                <Flex justify="space-between" align="center" py={2.5} borderBottom="1px solid" borderColor={border}>
+                  <Text fontSize="12.5px" color={muted}>Tax &amp; charges</Text>
+                  <Text fontSize="12.5px" fontWeight="700" color={text}>{fmt(taxValue)}</Text>
+                </Flex>
+              )}
+
+              <Flex justify="space-between" align="center" pt={3}>
+                <Text fontSize="14px" fontWeight="700" color={text}>Total</Text>
+                <Text fontSize="22px" fontWeight="900" color={text} letterSpacing="-0.04em">
+                  {fmt(totalValue)}
                 </Text>
-                <Text color={dashboardPalette.textSoft} fontSize="sm">
-                  Billing snapshot for this order
+              </Flex>
+
+              <Flex mt={3} align="center" justify="space-between"
+                bg={isPaid ? greenBg : warnBg} borderRadius="xl" px={3} py={2.5}>
+                <Text fontSize="12.5px" fontWeight="700" color={isPaid ? greenTxt : warnTxt}>
+                  {isPaid ? "✓ Payment received" : "⏳ Payment pending"}
                 </Text>
+                <Text fontSize="10px" fontWeight="700" color={isPaid ? greenTxt : warnTxt}
+                  textTransform="uppercase" letterSpacing="0.08em">
+                  {order.paymentStatus}
+                </Text>
+              </Flex>
+            </Flex>
+          </Box>
+
+          {/* Activity */}
+          {order.statusHistory?.length > 0 && (
+            <>
+              <Box h="8px" bg={sectionBg} />
+              <Box px={4} py={4}>
+                <SectionLabel
+                  muted={muted}
+                  right={
+                    <Box as="button" onClick={() => setShowHistory(v => !v)}
+                      fontSize="11px" fontWeight="600" color={accentTxt}>
+                      {showHistory ? "Collapse" : "Show all"}
+                    </Box>
+                  }
+                >
+                  Activity
+                </SectionLabel>
+
+                <Flex direction="column">
+                  {([...order.statusHistory].reverse().slice(0, showHistory ? undefined : 3) as any[])
+                    .map((h: any, i: number, arr: any[]) => (
+                      <Flex key={i} gap={3}>
+                        <Flex direction="column" align="center" flexShrink={0} w="22px">
+                          <Flex h={6} w={6} align="center" justify="center" borderRadius="full"
+                            bg={i === 0 ? accent : inputBg} color={i === 0 ? "white" : sub} flexShrink={0}>
+                            <Icon as={FiArrowRight} boxSize={2.5} />
+                          </Flex>
+                          {i < arr.length - 1 && (
+                            <Box w="1px" flex={1} minH="14px" bg={border} my={1} />
+                          )}
+                        </Flex>
+                        <Box pb={i < arr.length - 1 ? 3 : 0} pt={0.5} flex={1} minW={0}>
+                          <Text fontSize="12.5px" fontWeight="600" color={text} lineHeight="1.4" isTruncated>
+                            {h.status}
+                          </Text>
+                          <Text fontSize="11px" color={sub} mt={0.5}>
+                            {h.timestamp ? format(new Date(h.timestamp), "d MMM yyyy · h:mm a") : "—"}
+                          </Text>
+                        </Box>
+                      </Flex>
+                    ))}
+                </Flex>
               </Box>
-            </HStack>
+            </>
+          )}
 
-            <VStack spacing={3} align="stretch">
-              <Flex justify="space-between" align="center">
-                <Text color={dashboardPalette.textMuted}>Total Amount</Text>
-                <Text color={dashboardPalette.accentStrong} fontWeight="700" fontSize="lg">
-                  {formatCurrency(
-                    currentOrder?.quote?.price?.value || currentOrder?.total
-                  )}
-                </Text>
-              </Flex>
-              <Divider borderColor={dashboardPalette.borderStrong} />
-              <Flex justify="space-between" align="center">
-                <Text color={dashboardPalette.textMuted}>Payment Method</Text>
-                <Text color={dashboardPalette.text} textTransform="uppercase" fontWeight="600">
-                  {currentOrder?.paymentMethod || "N/A"}
-                </Text>
-              </Flex>
-            </VStack>
-          </Box>
-        </VStack>
-      </CustomDrawer>
-    );
-  }
-);
+          <Box h="4px" />
+        </Box>
 
-export default OrderDrawer;
+        <Box borderTop="1px solid" borderColor={border} bg={bg} px={4} pt={3}
+          pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 12px)", md: 4 }}>
+          <Flex gap={2.5}>
+            <Button h="44px" variant="outline" borderRadius="xl" fontSize="13px" fontWeight="700"
+              borderColor={border} color={text} bg="transparent" _hover={{ bg: inputBg }}
+              onClick={onClose} px={5} flexShrink={0}>
+              Close
+            </Button>
+            <Button flex={1} h="44px" borderRadius="xl" fontSize="13px" fontWeight="700"
+              bg={accent} color="white" _hover={{ bg: "#2B5EF0" }} _active={{ bg: "#2040CC" }}
+              leftIcon={<Icon as={FiPrinter} boxSize={4} />} transition="background 0.15s">
+              Print Invoice
+            </Button>
+          </Flex>
+        </Box>
+      </DrawerContent>
+    </Drawer>
+  );
+}
