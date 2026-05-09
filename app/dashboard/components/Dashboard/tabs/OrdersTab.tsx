@@ -45,7 +45,7 @@ const OrdersTab = observer(() => {
   const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
   const cBorderStrong = useColorModeValue("blue.200", dashboardPalette.borderStrong);
   const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cPage = useColorModeValue("#F0F6FF", dashboardPalette.page);
+  const cPage = useColorModeValue("white", dashboardPalette.page);
   const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
   // Orange-600 — no gold/amber
   const cWarning = useColorModeValue("orange.600", dashboardPalette.warning);
