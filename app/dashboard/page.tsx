@@ -10,7 +10,8 @@ const page = observer(() => {
   const { user } = stores.auth;
   const hasCompany = Boolean(user?.company?._id || user?.company);
   const isSuperAdmin = user?.type === "superAdmin" || user?.role === "superAdmin";
-  const isBuyerOnlyUser = !isSuperAdmin && !hasCompany && user?.type !== "seller";
+  const isSellerPendingShop = user?.onboarding?.state === "seller_pending_shop";
+  const isBuyerOnlyUser = !isSuperAdmin && !hasCompany && user?.type !== "seller" && !isSellerPendingShop;
 
   if (isBuyerOnlyUser) {
     return (
@@ -21,7 +22,11 @@ const page = observer(() => {
   }
 
   if (!isSuperAdmin && !hasCompany) {
-    return <CompanyRequiredState />;
+    return (
+      <CompanyRequiredState
+        message={isSellerPendingShop ? "Finish setting up your shop" : "Please create your shop first"}
+      />
+    );
   }
 
   return (

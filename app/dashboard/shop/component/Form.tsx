@@ -894,7 +894,11 @@ const ShopForm = observer(() => {
       const formData = await buildCompanyPayload(values);
 
       if (isUpdateMode) {
-        const response = await updateCompanyDetails({ ...formData, _id: user?.company?._id });
+        const companyId = typeof user?.company === "string" ? user.company : user?.company?._id;
+        if (!companyId) {
+          throw new Error("Shop id is missing. Please refresh and try again.");
+        }
+        const response = await updateCompanyDetails({ ...formData, _id: companyId });
         const updatedShop = response?.data?.data || {};
         const wasReviewReworkState = ["changes_requested", "rejected"].includes(reviewMeta.reviewStatus || "");
         setReviewMeta({
@@ -1008,6 +1012,23 @@ const ShopForm = observer(() => {
             scrollToTop();
           };
 
+          const handleNextSection = async () => {
+            setShowError(true);
+            const validationErrors = await validateForm();
+            const currentSectionFieldLabels = getSectionFieldLabels(validationErrors, activeSectionIndex);
+
+            if (currentSectionFieldLabels.length > 0) {
+              openNotification({
+                title: "Please review this step",
+                message: `Missing or invalid: ${currentSectionFieldLabels.slice(0, 4).join(", ")}${currentSectionFieldLabels.length > 4 ? "..." : ""}`,
+                type: "warning",
+              });
+              return;
+            }
+
+            goToSection(activeSectionIndex + 1);
+          };
+
           const handleFinalSubmit = async () => {
             setShowError(true);
             const validationErrors = await validateForm();
@@ -1079,7 +1100,7 @@ const ShopForm = observer(() => {
                 isLastStep={isLastStep}
                 isSubmitting={isSubmitting}
                 onBack={() => goToSection(activeSectionIndex - 1)}
-                onNext={() => goToSection(activeSectionIndex + 1)}
+                onNext={handleNextSection}
                 onSubmit={handleFinalSubmit}
                 isUpdateMode={isUpdateMode}
               />

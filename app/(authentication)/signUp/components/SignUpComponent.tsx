@@ -1065,6 +1065,7 @@ const SignUpForm = observer(() => {
       status: "error",
       duration: 4500,
     });
+    setStepIndex(Math.max(0, steps.length - 2));
   };
 
   const finishSellerCompanyCreation = async () => {
