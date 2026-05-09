@@ -52,6 +52,29 @@ const Subsection = ({
   </Box>
 );
 
+const getCategoryId = (category: any) => String(category?._id || "").trim();
+const getCategoryName = (category: any) => String(category?.name || "").trim();
+const getCategoryValue = (category: any) => getCategoryName(category) || getCategoryId(category);
+const getParentCategoryId = (category: any) => {
+  const parent = category?.parent;
+  if (!parent) return "";
+  return String(typeof parent === "object" ? parent?._id || "" : parent).trim();
+};
+const getParentCategoryName = (category: any) => {
+  const parent = category?.parent;
+  return String(parent && typeof parent === "object" ? parent?.name || "" : "").trim();
+};
+const getCategoryTokens = (category: any) =>
+  [getCategoryName(category), getCategoryId(category)].filter(Boolean);
+const isChildCategoryOfRoot = (category: any, rootCategory: any) => {
+  const parentId = getParentCategoryId(category);
+  const parentName = getParentCategoryName(category).toLowerCase();
+  const rootId = getCategoryId(rootCategory);
+  const rootName = getCategoryName(rootCategory).toLowerCase();
+
+  return Boolean(parentId && parentId === rootId) || Boolean(parentName && parentName === rootName);
+};
+
 const CategorySelector = observer(({ values, setFieldValue, errors, showError }: any) => {
   const tone = useMerchantTone("blue");
   const { categoryStore } = stores;
@@ -66,59 +89,219 @@ const CategorySelector = observer(({ values, setFieldValue, errors, showError }:
     return <Spinner size="sm" color="var(--dashboard-accent)" />;
   }
 
-  const toggleCategory = (categoryName: string) => {
-    const selectedCategories = values.categories || [];
-    const nextCategories = selectedCategories.includes(categoryName)
-      ? selectedCategories.filter((item: string) => item !== categoryName)
-      : [...selectedCategories, categoryName];
-    setFieldValue("categories", nextCategories);
+  const activeCategories = categories.filter((category: any) => category.isActive !== false);
+  const rootCategories = activeCategories.filter((category: any) => !getParentCategoryId(category));
+  const selectedCategories = Array.isArray(values.categories) ? values.categories : [];
+  const selectedCategoryKeys = new Set(
+    selectedCategories.map((category: string) => String(category).trim().toLowerCase()).filter(Boolean)
+  );
+
+  const isCategorySelected = (category: any) =>
+    getCategoryTokens(category).some((token) => selectedCategoryKeys.has(token.toLowerCase()));
+
+  const getChildCategories = (rootCategory: any) =>
+    activeCategories.filter((category: any) => isChildCategoryOfRoot(category, rootCategory));
+
+  const normalizeCategoryValues = (items: string[]) =>
+    Array.from(new Set(items.map((item) => String(item).trim()).filter(Boolean)));
+
+  const toggleRootCategory = (rootCategory: any) => {
+    const rootValue = getCategoryValue(rootCategory);
+
+    if (isCategorySelected(rootCategory)) {
+      const childCategories = getChildCategories(rootCategory);
+      const removalKeys = new Set(
+        [rootCategory, ...childCategories]
+          .flatMap((category) => getCategoryTokens(category))
+          .map((token) => token.toLowerCase())
+      );
+
+      setFieldValue(
+        "categories",
+        selectedCategories.filter(
+          (category: string) => !removalKeys.has(String(category).trim().toLowerCase())
+        )
+      );
+      return;
+    }
+
+    setFieldValue("categories", normalizeCategoryValues([...selectedCategories, rootValue]));
   };
 
+  const toggleChildCategory = (childCategory: any, rootCategory: any) => {
+    const childValue = getCategoryValue(childCategory);
+    const rootValue = getCategoryValue(rootCategory);
+
+    if (isCategorySelected(childCategory)) {
+      const childKeys = new Set(getCategoryTokens(childCategory).map((token) => token.toLowerCase()));
+      setFieldValue(
+        "categories",
+        selectedCategories.filter(
+          (category: string) => !childKeys.has(String(category).trim().toLowerCase())
+        )
+      );
+      return;
+    }
+
+    setFieldValue(
+      "categories",
+      normalizeCategoryValues([...selectedCategories, rootValue, childValue])
+    );
+  };
+
+  const selectedRootCategories = rootCategories.filter(isCategorySelected);
+
   return (
-    <Box>
+    <VStack align="stretch" spacing={4}>
+      <Box>
+        <Text fontSize="xs" fontWeight="800" letterSpacing="0.08em" textTransform="uppercase" color="var(--dashboard-text-soft)" mb={2}>
+          Root categories
+        </Text>
+        <Flex gap={2} wrap="wrap">
+          {rootCategories.map((category: any) => {
+            const isSelected = isCategorySelected(category);
+            return (
+              <Button
+                key={category._id || category.name}
+                type="button"
+                size="sm"
+                borderRadius="full"
+                px={4}
+                minH="36px"
+                fontSize="xs"
+                fontWeight="700"
+                variant="outline"
+                borderColor={isSelected ? tone.border : "var(--dashboard-border)"}
+                bg={isSelected ? tone.soft : "var(--dashboard-surface)"}
+                color={isSelected ? tone.text : "var(--dashboard-text-muted)"}
+                _hover={{
+                  borderColor: tone.border,
+                  bg: tone.soft,
+                }}
+                onClick={() => toggleRootCategory(category)}
+              >
+                {category.name}
+              </Button>
+            );
+          })}
+        </Flex>
+      </Box>
+
+      <Box>
+        <Text fontSize="xs" fontWeight="800" letterSpacing="0.08em" textTransform="uppercase" color="var(--dashboard-text-soft)" mb={2}>
+          Subcategories
+        </Text>
+        {selectedRootCategories.length === 0 ? (
+          <Box borderRadius="18px" borderWidth="1px" borderColor="var(--dashboard-border)" bg="var(--dashboard-surface)" px={4} py={3}>
+            <Text fontSize="sm" color="var(--dashboard-text-muted)">
+              Choose a root category to see its subcategories.
+            </Text>
+          </Box>
+        ) : (
+          <VStack align="stretch" spacing={3}>
+            {selectedRootCategories.map((rootCategory: any) => {
+              const childCategories = getChildCategories(rootCategory);
+
+              return (
+                <Box key={rootCategory._id || rootCategory.name}>
+                  <Text fontSize="sm" fontWeight="700" color="var(--dashboard-text)" mb={2}>
+                    {rootCategory.name}
+                  </Text>
+                  {childCategories.length === 0 ? (
+                    <Text fontSize="xs" color="var(--dashboard-text-muted)">
+                      No subcategories available for this category.
+                    </Text>
+                  ) : (
+                    <Flex gap={2} wrap="wrap">
+                      {childCategories.map((category: any) => {
+                        const isSelected = isCategorySelected(category);
+                        return (
+                          <Button
+                            key={category._id || category.name}
+                            type="button"
+                            size="sm"
+                            borderRadius="full"
+                            px={4}
+                            minH="34px"
+                            fontSize="xs"
+                            fontWeight="700"
+                            variant="outline"
+                            borderColor={isSelected ? tone.border : "var(--dashboard-border)"}
+                            bg={isSelected ? tone.soft : "var(--dashboard-surface)"}
+                            color={isSelected ? tone.text : "var(--dashboard-text-muted)"}
+                            _hover={{
+                              borderColor: tone.border,
+                              bg: tone.soft,
+                            }}
+                            onClick={() => toggleChildCategory(category, rootCategory)}
+                          >
+                            {category.name}
+                          </Button>
+                        );
+                      })}
+                    </Flex>
+                  )}
+                </Box>
+              );
+            })}
+          </VStack>
+        )}
+      </Box>
+
       <Flex gap={2} wrap="wrap">
-        {categories.map((category) => {
-          const isSelected = values.categories?.includes(category.name);
-          return (
-            <Button
-              key={category._id}
-              type="button"
-              size="sm"
-              borderRadius="full"
-              px={4}
-              minH="36px"
-              fontSize="xs"
-              fontWeight="700"
-              variant="outline"
-              borderColor={isSelected ? tone.border : "var(--dashboard-border)"}
-              bg={isSelected ? tone.soft : "var(--dashboard-surface)"}
-              color={isSelected ? tone.text : "var(--dashboard-text-muted)"}
-              _hover={{
-                borderColor: tone.border,
-                bg: tone.soft,
-              }}
-              onClick={() => toggleCategory(category.name)}
-            >
-              {category.name}
-            </Button>
-          );
-        })}
+        {selectedCategories.map((category: string) => (
+          <Box
+            key={category}
+            borderRadius="full"
+            bg="var(--dashboard-accent-soft)"
+            color="var(--dashboard-accent-strong)"
+            px={3}
+            py={1}
+            fontSize="xs"
+            fontWeight="700"
+          >
+            {category}
+          </Box>
+        ))}
       </Flex>
       {showError && errors.categories ? (
         <Text color="var(--dashboard-danger)" fontSize="xs" mt={2}>
           {errors.categories}
         </Text>
       ) : null}
-    </Box>
+    </VStack>
   );
 });
 
+const parseCommaSeparatedInput = (input: string) =>
+  input
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
   const [tagsInput, setTagsInput] = useState("");
+  const [isTagsInputFocused, setIsTagsInputFocused] = useState(false);
+  const [paymentMethodsInput, setPaymentMethodsInput] = useState("");
+  const [isPaymentMethodsInputFocused, setIsPaymentMethodsInputFocused] = useState(false);
+  const tagsTextFromValues = Array.isArray(values.tags)
+    ? values.tags.join(", ")
+    : "";
+  const paymentMethodsTextFromValues = Array.isArray(values.paymentMethods)
+    ? values.paymentMethods.join(", ")
+    : "";
 
   useEffect(() => {
-    setTagsInput(Array.isArray(values.tags) ? values.tags.join(", ") : "");
-  }, [values.tags]);
+    if (!isTagsInputFocused) {
+      setTagsInput(tagsTextFromValues);
+    }
+  }, [isTagsInputFocused, tagsTextFromValues]);
+
+  useEffect(() => {
+    if (!isPaymentMethodsInputFocused) {
+      setPaymentMethodsInput(paymentMethodsTextFromValues);
+    }
+  }, [isPaymentMethodsInputFocused, paymentMethodsTextFromValues]);
 
   return (
     <MerchantSectionCard
@@ -166,18 +349,20 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
             <MerchantTextField
               label="Tags"
               name="tags"
-              required
               placeholder="grocery, essentials, wholesale"
-              hint="Separate tags with commas."
+              hint="Optional. Separate tags with commas."
               value={tagsInput}
               onChange={(event) => {
                 const nextValue = event.target.value;
                 setTagsInput(nextValue);
-                const nextTags = nextValue
-                  .split(",")
-                  .map((tag: string) => tag.trim())
-                  .filter(Boolean);
+                setFieldValue("tags", parseCommaSeparatedInput(nextValue));
+              }}
+              onFocus={() => setIsTagsInputFocused(true)}
+              onBlur={(event) => {
+                const nextTags = parseCommaSeparatedInput(event.currentTarget.value);
+                setIsTagsInputFocused(false);
                 setFieldValue("tags", nextTags);
+                setTagsInput(nextTags.join(", "));
               }}
               showError={showError}
               error={errors.tags}
@@ -282,7 +467,6 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
               name="description"
               as="textarea"
               rows={3}
-              required
               placeholder="A short pitch about your shop..."
               value={values.description || ""}
               onChange={(event) => setFieldValue("description", event.target.value)}
@@ -374,13 +558,18 @@ const ShopDetailsSection = ({ values, errors, setFieldValue, showError }) => {
               name="paymentMethods"
               placeholder="e.g. UPI, Credit Card, COD"
               hint="Separate payment methods with commas."
-              value={values.paymentMethods ? values.paymentMethods.join(", ") : ""}
+              value={paymentMethodsInput}
               onChange={(event) => {
-                const methods = event.target.value
-                  .split(",")
-                  .map((method: string) => method.trim())
-                  .filter(Boolean);
-                setFieldValue("paymentMethods", methods);
+                const nextValue = event.target.value;
+                setPaymentMethodsInput(nextValue);
+                setFieldValue("paymentMethods", parseCommaSeparatedInput(nextValue));
+              }}
+              onFocus={() => setIsPaymentMethodsInputFocused(true)}
+              onBlur={(event) => {
+                const nextMethods = parseCommaSeparatedInput(event.currentTarget.value);
+                setIsPaymentMethodsInputFocused(false);
+                setFieldValue("paymentMethods", nextMethods);
+                setPaymentMethodsInput(nextMethods.join(", "));
               }}
               showError={showError}
               error={errors.paymentMethods}

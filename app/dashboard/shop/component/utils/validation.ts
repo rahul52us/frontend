@@ -10,9 +10,10 @@ export const validationSchema = Yup.object({
     .min(2, "Min 2 characters")
     .max(10, "Max 10 characters")
     .matches(/^[A-Z0-9]+$/, "Alphanumeric only"),
-  tags: Yup.array().of(Yup.string()).min(1, "Add at least one tag").required("Tags are required"),
-  description: Yup.string().required("Description is required").trim(),
-  about: Yup.string().required("Description is required").trim(),
+  tags: Yup.array().of(Yup.string()).optional(),
+  categories: Yup.array().of(Yup.string()).min(1, "Select at least one category").required("Categories are required"),
+  description: Yup.string().trim().optional(),
+  about: Yup.string().trim().optional(),
   gstNumber: Yup.string()
     .transform((value) => normalizeGstNumber(value))
     .matches(GSTIN_REGEX, {
@@ -26,7 +27,7 @@ export const validationSchema = Yup.object({
     address: Yup.string().required("Address is required"),
     city: Yup.string().required("City is required"),
     state: Yup.string().required("State is required"),
-    postalCode: Yup.string().required("Postal code is required"),
+    postalCode: Yup.string().optional(),
     country: Yup.string().required("Country is required"),
     coordinates: Yup.array()
       .of(Yup.number().required("Coordinate value is required"))
@@ -41,7 +42,7 @@ export const validationSchema = Yup.object({
       address: Yup.string().required("Address is required"),
       city: Yup.string().required("City is required"),
       state: Yup.string().required("State is required"),
-      postalCode: Yup.string().required("Postal code is required"),
+      postalCode: Yup.string().optional(),
       country: Yup.string().required("Country is required"),
       coordinates: Yup.array()
         .of(Yup.number().required("Coordinate value is required"))
@@ -53,7 +54,6 @@ export const validationSchema = Yup.object({
     })
   ),
   gallery: Yup.array().of(Yup.mixed()),
-  categories: Yup.array().of(Yup.string()),
   contactInfo: Yup.object({
     phone: Yup.string().required("Phone is required"),
     email: Yup.string().email("Invalid email format").optional(),

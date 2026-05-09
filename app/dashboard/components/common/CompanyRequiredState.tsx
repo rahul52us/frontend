@@ -9,7 +9,7 @@ type CompanyRequiredStateProps = {
 };
 
 const CompanyRequiredState: React.FC<CompanyRequiredStateProps> = ({
-  message = "Please create your company first",
+  message = "Please create your shop first",
 }) => {
   const router = useRouter();
 
@@ -23,7 +23,7 @@ const CompanyRequiredState: React.FC<CompanyRequiredStateProps> = ({
           Complete shop setup to access buyers, orders, products, and other seller features.
         </Text>
         <Button colorScheme="blue" onClick={() => router.push("/dashboard/shop")}>
-          Create Company
+          Create Shop
         </Button>
       </VStack>
     </Box>
