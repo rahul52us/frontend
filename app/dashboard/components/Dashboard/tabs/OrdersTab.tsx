@@ -98,7 +98,7 @@ function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
           <Text fontSize="xs" fontWeight="medium" letterSpacing="wide" color={textMuted} textTransform="uppercase">
             {label}
           </Text>
-          <Text mt={{base:1,md:2}} fontFamily="heading" fontSize={{ base: "2xl", sm: "3xl" }} fontWeight="bold" lineHeight="none" letterSpacing="tight" color={textColor}>
+          <Text mt={{base:1,md:2}} fontFamily="heading" fontSize={{ base: "xl", sm: "3xl" }} fontWeight="bold" lineHeight="none" letterSpacing="tight" color={textColor}>
             {value}
           </Text>
           {delta && (
@@ -310,8 +310,8 @@ const OrdersTab = observer(() => {
           bg="green.100" 
           color="green.700" 
           px={2.5} 
-          py={1} 
-          fontSize="11px" 
+          py={{base:0.5,md:1}} 
+          fontSize={{base:"10px",md:"11px"}} 
           fontWeight="semibold" 
           textTransform="none"
         >
@@ -332,7 +332,7 @@ const OrdersTab = observer(() => {
 
       <Heading 
         fontFamily="heading" 
-        fontSize={{ base: "lg", sm: "2xl" }} 
+        fontSize={{ sm: "2xl" }} 
         fontWeight="bold" 
         letterSpacing="tight" 
         color={textColor}

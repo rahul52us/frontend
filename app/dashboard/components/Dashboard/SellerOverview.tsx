@@ -258,7 +258,7 @@ const OverviewSectionHeader = ({
 
   return (
     <Flex align="center" justify="space-between" mb={3} px={1}>
-      <Heading fontSize={{ base: "md", md: "2xl" }} lineHeight="1.1" fontWeight="700" color={titleColor}>
+      <Heading fontSize={{ base: "sm", md: "md" }} lineHeight="1.1" fontWeight="700" color={titleColor}>
         {title}
       </Heading>
       {action && onAction ? (
@@ -309,8 +309,8 @@ const StatCard = ({
       border="1px solid"
       borderColor={borderColor}
       borderRadius="24px"
-      px={{ base: 3, md: 5 }}
-      py={{ base: 4, md: 5 }}
+      px={{ base: 3, md: 4 }}
+      py={{ base: 2, md: 4 }}
       boxShadow={useColorModeValue("0 16px 40px rgba(15, 23, 42, 0.06)", "0 20px 40px rgba(0, 0, 0, 0.26)")}
       position="relative"
       overflow="hidden"
@@ -332,7 +332,7 @@ const StatCard = ({
       <Text fontSize="sm" color={labelColor} fontWeight="500">
         {label}
       </Text>
-      <Text mt={1} fontSize={{ base: "2xl", md: "4xl" }} lineHeight="0.95" fontWeight="800" color={valueColor}>
+      <Text mt={{base:0.5,md:1}} fontSize={{ base: "xl", md: "3xl" }} lineHeight="0.95" fontWeight="700" color={valueColor}>
         {value}
       </Text>
       <HStack mt={1} spacing={1} color={helperColor} align="center">
@@ -403,38 +403,38 @@ const OrderRow = ({ order }: { order: DashboardOrder }) => {
       border="1px solid"
       borderColor={borderColor}
       borderRadius="20px"
-      p={3.5}
+      p={{base:2,md:3.5}}
       boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
     >
       <Flex align="center" justify="space-between" gap={3}>
         <HStack spacing={3} minW={0} flex="1">
-          <Circle size="44px" borderRadius="14px" bg={iconBg} color={iconColor} flexShrink={0}>
-            <Icon as={FiShoppingBag} boxSize={4.5} />
+          <Circle size={{base:"38px",md:"44px"}} borderRadius="14px" bg={iconBg} color={iconColor} flexShrink={0}>
+            <Icon as={FiShoppingBag} boxSize={4} />
           </Circle>
           <Box minW={0}>
-            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+            <Text fontSize={{md:"md"}} fontWeight="700" color={textPrimary} noOfLines={1}>
               {order.user?.name || "Unknown customer"}
             </Text>
-            <HStack spacing={2} mt={1} color={textMuted} flexWrap="wrap">
-              <Text fontSize="sm" fontWeight="500">
+            <HStack spacing={{base:1,md:2}} mt={{base:0.5,md:1}} color={textMuted} flexWrap="wrap">
+              <Text fontSize={{base:"xs",md:"sm"}} fontWeight="500">
                 {order.orderId || order._id}
               </Text>
               <Text fontSize="xs">•</Text>
               <HStack spacing={1}>
                 <Icon as={FiClock} boxSize={3} />
-                <Text fontSize="sm">{formatRelativeTime(order.createdAt)}</Text>
+                <Text fontSize={{base:"xs",md:"sm"}}>{formatRelativeTime(order.createdAt)}</Text>
               </HStack>
             </HStack>
           </Box>
         </HStack>
 
         <Box textAlign="right" flexShrink={0}>
-          <Text fontSize="2xl" lineHeight="1" fontWeight="900" color={textPrimary}>
+          <Text fontSize={{base:"lg",md:"xl"}} lineHeight="1" fontWeight="700" color={textPrimary}>
             {formatCurrency(getOrderAmount(order))}
           </Text>
           <Badge
-            mt={2}
-            px={2.5}
+            mt={{base:1,md:2}}
+            px={{base:1.5,md:2.5}}
             py={1}
             borderRadius="full"
             bg={status.bg}
@@ -477,10 +477,10 @@ const StockRow = ({ item }: { item: DashboardProduct }) => {
       <Flex align="center" justify="space-between" gap={3} mb={3}>
         <HStack spacing={3} minW={0}>
           <Circle size="44px" borderRadius="14px" bg={iconBg} color={iconColor} flexShrink={0}>
-            <Icon as={FiPackage} boxSize={4.5} />
+            <Icon as={FiPackage} boxSize={4} />
           </Circle>
           <Box minW={0}>
-            <Text fontSize="lg" fontWeight="700" color={textPrimary} noOfLines={1}>
+            <Text fontSize={{md:"lg"}} fontWeight="700" color={textPrimary} noOfLines={1}>
               {item.name || "Unnamed product"}
             </Text>
             <Text fontSize="sm" color={textMuted}>
@@ -524,7 +524,7 @@ const NotificationRow = ({ notification }: { notification: DashboardNotification
       border="1px solid"
       borderColor={borderColor}
       borderRadius="20px"
-      p={3.5}
+      p={{base:3,md:3.5}}
       boxShadow={useColorModeValue("0 12px 28px rgba(15, 23, 42, 0.04)", "0 18px 32px rgba(0, 0, 0, 0.22)")}
     >
       <Flex align="start" justify="space-between" gap={3}>
@@ -533,10 +533,10 @@ const NotificationRow = ({ notification }: { notification: DashboardNotification
             <Icon as={FiBell} boxSize={4} />
           </Circle>
           <Box minW={0}>
-            <Text fontSize={{md:"lg"}} fontWeight="700" color={textPrimary} noOfLines={1}>
+            <Text fontSize={{base:"sm",md:"md"}} fontWeight="700" color={textPrimary} noOfLines={1}>
               {notification.title}
             </Text>
-            <Text fontSize="sm" color={textMuted} mt={{base: 0, md: 1}} noOfLines={2}>
+            <Text fontSize={{base:"xs",md:"sm"}} color={textMuted} mt={{base: 0, md: 0.5}} noOfLines={2}>
               {notification.message}
             </Text>
           </Box>
@@ -579,7 +579,7 @@ const ChecklistCard = ({
     >
       <Flex align="center" justify="space-between" mb={5}>
         <Box>
-          <Heading fontSize={{base:"md",md:"2xl"}} fontWeight="700" color={titleColor}>
+          <Heading fontSize={{base:"sm",md:"md"}} fontWeight="700" color={titleColor}>
             Shop Setup
           </Heading>
           <Text fontSize="sm" color={mutedText} mt={1}>
@@ -765,7 +765,7 @@ const SellerOverview = observer(() => {
           variants={stagger}
           initial="hidden"
           animate="show"
-          spacing={{ base: 6, xl: 7 }}
+          spacing={{ base: 4, xl: 6 }}
           px={{ base: 0, md: 6, xl: 4 }}
           py={{ base: 2, md: 0 }}
         >
@@ -791,7 +791,7 @@ const SellerOverview = observer(() => {
                   <Flex align="center" justify="space-between" mb={{base:2,md:4}}>
                     <Badge
                       px={3}
-                      py={1.5}
+                      py={{base:1,md:1.5}}
                       borderRadius="full"
                       bg="rgba(255,255,255,0.18)"
                       color="white"
@@ -801,28 +801,28 @@ const SellerOverview = observer(() => {
                     >
                       <HStack spacing={1.5}>
                         <Box w="6px" h="6px" borderRadius="full" bg="#5CFF8A" />
-                        <Text as="span">{shopStatusLabel}</Text>
+                        <Text as="span" fontSize={{base:"10px",md:"sm"}}>{shopStatusLabel}</Text>
                       </HStack>
                     </Badge>
                     <Icon as={FiZap} boxSize={4} color="whiteAlpha.850" />
                   </Flex>
 
-                  <Text fontSize="xs" textTransform="uppercase" letterSpacing="0.12em" color="whiteAlpha.800" fontWeight="700">
+                  <Text fontSize={{base:"10px",md:"sm"}} textTransform="uppercase" letterSpacing="0.12em" color="whiteAlpha.800" fontWeight="700">
                     Today&apos;s Sales
                   </Text>
 
                   <Flex align="center" gap={2} mt={2} flexWrap="wrap">
-                    <Heading fontSize={{ base: "3xl", md: "5xl" }} lineHeight="0.95" fontWeight="800">
+                    <Heading fontSize={{ base: "2xl", md: "5xl" }} lineHeight="0.95" fontWeight="800">
                       {formatCurrency(todaySales)}
                     </Heading>
                     <Badge
                       // mb={1}
                       px={3}
-                      py={1.5}
+                      py={{base:0.5,md:1.5}}
                       borderRadius="full"
                       bg="rgba(255,255,255,0.22)"
                       color="white"
-                      fontSize="sm"
+                      fontSize={{base:"xs",md:"sm"}}
                       fontWeight="700"
                     >
                       <HStack spacing={1}>
