@@ -52,7 +52,7 @@ const stagger = {
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 };
 
-const fadeUp = {
+export const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: {
     opacity: 1,
@@ -773,82 +773,116 @@ const SellerOverview = observer(() => {
             <OverviewSkeleton />
           ) : (
             <>
-              <MotionBox
-                variants={fadeUp}
-                bgGradient={heroGradient}
-                borderRadius={{ base: "32px", md: "36px" }}
-                px={{ base: 4, md: 7 }}
-                py={{ base: 4, md: 6 }}
-                color="white"
-                position="relative"
-                overflow="hidden"
-                boxShadow={useColorModeValue("0 24px 60px rgba(91, 108, 255, 0.22)", "0 30px 70px rgba(0, 0, 0, 0.34)")}
-              >
-                <Box position="absolute" right="-36px" top="-24px" w="160px" h="160px" borderRadius="full" bg="whiteAlpha.160" />
-                <Box position="absolute" left="-18px" bottom="-52px" w="150px" h="150px" borderRadius="full" bg="whiteAlpha.120" />
 
-                <Box position="relative" zIndex={1}>
-                  <Flex align="center" justify="space-between" mb={{base:2,md:4}}>
-                    <Badge
-                      px={3}
-                      py={{base:1,md:1.5}}
-                      borderRadius="full"
-                      bg="rgba(255,255,255,0.18)"
-                      color="white"
-                      fontSize="11px"
-                      fontWeight="700"
-                      letterSpacing="0.04em"
-                    >
-                      <HStack spacing={1.5}>
-                        <Box w="6px" h="6px" borderRadius="full" bg="#5CFF8A" />
-                        <Text as="span" fontSize={{base:"10px",md:"sm"}}>{shopStatusLabel}</Text>
-                      </HStack>
-                    </Badge>
-                    <Icon as={FiZap} boxSize={4} color="whiteAlpha.850" />
-                  </Flex>
 
-                  <Text fontSize={{base:"10px",md:"sm"}} textTransform="uppercase" letterSpacing="0.12em" color="whiteAlpha.800" fontWeight="700">
-                    Today&apos;s Sales
-                  </Text>
 
-                  <Flex align="center" gap={2} mt={2} flexWrap="wrap">
-                    <Heading fontSize={{ base: "2xl", md: "5xl" }} lineHeight="0.95" fontWeight="800">
-                      {formatCurrency(todaySales)}
-                    </Heading>
-                    <Badge
-                      // mb={1}
-                      px={3}
-                      py={{base:0.5,md:1.5}}
-                      borderRadius="full"
-                      bg="rgba(255,255,255,0.22)"
-                      color="white"
-                      fontSize={{base:"xs",md:"sm"}}
-                      fontWeight="700"
-                    >
-                      <HStack spacing={1}>
-                        <FiTrendingUp size={12} />
-                        <Text as="span">^ {weeklyGrowth}%</Text>
-                      </HStack>
-                    </Badge>
-                  </Flex>
+<MotionBox
+  variants={fadeUp}
+  bgGradient={heroGradient}
+  borderRadius={{ base: "16px", md: "20px" }}
+  px={{ base: 4, md: 6 }}
+  py={{ base: 4, md: 5 }}
+  color="white"
+  position="relative"
+  overflow="hidden"
+  boxShadow={useColorModeValue(
+    "0 12px 30px rgba(91, 108, 255, 0.15)",
+    "0 15px 40px rgba(0, 0, 0, 0.25)"
+  )}
+>
+  {/* Decorative Background Elements */}
+  <Box position="absolute" right="-20px" top="-20px" w="100px" h="100px" borderRadius="full" bg="whiteAlpha.160" />
+  <Box position="absolute" left="-15px" bottom="-30px" w="90px" h="90px" borderRadius="full" bg="whiteAlpha.120" />
 
-                  <HStack spacing={4} mt={{base:3,md:5}} flexWrap="wrap" color="whiteAlpha.850">
-                    <HStack spacing={1.5}>
-                      <Icon as={FiMapPin} boxSize={3.5} />
-                      <Text fontSize="sm" fontWeight="500">
-                        {locationLabel}
-                      </Text>
-                    </HStack>
-                    <Text fontSize="xs">•</Text>
-                    <HStack spacing={1.5}>
-                      <Icon as={FiPhone} boxSize={3.5} />
-                      <Text fontSize="sm" fontWeight="500">
-                        {phoneLabel}
-                      </Text>
-                    </HStack>
-                  </HStack>
-                </Box>
-              </MotionBox>
+  <Box position="relative" zIndex={1}>
+    <Flex
+      direction={{ base: "column", md: "row" }}
+      justify="space-between"
+      align={{ base: "flex-start", md: "center" }}
+      gap={{ base: 4, md: 0 }}
+    >
+      {/* ================= LEFT SIDE: Shop Info ================= */}
+      <Box>
+        <Flex align="center" gap={3} mb={{ base: 2, md: 3 }}>
+          <Badge
+            px={2.5}
+            py={{ base: 0.5, md: 1 }}
+            borderRadius="full"
+            bg="rgba(255,255,255,0.18)"
+            color="white"
+            fontSize="10px"
+            fontWeight="700"
+            letterSpacing="0.04em"
+          >
+            <HStack spacing={1.5}>
+              <Box w="5px" h="5px" borderRadius="full" bg="#5CFF8A" />
+              <Text as="span" fontSize={{ base: "9px", md: "xs" }}>
+                {shopStatusLabel}
+              </Text>
+            </HStack>
+          </Badge>
+          <Icon as={FiZap} boxSize={3.5} color="whiteAlpha.850" />
+        </Flex>
+
+        <HStack spacing={3} flexWrap="wrap" color="whiteAlpha.850">
+          <HStack spacing={1}>
+            <Icon as={FiMapPin} boxSize={3.5} />
+            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="500">
+              {locationLabel}
+            </Text>
+          </HStack>
+          <Text fontSize="xs" opacity={0.6}>•</Text>
+          <HStack spacing={1}>
+            <Icon as={FiPhone} boxSize={3.5} />
+            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="500">
+              {phoneLabel}
+            </Text>
+          </HStack>
+        </HStack>
+      </Box>
+
+      {/* ================= RIGHT SIDE: Sales Info ================= */}
+      <Box textAlign={{ base: "left", md: "right" }}>
+        <Text
+          fontSize={{ base: "9px", md: "xs" }}
+          textTransform="uppercase"
+          letterSpacing="0.1em"
+          color="whiteAlpha.800"
+          fontWeight="700"
+        >
+          Today's Sales
+        </Text>
+
+        <Flex
+          align="center"
+          justify={{ base: "flex-start", md: "flex-end" }}
+          gap={2}
+          mt={1}
+        >
+          <Heading fontSize={{ base: "xl", md: "2xl" }} lineHeight="1" fontWeight="800">
+            {formatCurrency(todaySales)}
+          </Heading>
+          <Badge
+            px={2.5}
+            py={{ base: 0.5, md: 1 }}
+            borderRadius="full"
+            bg="rgba(255,255,255,0.22)"
+            color="white"
+            fontSize={{ base: "10px", md: "xs" }}
+            fontWeight="700"
+          >
+            <HStack spacing={1}>
+              <FiTrendingUp size={10} />
+              <Text as="span">^ {weeklyGrowth}%</Text>
+            </HStack>
+          </Badge>
+        </Flex>
+      </Box>
+    </Flex>
+  </Box>
+</MotionBox>
+
+
 
               <SimpleGrid columns={{ base: 2, md: 4 }} spacing={{base:2,md:4}}>
                 <StatCard
