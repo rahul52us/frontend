@@ -19,7 +19,6 @@ import {
   InputLeftElement,
   Menu,
   MenuButton,
-  MenuDivider,
   MenuItem,
   MenuList,
   SimpleGrid,
@@ -38,6 +37,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBoxOpen,
   FaChartLine,
+  FaChevronDown,
   FaFilter,
   FaFire,
   FaLayerGroup,
@@ -243,6 +243,7 @@ const ProductsPage = observer(() => {
   const [detailProductId, setDetailProductId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -355,6 +356,40 @@ const ProductsPage = observer(() => {
     });
   }, [allowedRootCategoryIds, allowedRootCategoryNames, categoryStore.categories, shopCategoryTokens]);
 
+  const selectedRootCategory = useMemo(
+    () =>
+      allowedRootCategories.find(
+        (category: any) => String(category._id) === String(selectedCategory)
+      ) || null,
+    [allowedRootCategories, selectedCategory]
+  );
+
+  const childCategoriesForSelectedRoot = useMemo(() => {
+    if (!selectedRootCategory) {
+      return [];
+    }
+
+    return sellerProductCategories.filter((category: any) => {
+      const parentId = getParentCategoryId(category);
+      const parentName = getParentCategoryName(category);
+
+      return (
+        Boolean(parentId) &&
+        (String(parentId) === String(selectedRootCategory._id) ||
+          String(parentName || "").toLowerCase() ===
+            String(selectedRootCategory.name || "").toLowerCase())
+      );
+    });
+  }, [selectedRootCategory, sellerProductCategories]);
+
+  const selectedChildCategory = useMemo(
+    () =>
+      childCategoriesForSelectedRoot.find(
+        (category: any) => String(category._id) === String(selectedSubCategory)
+      ) || null,
+    [childCategoriesForSelectedRoot, selectedSubCategory]
+  );
+
   const stats = useMemo(
     () => ({
       total: totalCount,
@@ -368,7 +403,13 @@ const ProductsPage = observer(() => {
   const initialValues = useMemo(() => mapProductToFormValues(selectedProduct), [selectedProduct]);
 
   const fetchProducts = useCallback(
-    async (page = 1, search = searchTerm, category = selectedCategory, inactiveView = showInactive) => {
+    async (
+      page = 1,
+      search = searchTerm,
+      category = selectedCategory,
+      inactiveView = showInactive,
+      subCategory = selectedSubCategory
+    ) => {
       const companyId =
         auth.company?._id ||
         auth.company ||
@@ -393,6 +434,7 @@ const ProductsPage = observer(() => {
           limit: 12,
           search,
           category,
+          subCategory,
           isDeleted: inactiveView ? true : undefined,
         });
 
@@ -413,7 +455,7 @@ const ProductsPage = observer(() => {
         setLoading(false);
       }
     },
-    [auth.company, auth.user?.company, searchTerm, selectedCategory, shopStore, showInactive, toast]
+    [auth.company, auth.user?.company, searchTerm, selectedCategory, selectedSubCategory, shopStore, showInactive, toast]
   );
 
   useEffect(() => {
@@ -426,28 +468,53 @@ const ProductsPage = observer(() => {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      fetchProducts(1, searchTerm, selectedCategory);
+      fetchProducts(1, searchTerm, selectedCategory, showInactive, selectedSubCategory);
     }, 300);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [fetchProducts, searchTerm, selectedCategory, showInactive]);
+  }, [fetchProducts, searchTerm, selectedCategory, selectedSubCategory, showInactive]);
 
   useEffect(() => {
     if (!selectedCategory) {
+      if (selectedSubCategory) {
+        setSelectedSubCategory("");
+      }
       return;
     }
 
-    const stillAllowed = allowedRootCategories.some((category: any) => category._id === selectedCategory);
+    const stillAllowed = allowedRootCategories.some(
+      (category: any) => String(category._id) === String(selectedCategory)
+    );
     if (!stillAllowed) {
       setSelectedCategory("");
+      setSelectedSubCategory("");
     }
-  }, [allowedRootCategories, selectedCategory]);
+  }, [allowedRootCategories, selectedCategory, selectedSubCategory]);
+
+  useEffect(() => {
+    if (!selectedSubCategory) {
+      return;
+    }
+
+    const stillAllowed = childCategoriesForSelectedRoot.some(
+      (category: any) => String(category._id) === String(selectedSubCategory)
+    );
+
+    if (!stillAllowed) {
+      setSelectedSubCategory("");
+    }
+  }, [childCategoriesForSelectedRoot, selectedSubCategory]);
 
   if (!isSuperAdmin && !hasCompany) {
     return <CompanyRequiredState />;
   }
+
+  const handleRootCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedSubCategory("");
+  };
 
   const handleOpenCreate = () => {
     setSelectedProductId(null);
@@ -581,7 +648,8 @@ const ProductsPage = observer(() => {
     }
   };
 
-  const showFirstProductAction = !searchTerm && !selectedCategory && !showInactive;
+  const hasCategoryFilter = Boolean(selectedCategory || selectedSubCategory);
+  const showFirstProductAction = !searchTerm && !hasCategoryFilter && !showInactive;
 
   if (!isDesktop && detailProduct) {
     return <ProductDetailView product={detailProduct} onBack={handleCloseDetail} mode="page" />;
@@ -677,60 +745,75 @@ const ProductsPage = observer(() => {
             />
           </InputGroup>
 
-          <HStack align="center" spacing={2}>
-            <HStack
-              spacing={2}
-              overflowX="auto"
-              flex="1"
-              pb={1}
-            >
-              <CategoryPill
-                active={!selectedCategory}
-                label="All"
-                onClick={() => setSelectedCategory("")}
-                accent={accent}
-                border={border}
-                text={text}
-              />
-              {allowedRootCategories.map((category: any) => (
-                <CategoryPill
-                  key={category._id}
-                  active={selectedCategory === category._id}
-                  label={category.name}
-                  onClick={() => setSelectedCategory(category._id)}
-                  accent={accent}
-                  border={border}
-                  text={text}
-                />
-              ))}
-            </HStack>
+          <Flex
+            align={{ base: "stretch", md: "center" }}
+            gap={2}
+            direction={{ base: "column", sm: "row" }}
+          >
+            <CategoryFilterDropdown
+              label="Root category"
+              valueLabel={selectedRootCategory?.name || "All root categories"}
+              active={Boolean(selectedCategory)}
+              icon={FaFilter}
+              minW={{ base: "100%", sm: "220px" }}
+              surface={surface}
+              surfaceMuted={surfaceMuted}
+              border={border}
+              borderStrong={borderStrong}
+              text={text}
+              textMuted={textMuted}
+              accent={accent}
+              accentSoft={accentSoft}
+              shadow={shadow}
+              options={[
+                {
+                  key: "all-categories",
+                  label: "All root categories",
+                  active: !selectedCategory,
+                  onClick: () => handleRootCategorySelect(""),
+                },
+                ...allowedRootCategories.map((category: any) => ({
+                  key: category._id,
+                  label: category.name,
+                  active: String(selectedCategory) === String(category._id),
+                  onClick: () => handleRootCategorySelect(category._id),
+                })),
+              ]}
+            />
 
-            <Menu placement="bottom-end">
-              <MenuButton
-                as={IconButton}
-                aria-label="Filter categories"
-                icon={<FaFilter />}
-                h="38px"
-                w="38px"
-                minW="38px"
-                borderRadius="full"
-                borderWidth="1px"
-                borderColor={border}
-                bg={surface}
-                color={textMuted}
-                _hover={{ color: text, borderColor: borderStrong }}
+            {selectedCategory && childCategoriesForSelectedRoot.length > 0 ? (
+              <CategoryFilterDropdown
+                label="Subcategory"
+                valueLabel={selectedChildCategory?.name || "All subcategories"}
+                active={Boolean(selectedSubCategory)}
+                icon={FaLayerGroup}
+                minW={{ base: "100%", sm: "220px" }}
+                surface={surface}
+                surfaceMuted={surfaceMuted}
+                border={border}
+                borderStrong={borderStrong}
+                text={text}
+                textMuted={textMuted}
+                accent={accent}
+                accentSoft={accentSoft}
+                shadow={shadow}
+                options={[
+                  {
+                    key: "all-subcategories",
+                    label: "All subcategories",
+                    active: !selectedSubCategory,
+                    onClick: () => setSelectedSubCategory(""),
+                  },
+                  ...childCategoriesForSelectedRoot.map((category: any) => ({
+                    key: category._id,
+                    label: category.name,
+                    active: String(selectedSubCategory) === String(category._id),
+                    onClick: () => setSelectedSubCategory(category._id),
+                  })),
+                ]}
               />
-              <MenuList bg={surface} borderColor={border} color={text} boxShadow={shadow}>
-                <MenuItem onClick={() => setSelectedCategory("")}>All categories</MenuItem>
-                <MenuDivider />
-                {allowedRootCategories.map((category: any) => (
-                  <MenuItem key={category._id} onClick={() => setSelectedCategory(category._id)}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
-          </HStack>
+            ) : null}
+          </Flex>
 
           <HStack spacing={2}>
             <HStack
@@ -787,14 +870,14 @@ const ProductsPage = observer(() => {
         ) : products.length === 0 ? (
           <EmptyState
             title={
-              searchTerm || selectedCategory
+              searchTerm || hasCategoryFilter
                 ? "No products found"
                 : showInactive
                   ? "Trash is empty"
                   : "No products yet"
             }
             description={
-              searchTerm || selectedCategory
+              searchTerm || hasCategoryFilter
                 ? "Try changing the search term or filters to find what you need."
                 : showInactive
                   ? "Deleted products will appear here when your backend returns them."
@@ -927,44 +1010,88 @@ function StatCardSkeleton() {
   );
 }
 
-function CategoryPill({
-  active,
+function CategoryFilterDropdown({
   label,
-  onClick,
-  accent,
+  valueLabel,
+  active,
+  icon,
+  options,
+  minW,
+  surface,
+  surfaceMuted,
   border,
+  borderStrong,
   text,
+  textMuted,
+  accent,
+  accentSoft,
+  shadow,
 }: {
-  active: boolean;
   label: string;
-  onClick: () => void;
-  accent: string;
+  valueLabel: string;
+  active: boolean;
+  icon: any;
+  options: Array<{
+    key: string;
+    label: string;
+    active?: boolean;
+    onClick: () => void;
+  }>;
+  minW?: any;
+  surface: string;
+  surfaceMuted: string;
   border: string;
+  borderStrong: string;
   text: string;
+  textMuted: string;
+  accent: string;
+  accentSoft: string;
+  shadow: string;
 }) {
-  const mutedBg = useColorModeValue("white", dashboardPalette.surface);
-  const mutedText = useColorModeValue("#64748B", dashboardPalette.textMuted);
-
   return (
-    <Button
-      h="36px"
-      px={4}
-      borderRadius="full"
-      flexShrink={0}
-      borderWidth="1px"
-      borderColor={active ? accent : border}
-      bg={active ? accent : mutedBg}
-      color={active ? "white" : text}
-      fontSize="xs"
-      fontWeight="700"
-      _hover={{
-        bg: active ? accent : mutedBg,
-        borderColor: active ? accent : mutedText,
-      }}
-      onClick={onClick}
-    >
-      {label}
-    </Button>
+    <Menu placement="bottom-start">
+      <MenuButton
+        as={Button}
+        h="48px"
+        minW={minW}
+        px={4}
+        borderRadius="18px"
+        borderWidth="1px"
+        borderColor={active ? accent : border}
+        bg={active ? accentSoft : surface}
+        color={text}
+        leftIcon={<Icon as={icon} color={active ? accent : textMuted} boxSize={3.5} />}
+        rightIcon={<Icon as={FaChevronDown} color={textMuted} boxSize={3} />}
+        justifyContent="flex-start"
+        textAlign="left"
+        _hover={{ borderColor: active ? accent : borderStrong, bg: active ? accentSoft : surfaceMuted }}
+        _active={{ bg: active ? accentSoft : surfaceMuted }}
+      >
+        <Box minW={0}>
+          <Text fontSize="10px" fontWeight="800" letterSpacing="0.1em" textTransform="uppercase" color={textMuted} lineHeight="1.1">
+            {label}
+          </Text>
+          <Text mt={0.5} fontSize="sm" fontWeight="800" color={active ? accent : text} noOfLines={1}>
+            {valueLabel}
+          </Text>
+        </Box>
+      </MenuButton>
+      <MenuList bg={surface} borderColor={border} color={text} boxShadow={shadow} borderRadius="18px" p={1.5}>
+        {options.map((option) => (
+          <MenuItem
+            key={option.key}
+            onClick={option.onClick}
+            borderRadius="14px"
+            bg={option.active ? accentSoft : surface}
+            color={option.active ? accent : text}
+            fontWeight={option.active ? "800" : "600"}
+            _hover={{ bg: option.active ? accentSoft : surfaceMuted, color: option.active ? accent : text }}
+          >
+            {option.label}
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
   );
 }
 
