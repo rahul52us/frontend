@@ -415,7 +415,7 @@ const OrderRow = ({ order }: { order: DashboardOrder }) => {
             <Text fontSize={{md:"md"}} fontWeight="700" color={textPrimary} noOfLines={1}>
               {order.user?.name || "Unknown customer"}
             </Text>
-            <HStack spacing={{base:1,md:2}} mt={{base:0.5,md:1}} color={textMuted} flexWrap="wrap">
+            <HStack spacing={{base:1,md:2}} mt={{base:0.5,md:0}} color={textMuted} flexWrap="wrap">
               <Text fontSize={{base:"xs",md:"sm"}} fontWeight="500">
                 {order.orderId || order._id}
               </Text>
@@ -429,7 +429,7 @@ const OrderRow = ({ order }: { order: DashboardOrder }) => {
         </HStack>
 
         <Box textAlign="right" flexShrink={0}>
-          <Text fontSize={{base:"lg",md:"xl"}} lineHeight="1" fontWeight="700" color={textPrimary}>
+          <Text fontSize={{md:"lg"}} lineHeight="1" fontWeight="700" color={textPrimary}>
             {formatCurrency(getOrderAmount(order))}
           </Text>
           <Badge
@@ -977,7 +977,7 @@ const SellerOverview = observer(() => {
             <Stack spacing={6}>
               <Box>
                 <OverviewSectionHeader title="Recent Orders" action="View all" onAction={() => router.push("/dashboard/orders")} />
-                <Stack spacing={3}>
+                <Stack spacing={2}>
                   {loading
                     ? Array.from({ length: 4 }).map((_, index) => (
                         <Box key={index}>

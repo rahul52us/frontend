@@ -59,7 +59,7 @@ import stores from "../../../store/stores";
 import GalleryBlock from "./GalleryBlock";
 import RegisterInput from "./RegisterInput";
 import UploadTile from "./UploadBlock";
-import { fieldCardStyles, mapOptions, sellerSteps, userSteps } from "./utils/constant";
+import { fieldCardStyles, mapOptions } from "./utils/constant";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -72,7 +72,6 @@ const SOFT_PRIMARY_COLOR = "#DBEAFE";
 const STORE_NAME_DUPLICATE_ERROR = "This shop name already exists. Please use another shop name.";
 const STORE_NAME_CHECK_MIN_LENGTH = 2;
 
-
 type Intent = "user" | "seller";
 
 const isValidEmail = (email: string) => {
@@ -80,21 +79,29 @@ const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 };
 
+// ── Step Definitions ──
+const USER_STEPS = [
+  { title: "Let's get started", subtitle: "Enter your phone and email to begin" },
+  { title: "Tell us about you", subtitle: "Just a few details about yourself" },
+  { title: "Verify OTP", subtitle: "Secure your account" },
+];
 
+const SELLER_STEPS = [
+  { title: "Let's get started", subtitle: "Enter your phone and email to begin" },
+  { title: "Tell us about your shop", subtitle: "Build your storefront" },
+  { title: "Choose categories", subtitle: "Select what you sell" },
+  { title: "Set your shop location", subtitle: "Help buyers find you" },
+  { title: "Show your shop", subtitle: "Add photos to build trust" },
+  { title: "Verify OTP", subtitle: "Secure your account" },
+];
 
-// Each step gets a color theme + left-panel content
+// Each step gets left-panel content
 const stepMeta: Record<string, {
-  bg: string;
-  accent: string;
-  softAccent: string;
   tagline: string;
   points: { icon: any; text: string }[];
   illustration: React.ReactNode;
 }> = {
   "Let's get started": {
-    bg: "#EFF6FF",
-    accent: "#3B82F6",
-    softAccent: "#BFDBFE",
     tagline: "Buy & sell, locally.",
     points: [
       { icon: FiShoppingCart, text: "Browse shops near you" },
@@ -112,9 +119,6 @@ const stepMeta: Record<string, {
     ),
   },
   "Tell us about you": {
-    bg: "#F5F3FF",
-    accent: "#7C3AED",
-    softAccent: "#DDD6FE",
     tagline: "Your profile, your identity.",
     points: [
       { icon: FiUser,  text: "Personalised experience" },
@@ -132,9 +136,6 @@ const stepMeta: Record<string, {
     ),
   },
   "Tell us about your shop": {
-    bg: "#ECFDF5",
-    accent: "#059669",
-    softAccent: "#A7F3D0",
     tagline: "Build your storefront.",
     points: [
       { icon: FiShoppingBag, text: "Your shop, your brand" },
@@ -152,9 +153,6 @@ const stepMeta: Record<string, {
     ),
   },
   "Choose categories": {
-    bg: "#F0FDF4",
-    accent: "#16A34A",
-    softAccent: "#BBF7D0",
     tagline: "Sell where buyers browse.",
     points: [
       { icon: FiShoppingBag, text: "Choose your main product areas" },
@@ -172,9 +170,6 @@ const stepMeta: Record<string, {
     ),
   },
   "Set your shop location": {
-    bg: "#F0FDFA",
-    accent: "#0D9488",
-    softAccent: "#99F6E4",
     tagline: "Put your shop on the map.",
     points: [
       { icon: FiNavigation, text: "Auto-detect your location" },
@@ -191,30 +186,7 @@ const stepMeta: Record<string, {
       />
     ),
   },
-  "Contact details": {
-    bg: "#ECFEFF",
-    accent: "#0891B2",
-    softAccent: "#A5F3FC",
-    tagline: "Stay connected with buyers.",
-    points: [
-      { icon: FiPhone, text: "Dedicated store number" },
-      { icon: FiCheck, text: "Order notifications" },
-      { icon: FiUser,  text: "Build buyer trust" },
-    ],
-    illustration: (
-       <Image
-        src="/images/register/contact.svg"
-        alt="Get started"
-        w="full"
-        maxH="280px"
-        objectFit="contain"
-      />
-    ),
-  },
   "Show your shop": {
-    bg: "#FFF7ED",
-    accent: "#EA580C",
-    softAccent: "#FED7AA",
     tagline: "A picture sells a thousand words.",
     points: [
       { icon: FiImage,       text: "Logo & cover image" },
@@ -232,9 +204,6 @@ const stepMeta: Record<string, {
     ),
   },
   "Verify OTP": {
-    bg: "#F0FDF4",
-    accent: "#16A34A",
-    softAccent: "#BBF7D0",
     tagline: "Almost there!",
     points: [
       { icon: FiCheck,       text: "One-time verification" },
@@ -253,8 +222,6 @@ const stepMeta: Record<string, {
     ),
   },
 };
-
-
 
 const hasPickedCoordinates = (coordinates: any) => {
   if (!Array.isArray(coordinates) || coordinates.length < 2) return false;
@@ -448,7 +415,6 @@ const SignUpForm = observer(() => {
   const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
-  const [isContactPhoneCustomized, setIsContactPhoneCustomized] = useState(false);
   const [isSellerAccountVerified, setIsSellerAccountVerified] = useState(false);
   const [duplicateShopName, setDuplicateShopName] = useState("");
   const [storeNameChecking, setStoreNameChecking] = useState(false);
@@ -471,11 +437,13 @@ const SignUpForm = observer(() => {
       onImageModalOpen();
     }
   };
+
   const [userData, setUserData] = useState({
     phone: "",
     name: "",
     email: "",
   });
+
   const [sellerData, setSellerData] = useState({
     storeName: "",
     gstNumber: "",
@@ -490,14 +458,14 @@ const SignUpForm = observer(() => {
       coordinates: [0, 0],
     },
     contactPhone: "",
-    logo: { file: [], isAdd: 0, isDeleted: 0 },
-    coverImage: { file: [], isAdd: 0, isDeleted: 0 },
+    logo: { file: [] as File[], isAdd: 0, isDeleted: 0 },
+    coverImage: { file: [] as File[], isAdd: 0, isDeleted: 0 },
     gallery: [] as Array<{ file: File; title: string; isAdd: number }>,
   });
 
   const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
 
-  const steps = intent === "seller" ? sellerSteps : userSteps;
+  const steps = intent === "seller" ? SELLER_STEPS : USER_STEPS;
   const activeStep = steps[stepIndex];
   const progress = ((stepIndex + 1) / steps.length) * 100;
   const isOtpStep = stepIndex === steps.length - 1;
@@ -520,22 +488,14 @@ const SignUpForm = observer(() => {
     return FALLBACK_CENTER;
   }, [selectedPoint]);
 
+  // Auto-sync seller contactPhone with user phone
   useEffect(() => {
-    if (intent !== "seller" || isContactPhoneCustomized) {
-      return;
-    }
-
+    if (intent !== "seller") return;
     setSellerData((prev) => {
-      if (prev.contactPhone === userData.phone) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        contactPhone: userData.phone,
-      };
+      if (prev.contactPhone === userData.phone) return prev;
+      return { ...prev, contactPhone: userData.phone };
     });
-  }, [intent, isContactPhoneCustomized, userData.phone]);
+  }, [intent, userData.phone]);
 
   useEffect(() => {
     return () => {
@@ -574,25 +534,14 @@ const SignUpForm = observer(() => {
   };
 
   useEffect(() => {
-  if (stepIndex === 0) {
-    focusPhoneInput(180);
-    return;
-  }
-  if (isOtpStep) {
-    focusOtpInput(220);
-  }
-}, [isOtpStep, stepIndex]);
-
-  // useEffect(() => {
-  //   if (stepIndex === 0) {
-  //     focusPhoneInput(180);
-  //     return;
-  //   }
-
-  //   if (isOtpStep) {
-  //     focusOtpInput(220);
-  //   }
-  // }, [intent, isOtpStep, stepIndex]);
+    if (stepIndex === 0) {
+      focusPhoneInput(180);
+      return;
+    }
+    if (isOtpStep) {
+      focusOtpInput(220);
+    }
+  }, [isOtpStep, stepIndex]);
 
   useEffect(() => {
     const isSellerLocationStep = intent === "seller" && activeStep.title === "Set your shop location";
@@ -646,23 +595,12 @@ const SignUpForm = observer(() => {
     }
   }, [isOtpStep, otp]);
 
-  // const setIntentSelection = (nextIntent: Intent) => {
-  //   setIntent(nextIntent);
-  //   setStepIndex(0);
-  //   setToken("");
-  //   setOtp("");
-  //   setErrors({});
-  //   setIsContactPhoneCustomized(false);
-  //   focusPhoneInput();
-  // };
-
   const setIntentSelection = (nextIntent: Intent) => {
     setIntent(nextIntent);
     setStepIndex(0);
     setToken("");
     setOtp("");
     setErrors({});
-    setIsContactPhoneCustomized(false);
     setIsSellerAccountVerified(false);
     setDuplicateShopName("");
     setStoreNameChecking(false);
@@ -928,13 +866,17 @@ const SignUpForm = observer(() => {
   const validateCurrentStep = (otpValue = otp) => {
     const nextErrors: Record<string, string> = {};
 
-    if (stepIndex === 0 && !phoneRegex.test(userData.phone.trim())) {
-      nextErrors.phone = "Enter a valid 10-digit phone number.";
+    if (stepIndex === 0) {
+      if (!phoneRegex.test(userData.phone.trim())) {
+        nextErrors.phone = "Enter a valid 10-digit phone number.";
+      }
+      if (!isValidEmail(userData.email)) {
+        nextErrors.email = "Enter a valid email address.";
+      }
     }
 
     if (intent === "user" && stepIndex === 1) {
       if (!userData.name.trim()) nextErrors.name = "Full name is required.";
-      if (!isValidEmail(userData.email)) nextErrors.email = "Enter a valid email address.";
     }
 
     if (intent === "seller" && activeStep.title === "Tell us about your shop") {
@@ -965,26 +907,22 @@ const SignUpForm = observer(() => {
       if (!sellerData.location.country.trim()) nextErrors.country = "Country is required.";
     }
 
-    if (intent === "seller" && activeStep.title === "Contact details") {
-      if (!phoneRegex.test(sellerData.contactPhone.trim())) nextErrors.contactPhone = "Enter a valid 10-digit store phone number.";
-      if (!isValidEmail(userData.email)) nextErrors.email = "Enter a valid email address.";
-    }
-
     if (isOtpStep && otpValue.trim().length < 6) {
       nextErrors.otp = "Enter the 6-digit OTP.";
     }
     return nextErrors;
   };
+
   const handleImageProcessing = async (file?: File | null) => {
     if (!file) return null;
     return buildBase64ImageUpload(file, { isAdd: 1, isDeleted: 0 });
   };
+
   const createSellerCompany = async () => {
     const basePayload: any = {
       name: sellerData.storeName.trim(),
       description: sellerData.description.trim(),
       categories: sellerData.categories,
-      // about: sellerData.description.trim(),
       gstNumber: normalizeGstNumber(sellerData.gstNumber) || undefined,
       location: sellerData.location,
       contactInfo: {
@@ -1258,792 +1196,650 @@ const SignUpForm = observer(() => {
     }));
   };
 
-
-
-const [isPhoneFocused, setIsPhoneFocused] = useState(false);
-
-const roleOptions = [
-  {
-    value: "user",
-    label: "Buyer",
-    sub: "Browse & purchase",
-    icon: FiShoppingCart,
-    active: {
-      bg: "blue.50",
-      border: PRIMARY_COLOR,
-      iconBg: "#DBEAFE",
-      iconColor: "#2563EB",
-      text: "blue.800",
-      subText: "blue.500",
-      dot: PRIMARY_COLOR,
+  const roleOptions = [
+    {
+      value: "user",
+      label: "Buyer",
+      sub: "Browse & purchase",
+      icon: FiShoppingCart,
+      active: {
+        bg: "blue.50",
+        border: PRIMARY_COLOR,
+        iconBg: "#DBEAFE",
+        iconColor: "#2563EB",
+        text: "blue.800",
+        subText: "blue.500",
+        dot: PRIMARY_COLOR,
+      },
     },
-  },
-  {
-    value: "seller",
-    label: "Seller",
-    sub: "List & sell",
-    icon: FiPackage,
-    active: {
-      bg: "blue.50",
-      border: PRIMARY_COLOR,
-      iconBg: "#DBEAFE",
-      iconColor: "#2563EB",
-      text: "blue.800",
-      subText: "blue.500",
-      dot: PRIMARY_COLOR,
+    {
+      value: "seller",
+      label: "Seller",
+      sub: "List & sell",
+      icon: FiPackage,
+      active: {
+        bg: "blue.50",
+        border: PRIMARY_COLOR,
+        iconBg: "#DBEAFE",
+        iconColor: "#2563EB",
+        text: "blue.800",
+        subText: "blue.500",
+        dot: PRIMARY_COLOR,
+      },
     },
-  },
-];
+  ];
 
- const renderPhoneStep = () => (
-  <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
-
-    {/* ── Role Selector ── */}
-    <Box>
-      <Text
-        fontSize="xs"
-        fontWeight="700"
-        color="gray.500"
-        mb={3}
-      >
-        I want to join as
-      </Text>
-
-      <HStack spacing={{ base: 2, md: 4 }}>
-        {roleOptions.map(({ value, label, sub, icon: Icon, active: a }: any) => {
-          const isActive = intent === value;
-          return (
-            <Box
-              key={value}
-              as="button"
-              type="button"
-              flex={1}
-              onClick={() => setIntentSelection(value)}
-              border="2px solid"
-              borderColor={isActive ? a.border : "gray.100"}
-              borderRadius="xl"
-              bg={isActive ? a.bg : "white"}
-              p={{ base: 2.5, md: 4 }}
-              cursor="pointer"
-              transition="all 0.2s ease"
-              boxShadow={isActive ? `0 2px 10px ${a.border}20` : "none"}
-              _hover={{ borderColor: isActive ? a.border : "gray.200" }}
-              textAlign="left"
-            >
-              <HStack spacing={{ base: 2, md: 3 }}>
-                <Flex
-                  w={{ base: "32px", md: "40px" }}
-                  h={{ base: "32px", md: "40px" }}
-                  borderRadius="lg"
-                  bg={isActive ? a.iconBg : "gray.50"}
-                  align="center"
-                  justify="center"
-                  flexShrink={0}
-                >
-                  <Icon
-                    size={isActive ? 18 : 16}
-                    color={isActive ? a.iconColor : "#9CA3AF"}
-                  />
-                </Flex>
-
-                <Box flex={1}>
-                  <Text
-                    fontWeight="700"
-                    fontSize={{ base: "xs", md: "sm" }}
-                    color={isActive ? a.text : "gray.700"}
-                    lineHeight="1.2"
-                  >
-                    {label}
-                  </Text>
-                  <Text
-                    display={{ base: "none", md: "block" }}
-                    fontSize="xs"
-                    color={isActive ? a.subText : "gray.400"}
-                    mt="2px"
-                    fontWeight="500"
-                  >
-                    {sub}
-                  </Text>
-                </Box>
-              </HStack>
-            </Box>
-          );
-        })}
-      </HStack>
-    </Box>
-
-    {/* ── Phone Input ── */}
-    <RegisterInput
-      ref={phoneInputRef}
-      label="Phone Number"
-      required
-      type="tel"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={userData.phone}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-        setUserData((prev) => ({
-          ...prev,
-          phone: e.target.value.replace(/\D/g, "").slice(0, 10),
-        }))
-      }
-      placeholder="Enter 10-digit mobile number"
-      error={errors.phone}
-      accentColor={PRIMARY_COLOR}
-      leftIcon={<FiPhone size={15} />}
-      maxLength={10}
-      autoFocus
-    />
-  </VStack>
-);
-
-
-const renderUserProfileStep = () => (
-  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <RegisterInput
-      label="Full Name"
-      required
-      name="name"
-      type="text"
-      value={userData.name}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-      placeholder="Your name"
-      error={errors.name}
-      accentColor={PRIMARY_COLOR}
-      leftIcon={<FiUser size={15} />}
-      autoComplete="name"
-    />
-
-    <RegisterInput
-      label="Email"
-      name="email"
-      type="email"
-      value={userData.email}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-      placeholder="Optional email"
-      error={errors.email}
-      accentColor={PRIMARY_COLOR}
-      hint="We'll send important updates here"
-      autoComplete="email"
-    />
-  </VStack>
-);
-
-const renderSellerBasicsStep = () => {
-  const trimmedStoreName = sellerData.storeName.trim();
-  const canShowAvailability = trimmedStoreName.length >= STORE_NAME_CHECK_MIN_LENGTH;
-  const storeNameHint = storeNameChecking
-    ? "Checking shop name..."
-    : canShowAvailability && isStoreNameAvailable
-      ? "Shop name is available."
-      : "This name should be unique for your storefront.";
-
-  return (
-  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <RegisterInput
-      label="Owner Name"
-      required
-      name="name"
-      type="text"
-      value={userData.name}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
-      placeholder="Your full name"
-      error={errors.name}
-      accentColor={PRIMARY_COLOR}
-      leftIcon={<FiUser size={15} />}
-      autoComplete="name"
-    />
-
-    <RegisterInput
-      label="Store Name"
-      required
-      name="storeName"
-      type="text"
-      value={sellerData.storeName}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-        const nextStoreName = event.target.value;
-        setSellerData((prev) => ({ ...prev, storeName: nextStoreName }));
-        setIsStoreNameAvailable(null);
-        if (duplicateShopName && nextStoreName.trim().toLowerCase() !== duplicateShopName) {
-          setDuplicateShopName("");
-          clearStoreNameDuplicateError();
-        }
-      }}
-      placeholder="Ex. Sharma Electronics"
-      error={errors.storeName}
-      hint={storeNameHint}
-      accentColor={PRIMARY_COLOR}
-      leftIcon={<FiShoppingBag size={15} />}
-      rightIcon={
-        storeNameChecking ? (
-          <Spinner size="xs" color={PRIMARY_COLOR} />
-        ) : canShowAvailability && isStoreNameAvailable ? (
-          <FiCheckCircle size={16} color="#16A34A" />
-        ) : undefined
-      }
-    />
-
-    <RegisterInput
-      label="GST Number"
-      name="gstNumber"
-      type="text"
-      value={sellerData.gstNumber}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-        setSellerData((prev) => ({
-          ...prev,
-          gstNumber: normalizeGstNumber(event.target.value),
-        }))
-      }
-      placeholder="Optional — e.g. 22AAAAA0000A1Z5"
-      error={errors.gstNumber}
-      hint="Leave blank if you don't have one"
-      accentColor={PRIMARY_COLOR}
-    />
-
-    <RegisterInput
-      as="textarea"
-      label="About Your Shop"
-      name="description"
-      value={sellerData.description}
-      onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
-      placeholder="What do you sell? What makes your store special?"
-      accentColor={PRIMARY_COLOR}
-      rows={3}
-    />
-  </VStack>
-  );
-};
-
-const renderSellerCategoriesStep = () => (
-  <VStack align="stretch" spacing={5}>
-    <Box
-      border="1.5px solid"
-      borderColor="gray.200"
-      borderRadius="2xl"
-      bg="gray.50"
-      p={{ base: 4, md: 5 }}
-    >
-      <Text fontSize="md" fontWeight="700" color="gray.900">
-        Select shop categories
-      </Text>
-      <Text fontSize="sm" color="gray.500" mt={1}>
-        These categories will decide what the seller can choose while adding products later.
-      </Text>
-
-      <Box mt={5}>
-        {categoryLoading ? (
-          <HStack color="gray.500">
-            <Spinner size="sm" color={PRIMARY_COLOR} />
-            <Text fontSize="sm">Loading categories...</Text>
-          </HStack>
-        ) : rootCategoryOptions.length === 0 ? (
-          <Box borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200" p={4}>
-            <Text fontSize="sm" color="gray.500">
-              No categories are available yet. Please ask superadmin to add categories first.
-            </Text>
-          </Box>
-        ) : (
-          <CheckboxGroup
-            value={sellerData.categories}
-            onChange={(selected) =>
-              setSellerData((prev) => ({
-                ...prev,
-                categories: selected.map(String),
-              }))
-            }
-          >
-            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-              {rootCategoryOptions.map((category) => {
-                const isSelected = sellerData.categories.includes(category.name);
-                return (
-                  <Checkbox
-                    key={category._id}
-                    value={category.name}
-                    border="1.5px solid"
-                    borderColor={isSelected ? PRIMARY_COLOR : "gray.200"}
-                    borderRadius="xl"
-                    bg={isSelected ? SOFT_PRIMARY_COLOR : "white"}
-                    color={isSelected ? "blue.700" : "gray.600"}
-                    px={4}
-                    py={3}
-                    fontWeight="700"
-                    _hover={{ borderColor: PRIMARY_COLOR, bg: SOFT_PRIMARY_COLOR }}
-                  >
-                    {category.name}
-                  </Checkbox>
-                );
-              })}
-            </SimpleGrid>
-          </CheckboxGroup>
-        )}
-      </Box>
-
-      <FieldError message={errors.categories} />
-    </Box>
-
-    {sellerData.categories.length ? (
-      <HStack spacing={2} flexWrap="wrap">
-        {sellerData.categories.map((categoryName) => (
-          <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
-            {categoryName}
-          </Badge>
-        ))}
-      </HStack>
-    ) : null}
-  </VStack>
-);
-
-  const renderSellerLocationStep = () => (
-  <VStack align="stretch" spacing={6}>
-    {/* Map Card */}
-    <Box
-      borderRadius="2xl"
-      overflow="hidden"
-      border="1.5px solid"
-      borderColor="gray.200"
-    >
-      {/* Card Header */}
-      <Box px={4} pt={4} pb={3} bg="gray.50">
-        <Text fontSize="md" fontWeight="700" color="gray.900" lineHeight="1.3">
-          Shop location
+  const renderPhoneStep = () => (
+    <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
+      {/* ── Role Selector ── */}
+      <Box>
+        <Text
+          fontSize="xs"
+          fontWeight="700"
+          color="gray.500"
+          mb={3}
+        >
+          I want to join as
         </Text>
-        <Text fontSize="sm" color="gray.500" mt={0.5}>
-          Tap the map to pin your shop, or search below.
-        </Text>
-      </Box>
 
-      {/* Map Container */}
-      <Box
-        h={{ base: "280px", md: "380px" }}
-        bg="blue.50"
-        position="relative"
-        borderTopWidth="1px"
-        borderColor="gray.200"
-      >
-        {!GOOGLE_MAPS_API_KEY ? (
-          <CenteredBox h="100%">
-            <Text fontSize="sm" color="gray.500" textAlign="center" px={6}>
-              Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to enable the map.
-            </Text>
-          </CenteredBox>
-        ) : loadError ? (
-          <CenteredBox h="100%">
-            <Text fontSize="sm" color="red.500" textAlign="center">
-              Failed to load Google Maps.
-            </Text>
-          </CenteredBox>
-        ) : !isLoaded ? (
-          <CenteredBox h="100%">
-            <Spinner size="sm" color="blue.400" />
-          </CenteredBox>
-        ) : (
-          <>
-            {/* Search Bar — floated top */}
-            <Box
-              position="absolute"
-              top={3}
-              left={3}
-              right={3}
-              zIndex={2}
-            >
+        <HStack spacing={{ base: 2, md: 4 }}>
+          {roleOptions.map(({ value, label, sub, icon: Icon, active: a }: any) => {
+            const isActive = intent === value;
+            return (
               <Box
-                bg="white"
+                key={value}
+                as="button"
+                type="button"
+                flex={1}
+                onClick={() => setIntentSelection(value)}
+                border="2px solid"
+                borderColor={isActive ? a.border : "gray.100"}
                 borderRadius="xl"
-                boxShadow="0 2px 8px rgba(0,0,0,0.12)"
-                overflow="hidden"
+                bg={isActive ? a.bg : "white"}
+                p={{ base: 2.5, md: 4 }}
+                cursor="pointer"
+                transition="all 0.2s ease"
+                boxShadow={isActive ? `0 2px 10px ${a.border}20` : "none"}
+                _hover={{ borderColor: isActive ? a.border : "gray.200" }}
+                textAlign="left"
               >
-                <Autocomplete onLoad={onLoadAutocomplete} onPlaceChanged={onPlaceChanged}>
-                  <Input
-                    placeholder="Search for a location…"
-                    h="44px"
-                    border="none"
-                    fontSize="sm"
-                    bg="transparent"
-                    _focus={{ boxShadow: "none" }}
-                    px={4}
-                  />
-                </Autocomplete>
+                <HStack spacing={{ base: 2, md: 3 }}>
+                  <Flex
+                    w={{ base: "32px", md: "40px" }}
+                    h={{ base: "32px", md: "40px" }}
+                    borderRadius="lg"
+                    bg={isActive ? a.iconBg : "gray.50"}
+                    align="center"
+                    justify="center"
+                    flexShrink={0}
+                  >
+                    <Icon
+                      size={isActive ? 18 : 16}
+                      color={isActive ? a.iconColor : "#9CA3AF"}
+                    />
+                  </Flex>
+
+                  <Box flex={1}>
+                    <Text
+                      fontWeight="700"
+                      fontSize={{ base: "xs", md: "sm" }}
+                      color={isActive ? a.text : "gray.700"}
+                      lineHeight="1.2"
+                    >
+                      {label}
+                    </Text>
+                    <Text
+                      display={{ base: "none", md: "block" }}
+                      fontSize="xs"
+                      color={isActive ? a.subText : "gray.400"}
+                      mt="2px"
+                      fontWeight="500"
+                    >
+                      {sub}
+                    </Text>
+                  </Box>
+                </HStack>
               </Box>
-            </Box>
-
-            {/* Use Current Location — floated bottom-right */}
-            <Box position="absolute" bottom={3} right={3} zIndex={2}>
-              <IconButton
-                aria-label="Use current location"
-                icon={<FiNavigation />}
-                onClick={() => detectCurrentLocation()}
-                isLoading={detectingLocation || geocoding}
-                bg="white"
-                color="blue.600"
-                borderRadius="xl"
-                boxShadow="0 2px 8px rgba(0,0,0,0.15)"
-                h="44px"
-                w="44px"
-                minW="44px"
-                _hover={{ bg: "blue.50" }}
-                _active={{ bg: "blue.100" }}
-              />
-            </Box>
-
-            {/* Pin Status Badge — floated bottom-left */}
-            <Box position="absolute" bottom={3} left={3} zIndex={2}>
-              <HStack
-                bg="white"
-                borderRadius="full"
-                px={3}
-                py={1.5}
-                spacing={1.5}
-                boxShadow="0 1px 4px rgba(0,0,0,0.12)"
-              >
-                <Box
-                  w="7px"
-                  h="7px"
-                  borderRadius="full"
-                  bg={selectedPoint ? "green.400" : "gray.300"}
-                  flexShrink={0}
-                />
-                <Text fontSize="xs" fontWeight="600" color={selectedPoint ? "green.700" : "gray.500"}>
-                  {selectedPoint
-                    ? `${selectedPoint.lat.toFixed(4)}, ${selectedPoint.lng.toFixed(4)}`
-                    : "No pin selected"}
-                </Text>
-              </HStack>
-            </Box>
-
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={mapCenter}
-              zoom={selectedPoint ? 15 : 11}
-              options={{
-                ...mapOptions,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
-              }}
-              onClick={handleMapClick}
-            >
-              {selectedPoint && (
-                <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
-              )}
-            </GoogleMap>
-          </>
-        )}
+            );
+          })}
+        </HStack>
       </Box>
 
-      {/* Coordinates error */}
-      {errors.coordinates && (
-        <Box px={4} pb={2}>
-          <FieldError message={errors.coordinates} />
-        </Box>
-      )}
-    </Box>
+      {/* ── Phone Input ── */}
+      <RegisterInput
+        ref={phoneInputRef}
+        label="Phone Number"
+        required
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={userData.phone}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setUserData((prev) => ({
+            ...prev,
+            phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+          }))
+        }
+        placeholder="Enter 10-digit mobile number"
+        error={errors.phone}
+        accentColor={PRIMARY_COLOR}
+        leftIcon={<FiPhone size={15} />}
+        maxLength={10}
+        autoFocus
+      />
 
-    {/* Address Fields */}
-    <Box>
-      <Text fontSize="sm" fontWeight="700" color="gray.900" mb={4}>
-        Address details
-      </Text>
+      {/* ── Email Input ── */}
+      <RegisterInput
+        label="Email"
+        name="email"
+        type="email"
+        value={userData.email}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setUserData((prev) => ({ ...prev, email: e.target.value }))
+        }
+        placeholder="Optional email address"
+        error={errors.email}
+        accentColor={PRIMARY_COLOR}
+        hint="We'll send important updates here"
+        autoComplete="email"
+      />
+    </VStack>
+  );
 
-      <VStack spacing={4} align="stretch">
-        {/* Address — full width */}
+  const renderUserProfileStep = () => (
+    <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
+      <RegisterInput
+        label="Full Name"
+        required
+        name="name"
+        type="text"
+        value={userData.name}
+        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+        placeholder="Your name"
+        error={errors.name}
+        accentColor={PRIMARY_COLOR}
+        leftIcon={<FiUser size={15} />}
+        autoComplete="name"
+      />
+    </VStack>
+  );
+
+  const renderSellerBasicsStep = () => {
+    const trimmedStoreName = sellerData.storeName.trim();
+    const canShowAvailability = trimmedStoreName.length >= STORE_NAME_CHECK_MIN_LENGTH;
+    const storeNameHint = storeNameChecking
+      ? "Checking shop name..."
+      : canShowAvailability && isStoreNameAvailable
+        ? "Shop name is available."
+        : "This name should be unique for your storefront.";
+
+    return (
+      <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
         <RegisterInput
-          label="Address"
+          label="Owner Name"
           required
-          name="address"
+          name="name"
           type="text"
-          value={sellerData.location.address}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.address", e.target.value)}
-          placeholder="Street address"
-          error={errors.address}
+          value={userData.name}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, name: event.target.value }))}
+          placeholder="Your full name"
+          error={errors.name}
+          accentColor={PRIMARY_COLOR}
+          leftIcon={<FiUser size={15} />}
+          autoComplete="name"
+        />
+
+        <RegisterInput
+          label="Store Name"
+          required
+          name="storeName"
+          type="text"
+          value={sellerData.storeName}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            const nextStoreName = event.target.value;
+            setSellerData((prev) => ({ ...prev, storeName: nextStoreName }));
+            setIsStoreNameAvailable(null);
+            if (duplicateShopName && nextStoreName.trim().toLowerCase() !== duplicateShopName) {
+              setDuplicateShopName("");
+              clearStoreNameDuplicateError();
+            }
+          }}
+          placeholder="Ex. Sharma Electronics"
+          error={errors.storeName}
+          hint={storeNameHint}
+          accentColor={PRIMARY_COLOR}
+          leftIcon={<FiShoppingBag size={15} />}
+          rightIcon={
+            storeNameChecking ? (
+              <Spinner size="xs" color={PRIMARY_COLOR} />
+            ) : canShowAvailability && isStoreNameAvailable ? (
+              <FiCheckCircle size={16} color="#16A34A" />
+            ) : undefined
+          }
+        />
+
+        <RegisterInput
+          label="GST Number"
+          name="gstNumber"
+          type="text"
+          value={sellerData.gstNumber}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setSellerData((prev) => ({
+              ...prev,
+              gstNumber: normalizeGstNumber(event.target.value),
+            }))
+          }
+          placeholder="Optional — e.g. 22AAAAA0000A1Z5"
+          error={errors.gstNumber}
+          hint="Leave blank if you don't have one"
           accentColor={PRIMARY_COLOR}
         />
 
-        {/* City + State — side by side */}
-        <SimpleGrid columns={2} spacing={3}>
-          <RegisterInput
-            label="City"
-            required
-            name="city"
-            type="text"
-            value={sellerData.location.city}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.city", e.target.value)}
-            placeholder="City"
-            error={errors.city}
-            accentColor={PRIMARY_COLOR}
-          />
-
-          <RegisterInput
-            label="State"
-            required
-            name="state"
-            type="text"
-            value={sellerData.location.state}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.state", e.target.value)}
-            placeholder="State"
-            error={errors.state}
-            accentColor={PRIMARY_COLOR}
-          />
-        </SimpleGrid>
-
-        {/* Postal Code + Country — side by side */}
-        <SimpleGrid columns={2} spacing={3}>
-          <RegisterInput
-            label="Postal code"
-            name="postalCode"
-            type="text"
-            value={sellerData.location.postalCode}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.postalCode", e.target.value)}
-            placeholder="000000"
-            accentColor={PRIMARY_COLOR}
-          />
-
-          <RegisterInput
-            label="Country"
-            required
-            name="country"
-            type="text"
-            value={sellerData.location.country}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.country", e.target.value)}
-            placeholder="Country"
-            error={errors.country}
-            accentColor={PRIMARY_COLOR}
-          />
-        </SimpleGrid>
+        <RegisterInput
+          as="textarea"
+          label="About Your Shop"
+          name="description"
+          value={sellerData.description}
+          onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setSellerData((prev) => ({ ...prev, description: event.target.value }))}
+          placeholder="What do you sell? What makes your store special?"
+          accentColor={PRIMARY_COLOR}
+          rows={3}
+        />
       </VStack>
-    </Box>
-  </VStack>
-);
+    );
+  };
 
-const renderSellerContactStep = () => (
-  <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-    <RegisterInput
-      label="Store Phone"
-      required
-      name="contactPhone"
-      type="tel"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={sellerData.contactPhone}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-        const nextPhone = event.target.value.replace(/\D/g, "").slice(0, 10);
-        setSellerData((prev) => ({
-          ...prev,
-          contactPhone: nextPhone,
-        }));
-        setIsContactPhoneCustomized(Boolean(nextPhone) && nextPhone !== userData.phone);
-      }}
-      placeholder="10-digit public shop number"
-      error={errors.contactPhone}
-      accentColor={PRIMARY_COLOR}
-      leftIcon={<FiPhone size={15} />}
-      hint="Shown to buyers on your storefront"
-      autoComplete="tel"
-    />
-
-    <RegisterInput
-      label="Email"
-      name="email"
-      type="email"
-      value={userData.email}
-      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUserData((prev) => ({ ...prev, email: event.target.value }))}
-      placeholder="Optional email"
-      error={errors.email}
-      accentColor={PRIMARY_COLOR}
-      hint="We'll use this for order notifications"
-      autoComplete="email"
-    />
-  </VStack>
-);
-
-  // const renderSellerPhotosStep = () => {
-  //   const completedMediaCount =
-  //     Number(Boolean(sellerData.logo.file.length)) +
-  //     Number(Boolean(sellerData.coverImage.file.length)) +
-  //     Number(Boolean(sellerData.gallery.length));
-
-  //   return (
-  //     <VStack align="stretch" spacing={6}>
-
-  //       {/* Header */}
-  //       <Box>
-  //         <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
-  //           Final step
-  //         </Badge>
-
-  //         <Heading mt={3} fontSize={{ base: "lg", md: "xl" }}>
-  //           Add photos to your shop
-  //         </Heading>
-
-  //         <Text mt={1} fontSize="sm" color="gray.500">
-  //           Shops with real images get more trust and clicks.
-  //         </Text>
-
-  //         <Text mt={2} fontSize="xs" color="gray.400">
-  //           {completedMediaCount}/3 completed
-  //         </Text>
-  //       </Box>
-
-  //       {/* Upload sections */}
-  //       <VStack spacing={4} align="stretch">
-
-  //         <UploadBlock
-  //           title="Shop logo"
-  //           description="Used across your shop and listings"
-  //           icon={FiShoppingBag}
-  //           files={sellerData.logo.file}
-  //           onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
-  //           onFileChange={(file) =>
-  //             setSellerData((prev) => ({
-  //               ...prev,
-  //               logo: {
-  //                 file: file ? [file] : [],
-  //                 isAdd: file ? 1 : 0,
-  //                 isDeleted: file ? 0 : 1,
-  //               },
-  //             }))
-  //           }
-  //           onRemove={() =>
-  //             setSellerData((prev) => ({
-  //               ...prev,
-  //               logo: { file: [], isAdd: 0, isDeleted: 1 },
-  //             }))
-  //           }
-  //         />
-
-  //         <UploadBlock
-  //           title="Cover image"
-  //           description="Wide image of your shop or setup"
-  //           icon={FiImage}
-  //           files={sellerData.coverImage.file}
-  //           onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
-  //           onFileChange={(file) =>
-  //             setSellerData((prev) => ({
-  //               ...prev,
-  //               coverImage: {
-  //                 file: file ? [file] : [],
-  //                 isAdd: file ? 1 : 0,
-  //                 isDeleted: file ? 0 : 1,
-  //               },
-  //             }))
-  //           }
-  //           onRemove={() =>
-  //             setSellerData((prev) => ({
-  //               ...prev,
-  //               coverImage: { file: [], isAdd: 0, isDeleted: 1 },
-  //             }))
-  //           }
-  //         />
-
-  //         <GalleryBlock
-  //           gallery={sellerData.gallery}
-  //           setSellerData={setSellerData}
-  //           galleryInputRef={galleryInputRef}
-  //           handleGalleryFilesSelected={handleGalleryFilesSelected}
-  //           onPreview={(index) => handlePreviewImage(sellerData.gallery[index]?.file || null)}
-  //         />
-  //       </VStack>
-  //     </VStack>
-  //   );
-  // };
-
-  const renderSellerPhotosStep = () => {
-  const completedMediaCount =
-    Number(Boolean(sellerData.logo.file.length)) +
-    Number(Boolean(sellerData.coverImage.file.length)) +
-    Number(Boolean(sellerData.gallery.length));
-
-  return (
-    <VStack align="stretch" spacing={5} px={1}>
-
-      {/* Header */}
-      <Box>
-        {/* <Text fontSize="xs" color="gray.500">
-          Step 3 of 3
-        </Text> */}
-
-        <Heading fontSize="lg" mt={1}>
-          Add photos
-        </Heading>
-
-        <Text fontSize="sm" color="gray.500">
-          Better photos = more trust 📈
+  const renderSellerCategoriesStep = () => (
+    <VStack align="stretch" spacing={5}>
+      <Box
+        border="1.5px solid"
+        borderColor="gray.200"
+        borderRadius="2xl"
+        bg="gray.50"
+        p={{ base: 4, md: 5 }}
+      >
+        <Text fontSize="md" fontWeight="700" color="gray.900">
+          Select shop categories
+        </Text>
+        <Text fontSize="sm" color="gray.500" mt={1}>
+          These categories will decide what the seller can choose while adding products later.
         </Text>
 
-        {/* Progress */}
-        <Progress
-          value={(completedMediaCount / 3) * 100}
-          size="xs"
-          mt={3}
-          colorScheme="blue"
-          borderRadius="full"
-        />
+        <Box mt={5}>
+          {categoryLoading ? (
+            <HStack color="gray.500">
+              <Spinner size="sm" color={PRIMARY_COLOR} />
+              <Text fontSize="sm">Loading categories...</Text>
+            </HStack>
+          ) : rootCategoryOptions.length === 0 ? (
+            <Box borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200" p={4}>
+              <Text fontSize="sm" color="gray.500">
+                No categories are available yet. Please ask superadmin to add categories first.
+              </Text>
+            </Box>
+          ) : (
+            <CheckboxGroup
+              value={sellerData.categories}
+              onChange={(selected) =>
+                setSellerData((prev) => ({
+                  ...prev,
+                  categories: selected.map(String),
+                }))
+              }
+            >
+              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+                {rootCategoryOptions.map((category) => {
+                  const isSelected = sellerData.categories.includes(category.name);
+                  return (
+                    <Checkbox
+                      key={category._id}
+                      value={category.name}
+                      border="1.5px solid"
+                      borderColor={isSelected ? PRIMARY_COLOR : "gray.200"}
+                      borderRadius="xl"
+                      bg={isSelected ? SOFT_PRIMARY_COLOR : "white"}
+                      color={isSelected ? "blue.700" : "gray.600"}
+                      px={4}
+                      py={3}
+                      fontWeight="700"
+                      _hover={{ borderColor: PRIMARY_COLOR, bg: SOFT_PRIMARY_COLOR }}
+                    >
+                      {category.name}
+                    </Checkbox>
+                  );
+                })}
+              </SimpleGrid>
+            </CheckboxGroup>
+          )}
+        </Box>
+
+        <FieldError message={errors.categories} />
       </Box>
 
-      {/* Upload tiles */}
-      <VStack spacing={4} align="stretch">
-
-        <UploadTile
-          title="Shop logo"
-          subtitle="Used across your shop"
-          icon={FiShoppingBag}
-          file={sellerData.logo.file}
-          onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
-          onFileChange={(file) =>
-            setSellerData((prev) => ({
-              ...prev,
-              logo: {
-                file: file ? [file] : [],
-                isAdd: file ? 1 : 0,
-                isDeleted: file ? 0 : 1,
-              },
-            }))
-          }
-          onRemove={() =>
-            setSellerData((prev) => ({
-              ...prev,
-              logo: { file: [], isAdd: 0, isDeleted: 1 },
-            }))
-          }
-        />
-
-        <UploadTile
-          title="Cover image"
-          subtitle="Your shop banner"
-          icon={FiImage}
-          file={sellerData.coverImage.file}
-          onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
-          onFileChange={(file) =>
-            setSellerData((prev) => ({
-              ...prev,
-              coverImage: {
-                file: file ? [file] : [],
-                isAdd: file ? 1 : 0,
-                isDeleted: file ? 0 : 1,
-              },
-            }))
-          }
-          onRemove={() =>
-            setSellerData((prev) => ({
-              ...prev,
-              coverImage: { file: [], isAdd: 0, isDeleted: 1 },
-            }))
-          }
-        />
-
-        <GalleryBlock
-          gallery={sellerData.gallery}
-          setSellerData={setSellerData}
-          handleGalleryFilesSelected={handleGalleryFilesSelected}
-          onPreview={(index) =>
-            handlePreviewImage(sellerData.gallery[index]?.file || null)
-          }
-        />
-      </VStack>
+      {sellerData.categories.length ? (
+        <HStack spacing={2} flexWrap="wrap">
+          {sellerData.categories.map((categoryName) => (
+            <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
+              {categoryName}
+            </Badge>
+          ))}
+        </HStack>
+      ) : null}
     </VStack>
   );
-};
 
+  const renderSellerLocationStep = () => (
+    <VStack align="stretch" spacing={6}>
+      {/* Map Card */}
+      <Box
+        borderRadius="2xl"
+        overflow="hidden"
+        border="1.5px solid"
+        borderColor="gray.200"
+      >
+        {/* Card Header */}
+        <Box px={4} pt={4} pb={3} bg="gray.50">
+          <Text fontSize="md" fontWeight="700" color="gray.900" lineHeight="1.3">
+            Shop location
+          </Text>
+          <Text fontSize="sm" color="gray.500" mt={0.5}>
+            Tap the map to pin your shop, or search below.
+          </Text>
+        </Box>
+
+        {/* Map Container */}
+        <Box
+          h={{ base: "280px", md: "380px" }}
+          bg="blue.50"
+          position="relative"
+          borderTopWidth="1px"
+          borderColor="gray.200"
+        >
+          {!GOOGLE_MAPS_API_KEY ? (
+            <CenteredBox h="100%">
+              <Text fontSize="sm" color="gray.500" textAlign="center" px={6}>
+                Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to enable the map.
+              </Text>
+            </CenteredBox>
+          ) : loadError ? (
+            <CenteredBox h="100%">
+              <Text fontSize="sm" color="red.500" textAlign="center">
+                Failed to load Google Maps.
+              </Text>
+            </CenteredBox>
+          ) : !isLoaded ? (
+            <CenteredBox h="100%">
+              <Spinner size="sm" color="blue.400" />
+            </CenteredBox>
+          ) : (
+            <>
+              {/* Search Bar — floated top */}
+              <Box
+                position="absolute"
+                top={3}
+                left={3}
+                right={3}
+                zIndex={2}
+              >
+                <Box
+                  bg="white"
+                  borderRadius="xl"
+                  boxShadow="0 2px 8px rgba(0,0,0,0.12)"
+                  overflow="hidden"
+                >
+                  <Autocomplete onLoad={onLoadAutocomplete} onPlaceChanged={onPlaceChanged}>
+                    <Input
+                      placeholder="Search for a location…"
+                      h="44px"
+                      border="none"
+                      fontSize="sm"
+                      bg="transparent"
+                      _focus={{ boxShadow: "none" }}
+                      px={4}
+                    />
+                  </Autocomplete>
+                </Box>
+              </Box>
+
+              {/* Use Current Location — floated bottom-right */}
+              <Box position="absolute" bottom={3} right={3} zIndex={2}>
+                <IconButton
+                  aria-label="Use current location"
+                  icon={<FiNavigation />}
+                  onClick={() => detectCurrentLocation()}
+                  isLoading={detectingLocation || geocoding}
+                  bg="white"
+                  color="blue.600"
+                  borderRadius="xl"
+                  boxShadow="0 2px 8px rgba(0,0,0,0.15)"
+                  h="44px"
+                  w="44px"
+                  minW="44px"
+                  _hover={{ bg: "blue.50" }}
+                  _active={{ bg: "blue.100" }}
+                />
+              </Box>
+
+              {/* Pin Status Badge — floated bottom-left */}
+              <Box position="absolute" bottom={3} left={3} zIndex={2}>
+                <HStack
+                  bg="white"
+                  borderRadius="full"
+                  px={3}
+                  py={1.5}
+                  spacing={1.5}
+                  boxShadow="0 1px 4px rgba(0,0,0,0.12)"
+                >
+                  <Box
+                    w="7px"
+                    h="7px"
+                    borderRadius="full"
+                    bg={selectedPoint ? "green.400" : "gray.300"}
+                    flexShrink={0}
+                  />
+                  <Text fontSize="xs" fontWeight="600" color={selectedPoint ? "green.700" : "gray.500"}>
+                    {selectedPoint
+                      ? `${selectedPoint.lat.toFixed(4)}, ${selectedPoint.lng.toFixed(4)}`
+                      : "No pin selected"}
+                  </Text>
+                </HStack>
+              </Box>
+
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={mapCenter}
+                zoom={selectedPoint ? 15 : 11}
+                options={{
+                  ...mapOptions,
+                  mapTypeControl: false,
+                  streetViewControl: false,
+                  fullscreenControl: false,
+                  zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+                }}
+                onClick={handleMapClick}
+              >
+                {selectedPoint && (
+                  <MarkerF position={{ lat: selectedPoint.lat, lng: selectedPoint.lng }} />
+                )}
+              </GoogleMap>
+            </>
+          )}
+        </Box>
+
+        {/* Coordinates error */}
+        {errors.coordinates && (
+          <Box px={4} pb={2}>
+            <FieldError message={errors.coordinates} />
+          </Box>
+        )}
+      </Box>
+
+      {/* Address Fields */}
+      <Box>
+        <Text fontSize="sm" fontWeight="700" color="gray.900" mb={4}>
+          Address details
+        </Text>
+
+        <VStack spacing={4} align="stretch">
+          {/* Address — full width */}
+          <RegisterInput
+            label="Address"
+            required
+            name="address"
+            type="text"
+            value={sellerData.location.address}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.address", e.target.value)}
+            placeholder="Street address"
+            error={errors.address}
+            accentColor={PRIMARY_COLOR}
+          />
+
+          {/* City + State — side by side */}
+          <SimpleGrid columns={2} spacing={3}>
+            <RegisterInput
+              label="City"
+              required
+              name="city"
+              type="text"
+              value={sellerData.location.city}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.city", e.target.value)}
+              placeholder="City"
+              error={errors.city}
+              accentColor={PRIMARY_COLOR}
+            />
+
+            <RegisterInput
+              label="State"
+              required
+              name="state"
+              type="text"
+              value={sellerData.location.state}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.state", e.target.value)}
+              placeholder="State"
+              error={errors.state}
+              accentColor={PRIMARY_COLOR}
+            />
+          </SimpleGrid>
+
+          {/* Postal Code + Country — side by side */}
+          <SimpleGrid columns={2} spacing={3}>
+            <RegisterInput
+              label="Postal code"
+              name="postalCode"
+              type="text"
+              value={sellerData.location.postalCode}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.postalCode", e.target.value)}
+              placeholder="000000"
+              accentColor={PRIMARY_COLOR}
+            />
+
+            <RegisterInput
+              label="Country"
+              required
+              name="country"
+              type="text"
+              value={sellerData.location.country}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSellerFieldValue("location.country", e.target.value)}
+              placeholder="Country"
+              error={errors.country}
+              accentColor={PRIMARY_COLOR}
+            />
+          </SimpleGrid>
+        </VStack>
+      </Box>
+    </VStack>
+  );
+
+  const renderSellerPhotosStep = () => {
+    const completedMediaCount =
+      Number(Boolean(sellerData.logo.file.length)) +
+      Number(Boolean(sellerData.coverImage.file.length)) +
+      Number(Boolean(sellerData.gallery.length));
+
+    return (
+      <VStack align="stretch" spacing={5} px={1}>
+        {/* Header */}
+        <Box>
+          <Heading fontSize="lg" mt={1}>
+            Add photos
+          </Heading>
+
+          <Text fontSize="sm" color="gray.500">
+            Better photos = more trust 📈
+          </Text>
+
+          {/* Progress */}
+          <Progress
+            value={(completedMediaCount / 3) * 100}
+            size="xs"
+            mt={3}
+            colorScheme="blue"
+            borderRadius="full"
+          />
+        </Box>
+
+        {/* Upload tiles */}
+        <VStack spacing={4} align="stretch">
+          <UploadTile
+            title="Shop logo"
+            subtitle="Used across your shop"
+            icon={FiShoppingBag}
+            file={sellerData.logo.file}
+            onPreview={() => handlePreviewImage(sellerData.logo.file[0] || null)}
+            onFileChange={(file) =>
+              setSellerData((prev) => ({
+                ...prev,
+                logo: {
+                  file: file ? [file] : [],
+                  isAdd: file ? 1 : 0,
+                  isDeleted: file ? 0 : 1,
+                },
+              }))
+            }
+            onRemove={() =>
+              setSellerData((prev) => ({
+                ...prev,
+                logo: { file: [], isAdd: 0, isDeleted: 1 },
+              }))
+            }
+          />
+
+          <UploadTile
+            title="Cover image"
+            subtitle="Your shop banner"
+            icon={FiImage}
+            file={sellerData.coverImage.file}
+            onPreview={() => handlePreviewImage(sellerData.coverImage.file[0] || null)}
+            onFileChange={(file) =>
+              setSellerData((prev) => ({
+                ...prev,
+                coverImage: {
+                  file: file ? [file] : [],
+                  isAdd: file ? 1 : 0,
+                  isDeleted: file ? 0 : 1,
+                },
+              }))
+            }
+            onRemove={() =>
+              setSellerData((prev) => ({
+                ...prev,
+                coverImage: { file: [], isAdd: 0, isDeleted: 1 },
+              }))
+            }
+          />
+
+          <GalleryBlock
+            gallery={sellerData.gallery}
+            setSellerData={setSellerData}
+            handleGalleryFilesSelected={handleGalleryFilesSelected}
+            onPreview={(index) =>
+              handlePreviewImage(sellerData.gallery[index]?.file || null)
+            }
+          />
+        </VStack>
+      </VStack>
+    );
+  };
 
   const renderOtpStep = () => (
     <VStack spacing={{ base: 4, md: 8 }} align="center">
@@ -2058,7 +1854,6 @@ const renderSellerContactStep = () => (
           onChange={handleOtpChange}
           size="md"
           focusBorderColor="blue.500"
-
           autoFocus={isOtpStep}
         >
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -2102,8 +1897,6 @@ const renderSellerContactStep = () => (
         return renderSellerCategoriesStep();
       case "Set your shop location":
         return renderSellerLocationStep();
-      case "Contact details":
-        return renderSellerContactStep();
       case "Show your shop":
         return renderSellerPhotosStep();
       case "Verify OTP":
@@ -2114,14 +1907,14 @@ const renderSellerContactStep = () => (
   };
 
   return (
-     <MotionBox
-    w="full"
-  minH="100vh"
-  h={{ base: "auto", md: "100vh" }}
-  overflow={{ base: "visible", md: "hidden" }}
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{ duration: 0.35, ease: "easeOut" }}
+    <MotionBox
+      w="full"
+      minH="100vh"
+      h={{ base: "auto", md: "100vh" }}
+      overflow={{ base: "visible", md: "hidden" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
     >
       <Flex minH="100vh" direction={{ base: "column", md: "row" }}>
 
@@ -2134,72 +1927,95 @@ const renderSellerContactStep = () => (
           position="sticky"
           top={0}
           h="100vh"
-          bg={meta.bg}
-          transition="background 0.4s ease"
+          bg="#0F172A"
           px={{ md: 10, xl: 14 }}
           py={12}
           overflow="hidden"
-          bgGradient={`linear(to-br, ${meta.bg}, ${meta.softAccent}30)`}
         >
-        
+          {/* Background Orbs */}
           <Box
             position="absolute"
-            top="-10%"
-            left="-10%"
-            w="350px"
-            h="350px"
-            bg={meta.accent}
-            opacity="0.08"
-            filter="blur(80px)"
+            top="-20%"
+            left="-15%"
+            w="600px"
+            h="600px"
+            bg="#1E40AF"
+            opacity="0.2"
+            filter="blur(120px)"
             borderRadius="full"
             zIndex={0}
           />
           <Box
             position="absolute"
-            bottom="-5%"
-            right="-10%"
-            w="400px"
-            h="400px"
-            bg={meta.accent}
-            opacity="0.1"
-            filter="blur(100px)"
+            bottom="-25%"
+            right="-15%"
+            w="600px"
+            h="600px"
+            bg="#2563EB"
+            opacity="0.15"
+            filter="blur(120px)"
             borderRadius="full"
             zIndex={0}
           />
           <Box
             position="absolute"
-            top="45%"
+            top="50%"
             left="50%"
             transform="translate(-50%, -50%)"
             w="500px"
             h="500px"
-            bg="white"
-            opacity="0.5"
-            filter="blur(60px)"
+            bg="#3B82F6"
+            opacity="0.08"
+            filter="blur(100px)"
             borderRadius="full"
             zIndex={0}
           />
 
-        
-          <HStack spacing={2} mb="auto" zIndex={1}>
+          {/* Subtle dot pattern */}
+     <Box
+  position="absolute"
+  inset={0}
+  opacity={0.03}
+  backgroundImage={`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM36 4V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`}
+  backgroundRepeat="repeat"
+  backgroundSize="60px 60px"
+  zIndex={0}
+/>
+          {/* Branding */}
+          <HStack spacing={3} mb="auto" zIndex={1}>
             <Box
-              w="32px" h="32px" borderRadius="8px"
-              bg={meta.accent} display="flex" alignItems="center" justifyContent="center"
-              boxShadow={`0 4px 12px ${meta.accent}40`}
+              w="44px"
+              h="44px"
+              borderRadius="14px"
+              bg="white"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              boxShadow="0 8px 24px rgba(37, 99, 235, 0.3)"
+              position="relative"
+              overflow="hidden"
             >
-              <Icon as={FiShoppingBag} color="white" boxSize={4} />
+              <Box
+                position="absolute"
+                inset={0}
+                bgGradient="linear(to-br, #3B82F6, #1D4ED8)"
+                opacity={0.1}
+              />
+              <Icon as={FiShoppingBag} color="#2563EB" boxSize={6} zIndex={1} />
             </Box>
-            <Text fontWeight="800" fontSize="lg" color="gray.800" letterSpacing="-0.02em">
-              YourApp
-            </Text>
+            <Box>
+              <Text fontWeight="800" fontSize="xl" color="white" letterSpacing="-0.02em" lineHeight="1.2">
+                Business Sahayta
+              </Text>
+              <Text fontSize="xs" color="blue.200" fontWeight="600" mt={0.5}>
+                Your business companion
+              </Text>
+            </Box>
           </HStack>
 
-    
+          {/* Illustration + Points */}
           <Box flex={1} display="flex" flexDirection="column" justifyContent="center" gap={10} zIndex={1} w="full">
-            <Box
-              w="100%" maxW={{ md: "300px", xl: "360px" }} mx="auto"
-              transition="all 0.4s ease"
-            >
+            <Box w="100%" maxW={{ md: "300px", xl: "360px" }} mx="auto">
               <AnimatePresence mode="wait">
                 <MotionBox
                   key={activeStep.title}
@@ -2222,23 +2038,33 @@ const renderSellerContactStep = () => (
                 transition={{ duration: 0.3, delay: 0.08 }}
               >
                 <Text
-                  fontSize={{ md: "2xl", xl: "3xl" }} fontWeight="800" color="gray.900"
-                  letterSpacing="-0.03em" lineHeight="1.2" mb={5}
+                  fontSize={{ md: "xl", xl: "2xl" }}
+                  fontWeight="800"
+                  color="white"
+                  letterSpacing="-0.02em"
+                  lineHeight="1.2"
+                  mb={5}
                 >
                   {meta.tagline}
                 </Text>
                 <VStack align="stretch" spacing={3.5}>
                   {meta.points.map((point, i) => (
-                    <HStack key={i} spacing={4} align="center">
+                    <HStack key={i} spacing={3} align="center">
                       <Flex
-                        w="32px" h="32px" borderRadius="10px" flexShrink={0}
-                        bg="white"
-                        boxShadow="0 2px 8px rgba(0,0,0,0.04)"
-                        align="center" justify="center"
+                        w="32px"
+                        h="32px"
+                        borderRadius="10px"
+                        flexShrink={0}
+                        bg="whiteAlpha.200"
+                        backdropFilter="blur(10px)"
+                        align="center"
+                        justify="center"
+                        border="1px solid"
+                        borderColor="whiteAlpha.300"
                       >
-                        <Icon as={point.icon} boxSize={4} color={meta.accent} />
+                        <Icon as={point.icon} boxSize={4} color="white" />
                       </Flex>
-                      <Text fontSize="md" fontWeight="600" color="gray.700">
+                      <Text fontSize="sm" fontWeight="500" color="whiteAlpha.900">
                         {point.text}
                       </Text>
                     </HStack>
@@ -2248,13 +2074,13 @@ const renderSellerContactStep = () => (
             </AnimatePresence>
           </Box>
 
-      
+          {/* Step Progress */}
           <VStack align="stretch" spacing={3} mt="auto" pt={8} zIndex={1}>
             <HStack justify="space-between" align="center">
-              <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="0.05em">
+              <Text fontSize="xs" fontWeight="700" color="whiteAlpha.600" textTransform="uppercase" letterSpacing="0.05em">
                 Step {stepIndex + 1} of {steps.length}
               </Text>
-              <Text fontSize="xs" fontWeight="600" color={meta.accent}>
+              <Text fontSize="xs" fontWeight="600" color="whiteAlpha.800">
                 {Math.round(progress)}% Completed
               </Text>
             </HStack>
@@ -2265,9 +2091,8 @@ const renderSellerContactStep = () => (
                   h="4px"
                   flex={i === stepIndex ? 2 : 1}
                   borderRadius="full"
-                  bg={i === stepIndex ? meta.accent : (i < stepIndex ? `${meta.accent}80` : "whiteAlpha.600")}
+                  bg={i === stepIndex ? "white" : (i < stepIndex ? "whiteAlpha.500" : "whiteAlpha.200")}
                   transition="all 0.3s ease"
-                  boxShadow={i < stepIndex ? "inset 0 1px 2px rgba(0,0,0,0.1)" : "none"}
                 />
               ))}
             </HStack>
@@ -2278,33 +2103,26 @@ const renderSellerContactStep = () => (
         <Box
           flex={1}
           h={{ base: "auto", md: "100vh" }}
-          overflowY={{ base: "visible", md: "auto" }}
-          bg="white"
           display="flex"
           flexDirection="column"
-          alignItems="center"
-          justifyContent="flex-start"
+          bg="white"
           position="relative"
-          sx={{
-            "&::-webkit-scrollbar": { display: "none" },
-            scrollbarWidth: "none",
-          }}
         >
-          {/* ─── Mobile Header ─── */}
+          {/* Sticky Header */}
           <Box
-            display={{ base: "block", md: "none" }}
-            w="full"
-            bg="white"
             position="sticky"
             top={0}
+            bg="white"
             zIndex={20}
-            pt="calc(env(safe-area-inset-top, 0px) + 8px)"
-            px={5}
-            pb={2}
+            borderBottom="1px solid"
+            borderColor="gray.100"
+            px={{ base: 4, md: 8 }}
+            py={{ base: 3, md: 4 }}
+            pt={{ base: "calc(env(safe-area-inset-top, 0px) + 12px)", md: 4 }}
           >
-            <Flex justify="space-between" align="center" mb={2}>
-              <Box>
-                {stepIndex > 0 && (
+            <Flex justify="space-between" align="center">
+              <HStack spacing={{ base: 2, md: 3 }}>
+                {stepIndex > 0 ? (
                   <IconButton
                     aria-label="Go back"
                     icon={<ArrowBackIcon />}
@@ -2313,133 +2131,110 @@ const renderSellerContactStep = () => (
                     borderRadius="full"
                     onClick={handleBack}
                     bg="gray.50"
+                    _hover={{ bg: "gray.100" }}
                   />
+                ) : (
+                  <Box w="32px" h="32px" />
                 )}
-              </Box>
-              <Text fontSize="xs" fontWeight="700" color="gray.500" textTransform="uppercase" letterSpacing="0.05em" ml="auto">
-                Step {stepIndex + 1} of {steps.length}
-              </Text>
-            </Flex>
-            <Progress
-              value={progress}
-              size="xs"
-              borderRadius="full"
-              colorScheme="blue"
-              bg="gray.100"
-            />
-          </Box>
-
-          <Box
-            w="full"
-            maxW={{ base: "full", md: "520px", xl: "650px" }}
-            display="flex"
-            flexDirection="column"
-            pt={{ base: 4, md: 10 }}
-            pb={{ base: "140px", md: 12 }}
-            px={{ base: 5, md: 8 }}
-            my={{ md: "auto" }}
-          >
-            <VStack align="stretch" spacing={{ base: 6, md: 8 }}>
-              
-              {/* Desktop Header / Mobile Title */}
-              <HStack align="flex-start" spacing={3}>
-                <IconButton
-                  aria-label="Go back"
-                  icon={<ArrowBackIcon />}
-                  variant="ghost"
-                  size="md"
-                  borderRadius="full"
-                  onClick={handleBack}
-                  bg="gray.50"
-                  _hover={{ bg: "gray.100" }}
-                  mt={1.5}
-                  flexShrink={0}
-                  display={{ base: "none", md: stepIndex > 0 ? "flex" : "none" }}
-                />
                 <Box>
-                  <Heading fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em" mb={2}>
+                  <Heading fontSize={{ base: "md", md: "xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em">
                     {activeStep.title}
                   </Heading>
-                  <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} fontWeight="500">
+                  <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} fontWeight="500" mt={0.5}>
                     {activeStep.subtitle}
                   </Text>
                 </Box>
               </HStack>
+              <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="0.05em">
+                Step {stepIndex + 1} of {steps.length}
+              </Text>
+            </Flex>
+          </Box>
 
-              {/* Step Content */}
-              <AnimatePresence mode="wait">
-                <MotionBox
-                  key={`${intent}-${stepIndex}`}
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                >
-                  {renderCurrentStep()}
-                </MotionBox>
-              </AnimatePresence>
-
-              {/* Desktop CTA & Footer */}
-              <VStack spacing={5} mt={4} display={{ base: "none", md: "flex" }}>
-                <Button
-                  w="full"
-                  h="56px"
-                  bg={PRIMARY_COLOR}
-                  color="white"
-                  fontSize="md"
-                  fontWeight="600"
-                  borderRadius="xl"
-                  _hover={{ bg: PRIMARY_COLOR, opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
-                  _active={{ bg: PRIMARY_COLOR, transform: "translateY(0)" }}
-                  transition="all 0.3s ease"
-                  onClick={isOtpStep ? () => void handleVerify() : handleContinue}
-                  isLoading={loading}
-                >
-                  {isOtpStep ? "Verify & Continue" : "Continue"}
-                  {!isOtpStep && <Icon as={FiChevronRight} ml={2} />}
-                </Button>
-
-                <Text textAlign="center" color="gray.500" fontSize="sm" fontWeight="500">
-                  Already have an account?{" "}
-                  <Button
-                    type="button"
-                    variant="link"
-                    color={PRIMARY_COLOR}
-                    fontWeight="700"
-                    fontSize="sm"
-                    isDisabled={isRouteTransitioning}
-                    onClick={() => navigateWithAnimation("/login")}
+          {/* Scrollable Content */}
+          <Box flex={1} overflowY="auto">
+            <Flex minH="100%" direction="column">
+              <Box flex={1} minH={{ base: 4, md: 8 }} />
+              
+              <Box w="full" maxW={{ base: "full", md: "520px", xl: "650px" }} mx="auto" px={{ base: 5, md: 8 }}>
+                <AnimatePresence mode="wait">
+                  <MotionBox
+                    key={`${intent}-${stepIndex}`}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
                   >
-                    Sign in
-                  </Button>
-                </Text>
-              </VStack>
+                    {renderCurrentStep()}
+                  </MotionBox>
+                </AnimatePresence>
 
-            </VStack>
+                {/* Desktop CTA */}
+                <VStack spacing={5} mt={8} display={{ base: "none", md: "flex" }}>
+                  <Button
+                    w="full"
+                    h="56px"
+                    bg={PRIMARY_COLOR}
+                    color="white"
+                    fontSize="md"
+                    fontWeight="600"
+                    borderRadius="xl"
+                    _hover={{ bg: PRIMARY_COLOR, opacity: 0.9, transform: "translateY(-1px)", boxShadow: "lg" }}
+                    _active={{ bg: PRIMARY_COLOR, transform: "translateY(0)" }}
+                    transition="all 0.3s ease"
+                    onClick={isOtpStep ? () => void handleVerify() : handleContinue}
+                    isLoading={loading}
+                  >
+                    {isOtpStep ? "Verify & Continue" : "Continue"}
+                    {!isOtpStep && <Icon as={FiChevronRight} ml={2} />}
+                  </Button>
+
+                  <Text textAlign="center" color="gray.500" fontSize="sm" fontWeight="500">
+                    Already have an account?{" "}
+                    <Button
+                      type="button"
+                      variant="link"
+                      color={PRIMARY_COLOR}
+                      fontWeight="700"
+                      fontSize="sm"
+                      isDisabled={isRouteTransitioning}
+                      onClick={() => navigateWithAnimation("/login")}
+                    >
+                      Sign in
+                    </Button>
+                  </Text>
+                </VStack>
+              </Box>
+              
+              <Box flex={1} minH={{ base: 24, md: 8 }} />
+            </Flex>
           </Box>
 
           {/* ─── Mobile Sticky Footer ─── */}
           <Box
             display={{ base: "block", md: "none" }}
             position="fixed"
-            bottom={4}
+            bottom={0}
             left={0}
             right={0}
             bg="white"
             px={5}
             pt={3}
-            pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
+            pb="calc(env(safe-area-inset-bottom, 0px) + 16px)"
             zIndex={30}
+            borderTop="1px solid"
+            borderColor="gray.100"
+            boxShadow="0 -4px 20px rgba(0,0,0,0.05)"
           >
-            <VStack spacing={2}>
+            <VStack spacing={3}>
               <Button
                 w="full"
-                h="46px"
+                h="48px"
                 bg={PRIMARY_COLOR}
                 color="white"
                 fontSize="sm"
                 fontWeight="700"
-                borderRadius="lg"
+                borderRadius="xl"
                 onClick={isOtpStep ? () => void handleVerify() : handleContinue}
                 isLoading={loading}
                 _hover={{ bg: PRIMARY_COLOR, opacity: 0.9 }}
@@ -2454,7 +2249,7 @@ const renderSellerContactStep = () => (
                 <Button
                   type="button"
                   variant="link"
-                  color={meta.accent}
+                  color={PRIMARY_COLOR}
                   fontWeight="700"
                   fontSize="xs"
                   onClick={() => navigateWithAnimation("/login")}
@@ -2490,132 +2285,7 @@ const renderSellerContactStep = () => (
 
       </Flex>
     </MotionBox>
-    
-    //   minH="100vh"
-    //   bgGradient={{ base: "none", md: "linear(to-b, #f8fafc 0%, #ffffff 45%, #eff6ff 100%)" }}
-    //   bg={{ base: "white", md: "transparent" }}
-    //   pt={{ base: "calc(env(safe-area-inset-top, 0px) + 4px)", md: 6 }}
-    //   pb={{ base: "calc(env(safe-area-inset-bottom, 0px) + 8px)", md: 6 }}
-    //   display="flex"
-    //   alignItems={{ base: "flex-start", md: "center" }}
-    //   initial={{ opacity: 0, y: 24, scale: 0.98 }}
-    //   animate={{ opacity: 1, y: 0, scale: 1 }}
-    //   transition={{ duration: 0.4, ease: "easeOut" }}
-    // >
-    //   <Container
-    //     maxW={{ base: "full", md: "container.lg", xl: "760px" }}
-    //     px={{ base: 0, md: 6 }}
-    //     display="flex"
-    //     alignItems={{ base: "flex-start", md: "center" }}
-    //     justifyContent="center"
-    //     minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
-    //     pt={{ base: "0px", md: 0 }}
-    //   >
-    //     <Box
-    //       {...panelStyles}
-    //       boxShadow={panelStyles.boxShadow}
-    //       borderWidth={panelStyles.borderWidth}
-    //       px={{ base: 3, md: 8, xl: 9 }}
-    //       py={{ base: 3, md: 8, xl: 9 }}
-    //       w="full"
-    //     >
-    //       <VStack align="stretch" spacing={{ base: 4, md: 8 }}>
-    //         <Flex justify="space-between" align="center" gap={2} mb={{ base: -2, md: 0 }} display={{ base: "none", md: "flex" }}>
-    //           <IconButton
-    //             aria-label="Go back"
-    //             icon={<ArrowBackIcon />}
-    //             variant="ghost"
-    //             size="sm"
-    //             borderRadius="full"
-    //             onClick={handleBack}
-    //             isDisabled={stepIndex === 0}
-    //             display={stepIndex === 0 ? "none" : "flex"}
-    //           />
-    //           <Box>
-    //             <Badge
-    //               bg="blue.50"
-    //               color="blue.600"
-    //               borderRadius="md"
-    //               px={3}
-    //               py={1}
-    //               fontSize="xs"
-    //               fontWeight="700"
-    //             >
-    //               Step {stepIndex + 1}/{steps.length}
-    //             </Badge>
-    //           </Box>
-    //         </Flex>
-
-    //         <Progress value={progress} bg="gray.100" borderRadius="full" colorScheme="blue" h="6px" display={{ base: "none", md: "block" }} />
-
-    //         <Stack
-    //           direction={isSellerPhotosStep ? { base: "row", md: "column" } : "row"}
-    //           spacing={{ base: 2, md: 4 }}
-    //           align="center"
-    //           justify={isSellerPhotosStep ? { base: "flex-start", md: "center" } : undefined}
-    //         >
-    //           <IconButton
-    //             aria-label="Go back"
-    //             icon={<ArrowBackIcon />}
-    //             variant="ghost"
-    //             size="sm"
-    //             borderRadius="full"
-    //             onClick={handleBack}
-    //             isDisabled={stepIndex === 0}
-    //             display={{ base: stepIndex === 0 ? "none" : "flex", md: "none" }}
-    //             mr={1}
-    //           />
-    //           <Circle size={{ base: "0px", md: "50px" }} bg="blue.50" color="blue.600" display={{ base: "none", md: "flex" }}>
-    //             <Icon as={activeStep.icon as any} boxSize={5} />
-    //           </Circle>
-    //           <Box flex="1" minW={0} textAlign={isSellerPhotosStep ? { base: "left", md: "center" } : "left"}>
-    //             <Heading fontSize={{ base: "lg", sm: "xl", md: "3xl" }} color="gray.900" lineHeight="1.2">
-    //               {activeStep.title}
-    //             </Heading>
-    //             <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} mt={1}>
-    //               {activeStep.subtitle}
-    //             </Text>
-    //           </Box>
-    //         </Stack>
-
-    //         <AnimatePresence mode="wait">
-    //           <MotionBox
-    //             key={`${intent}-${stepIndex}`}
-    //             initial={{ opacity: 0, y: 20 }}
-    //             animate={{ opacity: 1, y: 0 }}
-    //             exit={{ opacity: 0, y: -20 }}
-    //             transition={{ duration: 0.24 }}
-    //           >
-    //             {renderCurrentStep()}
-    //           </MotionBox>
-    //         </AnimatePresence>
-
-    //         <Button
-    //           w="full"
-    //           {...primaryButtonStyles}
-    //           onClick={isOtpStep ? () => void handleVerify() : handleContinue}
-    //           isLoading={loading}
-    //         >
-    //           {isOtpStep ? "Verify & Continue" : "Continue"}
-    //         </Button>
-
-    //         <Text textAlign="center" color="gray.600" fontSize={{ base: "xs", md: "sm" }} mt={{ base: -2, md: 0 }}>
-    //           Already have an account?{" "}
-    //           <Button
-    //             type="button"
-    //             variant="link"
-    //             color="blue.600"
-    //             fontSize={{ base: "xs", md: "sm" }}
-    //             isDisabled={isRouteTransitioning}
-    //             onClick={() => navigateWithAnimation("/login")}
-    //           >
-    //             Sign in
-    //           </Button>
-    //         </Text>
-    //       </VStack>
-    //     </Box>
-    //   </Container>
-    // </MotionBox>
   );
 });
+
 export default SignUpForm;
