@@ -34,6 +34,7 @@ import { Autocomplete, GoogleMap, MarkerF, useLoadScript } from "@react-google-m
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
+import { LiaStoreAltSolid } from "react-icons/lia";
 import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import {
   FiCamera,
@@ -60,6 +61,8 @@ import GalleryBlock from "./GalleryBlock";
 import RegisterInput from "./RegisterInput";
 import UploadTile from "./UploadBlock";
 import { fieldCardStyles, mapOptions } from "./utils/constant";
+import { RoleSelector } from "./RoleSelector";
+import { FaUser, FaUserAlt } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -1196,114 +1199,32 @@ const SignUpForm = observer(() => {
     }));
   };
 
-  const roleOptions = [
-    {
-      value: "user",
-      label: "Buyer",
-      sub: "Browse & purchase",
-      icon: FiShoppingCart,
-      active: {
-        bg: "blue.50",
-        border: PRIMARY_COLOR,
-        iconBg: "#DBEAFE",
-        iconColor: "#2563EB",
-        text: "blue.800",
-        subText: "blue.500",
-        dot: PRIMARY_COLOR,
-      },
-    },
-    {
-      value: "seller",
-      label: "Seller",
-      sub: "List & sell",
-      icon: FiPackage,
-      active: {
-        bg: "blue.50",
-        border: PRIMARY_COLOR,
-        iconBg: "#DBEAFE",
-        iconColor: "#2563EB",
-        text: "blue.800",
-        subText: "blue.500",
-        dot: PRIMARY_COLOR,
-      },
-    },
-  ];
+const roleOptions :any= [
+  {
+    value: 'user',
+    label: 'Buyer',
+    sub: 'Purchase products',
+    icon: FaUser,
+  },
+  {
+    value: 'seller',
+    label: 'Seller',
+    sub: 'Sell your items',
+    icon: LiaStoreAltSolid,
+  },
+];
+
 
   const renderPhoneStep = () => (
     <VStack align="stretch" spacing={{ base: 5, md: 6 }}>
-      {/* ── Role Selector ── */}
-      <Box>
-        <Text
-          fontSize="xs"
-          fontWeight="700"
-          color="gray.500"
-          mb={3}
-        >
-          I want to join as
-        </Text>
 
-        <HStack spacing={{ base: 2, md: 4 }}>
-          {roleOptions.map(({ value, label, sub, icon: Icon, active: a }: any) => {
-            const isActive = intent === value;
-            return (
-              <Box
-                key={value}
-                as="button"
-                type="button"
-                flex={1}
-                onClick={() => setIntentSelection(value)}
-                border="2px solid"
-                borderColor={isActive ? a.border : "gray.100"}
-                borderRadius="xl"
-                bg={isActive ? a.bg : "white"}
-                p={{ base: 2.5, md: 4 }}
-                cursor="pointer"
-                transition="all 0.2s ease"
-                boxShadow={isActive ? `0 2px 10px ${a.border}20` : "none"}
-                _hover={{ borderColor: isActive ? a.border : "gray.200" }}
-                textAlign="left"
-              >
-                <HStack spacing={{ base: 2, md: 3 }}>
-                  <Flex
-                    w={{ base: "32px", md: "40px" }}
-                    h={{ base: "32px", md: "40px" }}
-                    borderRadius="lg"
-                    bg={isActive ? a.iconBg : "gray.50"}
-                    align="center"
-                    justify="center"
-                    flexShrink={0}
-                  >
-                    <Icon
-                      size={isActive ? 18 : 16}
-                      color={isActive ? a.iconColor : "#9CA3AF"}
-                    />
-                  </Flex>
 
-                  <Box flex={1}>
-                    <Text
-                      fontWeight="700"
-                      fontSize={{ base: "xs", md: "sm" }}
-                      color={isActive ? a.text : "gray.700"}
-                      lineHeight="1.2"
-                    >
-                      {label}
-                    </Text>
-                    <Text
-                      display={{ base: "none", md: "block" }}
-                      fontSize="xs"
-                      color={isActive ? a.subText : "gray.400"}
-                      mt="2px"
-                      fontWeight="500"
-                    >
-                      {sub}
-                    </Text>
-                  </Box>
-                </HStack>
-              </Box>
-            );
-          })}
-        </HStack>
-      </Box>
+<RoleSelector
+  options={roleOptions}
+  value={intent}
+  onChange={setIntent}
+/>
+
 
       {/* ── Phone Input ── */}
       <RegisterInput
