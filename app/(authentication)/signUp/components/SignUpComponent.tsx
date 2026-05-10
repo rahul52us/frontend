@@ -4,8 +4,6 @@ import {
   Badge,
   Box,
   Button,
-  Checkbox,
-  CheckboxGroup,
   Circle,
   Flex,
   Heading,
@@ -32,10 +30,11 @@ import {
 } from "@chakra-ui/react";
 import { Autocomplete, GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { AnimatePresence, motion } from "framer-motion";
+import { toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
-import { LiaStoreAltSolid } from "react-icons/lia";
 import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { FaUser } from "react-icons/fa";
 import {
   FiCamera,
   FiCheck,
@@ -49,6 +48,7 @@ import {
   FiShoppingCart,
   FiUser
 } from "react-icons/fi";
+import { LiaStoreAltSolid } from "react-icons/lia";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import {
   getOptionalGstError,
@@ -57,12 +57,12 @@ import {
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { createCompanyCode } from "../../../dashboard/shop/component/utils/companyCode";
 import stores from "../../../store/stores";
+import { CategorySelector } from "./CategorySelector";
 import GalleryBlock from "./GalleryBlock";
 import RegisterInput from "./RegisterInput";
+import { RoleSelector } from "./RoleSelector";
 import UploadTile from "./UploadBlock";
 import { fieldCardStyles, mapOptions } from "./utils/constant";
-import { RoleSelector } from "./RoleSelector";
-import { FaUser, FaUserAlt } from "react-icons/fa";
 
 const MotionBox = motion(Box);
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
@@ -483,6 +483,8 @@ const SignUpForm = observer(() => {
     () => categoryOptions.filter((category) => !category.parent && category.isActive !== false),
     [categoryOptions],
   );
+
+  console.log('rootCategoryOptions--',toJS(categoryOptions));
 
   const mapCenter = useMemo(() => {
     if (selectedPoint) {
@@ -1371,82 +1373,100 @@ const roleOptions :any= [
   };
 
   const renderSellerCategoriesStep = () => (
-    <VStack align="stretch" spacing={5}>
-      <Box
-        border="1.5px solid"
-        borderColor="gray.200"
-        borderRadius="2xl"
-        bg="gray.50"
-        p={{ base: 4, md: 5 }}
-      >
-        <Text fontSize="md" fontWeight="700" color="gray.900">
-          Select shop categories
-        </Text>
-        <Text fontSize="sm" color="gray.500" mt={1}>
-          These categories will decide what the seller can choose while adding products later.
-        </Text>
+   <Box
+  border="1.5px solid"
+  borderColor="gray.200"
+  borderRadius="2xl"
+  bg="gray.50"
+  p={{ base: 4, md: 5 }}
+>
+  <CategorySelector
+    categories={categoryOptions}
+    selected={sellerData.categories}
+    onChange={(categories) =>
+      setSellerData((prev) => ({ ...prev, categories }))
+    }
+    loading={categoryLoading}
+    primaryColor={PRIMARY_COLOR}
+    maxSelection={5}
+  />
+</Box>
+    // <VStack align="stretch" spacing={5}>
+    //   <Box
+    //     border="1.5px solid"
+    //     borderColor="gray.200"
+    //     borderRadius="2xl"
+    //     bg="gray.50"
+    //     p={{ base: 4, md: 5 }}
+    //   >
+    //     <Text fontSize="md" fontWeight="700" color="gray.900">
+    //       Select shop categories
+    //     </Text>
+    //     <Text fontSize="sm" color="gray.500" mt={1}>
+    //       These categories will decide what the seller can choose while adding products later.
+    //     </Text>
 
-        <Box mt={5}>
-          {categoryLoading ? (
-            <HStack color="gray.500">
-              <Spinner size="sm" color={PRIMARY_COLOR} />
-              <Text fontSize="sm">Loading categories...</Text>
-            </HStack>
-          ) : rootCategoryOptions.length === 0 ? (
-            <Box borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200" p={4}>
-              <Text fontSize="sm" color="gray.500">
-                No categories are available yet. Please ask superadmin to add categories first.
-              </Text>
-            </Box>
-          ) : (
-            <CheckboxGroup
-              value={sellerData.categories}
-              onChange={(selected) =>
-                setSellerData((prev) => ({
-                  ...prev,
-                  categories: selected.map(String),
-                }))
-              }
-            >
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-                {rootCategoryOptions.map((category) => {
-                  const isSelected = sellerData.categories.includes(category.name);
-                  return (
-                    <Checkbox
-                      key={category._id}
-                      value={category.name}
-                      border="1.5px solid"
-                      borderColor={isSelected ? PRIMARY_COLOR : "gray.200"}
-                      borderRadius="xl"
-                      bg={isSelected ? SOFT_PRIMARY_COLOR : "white"}
-                      color={isSelected ? "blue.700" : "gray.600"}
-                      px={4}
-                      py={3}
-                      fontWeight="700"
-                      _hover={{ borderColor: PRIMARY_COLOR, bg: SOFT_PRIMARY_COLOR }}
-                    >
-                      {category.name}
-                    </Checkbox>
-                  );
-                })}
-              </SimpleGrid>
-            </CheckboxGroup>
-          )}
-        </Box>
+    //     <Box mt={5}>
+    //       {categoryLoading ? (
+    //         <HStack color="gray.500">
+    //           <Spinner size="sm" color={PRIMARY_COLOR} />
+    //           <Text fontSize="sm">Loading categories...</Text>
+    //         </HStack>
+    //       ) : rootCategoryOptions.length === 0 ? (
+    //         <Box borderRadius="xl" bg="white" border="1px solid" borderColor="gray.200" p={4}>
+    //           <Text fontSize="sm" color="gray.500">
+    //             No categories are available yet. Please ask superadmin to add categories first.
+    //           </Text>
+    //         </Box>
+    //       ) : (
+    //         <CheckboxGroup
+    //           value={sellerData.categories}
+    //           onChange={(selected) =>
+    //             setSellerData((prev) => ({
+    //               ...prev,
+    //               categories: selected.map(String),
+    //             }))
+    //           }
+    //         >
+    //           <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
+    //             {rootCategoryOptions.map((category) => {
+    //               const isSelected = sellerData.categories.includes(category.name);
+    //               return (
+    //                 <Checkbox
+    //                   key={category._id}
+    //                   value={category.name}
+    //                   border="1.5px solid"
+    //                   borderColor={isSelected ? PRIMARY_COLOR : "gray.200"}
+    //                   borderRadius="xl"
+    //                   bg={isSelected ? SOFT_PRIMARY_COLOR : "white"}
+    //                   color={isSelected ? "blue.700" : "gray.600"}
+    //                   px={4}
+    //                   py={3}
+    //                   fontWeight="700"
+    //                   _hover={{ borderColor: PRIMARY_COLOR, bg: SOFT_PRIMARY_COLOR }}
+    //                 >
+    //                   {category.name}
+    //                 </Checkbox>
+    //               );
+    //             })}
+    //           </SimpleGrid>
+    //         </CheckboxGroup>
+    //       )}
+    //     </Box>
 
-        <FieldError message={errors.categories} />
-      </Box>
+    //     <FieldError message={errors.categories} />
+    //   </Box>
 
-      {sellerData.categories.length ? (
-        <HStack spacing={2} flexWrap="wrap">
-          {sellerData.categories.map((categoryName) => (
-            <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
-              {categoryName}
-            </Badge>
-          ))}
-        </HStack>
-      ) : null}
-    </VStack>
+    //   {sellerData.categories.length ? (
+    //     <HStack spacing={2} flexWrap="wrap">
+    //       {sellerData.categories.map((categoryName) => (
+    //         <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
+    //           {categoryName}
+    //         </Badge>
+    //       ))}
+    //     </HStack>
+    //   ) : null}
+    // </VStack>
   );
 
   const renderSellerLocationStep = () => (
@@ -2077,7 +2097,7 @@ const roleOptions :any= [
             <Flex minH="100%" direction="column">
               <Box flex={1} minH={{ base: 4, md: 8 }} />
               
-              <Box w="full" maxW={{ base: "full", md: "520px", xl: "650px" }} mx="auto" px={{ base: 5, md: 8 }}>
+              <Box w="full" maxW={{ base: "full", md: "600px", xl: "750px" }} mx="auto" px={{ base: 2, md: 8 }}>
                 <AnimatePresence mode="wait">
                   <MotionBox
                     key={`${intent}-${stepIndex}`}
