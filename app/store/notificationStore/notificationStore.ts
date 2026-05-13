@@ -32,8 +32,13 @@ class NotificationStore {
   status: NotificationStatusFilter = "all";
 
   private pollingTimer: ReturnType<typeof setInterval> | null = null;
-  private readonly pollIntervalMs = 30_000;
+  private readonly pollIntervalMs = 180_000;
+  private readonly unreadRefreshWindowMs = 10_000;
+  private readonly listRefreshWindowMs = 15_000;
   private activeUserId: string | null = null;
+  private lastUnreadCountFetchedAt = 0;
+  private lastListFetchedAt = 0;
+  private lastListFetchKey = "";
 
   constructor() {
     makeAutoObservable(this);
@@ -50,7 +55,7 @@ class NotificationStore {
       this.activeUserId = nextUserId;
     }
 
-    await Promise.all([this.fetchUnreadCount(), this.fetchList({ page: 1, status: this.status })]);
+    await this.fetchUnreadCount({ force: true });
     this.startPolling();
     this.bindFocusRefresh();
   };
@@ -69,24 +74,52 @@ class NotificationStore {
     this.total = 0;
     this.totalPages = 0;
     this.error = null;
+    this.lastUnreadCountFetchedAt = 0;
+    this.lastListFetchedAt = 0;
+    this.lastListFetchKey = "";
   };
 
   fetchList = async (params?: {
     status?: NotificationStatusFilter;
     page?: number;
     limit?: number;
+    force?: boolean;
+    background?: boolean;
   }) => {
     if (!this.activeUserId) {
       return;
     }
 
-    this.loading = true;
-    this.error = null;
-
     try {
       const nextStatus = params?.status || this.status;
       const nextPage = params?.page || this.page;
       const nextLimit = params?.limit || this.limit;
+      const requestKey = JSON.stringify({
+        status: nextStatus,
+        page: nextPage,
+        limit: nextLimit,
+      });
+      const shouldUseCache =
+        !params?.force &&
+        this.lastListFetchKey === requestKey &&
+        Date.now() - this.lastListFetchedAt < this.listRefreshWindowMs &&
+        this.items.length > 0;
+
+      if (shouldUseCache) {
+        return {
+          items: this.items,
+          page: this.page,
+          limit: this.limit,
+          total: this.total,
+          totalPages: this.totalPages,
+          unreadCount: this.unreadCount,
+        };
+      }
+
+      if (!params?.background) {
+        this.loading = true;
+      }
+      this.error = null;
 
       const response = await axios.get("/notifications", {
         params: {
@@ -105,8 +138,11 @@ class NotificationStore {
         this.total = Number(payload.total || 0);
         this.totalPages = Number(payload.totalPages || 0);
         this.status = nextStatus;
+        this.lastListFetchedAt = Date.now();
+        this.lastListFetchKey = requestKey;
         if (typeof payload.unreadCount === "number") {
           this.unreadCount = payload.unreadCount;
+          this.lastUnreadCountFetchedAt = Date.now();
         }
       });
 
@@ -117,17 +153,28 @@ class NotificationStore {
       });
       return Promise.reject(error?.response?.data || error);
     } finally {
-      runInAction(() => {
-        this.loading = false;
-      });
+      if (!params?.background) {
+        runInAction(() => {
+          this.loading = false;
+        });
+      }
     }
   };
 
   fetchNotifications = this.fetchList;
 
-  fetchUnreadCount = async () => {
+  fetchUnreadCount = async (options?: { force?: boolean }) => {
     if (!this.activeUserId) {
       return 0;
+    }
+
+    const shouldUseCache =
+      !options?.force &&
+      this.lastUnreadCountFetchedAt > 0 &&
+      Date.now() - this.lastUnreadCountFetchedAt < this.unreadRefreshWindowMs;
+
+    if (shouldUseCache) {
+      return this.unreadCount;
     }
 
     try {
@@ -136,6 +183,7 @@ class NotificationStore {
 
       runInAction(() => {
         this.unreadCount = count;
+        this.lastUnreadCountFetchedAt = Date.now();
       });
 
       return count;
@@ -232,14 +280,11 @@ class NotificationStore {
       return;
     }
 
-    await Promise.all([
-      this.fetchUnreadCount(),
-      this.fetchList({
-        status: this.status,
-        page: this.page,
-        limit: this.limit,
-      }),
-    ]);
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+      return;
+    }
+
+    await this.fetchUnreadCount({ force: true });
   };
 
   private handleVisibilityRefresh = async () => {

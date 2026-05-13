@@ -83,6 +83,8 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
       .filter(Boolean)
       .slice(0, 6);
   }, [shop]);
+  const primaryPhone = shop?.ownerContact?.phone || shop?.contactInfo?.phone;
+  const primaryEmail = shop?.contactInfo?.email || shop?.ownerContact?.email;
 
   const handleSubmit = async (action: ReviewAction) => {
     setActiveAction(action);
@@ -167,7 +169,7 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
                 <Text as="span" fontWeight="600" color="gray.800">
                   Contact:
                 </Text>{" "}
-                {shop.contactInfo?.phone || "No phone"} {shop.contactInfo?.email ? `• ${shop.contactInfo.email}` : ""}
+                {primaryPhone || "No phone"} {primaryEmail ? `• ${primaryEmail}` : ""}
               </Text>
               <Text color="gray.600">
                 <Text as="span" fontWeight="600" color="gray.800">

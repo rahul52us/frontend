@@ -460,7 +460,6 @@ const SignUpForm = observer(() => {
       country: "",
       coordinates: [0, 0],
     },
-    contactPhone: "",
     logo: { file: [] as File[], isAdd: 0, isDeleted: 0 },
     coverImage: { file: [] as File[], isAdd: 0, isDeleted: 0 },
     gallery: [] as Array<{ file: File; title: string; isAdd: number }>,
@@ -492,15 +491,6 @@ const SignUpForm = observer(() => {
     }
     return FALLBACK_CENTER;
   }, [selectedPoint]);
-
-  // Auto-sync seller contactPhone with user phone
-  useEffect(() => {
-    if (intent !== "seller") return;
-    setSellerData((prev) => {
-      if (prev.contactPhone === userData.phone) return prev;
-      return { ...prev, contactPhone: userData.phone };
-    });
-  }, [intent, userData.phone]);
 
   useEffect(() => {
     return () => {
@@ -931,7 +921,7 @@ const SignUpForm = observer(() => {
       gstNumber: normalizeGstNumber(sellerData.gstNumber) || undefined,
       location: sellerData.location,
       contactInfo: {
-        phone: sellerData.contactPhone.trim() || userData.phone.trim(),
+        phone: userData.phone.trim(),
         email: userData.email.trim() || undefined,
       },
       userId: auth.user?._id,
@@ -954,7 +944,7 @@ const SignUpForm = observer(() => {
       basePayload.gallery = gallery.filter(Boolean);
     }
 
-    const phoneForCode = sellerData.contactPhone.trim() || userData.phone.trim();
+    const phoneForCode = userData.phone.trim();
     let lastError: any = null;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {

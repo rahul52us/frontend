@@ -22,7 +22,7 @@ import {
   useColorModeValue
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 // import stores from "../../../../../store/stores";
 // import { dashboardPalette } from "../../../../../layouts/dashboardLayout/dashboardPalette";
 import { formatDistanceToNow } from "date-fns";
@@ -47,7 +47,6 @@ const HeaderNotification = observer(({
       unreadCount,
       loading,
       fetchList,
-      fetchUnreadCount,
       markRead,
       markAllRead,
     },
@@ -67,19 +66,13 @@ const HeaderNotification = observer(({
   const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
   const isMobileSquare = buttonVariant === "mobileSquare";
 
-  useEffect(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
-
   const handleOpen = async () => {
     setDropdownOpen(true);
-    await Promise.all([
-      fetchUnreadCount(),
-      fetchList({
-        status: selectedItem === "Unread" ? "unread" : "all",
-        page: 1,
-      }),
-    ]);
+    await fetchList({
+      status: selectedItem === "Unread" ? "unread" : "all",
+      page: 1,
+      force: true,
+    });
   };
 
   const setFilter = async (filter: string) => {

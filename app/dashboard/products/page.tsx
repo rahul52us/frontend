@@ -54,6 +54,7 @@ import ProductCard from "./components/ProductCard";
 import ProductDetailView from "./components/ProductDetailView";
 import ProductForm from "./components/ProductForm";
 import { ProductStatCard } from "./components/ProductStatCard";
+import { DEFAULT_LOW_STOCK_THRESHOLD, isLowStockProduct } from "./utils/stockThreshold";
 
 const emptyToUndefined = (value: any, originalValue: any) =>
   originalValue === "" || originalValue === null || originalValue === undefined ? undefined : value;
@@ -76,6 +77,9 @@ const ProductSchema = Yup.object({
   stock: requiredNumberField("Stock quantity")
     .integer("Stock must be a whole number")
     .min(0, "Stock cannot be negative"),
+  lowStockThreshold: requiredNumberField("Low stock threshold")
+    .integer("Low stock threshold must be a whole number")
+    .min(1, "Low stock threshold must be at least 1"),
   brand: Yup.string().trim().optional(),
   sku: Yup.string().trim().optional(),
   weight: Yup.string().trim().optional(),
@@ -156,6 +160,7 @@ const normalizeProductPayload = (values: any) => ({
   weight: String(values.weight || "").trim(),
   price: normalizeNumberish(values.price),
   stock: normalizeNumberish(values.stock),
+  lowStockThreshold: normalizeNumberish(values.lowStockThreshold),
   taxRate: normalizeNumberish(values.taxRate),
   discountPrice: normalizeNumberish(values.discountPrice),
   tags: (values.tags || []).map((tag: string) => tag.trim()).filter(Boolean),
@@ -189,6 +194,7 @@ const mapProductToFormValues = (product: any) => {
       category: "",
       price: "",
       stock: 0,
+      lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
       brand: "",
       weight: "",
       productDetails: [],
@@ -221,6 +227,7 @@ const mapProductToFormValues = (product: any) => {
       : [],
     price: product.price ?? "",
     stock: product.stock ?? 0,
+    lowStockThreshold: product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
     discountPrice: product.discountPrice ?? "",
     taxRate: product.taxRate ?? 18,
     isFeatured: Boolean(product.isFeatured),
@@ -395,7 +402,7 @@ const ProductsPage = observer(() => {
       total: totalCount,
       inStock: products.filter((product) => Number(product?.stock || 0) > 0).length,
       featured: products.filter((product) => Boolean(product?.isFeatured)).length,
-      low: products.filter((product) => Number(product?.stock || 0) > 0 && Number(product?.stock || 0) < 10).length,
+      low: products.filter((product) => isLowStockProduct(product)).length,
     }),
     [products, totalCount]
   );

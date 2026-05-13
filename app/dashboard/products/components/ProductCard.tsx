@@ -14,6 +14,7 @@ import {
 import React from "react";
 import { FaChartLine, FaEdit, FaFire, FaTrash } from "react-icons/fa";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { isLowStockProduct } from "../utils/stockThreshold";
 
 interface ProductCardProps {
   product: any;
@@ -51,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onView, onEdit, onDe
   const imageSrc = getProductImage(product);
   const categoryName = getCategoryName(product?.category);
   const inStock = Number(product?.stock || 0) > 0;
-  const lowStock = inStock && Number(product?.stock || 0) < 10;
+  const lowStock = isLowStockProduct(product);
   const isFeatured = Boolean(product?.isFeatured);
 
   return (

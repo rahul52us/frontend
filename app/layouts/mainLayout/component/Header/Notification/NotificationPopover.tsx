@@ -31,20 +31,17 @@ const NotificationPopover = observer(({ children }: { children: React.ReactNode 
       totalPages,
       status,
       fetchList,
-      fetchUnreadCount,
       markRead,
       markAllRead,
     },
   } = stores;
 
   const handleOpen = async () => {
-    await Promise.all([
-      fetchUnreadCount(),
-      fetchList({
-        status,
-        page: 1,
-      }),
-    ]);
+    await fetchList({
+      status,
+      page: 1,
+      force: true,
+    });
   };
 
   const setFilter = async (nextStatus: "all" | "unread") => {

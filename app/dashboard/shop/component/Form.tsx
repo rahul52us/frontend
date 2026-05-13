@@ -432,10 +432,96 @@ const getSectionFieldLabels = (errors: any, sectionIndex: number) => {
   return Array.from(new Set(labels));
 };
 
+const getSectionIndexForPath = (path: string) => {
+  const normalized = normalizeErrorPath(path);
+
+  if (normalized.startsWith("location")) return 1;
+  if (normalized.startsWith("multipleLocations")) return 2;
+  if (normalized.startsWith("contactInfo")) return 3;
+  if (normalized.startsWith("operatingHours") || normalized.startsWith("closedDates")) return 4;
+  if (normalized.startsWith("gallery")) return 5;
+
+  return 0;
+};
+
+const humanizeBackendValidationReason = (reason: string) =>
+  String(reason || "")
+    .replace(/is not allowed to be empty/gi, "cannot be empty")
+    .replace(/fails to match the required pattern:.*$/i, "has an invalid format")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const parseBackendValidationItem = (item: any) => {
+  const rawMessage = String(item || "").trim();
+  const fieldMatch = rawMessage.match(/^"([^"]+)"\s*(.*)$/);
+
+  if (!fieldMatch) {
+    return {
+      path: "",
+      message: rawMessage,
+    };
+  }
+
+  const [, path, reason] = fieldMatch;
+  const label = getFriendlyFieldLabel(path);
+  const friendlyReason = humanizeBackendValidationReason(reason || "is invalid");
+
+  return {
+    path,
+    message: `${label} ${friendlyReason}`.trim(),
+  };
+};
+
+const extractShopSubmitErrorDetails = (error: any) => {
+  const validationItems = Array.isArray(error?.data)
+    ? error.data
+    : Array.isArray(error?.errors)
+      ? error.errors
+      : [];
+
+  if (validationItems.length > 0) {
+    const parsedItems = validationItems
+      .map(parseBackendValidationItem)
+      .filter((item) => item.message);
+    const sectionIndex = parsedItems[0]?.path ? getSectionIndexForPath(parsedItems[0].path) : null;
+    const message = parsedItems
+      .slice(0, 2)
+      .map((item) => item.message)
+      .join(". ");
+
+    return {
+      message: parsedItems.length > 2 ? `${message}. +${parsedItems.length - 2} more issue(s).` : message,
+      sectionIndex,
+    };
+  }
+
+  const fallbackMessage =
+    error?.data?.message ||
+    error?.message ||
+    "Something went wrong. Please review the form and try again.";
+
+  return {
+    message: String(fallbackMessage),
+    sectionIndex: null,
+  };
+};
+
 const scrollToTop = () => {
   if (typeof window !== "undefined") {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+};
+
+const sanitizeOptionalStringObject = (source: Record<string, any> | undefined | null) => {
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return undefined;
+  }
+
+  const entries = Object.entries(source)
+    .map(([key, value]) => [key, typeof value === "string" ? value.trim() : value] as const)
+    .filter(([, value]) => value !== "");
+
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
 
 const ShopFormHero = ({
@@ -784,7 +870,12 @@ const ShopForm = observer(() => {
           setInitialValues({
             ...baseInitialValues,
             ...shopData,
-            companyCode: shopData.companyCode || createCompanyCode(shopData.name || "", shopData.contactInfo?.phone || user?.phone || ""),
+            companyCode: shopData.companyCode || createCompanyCode(shopData.name || "", user?.phone || shopData.contactInfo?.phone || ""),
+            contactInfo: {
+              ...baseInitialValues.contactInfo,
+              ...(shopData.contactInfo || {}),
+              phone: user?.phone || shopData.contactInfo?.phone || "",
+            },
             coverImage,
             logo,
             gallery,
@@ -858,12 +949,17 @@ const ShopForm = observer(() => {
     });
     formData.about = typeof formData.about === "string" ? formData.about.trim() : "";
     formData.gstNumber = normalizeGstNumber(formData.gstNumber) || undefined;
+    formData.bankDetails = sanitizeOptionalStringObject(formData.bankDetails);
+    formData.contactInfo = {
+      ...(formData.contactInfo || {}),
+      phone: user?.phone || formData.contactInfo?.phone || "",
+    };
 
     return formData;
   };
 
   const createCompanyWithRetry = async (createData) => {
-    const contactPhone = createData?.contactInfo?.phone || user?.phone || "";
+    const contactPhone = user?.phone || createData?.contactInfo?.phone || "";
     let lastError: any = null;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -924,10 +1020,18 @@ const ShopForm = observer(() => {
         window.location.reload();
       }
     } catch (err) {
+      const { message, sectionIndex } = extractShopSubmitErrorDetails(err);
+
+      if (sectionIndex !== null) {
+        setActiveSectionIndex(sectionIndex);
+        setShowError(true);
+        scrollToTop();
+      }
+
       openNotification({
         title: isUpdateMode ? "Update Failed" : "Creation Failed",
-        message: err?.data?.message || err?.message || "Something went wrong",
-        type: getStatusType(err.status || 500),
+        message,
+        type: getStatusType(err?.status || err?.statusCode || 500),
       });
     } finally {
       setSubmitting(false);

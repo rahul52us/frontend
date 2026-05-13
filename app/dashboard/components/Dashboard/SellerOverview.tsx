@@ -42,6 +42,7 @@ import {
   FiZap
 } from "react-icons/fi";
 import { dashboardHeroGradient, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { getLowStockThreshold } from "../../products/utils/stockThreshold";
 import stores from "../../../store/stores";
 
 const MotionBox = motion(Box);
@@ -76,6 +77,7 @@ type DashboardProduct = {
   _id: string;
   name?: string;
   stock?: number;
+  lowStockThreshold?: number;
   threshold?: number;
   reorderLevel?: number;
   minStock?: number;
@@ -457,9 +459,9 @@ const StockRow = ({ item }: { item: DashboardProduct }) => {
   const textPrimary = useColorModeValue("#0F172A", dashboardPalette.text);
   const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
   const stock = Number(item.stock || 0);
-  const threshold = Number(item.threshold || item.reorderLevel || item.minStock || 20);
+  const threshold = getLowStockThreshold(item);
   const percent = Math.max(Math.min(Math.round((stock / threshold) * 100), 100), stock > 0 ? 8 : 4);
-  const danger = stock <= 5;
+  const danger = stock <= threshold;
   const iconBg = useColorModeValue(danger ? "#FDECEC" : "#FFF3E6", danger ? dashboardPalette.dangerSoft : dashboardPalette.warningSoft);
   const iconColor = useColorModeValue(danger ? "#F04F4F" : "#FF941F", danger ? "#FF9D9D" : "#FFB27A");
   const track = useColorModeValue("#F3F4F6", dashboardPalette.surfaceSoft);

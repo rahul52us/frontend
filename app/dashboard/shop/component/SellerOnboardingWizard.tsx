@@ -32,7 +32,7 @@ import {
 import { GoogleMap, MarkerF, useLoadScript } from "@react-google-maps/api";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiCamera, FiLayers, FiMail, FiMapPin, FiNavigation, FiPhone, FiShoppingBag } from "react-icons/fi";
+import { FiCamera, FiLayers, FiMapPin, FiNavigation, FiShoppingBag } from "react-icons/fi";
 import ShowFileUploadFile from "../../../component/common/ShowFileUploadFile/ShowFileUploadFile";
 import {
   getOptionalGstError,
@@ -86,23 +86,12 @@ const onboardingSteps = [
     icon: FiMapPin,
   },
   {
-    id: "contact",
-    title: "Contact",
-    subtitle: "Add the phone and optional email buyers can use to reach you.",
-    icon: FiMail,
-  },
-  {
     id: "media",
     title: "Media",
     subtitle: "Upload your logo, cover, or product photos. You can skip and add them later.",
     icon: FiCamera,
   },
 ];
-
-const isValidEmail = (email: string) => {
-  if (!email.trim()) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-};
 
 const hasPickedCoordinates = (coordinates: any) => {
   if (!Array.isArray(coordinates) || coordinates.length < 2) return false;
@@ -232,10 +221,10 @@ const SellerOnboardingWizard = ({
       categories: Array.isArray(initialValues.categories) ? initialValues.categories : [],
       companyCode:
         initialValues.companyCode ||
-        createCompanyCode(initialValues.name || "", initialValues.contactInfo?.phone || accountPhone || ""),
+        createCompanyCode(initialValues.name || "", accountPhone || initialValues.contactInfo?.phone || ""),
       contactInfo: {
         ...initialValues.contactInfo,
-        phone: initialValues.contactInfo?.phone || accountPhone || "",
+        phone: accountPhone || initialValues.contactInfo?.phone || "",
         email: initialValues.contactInfo?.email || accountEmail || "",
       },
     });
@@ -400,15 +389,6 @@ const SellerOnboardingWizard = ({
       }
     }
 
-    if (activeStepId === "contact") {
-      if (!formValues.contactInfo?.phone?.trim()) {
-        errors.phone = "Contact phone is required.";
-      }
-      if (!isValidEmail(formValues.contactInfo?.email || "")) {
-        errors.email = "Enter a valid email address.";
-      }
-    }
-
     return errors;
   };
 
@@ -443,7 +423,7 @@ const SellerOnboardingWizard = ({
         ...formValues,
         companyCode: createCompanyCode(
           formValues.name || "",
-          formValues.contactInfo?.phone || accountPhone || "",
+          accountPhone || formValues.contactInfo?.phone || "",
         ),
       };
       await onSubmit(preparedValues);
@@ -682,7 +662,7 @@ const SellerOnboardingWizard = ({
                         setFieldValue("name", nextName);
                         setFieldValue(
                           "companyCode",
-                          createCompanyCode(nextName, formValues.contactInfo?.phone || accountPhone || ""),
+                          createCompanyCode(nextName, accountPhone || formValues.contactInfo?.phone || ""),
                         );
                       }}
                       placeholder="Ex. Gupta General Store"
@@ -988,50 +968,6 @@ const SellerOnboardingWizard = ({
                     </FormControl>
                   </Box>
                 </SimpleGrid>
-              </VStack>
-            ) : null}
-
-            {activeStepId === "contact" ? (
-              <VStack align="stretch" spacing={5}>
-                <Box p={5} {...getFieldShellStyles()}>
-                  <FormControl isRequired>
-                    <FormLabel color={cTextMuted} fontWeight="600">
-                      Phone Number
-                    </FormLabel>
-                    <HStack>
-                      <Circle size="52px" bg={cSurfaceSoft} border="1px solid" borderColor={cBorder}>
-                        <Icon as={FiPhone} color={cAccent} />
-                      </Circle>
-                      <Input
-                        value={formValues.contactInfo?.phone || ""}
-                        onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
-                        placeholder="Contact phone"
-                        sx={fieldInputSx}
-                      />
-                    </HStack>
-                    <FieldError message={stepErrors.phone} />
-                  </FormControl>
-                </Box>
-
-                <Box p={5} {...getFieldShellStyles()}>
-                  <FormControl>
-                    <FormLabel color={cTextMuted} fontWeight="600">
-                      Email Address
-                    </FormLabel>
-                    <HStack>
-                      <Circle size="52px" bg={cSurfaceSoft} border="1px solid" borderColor={cBorder}>
-                        <Icon as={FiMail} color={cAccent} />
-                      </Circle>
-                      <Input
-                        value={formValues.contactInfo?.email || ""}
-                        onChange={(event) => setFieldValue("contactInfo.email", event.target.value)}
-                        placeholder="Business email (optional)"
-                        sx={fieldInputSx}
-                      />
-                    </HStack>
-                    <FieldError message={stepErrors.email} />
-                  </FormControl>
-                </Box>
               </VStack>
             ) : null}
 

@@ -42,6 +42,7 @@ import {
   FaUndoAlt,
 } from "react-icons/fa";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import { getLowStockThreshold } from "../utils/stockThreshold";
 
 interface ProductDetailViewProps {
   product: any;
@@ -271,6 +272,7 @@ export default function ProductDetailView({
   const ratingCount = getRatingCount(product);
   const soldCount = Number(product?.soldCount || 0);
   const stock = Number(product?.stock || 0);
+  const lowStockThreshold = getLowStockThreshold(product);
   const isInStock = stock > 0;
 
   useEffect(() => {
@@ -817,7 +819,11 @@ export default function ProductDetailView({
             {isInStock ? "In stock" : "Out of stock"}
           </Text>
           <Text fontSize="xs" color={isInStock ? success : danger}>
-            {isInStock ? (stock < 10 ? `Only ${stock} units left` : "Ready to ship soon") : "Restock needed"}
+            {isInStock
+              ? stock <= lowStockThreshold
+                ? `Only ${stock} units left`
+                : "Ready to ship soon"
+              : "Restock needed"}
           </Text>
         </HStack>
       </VStack>

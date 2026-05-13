@@ -14,13 +14,14 @@ const ContactInfoSection = ({ values, errors, setFieldValue, showError }) => {
       <VStack spacing={6} align="stretch">
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
           <MerchantTextField
-            label="Phone"
+            label="Seller Login Number"
             name="contactInfo.phone"
             type="tel"
             required
             placeholder="+91 98765 43210"
             value={values?.contactInfo?.phone || ""}
-            onChange={(event) => setFieldValue("contactInfo.phone", event.target.value)}
+            readOnly
+            hint="This always follows the seller account phone number."
             showError={showError}
             error={errors.contactInfo?.phone}
           />

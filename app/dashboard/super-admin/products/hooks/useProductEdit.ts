@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import stores from "../../../../store/stores";
 import * as Yup from "yup";
+import { DEFAULT_LOW_STOCK_THRESHOLD } from "../../../products/utils/stockThreshold";
 
 
 
@@ -17,6 +18,10 @@ const ProductSchema = Yup.object().shape({
         .required("Stock level is required")
         .integer("Stock must be an integer")
         .min(0, "Stock cannot be negative"),
+    lowStockThreshold: Yup.number()
+        .required("Low stock threshold is required")
+        .integer("Low stock threshold must be an integer")
+        .min(1, "Low stock threshold must be at least 1"),
     brand: Yup.string().optional(),
     sku: Yup.string().optional(),
     weight: Yup.string().optional(),
@@ -82,6 +87,7 @@ export const useProductEdit = (onRefresh: () => void) => {
             discountPrice: editProduct.discountPrice ?? "",
             price: editProduct.price ?? "",
             stock: editProduct.stock ?? 0,
+            lowStockThreshold: editProduct.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
             taxRate: editProduct.taxRate ?? 18,
             offers: editProduct.offers || []
         }
@@ -92,6 +98,7 @@ export const useProductEdit = (onRefresh: () => void) => {
             category: "",
             price: "",
             stock: 0,
+            lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
             brand: "",
             weight: "",
             productDetails: [],

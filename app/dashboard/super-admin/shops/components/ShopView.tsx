@@ -37,6 +37,9 @@ interface ShopViewProps {
 const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
     if (!shop) return null;
 
+    const primaryPhone = shop.ownerContact?.phone || shop.contactInfo?.phone;
+    const primaryEmail = shop.contactInfo?.email || shop.ownerContact?.email;
+
     return (
         <CustomDrawer
             title="Shop Details"
@@ -161,19 +164,19 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
 
                                         {/* Right Column (Contact) */}
                                         <Box bg="white" p={6} borderRadius="xl" shadow="sm" border="1px solid" borderColor="gray.100" h="fit-content">
-                                            <Text fontSize="xl" fontWeight="bold" mb={4} color="gray.700">Contact Info</Text>
+                                                <Text fontSize="xl" fontWeight="bold" mb={4} color="gray.700">Contact Info</Text>
                                             <VStack align="start" spacing={4}>
-                                                {shop.contactInfo?.phone && (
+                                                {primaryPhone && (
                                                     <HStack p={2} w="100%" _hover={{ bg: "gray.50", borderRadius: "md" }}>
                                                         <Icon as={FaPhone} color="blue.500" boxSize={5} />
-                                                        <Text fontWeight="medium">{shop.contactInfo.phone}</Text>
+                                                        <Text fontWeight="medium">{primaryPhone}</Text>
                                                     </HStack>
                                                 )}
-                                                {shop.contactInfo?.email && (
+                                                {primaryEmail && (
                                                     <HStack p={2} w="100%" _hover={{ bg: "gray.50", borderRadius: "md" }}>
                                                         <Icon as={FaEnvelope} color="orange.500" boxSize={5} />
-                                                        <Link href={`mailto:${shop.contactInfo.email}`} isExternal color="gray.700" _hover={{ color: "blue.500" }}>
-                                                            {shop.contactInfo.email}
+                                                        <Link href={`mailto:${primaryEmail}`} isExternal color="gray.700" _hover={{ color: "blue.500" }}>
+                                                            {primaryEmail}
                                                         </Link>
                                                     </HStack>
                                                 )}

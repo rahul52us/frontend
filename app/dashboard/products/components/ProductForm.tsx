@@ -56,6 +56,7 @@ import {
 import { buildBase64ImageUpload } from "../../../config/utils/imageUpload";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import { useMerchantFormSx } from "../../shop/component/merchantTheme";
+import { DEFAULT_LOW_STOCK_THRESHOLD } from "../utils/stockThreshold";
 import FreebieProductModal from "./FreebieProductModal";
 
 interface ProductFormProps {
@@ -813,7 +814,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         </Field>
                       </SimpleGrid>
 
-                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
                         <Field name="stock">
                           {({ field, form }: any) => (
                             <FormControl isRequired isInvalid={Boolean(form.errors.stock && form.touched.stock)}>
@@ -824,12 +825,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
                           )}
                         </Field>
 
+                        <Field name="lowStockThreshold">
+                          {({ field, form }: any) => (
+                            <FormControl
+                              isRequired
+                              isInvalid={Boolean(form.errors.lowStockThreshold && form.touched.lowStockThreshold)}
+                            >
+                              <FormLabel>Low stock threshold</FormLabel>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={1}
+                                placeholder={String(DEFAULT_LOW_STOCK_THRESHOLD)}
+                                {...sharedInputStyles}
+                              />
+                              <FormErrorMessage>{getErrorText(form.errors.lowStockThreshold)}</FormErrorMessage>
+                            </FormControl>
+                          )}
+                        </Field>
+
                         <Box borderRadius="24px" borderWidth="1px" borderColor={border} bg={surfaceMuted} px={4} py={4}>
                           <Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="0.12em" color={textSoft}>
                             Inventory note
                           </Text>
                           <Text mt={2} fontSize="sm" color={textMuted}>
-                            Use whole numbers for stock. Discount price can be left empty if the product is not on sale.
+                            Use whole numbers for stock. The alert triggers when stock is at or below the threshold.
                           </Text>
                         </Box>
                       </SimpleGrid>
