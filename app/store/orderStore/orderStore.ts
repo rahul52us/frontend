@@ -9,6 +9,17 @@ class OrderStore {
 
   companyOrders: any[] = [];
   isLoading: boolean = false;
+  statusCounts: Record<string, number> = {
+    all: 0,
+    created: 0,
+    pending: 0,
+    confirmed: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+    returned: 0,
+  };
   filters: any = {
     search: "",
     status: "",
@@ -31,6 +42,7 @@ class OrderStore {
       setUserAddedItems: action,
       fetchUserOrders: action,
       companyOrders: observable,
+      statusCounts: observable,
       fetchCompanyOrders: action,
       updateOrderStatus: action,
       updateOrderItemStatus: action,
@@ -95,6 +107,7 @@ class OrderStore {
           this.pagination.total = data.data.total;
           this.pagination.totalPages = data.data.totalPages;
           this.pagination.page = data.data.page;
+          this.statusCounts = data.data.statusCounts || this.statusCounts;
         } else {
           this.companyOrders = data.data;
         }

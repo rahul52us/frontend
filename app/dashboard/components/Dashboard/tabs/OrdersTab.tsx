@@ -48,10 +48,19 @@ const statusMetaDef: Record<string, { label: string; colorScheme: string; dot: s
   delivered: { label: "Delivered", colorScheme: "green", dot: "green.500" },
   cancelled: { label: "Cancelled", colorScheme: "red", dot: "red.500" },
   created: { label: "Placed", colorScheme: "blue", dot: "blue.500" },
+  returned: { label: "Returned", colorScheme: "pink", dot: "pink.500" },
 };
 
+const STATUS_ALIAS: Record<string, string> = {
+  "in-progress": "processing",
+  initialized: "created",
+};
+
+const normalizeOrderStatusKey = (status: string) =>
+  STATUS_ALIAS[String(status || "").toLowerCase()] || String(status || "").toLowerCase();
+
 export const getStatusMeta = (status: string) => {
-  const normalized = String(status || "").toLowerCase();
+  const normalized = normalizeOrderStatusKey(status);
   return statusMetaDef[normalized] || { label: status || "Unknown", colorScheme: "gray", dot: "gray.500" };
 };
 
@@ -63,8 +72,21 @@ const filterTabs = [
   { key: "processing", label: "Processing" },
   { key: "shipped", label: "Shipped" },
   { key: "delivered", label: "Delivered" },
+  { key: "returned", label: "Returned" },
   { key: "cancelled", label: "Cancelled" },
 ];
+
+const STATUS_QUERY_MAP: Record<string, string[]> = {
+  all: [],
+  created: ["created", "initialized"],
+  pending: ["pending"],
+  confirmed: ["confirmed"],
+  processing: ["processing", "in-progress"],
+  shipped: ["shipped"],
+  delivered: ["delivered"],
+  returned: ["returned"],
+  cancelled: ["cancelled"],
+};
 
 function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
   const cardBg = useColorModeValue("white", "gray.800");
@@ -225,7 +247,7 @@ const OrdersTab = observer(() => {
   };
 
   const handleTabChange = (key: string) => {
-    orderStore.setFilter("status", key === "all" ? "" : key);
+    orderStore.setFilter("status", key === "all" ? "" : STATUS_QUERY_MAP[key].join(","));
   };
 
   const handleDateChange = (field: "startDate" | "endDate", value: string) => {
@@ -260,25 +282,31 @@ const OrdersTab = observer(() => {
 
   const metrics = useMemo(() => {
     const orders = orderStore.companyOrders || [];
-    const total = orderStore.pagination.total || 0;
-    const pending = orders.filter((o: any) => ["pending", "created"].includes(String(o.orderStatus).toLowerCase())).length;
-    const inTransit = orders.filter((o: any) => ["confirmed", "processing", "shipped"].includes(String(o.orderStatus).toLowerCase())).length;
-    const delivered = orders.filter((o: any) => String(o.orderStatus).toLowerCase() === "delivered").length;
+    const total = orderStore.statusCounts.all || 0;
+    const pending = Number(orderStore.statusCounts.pending || 0) + Number(orderStore.statusCounts.created || 0);
+    const inTransit =
+      Number(orderStore.statusCounts.confirmed || 0) +
+      Number(orderStore.statusCounts.processing || 0) +
+      Number(orderStore.statusCounts.shipped || 0);
+    const delivered = Number(orderStore.statusCounts.delivered || 0);
     const revenue = orders.filter((o: any) => String(o.orderStatus).toLowerCase() !== "cancelled").reduce((s: number, o: any) => s + Number(o.quote?.price?.value || o.total || 0), 0);
     
     return { total, pending, inTransit, delivered, revenue };
-  }, [orderStore.companyOrders, orderStore.pagination.total]);
+  }, [orderStore.companyOrders, orderStore.statusCounts]);
 
   const counts = useMemo(() => {
-    const orders = orderStore.companyOrders || [];
-    const c: Record<string, number> = { all: orders.length };
-    for (const key of filterTabs.map(t => t.key)) {
-      if (key !== "all") {
-         c[key] = orders.filter((o: any) => String(o.orderStatus).toLowerCase() === key).length;
-      }
-    }
-    return c;
-  }, [orderStore.companyOrders]);
+    return {
+      all: Number(orderStore.statusCounts.all || 0),
+      created: Number(orderStore.statusCounts.created || 0),
+      pending: Number(orderStore.statusCounts.pending || 0),
+      confirmed: Number(orderStore.statusCounts.confirmed || 0),
+      processing: Number(orderStore.statusCounts.processing || 0),
+      shipped: Number(orderStore.statusCounts.shipped || 0),
+      delivered: Number(orderStore.statusCounts.delivered || 0),
+      returned: Number(orderStore.statusCounts.returned || 0),
+      cancelled: Number(orderStore.statusCounts.cancelled || 0),
+    };
+  }, [orderStore.statusCounts]);
 
   const handleRowClick = (row: any) => {
     setSelectedOrderId(row._id || row.orderId);
@@ -295,7 +323,14 @@ const OrdersTab = observer(() => {
     (o: any) => o._id === selectedOrderId || o.orderId === selectedOrderId
   );
 
-  const currentStatusTab = orderStore.filters.status || "all";
+  const currentStatusTab =
+    filterTabs.find((tab) => {
+      if (tab.key === "all") {
+        return !orderStore.filters.status;
+      }
+
+      return orderStore.filters.status === STATUS_QUERY_MAP[tab.key].join(",");
+    })?.key || "all";
 
   return (
     <Box minH="100vh" bg={bg} fontFamily="body">
