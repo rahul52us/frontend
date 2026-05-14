@@ -595,12 +595,21 @@ const CustomersTab: React.FC = observer(() => {
   const whatsappSupportUrl = `https://wa.me/919899129943?text=${encodeURIComponent(
     `Hello, I need help with the ${partySingularLabel.toLowerCase()} ledger.`,
   )}`;
-  const buyerFilterOptions: { key: BuyerFilterKey; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "receivable", label: "To receive" },
-    { key: "payable", label: "To pay" },
-    { key: "settled", label: "Settled" },
-  ];
+  const buyerFilterOptions = useMemo<{ key: BuyerFilterKey; label: string }[]>(() => {
+    if (isSupplierTab) {
+      return [
+        { key: "all", label: "All" },
+        { key: "payable", label: "To pay" },
+        { key: "settled", label: "Settled" },
+      ];
+    }
+
+    return [
+      { key: "all", label: "All" },
+      { key: "receivable", label: "To receive" },
+      { key: "settled", label: "Settled" },
+    ];
+  }, [isSupplierTab]);
   const getBuyerPartyType = (buyer?: BuyerProfile | null) =>
     (buyer?.partyType === "supplier" ? "supplier" : buyer?.partyType === "customer" ? "customer" : normalizedActivePartyType) as
       | "customer"
@@ -729,6 +738,13 @@ const CustomersTab: React.FC = observer(() => {
 
     return buyers.filter((buyer) => getBuyerBalanceState(buyer) === balanceFilter);
   }, [balanceFilter, buyers, normalizedActivePartyType]);
+
+  useEffect(() => {
+    const isAllowedFilter = buyerFilterOptions.some((option) => option.key === balanceFilter);
+    if (!isAllowedFilter) {
+      setBalanceFilter("all");
+    }
+  }, [balanceFilter, buyerFilterOptions]);
 
   const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
   const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
@@ -5211,6 +5227,8 @@ const CustomersTab: React.FC = observer(() => {
               const linkedSaleRecordId = getLinkedSaleRecordIdFromEntry(entry);
               const isDebit = entry.direction === "debit";
               const isReversed = entry.status === "reversed";
+              const hasLinkedSaleSummary = Boolean(entry.linkedSaleSummary);
+              const remainingTone = isEntryFullySettled(entry) ? dashboardPalette.success : cAccentStrong;
 
               return (
                 <Box
@@ -5299,6 +5317,53 @@ const CustomersTab: React.FC = observer(() => {
                           {formatLedgerReference(entry)}
                         </Text>
                       )}
+
+                      {hasLinkedSaleSummary ? (
+                        <SimpleGrid columns={{ base: 2, md: 2 }} spacing={2} mt={2.5}>
+                          <Box
+                            bg={cSurfaceMuted}
+                            border="1px solid"
+                            borderColor={cBorder}
+                            borderRadius="10px"
+                            px={2.5}
+                            py={2}
+                          >
+                            <Text
+                              fontSize="9px"
+                              color={cTextSoft}
+                              textTransform="uppercase"
+                              letterSpacing="0.08em"
+                              fontWeight="700"
+                            >
+                              {isSelectedSupplier ? "Paid out" : "Paid"}
+                            </Text>
+                            <Text mt={1} fontSize="sm" fontWeight="700" color={dashboardPalette.success}>
+                              {getEntryPaidText(entry)}
+                            </Text>
+                          </Box>
+                          <Box
+                            bg={cSurfaceMuted}
+                            border="1px solid"
+                            borderColor={cBorder}
+                            borderRadius="10px"
+                            px={2.5}
+                            py={2}
+                          >
+                            <Text
+                              fontSize="9px"
+                              color={cTextSoft}
+                              textTransform="uppercase"
+                              letterSpacing="0.08em"
+                              fontWeight="700"
+                            >
+                              Remaining
+                            </Text>
+                            <Text mt={1} fontSize="sm" fontWeight="700" color={remainingTone}>
+                              {getEntryRemainingText(entry)}
+                            </Text>
+                          </Box>
+                        </SimpleGrid>
+                      ) : null}
 
                       {!isReversed &&
                         (linkedSaleRecordId ||
