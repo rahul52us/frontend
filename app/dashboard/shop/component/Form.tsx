@@ -524,6 +524,123 @@ const sanitizeOptionalStringObject = (source: Record<string, any> | undefined | 
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
 
+const buildSingleAssetFormState = (asset: any) => ({
+  file: asset?.url ? [asset] : [],
+  isAdd: 0,
+  isDeleted: 0,
+});
+
+const buildGalleryFormState = (gallery: any) =>
+  Array.isArray(gallery)
+    ? gallery.map((item) => ({
+        file: item?.file?.url ? [item.file] : [],
+        title: item?.title || "",
+      }))
+    : [];
+
+const filterMeaningfulLocations = (locations: any) =>
+  (Array.isArray(locations) ? locations : []).filter((location: any) => {
+    const hasText = [location?.address, location?.city, location?.state, location?.postalCode, location?.country]
+      .some((value) => typeof value === "string" && value.trim().length > 0);
+    const coordinates = Array.isArray(location?.coordinates) ? location.coordinates : [];
+    const hasCoordinates =
+      coordinates.length >= 2 &&
+      (Number(coordinates[0]) !== 0 || Number(coordinates[1]) !== 0);
+
+    return hasText || hasCoordinates;
+  });
+
+const mergeSavedSectionIntoForm = ({
+  currentValues,
+  updatedShop,
+  sectionIndex,
+  userPhone,
+}: {
+  currentValues: any;
+  updatedShop: any;
+  sectionIndex: number | null;
+  userPhone?: string;
+}) => {
+  const normalizedShop = normalizeShopDataForForm(updatedShop || {});
+  const mergedContactInfo = {
+    ...(currentValues?.contactInfo || {}),
+    ...(normalizedShop.contactInfo || {}),
+    phone: userPhone || normalizedShop.contactInfo?.phone || "",
+  };
+
+  const mergedBase = {
+    ...currentValues,
+    deletedFiles: [],
+    contactInfo: mergedContactInfo,
+  };
+
+  if (sectionIndex === null) {
+    return {
+      ...mergedBase,
+      ...normalizedShop,
+      contactInfo: mergedContactInfo,
+      location: normalizeLocationForForm(normalizedShop.location, currentValues?.location),
+      multipleLocations: normalizeMultipleLocationsForForm(
+        normalizedShop.multipleLocations,
+        currentValues?.multipleLocations
+      ),
+      logo: buildSingleAssetFormState(normalizedShop.logo),
+      coverImage: buildSingleAssetFormState(normalizedShop.coverImage),
+      gallery: buildGalleryFormState(normalizedShop.gallery),
+    };
+  }
+
+  switch (sectionIndex) {
+    case 0:
+      return {
+        ...mergedBase,
+        name: normalizedShop.name,
+        companyCode: normalizedShop.companyCode || currentValues?.companyCode || "",
+        tags: normalizedShop.tags,
+        categories: normalizedShop.categories,
+        description: normalizedShop.description,
+        about: normalizedShop.about,
+        gstNumber: normalizedShop.gstNumber || "",
+        bankDetails: normalizedShop.bankDetails,
+        returnPolicy: normalizedShop.returnPolicy || "",
+        paymentMethods: normalizedShop.paymentMethods,
+        logo: buildSingleAssetFormState(normalizedShop.logo),
+        coverImage: buildSingleAssetFormState(normalizedShop.coverImage),
+      };
+    case 1:
+      return {
+        ...mergedBase,
+        location: normalizeLocationForForm(normalizedShop.location, currentValues?.location),
+      };
+    case 2:
+      return {
+        ...mergedBase,
+        multipleLocations: normalizeMultipleLocationsForForm(
+          normalizedShop.multipleLocations,
+          currentValues?.multipleLocations
+        ),
+      };
+    case 3:
+      return {
+        ...mergedBase,
+        contactInfo: mergedContactInfo,
+      };
+    case 4:
+      return {
+        ...mergedBase,
+        operatingHours: normalizedShop.operatingHours,
+        closedDates: normalizedShop.closedDates,
+      };
+    case 5:
+      return {
+        ...mergedBase,
+        gallery: buildGalleryFormState(normalizedShop.gallery),
+      };
+    default:
+      return mergedBase;
+  }
+};
+
 const ShopFormHero = ({
   activeSection,
   activeSectionIndex,
@@ -673,6 +790,7 @@ const StickyActionBar = ({
   isLastStep,
   isSubmitting,
   onBack,
+  onSaveSection,
   onNext,
   onSubmit,
   isUpdateMode,
@@ -682,6 +800,7 @@ const StickyActionBar = ({
   isLastStep: boolean;
   isSubmitting: boolean;
   onBack: () => void;
+  onSaveSection: () => void;
   onNext: () => void;
   onSubmit: () => void;
   isUpdateMode: boolean;
@@ -742,40 +861,57 @@ const StickyActionBar = ({
             Step {activeSectionIndex + 1} / {sections.length} · {activeSection.label}
           </Text>
 
-          {isLastStep ? (
-            <Button
-              minH={{ base: "42px", md: "44px" }}
-              px={{ base: 4, sm: 6 }}
-              minW={{ base: "112px", sm: "132px" }}
-              borderRadius="16px"
-              bg={tone.gradient}
-              color="white"
-              flexShrink={0}
-              onClick={onSubmit}
-              isLoading={isSubmitting}
-              _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
-              _active={{ transform: "scale(0.98)" }}
-            >
-              {isUpdateMode ? "Save shop" : "Publish shop"}
-            </Button>
-          ) : (
-            <Button
-              minH={{ base: "36px", md: "44px" }}
-              px={{ base: 4, sm: 6 }}
-              minW={{ base: "112px", sm: "132px" }}
-              borderRadius="16px"
-              bg={tone.gradient}
-              color="white"
-              flexShrink={0}
-              rightIcon={<FaChevronRight size={13} />}
-              onClick={onNext}
-              isDisabled={isSubmitting}
-              _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
-              _active={{ transform: "scale(0.98)" }}
-            >
-              Next
-            </Button>
-          )}
+          <HStack spacing={{ base: 2, md: 3 }} flexShrink={0}>
+            {isUpdateMode ? (
+              <Button
+                variant="outline"
+                borderRadius="16px"
+                minH={{ base: "42px", md: "44px" }}
+                px={{ base: 3.5, md: 4.5 }}
+                bg={backBg}
+                borderColor={tone.border}
+                color={tone.text}
+                onClick={onSaveSection}
+                isLoading={isSubmitting}
+                _hover={{ bg: tone.soft }}
+              >
+                Save section
+              </Button>
+            ) : null}
+
+            {isLastStep ? (
+              <Button
+                minH={{ base: "42px", md: "44px" }}
+                px={{ base: 4, sm: 6 }}
+                minW={{ base: "112px", sm: "132px" }}
+                borderRadius="16px"
+                bg={tone.gradient}
+                color="white"
+                onClick={onSubmit}
+                isLoading={isSubmitting}
+                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _active={{ transform: "scale(0.98)" }}
+              >
+                {isUpdateMode ? "Save shop" : "Publish shop"}
+              </Button>
+            ) : (
+              <Button
+                minH={{ base: "36px", md: "44px" }}
+                px={{ base: 4, sm: 6 }}
+                minW={{ base: "112px", sm: "132px" }}
+                borderRadius="16px"
+                bg={tone.gradient}
+                color="white"
+                rightIcon={<FaChevronRight size={13} />}
+                onClick={onNext}
+                isDisabled={isSubmitting}
+                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _active={{ transform: "scale(0.98)" }}
+              >
+                Next
+              </Button>
+            )}
+          </HStack>
         </Flex>
       </Box>
     </Box>
@@ -909,6 +1045,11 @@ const ShopForm = observer(() => {
     return null;
   };
 
+  const buildContactInfoPayload = (contactInfo) => ({
+    ...(contactInfo || {}),
+    phone: user?.phone || contactInfo?.phone || "",
+  });
+
   const buildCompanyPayload = async (values) => {
     const formData = { ...values };
 
@@ -937,25 +1078,87 @@ const ShopForm = observer(() => {
     );
 
     formData.gallery = updatedGallery.filter(Boolean);
-    formData.multipleLocations = (formData.multipleLocations || []).filter((location: any) => {
-      const hasText = [location?.address, location?.city, location?.state, location?.postalCode, location?.country]
-        .some((value) => typeof value === "string" && value.trim().length > 0);
-      const coordinates = Array.isArray(location?.coordinates) ? location.coordinates : [];
-      const hasCoordinates =
-        coordinates.length >= 2 &&
-        (Number(coordinates[0]) !== 0 || Number(coordinates[1]) !== 0);
-
-      return hasText || hasCoordinates;
-    });
+    formData.multipleLocations = filterMeaningfulLocations(formData.multipleLocations);
     formData.about = typeof formData.about === "string" ? formData.about.trim() : "";
     formData.gstNumber = normalizeGstNumber(formData.gstNumber) || undefined;
     formData.bankDetails = sanitizeOptionalStringObject(formData.bankDetails);
-    formData.contactInfo = {
-      ...(formData.contactInfo || {}),
-      phone: user?.phone || formData.contactInfo?.phone || "",
-    };
+    formData.contactInfo = buildContactInfoPayload(formData.contactInfo);
 
     return formData;
+  };
+
+  const buildSectionPayload = async (values, sectionIndex) => {
+    switch (sectionIndex) {
+      case 0: {
+        const payload: any = {
+          name: typeof values.name === "string" ? values.name.trim() : values.name,
+          companyCode: typeof values.companyCode === "string" ? values.companyCode.trim().toUpperCase() : values.companyCode,
+          tags: normalizeStringArray(values.tags),
+          categories: normalizeStringArray(values.categories),
+          description: typeof values.description === "string" ? values.description : "",
+          about: typeof values.about === "string" ? values.about.trim() : "",
+          gstNumber: normalizeGstNumber(values.gstNumber) || undefined,
+          bankDetails: sanitizeOptionalStringObject(values.bankDetails),
+          returnPolicy: typeof values.returnPolicy === "string" ? values.returnPolicy : "",
+          paymentMethods: normalizeStringArray(values.paymentMethods),
+        };
+
+        const logoData = await handleImageProcessing(
+          values.logo?.file,
+          values.logo?.isAdd,
+          values.logo?.isDeleted
+        );
+        const coverImageData = await handleImageProcessing(
+          values.coverImage?.file,
+          values.coverImage?.isAdd,
+          values.coverImage?.isDeleted
+        );
+
+        if (logoData) payload.logo = logoData;
+        if (coverImageData) payload.coverImage = coverImageData;
+
+        return payload;
+      }
+      case 1:
+        return {
+          location: values.location,
+        };
+      case 2:
+        return {
+          multipleLocations: filterMeaningfulLocations(values.multipleLocations),
+        };
+      case 3:
+        return {
+          contactInfo: buildContactInfoPayload(values.contactInfo),
+        };
+      case 4:
+        return {
+          operatingHours: values.operatingHours,
+          closedDates: values.closedDates,
+        };
+      case 5: {
+        const gallery = await Promise.all(
+          (values.gallery || []).map(async (item) => {
+            if (item?.isAdd) {
+              const processed = await handleImageProcessing(item.file, true, false);
+              return processed ? { file: processed, title: item.title } : null;
+            }
+
+            return {
+              file: Array.isArray(item?.file) ? item.file[0] : item?.file,
+              title: item?.title || "",
+            };
+          })
+        );
+
+        return {
+          gallery: gallery.filter(Boolean),
+          deletedFiles: values.deletedFiles || [],
+        };
+      }
+      default:
+        return {};
+    }
   };
 
   const createCompanyWithRetry = async (createData) => {
@@ -984,29 +1187,66 @@ const ShopForm = observer(() => {
     throw lastError;
   };
 
-  const onSubmit = async (values, { setSubmitting }) => {
+  const submitUpdatePayload = async ({
+    payload,
+    sectionIndex = null,
+    successMessage,
+    currentValues,
+    setValues,
+  }: {
+    payload: any;
+    sectionIndex?: number | null;
+    successMessage: string;
+    currentValues: any;
+    setValues?: (values: any, shouldValidate?: boolean) => void;
+  }) => {
+    const companyId = typeof user?.company === "string" ? user.company : user?.company?._id;
+    if (!companyId) {
+      throw new Error("Shop id is missing. Please refresh and try again.");
+    }
+
+    const response = await updateCompanyDetails({ ...payload, _id: companyId });
+    const updatedShop = response?.data?.data || {};
+    const wasReviewReworkState = ["changes_requested", "rejected"].includes(reviewMeta.reviewStatus || "");
+
+    setReviewMeta({
+      reviewStatus: updatedShop.reviewStatus || reviewMeta.reviewStatus || null,
+      reviewRemarks: updatedShop.reviewRemarks || "",
+    });
+
+    if (setValues && updatedShop?._id) {
+      setValues(
+        mergeSavedSectionIntoForm({
+          currentValues,
+          updatedShop,
+          sectionIndex,
+          userPhone: user?.phone,
+        }),
+        false
+      );
+    }
+
+    openNotification({
+      title: "Success",
+      message: wasReviewReworkState
+        ? `${successMessage} and resubmitted for review.`
+        : successMessage,
+      type: "success",
+    });
+  };
+
+  const onSubmit = async (values, { setSubmitting, setValues }) => {
     try {
       setSubmitting(true);
       const formData = await buildCompanyPayload(values);
 
       if (isUpdateMode) {
-        const companyId = typeof user?.company === "string" ? user.company : user?.company?._id;
-        if (!companyId) {
-          throw new Error("Shop id is missing. Please refresh and try again.");
-        }
-        const response = await updateCompanyDetails({ ...formData, _id: companyId });
-        const updatedShop = response?.data?.data || {};
-        const wasReviewReworkState = ["changes_requested", "rejected"].includes(reviewMeta.reviewStatus || "");
-        setReviewMeta({
-          reviewStatus: updatedShop.reviewStatus || reviewMeta.reviewStatus || null,
-          reviewRemarks: updatedShop.reviewRemarks || "",
-        });
-        openNotification({
-          title: "Success",
-          message: wasReviewReworkState
-            ? "Shop details updated and resubmitted for review."
-            : "Shop details updated.",
-          type: "success",
+        await submitUpdatePayload({
+          payload: formData,
+          sectionIndex: null,
+          successMessage: "Shop details updated",
+          currentValues: values,
+          setValues,
         });
       } else {
         const createData = { ...formData };
@@ -1105,7 +1345,7 @@ const ShopForm = observer(() => {
         enableReinitialize
         onSubmit={onSubmit}
       >
-        {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm }) => {
+        {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm, setSubmitting, setValues }) => {
           const activeSection = sections[activeSectionIndex];
           const ActiveSectionComponent = activeSection.component;
           const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSectionIndex);
@@ -1116,21 +1356,65 @@ const ShopForm = observer(() => {
             scrollToTop();
           };
 
-          const handleNextSection = async () => {
+          const validateActiveSection = async () => {
             setShowError(true);
             const validationErrors = await validateForm();
-            const currentSectionFieldLabels = getSectionFieldLabels(validationErrors, activeSectionIndex);
+            const activeFieldLabels = getSectionFieldLabels(validationErrors, activeSectionIndex);
 
-            if (currentSectionFieldLabels.length > 0) {
+            if (activeFieldLabels.length > 0) {
               openNotification({
                 title: "Please review this step",
-                message: `Missing or invalid: ${currentSectionFieldLabels.slice(0, 4).join(", ")}${currentSectionFieldLabels.length > 4 ? "..." : ""}`,
+                message: `Missing or invalid: ${activeFieldLabels.slice(0, 4).join(", ")}${activeFieldLabels.length > 4 ? "..." : ""}`,
                 type: "warning",
               });
+              return false;
+            }
+
+            return true;
+          };
+
+          const handleNextSection = async () => {
+            const isSectionValid = await validateActiveSection();
+            if (!isSectionValid) {
               return;
             }
 
             goToSection(activeSectionIndex + 1);
+          };
+
+          const handleSaveSection = async () => {
+            const isSectionValid = await validateActiveSection();
+            if (!isSectionValid) {
+              return;
+            }
+
+            try {
+              setSubmitting(true);
+              const sectionPayload = await buildSectionPayload(values, activeSectionIndex);
+              await submitUpdatePayload({
+                payload: sectionPayload,
+                sectionIndex: activeSectionIndex,
+                successMessage: `${activeSection.label} section updated`,
+                currentValues: values,
+                setValues,
+              });
+            } catch (err) {
+              const { message, sectionIndex } = extractShopSubmitErrorDetails(err);
+
+              if (sectionIndex !== null) {
+                setActiveSectionIndex(sectionIndex);
+                setShowError(true);
+                scrollToTop();
+              }
+
+              openNotification({
+                title: "Update Failed",
+                message,
+                type: getStatusType(err?.status || err?.statusCode || 500),
+              });
+            } finally {
+              setSubmitting(false);
+            }
           };
 
           const handleFinalSubmit = async () => {
@@ -1204,6 +1488,7 @@ const ShopForm = observer(() => {
                 isLastStep={isLastStep}
                 isSubmitting={isSubmitting}
                 onBack={() => goToSection(activeSectionIndex - 1)}
+                onSaveSection={handleSaveSection}
                 onNext={handleNextSection}
                 onSubmit={handleFinalSubmit}
                 isUpdateMode={isUpdateMode}
