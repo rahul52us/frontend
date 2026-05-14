@@ -31,8 +31,6 @@ class NotificationStore {
   totalPages = 0;
   status: NotificationStatusFilter = "all";
 
-  private pollingTimer: ReturnType<typeof setInterval> | null = null;
-  private readonly pollIntervalMs = 180_000;
   private readonly unreadRefreshWindowMs = 10_000;
   private readonly listRefreshWindowMs = 15_000;
   private activeUserId: string | null = null;
@@ -55,14 +53,10 @@ class NotificationStore {
       this.activeUserId = nextUserId;
     }
 
-    await this.fetchUnreadCount({ force: true });
-    this.startPolling();
-    this.bindFocusRefresh();
+    await this.fetchUnreadCount();
   };
 
   dispose = () => {
-    this.stopPolling();
-    this.unbindFocusRefresh();
     this.activeUserId = null;
     this.clearStateForUser();
   };
@@ -256,67 +250,6 @@ class NotificationStore {
       });
       return Promise.reject(error?.response?.data || error);
     }
-  };
-
-  startPolling = () => {
-    if (!this.activeUserId || this.pollingTimer) {
-      return;
-    }
-
-    this.pollingTimer = setInterval(() => {
-      this.pollNow();
-    }, this.pollIntervalMs);
-  };
-
-  stopPolling = () => {
-    if (this.pollingTimer) {
-      clearInterval(this.pollingTimer);
-      this.pollingTimer = null;
-    }
-  };
-
-  private pollNow = async () => {
-    if (!this.activeUserId) {
-      return;
-    }
-
-    if (typeof document !== "undefined" && document.visibilityState !== "visible") {
-      return;
-    }
-
-    await this.fetchUnreadCount({ force: true });
-  };
-
-  private handleVisibilityRefresh = async () => {
-    if (typeof document === "undefined") {
-      return;
-    }
-    if (document.visibilityState === "visible") {
-      await this.pollNow();
-    }
-  };
-
-  private handleWindowFocus = async () => {
-    await this.pollNow();
-  };
-
-  private bindFocusRefresh = () => {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return;
-    }
-
-    this.unbindFocusRefresh();
-    window.addEventListener("focus", this.handleWindowFocus);
-    document.addEventListener("visibilitychange", this.handleVisibilityRefresh);
-  };
-
-  private unbindFocusRefresh = () => {
-    if (typeof window === "undefined" || typeof document === "undefined") {
-      return;
-    }
-
-    window.removeEventListener("focus", this.handleWindowFocus);
-    document.removeEventListener("visibilitychange", this.handleVisibilityRefresh);
   };
 }
 

@@ -1,6 +1,7 @@
 import {
   Badge,
   Box,
+  Button,
   Center,
   Circle,
   Flex,
@@ -227,6 +228,17 @@ const OrdersTab = observer(() => {
     orderStore.setFilter("status", key === "all" ? "" : key);
   };
 
+  const handleDateChange = (field: "startDate" | "endDate", value: string) => {
+    orderStore.setFilter("date", {
+      ...(orderStore.filters.date || { startDate: null, endDate: null }),
+      [field]: value || null,
+    });
+  };
+
+  const handleClearDateFilter = () => {
+    orderStore.setFilter("date", { startDate: null, endDate: null });
+  };
+
   const isMounted = React.useRef(false);
   useEffect(() => {
     if (!isMounted.current) {
@@ -237,7 +249,14 @@ const OrdersTab = observer(() => {
       if (companyId) fetchOrders();
     }, 800);
     return () => clearTimeout(timer);
-  }, [orderStore.filters.search, orderStore.filters.status, companyId, fetchOrders]);
+  }, [
+    orderStore.filters.search,
+    orderStore.filters.status,
+    orderStore.filters.date?.startDate,
+    orderStore.filters.date?.endDate,
+    companyId,
+    fetchOrders,
+  ]);
 
   const metrics = useMemo(() => {
     const orders = orderStore.companyOrders || [];
@@ -384,6 +403,57 @@ const OrdersTab = observer(() => {
             <Flex as="button"   h={{base:"38px",md:"40px"}} w={{base:"38px",md:"48px"}} shrink={0} align="center" justify="center" borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={cardBg} color={textColor} transition="all 0.2s" _hover={{ bg: mutedBg }}>
               <Icon as={FiSliders} boxSize={4} />
             </Flex>
+          </Flex>
+
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            align={{ md: "center" }}
+            gap={2}
+            mb={3}
+          >
+            <Input
+              type="date"
+              value={orderStore.filters.date?.startDate || ""}
+              onChange={(event) => handleDateChange("startDate", event.target.value)}
+              borderRadius="2xl"
+              bg={cardBg}
+              borderColor={borderColor}
+              h={{ base: "38px", md: "40px" }}
+              maxW={{ md: "190px" }}
+              fontSize="sm"
+              color={textColor}
+              _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
+            />
+            <Input
+              type="date"
+              value={orderStore.filters.date?.endDate || ""}
+              onChange={(event) => handleDateChange("endDate", event.target.value)}
+              borderRadius="2xl"
+              bg={cardBg}
+              borderColor={borderColor}
+              h={{ base: "38px", md: "40px" }}
+              maxW={{ md: "190px" }}
+              fontSize="sm"
+              color={textColor}
+              _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
+            />
+            {(orderStore.filters.date?.startDate || orderStore.filters.date?.endDate) ? (
+              <Button
+                variant="outline"
+                borderRadius="2xl"
+                h={{ base: "38px", md: "40px" }}
+                px={4}
+                fontSize="sm"
+                borderColor={borderColor}
+                bg={cardBg}
+                color={textMuted}
+                _hover={{ bg: mutedBg, color: textColor }}
+                onClick={handleClearDateFilter}
+                alignSelf={{ base: "stretch", md: "auto" }}
+              >
+                Clear dates
+              </Button>
+            ) : null}
           </Flex>
 
           <Box mx={{ base: -4, sm: 0 }} px={{ base: 4, sm: 0 }} overflowX="auto" css={{ "&::-webkit-scrollbar": { display: "none" } }}>
