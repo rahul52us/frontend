@@ -57,6 +57,325 @@ const fmt = (amount: any) =>
     maximumFractionDigits: 0,
   }).format(Number(amount || 0));
 
+const formatPrintableDateTime = (value?: string) => {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return format(date, "d MMM yyyy, h:mm a");
+};
+
+const escapeHtml = (value: unknown) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const cleanItemName = (name?: string) =>
+  String(name || "")
+    .replace(/^\[FREE\]\s*/i, "")
+    .replace(/\s*\(Freebie\)\s*$/i, "")
+    .trim();
+
+const buildOrderInvoiceHtml = ({
+  order,
+  companyName,
+  addressStr,
+  totalValue,
+  taxValue,
+  isOnline,
+  isPaid,
+}: {
+  order: any;
+  companyName: string;
+  addressStr: string;
+  totalValue: number;
+  taxValue: number;
+  isOnline: boolean;
+  isPaid: boolean;
+}) => {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const normalizedItems = items.map((item: any) => {
+    const quantity = Number(item?.quantity || 0);
+    const unitPrice = Number(item?.unitPrice || 0);
+    const isFreebie = unitPrice === 0 || String(item?.productName || "").startsWith("[FREE]");
+    const lineTotal = isFreebie ? 0 : quantity * unitPrice;
+
+    return {
+      name: cleanItemName(item?.productName) || "Unnamed item",
+      quantity,
+      unitPrice,
+      lineTotal,
+      isFreebie,
+    };
+  });
+
+  const subtotal = normalizedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const customerName = order?.user?.name || "Unknown";
+  const customerPhone = order?.user?.phone || "-";
+  const orderDate = formatPrintableDateTime(order?.createdAt);
+  const paymentMethod = isOnline ? "Online" : order?.paymentMethod || "COD";
+  const paymentState = isPaid ? "Paid" : "Pending";
+  const shopTitle = companyName || "Store";
+  const grandTotal = Number.isFinite(totalValue) ? totalValue : subtotal + taxValue;
+
+  const itemsRows = normalizedItems.length
+    ? normalizedItems
+        .map(
+          (item, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(item.name)}${item.isFreebie ? ' <span class="badge">FREE</span>' : ""}</td>
+              <td class="right">${escapeHtml(item.quantity)}</td>
+              <td class="right">${item.isFreebie ? "FREE" : escapeHtml(fmt(item.unitPrice))}</td>
+              <td class="right">${item.isFreebie ? "FREE" : escapeHtml(fmt(item.lineTotal))}</td>
+            </tr>
+          `,
+        )
+        .join("")
+    : `
+      <tr>
+        <td colspan="5" class="empty">No items available for this order.</td>
+      </tr>
+    `;
+
+  return `<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>${escapeHtml(order?.orderId || "Order Invoice")}</title>
+      <style>
+        :root {
+          color-scheme: light;
+          --ink: #101828;
+          --muted: #667085;
+          --line: #d0d5dd;
+          --soft: #f8fafc;
+          --accent: #2f6fed;
+          --success: #027a48;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          padding: 32px;
+          font-family: Arial, Helvetica, sans-serif;
+          color: var(--ink);
+          background: #ffffff;
+        }
+        .sheet {
+          max-width: 860px;
+          margin: 0 auto;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          gap: 24px;
+          padding-bottom: 20px;
+          border-bottom: 2px solid var(--ink);
+        }
+        .brand h1 {
+          margin: 0;
+          font-size: 28px;
+          line-height: 1.1;
+        }
+        .brand p {
+          margin: 8px 0 0;
+          color: var(--muted);
+          font-size: 13px;
+        }
+        .invoice-meta {
+          text-align: right;
+        }
+        .invoice-meta h2 {
+          margin: 0 0 10px;
+          font-size: 24px;
+          letter-spacing: 0.04em;
+        }
+        .invoice-meta p {
+          margin: 4px 0;
+          font-size: 13px;
+          color: var(--muted);
+        }
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+          margin-top: 24px;
+        }
+        .card {
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          padding: 16px;
+          background: var(--soft);
+        }
+        .label {
+          margin: 0 0 8px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--muted);
+        }
+        .value {
+          margin: 0;
+          font-size: 14px;
+          line-height: 1.6;
+          white-space: pre-line;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 24px;
+        }
+        th, td {
+          padding: 12px 10px;
+          border-bottom: 1px solid var(--line);
+          font-size: 13px;
+          text-align: left;
+          vertical-align: top;
+        }
+        th {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--muted);
+        }
+        .right {
+          text-align: right;
+        }
+        .empty {
+          text-align: center;
+          color: var(--muted);
+          padding: 20px 10px;
+        }
+        .badge {
+          display: inline-block;
+          margin-left: 8px;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: #ecfdf3;
+          color: var(--success);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+        }
+        .totals {
+          width: 320px;
+          margin-left: auto;
+          margin-top: 24px;
+          border: 1px solid var(--line);
+          border-radius: 14px;
+          overflow: hidden;
+        }
+        .totals-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 12px 16px;
+          font-size: 13px;
+          border-bottom: 1px solid var(--line);
+        }
+        .totals-row:last-child {
+          border-bottom: 0;
+        }
+        .totals-row.total {
+          background: var(--soft);
+          font-size: 16px;
+          font-weight: 800;
+        }
+        .footer {
+          margin-top: 32px;
+          padding-top: 16px;
+          border-top: 1px solid var(--line);
+          color: var(--muted);
+          font-size: 12px;
+        }
+        @media print {
+          body { padding: 0; }
+          .sheet { max-width: none; }
+        }
+        @media (max-width: 640px) {
+          body { padding: 16px; }
+          .header { display: block; }
+          .invoice-meta { text-align: left; margin-top: 20px; }
+          .grid { grid-template-columns: 1fr; }
+          .totals { width: 100%; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="sheet">
+        <div class="header">
+          <div class="brand">
+            <h1>${escapeHtml(shopTitle)}</h1>
+            <p>Order invoice</p>
+          </div>
+          <div class="invoice-meta">
+            <h2>Invoice</h2>
+            <p><strong>Order ID:</strong> ${escapeHtml(order?.orderId || "-")}</p>
+            <p><strong>Date:</strong> ${escapeHtml(orderDate)}</p>
+            <p><strong>Status:</strong> ${escapeHtml(order?.orderStatus || "-")}</p>
+            <p><strong>Payment:</strong> ${escapeHtml(paymentMethod)} · ${escapeHtml(paymentState)}</p>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <p class="label">Customer</p>
+            <p class="value">${escapeHtml(customerName)}\n${escapeHtml(customerPhone)}</p>
+          </div>
+          <div class="card">
+            <p class="label">Shipping address</p>
+            <p class="value">${escapeHtml(addressStr || "No address provided")}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th class="right">Qty</th>
+              <th class="right">Unit price</th>
+              <th class="right">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRows}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="totals-row">
+            <span>Subtotal</span>
+            <strong>${escapeHtml(fmt(subtotal))}</strong>
+          </div>
+          <div class="totals-row">
+            <span>Tax & charges</span>
+            <strong>${escapeHtml(fmt(taxValue))}</strong>
+          </div>
+          <div class="totals-row total">
+            <span>Total</span>
+            <span>${escapeHtml(fmt(grandTotal))}</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          Generated from dashboard order details on ${escapeHtml(formatPrintableDateTime(new Date().toISOString()))}.
+        </div>
+      </div>
+    </body>
+  </html>`;
+};
+
 const stepIcon: Record<string, any> = {
   created: FiClock,
   pending: FiClock,
@@ -86,8 +405,9 @@ function SectionLabel({
 }
 
 export default function OrderDrawer({ isOpen, onClose, order }: Props) {
-  const { orderStore } = stores;
+  const { orderStore, auth } = stores;
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const toast = useToast();
 
@@ -130,6 +450,14 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
     order.shippingAddress?.postalCode,
   ].filter(Boolean).join(", ");
 
+  const companyName =
+    (typeof order.company === "object" &&
+      (order.company?.name || order.company?.companyName || order.company?.shopName)) ||
+    (typeof auth.company === "object" && (auth.company?.name || auth.company?.companyName || auth.company?.shopName)) ||
+    (typeof auth.user?.company === "object" &&
+      (auth.user?.company?.name || auth.user?.company?.companyName || auth.user?.company?.shopName)) ||
+    "";
+
   const initials = (order.user?.name || "UK")
     .split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
 
@@ -154,6 +482,98 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
     } catch (e: any) {
       toast({ title: "Error", description: e?.message, status: "error" });
     } finally { setIsUpdating(false); }
+  };
+
+  const handlePrintInvoice = async () => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      toast({
+        title: "Printing is not available",
+        description: "This environment does not support invoice printing.",
+        status: "error",
+      });
+      return;
+    }
+
+    setIsPrinting(true);
+
+    let iframe: HTMLIFrameElement | null = null;
+
+    const cleanup = () => {
+      if (iframe?.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+      setIsPrinting(false);
+    };
+
+    try {
+      const invoiceHtml = buildOrderInvoiceHtml({
+        order,
+        companyName,
+        addressStr,
+        totalValue,
+        taxValue,
+        isOnline,
+        isPaid,
+      });
+
+      iframe = document.createElement("iframe");
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+
+      document.body.appendChild(iframe);
+      const printWindow = iframe.contentWindow;
+      const printDocument = printWindow?.document;
+
+      if (!printWindow || !printDocument || typeof printWindow.print !== "function") {
+        cleanup();
+        toast({
+          title: "Printing failed",
+          description: "This browser could not open the print dialog.",
+          status: "error",
+        });
+        return;
+      }
+
+      printDocument.open();
+      printDocument.write(invoiceHtml);
+      printDocument.close();
+
+      window.setTimeout(() => {
+        try {
+          printWindow.focus();
+          printWindow.print();
+          printWindow.onafterprint = () => {
+            window.setTimeout(cleanup, 200);
+          };
+          window.setTimeout(() => {
+            if (iframe?.parentNode) {
+              cleanup();
+            }
+          }, 1500);
+        } catch (printError: any) {
+          cleanup();
+          toast({
+            title: "Printing failed",
+            description: printError?.message || "The invoice preview could not be printed.",
+            status: "error",
+          });
+        }
+      }, 300);
+    } catch (error: any) {
+      cleanup();
+      toast({
+        title: "Printing failed",
+        description: error?.message || "Could not prepare the invoice.",
+        status: "error",
+      });
+    }
   };
 
   return (
@@ -525,7 +945,9 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
             </Button>
             <Button flex={1} h="44px" borderRadius="xl" fontSize="13px" fontWeight="700"
               bg={accent} color="white" _hover={{ bg: "#2B5EF0" }} _active={{ bg: "#2040CC" }}
-              leftIcon={<Icon as={FiPrinter} boxSize={4} />} transition="background 0.15s">
+              leftIcon={<Icon as={FiPrinter} boxSize={4} />} transition="background 0.15s"
+              onClick={() => void handlePrintInvoice()}
+              isLoading={isPrinting}>
               Print Invoice
             </Button>
           </Flex>

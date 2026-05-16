@@ -1120,6 +1120,18 @@ const CustomersTab: React.FC = observer(() => {
         creditLimit: Number(nextSummary.creditLimit || 0),
         isBlocked: Boolean(nextSummary.isBlocked),
       });
+      setSelectedLedgerBuyer((current) => {
+        if (!current || current._id !== profileId) {
+          return current;
+        }
+
+        return {
+          ...current,
+          outstandingBalance: Number(nextSummary.outstandingBalance || 0),
+          creditLimit: Number(nextSummary.creditLimit || 0),
+          isBlocked: Boolean(nextSummary.isBlocked),
+        };
+      });
     } catch (error: any) {
       toast({
         title: "Failed to load ledger",
@@ -5066,7 +5078,7 @@ const CustomersTab: React.FC = observer(() => {
                 color={
                   balanceMeta.state === "settled"
                     ? cTextSoft
-                    : balanceMeta.state === "credit"
+                    : balanceMeta.state === "receivable"
                       ? "green.600"
                       : "red.500"
                 }
@@ -5314,7 +5326,7 @@ const CustomersTab: React.FC = observer(() => {
                           lineHeight="1.4"
                           noOfLines={2}
                         >
-                          {formatLedgerReference(entry)}
+                          {entry.notes}
                         </Text>
                       )}
 
