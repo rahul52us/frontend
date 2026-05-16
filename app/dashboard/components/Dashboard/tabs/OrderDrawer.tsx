@@ -32,7 +32,12 @@ import {
   FiX,
 } from "react-icons/fi";
 import stores from "../../../../store/stores";
-import { getStatusMeta } from "./OrdersTab";
+import {
+  getOrderStatusMeta,
+  normalizeOrderItemStatusKey,
+  normalizeOrderStatusKey,
+  ORDER_ITEM_STATUS_OPTIONS,
+} from "../../../../utils/orderStatus";
 
 interface Props {
   isOpen: boolean;
@@ -40,15 +45,12 @@ interface Props {
   order: any;
 }
 
-const flow = ["created", "pending", "confirmed", "processing", "shipped", "delivered"];
-
-const STATUS_ALIAS: Record<string, string> = {
-  "in-progress": "processing",
-  initialized: "created",
-};
-
-const normalizeStatus = (s: string) =>
-  STATUS_ALIAS[String(s ?? "").toLowerCase()] ?? String(s ?? "").toLowerCase();
+const flow = ["created", "processing", "shipped", "delivered"];
+const selectableStatuses = ["created", "processing", "shipped", "delivered", "cancelled"];
+const normalizeFulfillmentStatus = (status?: string) =>
+  ORDER_ITEM_STATUS_OPTIONS.some((option) => option.value === normalizeOrderItemStatusKey(status))
+    ? normalizeOrderItemStatusKey(status)
+    : "processing";
 
 const fmt = (amount: any) =>
   new Intl.NumberFormat("en-IN", {
@@ -83,6 +85,62 @@ const cleanItemName = (name?: string) =>
     .replace(/^\[FREE\]\s*/i, "")
     .replace(/\s*\(Freebie\)\s*$/i, "")
     .trim();
+
+const truncateWords = (value: string, maxWords: number = 10) => {
+  const words = String(value || "").split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) {
+    return words.join(" ");
+  }
+
+  return `${words.slice(0, maxWords).join(" ")}...`;
+};
+
+const getOrderItemHistoryLabel = (order: any, itemKey: string) => {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const matchedItem = items.find(
+    (item: any) =>
+      String(item?.fulfillment_id || "") === String(itemKey) ||
+      String(item?.item_id || "") === String(itemKey) ||
+      String(item?.productId || "") === String(itemKey),
+  );
+
+  return truncateWords(cleanItemName(matchedItem?.productName || ""), 10) || "Item";
+};
+
+const parseHistoryStatus = (order: any, status: string) => {
+  const rawStatus = String(status || "").trim();
+  const legacyItemMatch = rawStatus.match(
+    /^Item\s+(.+)\s+(pending|in-progress|processing|shipped|delivered|cancelled)$/i,
+  );
+  const namedItemMatch = rawStatus.match(
+    /^(.+?)\s+marked\s+(processing|shipped|delivered|cancelled)$/i,
+  );
+
+  if (legacyItemMatch) {
+    const [, itemKey, itemStatus] = legacyItemMatch;
+    const normalizedItemStatus = normalizeFulfillmentStatus(itemStatus);
+    return {
+      title: getOrderItemHistoryLabel(order, itemKey),
+      status: normalizedItemStatus,
+      isItemStatus: true,
+    };
+  }
+
+  if (namedItemMatch) {
+    const [, itemLabel, itemStatus] = namedItemMatch;
+    return {
+      title: truncateWords(cleanItemName(itemLabel), 10) || "Item",
+      status: normalizeFulfillmentStatus(itemStatus),
+      isItemStatus: true,
+    };
+  }
+
+  return {
+    title: rawStatus,
+    status: "",
+    isItemStatus: false,
+  };
+};
 
 const buildOrderInvoiceHtml = ({
   order,
@@ -125,6 +183,7 @@ const buildOrderInvoiceHtml = ({
   const paymentState = isPaid ? "Paid" : "Pending";
   const shopTitle = companyName || "Store";
   const grandTotal = Number.isFinite(totalValue) ? totalValue : subtotal + taxValue;
+  const statusLabel = getOrderStatusMeta(order?.orderStatus).label;
 
   const itemsRows = normalizedItems.length
     ? normalizedItems
@@ -322,7 +381,7 @@ const buildOrderInvoiceHtml = ({
             <h2>Invoice</h2>
             <p><strong>Order ID:</strong> ${escapeHtml(order?.orderId || "-")}</p>
             <p><strong>Date:</strong> ${escapeHtml(orderDate)}</p>
-            <p><strong>Status:</strong> ${escapeHtml(order?.orderStatus || "-")}</p>
+            <p><strong>Status:</strong> ${escapeHtml(statusLabel)}</p>
             <p><strong>Payment:</strong> ${escapeHtml(paymentMethod)} · ${escapeHtml(paymentState)}</p>
           </div>
         </div>
@@ -378,8 +437,6 @@ const buildOrderInvoiceHtml = ({
 
 const stepIcon: Record<string, any> = {
   created: FiClock,
-  pending: FiClock,
-  confirmed: FiCheckCircle,
   processing: FiPackage,
   shipped: FiTruck,
   delivered: FiCheck,
@@ -431,10 +488,11 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
   if (!order) return null;
 
   const rawStatus     = String(order.orderStatus ?? "");
-  const curStatus     = normalizeStatus(rawStatus);
-  const meta          = getStatusMeta(rawStatus);
+  const curStatus     = normalizeOrderStatusKey(rawStatus);
+  const currentStatusValue = selectableStatuses.includes(curStatus) ? curStatus : "created";
+  const meta          = getOrderStatusMeta(rawStatus);
   const stepIdx       = flow.indexOf(curStatus);
-  const cancelled     = rawStatus.toLowerCase() === "cancelled";
+  const cancelled     = curStatus === "cancelled";
   const totalValue    = Number(order.quote?.price?.value || order.total || 0);
   const breakup: any[] = order.quote?.breakup ?? [];
   const taxValue      = Number(breakup.find((b: any) => b.title_type === "tax")?.price?.value ?? 0);
@@ -606,7 +664,7 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
                 </Text>
                 <Badge px={2} py={0.5} borderRadius="md" fontSize="10px" fontWeight="700"
                   colorScheme={meta.colorScheme} textTransform="capitalize">
-                  {rawStatus}
+                  {meta.label}
                 </Badge>
               </Flex>
               <Text mt={1} fontSize="18px" fontWeight="800" color={text} letterSpacing="-0.03em">
@@ -667,7 +725,7 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
                           </Flex>
                           <Text fontSize="9px" fontWeight={active ? "700" : "500"}
                             color={done ? accent : sub} textAlign="center" textTransform="capitalize">
-                            {s}
+                            {getOrderStatusMeta(s).label}
                           </Text>
                         </Flex>
                         {i < flow.length - 1 && (
@@ -683,13 +741,11 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
 
             <Flex align="center" gap={2.5} mt={4}>
               <Text fontSize="12px" fontWeight="600" color={muted} flexShrink={0}>Update to</Text>
-              <Select value={curStatus} onChange={(e) => doStatusChange(e.target.value)}
+              <Select value={currentStatusValue} onChange={(e) => doStatusChange(e.target.value)}
                 isDisabled={isUpdating} bg={inputBg} border="1px solid" borderColor={border}
                 borderRadius="xl" h="38px" fontSize="13px" fontWeight="600" color={text} flex={1}
                 _focus={{ boxShadow: `0 0 0 3px ${accent}25`, borderColor: accent }}>
-                <option value="created">Created</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
+                <option value="created">Placed</option>
                 <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
@@ -744,7 +800,7 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
             <Flex direction="column">
               {order.items?.map((it: any, i: number) => {
                 const fulfillment = order.fulfillments?.find((f: any) => f.id === it.fulfillment_id);
-                const itemStatus  = normalizeStatus(fulfillment?.status ?? "pending");
+                const itemStatus  = normalizeFulfillmentStatus(fulfillment?.status);
                 const isFreebie   = it.unitPrice === 0 || it.productName?.startsWith("[FREE]");
                 const name        = it.productName
                   ?.replace(/^\[FREE\]\s*/i, "")
@@ -802,12 +858,11 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
                             borderRadius="lg" h="26px" fontSize="11px" fontWeight="600"
                             color={text} flex={1} maxW="140px"
                             _focus={{ boxShadow: `0 0 0 2px ${accent}25` }}>
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
+                            {ORDER_ITEM_STATUS_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
                           </Select>
                         </Flex>
                       </Box>
@@ -906,8 +961,14 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
 
                 <Flex direction="column">
                   {([...order.statusHistory].reverse().slice(0, showHistory ? undefined : 3) as any[])
-                    .map((h: any, i: number, arr: any[]) => (
-                      <Flex key={i} gap={3}>
+                    .map((h: any, i: number, arr: any[]) => {
+                      const historyEntry = parseHistoryStatus(order, h.status);
+                      const historyStatusMeta = historyEntry.isItemStatus
+                        ? getOrderStatusMeta(historyEntry.status)
+                        : null;
+
+                      return (
+                        <Flex key={i} gap={3}>
                         <Flex direction="column" align="center" flexShrink={0} w="22px">
                           <Flex h={6} w={6} align="center" justify="center" borderRadius="full"
                             bg={i === 0 ? accent : inputBg} color={i === 0 ? "white" : sub} flexShrink={0}>
@@ -918,15 +979,37 @@ export default function OrderDrawer({ isOpen, onClose, order }: Props) {
                           )}
                         </Flex>
                         <Box pb={i < arr.length - 1 ? 3 : 0} pt={0.5} flex={1} minW={0}>
-                          <Text fontSize="12.5px" fontWeight="600" color={text} lineHeight="1.4" isTruncated>
-                            {h.status}
-                          </Text>
+                          {historyEntry.isItemStatus ? (
+                            <Flex align="center" gap={2} minW={0} wrap="wrap">
+                              <Text fontSize="12.5px" fontWeight="600" color={text} lineHeight="1.4" noOfLines={1}>
+                                {historyEntry.title}
+                              </Text>
+                              {historyStatusMeta ? (
+                                <Badge
+                                  colorScheme={historyStatusMeta.colorScheme}
+                                  borderRadius="full"
+                                  px={2}
+                                  py={0.5}
+                                  fontSize="10px"
+                                  fontWeight="700"
+                                  textTransform="capitalize"
+                                >
+                                  {historyStatusMeta.label}
+                                </Badge>
+                              ) : null}
+                            </Flex>
+                          ) : (
+                            <Text fontSize="12.5px" fontWeight="600" color={text} lineHeight="1.4" isTruncated>
+                              {historyEntry.title}
+                            </Text>
+                          )}
                           <Text fontSize="11px" color={sub} mt={0.5}>
                             {h.timestamp ? format(new Date(h.timestamp), "d MMM yyyy · h:mm a") : "—"}
                           </Text>
                         </Box>
-                      </Flex>
-                    ))}
+                        </Flex>
+                      );
+                    })}
                 </Flex>
               </Box>
             </>

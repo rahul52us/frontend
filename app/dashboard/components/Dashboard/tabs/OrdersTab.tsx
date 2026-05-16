@@ -29,6 +29,12 @@ import { FaRupeeSign } from "react-icons/fa";
 import { FiCheckCircle, FiChevronRight, FiClipboard, FiClock, FiCreditCard, FiDollarSign, FiMapPin, FiPackage, FiSliders, FiTruck } from "react-icons/fi";
 import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../../store/stores";
+import {
+  COMPANY_ORDER_FILTER_TABS,
+  COMPANY_ORDER_STATUS_QUERY_MAP,
+  getOrderStatusMeta,
+  normalizeOrderStatusKey,
+} from "../../../../utils/orderStatus";
 import OrderDrawer from "./OrderDrawer";
 
 const formatCurrency = (amount: any) => {
@@ -38,54 +44,6 @@ const formatCurrency = (amount: any) => {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(numericAmount);
-};
-
-const statusMetaDef: Record<string, { label: string; colorScheme: string; dot: string }> = {
-  pending: { label: "Pending", colorScheme: "yellow", dot: "yellow.500" },
-  confirmed: { label: "Confirmed", colorScheme: "blue", dot: "blue.500" },
-  processing: { label: "Processing", colorScheme: "orange", dot: "orange.500" },
-  shipped: { label: "Shipped", colorScheme: "purple", dot: "purple.500" },
-  delivered: { label: "Delivered", colorScheme: "green", dot: "green.500" },
-  cancelled: { label: "Cancelled", colorScheme: "red", dot: "red.500" },
-  created: { label: "Placed", colorScheme: "blue", dot: "blue.500" },
-  returned: { label: "Returned", colorScheme: "pink", dot: "pink.500" },
-};
-
-const STATUS_ALIAS: Record<string, string> = {
-  "in-progress": "processing",
-  initialized: "created",
-};
-
-const normalizeOrderStatusKey = (status: string) =>
-  STATUS_ALIAS[String(status || "").toLowerCase()] || String(status || "").toLowerCase();
-
-export const getStatusMeta = (status: string) => {
-  const normalized = normalizeOrderStatusKey(status);
-  return statusMetaDef[normalized] || { label: status || "Unknown", colorScheme: "gray", dot: "gray.500" };
-};
-
-const filterTabs = [
-  { key: "all", label: "All" },
-  { key: "created", label: "Created" },
-  { key: "pending", label: "Pending" },
-  { key: "confirmed", label: "Confirmed" },
-  { key: "processing", label: "Processing" },
-  { key: "shipped", label: "Shipped" },
-  { key: "delivered", label: "Delivered" },
-  { key: "returned", label: "Returned" },
-  { key: "cancelled", label: "Cancelled" },
-];
-
-const STATUS_QUERY_MAP: Record<string, string[]> = {
-  all: [],
-  created: ["created", "initialized"],
-  pending: ["pending"],
-  confirmed: ["confirmed"],
-  processing: ["processing", "in-progress"],
-  shipped: ["shipped"],
-  delivered: ["delivered"],
-  returned: ["returned"],
-  cancelled: ["cancelled"],
 };
 
 function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
@@ -247,7 +205,7 @@ const OrdersTab = observer(() => {
   };
 
   const handleTabChange = (key: string) => {
-    orderStore.setFilter("status", key === "all" ? "" : STATUS_QUERY_MAP[key].join(","));
+    orderStore.setFilter("status", key === "all" ? "" : COMPANY_ORDER_STATUS_QUERY_MAP[key].join(","));
   };
 
   const handleDateChange = (field: "startDate" | "endDate", value: string) => {
@@ -302,13 +260,14 @@ const OrdersTab = observer(() => {
   const metrics = useMemo(() => {
     const orders = orderStore.companyOrders || [];
     const total = orderStore.statusCounts.all || 0;
-    const pending = Number(orderStore.statusCounts.pending || 0) + Number(orderStore.statusCounts.created || 0);
+    const pending = Number(orderStore.statusCounts.created || 0);
     const inTransit =
-      Number(orderStore.statusCounts.confirmed || 0) +
       Number(orderStore.statusCounts.processing || 0) +
       Number(orderStore.statusCounts.shipped || 0);
     const delivered = Number(orderStore.statusCounts.delivered || 0);
-    const revenue = orders.filter((o: any) => String(o.orderStatus).toLowerCase() !== "cancelled").reduce((s: number, o: any) => s + Number(o.quote?.price?.value || o.total || 0), 0);
+    const revenue = orders
+      .filter((o: any) => normalizeOrderStatusKey(o.orderStatus) !== "cancelled")
+      .reduce((s: number, o: any) => s + Number(o.quote?.price?.value || o.total || 0), 0);
     
     return { total, pending, inTransit, delivered, revenue };
   }, [orderStore.companyOrders, orderStore.statusCounts]);
@@ -317,12 +276,9 @@ const OrdersTab = observer(() => {
     return {
       all: Number(orderStore.statusCounts.all || 0),
       created: Number(orderStore.statusCounts.created || 0),
-      pending: Number(orderStore.statusCounts.pending || 0),
-      confirmed: Number(orderStore.statusCounts.confirmed || 0),
       processing: Number(orderStore.statusCounts.processing || 0),
       shipped: Number(orderStore.statusCounts.shipped || 0),
       delivered: Number(orderStore.statusCounts.delivered || 0),
-      returned: Number(orderStore.statusCounts.returned || 0),
       cancelled: Number(orderStore.statusCounts.cancelled || 0),
     };
   }, [orderStore.statusCounts]);
@@ -347,12 +303,12 @@ const OrdersTab = observer(() => {
   );
 
   const currentStatusTab =
-    filterTabs.find((tab) => {
+    COMPANY_ORDER_FILTER_TABS.find((tab) => {
       if (tab.key === "all") {
         return !orderStore.filters.status;
       }
 
-      return orderStore.filters.status === STATUS_QUERY_MAP[tab.key].join(",");
+      return orderStore.filters.status === COMPANY_ORDER_STATUS_QUERY_MAP[tab.key].join(",");
     })?.key || "all";
 
   return (
@@ -417,7 +373,7 @@ const OrdersTab = observer(() => {
         Good day, Merchant 👋
       </Heading>
       <Text mt={{md:1}} fontSize={{ base: "xs", sm: "md" }} color={textMuted}>
-        You have <Text as="span" fontWeight="semibold" color={textColor}>{metrics.pending}</Text> new orders waiting for confirmation.
+        You have <Text as="span" fontWeight="semibold" color={textColor}>{metrics.pending}</Text> placed orders awaiting processing.
       </Text>
     </Box>
 
@@ -438,7 +394,7 @@ const OrdersTab = observer(() => {
         {/* Stat grid */}
         <Grid templateColumns={{ base: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }} gap={{ base: 2, sm: 4 }} mb={{ base: 5, sm: 6 }}>
           <StatCard label="Total" value={metrics.total} icon={FiClipboard} tone="primary" delta="All time" />
-          <StatCard label="Pending" value={metrics.pending} icon={FiClock} tone="amber" delta="Needs action" />
+          <StatCard label="Placed" value={metrics.pending} icon={FiClock} tone="amber" delta="Needs action" />
           <StatCard label="In transit" value={metrics.inTransit} icon={FiTruck} tone="peach" delta="On the way" />
           <StatCard label="Delivered" value={metrics.delivered} icon={FiCheckCircle} tone="mint" delta="Completed" />
         </Grid>
@@ -516,7 +472,7 @@ const OrdersTab = observer(() => {
 
           <Box mx={{ base: -4, sm: 0 }} px={{ base: 4, sm: 0 }} overflowX="auto" css={{ "&::-webkit-scrollbar": { display: "none" } }}>
             <Flex gap={2} pb={1} w="max-content">
-              {filterTabs.map((t) => {
+              {COMPANY_ORDER_FILTER_TABS.map((t) => {
                 const active = currentStatusTab === t.key;
                 return (
                   <Flex
@@ -557,7 +513,7 @@ const OrdersTab = observer(() => {
             <EmptyState />
           ) : (
             orderStore.companyOrders.map((o: any) => (
-              <OrderCard key={o._id} order={o} onClick={() => handleRowClick(o)} bg={cardBg} borderColor={borderColor} textColor={textColor} textMuted={textMuted} getStatusMeta={getStatusMeta} />
+              <OrderCard key={o._id} order={o} onClick={() => handleRowClick(o)} bg={cardBg} borderColor={borderColor} textColor={textColor} textMuted={textMuted} getStatusMeta={getOrderStatusMeta} />
             ))
           )}
         </Grid>
@@ -583,7 +539,7 @@ const OrdersTab = observer(() => {
                 </Thead>
                 <Tbody>
                   {orderStore.companyOrders.map((o: any) => {
-                    const meta = getStatusMeta(o.orderStatus);
+                    const meta = getOrderStatusMeta(o.orderStatus);
                     const initials = (o.user?.name || "U K").split(" ").map((n: string) => n[0]).slice(0, 2).join("");
                     const addressStr = [o.shippingAddress?.addressLine1, o.shippingAddress?.city].filter(Boolean).join(", ") || "No address provided";
                     

@@ -228,7 +228,7 @@ const CheckoutPage = observer(() => {
 
                 toast({
                     title: "Order Placed Successfully!",
-                    description: `Orders have been confirmed.`,
+                    description: `Orders have been placed.`,
                     status: "success",
                     duration: 5000,
                     isClosable: true,

@@ -44,6 +44,7 @@ import {
 import { dashboardHeroGradient, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import { getLowStockThreshold } from "../../products/utils/stockThreshold";
 import stores from "../../../store/stores";
+import { normalizeOrderStatusKey } from "../../../utils/orderStatus";
 
 const MotionBox = motion(Box);
 const MotionButton = motion(Button);
@@ -189,7 +190,15 @@ const getOrderStatusPalette = (
   status: string | undefined,
   isDark: boolean
 ): { label: string; bg: string; color: string } => {
-  const normalized = String(status || "").toLowerCase();
+  const normalized = normalizeOrderStatusKey(status);
+
+  if (normalized === "created") {
+    return {
+      label: "Placed",
+      bg: isDark ? dashboardPalette.warningSoft : "#FFF3E6",
+      color: isDark ? "#FFB27A" : "#FF941F",
+    };
+  }
 
   if (normalized === "shipped" || normalized === "processing") {
     return {
@@ -216,7 +225,7 @@ const getOrderStatusPalette = (
   }
 
   return {
-    label: "Pending",
+    label: "Draft",
     bg: isDark ? dashboardPalette.warningSoft : "#FFF3E6",
     color: isDark ? "#FFB27A" : "#FF941F",
   };
