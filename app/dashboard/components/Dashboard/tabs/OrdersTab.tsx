@@ -261,6 +261,25 @@ const OrdersTab = observer(() => {
     orderStore.setFilter("date", { startDate: null, endDate: null });
   };
 
+  const handlePageChange = async (nextPage: number) => {
+    if (!companyId) return;
+
+    const safePage = Math.max(1, Math.min(nextPage, orderStore.pagination.totalPages || 1));
+    if (safePage === orderStore.pagination.page) {
+      return;
+    }
+
+    orderStore.setPage(safePage);
+    try {
+      await orderStore.fetchCompanyOrders(companyId);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching orders",
+        status: "error",
+      });
+    }
+  };
+
   const isMounted = React.useRef(false);
   useEffect(() => {
     if (!isMounted.current) {
@@ -308,6 +327,10 @@ const OrdersTab = observer(() => {
     };
   }, [orderStore.statusCounts]);
 
+  const currentPage = Number(orderStore.pagination.page || 1);
+  const totalPages = Number(orderStore.pagination.totalPages || 1);
+  const totalOrders = Number(orderStore.pagination.total || 0);
+
   const handleRowClick = (row: any) => {
     setSelectedOrderId(row._id || row.orderId);
     onOpen();
@@ -334,7 +357,7 @@ const OrdersTab = observer(() => {
 
   return (
     <Box minH="100vh" bg={bg} fontFamily="body">
-      <Box px={{ sm: 4 }} pb={{base:4,md:24}} pt={{ base: 0, sm: 6 }}>
+      <Box px={{ sm: 4 }} pb={{ base: 40, md: 24 }} pt={{ base: 0, sm: 6 }}>
    
 
           <Box 
@@ -606,6 +629,47 @@ const OrdersTab = observer(() => {
             </TableContainer>
           )}
         </Box>
+
+        {totalPages > 1 ? (
+          <Flex
+            mt={4}
+            align={{ base: "stretch", sm: "center" }}
+            justify="space-between"
+            direction={{ base: "column", sm: "row" }}
+            gap={3}
+          >
+            <Text fontSize="sm" color={textMuted} fontWeight="medium">
+              Page {currentPage} of {totalPages}
+              {totalOrders > 0 ? ` - ${totalOrders} orders` : ""}
+            </Text>
+            <Flex gap={2} align="center" justify={{ base: "space-between", sm: "flex-end" }}>
+              <Button
+                variant="outline"
+                borderRadius="2xl"
+                borderColor={borderColor}
+                bg={cardBg}
+                color={textMuted}
+                _hover={{ bg: mutedBg, color: textColor }}
+                isDisabled={currentPage <= 1 || orderStore.isLoading}
+                onClick={() => void handlePageChange(currentPage - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                borderRadius="2xl"
+                borderColor={borderColor}
+                bg={cardBg}
+                color={textMuted}
+                _hover={{ bg: mutedBg, color: textColor }}
+                isDisabled={currentPage >= totalPages || orderStore.isLoading}
+                onClick={() => void handlePageChange(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </Flex>
+          </Flex>
+        ) : null}
       </Box>
 
       {selectedOrder ? (
