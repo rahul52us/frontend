@@ -3421,7 +3421,7 @@ const CustomersTab: React.FC = observer(() => {
               <Text fontSize="xs" textTransform="uppercase" color={cAccent} fontWeight="700">
                 {selectedTransactionSingularLabel} ID
               </Text>
-              <Text fontSize="lg" fontWeight="800" color={cPage} wordBreak="break-all">
+              <Text fontSize="lg" fontWeight="800" color="gray.900" wordBreak="break-all">
                 {saleRecord._id}
               </Text>
               <HStack spacing={2} mt={2} wrap="wrap">
@@ -4606,7 +4606,7 @@ const CustomersTab: React.FC = observer(() => {
             border="1px solid"
             borderColor={cBorder}
             borderRadius="24px"
-            // p={2}
+            p={{ base: 2, md: 3 }}
             boxShadow={cSoftShadow}
             backdropFilter="blur(18px)"
           >
