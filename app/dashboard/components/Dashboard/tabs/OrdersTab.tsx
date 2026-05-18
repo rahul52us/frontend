@@ -26,14 +26,13 @@ import { format } from "date-fns";
 import { observer } from "mobx-react-lite";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaRupeeSign } from "react-icons/fa";
-import { FiCheckCircle, FiChevronRight, FiClipboard, FiClock, FiCreditCard, FiDollarSign, FiMapPin, FiPackage, FiSliders, FiTruck } from "react-icons/fi";
+import { FiCheckCircle, FiChevronRight, FiClipboard, FiClock, FiCreditCard, FiDollarSign, FiMapPin, FiPackage, FiTruck } from "react-icons/fi";
 import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../../store/stores";
 import {
   COMPANY_ORDER_FILTER_TABS,
   COMPANY_ORDER_STATUS_QUERY_MAP,
   getOrderStatusMeta,
-  normalizeOrderStatusKey,
 } from "../../../../utils/orderStatus";
 import OrderDrawer from "./OrderDrawer";
 
@@ -258,19 +257,16 @@ const OrdersTab = observer(() => {
   ]);
 
   const metrics = useMemo(() => {
-    const orders = orderStore.companyOrders || [];
     const total = orderStore.statusCounts.all || 0;
     const pending = Number(orderStore.statusCounts.created || 0);
     const inTransit =
       Number(orderStore.statusCounts.processing || 0) +
       Number(orderStore.statusCounts.shipped || 0);
     const delivered = Number(orderStore.statusCounts.delivered || 0);
-    const revenue = orders
-      .filter((o: any) => normalizeOrderStatusKey(o.orderStatus) !== "cancelled")
-      .reduce((s: number, o: any) => s + Number(o.quote?.price?.value || o.total || 0), 0);
+    const revenue = Number(orderStore.summary?.revenueTotal || 0);
     
     return { total, pending, inTransit, delivered, revenue };
-  }, [orderStore.companyOrders, orderStore.statusCounts]);
+  }, [orderStore.statusCounts, orderStore.summary]);
 
   const counts = useMemo(() => {
     return {
@@ -355,7 +351,7 @@ const OrdersTab = observer(() => {
         {/* 📱 MOBILE ONLY: Revenue sits top right to save vertical space */}
         <Box display={{ base: "block", sm: "none" }} textAlign="right">
           <Text fontSize="10px" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" color={textMuted}>
-            Today
+            Revenue
           </Text>
           <Text fontFamily="heading" fontSize="md" fontWeight="bold" letterSpacing="tight" color={textColor}>
             {formatCurrency(metrics.revenue)}
@@ -381,7 +377,7 @@ const OrdersTab = observer(() => {
     <Flex display={{ base: "none", sm: "flex" }} align="center" gap={2} shrink={0}>
       <Box borderRadius="2xl" bg={mutedBg} px={4} py={3} minW="120px" textAlign="right">
         <Text fontSize="10px" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" color={textMuted}>
-          Today
+          Revenue
         </Text>
         <Text fontFamily="heading" fontSize="lg" fontWeight="bold" letterSpacing="tight" color={textColor}>
           {formatCurrency(metrics.revenue)}
@@ -406,6 +402,7 @@ const OrdersTab = observer(() => {
               value={orderStore.filters.search || ""}
               onChange={handleSearchChange}
               placeholder="Search order ID, customer, address…"
+              flex={1}
               borderRadius="2xl"
               bg={cardBg}
               borderColor={borderColor}
@@ -414,9 +411,6 @@ const OrdersTab = observer(() => {
               fontSize="sm"
               _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
             />
-            <Flex as="button"   h={{base:"38px",md:"40px"}} w={{base:"38px",md:"48px"}} shrink={0} align="center" justify="center" borderRadius="2xl" border="1px solid" borderColor={borderColor} bg={cardBg} color={textColor} transition="all 0.2s" _hover={{ bg: mutedBg }}>
-              <Icon as={FiSliders} boxSize={4} />
-            </Flex>
           </Flex>
 
           <Flex

@@ -17,6 +17,9 @@ class OrderStore {
     delivered: 0,
     cancelled: 0,
   };
+  summary: any = {
+    revenueTotal: 0,
+  };
   filters: any = {
     search: "",
     status: "",
@@ -40,6 +43,7 @@ class OrderStore {
       fetchUserOrders: action,
       companyOrders: observable,
       statusCounts: observable,
+      summary: observable,
       fetchCompanyOrders: action,
       updateOrderStatus: action,
       updateOrderItemStatus: action,
@@ -105,6 +109,7 @@ class OrderStore {
           this.pagination.totalPages = data.data.totalPages;
           this.pagination.page = data.data.page;
           this.statusCounts = data.data.statusCounts || this.statusCounts;
+          this.summary = data.data.summary || this.summary;
         } else {
           this.companyOrders = data.data;
         }
@@ -129,7 +134,17 @@ class OrderStore {
       if (data.success) {
         const orderIndex = this.companyOrders.findIndex((o) => o._id === orderId);
         if (orderIndex > -1) {
-          this.companyOrders[orderIndex].orderStatus = status;
+          const existingOrder = this.companyOrders[orderIndex];
+          const updatedOrder = data.data || {};
+          this.companyOrders[orderIndex] = {
+            ...existingOrder,
+            orderStatus: updatedOrder.orderStatus || status,
+            paymentStatus: updatedOrder.paymentStatus || existingOrder.paymentStatus,
+            paymentDetails: updatedOrder.paymentDetails || existingOrder.paymentDetails,
+            statusHistory: updatedOrder.statusHistory || existingOrder.statusHistory,
+            deliveredAt: updatedOrder.deliveredAt || existingOrder.deliveredAt,
+            updatedAt: updatedOrder.updatedAt || existingOrder.updatedAt,
+          };
           this.companyOrders = [...this.companyOrders];
         }
       }
@@ -146,11 +161,22 @@ class OrderStore {
         const orderIndex = this.companyOrders.findIndex((o) => o._id === orderId);
         if (orderIndex > -1) {
           const order = this.companyOrders[orderIndex];
+          const updatedOrder = data.data || {};
           const updatedFulfillments = order.fulfillments.map((f: any) => {
-            if (f.id === itemId) return { ...f, status };
+            if (f.id === itemId || f.item_id === itemId) {
+              const matchingFulfillment = updatedOrder.fulfillments?.find(
+                (next: any) => next.id === f.id || next.item_id === f.item_id,
+              );
+              return { ...f, status: matchingFulfillment?.status || status };
+            }
             return f;
           });
-          this.companyOrders[orderIndex] = { ...order, fulfillments: updatedFulfillments };
+          this.companyOrders[orderIndex] = {
+            ...order,
+            fulfillments: updatedFulfillments,
+            statusHistory: updatedOrder.statusHistory || order.statusHistory,
+            updatedAt: updatedOrder.updatedAt || order.updatedAt,
+          };
           this.companyOrders = [...this.companyOrders];
         }
       }
