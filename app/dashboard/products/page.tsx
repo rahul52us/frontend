@@ -54,7 +54,7 @@ import ProductCard from "./components/ProductCard";
 import ProductDetailView from "./components/ProductDetailView";
 import ProductForm from "./components/ProductForm";
 import { ProductStatCard } from "./components/ProductStatCard";
-import { DEFAULT_LOW_STOCK_THRESHOLD, isLowStockProduct } from "./utils/stockThreshold";
+import { DEFAULT_LOW_STOCK_THRESHOLD } from "./utils/stockThreshold";
 
 const emptyToUndefined = (value: any, originalValue: any) =>
   originalValue === "" || originalValue === null || originalValue === undefined ? undefined : value;
@@ -237,6 +237,13 @@ const mapProductToFormValues = (product: any) => {
   };
 };
 
+const emptyProductSummary = {
+  total: 0,
+  inStock: 0,
+  featured: 0,
+  low: 0,
+};
+
 const ProductsPage = observer(() => {
   const toast = useToast();
   const { showAddToCartToast } = useCartToast();
@@ -254,6 +261,7 @@ const ProductsPage = observer(() => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [productSummary, setProductSummary] = useState(emptyProductSummary);
   const [showInactive, setShowInactive] = useState(false);
 
   const hasCompany = Boolean(auth.user?.company?._id || auth.user?.company || auth.company);
@@ -397,15 +405,7 @@ const ProductsPage = observer(() => {
     [childCategoriesForSelectedRoot, selectedSubCategory]
   );
 
-  const stats = useMemo(
-    () => ({
-      total: totalCount,
-      inStock: products.filter((product) => Number(product?.stock || 0) > 0).length,
-      featured: products.filter((product) => Boolean(product?.isFeatured)).length,
-      low: products.filter((product) => isLowStockProduct(product)).length,
-    }),
-    [products, totalCount]
-  );
+  const stats = productSummary;
 
   const initialValues = useMemo(() => mapProductToFormValues(selectedProduct), [selectedProduct]);
 
@@ -428,6 +428,7 @@ const ProductsPage = observer(() => {
         setTotalCount(0);
         setTotalPages(1);
         setCurrentPage(1);
+        setProductSummary({ ...emptyProductSummary });
         setLoading(false);
         return;
       }
@@ -446,10 +447,17 @@ const ProductsPage = observer(() => {
         });
 
         const nextProducts = response.data?.products || [];
+        const nextSummary = response.data?.summary || emptyProductSummary;
         setProducts(nextProducts);
         setCurrentPage(page);
         setTotalPages(response.data?.totalPages || 1);
         setTotalCount(response.data?.total || 0);
+        setProductSummary({
+          total: Number(nextSummary.total || response.data?.total || 0),
+          inStock: Number(nextSummary.inStock || 0),
+          featured: Number(nextSummary.featured || 0),
+          low: Number(nextSummary.low || 0),
+        });
       } catch (error: any) {
         toast({
           title: "Error fetching products",
@@ -572,7 +580,7 @@ const ProductsPage = observer(() => {
         setDetailProductId(null);
       }
       setProductToDelete(null);
-      await fetchProducts(nextPage, searchTerm, selectedCategory);
+      await fetchProducts(nextPage, searchTerm, selectedCategory, showInactive, selectedSubCategory);
     } catch (error: any) {
       toast({
         title: "Error deleting product",
@@ -589,7 +597,7 @@ const ProductsPage = observer(() => {
       return;
     }
 
-    fetchProducts(page, searchTerm, selectedCategory);
+    fetchProducts(page, searchTerm, selectedCategory, showInactive, selectedSubCategory);
   };
 
   const handleSubmit = async (values: any, actions: any) => {
@@ -640,7 +648,13 @@ const ProductsPage = observer(() => {
           setShowInactive(false);
         }
         handleCloseForm();
-        await fetchProducts(nextPage, searchTerm, selectedCategory, selectedProductId ? showInactive : false);
+        await fetchProducts(
+          nextPage,
+          searchTerm,
+          selectedCategory,
+          selectedProductId ? showInactive : false,
+          selectedSubCategory
+        );
       }
     } catch (error: any) {
       toast({
