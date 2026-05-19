@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Box,
   InputGroup,
@@ -15,14 +15,28 @@ import {
 import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
 import Link from "next/link";
-import { sidebarData } from "../../../../SidebarLayout/utils/SidebarItems";
+import { observer } from "mobx-react-lite";
+import stores from "../../../../../../store/stores";
+import { getSidebarDataByRole, sidebarFooterData } from "../../../../SidebarLayout/utils/SidebarItems";
 import { dashboardPalette } from "../../../../dashboardPalette";
-// import { dashboardPalette } from "../../../../../layouts/dashboardLayout/dashboardPalette";
 
-const SearchBar = () => {
+type SearchableSidebarItem = {
+  id: number;
+  name: string;
+  icon: any;
+  url: string;
+  role?: string[];
+  children?: SearchableSidebarItem[];
+};
+
+const flattenSidebarItems = (items: SearchableSidebarItem[]): SearchableSidebarItem[] =>
+  items.flatMap((item) => [item, ...(item.children ? flattenSidebarItems(item.children) : [])]);
+
+const SearchBar = observer(() => {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const { user } = stores.auth;
 
   // Theme-aware tokens
   const cShell = useColorModeValue("white", dashboardPalette.shell);
@@ -37,6 +51,31 @@ const SearchBar = () => {
   const cAccentGlow = useColorModeValue("rgba(37, 99, 235, 0.1)", dashboardPalette.accentGlow);
   const cHighlight = useColorModeValue("blue.600", dashboardPalette.success);
 
+  const searchableItems = useMemo(() => {
+    const rawRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role, user?.type].filter(Boolean);
+    const hasCompany = Boolean(user?.company?._id || user?.company);
+    const isSuperAdmin = rawRoles.includes("superAdmin");
+    const isBuyerOnlyUser =
+      !isSuperAdmin &&
+      !rawRoles.includes("admin") &&
+      !hasCompany &&
+      user?.type !== "seller";
+    const roles = isSuperAdmin
+      ? ["superAdmin"]
+      : isBuyerOnlyUser
+        ? ["buyer"]
+        : ["seller", "admin", ...rawRoles];
+
+    return flattenSidebarItems([
+      ...getSidebarDataByRole(roles),
+      ...sidebarFooterData.filter(
+        (item) => !item.role || item.role.some((role) => roles.includes(role))
+      ),
+    ]);
+  }, [user]);
+
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -50,21 +89,46 @@ const SearchBar = () => {
     };
   }, []);
 
-  const handleSearchDebounced = debounce((query: string) => handleSearch(query), 100);
+  const handleSearch = useMemo(
+    () => (query: string) => {
+      setSearchQuery(query);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+      if (!query.trim()) {
+        setResults([]);
+        return;
+      }
 
-    if (!query) {
+      const normalizedQuery = query.toLowerCase();
+      const filtered = searchableItems.filter((item) =>
+        item?.name?.toLowerCase()?.includes(normalizedQuery)
+      );
+      setResults(filtered);
+    },
+    [searchableItems]
+  );
+
+  const handleSearchDebounced = useMemo(
+    () => debounce((query: string) => handleSearch(query), 100),
+    [handleSearch]
+  );
+
+  useEffect(() => {
+    return () => {
+      handleSearchDebounced.cancel();
+    };
+  }, [handleSearchDebounced]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
       setResults([]);
       return;
     }
 
-    const filtered = sidebarData.filter((item: any) =>
-      item?.name?.toLowerCase()?.includes(query.toLowerCase())
+    const normalizedQuery = searchQuery.toLowerCase();
+    setResults(
+      searchableItems.filter((item) => item?.name?.toLowerCase()?.includes(normalizedQuery))
     );
-    setResults(filtered);
-  };
+  }, [searchQuery, searchableItems]);
 
   // Function to highlight the searched term
   const highlightText = (text: string, query: string) => {
@@ -183,6 +247,6 @@ const SearchBar = () => {
       )}
     </Box>
   );
-};
+});
 
 export default SearchBar;
