@@ -1064,6 +1064,7 @@ const CustomersTab: React.FC = observer(() => {
       const response = await buyerStore.listBuyerProfiles({
         companyId,
         partyType: normalizedActivePartyType,
+        balanceFilter: balanceFilter === "all" ? undefined : balanceFilter,
         page: pageToLoad,
         limit,
         search: query?.trim() || undefined,
@@ -2528,7 +2529,7 @@ const CustomersTab: React.FC = observer(() => {
     const timer = setTimeout(() => fetchBuyers(1, search), 400);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, search, selectedLedgerBuyer, normalizedActivePartyType]);
+  }, [companyId, search, selectedLedgerBuyer, normalizedActivePartyType, balanceFilter]);
 
   useEffect(() => {
     setBalanceFilter("all");
@@ -4719,7 +4720,7 @@ const CustomersTab: React.FC = observer(() => {
               <Text mt={1} fontSize="sm" color={cTextMuted}>
                 {balanceFilter === "all"
                   ? `Try a different search or add a new ${partySingularLabel.toLowerCase()}.`
-                  : `No ${partyPluralLabel.toLowerCase()} match the ${balanceFilter} filter on this page.`}
+                  : `No ${partyPluralLabel.toLowerCase()} match the selected filter.`}
               </Text>
             </Box>
           ) : (
