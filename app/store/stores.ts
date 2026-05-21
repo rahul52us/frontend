@@ -3,8 +3,6 @@ import { authStore } from "./authStore/authStore";
 import { cartStore } from "./cartStore/CartStore";
 import { blogStore } from "./blogStore/blogStore";
 import { CompanyStore } from "./companyStore/companyStore";
-import { contactStore } from "./contactStore/contactStore";
-import { testimonialStore } from "./testimonialStore/testimonialStore";
 import { themeStore } from "./themeStore/themeStore";
 import { userStore } from "./userStore/userStore";
 import { layoutStore } from './layoutStore/LayoutStore'
@@ -21,11 +19,9 @@ const stores = {
   themeStore: themeStore,
   shopStore: shopStore,
   layout: layoutStore,
-  contactStore: contactStore,
   BlogStore: blogStore,
   companyStore: CompanyStore,
   orderStore: orderStore,
-  testimonialStore: testimonialStore,
   cartStore: cartStore,
   categoryStore: categoryStore,
   offerStore: offerStore,
