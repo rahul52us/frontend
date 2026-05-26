@@ -174,13 +174,13 @@ const ShopSection = observer(
   };
 
   return (
-    <Box position="relative">
-      <Container maxW="7xl" px={0}>
+    <Box position="relative" pb={{ base: 4, md: 8 }}>
+      <Container maxW="7xl" px={0} py={{ base: 1, md: 4 }}>
         <AnimatePresence>
           {!loading && (
             <MotionSimpleGrid
-              columns={{ base: 1, sm: 2, md: 3 }}
-              spacing={{ base: 6, md: 10 }}
+              columns={{ base: 1, sm: 2, lg: 3, xl: 4 }}
+              spacing={{ base: 6, md: 8, xl: 10 }}
               variants={container}
               initial="hidden"
               animate="show"
@@ -195,7 +195,7 @@ const ShopSection = observer(
         </AnimatePresence>
 
         {loading && (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={{ base: 6, md: 10 }}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing={{ base: 6, md: 8, xl: 10 }}>
             {Array.from({ length: 6 }).map((_, index) => (
               <ShopCardSkeleton key={index} />
             ))}
@@ -204,17 +204,19 @@ const ShopSection = observer(
 
         {shops.length === 0 && !loading && (
           <Box py={20} textAlign="center">
-            <Text fontSize="lg" color="gray.500" fontWeight="500">No shops found matching your criteria.</Text>
+            <Text fontSize={{ base: 'lg', md: 'xl' }} color="gray.500" fontWeight="500">
+              No shops found matching your criteria.
+            </Text>
           </Box>
         )}
 
-        <Box ref={loadMoreRef} h="10px" />
+        <Box ref={loadMoreRef} h={{ base: '16px', md: '24px' }} />
 
         {shop.loading && currentPage > 1 && (
           <Box py={8} textAlign="center">
             <MotionBox
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               display="inline-block"
               w="24px"
               h="24px"

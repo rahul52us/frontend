@@ -106,25 +106,44 @@ const Header = observer(() => {
           align="center"
           justify="space-between"
           px={4}
-          py={2}
+          py={3}
+          bg="white"
+          borderBottom="1px solid"
+          borderColor="gray.200"
         >
-          <Image
-            src="/images/logo3.jpg"
-            alt="Logo"
-            h="32px"
-            objectFit="contain"
-            cursor="pointer"
-            onClick={() => router.push("/")}
-          />
+          <Flex align="center" gap={3} cursor="pointer" onClick={() => router.push("/")}> 
+            <Image
+              src="/images/logo3.jpg"
+              alt="Logo"
+              h="36px"
+              objectFit="contain"
+            />
+            <Box>
+              <Text fontWeight="bold" fontSize="md">
+                Business Sahayata
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                Marketplace for local sellers
+              </Text>
+            </Box>
+          </Flex>
 
           <Flex align="center" gap={1}>
             <IconButton
-              icon={<SearchIcon />}
-              aria-label="Search"
+              icon={<FiHeart size={18} />}
+              aria-label="Wishlist"
               variant="ghost"
               size="sm"
-              color="blue.600"
-              onClick={() => router.push("/search")}
+              color="gray.600"
+              onClick={onWishlistOpen}
+            />
+            <IconButton
+              icon={<FiShoppingCart size={18} />}
+              aria-label="Cart"
+              variant="ghost"
+              size="sm"
+              color="gray.600"
+              onClick={onCartOpen}
             />
             <IconButton
               icon={<HamburgerIcon />}
@@ -137,6 +156,10 @@ const Header = observer(() => {
           </Flex>
         </Flex>
 
+        <Box display={{ base: "block", md: "none" }} bg="gray.50" px={4} py={3}>
+          <SearchInput />
+        </Box>
+
         {/* ================= MOBILE DRAWER ================= */}
         <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
           <DrawerOverlay />
@@ -144,10 +167,16 @@ const Header = observer(() => {
             <DrawerCloseButton mt={3} mr={3} />
             <DrawerBody pt={6} px={0}>
 
-              <Box px={4}>
+              <Box px={4} mb={4}>
+                <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={3}>
+                  Navigation
+                </Text>
+                <NavItemsLayout onClose={onClose} />
+              </Box>
 
+              <Box px={4}>
                 {isMounted && user && (
-                  <Box mt={6} borderTop="1px solid" borderColor="gray.100" pt={2}>
+                  <Box mt={2} borderTop="1px solid" borderColor="gray.100" pt={4}>
                     <Text fontSize="xs" fontWeight="bold" color="gray.400" mb={3} textTransform="uppercase" letterSpacing="wider">
                       My Account
                     </Text>
@@ -222,62 +251,79 @@ const Header = observer(() => {
           align="center"
           justify="space-between"
           px={{ md: 6, lg: 10 }}
-          py={2.5}
+          py={3}
           gap={5}
+          maxW="8xl"
+          mx="auto"
         >
-          {/* LEFT: LOGO */}
-          <Image
-            src="/images/logo3.jpg"
-            alt="Logo"
-            h="32px"
-            objectFit="contain"
-            cursor="pointer"
-            onClick={() => router.push("/")}
-          />
-
-          {/* CENTER: SEARCH */}
-          <Flex flex={1} maxW="480px" bg="gray.50" borderRadius="md" px={2}>
-            <SearchInput />
+          <Flex align="center" gap={3} cursor="pointer" onClick={() => router.push("/")}> 
+            <Image
+              src="/images/logo3.jpg"
+              alt="Logo"
+              h="38px"
+              objectFit="contain"
+            />
+            <Box>
+              <Text fontWeight="bold" fontSize="lg">
+                Business Sahayata
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                Trusted local marketplace
+              </Text>
+            </Box>
           </Flex>
 
-          {/* RIGHT: NAV + ACTIONS */}
-          <Flex align="center" gap={3}>
+          <Flex align="center" gap={8} flex={1} justify="center">
             <NavItemsLayout />
+          </Flex>
 
-            {/* ✅ Notification (ONLY when logged in) */}
-            {isMounted && user && <NotificationBell />}
+          <Flex align="center" gap={3} minW="360px" justify="flex-end">
+            <Box w="full" maxW="380px" bg="gray.50" borderRadius="full" px={3} py={2} boxShadow="sm">
+              <SearchInput />
+            </Box>
 
-            {/* Cart */}
-            <Box
-              position="relative"
-              px={1}
-              py={1}
-              borderRadius="md"
-              _hover={{ bg: "gray.50" }}
-            >
+            <Flex align="center" gap={1}>
               <IconButton
-                icon={<FiShoppingCart size={18} />}
-                aria-label="Cart"
+                icon={<FiHeart size={18} />}
+                aria-label="Wishlist"
                 size="sm"
                 variant="ghost"
-                color="blue.600"
-                onClick={onCartOpen}
+                color="gray.600"
+                onClick={onWishlistOpen}
               />
-              {cartStore.totalItems > 0 && (
-                <Badge
-                  position="absolute"
-                  top="-2px"
-                  right="-2px"
-                  bg="blue.600"
-                  color="white"
-                  borderRadius="full"
-                  fontSize="0.7em"
-                  px={2}
-                >
-                  {cartStore.totalItems}
-                </Badge>
-              )}
-            </Box>
+              <Box
+                position="relative"
+                px={1}
+                py={1}
+                borderRadius="md"
+                _hover={{ bg: "gray.50" }}
+              >
+                <IconButton
+                  icon={<FiShoppingCart size={18} />}
+                  aria-label="Cart"
+                  size="sm"
+                  variant="ghost"
+                  color="blue.600"
+                  onClick={onCartOpen}
+                />
+                {cartStore.totalItems > 0 && (
+                  <Badge
+                    position="absolute"
+                    top="-2px"
+                    right="-2px"
+                    bg="blue.600"
+                    color="white"
+                    borderRadius="full"
+                    fontSize="0.7em"
+                    px={2}
+                  >
+                    {cartStore.totalItems}
+                  </Badge>
+                )}
+              </Box>
+
+              {isMounted && user && <NotificationBell />}
+            </Flex>
 
             {isMounted && user ? <UserMenu /> : <HeroNavButton />}
           </Flex>

@@ -47,6 +47,8 @@ const ShopsPage = () => {
 
   const inputBg = useColorModeValue('gray.50', 'whiteAlpha.50')
   const inputBorder = useColorModeValue('gray.200', 'whiteAlpha.200')
+  const heroBg = useColorModeValue('purple.50', 'whiteAlpha.100')
+  const panelBg = useColorModeValue('white', 'gray.900')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -111,109 +113,144 @@ const ShopsPage = () => {
   const categories = ['All Shops', 'Grocery', 'Clothing', 'Electronics', 'Restaurants', 'Beauty', 'Home', 'Pharmacy']
 
   return (
-    <Box bg={bg} minH="100vh" position="relative" pb={10}>
-      <Container maxW="7xl" px={{ base: 4, md: 6 }} pt={{ base: 8, md: 10 }}>
-        {/* Editorial Header */}
-        <VStack spacing={8} align="center" textAlign="center" mb={20}>
+    <Box bg={bg} minH="100vh" position="relative" pb={{ base: 28, md: 10 }}>
+      <Box
+        position="absolute"
+        top={0}
+        left={0}
+        right={0}
+        h={{ base: '220px', md: '280px' }}
+        bgGradient="linear(to-br, purple.100, transparent)"
+        zIndex={0}
+      />
 
-          <Stack spacing={4} maxW="3xl">
-            <Heading
-              fontSize={{ base: '4xl', md: '64px' }}
-              fontWeight="800"
-              color={textColor}
-              lineHeight="1.1"
-              letterSpacing="-0.03em"
-            >
-              The Boutique <Text as="span" color="purple.500">Collection</Text>
-            </Heading>
-            <Text color={subTextColor} fontSize={{ base: 'lg', md: 'xl' }} fontWeight="500" lineHeight="1.6" opacity={0.8}>
-              Discover a curated selection of premium local businesses dedicated to quality, service, and community excellence.
-            </Text>
-          </Stack>
+      <Container maxW="7xl" px={{ base: 4, md: 6 }} pt={{ base: 10, md: 12 }} position="relative" zIndex={1}>
+        <Box
+          bg={heroBg}
+          borderRadius="3xl"
+          p={{ base: 6, md: 10 }}
+          shadow="xl"
+          border="1px solid"
+          borderColor={inputBorder}
+          mb={{ base: 8, md: 12 }}
+        >
+          <VStack spacing={8} align="center" textAlign="center">
+            <Stack spacing={4} maxW="3xl">
+              <Heading
+                fontSize={{ base: '3xl', md: '5xl', lg: '64px' }}
+                fontWeight="800"
+                color={textColor}
+                lineHeight="1.05"
+                letterSpacing="-0.03em"
+              >
+                The Boutique <Text as="span" color="purple.500">Collection</Text>
+              </Heading>
+              <Text color={subTextColor} fontSize={{ base: 'md', md: 'lg' }} fontWeight="500" lineHeight="1.7" opacity={0.9}>
+                Discover a curated selection of premium local businesses dedicated to quality, service, and community excellence.
+              </Text>
+            </Stack>
 
-          {/* Centered Search Bar */}
-          <InputGroup size="lg" maxW="xl" shadow="sm">
-            <InputLeftElement pointerEvents="none" h="full" pl={4}>
-              <SearchIcon color="gray.400" boxSize={4} />
-            </InputLeftElement>
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or category..."
-              borderRadius="full"
-              bg={inputBg}
-              border="1px solid"
-              borderColor={inputBorder}
-              fontSize="md"
-              h="64px"
-              pl={12}
-              _placeholder={{ color: 'gray.400' }}
-              _focus={{
-                borderColor: 'purple.500',
-                bg: 'white',
-                shadow: 'xl'
-              }}
-              transition="all 0.3s"
-            />
-          </InputGroup>
+            <InputGroup size="lg" maxW="xl" shadow="md" borderRadius="3xl" overflow="hidden">
+              <InputLeftElement pointerEvents="none" h="full" pl={4}>
+                <SearchIcon color="gray.400" boxSize={5} />
+              </InputLeftElement>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or category..."
+                borderRadius="3xl"
+                bg={inputBg}
+                border="1px solid"
+                borderColor={inputBorder}
+                fontSize="md"
+                h="64px"
+                pl={14}
+                _placeholder={{ color: 'gray.400' }}
+                _focus={{
+                  borderColor: 'purple.500',
+                  bg: 'white',
+                  shadow: 'xl',
+                }}
+                transition="all 0.3s"
+              />
+            </InputGroup>
+          </VStack>
+        </Box>
 
-          <Box
-            w="full"
-            maxW="6xl"
-            p={{ base: 4, md: 5 }}
-            borderRadius="2xl"
-            border="1px solid"
-            borderColor={inputBorder}
-            bg={inputBg}
-          >
-            <VStack spacing={4} align="stretch">
-              <Stack direction={{ base: 'column', lg: 'row' }} spacing={3}>
-                <Button
-                  colorScheme="purple"
-                  onClick={useCurrentLocation}
-                  isLoading={geoLoading}
-                  loadingText="Detecting..."
-                  minW={{ lg: '180px' }}
-                >
-                  Use Current Location
-                </Button>
-                <Text fontSize="sm" color="gray.500" alignSelf="center">
-                  We will ask browser permission and use your current coordinates.
+        <Box
+          bg={panelBg}
+          borderRadius="3xl"
+          p={{ base: 5, md: 6 }}
+          shadow="xl"
+          border="1px solid"
+          borderColor={inputBorder}
+          mb={{ base: 8, md: 10 }}
+        >
+          <VStack spacing={6} align="stretch">
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={4} align="center" justify="space-between">
+              <VStack align="flex-start" spacing={2} flex={1} minW={0}>
+                <Text fontSize="sm" fontWeight="600" color={textColor} opacity={0.9}>
+                  Refine your search with location-aware filters
                 </Text>
-              </Stack>
+                <Text fontSize="sm" color={subTextColor} lineHeight="1.6">
+                  Your results refresh automatically as you update filters.
+                </Text>
+              </VStack>
+              <Button
+                colorScheme="purple"
+                onClick={useCurrentLocation}
+                isLoading={geoLoading}
+                loadingText="Detecting..."
+                w={{ base: 'full', md: 'auto' }}
+                minW={{ md: '180px' }}
+                borderRadius="full"
+                h="56px"
+              >
+                Use Current Location
+              </Button>
+            </Stack>
 
-              <Stack direction={{ base: 'column', lg: 'row' }} spacing={3}>
-                <Select
-                  value={radiusKm}
-                  onChange={(e) => setRadiusKm(Number(e.target.value))}
-                  maxW={{ lg: '220px' }}
-                >
-                  <option value={2}>2 km radius</option>
-                  <option value={5}>5 km radius</option>
-                  <option value={10}>10 km radius</option>
-                  <option value={20}>20 km radius</option>
-                  <option value={50}>50 km radius</option>
-                </Select>
-                <Select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'distance' | 'latest')}
-                  maxW={{ lg: '220px' }}
-                >
-                  <option value="distance">Sort by distance</option>
-                  <option value="latest">Sort by latest</option>
-                </Select>
-                <HStack spacing={3}>
-                  <Button colorScheme="purple" variant="outline" onClick={useCurrentLocation}>
-                    Refresh Location
-                  </Button>
-                  <Button variant="ghost" onClick={clearGeoFilter}>
-                    Clear
-                  </Button>
-                </HStack>
-              </Stack>
+            <Stack direction={{ base: 'column', md: 'row' }} spacing={3} align="stretch">
+              <Select
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                maxW={{ base: '100%', md: '240px' }}
+                borderRadius="2xl"
+                borderColor={inputBorder}
+                h="56px"
+                bg={inputBg}
+              >
+                <option value={2}>2 km radius</option>
+                <option value={5}>5 km radius</option>
+                <option value={10}>10 km radius</option>
+                <option value={20}>20 km radius</option>
+                <option value={50}>50 km radius</option>
+              </Select>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'distance' | 'latest')}
+                maxW={{ base: '100%', md: '240px' }}
+                borderRadius="2xl"
+                borderColor={inputBorder}
+                h="56px"
+                bg={inputBg}
+              >
+                <option value="distance">Sort by distance</option>
+                <option value="latest">Sort by latest</option>
+              </Select>
+              <HStack spacing={3} flex={1} flexWrap="wrap">
+                <Button colorScheme="purple" variant="outline" flex={1} minW={{ base: '100%', md: 'auto' }} borderRadius="2xl" h="56px" onClick={useCurrentLocation}>
+                  Refresh Location
+                </Button>
+                <Button variant="ghost" flex={1} minW={{ base: '100%', md: 'auto' }} borderRadius="2xl" h="56px" onClick={clearGeoFilter}>
+                  Clear
+                </Button>
+              </HStack>
+            </Stack>
 
+            <VStack spacing={2} align="stretch">
               {geoFilter.lat !== null && geoFilter.lng !== null && (
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={subTextColor}>
                   Showing shops near ({geoFilter.lat}, {geoFilter.lng}) within {geoFilter.radiusKm} km.
                 </Text>
               )}
@@ -223,10 +260,9 @@ const ShopsPage = () => {
                 </Text>
               ) : null}
             </VStack>
-          </Box>
-        </VStack>
+          </VStack>
+        </Box>
 
-        {/* Category Pill Navigation */}
         <Box
           mb={12}
           overflowX="auto"
@@ -238,9 +274,9 @@ const ShopsPage = () => {
             scrollbarWidth: 'none',
           }}
         >
-          <HStack spacing={3} px={4}>
+          <HStack spacing={3} px={{ base: 2, md: 4 }} py={2} bg={panelBg} borderRadius="3xl" shadow="sm" border="1px solid" borderColor={inputBorder}>
             {categories.map((category) => {
-              const isActive = activeCategory === category || (category === 'All Shops' && !activeCategory);
+              const isActive = activeCategory === category || (category === 'All Shops' && !activeCategory)
               return (
                 <Button
                   key={category}
@@ -263,7 +299,6 @@ const ShopsPage = () => {
           </HStack>
         </Box>
 
-        {/* Shops Section Content */}
         <ShopSection
           searchQuery={searchQuery}
           activeCategory={activeCategory}
@@ -271,9 +306,8 @@ const ShopsPage = () => {
           sortBy={sortBy}
         />
 
-        {/* Premium Call to Action */}
         <Box
-          mt={32}
+          mt={{ base: 20, md: 32 }}
           bgGradient="linear(to-br, gray.900, black)"
           color="white"
           p={{ base: 10, md: 20 }}
@@ -307,14 +341,40 @@ const ShopsPage = () => {
         </Box>
       </Container>
 
-      {/* Floating Scroll to Top */}
+      <Box
+        display={{ base: 'flex', md: 'none' }}
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        bg={bg}
+        borderTop="1px solid"
+        borderColor={inputBorder}
+        px={4}
+        py={3}
+        zIndex={999}
+        shadow="xl"
+      >
+        <HStack spacing={3} w="full" justify="space-between">
+          <Button flex={1} size="sm" variant="ghost" colorScheme="purple" borderRadius="2xl">
+            Explore
+          </Button>
+          <Button flex={1} size="sm" variant="solid" colorScheme="purple" borderRadius="2xl" onClick={useCurrentLocation} isLoading={geoLoading}>
+            Location
+          </Button>
+          <Button flex={1} size="sm" variant="outline" borderRadius="2xl" onClick={clearGeoFilter}>
+            Clear
+          </Button>
+        </HStack>
+      </Box>
+
       <Fade in={showScrollBtn}>
         <IconButton
           icon={<ArrowUpIcon />}
           onClick={scrollToTop}
           position="fixed"
-          bottom="40px"
-          right="40px"
+          bottom={{ base: '84px', md: '40px' }}
+          right={{ base: '20px', md: '40px' }}
           bg="purple.500"
           color="white"
           _hover={{ bg: 'purple.600', transform: 'scale(1.1)' }}

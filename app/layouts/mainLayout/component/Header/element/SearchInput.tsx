@@ -168,11 +168,11 @@ const SearchInput = observer(() => {
   return (
     <Box
       position="relative"
-      w={{ base: "full", md: "600px" }}
+      w="full"
       ref={ref}
       mx={{ base: 2, md: 4 }}
     >
-      <InputGroup size="lg">
+      <InputGroup size="lg" w="full">
         <InputLeftElement pointerEvents="none">
           <SearchIcon
             color={query ? accentColor : "gray.400"}

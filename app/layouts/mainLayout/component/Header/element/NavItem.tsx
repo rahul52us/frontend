@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
   PopoverContent,
   PopoverBody,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -27,9 +28,10 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
   const router = useRouter();
   const hasChildren = !!item.children?.length;
+  const triggerType = useBreakpointValue<"click" | "hover">({ base: "click", md: "hover" }) || "click";
 
   return (
-    <Popover trigger="hover" placement="bottom-start" gutter={10}>
+    <Popover trigger={triggerType} placement="bottom-start" gutter={10} closeOnBlur>
       <PopoverTrigger>
         <Flex
           align="center"

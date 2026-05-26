@@ -9,19 +9,17 @@ const HeroNavButton = () => {
     <Box display="flex" gap={2}>
       <Button
         size="md"
-        variant="outline"
-        border="2px solid transparent" // Keep border minimal initially
-        fontWeight="medium"
-        bgGradient="linear(to-r, teal.400, blue.500)"
-        backgroundClip="text" // Apply gradient to text
+        bgGradient="linear(to-r, blue.500, teal.400)"
+        color="white"
+        fontWeight="semibold"
+        boxShadow="lg"
         _hover={{
-          color: "white",
-          bgGradient: "linear(to-r, blue.500, teal.400)", // Reverse gradient on hover
-          borderColor: "blue.400", // Add border effect
-          transform: "scale(1.07)", // Slight scale-up effect
-          boxShadow: "lg", // Add subtle shadow for depth
+          transform: "scale(1.03)",
+          boxShadow: "xl",
+          opacity: 0.95,
         }}
-        transition="all 0.3s ease-in-out"
+        _active={{ transform: "scale(0.98)" }}
+        transition="all 0.2s ease"
         onClick={() => router.push("/login")}
       >
         Sign In
