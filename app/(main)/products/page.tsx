@@ -1,5 +1,5 @@
 "use client";
-import { Box, Flex, Grid, Text } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
@@ -11,14 +11,6 @@ import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 import VideoStories from "./components/VideoStories/VideoStories";
 import MapComponent from "../../component/maps/MapMarker";
-
-const banners = [
-  '/images/banners/blackFriday.jpg',
-  '/images/banners/shoes.jpg',
-  '/images/banners/summerSale.jpg',
-  '/images/banners/cyberMonday.jpg',
-  '/images/banners/sofa.jpg'
-];
 
 const Page = observer(() => {
   return (
@@ -50,13 +42,6 @@ const Page = observer(() => {
       </Box>
 
       <CategoryFilter />
-      <VideoStories />
-      <HeroSection />
-
-      <Box p={4}>
-        <Box h="1px" bg="gray.100" w="100%" />
-      </Box>
-
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -74,6 +59,13 @@ const Page = observer(() => {
           <ProductsListSection />
         </Box>
       </Flex>
+
+      <VideoStories />
+      <HeroSection />
+
+      <Box p={4}>
+        <Box h="1px" bg="gray.100" w="100%" />
+      </Box>
 
       <Box>
         <ProductCarousel />
