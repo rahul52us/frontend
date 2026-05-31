@@ -8,7 +8,6 @@ import {
     Text,
     Box,
     HStack,
-    Icon,
     SimpleGrid,
 } from "@chakra-ui/react";
 import { FiFolderPlus, FiLayers } from "react-icons/fi";
@@ -137,6 +136,22 @@ const CategoryPage = () => {
                         {data.isActive ? "Active" : "Inactive"}
                     </MerchantBadge>
                 )
+            }
+        },
+        {
+            headerName: "Filters",
+            key: "filterConfig",
+            type: "component",
+            metaData: {
+                component: (data: any) => {
+                    const filterCount = (data.filterConfig || []).filter((item: any) => item.isActive !== false).length;
+
+                    return (
+                        <MerchantBadge tone={filterCount > 0 ? "accent" : "soft"}>
+                            {filterCount} Active
+                        </MerchantBadge>
+                    );
+                }
             }
         },
         {

@@ -11,13 +11,17 @@ import {
     Select,
     Switch,
     useToast,
+    HStack,
+    Text,
+    IconButton,
 } from "@chakra-ui/react";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, FieldArray } from "formik";
 import * as Yup from "yup";
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
 import { convertImageFileToWebp } from "../../../../config/utils/imageUpload";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 
 interface CategoryFormProps {
     isOpen: boolean;
@@ -31,7 +35,75 @@ const CategoryValidationSchema = Yup.object().shape({
     parent: Yup.string().nullable(),
     isActive: Yup.boolean(),
     isFeatured: Yup.boolean(),
+    filterConfig: Yup.array().of(
+        Yup.object().shape({
+            label: Yup.string().required("Label is required"),
+            source: Yup.string().required("Source is required"),
+            sourceKey: Yup.string(),
+            type: Yup.string().required("Type is required"),
+            allowedValuesText: Yup.string(),
+            sortOrder: Yup.number().min(0),
+            isActive: Yup.boolean(),
+        })
+    ),
 });
+
+const filterSourceOptions = [
+    { value: "tag", label: "Popular ideas" },
+    { value: "variant", label: "Variant" },
+    { value: "productDetails", label: "Product detail" },
+    { value: "information", label: "Information" },
+    { value: "brand", label: "Brand" },
+    { value: "price", label: "Price" },
+    { value: "deal", label: "Deals" },
+    { value: "availability", label: "Availability" },
+];
+
+const filterTypeOptions = [
+    { value: "checkbox", label: "Checkbox" },
+    { value: "pills", label: "Pills" },
+    { value: "color", label: "Color" },
+    { value: "range", label: "Range" },
+];
+
+const sourcesNeedingKey = new Set(["variant", "productDetails", "information"]);
+
+const createFilterConfigItem = () => ({
+    label: "",
+    source: "productDetails",
+    sourceKey: "",
+    type: "checkbox",
+    allowedValuesText: "",
+    sortOrder: 100,
+    isActive: true,
+});
+
+const toFormFilterConfig = (filterConfig: any[] = []) =>
+    filterConfig.map((item) => ({
+        label: item?.label || "",
+        source: item?.source || "productDetails",
+        sourceKey: item?.sourceKey || "",
+        type: item?.type || "checkbox",
+        allowedValuesText: Array.isArray(item?.allowedValues) ? item.allowedValues.join(", ") : "",
+        sortOrder: item?.sortOrder ?? 100,
+        isActive: item?.isActive ?? true,
+    }));
+
+const toSubmitFilterConfig = (filterConfig: any[] = []) =>
+    filterConfig
+        .map((item) => ({
+            label: String(item?.label || "").trim(),
+            source: item?.source || "productDetails",
+            sourceKey: sourcesNeedingKey.has(item?.source) ? String(item?.sourceKey || "").trim() : "",
+            type: item?.type || "checkbox",
+            allowedValues: String(item?.allowedValuesText || "")
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+            sortOrder: Number(item?.sortOrder || 100),
+            isActive: item?.isActive !== false,
+        }))
+        .filter((item) => item.label && (!sourcesNeedingKey.has(item.source) || item.sourceKey));
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
     isOpen,
@@ -56,6 +128,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         formData.append("description", values.description || "");
         formData.append("isActive", values.isActive);
         formData.append("isFeatured", values.isFeatured);
+        formData.append("filterConfig", JSON.stringify(toSubmitFilterConfig(values.filterConfig)));
         if (values.parent) {
             formData.append("parent", values.parent);
         }
@@ -101,6 +174,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         parent: initialValues?.parent?._id || initialValues?.parent || "",
         isActive: initialValues?.isActive ?? true,
         isFeatured: initialValues?.isFeatured ?? false,
+        filterConfig: toFormFilterConfig(initialValues?.filterConfig || []),
         image: initialValues?.image || null,
     };
 
@@ -116,7 +190,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             title={initialValues ? "Edit Category" : "Add New Category"}
             open={isOpen}
             close={onClose}
-            width="40vw"
+            width="52vw"
         >
             <Formik
                 initialValues={formValues}
@@ -197,6 +271,142 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                                     </Box>
                                 ) : null}
                             </FormControl>
+
+                            <FieldArray name="filterConfig">
+                                {({ push, remove }) => (
+                                    <Box>
+                                        <HStack justify="space-between" mb={3}>
+                                            <Box>
+                                                <FormLabel mb={0}>Product Filters</FormLabel>
+                                                <Text fontSize="sm" color="gray.500">
+                                                    Approved filters shown on product search for this category.
+                                                </Text>
+                                            </Box>
+                                            <Button
+                                                size="sm"
+                                                leftIcon={<FiPlus />}
+                                                onClick={() => push(createFilterConfigItem())}
+                                            >
+                                                Add Filter
+                                            </Button>
+                                        </HStack>
+
+                                        <VStack align="stretch" spacing={3}>
+                                            {(props.values.filterConfig || []).map((item: any, index: number) => {
+                                                const needsKey = sourcesNeedingKey.has(item.source);
+
+                                                return (
+                                                    <Box
+                                                        key={index}
+                                                        border="1px solid"
+                                                        borderColor="gray.200"
+                                                        borderRadius="md"
+                                                        p={3}
+                                                    >
+                                                        <HStack align="flex-start" spacing={3}>
+                                                            <Field name={`filterConfig.${index}.label`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl>
+                                                                        <FormLabel fontSize="sm">Label</FormLabel>
+                                                                        <Input {...field} placeholder="Storage" />
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <Field name={`filterConfig.${index}.source`}>
+                                                                {({ field, form }: any) => (
+                                                                    <FormControl>
+                                                                        <FormLabel fontSize="sm">Source</FormLabel>
+                                                                        <Select
+                                                                            {...field}
+                                                                            onChange={(event) => {
+                                                                                field.onChange(event);
+                                                                                if (!sourcesNeedingKey.has(event.target.value)) {
+                                                                                    form.setFieldValue(`filterConfig.${index}.sourceKey`, "");
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {filterSourceOptions.map((option) => (
+                                                                                <option key={option.value} value={option.value}>
+                                                                                    {option.label}
+                                                                                </option>
+                                                                            ))}
+                                                                        </Select>
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <Field name={`filterConfig.${index}.sourceKey`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl isDisabled={!needsKey}>
+                                                                        <FormLabel fontSize="sm">Field Key</FormLabel>
+                                                                        <Input {...field} placeholder={needsKey ? "Color" : "-"} />
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <IconButton
+                                                                mt={8}
+                                                                aria-label="Remove filter"
+                                                                icon={<FiTrash2 />}
+                                                                variant="ghost"
+                                                                colorScheme="red"
+                                                                onClick={() => remove(index)}
+                                                            />
+                                                        </HStack>
+
+                                                        <HStack align="flex-start" spacing={3} mt={3}>
+                                                            <Field name={`filterConfig.${index}.type`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl>
+                                                                        <FormLabel fontSize="sm">Display</FormLabel>
+                                                                        <Select {...field}>
+                                                                            {filterTypeOptions.map((option) => (
+                                                                                <option key={option.value} value={option.value}>
+                                                                                    {option.label}
+                                                                                </option>
+                                                                            ))}
+                                                                        </Select>
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <Field name={`filterConfig.${index}.allowedValuesText`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl>
+                                                                        <FormLabel fontSize="sm">Allowed Values</FormLabel>
+                                                                        <Input {...field} placeholder="Samsung, Apple, Xiaomi" />
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <Field name={`filterConfig.${index}.sortOrder`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl maxW="120px">
+                                                                        <FormLabel fontSize="sm">Order</FormLabel>
+                                                                        <Input {...field} type="number" min={0} />
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+
+                                                            <Field name={`filterConfig.${index}.isActive`}>
+                                                                {({ field }: any) => (
+                                                                    <FormControl maxW="110px" pt={8}>
+                                                                        <Switch
+                                                                            {...field}
+                                                                            isChecked={field.value}
+                                                                        />
+                                                                    </FormControl>
+                                                                )}
+                                                            </Field>
+                                                        </HStack>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </VStack>
+                                    </Box>
+                                )}
+                            </FieldArray>
 
                             <Field name="isActive">
                                 {({ field }: any) => (
