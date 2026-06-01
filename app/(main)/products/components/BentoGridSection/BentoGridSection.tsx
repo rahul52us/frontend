@@ -13,7 +13,8 @@ import {
   Badge,
   useColorModeValue,
   VStack,
-  HStack
+  HStack,
+  Skeleton
 } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -27,13 +28,19 @@ import {
   FiShoppingBag,
   FiCamera,
   FiClock,
-  FiStar
+  FiStar,
+  FiBarChart2
 } from 'react-icons/fi';
 
 const BentoGridSection = () => {
     const router = useRouter();
     const [isHovered, setIsHovered] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+    const [imageLoaded, setImageLoaded] = useState({
+        hero: false,
+        audio: false,
+        sneakers: false
+    });
 
     // Countdown timer
     useEffect(() => {
@@ -48,45 +55,21 @@ const BentoGridSection = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Color mode values
+    // Blue & White color mode values
+    const sectionBg = useColorModeValue('blue.50', 'gray.900');
+    const cardBg = useColorModeValue('white', 'gray.800');
     const overlayGradient = useColorModeValue(
-        'linear(to-t, blackAlpha.800, blackAlpha.200)',
-        'linear(to-t, blackAlpha.900, blackAlpha.300)'
+        'linear(to-t, blue.900 0%, blue.500 30%, transparent 70%)',
+        'linear(to-t, blackAlpha.900, blackAlpha.300, transparent)'
     );
     const badgeBg = useColorModeValue('white', 'gray.800');
-    const badgeColor = useColorModeValue('gray.800', 'white');
-    const cardBg = useColorModeValue('white', 'gray.800');
-    const sectionBg = useColorModeValue('gray.50', 'gray.900');
-
-    const featuredItems = [
-        {
-            id: 'hero',
-            title: "Minimalist Tech",
-            subtitle: "Clean lines. Powerful performance. Premium quality.",
-            image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80",
-            category: "Editor's Pick",
-            icon: FiZap,
-            badge: "⚡ FEATURED"
-        },
-        {
-            id: 'audio',
-            title: "Premium Audio",
-            subtitle: "Immersive sound experience",
-            image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80",
-            category: "Audio",
-            icon: FiMusic,
-            badge: "🎧 NEW ARRIVAL"
-        },
-        {
-            id: 'sneakers',
-            title: "Street Style",
-            subtitle: "Limited edition drops",
-            image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80",
-            category: "Sneakers",
-            icon: FiShoppingBag,
-            badge: "👟 TRENDING"
-        }
-    ];
+    const badgeColor = useColorModeValue('blue.800', 'white');
+    const gradientText = useColorModeValue(
+        'linear(135deg, #1e3a8a 0%, #3b82f6 100%)',
+        'linear(135deg, #60a5fa 0%, #93c5fd 100%)'
+    );
+    const blueGradient = 'linear(135deg, #1e3a8a 0%, #3b82f6 100%)';
+    const lightBlueGradient = 'linear(135deg, #3b82f6 0%, #93c5fd 100%)';
 
     return (
         <Box 
@@ -100,21 +83,21 @@ const BentoGridSection = () => {
                 justify="space-between" 
                 align={{ base: 'flex-start', sm: 'flex-end' }}
                 direction={{ base: 'column', sm: 'row' }}
-                gap={{ base: 3, sm: 0 }}
+                gap={{ base: 4, sm: 0 }}
                 mb={{ base: 8, md: 10 }}
             >
                 <Box>
                     <HStack spacing={2} mb={2}>
                         <Box 
-                            w="40px" 
+                            w={{ base: "30px", sm: "40px" }} 
                             h="3px" 
-                            bgGradient="linear(90deg, purple.500, pink.500)" 
+                            bgGradient={blueGradient} 
                             borderRadius="full"
                         />
                         <Text 
                             fontSize={{ base: "10px", sm: "xs" }} 
                             fontWeight="800" 
-                            bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                            bgGradient={gradientText}
                             bgClip="text"
                             letterSpacing="widest" 
                             textTransform="uppercase"
@@ -125,26 +108,30 @@ const BentoGridSection = () => {
                     <Heading 
                         size={{ base: "lg", md: "xl", lg: "2xl" }} 
                         fontWeight="900"
-                        lineHeight="1.2"
+                        lineHeight={{ base: "1.3", md: "1.2" }}
                         letterSpacing="-0.02em"
+                        color="blue.800"
+                        _dark={{ color: "white" }}
                     >
                         Discover Amazing
-                        <Box as="span" display="block" color="purple.500">
+                        <Box as="span" display="block" color="blue.600">
                             Collections ✨
                         </Box>
                     </Heading>
                 </Box>
                 <Button
                     variant="ghost"
-                    color="purple.500"
+                    color="blue.600"
                     fontSize={{ base: "sm", md: "md" }}
                     fontWeight="bold"
                     rightIcon={<FiArrowRight />}
                     _hover={{ 
-                        bg: "purple.50",
+                        bg: "blue.100",
                         transform: "translateX(5px)"
                     }}
                     transition="all 0.3s"
+                    px={{ base: 3, md: 4 }}
+                    size={{ base: "sm", md: "md" }}
                 >
                     EXPLORE ALL
                 </Button>
@@ -179,61 +166,75 @@ const BentoGridSection = () => {
                         "trending trending trending trending"
                     `
                 }}
-                gridTemplateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }}
+                gridTemplateColumns={{ 
+                    base: '1fr', 
+                    sm: 'repeat(2, 1fr)', 
+                    md: 'repeat(3, 1fr)', 
+                    lg: 'repeat(4, 1fr)' 
+                }}
                 gap={{ base: 4, md: 5, lg: 6 }}
             >
-                {/* Hero Item - Large Featured */}
+                {/* Hero Item */}
                 <GridItem 
                     area="hero" 
                     position="relative" 
                     borderRadius={{ base: "2xl", md: "3xl" }} 
                     overflow="hidden" 
-                    bg="gray.100"
+                    bg="blue.100"
                     cursor="pointer"
                     role="group"
                     h={{ base: "400px", sm: "450px", md: "500px", lg: "550px" }}
                     onMouseEnter={() => setIsHovered('hero')}
                     onMouseLeave={() => setIsHovered(null)}
                     onClick={() => router.push('/collections/featured')}
-                    transition="all 0.3s"
-                    _hover={{ transform: "scale(1.01)" }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{ transform: { base: "none", md: "scale(1.01)" }, boxShadow: "xl" }}
                 >
+                    {!imageLoaded.hero && (
+                        <Skeleton position="absolute" inset={0} zIndex={0} />
+                    )}
                     <Image
                         src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80"
-                        alt="Featured collection"
+                        alt="Featured collection - Minimalist Tech"
                         objectFit="cover"
                         w="100%"
                         h="100%"
-                        transition="transform 0.5s ease"
-                        _groupHover={{ transform: 'scale(1.08)' }}
+                        transition="transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                        _groupHover={{ transform: { base: "none", md: "scale(1.08)" } }}
+                        onLoad={() => setImageLoaded(prev => ({ ...prev, hero: true }))}
                     />
                     <Box 
                         position="absolute" 
                         inset={0} 
-                        bgGradient="linear(to-t, blackAlpha.800, blackAlpha.200, transparent)"
+                        bgGradient={overlayGradient}
                     />
                     
-                    {/* Badge */}
                     <Badge
                         position="absolute"
-                        top={4}
-                        left={4}
+                        top={{ base: 3, md: 4 }}
+                        left={{ base: 3, md: 4 }}
                         bg={badgeBg}
                         color={badgeColor}
-                        px={3}
-                        py={1.5}
+                        px={{ base: 2, md: 3 }}
+                        py={{ base: 1, md: 1.5 }}
                         borderRadius="full"
-                        fontSize="xs"
+                        fontSize={{ base: "10px", md: "xs" }}
                         fontWeight="bold"
                         boxShadow="md"
                     >
                         🔥 HOT PICK
                     </Badge>
 
-                    <Box position="absolute" bottom={6} left={6} right={6} color="white">
+                    <Box 
+                        position="absolute" 
+                        bottom={{ base: 4, md: 6 }} 
+                        left={{ base: 4, md: 6 }} 
+                        right={{ base: 4, md: 6 }} 
+                        color="white"
+                    >
                         <Flex align="center" gap={2} mb={2}>
-                            <Icon as={FiTrendingUp} boxSize={4} />
-                            <Text fontSize="xs" fontWeight="bold" letterSpacing="widest">
+                            <Icon as={FiTrendingUp} boxSize={{ base: 3, md: 4 }} />
+                            <Text fontSize={{ base: "10px", md: "xs" }} fontWeight="bold" letterSpacing="widest">
                                 TRENDING NOW
                             </Text>
                         </Flex>
@@ -244,19 +245,20 @@ const BentoGridSection = () => {
                             Discover the cleanest setup essentials for modern workspace
                         </Text>
                         <Button
-                            mt={4}
+                            mt={{ base: 3, md: 4 }}
                             bg="white"
-                            color="gray.900"
+                            color="blue.700"
                             size={{ base: "sm", md: "md" }}
                             borderRadius="full"
                             rightIcon={<FiArrowRight />}
                             _hover={{ 
                                 transform: "translateX(5px)",
-                                bg: "gray.100"
+                                bg: "blue.50"
                             }}
                             transition="all 0.3s"
-                            opacity={isHovered === 'hero' ? 1 : 0}
-                            transform={isHovered === 'hero' ? 'translateY(0)' : 'translateY(20px)'}
+                            opacity={isHovered === 'hero' ? { base: 1, md: 0 } : 1}
+                            transform={isHovered === 'hero' ? 'translateY(0)' : { base: 'translateY(0)', md: 'translateY(20px)' }}
+                            display={{ base: "inline-flex", md: isHovered === 'hero' ? "inline-flex" : "none" }}
                         >
                             Shop Now
                         </Button>
@@ -275,17 +277,21 @@ const BentoGridSection = () => {
                     onMouseEnter={() => setIsHovered('audio')}
                     onMouseLeave={() => setIsHovered(null)}
                     onClick={() => router.push('/collections/audio')}
-                    transition="all 0.3s"
-                    _hover={{ transform: "scale(1.02)" }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{ transform: { base: "none", md: "scale(1.02)" }, boxShadow: "lg" }}
                 >
+                    {!imageLoaded.audio && (
+                        <Skeleton position="absolute" inset={0} zIndex={0} />
+                    )}
                     <Image
                         src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80"
-                        alt="Audio collection"
+                        alt="Premium Audio headphones"
                         objectFit="cover"
                         w="100%"
                         h="100%"
-                        transition="transform 0.5s ease"
-                        _groupHover={{ transform: 'scale(1.1)' }}
+                        transition="transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                        _groupHover={{ transform: { base: "none", md: "scale(1.1)" } }}
+                        onLoad={() => setImageLoaded(prev => ({ ...prev, audio: true }))}
                     />
                     <Box 
                         position="absolute" 
@@ -293,37 +299,36 @@ const BentoGridSection = () => {
                         bgGradient="linear(to-t, blackAlpha.700, blackAlpha.100)"
                     />
                     
-                    {/* Category Icon */}
                     <Flex
                         position="absolute"
-                        top={4}
-                        right={4}
-                        bg="whiteAlpha.200"
+                        top={{ base: 3, md: 4 }}
+                        right={{ base: 3, md: 4 }}
+                        bg="whiteAlpha.300"
                         backdropFilter="blur(10px)"
                         borderRadius="full"
                         p={2}
                         align="center"
                         justify="center"
                     >
-                        <Icon as={FiMusic} boxSize={5} color="white" />
+                        <Icon as={FiMusic} boxSize={{ base: 4, md: 5 }} color="white" />
                     </Flex>
 
-                    <Box position="absolute" bottom={4} left={4} right={4} color="white">
+                    <Box position="absolute" bottom={{ base: 3, md: 4 }} left={{ base: 3, md: 4 }} right={{ base: 3, md: 4 }} color="white">
                         <Badge
-                            bg="linear(135deg, #f093fb 0%, #f5576c 100%)"
+                            bgGradient={lightBlueGradient}
                             color="white"
                             mb={2}
                             px={2}
                             py={1}
                             borderRadius="full"
-                            fontSize="10px"
+                            fontSize={{ base: "8px", md: "10px" }}
                         >
                             🎧 NEW
                         </Badge>
                         <Heading size="sm" mb={1}>
                             Premium Audio
                         </Heading>
-                        <Text fontSize="xs" opacity={0.9}>
+                        <Text fontSize={{ base: "10px", md: "xs" }} opacity={0.9}>
                             Immersive sound experience
                         </Text>
                     </Box>
@@ -341,17 +346,21 @@ const BentoGridSection = () => {
                     onMouseEnter={() => setIsHovered('sneakers')}
                     onMouseLeave={() => setIsHovered(null)}
                     onClick={() => router.push('/collections/sneakers')}
-                    transition="all 0.3s"
-                    _hover={{ transform: "scale(1.02)" }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{ transform: { base: "none", md: "scale(1.02)" }, boxShadow: "lg" }}
                 >
+                    {!imageLoaded.sneakers && (
+                        <Skeleton position="absolute" inset={0} zIndex={0} />
+                    )}
                     <Image
                         src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80"
-                        alt="Sneakers collection"
+                        alt="Street Style sneakers"
                         objectFit="cover"
                         w="100%"
                         h="100%"
-                        transition="transform 0.5s ease"
-                        _groupHover={{ transform: 'scale(1.1)' }}
+                        transition="transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+                        _groupHover={{ transform: { base: "none", md: "scale(1.1)" } }}
+                        onLoad={() => setImageLoaded(prev => ({ ...prev, sneakers: true }))}
                     />
                     <Box 
                         position="absolute" 
@@ -361,40 +370,40 @@ const BentoGridSection = () => {
                     
                     <Flex
                         position="absolute"
-                        top={4}
-                        right={4}
-                        bg="whiteAlpha.200"
+                        top={{ base: 3, md: 4 }}
+                        right={{ base: 3, md: 4 }}
+                        bg="whiteAlpha.300"
                         backdropFilter="blur(10px)"
                         borderRadius="full"
                         p={2}
                         align="center"
                         justify="center"
                     >
-                        <Icon as={FiShoppingBag} boxSize={5} color="white" />
+                        <Icon as={FiShoppingBag} boxSize={{ base: 4, md: 5 }} color="white" />
                     </Flex>
 
-                    <Box position="absolute" bottom={4} left={4} right={4} color="white">
+                    <Box position="absolute" bottom={{ base: 3, md: 4 }} left={{ base: 3, md: 4 }} right={{ base: 3, md: 4 }} color="white">
                         <Badge
-                            bg="linear(135deg, #fa709a 0%, #fee140 100%)"
+                            bgGradient="linear(135deg, #3b82f6 0%, #1e3a8a 100%)"
                             color="white"
                             mb={2}
                             px={2}
                             py={1}
                             borderRadius="full"
-                            fontSize="10px"
+                            fontSize={{ base: "8px", md: "10px" }}
                         >
                             👟 TRENDING
                         </Badge>
                         <Heading size="sm" mb={1}>
                             Street Style
                         </Heading>
-                        <Text fontSize="xs" opacity={0.9}>
+                        <Text fontSize={{ base: "10px", md: "xs" }} opacity={0.9}>
                             Limited edition drops
                         </Text>
                     </Box>
                 </GridItem>
 
-                {/* Promo Banner - Summer Sale */}
+                {/* Promo Banner - Blue theme */}
                 <GridItem 
                     area="promo" 
                     position="relative" 
@@ -406,22 +415,21 @@ const BentoGridSection = () => {
                     onMouseEnter={() => setIsHovered('promo')}
                     onMouseLeave={() => setIsHovered(null)}
                     onClick={() => router.push('/sale')}
-                    transition="all 0.3s"
-                    _hover={{ transform: "scale(1.01)" }}
+                    transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                    _hover={{ transform: { base: "none", md: "scale(1.01)" }, boxShadow: "lg" }}
                 >
                     <Box
                         w="100%"
                         h="100%"
-                        bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                        bgGradient="linear(135deg, #1e3a8a 0%, #3b82f6 100%)"
                         position="relative"
                     >
-                        {/* Decorative circles */}
                         <Box
                             position="absolute"
                             top="-20%"
                             right="-10%"
-                            w="200px"
-                            h="200px"
+                            w={{ base: "150px", md: "200px" }}
+                            h={{ base: "150px", md: "200px" }}
                             borderRadius="full"
                             bg="whiteAlpha.100"
                         />
@@ -429,8 +437,8 @@ const BentoGridSection = () => {
                             position="absolute"
                             bottom="-30%"
                             left="-10%"
-                            w="250px"
-                            h="250px"
+                            w={{ base: "200px", md: "250px" }}
+                            h={{ base: "200px", md: "250px" }}
                             borderRadius="full"
                             bg="whiteAlpha.100"
                         />
@@ -438,37 +446,38 @@ const BentoGridSection = () => {
                         <Flex 
                             h="100%" 
                             align="center" 
-                            px={{ base: 6, md: 8, lg: 12 }}
+                            px={{ base: 4, md: 6, lg: 8 }}
                             justify="space-between" 
                             direction={{ base: 'column', sm: 'row' }}
-                            py={{ base: 6, md: 0 }}
+                            py={{ base: 4, md: 0 }}
                             position="relative"
                             zIndex={2}
+                            textAlign={{ base: 'center', sm: 'left' }}
                         >
-                            <Box color="white" textAlign={{ base: 'center', sm: 'left' }}>
+                            <Box color="white">
                                 <Flex align="center" gap={2} mb={2} justify={{ base: 'center', sm: 'flex-start' }}>
-                                    <Icon as={FiGift} boxSize={5} />
-                                    <Text fontWeight="bold" fontSize="sm">
+                                    <Icon as={FiGift} boxSize={{ base: 4, md: 5 }} />
+                                    <Text fontWeight="bold" fontSize={{ base: "xs", md: "sm" }}>
                                         SUMMER SALE
                                     </Text>
                                 </Flex>
                                 <Heading size={{ base: "sm", md: "md", lg: "lg" }} mb={1}>
                                     Up to 50% Off
                                 </Heading>
-                                <Text fontSize={{ base: "xs", md: "sm" }} opacity={0.95}>
+                                <Text fontSize={{ base: "10px", md: "sm" }} opacity={0.95}>
                                     On all seasonal items • Limited time
                                 </Text>
                             </Box>
                             <Button
                                 bg="white"
-                                color="purple.600"
+                                color="blue.700"
                                 borderRadius="full"
-                                px={{ base: 6, md: 8 }}
+                                px={{ base: 4, md: 6, lg: 8 }}
                                 fontWeight="bold"
                                 size={{ base: "sm", md: "md" }}
                                 _hover={{ 
                                     transform: "scale(1.05)",
-                                    bg: "gray.100"
+                                    bg: "blue.50"
                                 }}
                                 transition="all 0.3s"
                                 rightIcon={<FiArrowRight />}
@@ -491,52 +500,52 @@ const BentoGridSection = () => {
                         gap={4}
                         h="100%"
                     >
-                        {/* Live Counter Card */}
+                        {/* Live Counter Card - Blue gradient */}
                         <Box
                             flex={1}
-                            bgGradient="linear(135deg, #f093fb 0%, #f5576c 100%)"
+                            bgGradient="linear(135deg, #2563eb 0%, #1e3a8a 100%)"
                             borderRadius={{ base: "xl", md: "2xl" }}
                             p={{ base: 4, md: 6 }}
                             color="white"
                             cursor="pointer"
                             transition="all 0.3s"
-                            _hover={{ transform: "translateY(-5px)", boxShadow: "xl" }}
+                            _hover={{ transform: { base: "none", md: "translateY(-5px)" }, boxShadow: "xl" }}
                         >
                             <Flex align="center" gap={2} mb={3}>
-                                <Icon as={FiClock} boxSize={5} />
-                                <Text fontWeight="bold" fontSize="sm">FLASH SALE ENDS IN</Text>
+                                <Icon as={FiClock} boxSize={{ base: 4, md: 5 }} />
+                                <Text fontWeight="bold" fontSize={{ base: "10px", md: "sm" }}>FLASH SALE ENDS IN</Text>
                             </Flex>
-                            <Flex gap={3} mb={3}>
+                            <Flex gap={2} mb={3} wrap="wrap">
                                 <Box>
-                                    <Heading size="2xl">{String(timeLeft.hours).padStart(2, '0')}</Heading>
-                                    <Text fontSize="xs">HOURS</Text>
+                                    <Heading size={{ base: "lg", md: "2xl" }}>{String(timeLeft.hours).padStart(2, '0')}</Heading>
+                                    <Text fontSize={{ base: "9px", md: "xs" }}>HOURS</Text>
                                 </Box>
-                                <Heading size="2xl">:</Heading>
+                                <Heading size={{ base: "lg", md: "2xl" }}>:</Heading>
                                 <Box>
-                                    <Heading size="2xl">{String(timeLeft.minutes).padStart(2, '0')}</Heading>
-                                    <Text fontSize="xs">MINS</Text>
+                                    <Heading size={{ base: "lg", md: "2xl" }}>{String(timeLeft.minutes).padStart(2, '0')}</Heading>
+                                    <Text fontSize={{ base: "9px", md: "xs" }}>MINS</Text>
                                 </Box>
-                                <Heading size="2xl">:</Heading>
+                                <Heading size={{ base: "lg", md: "2xl" }}>:</Heading>
                                 <Box>
-                                    <Heading size="2xl">{String(timeLeft.seconds).padStart(2, '0')}</Heading>
-                                    <Text fontSize="xs">SECS</Text>
+                                    <Heading size={{ base: "lg", md: "2xl" }}>{String(timeLeft.seconds).padStart(2, '0')}</Heading>
+                                    <Text fontSize={{ base: "9px", md: "xs" }}>SECS</Text>
                                 </Box>
                             </Flex>
                             <Button
-                                size="sm"
+                                size={{ base: "xs", md: "sm" }}
                                 variant="outline"
                                 color="white"
                                 borderColor="white"
                                 borderRadius="full"
                                 w="full"
-                                _hover={{ bg: "white", color: "pink.500" }}
+                                _hover={{ bg: "white", color: "blue.600" }}
                                 transition="all 0.3s"
                             >
                                 Shop Flash Sale
                             </Button>
                         </Box>
 
-                        {/* Trending Items */}
+                        {/* Trending Items - White card with blue accents */}
                         <Box
                             flex={2}
                             bg={cardBg}
@@ -545,11 +554,11 @@ const BentoGridSection = () => {
                             boxShadow="sm"
                             cursor="pointer"
                             transition="all 0.3s"
-                            _hover={{ transform: "translateY(-5px)", boxShadow: "lg" }}
+                            _hover={{ transform: { base: "none", md: "translateY(-5px)" }, boxShadow: "lg" }}
                         >
                             <Flex align="center" gap={2} mb={4}>
-                                <Icon as={FiHeart} color="red.500" />
-                                <Text fontWeight="bold" fontSize="sm">
+                                <Icon as={FiBarChart2} color="blue.500" />
+                                <Text fontWeight="bold" fontSize={{ base: "xs", md: "sm" }} color="blue.700" _dark={{ color: "white" }}>
                                     Most Loved This Week
                                 </Text>
                             </Flex>
@@ -559,24 +568,37 @@ const BentoGridSection = () => {
                                     { name: "Smart Watch Series", sold: "1.8k", icon: FiCamera, rating: 4.8 },
                                     { name: "Premium Backpack", sold: "1.2k", icon: FiShoppingBag, rating: 4.7 }
                                 ].map((item, idx) => (
-                                    <Flex key={idx} justify="space-between" align="center">
+                                    <Flex 
+                                        key={idx} 
+                                        justify="space-between" 
+                                        align="center"
+                                        direction={{ base: 'column', xs: 'row' }}
+                                        gap={{ base: 2, xs: 0 }}
+                                        pb={idx !== 2 ? 2 : 0}
+                                        borderBottom={idx !== 2 ? "1px solid" : "none"}
+                                        borderColor="gray.100"
+                                        _dark={{ borderColor: "gray.700" }}
+                                    >
                                         <Flex align="center" gap={2}>
                                             <Flex
-                                                bg={useColorModeValue('gray.100', 'gray.700')}
+                                                bg="blue.50"
+                                                _dark={{ bg: "gray.700" }}
                                                 p={1.5}
                                                 borderRadius="full"
                                             >
-                                                <Icon as={item.icon} boxSize={3} />
+                                                <Icon as={item.icon} boxSize={{ base: 3, md: 3.5 }} color="blue.500" />
                                             </Flex>
                                             <Box>
-                                                <Text fontSize="sm" fontWeight="500">{item.name}</Text>
+                                                <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="500">
+                                                    {item.name}
+                                                </Text>
                                                 <Flex align="center" gap={1}>
                                                     <Icon as={FiStar} boxSize={2.5} color="yellow.400" fill="yellow.400" />
                                                     <Text fontSize="xs" color="gray.500">{item.rating}</Text>
                                                 </Flex>
                                             </Box>
                                         </Flex>
-                                        <Text fontSize="xs" color="green.500" fontWeight="bold">
+                                        <Text fontSize={{ base: "10px", md: "xs" }} color="blue.600" fontWeight="bold">
                                             +{item.sold} sold
                                         </Text>
                                     </Flex>

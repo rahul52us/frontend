@@ -10,15 +10,15 @@ const StateFilter = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // Color mode values
-  const sectionBg = useColorModeValue("gray.50", "gray.900");
+  // Professional blue & white color mode values
+  const sectionBg = useColorModeValue("blue.50", "gray.900");
   const cardBg = useColorModeValue("white", "gray.800");
   const gradientOverlay = useColorModeValue(
-    "linear(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.85) 100%)",
-    "linear(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%)"
+    "linear(180deg, rgba(255,255,255,0) 0%, rgba(0,0,0,0.75) 100%)",
+    "linear(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.85) 100%)"
   );
 
-  // Sample data enhancement - add more details to states
+  // Sample data enhancement
   const enhancedStates = indianStates.map((state, idx) => ({
     ...state,
     productCount: Math.floor(Math.random() * 500) + 100,
@@ -44,21 +44,21 @@ const StateFilter = () => {
 
   return (
     <Box 
-      py={{ base: 8, md: 12, lg: 16 }} 
+      py={{ base: 6, md: 12, lg: 16 }} 
       bg={sectionBg} 
       position="relative" 
       overflow="hidden"
     >
-      {/* Background Decorative Elements */}
+      {/* Background Decorative Elements - Blue & White Theme */}
       <Box
         position="absolute"
         top="0"
         left="0"
         right="0"
         h="200px"
-        bgGradient="linear(135deg, purple.100 0%, pink.100 100%)"
-        opacity="0.3"
-        _dark={{ opacity: 0.1 }}
+        bgGradient="linear(135deg, blue.100 0%, cyan.100 100%)"
+        opacity="0.4"
+        _dark={{ opacity: 0.05 }}
       />
       <Box
         position="absolute"
@@ -66,28 +66,28 @@ const StateFilter = () => {
         left="0"
         right="0"
         h="150px"
-        bgGradient="linear(135deg, blue.100 0%, cyan.100 100%)"
-        opacity="0.2"
-        _dark={{ opacity: 0.05 }}
+        bgGradient="linear(135deg, blue.50 0%, white 100%)"
+        opacity="0.6"
+        _dark={{ opacity: 0 }}
       />
 
       <Container maxW="100%" px={{ base: 4, md: 6, lg: 8 }}>
         {/* Header Section */}
-        <Box position="relative" zIndex={2} mb={{ base: 8, md: 12 }}>
+        <Box position="relative" zIndex={2} mb={{ base: 6, md: 10 }}>
           <Flex justify="center" mb={4}>
             <HStack spacing={2}>
-              <Icon as={FiCompass} boxSize={5} color="purple.500" />
+              <Icon as={FiCompass} boxSize={5} color="blue.500" />
               <Text
                 fontSize="xs"
                 fontWeight="800"
                 letterSpacing="widest"
                 textTransform="uppercase"
-                bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+                bgGradient="linear(135deg, #2563eb 0%, #1e3a8a 100%)"
                 bgClip="text"
               >
                 Explore India
               </Text>
-              <Icon as={FiHeart} boxSize={5} color="pink.500" />
+              <Icon as={FiHeart} boxSize={5} color="blue.400" />
             </HStack>
           </Flex>
           
@@ -103,56 +103,56 @@ const StateFilter = () => {
             subheading="Experience the rich cultural heritage through unique handcrafted products from across India"
           />
           
-          {/* Stats Bar */}
+          {/* Stats Bar - Mobile Friendly */}
           <Flex 
             justify="center" 
-            gap={{ base: 4, md: 8 }} 
+            gap={{ base: 3, md: 8 }} 
             mt={6}
             direction={{ base: "column", sm: "row" }}
             align="center"
           >
-            <HStack spacing={2}>
-              <Circle size="32px" bg="purple.100" _dark={{ bg: "purple.900" }}>
-                <Icon as={FaStore} color="purple.600" size={14} />
+            <HStack spacing={2} bg="whiteAlpha.800" _dark={{ bg: "gray.800" }} px={4} py={2} borderRadius="full" boxShadow="sm">
+              <Circle size="32px" bg="blue.100" _dark={{ bg: "blue.900" }}>
+                <Icon as={FaStore} color="blue.600" size={14} />
               </Circle>
               <Box>
-                <Text fontWeight="bold" fontSize="xl">{indianStates.length}+</Text>
-                <Text fontSize="xs" color="gray.500">States & UTs</Text>
+                <Text fontWeight="bold" fontSize="xl" color="blue.700" _dark={{ color: "blue.200" }}>{indianStates.length}+</Text>
+                <Text fontSize="xs" color="gray.600" _dark={{ color: "gray.400" }}>States & UTs</Text>
               </Box>
             </HStack>
-            <HStack spacing={2}>
-              <Circle size="32px" bg="pink.100" _dark={{ bg: "pink.900" }}>
-                <Icon as={FaHandsHelping} color="pink.600" size={14} />
+            <HStack spacing={2} bg="whiteAlpha.800" _dark={{ bg: "gray.800" }} px={4} py={2} borderRadius="full" boxShadow="sm">
+              <Circle size="32px" bg="cyan.100" _dark={{ bg: "cyan.900" }}>
+                <Icon as={FaHandsHelping} color="cyan.600" size={14} />
               </Circle>
               <Box>
-                <Text fontWeight="bold" fontSize="xl">10K+</Text>
-                <Text fontSize="xs" color="gray.500">Artisans</Text>
+                <Text fontWeight="bold" fontSize="xl" color="cyan.700" _dark={{ color: "cyan.200" }}>10K+</Text>
+                <Text fontSize="xs" color="gray.600" _dark={{ color: "gray.400" }}>Artisans</Text>
               </Box>
             </HStack>
-            <HStack spacing={2}>
-              <Circle size="32px" bg="orange.100" _dark={{ bg: "orange.900" }}>
-                <Icon as={FiAward} color="orange.600" size={14} />
+            <HStack spacing={2} bg="whiteAlpha.800" _dark={{ bg: "gray.800" }} px={4} py={2} borderRadius="full" boxShadow="sm">
+              <Circle size="32px" bg="blue.100" _dark={{ bg: "blue.900" }}>
+                <Icon as={FiAward} color="blue.600" size={14} />
               </Circle>
               <Box>
-                <Text fontWeight="bold" fontSize="xl">50K+</Text>
-                <Text fontSize="xs" color="gray.500">Products</Text>
+                <Text fontWeight="bold" fontSize="xl" color="blue.700" _dark={{ color: "blue.200" }}>50K+</Text>
+                <Text fontSize="xs" color="gray.600" _dark={{ color: "gray.400" }}>Products</Text>
               </Box>
             </HStack>
           </Flex>
         </Box>
 
-        {/* Carousel Section */}
-        <Box position="relative" zIndex={2} px={{ base: 2, md: 4 }}>
+        {/* Carousel Section - Mobile Optimized */}
+        <Box position="relative" zIndex={2} px={{ base: 1, md: 4 }}>
           <Carousel {...settings}>
             {enhancedStates.map((state, index) => (
               <Box
                 key={index}
-                px={2}
+                px={{ base: 1, md: 2 }}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
                 cursor="pointer"
                 transition="all 0.3s ease"
-                transform={hoveredIndex === index ? "translateY(-8px)" : "translateY(0)"}
+                transform={hoveredIndex === index ? "translateY(-4px)" : "translateY(0)"}
               >
                 <Box
                   position="relative"
@@ -161,9 +161,8 @@ const StateFilter = () => {
                   bg={cardBg}
                   boxShadow={hoveredIndex === index ? "xl" : "md"}
                   transition="all 0.3s ease"
-                  height="260px"
+                  height={{ base: "220px", md: "260px" }}
                 >
-                  {/* State Image */}
                   <Image
                     src={state.image}
                     alt={state.state}
@@ -171,23 +170,22 @@ const StateFilter = () => {
                     height="100%"
                     width="100%"
                     transition="transform 0.5s ease"
-                    transform={hoveredIndex === index ? "scale(1.08)" : "scale(1)"}
+                    transform={hoveredIndex === index ? "scale(1.06)" : "scale(1)"}
                   />
 
-                  {/* Gradient Overlay */}
                   <Box
                     position="absolute"
                     inset={0}
                     bgGradient={gradientOverlay}
                   />
 
-                  {/* Trending Badge */}
+                  {/* Trending Badge - Blue theme */}
                   {state.isTrending && (
                     <Badge
                       position="absolute"
                       top={3}
                       left={3}
-                      bg="gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                      bg="linear(135deg, #2563eb 0%, #1e3a8a 100%)"
                       color="white"
                       px={2.5}
                       py={1}
@@ -208,7 +206,7 @@ const StateFilter = () => {
                     position="absolute"
                     top={3}
                     right={3}
-                    bg="whiteAlpha.200"
+                    bg="whiteAlpha.300"
                     backdropFilter="blur(10px)"
                     color="white"
                     px={2}
@@ -223,49 +221,48 @@ const StateFilter = () => {
                     </HStack>
                   </Badge>
 
-                  {/* Content */}
                   <VStack
                     position="absolute"
                     bottom={0}
                     left={0}
                     right={0}
-                    p={4}
+                    p={{ base: 3, md: 4 }}
                     color="white"
-                    spacing={2}
+                    spacing={{ base: 1, md: 2 }}
                     align="flex-start"
                     zIndex={2}
                   >
                     <Flex align="center" gap={2}>
                       <Icon as={FiMapPin} boxSize={3} />
-                      <Heading as="h3" size="md" fontWeight="800" letterSpacing="-0.5px">
+                      <Heading as="h3" size={{ base: "sm", md: "md" }} fontWeight="800" letterSpacing="-0.5px">
                         {state.state}
                       </Heading>
                     </Flex>
                     
-                    {/* Animated Details on Hover */}
                     <Box
                       opacity={hoveredIndex === index ? 1 : 0}
                       transform={hoveredIndex === index ? "translateY(0)" : "translateY(10px)"}
                       transition="all 0.3s ease"
                       width="100%"
                     >
-                      <Text fontSize="xs" opacity={0.9} noOfLines={2}>
+                      <Text fontSize={{ base: "9px", md: "xs" }} opacity={0.9} noOfLines={2}>
                         Known for {state.popularItem} • {state.productCount}+ products
                       </Text>
                       
                       <Button
                         size="xs"
                         variant="outline"
-                        colorScheme="white"
                         borderColor="white"
                         borderRadius="full"
                         mt={2}
-                        px={4}
+                        px={{ base: 3, md: 4 }}
                         py={1}
                         height="auto"
-                        fontSize="10px"
+                        fontSize={{ base: "8px", md: "10px" }}
                         fontWeight="bold"
-                        _hover={{ bg: "white", color: "gray.900" }}
+                        bg="whiteAlpha.200"
+                        backdropFilter="blur(4px)"
+                        _hover={{ bg: "white", color: "blue.600" }}
                         transition="all 0.3s"
                       >
                         Explore Collection
@@ -273,14 +270,14 @@ const StateFilter = () => {
                     </Box>
                   </VStack>
 
-                  {/* Bottom Border Animation */}
+                  {/* Bottom Border - Blue theme */}
                   <Box
                     position="absolute"
                     bottom={0}
                     left={0}
                     right={0}
                     height="3px"
-                    bgGradient="linear(90deg, #667eea, #764ba2, #f093fb, #f5576c)"
+                    bgGradient="linear(90deg, #2563eb, #3b82f6, #06b6d4, #2563eb)"
                     transformOrigin="left"
                     transition="transform 0.3s ease"
                     transform={hoveredIndex === index ? "scaleX(1)" : "scaleX(0)"}
@@ -291,20 +288,20 @@ const StateFilter = () => {
           </Carousel>
         </Box>
 
-        {/* Footer CTA */}
+        {/* Footer CTA - Blue theme */}
         <Flex justify="center" mt={{ base: 8, md: 12 }}>
           <Button
-            size="lg"
-            variant="outline"
-            colorScheme="purple"
+            size={{ base: "md", md: "lg" }}
+            variant="solid"
+            bg="blue.600"
+            color="white"
             borderRadius="full"
-            px={8}
+            px={{ base: 6, md: 8 }}
             rightIcon={<FiCompass />}
             _hover={{
               transform: "translateY(-2px)",
-              boxShadow: "lg",
-              bg: "purple.500",
-              color: "white"
+              boxShadow: "xl",
+              bg: "blue.700"
             }}
             transition="all 0.3s"
           >

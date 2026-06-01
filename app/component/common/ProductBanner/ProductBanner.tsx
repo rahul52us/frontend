@@ -39,9 +39,9 @@ const ProductBanner = () => {
   ];
 
   const features = [
-    { icon: FiHeadphones, text: "AI Noise Cancellation", color: "blue.400" },
-    { icon: FiBattery, text: "48h Battery Life", color: "green.400" },
-    { icon: FiShield, text: "2 Year Warranty", color: "purple.400" }
+    { icon: FiHeadphones, text: "AI Noise Cancellation", color: "blue.500" },
+    { icon: FiBattery, text: "48h Battery Life", color: "green.500" },
+    { icon: FiShield, text: "2 Year Warranty", color: "blue.600" }
   ];
 
   useEffect(() => {
@@ -56,10 +56,14 @@ const ProductBanner = () => {
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
 
-  // Color mode values
-  const badgeBg = useColorModeValue('whiteAlpha.200', 'blackAlpha.300');
-  const buttonBg = useColorModeValue('white', 'gray.800');
-  const buttonColor = useColorModeValue('gray.900', 'white');
+  // Blue & White color mode values
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const badgeBg = useColorModeValue('blue.50', 'blue.900');
+  const badgeColor = useColorModeValue('blue.700', 'blue.200');
+  const buttonBg = useColorModeValue('blue.600', 'blue.500');
+  const buttonColor = useColorModeValue('white', 'white');
+  const featureBg = useColorModeValue('gray.50', 'gray.700');
+  const sectionBg = useColorModeValue('blue.50', 'gray.900');
 
   return (
     <Container maxW="7xl" py={{ base: 8, md: 12, lg: 16 }} px={{ base: 4, sm: 6, md: 8 }}>
@@ -68,22 +72,23 @@ const ProductBanner = () => {
         minH={{ base: 'auto', md: '550px', lg: '600px' }}
         borderRadius={{ base: '2xl', md: '3xl' }}
         overflow="hidden"
-        bgGradient="linear(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)"
+        bg={cardBg}
+        boxShadow="xl"
         p={{ base: 6, sm: 8, md: 12, lg: 16 }}
         transition="all 0.3s ease"
         _hover={{ boxShadow: "2xl" }}
       >
-        {/* Background Decorative Elements - No animations */}
+        {/* Background Decorative Elements - Soft blue tones */}
         <Box
           position="absolute"
           top="-20%"
           right="-10%"
           w={{ base: "300px", md: "500px" }}
           h={{ base: "300px", md: "500px" }}
-          bg="blue.500"
+          bg="blue.200"
           borderRadius="full"
           filter="blur(100px)"
-          opacity={0.2}
+          opacity={0.4}
         />
         <Box
           position="absolute"
@@ -91,10 +96,10 @@ const ProductBanner = () => {
           left="-10%"
           w={{ base: "250px", md: "400px" }}
           h={{ base: "250px", md: "400px" }}
-          bg="purple.500"
+          bg="blue.100"
           borderRadius="full"
           filter="blur(80px)"
-          opacity={0.15}
+          opacity={0.5}
         />
         <Box
           position="absolute"
@@ -102,10 +107,10 @@ const ProductBanner = () => {
           left="20%"
           w="200px"
           h="200px"
-          bg="cyan.500"
+          bg="cyan.200"
           borderRadius="full"
           filter="blur(60px)"
-          opacity={0.1}
+          opacity={0.3}
         />
 
         <Flex
@@ -123,21 +128,20 @@ const ProductBanner = () => {
             align={{ base: 'center', lg: 'flex-start' }}
             textAlign={{ base: 'center', lg: 'left' }}
           >
-            {/* Flash Deal Badge */}
+            {/* Flash Deal Badge - Blue theme */}
             <HStack
               bg={badgeBg}
-              backdropFilter="blur(12px)"
               px={4}
               py={2}
               borderRadius="full"
               border="1px solid"
-              borderColor="whiteAlpha.300"
+              borderColor="blue.200"
               spacing={2}
               transition="all 0.3s"
-              _hover={{ transform: "scale(1.05)", bg: "whiteAlpha.300" }}
+              _hover={{ transform: "scale(1.05)", bg: "blue.100" }}
             >
-              <FiZap color="#fbbf24" size={18} />
-              <Text fontSize={{ base: "10px", sm: "xs", md: "sm" }} fontWeight="800" color="white" letterSpacing="widest" textTransform="uppercase">
+              <FiZap color="#2563eb" size={18} />
+              <Text fontSize={{ base: "10px", sm: "xs", md: "sm" }} fontWeight="800" color={badgeColor} letterSpacing="widest" textTransform="uppercase">
                 Flash Deal - 50% OFF
               </Text>
             </HStack>
@@ -148,13 +152,14 @@ const ProductBanner = () => {
                 fontSize={{ base: '3xl', sm: '4xl', md: '5xl', lg: '6xl', xl: '7xl' }}
                 fontWeight="900"
                 lineHeight="1.1"
-                color="white"
+                color="gray.800"
+                _dark={{ color: "white" }}
                 letterSpacing="-0.02em"
               >
                 Quantum X3
                 <Text 
                   as="span" 
-                  bgGradient="linear(135deg, #60a5fa 0%, #34d399 50%, #a78bfa 100%)"
+                  bgGradient="linear(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%)"
                   bgClip="text"
                   display="block"
                 >
@@ -166,7 +171,8 @@ const ProductBanner = () => {
             {/* Description */}
             <Text
               fontSize={{ base: 'sm', md: 'md', lg: 'lg' }}
-              color="whiteAlpha.700"
+              color="gray.600"
+              _dark={{ color: "gray.300" }}
               maxW={{ base: "100%", lg: "500px" }}
               lineHeight="tall"
             >
@@ -174,46 +180,46 @@ const ProductBanner = () => {
               and a battery life that keeps up with your rhythm.
             </Text>
 
-            {/* Features Grid */}
+            {/* Features Grid - Light backgrounds */}
             <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={3} w="full">
               {features.map((feature, idx) => (
                 <HStack 
                   key={idx} 
                   spacing={2}
-                  bg="whiteAlpha.100"
+                  bg={featureBg}
                   px={3}
                   py={2}
                   borderRadius="lg"
                   transition="all 0.3s"
-                  _hover={{ transform: "translateY(-2px)", bg: "whiteAlpha.200" }}
+                  _hover={{ transform: "translateY(-2px)", bg: "blue.50" }}
                 >
                   <feature.icon color={feature.color} size={16} />
-                  <Text fontSize="xs" fontWeight="600" color="whiteAlpha.900">
+                  <Text fontSize="xs" fontWeight="600" color="gray.700" _dark={{ color: "gray.200" }}>
                     {feature.text}
                   </Text>
                 </HStack>
               ))}
             </SimpleGrid>
 
-            {/* Price Section */}
+            {/* Price Section - Blue accents */}
             <HStack spacing={6} pt={2}>
               <Box>
-                <Text color="whiteAlpha.600" fontSize="xs" fontWeight="700" letterSpacing="widest">
+                <Text color="gray.500" fontSize="xs" fontWeight="700" letterSpacing="widest">
                   PRICE
                 </Text>
-                <Text fontSize={{ base: "3xl", md: "4xl" }} fontWeight="900" color="white">
+                <Text fontSize={{ base: "3xl", md: "4xl" }} fontWeight="900" color="gray.800" _dark={{ color: "white" }}>
                   $299.99
                 </Text>
-                <Text fontSize="sm" color="whiteAlpha.500" textDecoration="line-through">
+                <Text fontSize="sm" color="gray.400" textDecoration="line-through">
                   $499.99
                 </Text>
               </Box>
-              <Divider orientation="vertical" h="50px" bg="whiteAlpha.300" />
+              <Divider orientation="vertical" h="50px" bg="gray.200" _dark={{ bg: "gray.600" }} />
               <Box>
-                <Text color="whiteAlpha.600" fontSize="xs" fontWeight="700" letterSpacing="widest">
+                <Text color="gray.500" fontSize="xs" fontWeight="700" letterSpacing="widest">
                   YOU SAVE
                 </Text>
-                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="900" color="green.400">
+                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="900" color="green.600">
                   $200
                 </Text>
                 <Badge colorScheme="green" fontSize="xs">40% OFF</Badge>
@@ -224,19 +230,19 @@ const ProductBanner = () => {
             <HStack spacing={4} pt={2}>
               <HStack spacing={1}>
                 <FiStar color="#fbbf24" size={14} />
-                <Text fontSize="xs" color="whiteAlpha.800">4.9/5 Rating</Text>
+                <Text fontSize="xs" color="gray.600">4.9/5 Rating</Text>
               </HStack>
               <HStack spacing={1}>
-                <FiTruck color="#60a5fa" size={14} />
-                <Text fontSize="xs" color="whiteAlpha.800">Free Shipping</Text>
+                <FiTruck color="#3b82f6" size={14} />
+                <Text fontSize="xs" color="gray.600">Free Shipping</Text>
               </HStack>
               <HStack spacing={1}>
-                <FiTrendingUp color="#34d399" size={14} />
-                <Text fontSize="xs" color="whiteAlpha.800">Top Seller</Text>
+                <FiTrendingUp color="#10b981" size={14} />
+                <Text fontSize="xs" color="gray.600">Top Seller</Text>
               </HStack>
             </HStack>
 
-            {/* CTA Button */}
+            {/* CTA Button - Solid Blue */}
             <Button
               size="lg"
               h={{ base: "60px", md: "70px" }}
@@ -250,8 +256,8 @@ const ProductBanner = () => {
               transition="all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
               _hover={{
                 transform: "translateY(-4px)",
-                boxShadow: "0 20px 40px -10px rgba(255,255,255,0.2)",
-                bg: buttonBg === 'white' ? "gray.100" : "gray.700"
+                boxShadow: "0 20px 40px -10px rgba(37,99,235,0.4)",
+                bg: useColorModeValue('blue.700', 'blue.400')
               }}
               _active={{ transform: "translateY(0px)" }}
               w={{ base: "full", sm: "auto" }}
@@ -267,7 +273,6 @@ const ProductBanner = () => {
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            {/* Main Image */}
             <Box
               position="relative"
               transition="all 0.5s ease"
@@ -279,13 +284,13 @@ const ProductBanner = () => {
                 w="full"
                 maxH={{ base: "300px", sm: "400px", md: "450px", lg: "500px" }}
                 objectFit="contain"
-                filter="drop-shadow(0 20px 40px rgba(0,0,0,0.3))"
+                filter="drop-shadow(0 20px 30px rgba(0,0,0,0.15))"
                 transition="opacity 0.3s ease"
                 opacity={1}
               />
             </Box>
 
-            {/* Navigation Arrows */}
+            {/* Navigation Arrows - Blue themed */}
             <IconButton
               aria-label="Previous"
               icon={<FiChevronLeft size={24} />}
@@ -293,16 +298,17 @@ const ProductBanner = () => {
               left={{ base: "-10px", md: "-20px" }}
               top="50%"
               transform="translateY(-50%)"
-              bg="whiteAlpha.200"
-              color="white"
-              backdropFilter="blur(10px)"
+              bg="white"
+              color="blue.600"
+              boxShadow="md"
               borderRadius="full"
               onClick={prevImage}
               size={{ base: "sm", md: "md" }}
               transition="all 0.3s"
               _hover={{ 
                 transform: "translateY(-50%) scale(1.1)",
-                bg: "whiteAlpha.400"
+                bg: "blue.50",
+                color: "blue.700"
               }}
             />
             <IconButton
@@ -312,20 +318,21 @@ const ProductBanner = () => {
               right={{ base: "-10px", md: "-20px" }}
               top="50%"
               transform="translateY(-50%)"
-              bg="whiteAlpha.200"
-              color="white"
-              backdropFilter="blur(10px)"
+              bg="white"
+              color="blue.600"
+              boxShadow="md"
               borderRadius="full"
               onClick={nextImage}
               size={{ base: "sm", md: "md" }}
               transition="all 0.3s"
               _hover={{ 
                 transform: "translateY(-50%) scale(1.1)",
-                bg: "whiteAlpha.400"
+                bg: "blue.50",
+                color: "blue.700"
               }}
             />
 
-            {/* Thumbnail Indicators */}
+            {/* Thumbnail Indicators - Blue */}
             <HStack
               position="absolute"
               bottom="-30px"
@@ -340,25 +347,25 @@ const ProductBanner = () => {
                   w={currentImageIndex === idx ? "24px" : "8px"}
                   h="8px"
                   borderRadius="full"
-                  bg={currentImageIndex === idx ? "white" : "whiteAlpha.400"}
+                  bg={currentImageIndex === idx ? "blue.600" : "gray.300"}
                   cursor="pointer"
                   transition="all 0.3s"
                   onClick={() => setCurrentImageIndex(idx)}
-                  _hover={{ bg: "white", transform: "scaleX(1.2)" }}
+                  _hover={{ bg: "blue.400", transform: "scaleX(1.2)" }}
                 />
               ))}
             </HStack>
           </Box>
         </Flex>
 
-        {/* Bottom Decorative Bar */}
+        {/* Bottom Decorative Bar - Blue gradient */}
         <Box
           position="absolute"
           bottom={0}
           left={0}
           right={0}
           h="3px"
-          bgGradient="linear(90deg, #60a5fa, #34d399, #a78bfa, #60a5fa)"
+          bgGradient="linear(90deg, #1e3a8a, #3b82f6, #06b6d4, #1e3a8a)"
           borderBottomRadius="full"
         />
       </Box>

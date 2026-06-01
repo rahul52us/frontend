@@ -82,18 +82,22 @@ const CreativeTabs = () => {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  // Get gradient for category
+  // Get gradient for category - Blue & White theme
   const getCategoryGradient = (color: string) => {
     const gradients: Record<string, string> = {
-      blue: "linear(135deg, #60a5fa 0%, #3b82f6 100%)",
-      cyan: "linear(135deg, #22d3ee 0%, #06b6d4 100%)",
-      pink: "linear(135deg, #f472b6 0%, #ec4899 100%)",
-      green: "linear(135deg, #4ade80 0%, #22c55e 100%)",
-      purple: "linear(135deg, #a78bfa 0%, #8b5cf6 100%)",
-      orange: "linear(135deg, #fb923c 0%, #f97316 100%)",
+      blue: "linear(135deg, #1e3a8a 0%, #3b82f6 100%)",
+      cyan: "linear(135deg, #06b6d4 0%, #22d3ee 100%)",
+      pink: "linear(135deg, #ec4899 0%, #f472b6 100%)",
+      green: "linear(135deg, #15803d 0%, #22c55e 100%)",
+      purple: "linear(135deg, #7c3aed 0%, #a78bfa 100%)",
+      orange: "linear(135deg, #ea580c 0%, #f97316 100%)",
     };
     return gradients[color] || gradients.blue;
   };
+
+  // Blue gradient for primary accents
+  const primaryBlueGradient = "linear(135deg, #1e3a8a 0%, #3b82f6 100%)";
+  const lightBlueGradient = "linear(135deg, #bfdbfe 0%, #93c5fd 100%)";
 
   return (
     <Box
@@ -103,14 +107,14 @@ const CreativeTabs = () => {
       bg={bgColor}
       minH="100vh"
     >
-      {/* Decorative Background */}
+      {/* Decorative Background - Soft blue tones */}
       <Box
         position="absolute"
         top="-10%"
         right="-5%"
         w={{ base: "200px", md: "400px" }}
         h={{ base: "200px", md: "400px" }}
-        bg="purple.200"
+        bg="blue.200"
         borderRadius="full"
         filter="blur(80px)"
         opacity={0.3}
@@ -123,7 +127,7 @@ const CreativeTabs = () => {
         left="-5%"
         w={{ base: "200px", md: "300px" }}
         h={{ base: "200px", md: "300px" }}
-        bg="pink.200"
+        bg="blue.100"
         borderRadius="full"
         filter="blur(80px)"
         opacity={0.3}
@@ -132,18 +136,18 @@ const CreativeTabs = () => {
       />
 
       <Container maxW="100%" position="relative" zIndex={2}>
-        {/* Header Section */}
+        {/* Header Section - Blue theme */}
         <VStack spacing={4} mb={{ base: 8, md: 12 }}>
           <HStack spacing={2}>
-            <Circle size="40px" bg="purple.100" _dark={{ bg: "purple.900" }}>
-              <Icon as={FiTrendingUp} color="purple.600" boxSize={5} />
+            <Circle size="40px" bg="blue.100" _dark={{ bg: "blue.900" }}>
+              <Icon as={FiTrendingUp} color="blue.600" boxSize={5} />
             </Circle>
             <Text
               fontSize="xs"
               fontWeight="800"
               letterSpacing="widest"
               textTransform="uppercase"
-              bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+              bgGradient={primaryBlueGradient}
               bgClip="text"
             >
               Shop by Category
@@ -158,7 +162,7 @@ const CreativeTabs = () => {
             lineHeight="1.2"
           >
             Discover Your
-            <Text as="span" bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)" bgClip="text">
+            <Text as="span" bgGradient={primaryBlueGradient} bgClip="text">
               {" "}Favorite{" "}
             </Text>
             Categories
@@ -234,7 +238,7 @@ const CreativeTabs = () => {
                   </Badge>
                 </HStack>
                 
-                {/* Active Indicator */}
+                {/* Active Indicator - Blue theme */}
                 {activeTab === index && (
                   <Box
                     position="absolute"
@@ -259,7 +263,7 @@ const CreativeTabs = () => {
                 transition="all 0.3s ease"
               >
                 <ScaleFade in={!loading} initialScale={0.9} delay={0.1}>
-                  {/* Category Hero Section */}
+                  {/* Category Hero Section - Blue themed gradient for all, but using category color for accent */}
                   <Box
                     mb={8}
                     p={{ base: 4, md: 6 }}
@@ -316,7 +320,7 @@ const CreativeTabs = () => {
                     </Flex>
                   </Box>
 
-                  {/* Products Grid - No Carousel, Clean Grid */}
+                  {/* Products Grid */}
                   {loading ? (
                     <SimpleGrid
                       columns={columnsCount}
@@ -343,7 +347,7 @@ const CreativeTabs = () => {
                         ))}
                       </SimpleGrid>
 
-                      {/* Load More Button */}
+                      {/* Load More Button - Blue theme */}
                       <Flex justify="center" mt={8}>
                         <Button
                           variant="outline"
@@ -360,7 +364,7 @@ const CreativeTabs = () => {
                     </>
                   )}
 
-                  {/* Category Features */}
+                  {/* Category Features - Blue accents */}
                   <Flex
                     justify="space-between"
                     align="center"
@@ -375,15 +379,15 @@ const CreativeTabs = () => {
                   >
                     <HStack spacing={6} flexWrap="wrap" justify="center">
                       <HStack spacing={2}>
-                        <Icon as={FiAward} boxSize={5} color="green.500" />
+                        <Icon as={FiAward} boxSize={5} color="blue.500" />
                         <Text fontSize="sm" fontWeight="500">Top Rated Products</Text>
                       </HStack>
                       <HStack spacing={2}>
-                        <Icon as={FaHandsHelping} boxSize={5} color="purple.500" />
+                        <Icon as={FaHandsHelping} boxSize={5} color="blue.600" />
                         <Text fontSize="sm" fontWeight="500">100% Verified Sellers</Text>
                       </HStack>
                       <HStack spacing={2}>
-                        <Icon as={FiClock} boxSize={5} color="orange.500" />
+                        <Icon as={FiClock} boxSize={5} color="blue.400" />
                         <Text fontSize="sm" fontWeight="500">Free & Fast Delivery</Text>
                       </HStack>
                     </HStack>

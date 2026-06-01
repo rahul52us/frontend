@@ -140,6 +140,7 @@ const MapComponent = () => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'white');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const blueGradient = 'linear(135deg, #1e3a8a 0%, #3b82f6 100%)';
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -298,7 +299,7 @@ const MapComponent = () => {
 
   return (
     <Container maxW="100%" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 8, md: 12 }}>
-      {/* Header Section */}
+      {/* Header Section - Blue Theme */}
       <VStack spacing={4} mb={8} textAlign="center">
         <HStack spacing={2}>
           <Circle size="50px" bg="blue.100" _dark={{ bg: "blue.900" }}>
@@ -312,7 +313,7 @@ const MapComponent = () => {
         <Heading
           size={{ base: "xl", md: "2xl" }}
           fontWeight="900"
-          bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
+          bgGradient={blueGradient}
           bgClip="text"
         >
           Discover Nearby Stores
@@ -323,7 +324,7 @@ const MapComponent = () => {
         </Text>
       </VStack>
 
-      {/* Controls Bar */}
+      {/* Controls Bar - Blue Accents */}
       <Flex
         mb={6}
         justify="space-between"
@@ -386,7 +387,7 @@ const MapComponent = () => {
 
       {/* Map and Sidebar Grid */}
       <SimpleGrid columns={{ base: 1, lg: 3 }} gap={6}>
-        {/* Sidebar - Shop List */}
+        {/* Sidebar - Shop List with Blue Theme */}
         <Box
           bg={cardBg}
           borderRadius="2xl"
@@ -404,13 +405,15 @@ const MapComponent = () => {
               borderRadius: '10px',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: '#888',
+              background: '#cbd5e1',
               borderRadius: '10px',
             },
           }}
         >
           <Box p={4} borderBottom="1px solid" borderColor={borderColor}>
-            <Text fontWeight="800" fontSize="lg">Nearby Sellers</Text>
+            <Text fontWeight="800" fontSize="lg" color="blue.700" _dark={{ color: "blue.300" }}>
+              Nearby Sellers
+            </Text>
             <Text fontSize="xs" color="gray.500">Tap on any store to see details</Text>
           </Box>
           
@@ -544,7 +547,7 @@ const MapComponent = () => {
             </Flex>
           ) : (
             <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={13} options={mapOptions}>
-              {/* User Location Marker */}
+              {/* User Location Marker - Blue */}
               {userLocation && (
                 <>
                   <MarkerF
@@ -574,7 +577,7 @@ const MapComponent = () => {
                 </>
               )}
 
-              {/* Shop Markers */}
+              {/* Shop Markers - Blue/Orange for selected vs normal */}
               {shops.map((shop) => {
                 if (!shop.mapPoint) return null;
                 return (
@@ -586,7 +589,7 @@ const MapComponent = () => {
                     icon={{
                       path: window.google.maps.SymbolPath.CIRCLE,
                       scale: selectedShop?._id === shop._id ? 12 : 8,
-                      fillColor: selectedShop?._id === shop._id ? '#ec4899' : '#f97316',
+                      fillColor: selectedShop?._id === shop._id ? '#f97316' : '#3b82f6',
                       fillOpacity: 1,
                       strokeColor: '#ffffff',
                       strokeWeight: 2,
@@ -595,7 +598,7 @@ const MapComponent = () => {
                 );
               })}
 
-              {/* Info Window for Selected Shop */}
+              {/* Info Window for Selected Shop - Blue themed */}
               {selectedShop?.mapPoint && (
                 <InfoWindowF
                   position={selectedShop.mapPoint}
@@ -607,7 +610,7 @@ const MapComponent = () => {
                   <Box maxW="280px" p={2}>
                     <VStack align="stretch" spacing={2}>
                       <Flex justify="space-between" align="start">
-                        <Text fontWeight="800" fontSize="lg">
+                        <Text fontWeight="800" fontSize="lg" color="blue.700">
                           {selectedShop.name || 'Seller'}
                         </Text>
                         {selectedShop.isVerified && (
@@ -664,7 +667,7 @@ const MapComponent = () => {
                       
                       <Button
                         size="xs"
-                        colorScheme="purple"
+                        colorScheme="blue"
                         borderRadius="full"
                         mt={2}
                         onClick={() => window.open(`https://maps.google.com/?q=${selectedShop.mapPoint?.lat},${selectedShop.mapPoint?.lng}`, '_blank')}
@@ -680,11 +683,11 @@ const MapComponent = () => {
         </Box>
       </SimpleGrid>
 
-      {/* Features Footer */}
+      {/* Features Footer - Blue, Green, Purple to Blue/Green/Orange */}
       <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} gap={4} mt={8}>
         <Flex align="center" gap={3} p={4} bg={cardBg} borderRadius="xl" border="1px solid" borderColor={borderColor}>
-          <Circle size="40px" bg="green.100" _dark={{ bg: "green.900" }}>
-            <Icon as={FaShieldAlt} color="green.600" />
+          <Circle size="40px" bg="blue.100" _dark={{ bg: "blue.900" }}>
+            <Icon as={FaShieldAlt} color="blue.600" />
           </Circle>
           <Box>
             <Text fontWeight="700" fontSize="sm">Verified Sellers</Text>
@@ -693,8 +696,8 @@ const MapComponent = () => {
         </Flex>
         
         <Flex align="center" gap={3} p={4} bg={cardBg} borderRadius="xl" border="1px solid" borderColor={borderColor}>
-          <Circle size="40px" bg="purple.100" _dark={{ bg: "purple.900" }}>
-            <Icon as={FaShippingFast} color="purple.600" />
+          <Circle size="40px" bg="green.100" _dark={{ bg: "green.900" }}>
+            <Icon as={FaShippingFast} color="green.600" />
           </Circle>
           <Box>
             <Text fontWeight="700" fontSize="sm">Fast Delivery</Text>
@@ -713,8 +716,8 @@ const MapComponent = () => {
         </Flex>
         
         <Flex align="center" gap={3} p={4} bg={cardBg} borderRadius="xl" border="1px solid" borderColor={borderColor}>
-          <Circle size="40px" bg="pink.100" _dark={{ bg: "pink.900" }}>
-            <Icon as={FiHeart} color="pink.600" />
+          <Circle size="40px" bg="blue.100" _dark={{ bg: "blue.900" }}>
+            <Icon as={FiHeart} color="blue.600" />
           </Circle>
           <Box>
             <Text fontWeight="700" fontSize="sm">Trusted by Many</Text>

@@ -1,612 +1,556 @@
-import { 
-  Box, 
-  Flex, 
-  Heading, 
-  Text, 
-  useColorModeValue, 
-  Badge, 
-  Container, 
-  VStack, 
-  Button, 
+'use client';
+
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Container,
+  VStack,
   HStack,
+  Text,
+  Button,
+  Badge,
   Icon,
-  SimpleGrid,
-  Circle,
-  Divider,
-  ScaleFade,
-  SlideFade
-} from "@chakra-ui/react";
-import { useEffect, useState, useCallback, useRef } from "react";
-import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
-import stores from "../../../../store/stores";
-import { observer } from "mobx-react-lite";
-import { featuredProducts } from "./utils/constant";
-import { 
-  FiTrendingUp, 
-  FiStar, 
-  FiHeart, 
-  FiShoppingBag, 
-  FiArrowRight,
-  FiAward,
-  FiZap,
-  FiMapPin,
-  FiUsers,
-  FiGlobe,
-  FiCamera
-} from "react-icons/fi";
+  useBreakpointValue,
+  IconButton,
+} from '@chakra-ui/react';
+import { FaStar, FaRegStar, FaStarHalfAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
-const ProductCarousel = observer(() => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [direction, setDirection] = useState<'left' | 'right'>('right');
-  const carouselRef = useRef<HTMLDivElement>(null);
-  
-  const { themeStore: { themeConfig } } = stores;
-  const isDarkMode = themeConfig.config.initialColorMode === "dark";
+// ============================
+// Types
+// ============================
+interface Product {
+  id: string | number;
+  name: string;
+  price: number;
+  oldPrice?: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  badge?: string;
+  category?: string;
+}
 
-  const headingColor = isDarkMode
-    ? themeConfig.colors.dark.primary[500]
-    : themeConfig.colors.light.primary[500];
+interface ProductCarouselProps {
+  products?: Product[];
+  title?: string;
+  subtitle?: string;
+  autoplay?: boolean;
+  autoplaySpeed?: number;
+}
 
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'whiteAlpha.900');
-
-  // Auto-advance carousel with direction awareness
-  useEffect(() => {
-    if (isHovering) return;
-    
-    const interval = setInterval(() => {
-      setDirection('right');
-      setActiveIndex((prev) => (prev + 1) % featuredProducts.length);
-      setProgress(0);
-    }, 8000);
-    
-    return () => clearInterval(interval);
-  }, [isHovering]);
-
-  // Progress bar animation
-  useEffect(() => {
-    if (isHovering) return;
-    
-    let startTime: number;
-    let animationFrame: number;
-    
-    const animateProgress = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const newProgress = Math.min((elapsed / 8000) * 100, 100);
-      setProgress(newProgress);
-      
-      if (newProgress < 100) {
-        animationFrame = requestAnimationFrame(animateProgress);
-      }
-    };
-    
-    animationFrame = requestAnimationFrame(animateProgress);
-    return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-    };
-  }, [activeIndex, isHovering]);
-
-  const getCategoryGradient = (index: number) => {
-    const gradients = [
-      "linear(135deg, #667eea 0%, #764ba2 100%)",
-      "linear(135deg, #f093fb 0%, #f5576c 100%)",
-      "linear(135deg, #4facfe 0%, #00f2fe 100%)",
-      "linear(135deg, #43e97b 0%, #38f9d7 100%)",
-      "linear(135deg, #fa709a 0%, #fee140 100%)",
-    ];
-    return gradients[index % gradients.length];
-  };
-
-  const handleCardClick = (index: number) => {
-    setDirection(index > activeIndex ? 'right' : 'left');
-    setActiveIndex(index);
-    setProgress(0);
-  };
+// ============================
+// Helper: Star Rating
+// ============================
+const renderStars = (rating: number) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
   return (
-    <Box 
-      py={{ base: 8, sm: 12, md: 16, lg: 20 }} 
-      px={{ base: 2, sm: 4, md: 6 }}
-      bg={useColorModeValue('gray.50', 'gray.900')}
+    <HStack spacing={0.5}>
+      {[...Array(fullStars)].map((_, i) => (
+        <Icon key={`full-${i}`} as={FaStar} color="yellow.400" boxSize={3.5} />
+      ))}
+      {hasHalfStar && (
+        <Icon as={FaStarHalfAlt} color="yellow.400" boxSize={3.5} />
+      )}
+      {[...Array(emptyStars)].map((_, i) => (
+        <Icon key={`empty-${i}`} as={FaRegStar} color="gray.300" boxSize={3.5} />
+      ))}
+    </HStack>
+  );
+};
+
+// ============================
+// Default product data
+// ============================
+const defaultProducts: Product[] = [
+  {
+    id: 1,
+    name: 'Wireless Noise Cancelling Headphones',
+    price: 249.99,
+    oldPrice: 349.99,
+    rating: 4.8,
+    reviewCount: 234,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=450&fit=crop',
+    badge: 'Best Seller',
+    category: 'Electronics',
+  },
+  {
+    id: 2,
+    name: 'Smart Watch Ultra',
+    price: 399.99,
+    rating: 4.9,
+    reviewCount: 189,
+    image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&h=450&fit=crop',
+    badge: 'New',
+    category: 'Wearables',
+  },
+  {
+    id: 3,
+    name: 'Minimalist Leather Backpack',
+    price: 89.99,
+    oldPrice: 129.99,
+    rating: 4.7,
+    reviewCount: 456,
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=450&fit=crop',
+    category: 'Fashion',
+  },
+  {
+    id: 4,
+    name: 'Premium Running Shoes',
+    price: 159.99,
+    rating: 4.6,
+    reviewCount: 892,
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=450&fit=crop',
+    badge: '-20%',
+    category: 'Sports',
+  },
+  {
+    id: 5,
+    name: 'Smart Home Speaker',
+    price: 129.99,
+    oldPrice: 179.99,
+    rating: 4.5,
+    reviewCount: 567,
+    image: 'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=600&h=450&fit=crop',
+    category: 'Electronics',
+  },
+  {
+    id: 6,
+    name: 'Ultra HD Action Camera',
+    price: 299.99,
+    rating: 4.8,
+    reviewCount: 321,
+    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=450&fit=crop',
+    badge: 'Trending',
+    category: 'Camera',
+  },
+  {
+    id: 7,
+    name: 'Ergonomic Office Chair',
+    price: 349.99,
+    oldPrice: 499.99,
+    rating: 4.4,
+    reviewCount: 178,
+    image: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=600&h=450&fit=crop',
+    category: 'Furniture',
+  },
+  {
+    id: 8,
+    name: 'Wireless Mechanical Keyboard',
+    price: 119.99,
+    rating: 4.7,
+    reviewCount: 245,
+    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&h=450&fit=crop',
+    badge: 'Hot',
+    category: 'Electronics',
+  },
+];
+
+// ============================
+// Main Component (No scrollbar, perfect autoplay)
+// ============================
+const ProductCarousel: React.FC<ProductCarouselProps> = ({
+  products = defaultProducts,
+  title = '✨ Featured Products',
+  subtitle = 'Hand-picked just for you',
+  autoplay = true,
+  autoplaySpeed = 4000,
+}) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const [cardWidth, setCardWidth] = useState(0);
+  const [totalSlides, setTotalSlides] = useState(0);
+  const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Responsive cards per view
+  const slidesToShow = useBreakpointValue({
+    base: 1,
+    sm: 2,
+    md: 3,
+    lg: 4,
+    xl: 4,
+  }) || 4;
+
+  // Update card width and total slides
+  const updateMetrics = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const firstCard = container.querySelector('.product-card') as HTMLElement;
+      if (firstCard) {
+        const cardWidthValue = firstCard.offsetWidth;
+        setCardWidth(cardWidthValue);
+        const scrollWidth = container.scrollWidth;
+        const visibleWidth = container.clientWidth;
+        const maxScroll = scrollWidth - visibleWidth;
+        const maxIndex = Math.ceil(maxScroll / cardWidthValue);
+        setTotalSlides(Math.max(1, maxIndex + 1));
+      }
+    }
+  }, [products.length]);
+
+  // Update active index on scroll
+  const handleScroll = useCallback(() => {
+    if (scrollContainerRef.current && cardWidth > 0) {
+      const scrollLeft = scrollContainerRef.current.scrollLeft;
+      const newIndex = Math.round(scrollLeft / cardWidth);
+      setActiveIndex(newIndex);
+    }
+  }, [cardWidth]);
+
+  // Scroll to index with smooth behavior
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      if (scrollContainerRef.current && cardWidth > 0) {
+        const maxIndex = totalSlides - 1;
+        const targetIndex = Math.min(Math.max(index, 0), maxIndex);
+        scrollContainerRef.current.scrollTo({
+          left: targetIndex * cardWidth,
+          behavior: 'smooth',
+        });
+        setActiveIndex(targetIndex);
+      }
+    },
+    [cardWidth, totalSlides]
+  );
+
+  const handlePrev = () => scrollToIndex(activeIndex - 1);
+  const handleNext = () => scrollToIndex(activeIndex + 1);
+
+  // Autoplay logic with cleanup
+  useEffect(() => {
+    if (!autoplay || isHovering || totalSlides <= 1) {
+      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+      return;
+    }
+    autoplayTimerRef.current = setInterval(() => {
+      if (activeIndex + 1 < totalSlides) {
+        scrollToIndex(activeIndex + 1);
+      } else {
+        scrollToIndex(0);
+      }
+    }, autoplaySpeed);
+    return () => {
+      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
+    };
+  }, [autoplay, autoplaySpeed, activeIndex, totalSlides, scrollToIndex, isHovering]);
+
+  // Set up resize and scroll listeners
+  useEffect(() => {
+    updateMetrics();
+    window.addEventListener('resize', updateMetrics);
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      window.removeEventListener('resize', updateMetrics);
+      if (container) container.removeEventListener('scroll', handleScroll);
+    };
+  }, [updateMetrics, handleScroll]);
+
+  // Re-run metrics when products or slidesToShow change
+  useEffect(() => {
+    updateMetrics();
+  }, [updateMetrics, slidesToShow]);
+
+  return (
+    <Box
+      as="section"
+      py={{ base: 8, md: 12 }}
+      bg="linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%)"
       position="relative"
       overflow="hidden"
     >
-      {/* Animated Background Patterns */}
+      {/* Decorative blobs */}
       <Box
         position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        overflow="hidden"
-        pointerEvents="none"
-      >
-        <Box
-          position="absolute"
-          top="-10%"
-          left="-5%"
-          w={{ base: "150px", md: "300px", lg: "400px" }}
-          h={{ base: "150px", md: "300px", lg: "400px" }}
-          bg="purple.200"
-          borderRadius="full"
-          filter="blur(60px)"
-          opacity={0.4}
-          _dark={{ opacity: 0.1 }}
-          transform="translateZ(0)"
-        />
-        <Box
-          position="absolute"
-          bottom="-10%"
-          right="-5%"
-          w={{ base: "150px", md: "300px", lg: "400px" }}
-          h={{ base: "150px", md: "300px", lg: "400px" }}
-          bg="pink.200"
-          borderRadius="full"
-          filter="blur(60px)"
-          opacity={0.4}
-          _dark={{ opacity: 0.1 }}
-          transform="translateZ(0)"
-        />
-      </Box>
+        top="-20%"
+        right="-10%"
+        w="300px"
+        h="300px"
+        bg="blue.100"
+        borderRadius="full"
+        filter="blur(80px)"
+        opacity={0.4}
+        zIndex={0}
+      />
+      <Box
+        position="absolute"
+        bottom="-20%"
+        left="-10%"
+        w="300px"
+        h="300px"
+        bg="purple.100"
+        borderRadius="full"
+        filter="blur(80px)"
+        opacity={0.4}
+        zIndex={0}
+      />
 
-      <Container maxW="7xl" position="relative" zIndex={2}>
-        {/* Modern Header with Stats */}
-        <VStack spacing={{ base: 4, md: 6 }} mb={{ base: 8, md: 12 }}>
-          <HStack spacing={3}>
-            <Circle size="50px" bg="purple.100" _dark={{ bg: "purple.900" }}>
-              <Icon as={FiGlobe} boxSize={6} color="purple.600" />
-            </Circle>
-            <Badge
-              bgGradient="linear(135deg, #667eea 0%, #764ba2 100%)"
-              color="white"
-              px={4}
-              py={2}
-              borderRadius="full"
-              fontSize="xs"
-            >
-              TRENDING COLLECTION
-            </Badge>
-          </HStack>
-          
-          <CommonHeading
-            heading="Must-Have Picks for You"
-            subheading="Explore our top-rated and trending products, handpicked just for you."
-            mb={0}
-            color={headingColor}
-          />
-
-          {/* Quick Stats Row */}
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} w="full" maxW="3xl" mx="auto">
-            <Flex align="center" justify="center" gap={2}>
-              <Icon as={FiUsers} color="purple.500" boxSize={4} />
-              <Text fontSize="xs" fontWeight="600">50K+ Happy Customers</Text>
-            </Flex>
-            <Flex align="center" justify="center" gap={2}>
-              <Icon as={FiStar} color="yellow.500" boxSize={4} />
-              <Text fontSize="xs" fontWeight="600">4.9/5 Rating</Text>
-            </Flex>
-            <Flex align="center" justify="center" gap={2}>
-              <Icon as={FiShoppingBag} color="green.500" boxSize={4} />
-              <Text fontSize="xs" fontWeight="600">Free Shipping</Text>
-            </Flex>
-            <Flex align="center" justify="center" gap={2}>
-              <Icon as={FiMapPin} color="red.500" boxSize={4} />
-              <Text fontSize="xs" fontWeight="600">Pan India Delivery</Text>
-            </Flex>
-          </SimpleGrid>
+      <Container maxW="container.xl" position="relative" zIndex={1}>
+        {/* Header */}
+        <VStack mb={{ base: 6, md: 10 }} spacing={2}>
+          <Text
+            fontSize={{ base: 'sm', md: 'md' }}
+            fontWeight="semibold"
+            color="blue.600"
+            textTransform="uppercase"
+            letterSpacing="wider"
+            bg="white"
+            px={4}
+            py={1}
+            borderRadius="full"
+            boxShadow="sm"
+          >
+            {subtitle}
+          </Text>
+          <Text
+            fontSize={{ base: '2xl', md: '3xl' }}
+            fontWeight="bold"
+            color="gray.800"
+            textAlign="center"
+          >
+            {title}
+          </Text>
+          <Box w="80px" h="3px" bg="linear-gradient(90deg, #3182ce, #9f7aea)" rounded="full" />
         </VStack>
 
-        {/* Main Carousel Layout */}
-        <Flex 
-          gap={{ base: 4, md: 6, lg: 8 }} 
-          direction={{ base: "column", xl: "row" }} 
-          align="stretch"
-          ref={carouselRef}
-        >
-          {/* Creative Card Grid Section */}
-          <Box flex={2}>
-            <Flex 
-              gap={{ base: 2, sm: 3, md: 4 }} 
-              direction={{ base: "column", sm: "row" }} 
-              w="full"
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
+        {/* Carousel Wrapper */}
+        <Box position="relative" px={{ base: 0, md: 6 }}>
+          {/* Navigation Buttons (desktop) */}
+          <IconButton
+            aria-label="Previous products"
+            icon={<FaChevronLeft />}
+            position="absolute"
+            left={{ base: -2, md: -4 }}
+            top="50%"
+            transform="translateY(-50%)"
+            zIndex={10}
+            rounded="full"
+            bg="white"
+            color="blue.600"
+            boxShadow="xl"
+            size="lg"
+            onClick={handlePrev}
+            isDisabled={activeIndex === 0}
+            display={{ base: 'none', md: 'flex' }}
+            _hover={{ bg: 'blue.500', color: 'white', transform: 'translateY(-50%) scale(1.05)' }}
+            transition="all 0.2s"
+            opacity={activeIndex === 0 ? 0.5 : 1}
+          />
+          <IconButton
+            aria-label="Next products"
+            icon={<FaChevronRight />}
+            position="absolute"
+            right={{ base: -2, md: -4 }}
+            top="50%"
+            transform="translateY(-50%)"
+            zIndex={10}
+            rounded="full"
+            bg="white"
+            color="blue.600"
+            boxShadow="xl"
+            size="lg"
+            onClick={handleNext}
+            isDisabled={activeIndex >= totalSlides - 1}
+            display={{ base: 'none', md: 'flex' }}
+            _hover={{ bg: 'blue.500', color: 'white', transform: 'translateY(-50%) scale(1.05)' }}
+            transition="all 0.2s"
+            opacity={activeIndex >= totalSlides - 1 ? 0.5 : 1}
+          />
+
+          {/* Scrollable Container - NO SCROLLBAR */}
+          <Box
+            ref={scrollContainerRef}
+            overflowX="auto"
+            css={{
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE/Edge
+              scrollSnapType: 'x mandatory',
+              '&::-webkit-scrollbar': {
+                display: 'none', // Chrome/Safari
+              },
+            }}
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
+            <HStack
+              spacing={6}
+              align="stretch"
+              px={{ base: 2, md: 0 }}
+              py={4}
+              display="inline-flex"
             >
-              {featuredProducts.map((product, index) => {
-                const isActive = activeIndex === index;
-                const isPrevMobile = !isActive && window.innerWidth < 640;
-                
-                return (
+              {products.map((product) => (
+                <Box
+                  key={product.id}
+                  className="product-card"
+                  width={{
+                    base: '280px',
+                    sm: 'calc((100vw - 48px) / 2 - 12px)',
+                    md: 'calc((100vw - 80px) / 3 - 16px)',
+                    lg: 'calc((100vw - 120px) / 4 - 16px)',
+                    xl: '300px',
+                  }}
+                  minW={{ base: '260px', sm: '240px', md: '220px', lg: '250px', xl: '280px' }}
+                  flexShrink={0}
+                  scrollSnapAlign="start"
+                >
                   <Box
-                    key={index}
-                    flex={isActive ? { base: "auto", sm: 2.5, md: 3 } : { base: "auto", sm: 1 }}
-                    w={{ base: "100%", sm: "auto" }}
-                    h={{ 
-                      base: isActive ? "360px" : "240px",
-                      sm: isActive ? "400px" : "280px",
-                      md: "440px",
-                      lg: "480px" 
-                    }}
-                    position="relative"
-                    borderRadius={{ base: "2xl", md: "3xl" }}
+                    bg="white"
+                    rounded="2xl"
                     overflow="hidden"
-                    cursor="pointer"
-                    onClick={() => handleCardClick(index)}
-                    transition="all 0.5s cubic-bezier(0.34, 1.2, 0.64, 1)"
-                    boxShadow={isActive ? "2xl" : "md"}
-                    _hover={{ 
-                      transform: isActive ? "scale(1.02)" : "scale(1.01)",
-                      boxShadow: "xl"
+                    boxShadow="lg"
+                    transition="all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)"
+                    _hover={{
+                      transform: { base: 'none', md: 'translateY(-12px)' },
+                      boxShadow: '2xl',
                     }}
+                    height="100%"
+                    display="flex"
+                    flexDirection="column"
+                    position="relative"
+                    backdropFilter="blur(2px)"
+                    bgGradient="linear(to-br, white, gray.50)"
                   >
-                    {/* Background Image */}
-                    <Box
-                      position="absolute"
-                      inset={0}
-                      bgImage={`url(${product.image})`}
-                      bgSize="cover"
-                      bgPosition="center"
-                      transition="transform 0.7s cubic-bezier(0.34, 1.2, 0.64, 1)"
-                      transform={isActive ? "scale(1.08)" : "scale(1)"}
-                    />
-
-                    {/* Dynamic Gradient Overlay */}
-                    <Box
-                      position="absolute"
-                      inset={0}
-                      bgGradient={isActive
-                        ? "linear(to-t, blackAlpha.900, blackAlpha.500, transparent 60%)"
-                        : "linear(to-t, blackAlpha.800, blackAlpha.600)"}
-                      transition="all 0.4s ease"
-                    />
-
-                    {/* Creative Elements for Active Card */}
-                    {isActive && (
-                      <>
-                        {/* Corner Accents */}
-                        <Box
-                          position="absolute"
-                          top={0}
-                          left={0}
-                          w="60px"
-                          h="60px"
-                          borderTop="3px solid"
-                          borderLeft="3px solid"
-                          borderColor="whiteAlpha.600"
-                          borderTopLeftRadius="2xl"
-                          zIndex={2}
-                        />
-                        <Box
-                          position="absolute"
-                          top={0}
-                          right={0}
-                          w="60px"
-                          h="60px"
-                          borderTop="3px solid"
-                          borderRight="3px solid"
-                          borderColor="whiteAlpha.600"
-                          borderTopRightRadius="2xl"
-                          zIndex={2}
-                        />
-                        
-                        {/* Glow Effect */}
-                        <Box
-                          position="absolute"
-                          top="50%"
-                          left="50%"
-                          transform="translate(-50%, -50%)"
-                          w="90%"
-                          h="90%"
-                          borderRadius="full"
-                          bgGradient="radial(circle, rgba(255,255,255,0.1) 0%, transparent 70%)"
-                          pointerEvents="none"
-                        />
-                      </>
-                    )}
-
-                    {/* Hot Badge */}
-                    {isActive && (
-                      <Box
+                    {/* Animated Badge */}
+                    {product.badge && (
+                      <Badge
                         position="absolute"
-                        top={{ base: 3, md: 4 }}
-                        left={{ base: 3, md: 4 }}
-                        zIndex={3}
+                        top={3}
+                        left={3}
+                        zIndex={2}
+                        bg="linear-gradient(135deg, #3182ce, #63b3ed)"
+                        color="white"
+                        px={3}
+                        py={1}
+                        rounded="full"
+                        fontSize="xs"
+                        fontWeight="bold"
+                        textTransform="uppercase"
+                        boxShadow="md"
+                        animation="pulse 2s infinite"
+                        sx={{
+                          '@keyframes pulse': {
+                            '0%': { opacity: 0.8, transform: 'scale(1)' },
+                            '50%': { opacity: 1, transform: 'scale(1.05)' },
+                            '100%': { opacity: 0.8, transform: 'scale(1)' },
+                          },
+                        }}
                       >
-                        <HStack spacing={1}>
-                          <Circle size="20px" bg="red.500">
-                            <Icon as={FiZap} boxSize={3} color="white" />
-                          </Circle>
-                          <Text fontSize="10px" fontWeight="800" color="white" letterSpacing="widest">
-                            HOT PICK
-                          </Text>
-                        </HStack>
-                      </Box>
+                        {product.badge}
+                      </Badge>
                     )}
 
-                    {/* Content Overlay */}
-                    <Flex
-                      position="absolute"
-                      inset={0}
-                      p={{ base: 4, md: 5, lg: 6 }}
-                      direction="column"
-                      justify="flex-end"
-                      zIndex={2}
+                    {/* Image */}
+                    <Box
+                      position="relative"
+                      height="200px"
+                      width="100%"
+                      overflow="hidden"
+                      bg="gray.100"
                     >
-                      {isActive ? (
-                        <SlideFade in={isActive} offsetY={20}>
-                          <VStack align="flex-start" spacing={3}>
-                            <Badge 
-                              bg="whiteAlpha.200"
-                              backdropFilter="blur(10px)"
-                              color="white"
-                              px={3}
-                              py={1.5}
-                              borderRadius="full"
-                              fontSize="9px"
-                              border="1px solid whiteAlpha.400"
-                            >
-                              ✨ EDITOR'S CHOICE
-                            </Badge>
-                            
-                            <Heading 
-                              size={{ base: "sm", md: "md", lg: "lg" }} 
-                              color="white" 
-                              letterSpacing="-0.02em"
-                              lineHeight="1.3"
-                            >
-                              {product.title}
-                            </Heading>
-                            
-                            <Text fontSize="xs" color="whiteAlpha.800" noOfLines={2}>
-                              {product.description}
-                            </Text>
-                            
-                            {/* Interactive Progress Bar */}
-                            <Box w="full" mt={2}>
-                              <Box 
-                                h="2px" 
-                                bg="whiteAlpha.300" 
-                                borderRadius="full" 
-                                overflow="hidden"
-                              >
-                                <Box
-                                  h="full"
-                                  bgGradient={getCategoryGradient(index)}
-                                  width={`${progress}%`}
-                                  transition="width 0.05s linear"
-                                  borderRadius="full"
-                                />
-                              </Box>
-                            </Box>
-                          </VStack>
-                        </SlideFade>
-                      ) : (
-                        <SlideFade in={!isActive} offsetY={10}>
-                          <VStack align="flex-start" spacing={1}>
-                            <Icon as={FiCamera} color="whiteAlpha.700" boxSize={4} />
-                            <Heading
-                              size="xs"
-                              color="whiteAlpha.900"
-                              letterSpacing="widest"
-                              textTransform="uppercase"
-                              fontSize={{ base: "9px", md: "10px" }}
-                              noOfLines={1}
-                            >
-                              {product.title}
-                            </Heading>
-                          </VStack>
-                        </SlideFade>
-                      )}
-                    </Flex>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.5s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.08)';
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
+                        }}
+                      />
+                    </Box>
 
-                    {/* Interactive Overlay on Hover for Inactive Cards */}
-                    {!isActive && (
-                      <Box
-                        position="absolute"
-                        inset={0}
-                        bg="blackAlpha.500"
-                        opacity={0}
-                        transition="opacity 0.3s ease"
-                        _groupHover={{ opacity: 1 }}
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
+                    {/* Details */}
+                    <VStack p={4} align="stretch" flex="1" spacing={2}>
+                      {product.category && (
+                        <Text fontSize="xs" color="blue.500" fontWeight="bold" letterSpacing="wide">
+                          {product.category}
+                        </Text>
+                      )}
+                      <Text
+                        fontWeight="bold"
+                        fontSize="md"
+                        color="gray.800"
+                        noOfLines={2}
+                        lineHeight="short"
+                        minH="2.5rem"
                       >
-                        <HStack spacing={2}>
-                          <Circle size="30px" bg="white" opacity={0.9}>
-                            <Icon as={FiArrowRight} color="purple.600" boxSize={4} />
-                          </Circle>
-                          <Text fontSize="xs" color="white" fontWeight="bold">
-                            Click to Explore
+                        {product.name}
+                      </Text>
+                      <HStack spacing={1} alignItems="center">
+                        {renderStars(product.rating)}
+                        <Text fontSize="xs" color="gray.500" ml={1}>
+                          ({product.reviewCount})
+                        </Text>
+                      </HStack>
+                      <HStack spacing={2} alignItems="baseline">
+                        <Text fontWeight="bold" fontSize="xl" color="blue.600">
+                          ${product.price.toFixed(2)}
+                        </Text>
+                        {product.oldPrice && (
+                          <Text fontSize="sm" color="gray.400" textDecoration="line-through">
+                            ${product.oldPrice.toFixed(2)}
                           </Text>
-                        </HStack>
-                      </Box>
-                    )}
+                        )}
+                      </HStack>
+                      <Button
+                        mt={2}
+                        colorScheme="blue"
+                        variant="outline"
+                        size="sm"
+                        rounded="full"
+                        w="full"
+                        _hover={{
+                          bg: 'blue.500',
+                          color: 'white',
+                          transform: 'translateY(-2px)',
+                          boxShadow: 'md',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        Quick View →
+                      </Button>
+                    </VStack>
                   </Box>
-                );
-              })}
-            </Flex>
+                </Box>
+              ))}
+            </HStack>
           </Box>
 
-          {/* Modern Details Panel */}
-          <Flex 
-            flex={1} 
-            direction="column" 
-            justify="space-between"
-            p={{ base: 5, sm: 6, md: 7, lg: 8 }}
-            bg={bgColor}
-            borderRadius="3xl"
-            boxShadow="xl"
-            minH={{ base: "auto", sm: "400px", md: "440px", lg: "480px" }}
-            position="relative"
-            border="1px solid"
-            borderColor={useColorModeValue('gray.100', 'gray.700')}
-            overflow="hidden"
-          >
-            {/* Background Pattern */}
-            <Box
-              position="absolute"
-              top="-20%"
-              right="-20%"
-              w="200px"
-              h="200px"
-              bgGradient={getCategoryGradient(activeIndex)}
-              borderRadius="full"
-              opacity={0.05}
-              pointerEvents="none"
-            />
-
-            <Box position="relative" zIndex={2}>
-              {/* Category Badge with Pulse Effect */}
-              <ScaleFade in initialScale={0.9}>
-                <Badge
-                  bgGradient={getCategoryGradient(activeIndex)}
-                  color="white"
-                  px={4}
-                  py={2}
-                  borderRadius="full"
-                  fontSize="10px"
-                  mb={5}
-                  alignSelf="flex-start"
-                  display="inline-flex"
-                  alignItems="center"
-                  gap={2}
-                >
-                  <Icon as={FiAward} boxSize={3} />
-                  <Text>EDITOR'S CHOICE {activeIndex + 1}</Text>
-                </Badge>
-              </ScaleFade>
-
-              {/* Animated Title with Counter */}
-              <HStack spacing={2} mb={3}>
-                <Circle size="30px" bg="purple.100" _dark={{ bg: "purple.900" }}>
-                  <Text fontSize="sm" fontWeight="800" color="purple.600">
-                    {String(activeIndex + 1).padStart(2, '0')}
-                  </Text>
-                </Circle>
-                <Text fontSize="xs" fontWeight="600" color="gray.400" letterSpacing="widest">
-                  / {String(featuredProducts.length).padStart(2, '0')}
-                </Text>
-              </HStack>
-
-              <Heading 
-                fontSize={{ base: "2xl", sm: "3xl", md: "3xl", lg: "4xl" }} 
-                mb={4} 
-                color={textColor} 
-                fontWeight="900"
-                lineHeight="1.2"
-                letterSpacing="-0.02em"
-              >
-                {featuredProducts[activeIndex].title}
-              </Heading>
-
-              <Text 
-                fontSize={{ base: "sm", md: "md" }} 
-                mb={6} 
-                color="gray.600"
-                _dark={{ color: "gray.400" }}
-                lineHeight="relaxed"
-              >
-                {featuredProducts[activeIndex].description}
-              </Text>
-
-              {/* Creative Stats Grid */}
-              <SimpleGrid columns={2} spacing={4} mb={6}>
-                <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="2xl">
-                  <Text fontSize="xs" color="gray.500" mb={1}>AVAILABILITY</Text>
-                  <HStack spacing={1}>
-                    <Icon as={FiShoppingBag} color="purple.500" boxSize={4} />
-                    <Text fontWeight="800" fontSize="lg">{featuredProducts[activeIndex].availability}</Text>
-                    <Text fontSize="xs" color="gray.500">units</Text>
-                  </HStack>
-                </Box>
-                <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="2xl">
-                  <Text fontSize="xs" color="gray.500" mb={1}>TRENDING SCORE</Text>
-                  <HStack spacing={1}>
-                    <Icon as={FiTrendingUp} color="green.500" boxSize={4} />
-                    <Text fontWeight="800" fontSize="lg">98%</Text>
-                    <Icon as={FiArrowRight} boxSize={3} color="green.500" />
-                  </HStack>
-                </Box>
-              </SimpleGrid>
-
-              <Divider my={4} />
-
-              {/* Action Section */}
-              <Flex align="center" justify="space-between" wrap="wrap" gap={3}>
-                <VStack align="flex-start" spacing={0}>
-                  <Text fontSize="10px" fontWeight="700" color="gray.400" letterSpacing="widest">
-                    STARTING FROM
-                  </Text>
-                  <Text fontWeight="900" fontSize="2xl" color="purple.500">
-                    $49.99
-                  </Text>
-                </VStack>
-                
-                <Button
-                  size="lg"
-                  bgGradient={getCategoryGradient(activeIndex)}
-                  color="white"
-                  borderRadius="2xl"
-                  px={{ base: 6, md: 8 }}
-                  rightIcon={<FiArrowRight />}
-                  transition="all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)"
-                  _hover={{
-                    transform: "translateX(5px)",
-                    boxShadow: "0 10px 25px -5px rgba(128, 90, 213, 0.4)",
-                  }}
-                >
-                  SHOP NOW
-                </Button>
-              </Flex>
-            </Box>
-
-            {/* Creative Navigation Dots */}
-            <HStack spacing={2} justify="center" mt={6} pt={4}>
-              {featuredProducts.map((_, idx) => (
+          {/* Dots Indicator with animation */}
+          {totalSlides > 1 && (
+            <HStack justify="center" mt={8} spacing={3}>
+              {Array.from({ length: totalSlides }).map((_, idx) => (
                 <Box
                   key={idx}
                   as="button"
-                  onClick={() => handleCardClick(idx)}
+                  onClick={() => scrollToIndex(idx)}
+                  w={idx === activeIndex ? '28px' : '8px'}
                   h="8px"
-                  borderRadius="full"
-                  bg={activeIndex === idx ? "purple.500" : "gray.300"}
-                  transition="all 0.4s cubic-bezier(0.34, 1.2, 0.64, 1)"
-                  width={activeIndex === idx ? "28px" : "8px"}
-                  _hover={{
-                    bg: "purple.400",
-                    width: "20px"
-                  }}
+                  rounded="full"
+                  bg={idx === activeIndex ? 'blue.500' : 'gray.300'}
+                  transition="all 0.3s ease"
+                  cursor="pointer"
+                  _hover={{ bg: 'blue.400', transform: 'scale(1.2)' }}
                 />
               ))}
             </HStack>
-          </Flex>
-        </Flex>
-
-        {/* Floating Action Button */}
-        <Flex justify="center" mt={{ base: 8, md: 10 }}>
-          <Button
-            variant="outline"
-            colorScheme="purple"
-            borderRadius="full"
-            px={8}
-            rightIcon={<FiArrowRight />}
-            _hover={{
-              transform: "translateX(5px)",
-              bg: "purple.50",
-              _dark: { bg: "purple.900" }
-            }}
-            transition="all 0.3s"
-          >
-            View All Collections
-          </Button>
-        </Flex>
+          )}
+        </Box>
       </Container>
     </Box>
   );
-});
+};
 
 export default ProductCarousel;
