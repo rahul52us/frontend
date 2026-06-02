@@ -28,14 +28,18 @@ interface ShopSectionProps {
   activeCategory?: string | null;
   geoFilter?: GeoFilter;
   sortBy?: "distance" | "latest";
+  enableInfiniteLoad?: boolean;
 }
+
+const DEFAULT_GEO_FILTER: GeoFilter = { lat: null, lng: null, radiusKm: 5 };
 
 const ShopSection = observer(
   ({
     searchQuery = "",
     activeCategory = null,
-    geoFilter = { lat: null, lng: null, radiusKm: 5 },
+    geoFilter = DEFAULT_GEO_FILTER,
     sortBy = "distance",
+    enableInfiniteLoad = true,
   }: ShopSectionProps) => {
   const {
     shopStore: { getAllShops, shop },
@@ -45,6 +49,9 @@ const ShopSection = observer(
   const [currentPage, setCurrentPage] = useState<number>(1);
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const geoLat = geoFilter.lat;
+  const geoLng = geoFilter.lng;
+  const geoRadiusKm = geoFilter.radiusKm;
 
   const applyGetAllShops = useCallback(
     async ({
@@ -100,12 +107,12 @@ const ShopSection = observer(
       limit: tablePageLimit,
       name: debouncedSearchQuery,
       categories: activeCategory,
-      lat: geoFilter.lat,
-      lng: geoFilter.lng,
-      radiusKm: geoFilter.radiusKm,
+      lat: geoLat,
+      lng: geoLng,
+      radiusKm: geoRadiusKm,
       sortBy,
     });
-  }, [debouncedSearchQuery, activeCategory, geoFilter, sortBy, applyGetAllShops]);
+  }, [debouncedSearchQuery, activeCategory, geoLat, geoLng, geoRadiusKm, sortBy, applyGetAllShops]);
 
   const handleLoadMore = useCallback(() => {
     const nextPage = currentPage + 1;
@@ -116,9 +123,9 @@ const ShopSection = observer(
       page: nextPage,
       name: debouncedSearchQuery,
       categories: activeCategory,
-      lat: geoFilter.lat,
-      lng: geoFilter.lng,
-      radiusKm: geoFilter.radiusKm,
+      lat: geoLat,
+      lng: geoLng,
+      radiusKm: geoRadiusKm,
       sortBy,
     });
   }, [
@@ -127,11 +134,17 @@ const ShopSection = observer(
     applyGetAllShops,
     debouncedSearchQuery,
     activeCategory,
-    geoFilter,
+    geoLat,
+    geoLng,
+    geoRadiusKm,
     sortBy,
   ]);
 
   useEffect(() => {
+    if (!enableInfiniteLoad) {
+      return undefined;
+    }
+
     const currentLoadMoreRef = loadMoreRef.current;
     if (!currentLoadMoreRef) return;
 
@@ -146,7 +159,7 @@ const ShopSection = observer(
 
     observer.observe(currentLoadMoreRef);
     return () => observer.disconnect();
-  }, [handleLoadMore, shop.loading]);
+  }, [enableInfiniteLoad, handleLoadMore, shop.loading]);
 
   const shops = shop?.data || [];
   const loading = shop?.loading && currentPage === 1;
@@ -210,7 +223,7 @@ const ShopSection = observer(
           </Box>
         )}
 
-        <Box ref={loadMoreRef} h={{ base: '16px', md: '24px' }} />
+        {enableInfiniteLoad && <Box ref={loadMoreRef} h={{ base: '16px', md: '24px' }} />}
 
         {shop.loading && currentPage > 1 && (
           <Box py={8} textAlign="center">

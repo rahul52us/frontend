@@ -12,9 +12,6 @@ import {
   Flex,
   HStack,
   Icon,
-  Input,
-  InputGroup,
-  InputLeftElement,
   Select,
   SimpleGrid,
   Tag,
@@ -29,8 +26,9 @@ import {
 import axios from "axios";
 import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiFilter, FiInbox, FiRefreshCcw, FiSearch, FiSliders } from "react-icons/fi";
+import { FiFilter, FiInbox, FiRefreshCcw, FiSliders } from "react-icons/fi";
 import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
 import MainPagePagination from "../../../../component/config/component/pagination/MainPagePagination";
 import stores from "../../../../store/stores";
@@ -473,6 +471,7 @@ const ProductsListSection = observer(() => {
   const {
     themeStore: { themeConfig },
     shopStore,
+    layout,
   } = stores;
   const isDarkMode = themeConfig.config.initialColorMode === "dark";
   const [products, setProducts] = useState<any[]>([]);
@@ -482,11 +481,16 @@ const ProductsListSection = observer(() => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const filterDrawer = useDisclosure();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const urlSearchTerm = (searchParams.get("search") || searchParams.get("q") || "").trim();
+  const searchTerm = String(layout.productSearchQuery || "").trim();
+  const previousSearchTermRef = useRef(searchTerm);
 
   const headingColor = isDarkMode
     ? themeConfig.colors.dark.primary[500]
@@ -499,6 +503,15 @@ const ProductsListSection = observer(() => {
   const mutedText = useColorModeValue("gray.500", "gray.400");
   const cardGridBg = useColorModeValue("transparent", "transparent");
   const filterShadow = useColorModeValue("sm", "xl");
+  const controlBg = useColorModeValue("gray.50", "gray.800");
+  const controlBorder = useColorModeValue("gray.200", "gray.700");
+  const resetHoverBg = useColorModeValue("red.50", "rgba(229, 62, 62, 0.1)");
+  const matchCountColor = useColorModeValue("gray.900", "white");
+  const liveFilterBg = useColorModeValue("blue.50", "rgba(66, 153, 225, 0.1)");
+  const liveFilterColor = useColorModeValue("blue.600", "blue.300");
+  const emptyIconColor = useColorModeValue("gray.300", "gray.600");
+  const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
+  const shopSectionBg = useColorModeValue("transparent", "rgba(255,255,255,0.01)");
   const inputFocusBorder = isDarkMode ? "primary.400" : "primary.500";
 
   const activeCategories = useMemo(
@@ -523,6 +536,9 @@ const ProductsListSection = observer(() => {
 
   const advancedFilterCount = getAdvancedFilterCount(advancedFilters);
   const hasActiveFilters = Boolean(searchTerm || selectedCategory || selectedSubCategory || advancedFilterCount);
+  const filterControlCount = advancedFilterCount + (selectedCategory ? 1 : 0) + (selectedSubCategory ? 1 : 0);
+  const showFilterControls = Boolean(searchTerm || filterControlCount);
+  const showSearchResults = hasActiveFilters;
 
   const fetchProducts = useCallback(
     async (page = 1) => {
@@ -570,12 +586,39 @@ const ProductsListSection = observer(() => {
   }, []);
 
   useEffect(() => {
+    if (urlSearchTerm !== layout.productSearchQuery) {
+      layout.setProductSearchQuery(urlSearchTerm);
+    }
+  }, [layout, urlSearchTerm]);
+
+  useEffect(() => {
+    if (!showSearchResults) {
+      setProducts([]);
+      setFacets([]);
+      setTotalProducts(0);
+      setTotalPages(1);
+      setCurrentPage(1);
+      setLoading(false);
+      return undefined;
+    }
+
     const timer = window.setTimeout(() => {
       fetchProducts(1);
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [fetchProducts]);
+  }, [fetchProducts, showSearchResults]);
+
+  useEffect(() => {
+    if (previousSearchTermRef.current === searchTerm) {
+      return;
+    }
+
+    previousSearchTermRef.current = searchTerm;
+    setSelectedCategory("");
+    setSelectedSubCategory("");
+    setAdvancedFilters(emptyAdvancedFilters);
+  }, [searchTerm]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -583,19 +626,30 @@ const ProductsListSection = observer(() => {
     setAdvancedFilters(emptyAdvancedFilters);
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-
-    if (value.trim()) {
-      setSelectedCategory("");
-      setSelectedSubCategory("");
-    }
-
+  const handleSubCategoryChange = (categoryId: string) => {
+    setSelectedSubCategory(categoryId);
     setAdvancedFilters(emptyAdvancedFilters);
   };
 
+  const clearCategoryFilters = () => {
+    setSelectedCategory("");
+    setSelectedSubCategory("");
+    setAdvancedFilters(emptyAdvancedFilters);
+  };
+
+  const clearSearchParam = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.delete("search");
+    params.delete("q");
+
+    const queryString = params.toString();
+    layout.setProductSearchQuery("");
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ""}`, { scroll: false });
+  }, [layout, pathname, router, searchParams]);
+
   const resetFilters = () => {
-    setSearchTerm("");
+    clearSearchParam();
     setSelectedCategory("");
     setSelectedSubCategory("");
     setAdvancedFilters(emptyAdvancedFilters);
@@ -644,6 +698,66 @@ const ProductsListSection = observer(() => {
     setAdvancedFilters(emptyAdvancedFilters);
   };
 
+  const renderCategoryControls = () => (
+    <VStack align="stretch" spacing={3}>
+      <HStack justify="space-between" align="center">
+        <Text fontWeight="800">Categories</Text>
+        <Button
+          size="xs"
+          variant="ghost"
+          onClick={clearCategoryFilters}
+          isDisabled={!selectedCategory && !selectedSubCategory}
+        >
+          Clear
+        </Button>
+      </HStack>
+
+      <Select
+        value={selectedCategory}
+        onChange={(event) => handleCategoryChange(event.target.value)}
+        placeholder="All Categories"
+        size="md"
+        h="44px"
+        bg={controlBg}
+        border="1px solid"
+        borderColor={controlBorder}
+        _focus={{ borderColor: inputFocusBorder }}
+        borderRadius="md"
+        icon={<FiFilter />}
+        cursor="pointer"
+        fontSize="sm"
+      >
+        {rootCategories.map((category: any) => (
+          <option key={getCategoryId(category)} value={getCategoryId(category)}>
+            {getCategoryName(category)}
+          </option>
+        ))}
+      </Select>
+
+      <Select
+        value={selectedSubCategory}
+        onChange={(event) => handleSubCategoryChange(event.target.value)}
+        placeholder="All Subcategories"
+        size="md"
+        h="44px"
+        bg={controlBg}
+        border="1px solid"
+        borderColor={controlBorder}
+        _focus={{ borderColor: inputFocusBorder }}
+        borderRadius="md"
+        isDisabled={!selectedCategory || subCategories.length === 0}
+        cursor={!selectedCategory || subCategories.length === 0 ? "not-allowed" : "pointer"}
+        fontSize="sm"
+      >
+        {subCategories.map((category: any) => (
+          <option key={getCategoryId(category)} value={getCategoryId(category)}>
+            {getCategoryName(category)}
+          </option>
+        ))}
+      </Select>
+    </VStack>
+  );
+
   const handlePageChange = ({ selected }: { selected: number }) => {
     const nextPage = Math.max(1, Number(selected) || 1);
     fetchProducts(nextPage);
@@ -663,7 +777,7 @@ const ProductsListSection = observer(() => {
     });
 
     if (searchTerm.trim()) {
-      chips.push({ key: "search", label: `Search: ${searchTerm.trim()}`, onRemove: () => setSearchTerm("") });
+      chips.push({ key: "search", label: `Search: ${searchTerm.trim()}`, onRemove: clearSearchParam });
     }
 
     ["brand", "idea", "deal", "availability"].forEach((key) => {
@@ -718,7 +832,7 @@ const ProductsListSection = observer(() => {
     }
 
     return chips;
-  }, [advancedFilters, facets, searchTerm, setPriceFilter, toggleAdvancedFilter]);
+  }, [advancedFilters, clearSearchParam, facets, searchTerm, setPriceFilter, toggleAdvancedFilter]);
 
   return (
     <Box
@@ -729,7 +843,6 @@ const ProductsListSection = observer(() => {
       overflow="hidden"
       transition="background-color 0.3s ease"
     >
-      {/* Filterable Product Section */}
       <MotionBox
         id="all-products"
         mb={{ base: 14, md: 24 }}
@@ -738,159 +851,103 @@ const ProductsListSection = observer(() => {
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          justify="space-between"
-          align={{ base: "start", md: "end" }}
-          gap={4}
-          mb={{ base: 6, md: 8 }}
-        >
-          <CommonHeading
-            heading="All Products"
-            subheading="Filter and browse premium products curated just for you"
-            color={headingColor}
-            align="left"
-          />
+        <Flex justify={{ base: "flex-start", lg: "flex-end" }} mb={{ base: 4, lg: 0 }}>
+          <Button
+            display={{ base: "inline-flex", lg: "none" }}
+            leftIcon={<FiSliders />}
+            onClick={filterDrawer.onOpen}
+            colorScheme="blue"
+            borderRadius="md"
+            size="sm"
+          >
+            {showSearchResults ? `Filters${filterControlCount ? ` (${filterControlCount})` : ""}` : "Categories"}
+          </Button>
         </Flex>
 
-        {/* Filter Bar with Subtle Glassmorphism Card */}
-        <Box
-          bg={filterBg}
-          backdropFilter="blur(8px)"
-          border="1px solid"
-          borderColor={filterBorder}
-          borderRadius="xl"
-          p={{ base: 4, md: 5 }}
-          mb={{ base: 6, md: 10 }}
-          boxShadow={filterShadow}
-        >
-          <Flex gap={4} align={{ base: "stretch", lg: "center" }} direction={{ base: "column", lg: "row" }}>
-            <InputGroup flex={{ base: "unset", lg: 1.5 }}>
-              <InputLeftElement h="100%" pointerEvents="none" pl={1}>
-                <Icon as={FiSearch} color={mutedText} boxSize={5} />
-              </InputLeftElement>
-              <Input
-                value={searchTerm}
-                onChange={(event) => handleSearchChange(event.target.value)}
-                placeholder="Search premium products..."
-                size="lg"
-                h="48px"
-                pl="44px"
-                fontSize="md"
-                bg={useColorModeValue("gray.50", "gray.800")}
-                border="1px solid"
-                borderColor={useColorModeValue("gray.200", "gray.700")}
-                _focus={{
-                  borderColor: inputFocusBorder,
-                  boxShadow: `0 0 0 1px ${isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.05)"}`,
-                  bg: useColorModeValue("white", "gray.900"),
-                }}
-                borderRadius="lg"
-                transition="all 0.2s ease"
-              />
-            </InputGroup>
-
-            <Select
-              value={selectedCategory}
-              onChange={(event) => handleCategoryChange(event.target.value)}
-              placeholder="All Categories"
-              size="lg"
-              h="48px"
-              maxW={{ base: "100%", lg: "220px" }}
-              bg={useColorModeValue("gray.50", "gray.800")}
-              border="1px solid"
-              borderColor={useColorModeValue("gray.200", "gray.700")}
-              _focus={{ borderColor: inputFocusBorder }}
-              borderRadius="lg"
-              icon={<FiFilter />}
-              cursor="pointer"
-              fontSize="md"
-            >
-              {rootCategories.map((category: any) => (
-                <option key={getCategoryId(category)} value={getCategoryId(category)}>
-                  {getCategoryName(category)}
-                </option>
-              ))}
-            </Select>
-
-            <Select
-              value={selectedSubCategory}
-              onChange={(event) => setSelectedSubCategory(event.target.value)}
-              placeholder="All Subcategories"
-              size="lg"
-              h="48px"
-              maxW={{ base: "100%", lg: "240px" }}
-              bg={useColorModeValue("gray.50", "gray.800")}
-              border="1px solid"
-              borderColor={useColorModeValue("gray.200", "gray.700")}
-              _focus={{ borderColor: inputFocusBorder }}
-              borderRadius="lg"
-              isDisabled={!selectedCategory || subCategories.length === 0}
-              cursor={!selectedCategory || subCategories.length === 0 ? "not-allowed" : "pointer"}
-              fontSize="md"
-            >
-              {subCategories.map((category: any) => (
-                <option key={getCategoryId(category)} value={getCategoryId(category)}>
-                  {getCategoryName(category)}
-                </option>
-              ))}
-            </Select>
-
-            <Button
-              leftIcon={<FiRefreshCcw />}
-              onClick={resetFilters}
-              variant="ghost"
-              size="lg"
-              h="48px"
-              px={6}
-              borderRadius="lg"
-              isDisabled={!hasActiveFilters}
-              colorScheme="red"
-              _hover={{ bg: useColorModeValue("red.50", "rgba(229, 62, 62, 0.1)") }}
-              transition="all 0.2s"
-            >
-              Reset
-            </Button>
-
-            <Button
-              display={{ base: "inline-flex", lg: "none" }}
-              leftIcon={<FiSliders />}
-              onClick={filterDrawer.onOpen}
-              colorScheme="blue"
-              borderRadius="md"
-            >
-              Filters{advancedFilterCount ? ` (${advancedFilterCount})` : ""}
-            </Button>
+        {showSearchResults && (
+          <>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "start", md: "end" }}
+            gap={4}
+            mb={{ base: 6, md: 8 }}
+          >
+            <CommonHeading
+              heading="All Products"
+              subheading="Filter and browse premium products curated just for you"
+              color={headingColor}
+              align="left"
+            />
           </Flex>
 
-          <HStack mt={4} pt={2} borderTop="1px dashed" borderColor={filterBorder} justify="space-between" color={mutedText} fontSize="sm" flexWrap="wrap" gap={2}>
-            <Text fontWeight="medium">
-              {loading ? (
-                "Syncing catalog..."
-              ) : (
-                <>
-                  Showing <Text as="span" color={useColorModeValue("gray.900", "white")} fontWeight="bold">{totalProducts}</Text> match{totalProducts === 1 ? "" : "es"}
-                </>
-              )}
-            </Text>
-            {hasActiveFilters && (
-              <Text fontSize="xs" bg={useColorModeValue("blue.50", "rgba(66, 153, 225, 0.1)")} color={useColorModeValue("blue.600", "blue.300")} px={2} py={0.5} borderRadius="md" fontWeight="medium">
-                Live filtering active
+          <Box
+            bg={filterBg}
+            backdropFilter="blur(8px)"
+            border="1px solid"
+            borderColor={filterBorder}
+            borderRadius="xl"
+            p={{ base: 4, md: 5 }}
+            mb={{ base: 6, md: 10 }}
+            boxShadow={filterShadow}
+          >
+            <HStack justify="space-between" color={mutedText} fontSize="sm" flexWrap="wrap" gap={3}>
+              <Text fontWeight="medium">
+                {loading ? (
+                  "Syncing catalog..."
+                ) : (
+                  <>
+                    Showing <Text as="span" color={matchCountColor} fontWeight="bold">{totalProducts}</Text> match{totalProducts === 1 ? "" : "es"}
+                  </>
+                )}
               </Text>
-            )}
-          </HStack>
 
-          {activeFilterChips.length > 0 && (
-            <Wrap spacing={2} mt={3}>
-              {activeFilterChips.map((chip) => (
-                <Tag key={chip.key} size="sm" borderRadius="full" colorScheme="blue">
-                  <TagLabel>{chip.label}</TagLabel>
-                  <TagCloseButton onClick={chip.onRemove} />
-                </Tag>
-              ))}
-            </Wrap>
-          )}
-        </Box>
+              <HStack spacing={2}>
+                <Text fontSize="xs" bg={liveFilterBg} color={liveFilterColor} px={2} py={0.5} borderRadius="md" fontWeight="medium">
+                  Live filtering active
+                </Text>
+
+                {showFilterControls && (
+                  <Button
+                    display={{ base: "inline-flex", lg: "none" }}
+                    leftIcon={<FiSliders />}
+                    onClick={filterDrawer.onOpen}
+                    colorScheme="blue"
+                    borderRadius="md"
+                    size="sm"
+                  >
+                    Filters{filterControlCount ? ` (${filterControlCount})` : ""}
+                  </Button>
+                )}
+
+                <Button
+                  leftIcon={<FiRefreshCcw />}
+                  onClick={resetFilters}
+                  variant="ghost"
+                  size="sm"
+                  borderRadius="md"
+                  colorScheme="red"
+                  _hover={{ bg: resetHoverBg }}
+                  transition="all 0.2s"
+                >
+                  Reset
+                </Button>
+              </HStack>
+            </HStack>
+
+            {activeFilterChips.length > 0 && (
+              <Wrap spacing={2} mt={3}>
+                {activeFilterChips.map((chip) => (
+                  <Tag key={chip.key} size="sm" borderRadius="full" colorScheme="blue">
+                    <TagLabel>{chip.label}</TagLabel>
+                    <TagCloseButton onClick={chip.onRemove} />
+                  </Tag>
+                ))}
+              </Wrap>
+            )}
+          </Box>
+          </>
+        )}
 
         <Flex gap={6} align="flex-start">
           <Box
@@ -907,102 +964,115 @@ const ProductsListSection = observer(() => {
             bg={filterBg}
             p={4}
           >
-            <AdvancedFilterPanel
-              facets={facets}
-              filters={advancedFilters}
-              onToggle={toggleAdvancedFilter}
-              onPriceChange={setPriceFilter}
-              onClear={clearAdvancedFilters}
-            />
+            {renderCategoryControls()}
+            {showSearchResults && (
+              <>
+                <Divider my={4} />
+                <AdvancedFilterPanel
+                  facets={facets}
+                  filters={advancedFilters}
+                  onToggle={toggleAdvancedFilter}
+                  onPriceChange={setPriceFilter}
+                  onClear={clearAdvancedFilters}
+                />
+              </>
+            )}
           </Box>
 
-          <Box flex={1} minW={0} bg={cardGridBg}>
-            {loading ? (
-              <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 4, md: 6 }}>
-                {[...Array(PRODUCT_LIMIT)].map((_, index) => (
-                  <Box key={index} borderRadius="xl" overflow="hidden">
-                    <ProductCardSkeleton />
-                  </Box>
-                ))}
-              </SimpleGrid>
-            ) : (
-              products.length > 0 ? (
-                <>
-                  <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 4, md: 6 }}>
-                    {products.map((product) => (
-                      <MotionBox
-                        key={`${product._id || product.productId}-${product.name}`}
-                        whileHover={{ y: -6 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                      >
-                        <ProductCard product={product} />
-                      </MotionBox>
-                    ))}
-                  </SimpleGrid>
-
-                  {totalPages > 1 && (
-                    <Flex mt={12} justify="center" align="center" width="100%">
-                      <Box
-                        px={4}
-                        py={2}
-                        bg={filterBg}
-                        borderRadius="full"
-                        boxShadow="sm"
-                        border="1px solid"
-                        borderColor={filterBorder}
-                      >
-                        <MainPagePagination
-                          totalPages={totalPages}
-                          currentPage={currentPage}
-                          onPageChange={handlePageChange}
-                          placement="center"
-                        />
-                      </Box>
-                    </Flex>
-                  )}
-                </>
+          {showSearchResults && (
+            <Box flex={1} minW={0} bg={cardGridBg}>
+              {loading ? (
+                <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 4, md: 6 }}>
+                  {[...Array(PRODUCT_LIMIT)].map((_, index) => (
+                    <Box key={index} borderRadius="xl" overflow="hidden">
+                      <ProductCardSkeleton />
+                    </Box>
+                  ))}
+                </SimpleGrid>
               ) : (
-                <VStack textAlign="center" py={16} px={4} spacing={4} bg={filterBg} borderRadius="xl" border="1px dashed" borderColor={filterBorder}>
-                  <Icon as={FiInbox} boxSize={12} color={useColorModeValue("gray.300", "gray.600")} />
-                  <VStack spacing={1}>
-                    <Text fontSize="xl" fontWeight="semibold" color={useColorModeValue("gray.700", "gray.200")}>
-                      No products matched your search
-                    </Text>
-                    <Text fontSize="md" color={mutedText} maxW="md">
-                      Try adjusting your filter selection or clear search key phrases to view the full collection again.
-                    </Text>
-                  </VStack>
-                  {hasActiveFilters && (
+                products.length > 0 ? (
+                  <>
+                    <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 4, md: 6 }}>
+                      {products.map((product) => (
+                        <MotionBox
+                          key={`${product._id || product.productId}-${product.name}`}
+                          whileHover={{ y: -6 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          <ProductCard product={product} />
+                        </MotionBox>
+                      ))}
+                    </SimpleGrid>
+
+                    {totalPages > 1 && (
+                      <Flex mt={12} justify="center" align="center" width="100%">
+                        <Box
+                          px={4}
+                          py={2}
+                          bg={filterBg}
+                          borderRadius="full"
+                          boxShadow="sm"
+                          border="1px solid"
+                          borderColor={filterBorder}
+                        >
+                          <MainPagePagination
+                            totalPages={totalPages}
+                            currentPage={currentPage}
+                            onPageChange={handlePageChange}
+                            placement="center"
+                          />
+                        </Box>
+                      </Flex>
+                    )}
+                  </>
+                ) : (
+                  <VStack textAlign="center" py={16} px={4} spacing={4} bg={filterBg} borderRadius="xl" border="1px dashed" borderColor={filterBorder}>
+                    <Icon as={FiInbox} boxSize={12} color={emptyIconColor} />
+                    <VStack spacing={1}>
+                      <Text fontSize="xl" fontWeight="semibold" color={emptyTitleColor}>
+                        No products matched your search
+                      </Text>
+                      <Text fontSize="md" color={mutedText} maxW="md">
+                        Try adjusting your filter selection or clear search key phrases to view the full collection again.
+                      </Text>
+                    </VStack>
                     <Button size="sm" mt={2} colorScheme="blue" variant="outline" borderRadius="lg" onClick={resetFilters}>
                       Clear Active Filters
                     </Button>
-                  )}
-                </VStack>
-              )
-            )}
-          </Box>
+                  </VStack>
+                )
+              )}
+            </Box>
+          )}
         </Flex>
 
         <Drawer isOpen={filterDrawer.isOpen} placement="bottom" onClose={filterDrawer.onClose} size="full">
           <DrawerOverlay />
           <DrawerContent borderTopRadius="lg">
             <DrawerCloseButton />
-            <DrawerHeader>Filters</DrawerHeader>
+            <DrawerHeader>{showSearchResults ? "Filters" : "Categories"}</DrawerHeader>
             <DrawerBody pb={8}>
-              <AdvancedFilterPanel
-                facets={facets}
-                filters={advancedFilters}
-                onToggle={toggleAdvancedFilter}
-                onPriceChange={setPriceFilter}
-                onClear={clearAdvancedFilters}
-              />
+              {renderCategoryControls()}
+              {showSearchResults && (
+                <>
+                <Divider my={4} />
+                <AdvancedFilterPanel
+                  facets={facets}
+                  filters={advancedFilters}
+                  onToggle={toggleAdvancedFilter}
+                  onPriceChange={setPriceFilter}
+                  onClear={clearAdvancedFilters}
+                />
+                </>
+              )}
             </DrawerBody>
           </DrawerContent>
         </Drawer>
       </MotionBox>
 
-      {/* Beautiful Section Divider Accent Line */}
-      <Box w="100%" h="1px" bgGradient={`linear(to-r, transparent, ${filterBorder}, transparent)`} mb={{ base: 14, md: 24 }} />
+      {showSearchResults && (
+        <Box w="100%" h="1px" bgGradient={`linear(to-r, transparent, ${filterBorder}, transparent)`} mb={{ base: 14, md: 24 }} />
+      )}
 
       {/* Trending Products Section */}
       <MotionBox
@@ -1022,9 +1092,9 @@ const ProductsListSection = observer(() => {
         <Box 
           p={{ base: 1, md: 2 }}
           borderRadius="xl"
-          bg={useColorModeValue("transparent", "rgba(255,255,255,0.01)")}
+          bg={shopSectionBg}
         >
-          <ShopSection />
+          <ShopSection enableInfiniteLoad={false} />
         </Box>
       </MotionBox>
     </Box>

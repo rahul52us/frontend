@@ -10,6 +10,7 @@ class LayoutStore {
   fullScreenMode = false;
   MobileSidebar = false;
   SearchDialog = false;
+  productSearchQuery = "";
   showDashboardNote = false;
   openNotification = false;
 
@@ -20,6 +21,7 @@ class LayoutStore {
       fullScreenMode: observable,
       MobileSidebar: observable,
       SearchDialog: observable,
+      productSearchQuery: observable,
       showDashboardNote: observable,
       themeMode: observable,
       openNotification: observable,
@@ -33,6 +35,7 @@ class LayoutStore {
       mediumScreenModeFun: action,
       MobileSidebarFun: action,
       SearchDialogFun: action,
+      setProductSearchQuery: action,
       changeThemeMode: action,
       setOpenNotification: action,
       resetLayout: action,
@@ -104,6 +107,10 @@ class LayoutStore {
     if (typeof window !== "undefined") {
       localStorage.setItem("SearchDialog", String(status));
     }
+  };
+
+  setProductSearchQuery = (query: string) => {
+    this.productSearchQuery = query;
   };
 
   setShowDashboardNote = (status: boolean) => {

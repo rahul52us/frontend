@@ -1,5 +1,5 @@
 "use client";
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
@@ -15,32 +15,6 @@ import MapComponent from "../../component/maps/MapMarker";
 const Page = observer(() => {
   return (
     <Box maxW={{ base: "100%", md: "95%" }} mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
-      {/* Sticky Mobile Search Header */}
-      <Box
-        display={{ base: 'block', md: 'none' }}
-        position="sticky"
-        top="0"
-        zIndex="100"
-        bg="white"
-        px={4}
-        py={3}
-        borderBottom="1px solid"
-        borderColor="gray.100"
-      >
-        <Flex
-          bg="gray.100"
-          borderRadius="full"
-          px={4}
-          py={2}
-          align="center"
-          gap={3}
-          onClick={() => {/* Open search */ }}
-        >
-          <Box color="gray.500">🔍</Box>
-          <Text color="gray.500" fontSize="sm">Search products, shops...</Text>
-        </Flex>
-      </Box>
-
       <CategoryFilter />
       <Flex
         direction={{ base: "column", md: "row" }}
@@ -78,7 +52,6 @@ const Page = observer(() => {
         <ProductBanner />
       </Box>
       <BentoGridSection />
-
     </Box>
   );
 });
