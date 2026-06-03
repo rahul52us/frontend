@@ -1,6 +1,5 @@
 import {
   Box,
-  Grid,
   Icon,
   Tab,
   TabList,
@@ -18,9 +17,10 @@ import {
   VStack,
   Container,
   SimpleGrid,
-  ScaleFade,
+  Progress,
+  Fade,
 } from "@chakra-ui/react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { AiFillApple } from "react-icons/ai";
 import {
   FiDroplet,
@@ -32,12 +32,9 @@ import {
   FiAward,
   FiClock,
   FiArrowRight,
-  FiChevronLeft,
-  FiChevronRight,
 } from "react-icons/fi";
-import { FaHandsHelping } from "react-icons/fa";
+import { FaHandsHelping, FaGift } from "react-icons/fa";
 import ProductCard from "../ProductCard/ProductCard";
-import ProductCardSkeleton from "../ProductCard/ProductCardSkeleton/ProductCardSkeleton";
 import { uniqueProducts } from "../utils/constant";
 
 const CreativeTabs = () => {
@@ -51,17 +48,7 @@ const CreativeTabs = () => {
   ];
 
   const bgColor = useColorModeValue("white", "gray.800");
-  const cardBg = useColorModeValue("gray.50", "gray.900");
-  
-  // Responsive settings
-  const columnsCount = useBreakpointValue({
-    base: 1,
-    sm: 2,
-    md: 3,
-    lg: 4,
-    xl: 5,
-  });
-  
+  const columnsCount = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 4, xl: 5 });
   const tabFontSize = useBreakpointValue({ base: "xs", sm: "sm", md: "md" });
   const iconSize = useBreakpointValue({ base: 14, sm: 16, md: 18 });
 
@@ -70,19 +57,64 @@ const CreativeTabs = () => {
   const [hoveredTab, setHoveredTab] = useState<number | null>(null);
   const [visibleProducts, setVisibleProducts] = useState(uniqueProducts.slice(0, 10));
 
-  // Simulate loading when tab changes
-  useEffect(() => {
+  // Loader animation state
+  const [loaderProgress, setLoaderProgress] = useState(0);
+  const [loaderMessage, setLoaderMessage] = useState("Discovering amazing products...");
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const LOADER_DURATION_MS = 2500; // 2.5 seconds
+
+  const startLoader = useCallback(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    setLoaderProgress(0);
+    setLoaderMessage("Discovering amazing products...");
     setLoading(true);
-    const timer = setTimeout(() => {
+
+    const stepPercent = 100 / (LOADER_DURATION_MS / 50);
+    progressInterval.current = setInterval(() => {
+      setLoaderProgress(prev => {
+        const next = Math.min(prev + stepPercent, 100);
+        if (next >= 100 && progressInterval.current) {
+          clearInterval(progressInterval.current);
+        }
+        if (next < 30) setLoaderMessage("Discovering amazing products...");
+        else if (next < 70) setLoaderMessage("Handpicking your favorites ✨");
+        else setLoaderMessage("Almost ready! 🎁");
+        return next;
+      });
+    }, 50);
+
+    timeoutRef.current = setTimeout(() => {
       setLoading(false);
-      // Show different products based on category
+      setLoaderProgress(100);
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      timeoutRef.current = null;
+    }, LOADER_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    startLoader();
+    const shuffleTimer = setTimeout(() => {
       const shuffled = [...uniqueProducts].sort(() => 0.5 - Math.random());
       setVisibleProducts(shuffled.slice(0, 10));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [activeTab]);
+    }, 300);
+    return () => {
+      clearTimeout(shuffleTimer);
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [activeTab, startLoader]);
 
-  // Get gradient for category - Blue & White theme
+  useEffect(() => {
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const getCategoryGradient = (color: string) => {
     const gradients: Record<string, string> = {
       blue: "linear(135deg, #1e3a8a 0%, #3b82f6 100%)",
@@ -95,9 +127,7 @@ const CreativeTabs = () => {
     return gradients[color] || gradients.blue;
   };
 
-  // Blue gradient for primary accents
   const primaryBlueGradient = "linear(135deg, #1e3a8a 0%, #3b82f6 100%)";
-  const lightBlueGradient = "linear(135deg, #bfdbfe 0%, #93c5fd 100%)";
 
   return (
     <Box
@@ -107,7 +137,7 @@ const CreativeTabs = () => {
       bg={bgColor}
       minH="100vh"
     >
-      {/* Decorative Background - Soft blue tones */}
+      {/* Decorative Background */}
       <Box
         position="absolute"
         top="-10%"
@@ -136,7 +166,7 @@ const CreativeTabs = () => {
       />
 
       <Container maxW="100%" position="relative" zIndex={2}>
-        {/* Header Section - Blue theme */}
+        {/* Header Section */}
         <VStack spacing={4} mb={{ base: 8, md: 12 }}>
           <HStack spacing={2}>
             <Circle size="40px" bg="blue.100" _dark={{ bg: "blue.900" }}>
@@ -153,7 +183,7 @@ const CreativeTabs = () => {
               Shop by Category
             </Text>
           </HStack>
-          
+
           <Text
             fontSize={{ base: "2xl", sm: "3xl", md: "4xl", lg: "5xl" }}
             fontWeight="900"
@@ -167,7 +197,7 @@ const CreativeTabs = () => {
             </Text>
             Categories
           </Text>
-          
+
           <Text
             fontSize={{ base: "sm", md: "md" }}
             color="gray.600"
@@ -222,9 +252,9 @@ const CreativeTabs = () => {
                 }}
               >
                 <HStack spacing={2}>
-                  <Icon 
-                    as={category.icon} 
-                    fontSize={iconSize} 
+                  <Icon
+                    as={category.icon}
+                    fontSize={iconSize}
                     color={activeTab === index ? `${category.color}.500` : "gray.400"}
                   />
                   <Text fontWeight="700">{category.name}</Text>
@@ -237,8 +267,7 @@ const CreativeTabs = () => {
                     {category.badge}
                   </Badge>
                 </HStack>
-                
-                {/* Active Indicator - Blue theme */}
+
                 {activeTab === index && (
                   <Box
                     position="absolute"
@@ -256,152 +285,178 @@ const CreativeTabs = () => {
           </TabList>
 
           <TabPanels>
-            {categories.map((category, idx) => (
-              <TabPanel
-                key={category.name}
-                p={{ base: 2, md: 4 }}
-                transition="all 0.3s ease"
-              >
-                <ScaleFade in={!loading} initialScale={0.9} delay={0.1}>
-                  {/* Category Hero Section - Blue themed gradient for all, but using category color for accent */}
+            {categories.map((category) => (
+              <TabPanel key={category.name} p={{ base: 2, md: 4 }}>
+                {/* Hero Section - always visible */}
+                <Box
+                  mb={8}
+                  p={{ base: 4, md: 6 }}
+                  borderRadius="3xl"
+                  bgGradient={getCategoryGradient(category.color)}
+                  position="relative"
+                  overflow="hidden"
+                >
                   <Box
-                    mb={8}
-                    p={{ base: 4, md: 6 }}
-                    borderRadius="3xl"
-                    bgGradient={getCategoryGradient(category.color)}
+                    position="absolute"
+                    top="-20%"
+                    right="-10%"
+                    w="200px"
+                    h="200px"
+                    bg="white"
+                    borderRadius="full"
+                    opacity={0.1}
+                  />
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    direction={{ base: "column", sm: "row" }}
+                    gap={4}
                     position="relative"
-                    overflow="hidden"
+                    zIndex={1}
                   >
-                    <Box
-                      position="absolute"
-                      top="-20%"
-                      right="-10%"
-                      w="200px"
-                      h="200px"
+                    <HStack spacing={4}>
+                      <Circle size="60px" bg="whiteAlpha.300" backdropFilter="blur(10px)">
+                        <Icon as={category.icon} boxSize={8} color="white" />
+                      </Circle>
+                      <Box>
+                        <Text fontSize="xs" color="whiteAlpha.800" fontWeight="bold" letterSpacing="widest">
+                          FEATURED COLLECTION
+                        </Text>
+                        <Text fontSize="2xl" fontWeight="900" color="white">
+                          {category.name} Specials
+                        </Text>
+                        <Text fontSize="sm" color="whiteAlpha.900">
+                          Handpicked {category.name.toLowerCase()} products just for you
+                        </Text>
+                      </Box>
+                    </HStack>
+                    <Button
                       bg="white"
+                      color={`${category.color}.600`}
+                      rightIcon={<FiArrowRight />}
                       borderRadius="full"
-                      opacity={0.1}
-                    />
-                    <Flex
-                      justify="space-between"
-                      align="center"
-                      direction={{ base: "column", sm: "row" }}
-                      gap={4}
-                      position="relative"
-                      zIndex={1}
+                      px={6}
+                      _hover={{ transform: "translateX(5px)", bg: "gray.50" }}
+                      transition="all 0.3s"
                     >
-                      <HStack spacing={4}>
-                        <Circle size="60px" bg="whiteAlpha.300" backdropFilter="blur(10px)">
-                          <Icon as={category.icon} boxSize={8} color="white" />
-                        </Circle>
-                        <Box>
-                          <Text fontSize="xs" color="whiteAlpha.800" fontWeight="bold" letterSpacing="widest">
-                            FEATURED COLLECTION
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="900" color="white">
-                            {category.name} Specials
-                          </Text>
-                          <Text fontSize="sm" color="whiteAlpha.900">
-                            Handpicked {category.name.toLowerCase()} products just for you
-                          </Text>
-                        </Box>
-                      </HStack>
-                      <Button
-                        bg="white"
-                        color={`${category.color}.600`}
-                        rightIcon={<FiArrowRight />}
-                        borderRadius="full"
-                        px={6}
-                        _hover={{ transform: "translateX(5px)", bg: "gray.50" }}
-                        transition="all 0.3s"
-                      >
-                        View Collection
-                      </Button>
-                    </Flex>
-                  </Box>
+                      View Collection
+                    </Button>
+                  </Flex>
+                </Box>
 
-                  {/* Products Grid */}
-                  {loading ? (
+                {/* Product Area: Loader or Grid with Fade */}
+                {loading ? (
+                  <Flex
+                    direction="column"
+                    align="center"
+                    justify="center"
+                    minH="400px"
+                    gap={6}
+                  >
+                    <Box position="relative" boxSize="80px">
+                      <Icon
+                        as={FaGift}
+                        boxSize="80px"
+                        color="blue.400"
+                        transition="all 0.2s"
+                        animation="pulse 0.8s infinite"
+                        sx={{
+                          '@keyframes pulse': {
+                            '0%': { transform: 'scale(1)', opacity: 1 },
+                            '50%': { transform: 'scale(1.1)', opacity: 0.8 },
+                            '100%': { transform: 'scale(1)', opacity: 1 },
+                          }
+                        }}
+                      />
+                      <Icon
+                        as={FiHeart}
+                        position="absolute"
+                        top="-10px"
+                        right="-10px"
+                        boxSize="24px"
+                        color="red.500"
+                        transition="all 0.2s"
+                        animation="bounce 0.6s infinite"
+                        sx={{
+                          '@keyframes bounce': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                          }
+                        }}
+                      />
+                    </Box>
+                    <Text fontWeight="800" fontSize="lg" color="blue.600">
+                      {loaderMessage}
+                    </Text>
+                    <Progress
+                      value={loaderProgress}
+                      size="sm"
+                      width="250px"
+                      colorScheme="blue"
+                      borderRadius="full"
+                      hasStripe
+                      isAnimated
+                    />
+                    <Text fontSize="sm" color="gray.500">
+                      Just a moment, loading your {category.name.toLowerCase()}...
+                    </Text>
+                  </Flex>
+                ) : (
+                  <Fade in={!loading} transition={{ enter: { duration: 0.5 } }}>
                     <SimpleGrid
                       columns={columnsCount}
                       spacing={{ base: 3, md: 4, lg: 5 }}
                     >
-                      {[...Array(8)].map((_, i) => (
-                        <ProductCardSkeleton key={i} />
+                      {visibleProducts.map((product, productIdx) => (
+                        <Box
+                          key={`${product.id}-${productIdx}`}
+                          transition="all 0.3s ease"
+                          _hover={{ transform: "translateY(-4px)" }}
+                        >
+                          <ProductCard product={{ ...product, categoryName: category.name }} />
+                        </Box>
                       ))}
                     </SimpleGrid>
-                  ) : (
-                    <>
-                      <SimpleGrid
-                        columns={columnsCount}
-                        spacing={{ base: 3, md: 4, lg: 5 }}
-                      >
-                        {visibleProducts.map((product, productIdx) => (
-                          <Box
-                            key={`${product.id}-${productIdx}`}
-                            transition="all 0.3s ease"
-                            _hover={{ transform: "translateY(-4px)" }}
-                          >
-                            <ProductCard product={{ ...product, categoryName: category.name }} />
-                          </Box>
-                        ))}
-                      </SimpleGrid>
+                  </Fade>
+                )}
 
-                      {/* Load More Button - Blue theme */}
-                      <Flex justify="center" mt={8}>
-                        <Button
-                          variant="outline"
-                          colorScheme={category.color}
-                          borderRadius="full"
-                          px={8}
-                          rightIcon={<FiArrowRight />}
-                          _hover={{ transform: "translateX(5px)" }}
-                          transition="all 0.3s"
-                        >
-                          Load More Products
-                        </Button>
-                      </Flex>
-                    </>
-                  )}
-
-                  {/* Category Features - Blue accents */}
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    mt={8}
-                    pt={6}
-                    borderTop="2px solid"
-                    borderColor="gray.100"
-                    _dark={{ borderColor: "gray.700" }}
-                    direction={{ base: "column", sm: "row" }}
-                    gap={4}
-                    flexWrap="wrap"
-                  >
-                    <HStack spacing={6} flexWrap="wrap" justify="center">
-                      <HStack spacing={2}>
-                        <Icon as={FiAward} boxSize={5} color="blue.500" />
-                        <Text fontSize="sm" fontWeight="500">Top Rated Products</Text>
-                      </HStack>
-                      <HStack spacing={2}>
-                        <Icon as={FaHandsHelping} boxSize={5} color="blue.600" />
-                        <Text fontSize="sm" fontWeight="500">100% Verified Sellers</Text>
-                      </HStack>
-                      <HStack spacing={2}>
-                        <Icon as={FiClock} boxSize={5} color="blue.400" />
-                        <Text fontSize="sm" fontWeight="500">Free & Fast Delivery</Text>
-                      </HStack>
+                {/* Category Features (always visible) */}
+                <Flex
+                  justify="space-between"
+                  align="center"
+                  mt={8}
+                  pt={6}
+                  borderTop="2px solid"
+                  borderColor="gray.100"
+                  _dark={{ borderColor: "gray.700" }}
+                  direction={{ base: "column", sm: "row" }}
+                  gap={4}
+                  flexWrap="wrap"
+                >
+                  <HStack spacing={6} flexWrap="wrap" justify="center">
+                    <HStack spacing={2}>
+                      <Icon as={FiAward} boxSize={5} color="blue.500" />
+                      <Text fontSize="sm" fontWeight="500">Top Rated Products</Text>
                     </HStack>
-                    <Badge
-                      colorScheme={category.color}
-                      fontSize="sm"
-                      p={2}
-                      px={3}
-                      borderRadius="full"
-                    >
-                      {Math.floor(Math.random() * 100) + 50}+ Products Available
-                    </Badge>
-                  </Flex>
-                </ScaleFade>
+                    <HStack spacing={2}>
+                      <Icon as={FaHandsHelping} boxSize={5} color="blue.600" />
+                      <Text fontSize="sm" fontWeight="500">100% Verified Sellers</Text>
+                    </HStack>
+                    <HStack spacing={2}>
+                      <Icon as={FiClock} boxSize={5} color="blue.400" />
+                      <Text fontSize="sm" fontWeight="500">Free & Fast Delivery</Text>
+                    </HStack>
+                  </HStack>
+                  <Badge
+                    colorScheme={category.color}
+                    fontSize="sm"
+                    p={2}
+                    px={3}
+                    borderRadius="full"
+                  >
+                    {Math.floor(Math.random() * 100) + 50}+ Products Available
+                  </Badge>
+                </Flex>
               </TabPanel>
             ))}
           </TabPanels>

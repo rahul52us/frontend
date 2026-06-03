@@ -1,554 +1,638 @@
-'use client';
-
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Box, Flex, Text, Badge, IconButton, useBreakpointValue } from '@chakra-ui/react';
 import {
-  Box,
-  Container,
-  VStack,
-  HStack,
-  Text,
-  Button,
-  Badge,
-  Icon,
-  useBreakpointValue,
-  IconButton,
-} from '@chakra-ui/react';
-import { FaStar, FaRegStar, FaStarHalfAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+  FaChevronLeft,
+  FaChevronRight,
+  FaStar,
+  FaShoppingCart,
+  FaHeart,
+  FaEye,
+  FaRegHeart,
+} from 'react-icons/fa';
 
-// ============================
-// Types
-// ============================
+// ─── Types ──────────────────────────────────────────────────────────────
 interface Product {
-  id: string | number;
+  id: number;
   name: string;
   price: number;
-  oldPrice?: number;
+  originalPrice: number;
   rating: number;
-  reviewCount: number;
+  reviews: number;
   image: string;
+  category: string;
   badge?: string;
-  category?: string;
+  isNew?: boolean;
 }
 
-interface ProductCarouselProps {
-  products?: Product[];
-  title?: string;
-  subtitle?: string;
-  autoplay?: boolean;
-  autoplaySpeed?: number;
-}
-
-// ============================
-// Helper: Star Rating
-// ============================
-const renderStars = (rating: number) => {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-  return (
-    <HStack spacing={0.5}>
-      {[...Array(fullStars)].map((_, i) => (
-        <Icon key={`full-${i}`} as={FaStar} color="yellow.400" boxSize={3.5} />
-      ))}
-      {hasHalfStar && (
-        <Icon as={FaStarHalfAlt} color="yellow.400" boxSize={3.5} />
-      )}
-      {[...Array(emptyStars)].map((_, i) => (
-        <Icon key={`empty-${i}`} as={FaRegStar} color="gray.300" boxSize={3.5} />
-      ))}
-    </HStack>
-  );
-};
-
-// ============================
-// Default product data
-// ============================
-const defaultProducts: Product[] = [
+// ─── Mock Data ──────────────────────────────────────────────────────────
+const products: Product[] = [
   {
     id: 1,
-    name: 'Wireless Noise Cancelling Headphones',
-    price: 249.99,
-    oldPrice: 349.99,
-    rating: 4.8,
-    reviewCount: 234,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=450&fit=crop',
-    badge: 'Best Seller',
-    category: 'Electronics',
+    name: "Premium Wireless Headphones",
+    price: 199.99,
+    originalPrice: 299.99,
+    rating: 4.9,
+    reviews: 2341,
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
+    category: "Electronics",
+    badge: "Best Seller",
+    isNew: false,
   },
   {
     id: 2,
-    name: 'Smart Watch Ultra',
-    price: 399.99,
-    rating: 4.9,
-    reviewCount: 189,
-    image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&h=450&fit=crop',
-    badge: 'New',
-    category: 'Wearables',
+    name: "Minimalist Leather Watch",
+    price: 149.50,
+    originalPrice: 220.00,
+    rating: 4.8,
+    reviews: 1856,
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+    category: "Accessories",
+    badge: "Top Rated",
+    isNew: true,
   },
   {
     id: 3,
-    name: 'Minimalist Leather Backpack',
+    name: "Smart Fitness Tracker Pro",
     price: 89.99,
-    oldPrice: 129.99,
+    originalPrice: 129.99,
     rating: 4.7,
-    reviewCount: 456,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=450&fit=crop',
-    category: 'Fashion',
+    reviews: 3102,
+    image: "https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=500&h=500&fit=crop",
+    category: "Fitness",
+    badge: "Hot Deal",
+    isNew: false,
   },
   {
     id: 4,
-    name: 'Premium Running Shoes',
-    price: 159.99,
-    rating: 4.6,
-    reviewCount: 892,
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&h=450&fit=crop',
-    badge: '-20%',
-    category: 'Sports',
+    name: "Designer Sunglasses",
+    price: 245.00,
+    originalPrice: 350.00,
+    rating: 4.9,
+    reviews: 987,
+    image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
+    category: "Fashion",
+    badge: "Limited",
+    isNew: true,
   },
   {
     id: 5,
-    name: 'Smart Home Speaker',
-    price: 129.99,
-    oldPrice: 179.99,
-    rating: 4.5,
-    reviewCount: 567,
-    image: 'https://images.unsplash.com/photo-1589003077984-894e133dabab?w=600&h=450&fit=crop',
-    category: 'Electronics',
+    name: "Portable Bluetooth Speaker",
+    price: 79.99,
+    originalPrice: 119.99,
+    rating: 4.6,
+    reviews: 4521,
+    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
+    category: "Electronics",
+    badge: "Best Seller",
+    isNew: false,
   },
   {
     id: 6,
-    name: 'Ultra HD Action Camera',
-    price: 299.99,
+    name: "Organic Skincare Set",
+    price: 65.00,
+    originalPrice: 95.00,
     rating: 4.8,
-    reviewCount: 321,
-    image: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=450&fit=crop',
-    badge: 'Trending',
-    category: 'Camera',
+    reviews: 1567,
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500&h=500&fit=crop",
+    category: "Beauty",
+    badge: "Organic",
+    isNew: true,
   },
   {
     id: 7,
-    name: 'Ergonomic Office Chair',
+    name: "Ergonomic Office Chair",
     price: 349.99,
-    oldPrice: 499.99,
-    rating: 4.4,
-    reviewCount: 178,
-    image: 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=600&h=450&fit=crop',
-    category: 'Furniture',
+    originalPrice: 499.99,
+    rating: 4.7,
+    reviews: 892,
+    image: "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1?w=500&h=500&fit=crop",
+    category: "Furniture",
+    badge: "Top Rated",
+    isNew: false,
   },
   {
     id: 8,
-    name: 'Wireless Mechanical Keyboard',
-    price: 119.99,
-    rating: 4.7,
-    reviewCount: 245,
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&h=450&fit=crop',
-    badge: 'Hot',
-    category: 'Electronics',
+    name: "Premium Coffee Maker",
+    price: 129.99,
+    originalPrice: 179.99,
+    rating: 4.9,
+    reviews: 2234,
+    image: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500&h=500&fit=crop",
+    category: "Kitchen",
+    badge: "Best Seller",
+    isNew: true,
   },
 ];
 
-// ============================
-// Main Component (No scrollbar, perfect autoplay)
-// ============================
-const ProductCarousel: React.FC<ProductCarouselProps> = ({
-  products = defaultProducts,
-  title = '✨ Featured Products',
-  subtitle = 'Hand-picked just for you',
-  autoplay = true,
-  autoplaySpeed = 4000,
-}) => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
-  const [cardWidth, setCardWidth] = useState(0);
-  const [totalSlides, setTotalSlides] = useState(0);
-  const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+// ─── Inline SVG Icons (no external deps) ────────────────────────────────
+const ShoppingBagIcon = ({ size = 80, color = "#3182ce" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <path d="M16 10a4 4 0 0 1-8 0" />
+  </svg>
+);
 
-  // Responsive cards per view
-  const slidesToShow = useBreakpointValue({
-    base: 1,
-    sm: 2,
-    md: 3,
-    lg: 4,
-    xl: 4,
-  }) || 4;
+// ─── E-Commerce Loader Component ──────────────────────────────────────────
+const EcommerceLoader = () => {
+  return (
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
+      minH="500px"
+      bg="gray.50"
+      borderRadius="2xl"
+      gap={6}
+    >
+      {/* Animated Shopping Bag */}
+      <Box position="relative" width="80px" height="80px">
+        <motion.div
+          animate={{
+            y: [0, -15, 0],
+            rotate: [0, -5, 5, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <ShoppingBagIcon />
+        </motion.div>
 
-  // Update card width and total slides
-  const updateMetrics = useCallback(() => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      const firstCard = container.querySelector('.product-card') as HTMLElement;
-      if (firstCard) {
-        const cardWidthValue = firstCard.offsetWidth;
-        setCardWidth(cardWidthValue);
-        const scrollWidth = container.scrollWidth;
-        const visibleWidth = container.clientWidth;
-        const maxScroll = scrollWidth - visibleWidth;
-        const maxIndex = Math.ceil(maxScroll / cardWidthValue);
-        setTotalSlides(Math.max(1, maxIndex + 1));
-      }
-    }
-  }, [products.length]);
+        {/* Floating particles */}
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: i === 0 ? '#38b2ac' : i === 1 ? '#ed8936' : '#e53e3e',
+              top: '50%',
+              left: '50%',
+            }}
+            animate={{
+              x: [0, (i - 1) * 40, 0],
+              y: [0, -30, 0],
+              opacity: [0, 1, 0],
+              scale: [0.5, 1.2, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: i * 0.4,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </Box>
 
-  // Update active index on scroll
-  const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current && cardWidth > 0) {
-      const scrollLeft = scrollContainerRef.current.scrollLeft;
-      const newIndex = Math.round(scrollLeft / cardWidth);
-      setActiveIndex(newIndex);
-    }
-  }, [cardWidth]);
+      {/* Loading Text */}
+      <Flex direction="column" align="center" gap={2}>
+        <Text fontSize="xl" fontWeight="bold" color="gray.700" letterSpacing="wide">
+          Loading Top Picks
+        </Text>
+        <Text fontSize="sm" color="gray.500">
+          Curating the best for you...
+        </Text>
+      </Flex>
 
-  // Scroll to index with smooth behavior
-  const scrollToIndex = useCallback(
-    (index: number) => {
-      if (scrollContainerRef.current && cardWidth > 0) {
-        const maxIndex = totalSlides - 1;
-        const targetIndex = Math.min(Math.max(index, 0), maxIndex);
-        scrollContainerRef.current.scrollTo({
-          left: targetIndex * cardWidth,
-          behavior: 'smooth',
-        });
-        setActiveIndex(targetIndex);
-      }
-    },
-    [cardWidth, totalSlides]
+      {/* Progress Bar */}
+      <Box width="200px" height="4px" bg="gray.200" borderRadius="full" overflow="hidden">
+        <motion.div
+          style={{ height: '100%', background: 'linear-gradient(90deg, #3182ce, #38b2ac)', borderRadius: 'full' }}
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 2.5, ease: "easeInOut" }}
+        />
+      </Box>
+    </Flex>
   );
+};
 
-  const handlePrev = () => scrollToIndex(activeIndex - 1);
-  const handleNext = () => scrollToIndex(activeIndex + 1);
+// ─── Product Card Component ─────────────────────────────────────────────
+const ProductCard = ({ product, index }: { product: Product; index: number }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
-  // Autoplay logic with cleanup
-  useEffect(() => {
-    if (!autoplay || isHovering || totalSlides <= 1) {
-      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
-      return;
-    }
-    autoplayTimerRef.current = setInterval(() => {
-      if (activeIndex + 1 < totalSlides) {
-        scrollToIndex(activeIndex + 1);
-      } else {
-        scrollToIndex(0);
-      }
-    }, autoplaySpeed);
-    return () => {
-      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
-    };
-  }, [autoplay, autoplaySpeed, activeIndex, totalSlides, scrollToIndex, isHovering]);
-
-  // Set up resize and scroll listeners
-  useEffect(() => {
-    updateMetrics();
-    window.addEventListener('resize', updateMetrics);
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-    }
-    return () => {
-      window.removeEventListener('resize', updateMetrics);
-      if (container) container.removeEventListener('scroll', handleScroll);
-    };
-  }, [updateMetrics, handleScroll]);
-
-  // Re-run metrics when products or slidesToShow change
-  useEffect(() => {
-    updateMetrics();
-  }, [updateMetrics, slidesToShow]);
+  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   return (
-    <Box
-      as="section"
-      py={{ base: 8, md: 12 }}
-      bg="linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%)"
-      position="relative"
-      overflow="hidden"
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover={{ y: -8 }}
+      style={{ height: '100%' }}
     >
-      {/* Decorative blobs */}
       <Box
-        position="absolute"
-        top="-20%"
-        right="-10%"
-        w="300px"
-        h="300px"
-        bg="blue.100"
-        borderRadius="full"
-        filter="blur(80px)"
-        opacity={0.4}
-        zIndex={0}
-      />
-      <Box
-        position="absolute"
-        bottom="-20%"
-        left="-10%"
-        w="300px"
-        h="300px"
-        bg="purple.100"
-        borderRadius="full"
-        filter="blur(80px)"
-        opacity={0.4}
-        zIndex={0}
-      />
-
-      <Container maxW="container.xl" position="relative" zIndex={1}>
-        {/* Header */}
-        <VStack mb={{ base: 6, md: 10 }} spacing={2}>
-          <Text
-            fontSize={{ base: 'sm', md: 'md' }}
-            fontWeight="semibold"
-            color="blue.600"
-            textTransform="uppercase"
-            letterSpacing="wider"
-            bg="white"
-            px={4}
-            py={1}
-            borderRadius="full"
-            boxShadow="sm"
-          >
-            {subtitle}
-          </Text>
-          <Text
-            fontSize={{ base: '2xl', md: '3xl' }}
-            fontWeight="bold"
-            color="gray.800"
-            textAlign="center"
-          >
-            {title}
-          </Text>
-          <Box w="80px" h="3px" bg="linear-gradient(90deg, #3182ce, #9f7aea)" rounded="full" />
-        </VStack>
-
-        {/* Carousel Wrapper */}
-        <Box position="relative" px={{ base: 0, md: 6 }}>
-          {/* Navigation Buttons (desktop) */}
-          <IconButton
-            aria-label="Previous products"
-            icon={<FaChevronLeft />}
-            position="absolute"
-            left={{ base: -2, md: -4 }}
-            top="50%"
-            transform="translateY(-50%)"
-            zIndex={10}
-            rounded="full"
-            bg="white"
-            color="blue.600"
-            boxShadow="xl"
-            size="lg"
-            onClick={handlePrev}
-            isDisabled={activeIndex === 0}
-            display={{ base: 'none', md: 'flex' }}
-            _hover={{ bg: 'blue.500', color: 'white', transform: 'translateY(-50%) scale(1.05)' }}
-            transition="all 0.2s"
-            opacity={activeIndex === 0 ? 0.5 : 1}
-          />
-          <IconButton
-            aria-label="Next products"
-            icon={<FaChevronRight />}
-            position="absolute"
-            right={{ base: -2, md: -4 }}
-            top="50%"
-            transform="translateY(-50%)"
-            zIndex={10}
-            rounded="full"
-            bg="white"
-            color="blue.600"
-            boxShadow="xl"
-            size="lg"
-            onClick={handleNext}
-            isDisabled={activeIndex >= totalSlides - 1}
-            display={{ base: 'none', md: 'flex' }}
-            _hover={{ bg: 'blue.500', color: 'white', transform: 'translateY(-50%) scale(1.05)' }}
-            transition="all 0.2s"
-            opacity={activeIndex >= totalSlides - 1 ? 0.5 : 1}
-          />
-
-          {/* Scrollable Container - NO SCROLLBAR */}
-          <Box
-            ref={scrollContainerRef}
-            overflowX="auto"
-            css={{
-              scrollbarWidth: 'none', // Firefox
-              msOverflowStyle: 'none', // IE/Edge
-              scrollSnapType: 'x mandatory',
-              '&::-webkit-scrollbar': {
-                display: 'none', // Chrome/Safari
-              },
+        bg="white"
+        borderRadius="2xl"
+        overflow="hidden"
+        boxShadow="0 4px 20px rgba(0,0,0,0.08)"
+        transition="box-shadow 0.3s ease"
+        _hover={{ boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+        position="relative"
+        height="100%"
+        display="flex"
+        flexDirection="column"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Image Container */}
+        <Box position="relative" overflow="hidden" paddingTop="100%" bg="gray.100">
+          <motion.img
+            src={product.image}
+            alt={product.name}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
             }}
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
+            animate={{ scale: isHovered ? 1.1 : 1 }}
+            transition={{ duration: 0.4 }}
+          />
+
+          {/* Badges */}
+          <Flex position="absolute" top={3} left={3} gap={2} zIndex={2}>
+            {product.isNew && (
+              <Badge colorScheme="green" borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="bold">
+                NEW
+              </Badge>
+            )}
+            <Badge colorScheme="red" borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="bold">
+              -{discount}%
+            </Badge>
+          </Flex>
+
+          {/* Wishlist Button */}
+          <motion.div
+            style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}
+            whileTap={{ scale: 0.8 }}
           >
-            <HStack
-              spacing={6}
-              align="stretch"
-              px={{ base: 2, md: 0 }}
-              py={4}
-              display="inline-flex"
-            >
-              {products.map((product) => (
-                <Box
-                  key={product.id}
-                  className="product-card"
-                  width={{
-                    base: '280px',
-                    sm: 'calc((100vw - 48px) / 2 - 12px)',
-                    md: 'calc((100vw - 80px) / 3 - 16px)',
-                    lg: 'calc((100vw - 120px) / 4 - 16px)',
-                    xl: '300px',
-                  }}
-                  minW={{ base: '260px', sm: '240px', md: '220px', lg: '250px', xl: '280px' }}
-                  flexShrink={0}
-                  scrollSnapAlign="start"
-                >
-                  <Box
+            <IconButton
+              aria-label="Add to wishlist"
+              icon={
+                isLiked ? (
+                  <FaHeart size={18} color="#e53e3e" />
+                ) : (
+                  <FaRegHeart size={18} color="white" />
+                )
+              }
+              size="sm"
+              borderRadius="full"
+              bg="rgba(0,0,0,0.3)"
+              _hover={{ bg: "rgba(0,0,0,0.5)" }}
+              backdropFilter="blur(4px)"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsLiked(!isLiked);
+              }}
+            />
+          </motion.div>
+
+          {/* Quick Actions Overlay */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                }}
+              >
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <IconButton
+                    aria-label="Quick view"
+                    icon={<FaEye size={20} />}
+                    size="md"
+                    borderRadius="full"
                     bg="white"
-                    rounded="2xl"
-                    overflow="hidden"
-                    boxShadow="lg"
-                    transition="all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)"
-                    _hover={{
-                      transform: { base: 'none', md: 'translateY(-12px)' },
-                      boxShadow: '2xl',
-                    }}
-                    height="100%"
-                    display="flex"
-                    flexDirection="column"
-                    position="relative"
-                    backdropFilter="blur(2px)"
-                    bgGradient="linear(to-br, white, gray.50)"
-                  >
-                    {/* Animated Badge */}
-                    {product.badge && (
-                      <Badge
-                        position="absolute"
-                        top={3}
-                        left={3}
-                        zIndex={2}
-                        bg="linear-gradient(135deg, #3182ce, #63b3ed)"
-                        color="white"
-                        px={3}
-                        py={1}
-                        rounded="full"
-                        fontSize="xs"
-                        fontWeight="bold"
-                        textTransform="uppercase"
-                        boxShadow="md"
-                        animation="pulse 2s infinite"
-                        sx={{
-                          '@keyframes pulse': {
-                            '0%': { opacity: 0.8, transform: 'scale(1)' },
-                            '50%': { opacity: 1, transform: 'scale(1.05)' },
-                            '100%': { opacity: 0.8, transform: 'scale(1)' },
-                          },
-                        }}
-                      >
-                        {product.badge}
-                      </Badge>
-                    )}
+                    color="gray.800"
+                    _hover={{ bg: "gray.100" }}
+                  />
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <IconButton
+                    aria-label="Add to cart"
+                    icon={<FaShoppingCart size={20} />}
+                    size="md"
+                    borderRadius="full"
+                    bg="#3182ce"
+                    color="white"
+                    _hover={{ bg: "#2c5282" }}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Box>
 
-                    {/* Image */}
-                    <Box
-                      position="relative"
-                      height="200px"
-                      width="100%"
-                      overflow="hidden"
-                      bg="gray.100"
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          transition: 'transform 0.5s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.08)';
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)';
-                        }}
-                      />
-                    </Box>
+        {/* Content */}
+        <Flex direction="column" p={4} gap={2} flex={1}>
+          <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wider">
+            {product.category}
+          </Text>
 
-                    {/* Details */}
-                    <VStack p={4} align="stretch" flex="1" spacing={2}>
-                      {product.category && (
-                        <Text fontSize="xs" color="blue.500" fontWeight="bold" letterSpacing="wide">
-                          {product.category}
-                        </Text>
-                      )}
-                      <Text
-                        fontWeight="bold"
-                        fontSize="md"
-                        color="gray.800"
-                        noOfLines={2}
-                        lineHeight="short"
-                        minH="2.5rem"
-                      >
-                        {product.name}
-                      </Text>
-                      <HStack spacing={1} alignItems="center">
-                        {renderStars(product.rating)}
-                        <Text fontSize="xs" color="gray.500" ml={1}>
-                          ({product.reviewCount})
-                        </Text>
-                      </HStack>
-                      <HStack spacing={2} alignItems="baseline">
-                        <Text fontWeight="bold" fontSize="xl" color="blue.600">
-                          ${product.price.toFixed(2)}
-                        </Text>
-                        {product.oldPrice && (
-                          <Text fontSize="sm" color="gray.400" textDecoration="line-through">
-                            ${product.oldPrice.toFixed(2)}
-                          </Text>
-                        )}
-                      </HStack>
-                      <Button
-                        mt={2}
-                        colorScheme="blue"
-                        variant="outline"
-                        size="sm"
-                        rounded="full"
-                        w="full"
-                        _hover={{
-                          bg: 'blue.500',
-                          color: 'white',
-                          transform: 'translateY(-2px)',
-                          boxShadow: 'md',
-                        }}
-                        transition="all 0.2s"
-                      >
-                        Quick View →
-                      </Button>
-                    </VStack>
-                  </Box>
-                </Box>
-              ))}
-            </HStack>
-          </Box>
+          <Text fontSize="md" fontWeight="bold" color="gray.800" noOfLines={2} lineHeight="short">
+            {product.name}
+          </Text>
 
-          {/* Dots Indicator with animation */}
-          {totalSlides > 1 && (
-            <HStack justify="center" mt={8} spacing={3}>
-              {Array.from({ length: totalSlides }).map((_, idx) => (
-                <Box
-                  key={idx}
-                  as="button"
-                  onClick={() => scrollToIndex(idx)}
-                  w={idx === activeIndex ? '28px' : '8px'}
-                  h="8px"
-                  rounded="full"
-                  bg={idx === activeIndex ? 'blue.500' : 'gray.300'}
-                  transition="all 0.3s ease"
-                  cursor="pointer"
-                  _hover={{ bg: 'blue.400', transform: 'scale(1.2)' }}
+          {/* Rating */}
+          <Flex align="center" gap={1}>
+            <Flex>
+              {[...Array(5)].map((_, i) => (
+                <FaStar
+                  key={i}
+                  size={14}
+                  color={i < Math.floor(product.rating) ? "#ecc94b" : "#cbd5e0"}
+                  style={{ marginRight: '1px' }}
                 />
               ))}
-            </HStack>
-          )}
+            </Flex>
+            <Text fontSize="sm" color="gray.600" fontWeight="medium">
+              {product.rating}
+            </Text>
+            <Text fontSize="xs" color="gray.400">
+              ({product.reviews.toLocaleString()})
+            </Text>
+          </Flex>
+
+          {/* Price */}
+          <Flex align="baseline" gap={2} mt="auto" pt={2}>
+            <Text fontSize="xl" fontWeight="bold" color="#3182ce">
+              ${product.price.toFixed(2)}
+            </Text>
+            <Text fontSize="sm" color="gray.400" textDecoration="line-through">
+              ${product.originalPrice.toFixed(2)}
+            </Text>
+          </Flex>
+        </Flex>
+      </Box>
+    </motion.div>
+  );
+};
+
+// ─── Main Carousel Component ────────────────────────────────────────────
+const ProductCarousel = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [direction, setDirection] = useState(0);
+
+  // Responsive items per page
+  const itemsPerPage = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 4 }) || 4;
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+
+  // Simulate loading delay (2-3 seconds)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const paginate = useCallback((newDirection: number) => {
+    setDirection(newDirection);
+    setCurrentPage((prev) => {
+      if (newDirection === 1) {
+        return prev === totalPages - 1 ? 0 : prev + 1;
+      }
+      return prev === 0 ? totalPages - 1 : prev - 1;
+    });
+  }, [totalPages]);
+
+  const currentProducts = products.slice(
+    currentPage * itemsPerPage,
+    currentPage * itemsPerPage + itemsPerPage
+  );
+
+  // Auto-play
+  useEffect(() => {
+    if (isLoading) return;
+    const interval = setInterval(() => {
+      paginate(1);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isLoading, paginate]);
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+    }),
+  };
+
+  if (isLoading) {
+    return (
+      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 8 }} py={12}>
+        <EcommerceLoader />
+      </Box>
+    );
+  }
+
+  return (
+    <Box bg="gray.50" py={{ base: 12, md: 20 }} overflow="hidden">
+      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 8 }}>
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Flex direction="column" align={{ base: "center", md: "flex-start" }} mb={10} gap={3}>
+            <Badge colorScheme="blue" borderRadius="full" px={4} py={1} fontSize="sm" textTransform="uppercase" letterSpacing="widest">
+              Curated For You
+            </Badge>
+            <Text
+              fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }}
+              fontWeight="extrabold"
+              color="gray.900"
+              lineHeight="1.1"
+              textAlign={{ base: "center", md: "left" }}
+            >
+              Top Rated{" "}
+              <Text as="span" color="#3182ce" position="relative">
+                Products
+                <svg
+                  style={{ position: 'absolute', bottom: '-8px', left: 0, width: '100%' }}
+                  viewBox="0 0 200 12"
+                  fill="none"
+                >
+                  <motion.path
+                    d="M2 8C50 2 150 2 198 8"
+                    stroke="#3182ce"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    fill="none"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                  />
+                </svg>
+              </Text>
+            </Text>
+            <Text fontSize="lg" color="gray.600" maxW="600px" textAlign={{ base: "center", md: "left" }}>
+              Discover our community's favorite picks, rated and reviewed by thousands of happy customers.
+            </Text>
+          </Flex>
+        </motion.div>
+
+        {/* Carousel Container */}
+        <Box position="relative">
+          {/* Navigation Arrows */}
+          <motion.div
+            style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <IconButton
+              aria-label="Previous"
+              icon={<FaChevronLeft size={24} />}
+              size="lg"
+              borderRadius="full"
+              bg="white"
+              boxShadow="lg"
+              color="gray.700"
+              _hover={{ bg: "gray.50" }}
+              onClick={() => paginate(-1)}
+              display={{ base: "none", md: "flex" }}
+            />
+          </motion.div>
+
+          <motion.div
+            style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <IconButton
+              aria-label="Next"
+              icon={<FaChevronRight size={24} />}
+              size="lg"
+              borderRadius="full"
+              bg="white"
+              boxShadow="lg"
+              color="gray.700"
+              _hover={{ bg: "gray.50" }}
+              onClick={() => paginate(1)}
+              display={{ base: "none", md: "flex" }}
+            />
+          </motion.div>
+
+          {/* Products Grid with Animation */}
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={currentPage}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <Flex gap={6}>
+                {currentProducts.map((product, index) => (
+                  <Box key={product.id} flex={`0 0 calc(${100 / itemsPerPage}% - ${(itemsPerPage - 1) * 24 / itemsPerPage}px)`}>
+                    <ProductCard product={product} index={index} />
+                  </Box>
+                ))}
+              </Flex>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Mobile Navigation */}
+          <Flex justify="center" gap={4} mt={8} display={{ base: "flex", md: "none" }}>
+            <IconButton
+              aria-label="Previous"
+              icon={<FaChevronLeft size={20} />}
+              borderRadius="full"
+              bg="white"
+              boxShadow="md"
+              onClick={() => paginate(-1)}
+            />
+            <IconButton
+              aria-label="Next"
+              icon={<FaChevronRight size={20} />}
+              borderRadius="full"
+              bg="white"
+              boxShadow="md"
+              onClick={() => paginate(1)}
+            />
+          </Flex>
+
+          {/* Pagination Dots */}
+          <Flex justify="center" gap={2} mt={8}>
+            {[...Array(totalPages)].map((_, i) => (
+              <motion.button
+                key={i}
+                onClick={() => {
+                  setDirection(i > currentPage ? 1 : -1);
+                  setCurrentPage(i);
+                }}
+                style={{
+                  width: i === currentPage ? 32 : 12,
+                  height: 12,
+                  borderRadius: 999,
+                  border: 'none',
+                  background: i === currentPage ? '#3182ce' : '#cbd5e0',
+                  cursor: 'pointer',
+                }}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                animate={{ width: i === currentPage ? 32 : 12 }}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
+          </Flex>
         </Box>
-      </Container>
+
+        {/* View All Button */}
+        <Flex justify="center" mt={12}>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Box
+              as="button"
+              px={8}
+              py={4}
+              bg="gray.900"
+              color="white"
+              borderRadius="full"
+              fontWeight="bold"
+              fontSize="md"
+              letterSpacing="wide"
+              boxShadow="0 10px 30px rgba(0,0,0,0.2)"
+              transition="all 0.3s"
+              _hover={{
+                bg: "#3182ce",
+                boxShadow: "0 15px 40px rgba(49, 130, 206, 0.3)",
+              }}
+            >
+              View All Products
+            </Box>
+          </motion.div>
+        </Flex>
+      </Box>
     </Box>
   );
 };
