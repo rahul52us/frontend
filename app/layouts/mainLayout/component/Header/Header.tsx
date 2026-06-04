@@ -22,7 +22,7 @@ import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
 import { FiShoppingCart, FiHeart, FiShoppingBag, FiMapPin, FiCreditCard, FiUser, FiLogOut, FiGrid } from "react-icons/fi";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
@@ -157,7 +157,9 @@ const Header = observer(() => {
         </Flex>
 
         <Box display={{ base: "block", md: "none" }} bg="gray.50" px={4} py={3}>
-          <SearchInput />
+          <Suspense fallback={null}>
+            <SearchInput />
+          </Suspense>
         </Box>
 
         {/* ================= MOBILE DRAWER ================= */}
@@ -279,7 +281,9 @@ const Header = observer(() => {
 
           <Flex align="center" gap={3} minW="360px" justify="flex-end">
             <Box w="full" maxW="380px" bg="gray.50" borderRadius="full" px={3} py={2} boxShadow="sm">
-              <SearchInput />
+              <Suspense fallback={null}>
+                <SearchInput />
+              </Suspense>
             </Box>
 
             <Flex align="center" gap={1}>

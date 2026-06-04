@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
@@ -30,7 +31,9 @@ const Page = observer(() => {
             "&::-webkit-scrollbar-thumb": { background: "#888", borderRadius: "4px" },
           }}
         >
-          <ProductsListSection />
+          <Suspense fallback={null}>
+            <ProductsListSection />
+          </Suspense>
         </Box>
       </Flex>
 
