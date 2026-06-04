@@ -14,7 +14,6 @@ import {
   Flex,
   HStack,
   Icon,
-  Select,
   SimpleGrid,
   Tag,
   TagCloseButton,
@@ -312,12 +311,16 @@ const compactAdvancedFilters = (filters: any) => {
 const AdvancedFilterPanel = ({
   facets,
   filters,
+  loading,
+  emptyMessage,
   onToggle,
   onPriceChange,
   onClear,
 }: {
   facets: any[];
   filters: any;
+  loading?: boolean;
+  emptyMessage?: string;
   onToggle: (_facetKey: string, _value: string) => void;
   onPriceChange: (_min?: number, _max?: number) => void;
   onClear: () => void;
@@ -339,7 +342,7 @@ const AdvancedFilterPanel = ({
       <Box border="1px solid" borderColor={borderColor} borderRadius="md" p={4}>
         <Text fontWeight="700">Filters</Text>
         <Text color={textMuted} fontSize="sm" mt={2}>
-          Search products to see related filters.
+          {loading ? "Loading category filters..." : emptyMessage || "Search products or select a category to see related filters."}
         </Text>
       </Box>
     );
@@ -505,8 +508,6 @@ const ProductsListSection = observer(() => {
   const mutedText = useColorModeValue("gray.500", "gray.400");
   const cardGridBg = useColorModeValue("transparent", "transparent");
   const filterShadow = useColorModeValue("sm", "xl");
-  const controlBg = useColorModeValue("gray.50", "gray.800");
-  const controlBorder = useColorModeValue("gray.200", "gray.700");
   const resetHoverBg = useColorModeValue("red.50", "rgba(229, 62, 62, 0.1)");
   const matchCountColor = useColorModeValue("gray.900", "white");
   const liveFilterBg = useColorModeValue("blue.50", "rgba(66, 153, 225, 0.1)");
@@ -514,7 +515,6 @@ const ProductsListSection = observer(() => {
   const emptyIconColor = useColorModeValue("gray.300", "gray.600");
   const emptyTitleColor = useColorModeValue("gray.700", "gray.200");
   const shopSectionBg = useColorModeValue("transparent", "rgba(255,255,255,0.01)");
-  const inputFocusBorder = isDarkMode ? "primary.400" : "primary.500";
 
   const activeCategories = useMemo(
     () => filterCategories.filter((category: any) => category.isActive !== false),
@@ -534,6 +534,16 @@ const ProductsListSection = observer(() => {
           )
         : [],
     [activeCategories, selectedCategory]
+  );
+
+  const selectedCategoryName = useMemo(
+    () => getCategoryName(activeCategories.find((category: any) => getCategoryId(category) === selectedCategory)),
+    [activeCategories, selectedCategory]
+  );
+
+  const selectedSubCategoryName = useMemo(
+    () => getCategoryName(activeCategories.find((category: any) => getCategoryId(category) === selectedSubCategory)),
+    [activeCategories, selectedSubCategory]
   );
 
   const advancedFilterCount = getAdvancedFilterCount(advancedFilters);
@@ -626,17 +636,20 @@ const ProductsListSection = observer(() => {
     setSelectedCategory(categoryId);
     setSelectedSubCategory("");
     setAdvancedFilters(emptyAdvancedFilters);
+    setFacets([]);
   };
 
   const handleSubCategoryChange = (categoryId: string) => {
     setSelectedSubCategory(categoryId);
     setAdvancedFilters(emptyAdvancedFilters);
+    setFacets([]);
   };
 
   const clearCategoryFilters = () => {
     setSelectedCategory("");
     setSelectedSubCategory("");
     setAdvancedFilters(emptyAdvancedFilters);
+    setFacets([]);
   };
 
   const clearSearchParam = useCallback(() => {
@@ -714,49 +727,87 @@ const ProductsListSection = observer(() => {
         </Button>
       </HStack>
 
-      <Select
-        value={selectedCategory}
-        onChange={(event) => handleCategoryChange(event.target.value)}
-        placeholder="All Categories"
-        size="md"
-        h="44px"
-        bg={controlBg}
-        border="1px solid"
-        borderColor={controlBorder}
-        _focus={{ borderColor: inputFocusBorder }}
-        borderRadius="md"
-        icon={<FiFilter />}
-        cursor="pointer"
-        fontSize="sm"
-      >
-        {rootCategories.map((category: any) => (
-          <option key={getCategoryId(category)} value={getCategoryId(category)}>
-            {getCategoryName(category)}
-          </option>
-        ))}
-      </Select>
+      <VStack align="stretch" spacing={1}>
+        <Button
+          size="sm"
+          justifyContent="flex-start"
+          variant={!selectedCategory ? "solid" : "ghost"}
+          colorScheme={!selectedCategory ? "blue" : "gray"}
+          borderRadius="md"
+          onClick={clearCategoryFilters}
+        >
+          All Categories
+        </Button>
 
-      <Select
-        value={selectedSubCategory}
-        onChange={(event) => handleSubCategoryChange(event.target.value)}
-        placeholder="All Subcategories"
-        size="md"
-        h="44px"
-        bg={controlBg}
-        border="1px solid"
-        borderColor={controlBorder}
-        _focus={{ borderColor: inputFocusBorder }}
-        borderRadius="md"
-        isDisabled={!selectedCategory || subCategories.length === 0}
-        cursor={!selectedCategory || subCategories.length === 0 ? "not-allowed" : "pointer"}
-        fontSize="sm"
-      >
-        {subCategories.map((category: any) => (
-          <option key={getCategoryId(category)} value={getCategoryId(category)}>
-            {getCategoryName(category)}
-          </option>
-        ))}
-      </Select>
+        {rootCategories.map((category: any) => {
+          const categoryId = getCategoryId(category);
+          const isSelected = categoryId === selectedCategory;
+
+          return (
+            <Button
+              key={categoryId}
+              size="sm"
+              justifyContent="space-between"
+              variant={isSelected ? "solid" : "ghost"}
+              colorScheme={isSelected ? "blue" : "gray"}
+              borderRadius="md"
+              rightIcon={<FiFilter />}
+              onClick={() => handleCategoryChange(categoryId)}
+            >
+              <Text as="span" noOfLines={1}>
+                {getCategoryName(category)}
+              </Text>
+            </Button>
+          );
+        })}
+      </VStack>
+
+      {selectedCategory && (
+        <Box pt={2}>
+          <Text fontSize="xs" color={mutedText} fontWeight="800" textTransform="uppercase" letterSpacing="0.08em" mb={2}>
+            Subcategories
+          </Text>
+
+          {subCategories.length > 0 ? (
+            <VStack align="stretch" spacing={1}>
+              <Button
+                size="sm"
+                justifyContent="flex-start"
+                variant={!selectedSubCategory ? "solid" : "ghost"}
+                colorScheme={!selectedSubCategory ? "blue" : "gray"}
+                borderRadius="md"
+                onClick={() => handleSubCategoryChange("")}
+              >
+                All {selectedCategoryName || "Subcategories"}
+              </Button>
+              {subCategories.map((category: any) => {
+                const categoryId = getCategoryId(category);
+                const isSelected = categoryId === selectedSubCategory;
+
+                return (
+                  <Button
+                    key={categoryId}
+                    size="sm"
+                    justifyContent="flex-start"
+                    variant={isSelected ? "solid" : "ghost"}
+                    colorScheme={isSelected ? "blue" : "gray"}
+                    borderRadius="md"
+                    onClick={() => handleSubCategoryChange(categoryId)}
+                  >
+                    <Text as="span" noOfLines={1}>
+                      {getCategoryName(category)}
+                    </Text>
+                  </Button>
+                );
+              })}
+            </VStack>
+          ) : (
+            <Text fontSize="sm" color={mutedText}>
+              No subcategories configured.
+            </Text>
+          )}
+        </Box>
+      )}
     </VStack>
   );
 
@@ -780,6 +831,22 @@ const ProductsListSection = observer(() => {
 
     if (searchTerm.trim()) {
       chips.push({ key: "search", label: `Search: ${searchTerm.trim()}`, onRemove: clearSearchParam });
+    }
+
+    if (selectedCategory) {
+      chips.push({
+        key: "category",
+        label: `Category: ${selectedCategoryName || selectedCategory}`,
+        onRemove: clearCategoryFilters,
+      });
+    }
+
+    if (selectedSubCategory) {
+      chips.push({
+        key: "subcategory",
+        label: `Subcategory: ${selectedSubCategoryName || selectedSubCategory}`,
+        onRemove: () => handleSubCategoryChange(""),
+      });
     }
 
     ["brand", "idea", "deal", "availability"].forEach((key) => {
@@ -834,7 +901,18 @@ const ProductsListSection = observer(() => {
     }
 
     return chips;
-  }, [advancedFilters, clearSearchParam, facets, searchTerm, setPriceFilter, toggleAdvancedFilter]);
+  }, [
+    advancedFilters,
+    clearSearchParam,
+    facets,
+    searchTerm,
+    selectedCategory,
+    selectedCategoryName,
+    selectedSubCategory,
+    selectedSubCategoryName,
+    setPriceFilter,
+    toggleAdvancedFilter,
+  ]);
 
   return (
     <Box
@@ -973,6 +1051,12 @@ const ProductsListSection = observer(() => {
                 <AdvancedFilterPanel
                   facets={facets}
                   filters={advancedFilters}
+                  loading={loading}
+                  emptyMessage={
+                    selectedCategory
+                      ? "No configured filters are available for this category yet."
+                      : "Search products or select a category to see related filters."
+                  }
                   onToggle={toggleAdvancedFilter}
                   onPriceChange={setPriceFilter}
                   onClear={clearAdvancedFilters}
@@ -1061,6 +1145,12 @@ const ProductsListSection = observer(() => {
                 <AdvancedFilterPanel
                   facets={facets}
                   filters={advancedFilters}
+                  loading={loading}
+                  emptyMessage={
+                    selectedCategory
+                      ? "No configured filters are available for this category yet."
+                      : "Search products or select a category to see related filters."
+                  }
                   onToggle={toggleAdvancedFilter}
                   onPriceChange={setPriceFilter}
                   onClear={clearAdvancedFilters}

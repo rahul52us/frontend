@@ -48,27 +48,27 @@ const CategoryValidationSchema = Yup.object().shape({
     ),
 });
 
-const filterSourceOptions = [
-    { value: "tag", label: "Popular ideas" },
-    { value: "variant", label: "Variant" },
-    { value: "productDetails", label: "Product detail" },
-    { value: "information", label: "Information" },
-    { value: "brand", label: "Brand" },
-    { value: "price", label: "Price" },
-    { value: "deal", label: "Deals" },
-    { value: "availability", label: "Availability" },
+export const filterSourceOptions = [
+    { value: "brand", label: "Product brand" },
+    { value: "price", label: "Price range" },
+    { value: "deal", label: "Deals and discounts" },
+    { value: "availability", label: "Stock availability" },
+    { value: "tag", label: "Tags / shopping ideas" },
+    { value: "variant", label: "Variant option" },
+    { value: "productDetails", label: "Product details field" },
+    { value: "information", label: "Product information field" },
 ];
 
-const filterTypeOptions = [
+export const filterTypeOptions = [
     { value: "checkbox", label: "Checkbox" },
     { value: "pills", label: "Pills" },
     { value: "color", label: "Color" },
     { value: "range", label: "Range" },
 ];
 
-const sourcesNeedingKey = new Set(["variant", "productDetails", "information"]);
+export const sourcesNeedingKey = new Set(["variant", "productDetails", "information"]);
 
-const createFilterConfigItem = () => ({
+export const createFilterConfigItem = () => ({
     label: "",
     source: "productDetails",
     sourceKey: "",
@@ -78,7 +78,7 @@ const createFilterConfigItem = () => ({
     isActive: true,
 });
 
-const toFormFilterConfig = (filterConfig: any[] = []) =>
+export const toFormFilterConfig = (filterConfig: any[] = []) =>
     filterConfig.map((item) => ({
         label: item?.label || "",
         source: item?.source || "productDetails",
@@ -89,7 +89,7 @@ const toFormFilterConfig = (filterConfig: any[] = []) =>
         isActive: item?.isActive ?? true,
     }));
 
-const toSubmitFilterConfig = (filterConfig: any[] = []) =>
+export const toSubmitFilterConfig = (filterConfig: any[] = []) =>
     filterConfig
         .map((item) => ({
             label: String(item?.label || "").trim(),
