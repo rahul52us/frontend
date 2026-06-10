@@ -17,6 +17,18 @@ const Page = observer(() => {
   return (
     <Box maxW={{ base: "100%", md: "95%" }} mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
       <CategoryFilter />
+      
+
+      {/* <VideoStories /> */}
+      <HeroSection />
+
+      <Box p={4}>
+        <Box h="1px" bg="gray.100" w="100%" />
+      </Box>
+
+      <Box>
+        <ProductCarousel />
+      </Box>
       <Flex
         direction={{ base: "column", md: "row" }}
         gap={{ base: 4, md: 2 }}
@@ -36,17 +48,6 @@ const Page = observer(() => {
           </Suspense>
         </Box>
       </Flex>
-
-      <VideoStories />
-      <HeroSection />
-
-      <Box p={4}>
-        <Box h="1px" bg="gray.100" w="100%" />
-      </Box>
-
-      <Box>
-        <ProductCarousel />
-      </Box>
       <MapComponent />
       <CategoryTabs />
       <IndianStateFilter />

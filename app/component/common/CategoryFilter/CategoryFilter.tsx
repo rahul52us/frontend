@@ -1,135 +1,184 @@
-import { Box, Flex, Image, Text, Skeleton, useColorModeValue } from '@chakra-ui/react';
+'use client';
+
+import {
+  Box,
+  Button,
+  Flex,
+  Image,
+  Text,
+  Skeleton,
+  useColorModeValue,
+  IconButton,
+} from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { observer } from 'mobx-react-lite';
 import categoryStore from '../../../store/categoryStore/categoryStore';
 
-const MotionFlex = motion(Flex);
 const MotionBox = motion(Box);
 
-const CategoryFilter = observer(() => {
+const CategorySection = observer(() => {
   const router = useRouter();
   const { categories, loading } = categoryStore;
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     categoryStore.getAllCategories({ isActive: true, isFeatured: true });
   }, []);
 
-  const handleCategoryClick = (category: any) => {
-    setActiveCategory(category._id);
-    router.push(`/categories?slug=${category.slug || category.name.toLowerCase()}`);
-  };
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const descriptionColor = useColorModeValue('gray.600', 'gray.400');
+  const sectionText = useColorModeValue('gray.700', 'gray.300');
 
-  const bgColor = useColorModeValue('rgba(255, 255, 255, 0.8)', 'rgba(26, 32, 44, 0.8)');
-  const borderColor = useColorModeValue('gray.100', 'whiteAlpha.200');
+  const handleCategoryClick = useCallback(
+    (category: any) => {
+      router.push(`/categories?slug=${category.slug || category.name.toLowerCase()}`);
+    },
+    [router]
+  );
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -320 : 320;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const isLoading = loading && categories.length === 0;
 
   if (isLoading) {
     return (
-      <Box py={4} px={{ base: 4, md: 8 }} mt={2} overflowX="auto">
-        <Flex gap={4} mx="auto" justify="center">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Skeleton key={i} h="80px" w="100px" borderRadius="2xl" />
+      <Box py={10} px={{ base: 4, md: 8 }}>
+        <Flex gap={6} overflow="hidden">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} h="280px" w="260px" borderRadius="24px" flexShrink={0} />
           ))}
         </Flex>
       </Box>
-    )
+    );
   }
 
-  if (!loading && (!categories || categories?.length === 0)) return null;
+  if (!categories.length) return null;
 
   return (
-    <Box
-      as="nav"
-      py={4}
-      bg={bgColor}
-      backdropFilter="blur(20px)"
-      borderBottom="1px solid"
-      borderColor={borderColor}
-      position="sticky"
-      top="0"
-      zIndex="100"
-      overflowX="auto"
-      css={{
-        '&::-webkit-scrollbar': { display: 'none' },
-        '-ms-overflow-style': 'none',
-        'scrollbar-width': 'none',
-      }}
-    >
+    <Box py={{ base: 8, md: 12 }} px={{ base: 4, md: 8 }} maxW="1600px" mx="auto">
       <Flex
-        px={{ base: 4, md: 8 }}
-        gap={{ base: 8, md: 10 }}
-        justifyContent={{ base: "flex-start", md: "center" }}
-        align="center"
+        direction={{ base: 'column', md: 'row' }}
+        wrap={{ base: 'wrap', md: 'nowrap' }}
+        justify="space-between"
+        align={{ base: 'flex-start', md: 'center' }}
+        mb={6}
+        gap={4}
       >
-        {categories.map((category) => (
-          <MotionFlex
-            key={category._id}
-            direction="column"
-            align="center"
-            onClick={() => handleCategoryClick(category)}
-            cursor="pointer"
-            flex="0 0 auto"
-            whileHover={{ y: -4 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <Box
-              p="3px"
-              borderRadius="2xl"
-              bgGradient={activeCategory === category._id ? "linear(to-tr, purple.500, blue.500)" : "transparent"}
-              mb={2}
-              transition="all 0.3s"
-              boxShadow={activeCategory === category._id ? "0 8px 20px -5px rgba(128, 90, 213, 0.5)" : "none"}
+        <Box flex="1" minW={0} maxW={{ md: '620px' }}>
+          <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="extrabold" lineHeight="1.05">
+            Shop by Category
+          </Text>
+          <Text mt={3} color={sectionText} fontSize={{ base: 'sm', md: 'md' }} maxW="720px" lineHeight="1.7">
+            Browse top categories curated for local buyers and sellers. Tap a category to explore the best products from trusted vendors near you.
+          </Text>
+        </Box>
+
+        <Flex
+          align="center"
+          gap={2}
+          flexShrink={0}
+          justify={{ base: 'flex-start', md: 'flex-end' }}
+        >
+          <IconButton
+            aria-label="Scroll left"
+            icon={<ChevronLeftIcon />}
+            onClick={() => scroll('left')}
+            borderRadius="full"
+            variant="outline"
+            size="sm"
+          />
+          <IconButton
+            aria-label="Scroll right"
+            icon={<ChevronRightIcon />}
+            onClick={() => scroll('right')}
+            borderRadius="full"
+            variant="outline"
+            size="sm"
+          />
+        </Flex>
+      </Flex>
+
+      <Box position="relative">
+        <Flex
+          ref={scrollRef}
+          gap={6}
+          overflowX="auto"
+          overflowY="hidden"
+          pb={2}
+          sx={{
+            scrollSnapType: 'x mandatory',
+            '& > div': {
+              scrollSnapAlign: 'start',
+            },
+            /* Hide scrollbar for Chrome, Safari, Opera */
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            /* Hide scrollbar for IE, Edge, Firefox */
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
+          {categories.map((category: any) => (
+            <MotionBox
+              key={category._id}
+              bg={cardBg}
+              borderRadius="24px"
+              overflow="hidden"
+              boxShadow="lg"
+              cursor="pointer"
+              whileHover={{ y: -6, scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.25 }}
+              _hover={{ boxShadow: '2xl' }}
+              minW="260px"
+              w="260px"
+              flexShrink={0}
             >
-              <Box
-                borderRadius="xl"
-                overflow="hidden"
-                boxSize={{ base: '54px', md: '64px' }}
-                bg="gray.100"
-                border="2px solid white"
-              >
+              <Box h={{ base: '170px', md: '180px' }} overflow="hidden" position="relative">
                 <Image
-                  src={category.image?.url || 'https://via.placeholder.com/150'}
+                  src={category.image?.url || 'https://via.placeholder.com/500x500'}
                   alt={category.name}
-                  objectFit="cover"
                   w="100%"
                   h="100%"
-                  transition="transform 0.5s"
-                  _hover={{ transform: 'scale(1.1)' }}
+                  objectFit="cover"
+                  transition="transform 0.5s ease"
+                  _hover={{ transform: 'scale(1.08)' }}
                 />
               </Box>
-            </Box>
-            <Text
-              fontSize="xs"
-              fontWeight={activeCategory === category._id ? "bold" : "semibold"}
-              color={activeCategory === category._id ? 'purple.600' : 'gray.500'}
-              textAlign="center"
-              maxW="80px"
-              noOfLines={1}
-              letterSpacing="wide"
-              textTransform="uppercase"
-            >
-              {category.name}
-            </Text>
-            {activeCategory === category._id && (
-              <MotionBox
-                layoutId="activeCategory"
-                mt={1}
-                h="3px"
-                w="20px"
-                bg="purple.500"
-                borderRadius="full"
-              />
-            )}
-          </MotionFlex>
-        ))}
-      </Flex>
+              <Box p={{ base: 4, md: 5 }}>
+                <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" noOfLines={1} mb={2}>
+                  {category.name}
+                </Text>
+                <Text fontSize="sm" color={descriptionColor} noOfLines={2} mb={4}>
+                  {category.description || 'Discover premium products and bestselling items.'}
+                </Text>
+                <Button
+                  size="sm"
+                  w="full"
+                  borderRadius="full"
+                  bgGradient="linear(to-r, purple.500, blue.500)"
+                  color="white"
+                  _hover={{ bgGradient: 'linear(to-r, purple.600, blue.600)' }}
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  Explore
+                </Button>
+              </Box>
+            </MotionBox>
+          ))}
+        </Flex>
+      </Box>
     </Box>
   );
 });
 
-export default CategoryFilter;
+export default CategorySection;

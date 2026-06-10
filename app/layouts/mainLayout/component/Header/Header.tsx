@@ -1,6 +1,6 @@
 "use client";
 
-import { HamburgerIcon, SearchIcon } from "@chakra-ui/icons";
+import { HamburgerIcon } from "@chakra-ui/icons";
 import {
   Box,
   Center,
@@ -111,18 +111,18 @@ const Header = observer(() => {
           borderBottom="1px solid"
           borderColor="gray.200"
         >
-          <Flex align="center" gap={3} cursor="pointer" onClick={() => router.push("/")}> 
+          <Flex align="center" gap={3} minW={0} cursor="pointer" onClick={() => router.push("/")}> 
             <Image
               src="/images/logo3.jpg"
               alt="Logo"
               h="36px"
               objectFit="contain"
             />
-            <Box>
-              <Text fontWeight="bold" fontSize="md">
+            <Box minW={0}>
+              <Text fontWeight="bold" fontSize="md" noOfLines={1}>
                 Business Sahayata
               </Text>
-              <Text fontSize="xs" color="gray.500">
+              <Text fontSize="xs" color="gray.500" noOfLines={1}>
                 Marketplace for local sellers
               </Text>
             </Box>
@@ -157,9 +157,11 @@ const Header = observer(() => {
         </Flex>
 
         <Box display={{ base: "block", md: "none" }} bg="gray.50" px={4} py={3}>
-          <Suspense fallback={null}>
-            <SearchInput />
-          </Suspense>
+          <Flex w="full" maxW="100%">
+            <Suspense fallback={null}>
+              <SearchInput />
+            </Suspense>
+          </Flex>
         </Box>
 
         {/* ================= MOBILE DRAWER ================= */}
@@ -279,14 +281,14 @@ const Header = observer(() => {
             <NavItemsLayout />
           </Flex>
 
-          <Flex align="center" gap={3} minW="360px" justify="flex-end">
-            <Box w="full" maxW="380px" bg="gray.50" borderRadius="full" px={3} py={2} boxShadow="sm">
+          <Flex align="center" gap={3} flexShrink={0} justify="flex-end" flexWrap="wrap">
+            <Box flex="1" minW={{ base: '220px', md: '260px' }} maxW="380px" bg="gray.50" borderRadius="full" px={3} py={2} boxShadow="sm">
               <Suspense fallback={null}>
                 <SearchInput />
               </Suspense>
             </Box>
 
-            <Flex align="center" gap={1}>
+            <Flex align="center" gap={1} flexShrink={0}>
               <IconButton
                 icon={<FiHeart size={18} />}
                 aria-label="Wishlist"
@@ -329,7 +331,9 @@ const Header = observer(() => {
               {isMounted && user && <NotificationBell />}
             </Flex>
 
-            {isMounted && user ? <UserMenu /> : <HeroNavButton />}
+            <Box flexShrink={0}>
+              {isMounted && user ? <UserMenu /> : <HeroNavButton />}
+            </Box>
           </Flex>
         </Flex>
       </Box>
