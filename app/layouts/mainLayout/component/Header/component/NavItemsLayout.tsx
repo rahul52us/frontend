@@ -13,7 +13,7 @@ const NavItemsLayout: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   return (
     <Flex
       direction={{ base: "column", md: "row" }}
-      gap={{ base: 6, md: 2 }} // Tighter spacing on desktop
+      gap={{ base: 4, md: 1 }}
       alignItems="center"
       justifyContent="center"
       wrap={{ base: "wrap", md: "nowrap" }}

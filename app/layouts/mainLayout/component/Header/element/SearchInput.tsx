@@ -163,10 +163,10 @@ const SearchInput = observer(() => {
   };
 
   return (
-    <Box position="relative" w="full" mx={{ base: 2, md: 4 }}>
+    <Box position="relative" w="full">
       <Box as="form" action="/products" method="get" onSubmit={handleSubmit}>
         <InputGroup size="lg" w="full">
-          <InputLeftElement pointerEvents="none">
+          <InputLeftElement pointerEvents="none" left="3">
             <SearchIcon
               color={query ? accentColor : "gray.400"}
               transition="all 0.3s ease"
@@ -199,9 +199,9 @@ const SearchInput = observer(() => {
             }}
             transition="all 0.3s ease"
             fontSize="md"
-            py={6}
-            px={12}
-            pr="5rem"
+            py={5}
+            pl="3.5rem"
+            pr={query ? "4.5rem" : "3.5rem"}
             fontWeight="medium"
             boxShadow="sm"
           />
