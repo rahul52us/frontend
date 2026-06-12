@@ -201,77 +201,48 @@ const Header = observer(() => {
 
   return (
     <Box position="sticky" top="0" zIndex="1000">
-      {/* Modernized Top Bar with auto-rotating messages */}
+      {/* Top promo strip */}
       <Box
         display={{ base: "none", md: "flex" }}
         alignItems="center"
         justifyContent="space-between"
-        bg="linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)"
+        bg="gray.900"
         color="white"
         px={{ base: 4, md: 10 }}
-        py={2.5}
+        py={1}
         borderBottom="1px solid"
         borderColor="whiteAlpha.200"
+        fontSize="xs"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPromoIndex}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.3 }}
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <Icon as={promoMessages[currentPromoIndex].icon} boxSize={4} />
-            <Text fontSize="xs" fontWeight="semibold" letterSpacing="wider">
-              {promoMessages[currentPromoIndex].text}
-            </Text>
-          </motion.div>
-        </AnimatePresence>
-
-        <HStack spacing={3}>
-          {promoFeatures.map((feature) => (
-            <Tooltip label={feature.label} key={feature.label} hasArrow>
-              <HStack
-                spacing={1}
-                px={3}
-                py={1}
-                bg="whiteAlpha.200"
-                borderRadius="full"
-                _hover={{ bg: "whiteAlpha.300", transform: "scale(1.05)" }}
-                transition="all 0.2s"
-                cursor="default"
-              >
-                <Icon as={feature.icon} boxSize={3.5} color={feature.color} />
-                <Text fontSize="xs" display={{ base: "none", lg: "block" }}>
-                  {feature.label}
-                </Text>
-              </HStack>
-            </Tooltip>
-          ))}
+        <HStack spacing={4} flex="1" minW={0} overflow="hidden">
+          <Text whiteSpace="nowrap" fontWeight="semibold">
+            Free local delivery on select orders
+          </Text>
+          <Text whiteSpace="nowrap" display={{ base: "none", lg: "inline" }}>
+            24h fulfillment for nearby sellers · 7-day easy returns · Secure checkout
+          </Text>
         </HStack>
 
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <HStack spacing={3} flexShrink={0}>
+          <Text color="gray.300" whiteSpace="nowrap">
+            {promoMessages[currentPromoIndex].text}
+          </Text>
           <Button
-            size="sm"
-            variant="solid"
-            bg="whiteAlpha.200"
-            backdropFilter="blur(4px)"
+            size="xs"
+            variant="outline"
+            borderColor="whiteAlpha.400"
             color="white"
-            _hover={{ bg: "whiteAlpha.300", transform: "translateY(-1px)" }}
+            _hover={{ bg: "whiteAlpha.100" }}
             onClick={() => router.push("/contact-us")}
-            leftIcon={<FiPhone />}
-            borderRadius="full"
-            fontSize="xs"
           >
-            Talk to a local expert
+            Need help?
           </Button>
-        </motion.div>
+        </HStack>
       </Box>
 
       {/* Main header with dynamic scroll effect */}
       <Box
-        bg={isScrolled ? "rgba(255, 255, 255, 0.95)" : "white"}
+        bg={isScrolled ? "rgba(255, 255, 255, 0.96)" : "white"}
         backdropFilter={isScrolled ? "blur(12px)" : "none"}
         borderBottom="1px solid"
         borderColor={isScrolled ? "gray.200" : "gray.100"}
@@ -281,140 +252,15 @@ const Header = observer(() => {
         <Flex
           align="center"
           justify="space-between"
-          px={{ base: 4, md: 10 }}
-          py={2}
+          px={{ base: 2, md: 8 }}
+          py={{ base: 2, md: 3 }}
           gap={2}
           maxW="8xl"
           mx="auto"
           wrap="wrap"
         >
-          {/* Logo + Brand with animation */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 400 }}
-            style={{ cursor: "pointer" }}
-            onClick={() => router.push("/")}
-          >
-            <Flex align="center" gap={3} minW="220px">
-              <Box position="relative">
-                <Image
-                  src="/images/logo3.jpg"
-                  alt="Business Sahayata"
-                  h={{ base: "38px", md: "44px" }}
-                  objectFit="contain"
-                  borderRadius="md"
-                />
-                <Badge
-                  position="absolute"
-                  bottom="-6px"
-                  right="-10px"
-                  bg="orange.400"
-                  color="white"
-                  fontSize="9px"
-                  px={1.5}
-                  borderRadius="full"
-                  display={{ base: "none", md: "flex" }}
-                >
-                  Local Love ❤️
-                </Badge>
-              </Box>
-              <Box>
-                <Text
-                  fontWeight="extrabold"
-                  fontSize={{ base: "md", md: "lg" }}
-                  bgGradient="linear(to-r, blue.600, purple.600)"
-                  bgClip="text"
-                  lineHeight="short"
-                >
-                  Business Sahayata
-                </Text>
-                <Text fontSize="xs" color="gray.500" lineHeight="short">
-                  Empowering local sellers 🚀
-                </Text>
-              </Box>
-            </Flex>
-          </motion.div>
-
-          {/* Search - Desktop with enhanced styling */}
-          <Box
-            display={{ base: "none", md: "block" }}
-            flex="1"
-            minW="0"
-            maxW="560px"
-            position="relative"
-          >
-            <Box borderRadius="full" p={0.5} bgGradient="linear(to-r, blue.100, purple.100)">
-              <Suspense fallback={null}>
-                <SearchInput />
-              </Suspense>
-            </Box>
-          </Box>
-
-          {/* Action buttons with animations */}
-          <HStack spacing={1} align="center" flexShrink={0}>
-            <Tooltip label="Wishlist" hasArrow>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <IconButton
-                  icon={<FiHeart size={19} />}
-                  aria-label="Wishlist"
-                  variant="ghost"
-                  color="red.500"
-                  size="sm"
-                  onClick={onWishlistOpen}
-                  _hover={{ bg: "red.50" }}
-                  borderRadius="full"
-                />
-              </motion.div>
-            </Tooltip>
-
-            <Tooltip label="Shopping Cart" hasArrow>
-              <Box position="relative">
-                <motion.div
-                  animate={cartBounce ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ duration: 0.3 }}
-                >
-                  <IconButton
-                    icon={<FiShoppingCart size={19} />}
-                    aria-label="Cart"
-                    variant="ghost"
-                    color="blue.600"
-                    size="sm"
-                    onClick={onCartOpen}
-                    borderRadius="full"
-                    _hover={{ bg: "blue.50" }}
-                  />
-                </motion.div>
-                {cartStore.totalItems > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500 }}
-                  >
-                    <Badge
-                      position="absolute"
-                      top="-1"
-                      right="-1"
-                      bg="linear-gradient(135deg, #F59E0B, #EF4444)"
-                      color="white"
-                      borderRadius="full"
-                      fontSize="0.6em"
-                      px={1.5}
-                      minW="18px"
-                      textAlign="center"
-                    >
-                      {cartStore.totalItems > 9 ? "9+" : cartStore.totalItems}
-                    </Badge>
-                  </motion.div>
-                )}
-              </Box>
-            </Tooltip>
-
-            {isAuthenticated && <NotificationBell />}
-
-            <Box>
-              {isAuthenticated ? <UserMenu /> : <HeroNavButton />}
-            </Box>
-
+          {/* Brand and mobile menu */}
+          <Flex align="center" gap={3} minW={{ base: 0, md: "220px" }} flexShrink={0}>
             <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<HamburgerIcon />}
@@ -425,53 +271,176 @@ const Header = observer(() => {
               onClick={onOpen}
               borderRadius="full"
             />
+            <Box
+              as="button"
+              onClick={() => router.push("/")}
+              display="flex"
+              alignItems="center"
+              gap={3}
+              minW={0}
+            >
+              <Box position="relative">
+                <Image
+                  src="/images/logo3.jpg"
+                  alt="Business Sahayata"
+                  h={{ base: "34px", md: "42px" }}
+                  objectFit="cover"
+                  borderRadius="md"
+                />
+              </Box>
+              <Box display={{ base: "none", md: "block" }} minW={0}>
+                <Text
+                  fontWeight="extrabold"
+                  fontSize={{ base: "sm", md: "lg" }}
+                  bgGradient="linear(to-r, blue.600, purple.600)"
+                  bgClip="text"
+                  lineHeight="short"
+                >
+                  Business Sahayata
+                </Text>
+                <Text fontSize="2xs" color="gray.500" lineHeight="short">
+                  Better shopping for local sellers
+                </Text>
+              </Box>
+            </Box>
+          </Flex>
+
+          {/* Search input */}
+          <Box flex="1" minW="0" maxW={{ base: "100%", md: "640px" }}>
+            <Flex
+              align="center"
+              gap={2}
+              bg="gray.50"
+              borderRadius="full"
+              p={1.5}
+              border="1px solid"
+              borderColor="gray.200"
+              boxShadow="sm"
+            >
+              <Button
+                leftIcon={<FiGrid />}
+                size="sm"
+                variant="ghost"
+                color="gray.700"
+                px={3}
+                borderRadius="full"
+                _hover={{ bg: "gray.100" }}
+              >
+                All
+              </Button>
+              <Box flex="1" minW={0}>
+                <Suspense fallback={null}>
+                  <SearchInput />
+                </Suspense>
+              </Box>
+            </Flex>
+            <Text display={{ base: "none", md: "block" }} color="gray.500" fontSize="xs" mt={2}>
+              Search 10,000+ local products, sellers, and exclusive deals.
+            </Text>
+          </Box>
+
+          {/* Action icons */}
+          <HStack spacing={1} align="center" flexShrink={0} display={{ base: "none", md: "flex" }}>
+            <Button
+              leftIcon={<FiMapPin />}
+              size="sm"
+              variant="ghost"
+              colorScheme="blue"
+              borderRadius="full"
+              px={3}
+              _hover={{ bg: "blue.50" }}
+            >
+              <Text fontSize="xs" color="gray.600">
+                Deliver to
+              </Text>
+              <Text fontSize="sm" fontWeight="bold">
+                Your City
+              </Text>
+            </Button>
+
+            <Tooltip label="Wishlist" hasArrow>
+              <IconButton
+                icon={<FiHeart size={18} />}
+                aria-label="Wishlist"
+                variant="ghost"
+                color="red.500"
+                size="sm"
+                onClick={onWishlistOpen}
+                _hover={{ bg: "red.50" }}
+                borderRadius="full"
+              />
+            </Tooltip>
+
+            <Tooltip label="Shopping Cart" hasArrow>
+              <Box position="relative">
+                <motion.div
+                  animate={cartBounce ? { scale: [1, 1.15, 1] } : {}}
+                  transition={{ duration: 0.25 }}
+                >
+                  <IconButton
+                    icon={<FiShoppingCart size={18} />}
+                    aria-label="Cart"
+                    variant="ghost"
+                    color="blue.600"
+                    size="sm"
+                    onClick={onCartOpen}
+                    borderRadius="full"
+                    _hover={{ bg: "blue.50" }}
+                  />
+                </motion.div>
+                {cartStore.totalItems > 0 && (
+                  <Badge
+                    position="absolute"
+                    top="-1"
+                    right="-1"
+                    bg="linear-gradient(135deg, #F59E0B, #EF4444)"
+                    color="white"
+                    borderRadius="full"
+                    fontSize="0.6em"
+                    px={1.5}
+                    minW="18px"
+                    textAlign="center"
+                  >
+                    {cartStore.totalItems > 9 ? "9+" : cartStore.totalItems}
+                  </Badge>
+                )}
+              </Box>
+            </Tooltip>
+
+            <Box>
+              {isAuthenticated ? <UserMenu /> : <HeroNavButton />}
+            </Box>
           </HStack>
         </Flex>
 
-        {/* Category navigation (desktop) - Enhanced */}
-        <Box display={{ base: "none", md: "flex" }} px={{ md: 10 }} pb={2}>
-          <Flex align="center" justify="space-between" w="full" gap={2}>
-            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="solid"
-                bgGradient="linear(to-r, blue.500, blue.600)"
-                color="white"
-                size="sm"
-                leftIcon={<FiGrid />}
-                onClick={() => router.push("/categories")}
-                _hover={{ bgGradient: "linear(to-r, blue.600, blue.700)", transform: "translateY(-1px)" }}
-                transition="all 0.2s"
-                borderRadius="xl"
-                boxShadow="sm"
-              >
-                Shop by category
-              </Button>
-            </motion.div>
-
-            <Box flex="1" ml={2}>
+        {/* Desktop category navigation */}
+        <Box display={{ base: "none", md: "block" }} px={{ md: 10 }} pb={2}>
+          <Flex align="center" gap={2} wrap="wrap">
+            <Button size="sm" variant="ghost" colorScheme="blue" borderRadius="full" px={3} _hover={{ bg: "blue.50" }}>
+              Today's deals
+            </Button>
+            <Button size="sm" variant="ghost" colorScheme="purple" borderRadius="full" px={3} _hover={{ bg: "purple.50" }}>
+              New arrivals
+            </Button>
+            <Button size="sm" variant="ghost" colorScheme="green" borderRadius="full" px={3} _hover={{ bg: "green.50" }}>
+              Top rated
+            </Button>
+            <Button size="sm" variant="ghost" colorScheme="orange" borderRadius="full" px={3} _hover={{ bg: "orange.50" }}>
+              Local sellers
+            </Button>
+            <Box flex="1" minW="0" ml={2}>
               <NavItemsLayout />
             </Box>
-
-            <Tooltip label="Trending this week" hasArrow>
-              <HStack
-                spacing={1}
-                px={3}
-                py={1.5}
-                bg="orange.50"
-                borderRadius="full"
-                border="1px solid"
-                borderColor="orange.200"
-                cursor="pointer"
-                onClick={() => router.push("/trending")}
-                _hover={{ bg: "orange.100", transform: "scale(1.02)" }}
-                transition="all 0.2s"
-              >
-                <FiTrendingUp color="#F97316" size={14} />
-                <Text fontSize="xs" fontWeight="medium" color="orange.600">
-                  Trending
-                </Text>
-              </HStack>
-            </Tooltip>
+            <Button
+              size="sm"
+              variant="solid"
+              colorScheme="orange"
+              leftIcon={<FiTrendingUp />}
+              borderRadius="full"
+              _hover={{ bg: "orange.500" }}
+            >
+              Trending
+            </Button>
           </Flex>
         </Box>
       </Box>
