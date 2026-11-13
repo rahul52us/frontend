@@ -15,7 +15,7 @@ import MapComponent from "../../component/maps/MapMarker";
 
 const Page = observer(() => {
   return (
-    <Box maxW={{ base: "100%", md: "95%" }} mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
+    <Box mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
       
 
       {/* <VideoStories /> */}

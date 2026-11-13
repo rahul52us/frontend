@@ -1,532 +1,545 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
 import {
+  Badge,
   Box,
   Button,
   Container,
   Flex,
+  Grid,
+  GridItem,
   Heading,
+  HStack,
+  Icon,
+  IconButton,
+  Image,
+  SimpleGrid,
   Text,
   VStack,
-  HStack,
-  Image,
-  Badge,
-  Icon,
-  SimpleGrid,
-  Circle,
 } from "@chakra-ui/react";
-import { motion, useMotionValue, useSpring, useTransform, useAnimation, useInView } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import {
-  FaArrowRight,
-  FaPlay,
-  FaStar,
-  FaShoppingBag,
-  FaHeart,
-} from "react-icons/fa";
+  FiArrowRight,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCoffee,
+  FiCpu,
+  FiGift,
+  FiHome,
+  FiPercent,
+  FiRefreshCw,
+  FiShield,
+  FiShoppingBag,
+  FiSmile,
+  FiStar,
+  FiTrendingUp,
+  FiTruck,
+} from "react-icons/fi";
+import { products } from "./constant";
 
 const MotionBox = motion(Box);
-const MotionCircle = motion(Circle);
-const MotionFlex = motion(Flex);
-const MotionSimpleGrid = motion(SimpleGrid);
 
-const products = [
+// 1. Quick-access categories for everyday shoppers
+const quickCategories = [
+  { label: "Top Offers", icon: FiPercent, color: "orange.500", bg: "orange.50", path: "/deals" },
+  { label: "Fashion", icon: FiShoppingBag, color: "purple.500", bg: "purple.50", path: "/categories?cat=fashion" },
+  { label: "Daily Needs", icon: FiCoffee, color: "green.500", bg: "green.50", path: "/categories?cat=groceries" },
+  { label: "Electronics", icon: FiCpu, color: "blue.500", bg: "blue.50", path: "/categories?cat=electronics" },
+  { label: "Home & Living", icon: FiHome, color: "teal.500", bg: "teal.50", path: "/categories?cat=home" },
+  { label: "Beauty & Care", icon: FiSmile, color: "pink.500", bg: "pink.50", path: "/categories?cat=beauty" },
+  { label: "Local Gifts", icon: FiGift, color: "red.500", bg: "red.50", path: "/categories?cat=gifts" },
+];
+
+// 2. Banner slides tailored for both Common Shoppers & Local Shop Owners
+const heroSlides = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-    title: "Premium Sneakers",
-    price: "$129",
-    rating: 4.9,
+    badge: "🔥 Maha Local Sale",
+    title: "Your Trusted Local Market, Now Online!",
+    subtitle: "Get up to 60% OFF on daily essentials, fashion & electronics directly from nearby shops.",
+    ctaText: "Shop Local Deals",
+    ctaLink: "/products",
+    bgGradient: "linear(to-r, #1E3A8A, #2563EB)",
+    accentColor: "amber.300",
+    image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518",
-    title: "Luxury Fashion",
-    price: "$89",
-    rating: 4.8,
+    badge: "🏪 For Local Shop Owners",
+    title: "Bring Your Local Shop Online in 2 Minutes",
+    subtitle: "Reach thousands of customers in your city with 0% setup fee and fast direct payments.",
+    ctaText: "Become a Seller",
+    ctaLink: "/register?role=seller",
+    bgGradient: "linear(to-r, #065F46, #059669)",
+    accentColor: "green.200",
+    image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 3,
-    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f",
-    title: "Modern Outfit",
-    price: "$149",
-    rating: 4.9,
+    badge: "⚡ Express Delivery",
+    title: "Fresh Arrivals & Trending Styles",
+    subtitle: "Same-day & next-day doorstep delivery from verified neighborhood stores near you.",
+    ctaText: "Explore New Arrivals",
+    ctaLink: "/new-arrivals",
+    bgGradient: "linear(to-r, #581C87, #7C3AED)",
+    accentColor: "purple.200",
+    image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
-// Staggered fade-in variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 12 } },
-};
+// 3. Simple, reassuring trust points for common users
+const trustFeatures = [
+  { icon: FiCheckCircle, title: "Verified Local Shops", desc: "100% genuine neighborhood sellers" },
+  { icon: FiTruck, title: "Fast Local Delivery", desc: "Quick delivery within your city" },
+  { icon: FiShield, title: "Safe Payments & COD", desc: "Pay via UPI, Cards or Cash" },
+  { icon: FiRefreshCw, title: "Easy 7-Day Returns", desc: "Hassle-free local replacements" },
+];
 
 const HeroSection = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const router = useRouter();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Smooth spring for parallax
-  const springX = useSpring(mouseX, { stiffness: 100, damping: 30 });
-  const springY = useSpring(mouseY, { stiffness: 100, damping: 30 });
-
-  // Transform values for 3D tilt (max 10deg rotation)
-  const rotateX = useTransform(springY, [-300, 300], [6, -6]);
-  const rotateY = useTransform(springX, [-300, 300], [-6, 6]);
-
-  // For background gradient movement
-  const bgX = useTransform(springX, [-300, 300], [-30, 30]);
-  const bgY = useTransform(springY, [-300, 300], [-30, 30]);
-
+  // Auto-advance banner every 5 seconds
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      mouseX.set(e.clientX - centerX);
-      mouseY.set(e.clientY - centerY);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [mouseX, mouseY]);
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  const prevSlide = () =>
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+
+  const activeSlide = heroSlides[currentSlide];
 
   return (
-    <Box
-      ref={containerRef}
-      minH="100vh"
-      position="relative"
-      overflow="hidden"
-      bg="linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%)"
-    >
-      {/* Animated Background with mouse-follow glow */}
-      <MotionBox
-        position="absolute"
-        inset="0"
-        style={{ x: bgX, y: bgY }}
-        bgGradient="radial(circle at top left, rgba(124,58,237,.15), transparent 50%), radial(circle at bottom right, rgba(59,130,246,.15), transparent 50%)"
-      />
-
-      {/* Grid Pattern */}
-      <Box
-        position="absolute"
-        inset="0"
-        opacity={0.06}
-        backgroundImage={`
-          linear-gradient(to right, #1a1a2e 1px, transparent 1px),
-          linear-gradient(to bottom, #1a1a2e 1px, transparent 1px)
-        `}
-        backgroundSize="60px 60px"
-      />
-
-      {/* Glow Effects with spring animation */}
-      <MotionCircle
-        size="500px"
-        bg="purple.300"
-        opacity={0.25}
-        filter="blur(100px)"
-        position="absolute"
-        top="-200px"
-        left="-150px"
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <MotionCircle
-        size="400px"
-        bg="blue.300"
-        opacity={0.25}
-        filter="blur(100px)"
-        position="absolute"
-        bottom="-150px"
-        right="-120px"
-        animate={{ scale: [1.1, 1, 1.1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <Container maxW="8xl" position="relative" zIndex={2}>
-        <Flex
-          minH="100vh"
-          align="center"
-          justify="space-between"
-          direction={{ base: "column", lg: "row" }}
-          gap={{ base: 12, lg: 10 }}
-          py={{ base: 12, lg: 8 }}
-        >
-          {/* LEFT CONTENT with staggered animations */}
-          <MotionFlex
-            flex={1}
-            direction="column"
-            align={{ base: "center", lg: "flex-start" }}
-            spacing={6}
-            textAlign={{ base: "center", lg: "left" }}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+    <Box bg="#F8FAFC" borderBottom="1px solid" borderColor="gray.100" pb={{ base: 4, md: 8 }}>
+      {/* PART 1: Quick Category Bar (App-style horizontal scroll on mobile) */}
+      {/* <Box bg="white" borderBottom="1px solid" borderColor="gray.100" py={{ base: 2.5, md: 3 }}>
+        <Container maxW="8xl" px={{ base: 3, md: 8 }}>
+          <Flex
+            justify={{ base: "flex-start", md: "space-between" }}
+            align="center"
+            gap={{ base: 4, md: 6 }}
+            overflowX="auto"
+            sx={{
+              scrollbarWidth: "none",
+              "&::-webkit-scrollbar": { display: "none" },
+            }}
           >
-            <MotionBox variants={itemVariants}>
-              <Badge
-                px={5}
-                py={2}
-                rounded="full"
-                bg="rgba(124,58,237,0.12)"
-                color="purple.700"
-                border="1px solid rgba(124,58,237,0.2)"
-                backdropFilter="blur(4px)"
-                fontSize="sm"
-                fontWeight="medium"
+            {quickCategories.map((cat) => (
+              <VStack
+                key={cat.label}
+                as="button"
+                onClick={() => router.push(cat.path)}
+                spacing={1.5}
+                flexShrink={0}
+                minW={{ base: "64px", md: "80px" }}
+                role="group"
+                _focus={{ outline: "none" }}
               >
-                ✨ NEXT GEN E-COMMERCE EXPERIENCE
-              </Badge>
-            </MotionBox>
-
-            <MotionBox variants={itemVariants}>
-              <Heading
-                color="gray.800"
-                lineHeight="1.05"
-                fontWeight="800"
-                fontSize={{
-                  base: "3.5rem",
-                  md: "5rem",
-                  lg: "6.5rem",
-                }}
-                letterSpacing="-2px"
-              >
-                SHOP
-                <br />
+                <Flex
+                  w={{ base: "44px", md: "48px" }}
+                  h={{ base: "44px", md: "48px" }}
+                  rounded="2xl"
+                  bg={cat.bg}
+                  color={cat.color}
+                  align="center"
+                  justify="center"
+                  transition="all 0.2s ease"
+                  _groupHover={{ transform: "translateY(-2px)", boxShadow: "sm" }}
+                >
+                  <Icon as={cat.icon} boxSize={{ base: 5, md: 5 }} />
+                </Flex>
                 <Text
-                  as="span"
-                  bgGradient="linear(to-r, #7c3aed, #2563eb)"
-                  bgClip="text"
-                  fontWeight="800"
-                >
-                  THE FUTURE
-                </Text>
-              </Heading>
-            </MotionBox>
-
-            <MotionBox variants={itemVariants}>
-              <Text
-                color="gray.600"
-                fontSize={{ base: "md", md: "xl" }}
-                maxW="580px"
-                lineHeight="1.6"
-                fontWeight="500"
-              >
-                Experience futuristic shopping with premium collections,
-                immersive design, ultra-fast delivery, and products people
-                actually fall in love with.
-              </Text>
-            </MotionBox>
-
-            {/* BUTTONS */}
-            <MotionBox variants={itemVariants}>
-              <HStack spacing={5} flexWrap="wrap" justify={{ base: "center", lg: "flex-start" }}>
-                <Button
-                  size="lg"
-                  h="60px"
-                  px={8}
-                  rounded="full"
-                  bgGradient="linear(to-r, #7c3aed, #2563eb)"
-                  color="white"
-                  fontWeight="bold"
-                  fontSize="md"
-                  _hover={{
-                    transform: "translateY(-3px)",
-                    boxShadow: "0 20px 30px -12px rgba(37,99,235,0.4)",
-                  }}
-                  transition="all 0.25s"
-                  rightIcon={<FaArrowRight />}
-                >
-                  Start Shopping
-                </Button>
-
-                <Button
-                  size="lg"
-                  h="60px"
-                  px={7}
-                  rounded="full"
-                  bg="rgba(255,255,255,0.9)"
+                  fontSize={{ base: "11px", md: "xs" }}
+                  fontWeight="600"
                   color="gray.700"
-                  border="1px solid rgba(0,0,0,0.08)"
-                  boxShadow="0 4px 12px rgba(0,0,0,0.02)"
-                  leftIcon={<FaPlay />}
-                  _hover={{
-                    bg: "white",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.05)",
-                  }}
-                  transition="all 0.25s"
+                  noOfLines={1}
+                  _groupHover={{ color: "blue.600" }}
                 >
-                  Watch Demo
+                  {cat.label}
+                </Text>
+              </VStack>
+            ))}
+
+            <Box display={{ base: "none", lg: "block" }} pl={2}>
+              <Button
+                size="sm"
+                rounded="xl"
+                colorScheme="green"
+                variant="outline"
+                rightIcon={<FiArrowRight />}
+                onClick={() => router.push("/register?role=seller")}
+                fontWeight="600"
+                fontSize="xs"
+              >
+                Sell Your Products
+              </Button>
+            </Box>
+          </Flex>
+        </Container>
+      </Box> */}
+
+      {/* PART 2: Main Storefront Grid (Banner Slider + Side Deal/Seller Cards) */}
+      <Container maxW="8xl" px={{ base: 3, md: 8 }} pt={{ base: 3, md: 6 }}>
+        <Grid
+          templateColumns={{ base: "1fr", lg: "2.1fr 1fr" }}
+          gap={{ base: 3.5, md: 5 }}
+        >
+          {/* LEFT: Auto-Sliding Promotional Banner */}
+          <GridItem
+            position="relative"
+            rounded="2xl"
+            overflow="hidden"
+            h={{ base: "195px", sm: "240px", md: "330px" }}
+            boxShadow="sm"
+          >
+            <AnimatePresence mode="wait">
+              <MotionBox
+                key={activeSlide.id}
+                initial={{ opacity: 0.85 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0.85 }}
+                transition={{ duration: 0.25 }}
+                w="full"
+                h="full"
+                bgGradient={activeSlide.bgGradient}
+                position="relative"
+              >
+                <Flex
+                  h="full"
+                  align="center"
+                  justify="space-between"
+                  px={{ base: 4, sm: 7, md: 10 }}
+                  py={{ base: 4, md: 6 }}
+                >
+                  {/* Banner Text Content */}
+                  <VStack
+                    align="flex-start"
+                    spacing={{ base: 2, md: 3.5 }}
+                    maxW={{ base: "62%", sm: "58%", md: "55%" }}
+                    zIndex={2}
+                    color="white"
+                  >
+                    <Badge
+                      bg="whiteAlpha.200"
+                      color="white"
+                      backdropFilter="blur(6px)"
+                      px={2.5}
+                      py={0.5}
+                      rounded="full"
+                      fontSize={{ base: "10px", md: "xs" }}
+                      fontWeight="700"
+                      textTransform="none"
+                    >
+                      {activeSlide.badge}
+                    </Badge>
+
+                    <Heading
+                      as="h1"
+                      fontSize={{ base: "md", sm: "xl", md: "3xl" }}
+                      fontWeight="800"
+                      lineHeight="1.2"
+                      noOfLines={2}
+                    >
+                      {activeSlide.title}
+                    </Heading>
+
+                    <Text
+                      fontSize={{ base: "11px", sm: "xs", md: "sm" }}
+                      color="whiteAlpha.900"
+                      noOfLines={2}
+                      lineHeight="1.4"
+                    >
+                      {activeSlide.subtitle}
+                    </Text>
+
+                    <Button
+                      size={{ base: "xs", sm: "sm", md: "md" }}
+                      bg="white"
+                      color="gray.900"
+                      fontWeight="700"
+                      rounded="full"
+                      px={{ base: 4, md: 6 }}
+                      rightIcon={<FiArrowRight />}
+                      _hover={{ bg: "gray.100", transform: "translateY(-1px)" }}
+                      onClick={() => router.push(activeSlide.ctaLink)}
+                      mt={1}
+                    >
+                      {activeSlide.ctaText}
+                    </Button>
+                  </VStack>
+
+                  {/* Banner Visual Cutout / Image */}
+                  <Box
+                    position="absolute"
+                    right="0"
+                    top="0"
+                    bottom="0"
+                    w={{ base: "45%", sm: "46%", md: "48%" }}
+                    zIndex={1}
+                  >
+                    <Box
+                      position="absolute"
+                      inset="0"
+                      bgGradient="linear(to-r, blackAlpha.400, transparent)"
+                      zIndex={1}
+                      display={{ base: "block", md: "none" }}
+                    />
+                    <Image
+                      src={activeSlide.image}
+                      alt={activeSlide.title}
+                      w="full"
+                      h="full"
+                      objectFit="cover"
+                      clipPath={{
+                        base: "polygon(18% 0, 100% 0, 100% 100%, 0% 100%)",
+                        md: "polygon(14% 0, 100% 0, 100% 100%, 0% 100%)",
+                      }}
+                    />
+                  </Box>
+                </Flex>
+              </MotionBox>
+            </AnimatePresence>
+
+            {/* Desktop Prev / Next Arrows */}
+            <IconButton
+              display={{ base: "none", md: "flex" }}
+              aria-label="Previous slide"
+              icon={<FiChevronLeft size={18} />}
+              position="absolute"
+              left={3}
+              top="50%"
+              transform="translateY(-50%)"
+              size="sm"
+              rounded="full"
+              bg="blackAlpha.400"
+              color="white"
+              _hover={{ bg: "blackAlpha.600" }}
+              onClick={prevSlide}
+              zIndex={3}
+            />
+            <IconButton
+              display={{ base: "none", md: "flex" }}
+              aria-label="Next slide"
+              icon={<FiChevronRight size={18} />}
+              position="absolute"
+              right={3}
+              top="50%"
+              transform="translateY(-50%)"
+              size="sm"
+              rounded="full"
+              bg="blackAlpha.400"
+              color="white"
+              _hover={{ bg: "blackAlpha.600" }}
+              onClick={nextSlide}
+              zIndex={3}
+            />
+
+            {/* Slide Indicator Dots */}
+            <HStack
+              position="absolute"
+              bottom={2.5}
+              left="50%"
+              transform="translateX(-50%)"
+              spacing={1.5}
+              zIndex={3}
+            >
+              {heroSlides.map((s, idx) => (
+                <Box
+                  key={s.id}
+                  as="button"
+                  onClick={() => setCurrentSlide(idx)}
+                  w={currentSlide === idx ? "18px" : "6px"}
+                  h="6px"
+                  rounded="full"
+                  bg={currentSlide === idx ? "white" : "whiteAlpha.500"}
+                  transition="all 0.2s ease"
+                />
+              ))}
+            </HStack>
+          </GridItem>
+
+          {/* RIGHT (Desktop): Stacked "Top Local Deals" + "Local Shop Owner CTA" */}
+          <Flex direction="column" gap={4} justify="space-between">
+            {/* Today's Spotlight Products */}
+            <Box
+              bg="white"
+              rounded="2xl"
+              p={{ base: 3.5, md: 4 }}
+              border="1px solid"
+              borderColor="gray.100"
+              boxShadow="xs"
+              flex="1"
+            >
+              <HStack justify="space-between" mb={3}>
+                <HStack spacing={1.5}>
+                  <Icon as={FiTrendingUp} color="orange.500" boxSize={4} />
+                  <Text fontSize="sm" fontWeight="700" color="gray.800">
+                    Top Local Deals Today
+                  </Text>
+                </HStack>
+                <Button
+                  variant="link"
+                  size="xs"
+                  colorScheme="blue"
+                  onClick={() => router.push("/products")}
+                >
+                  View All
                 </Button>
               </HStack>
-            </MotionBox>
 
-            {/* STATS with staggered entrance */}
-            <MotionSimpleGrid
-              columns={{ base: 2, md: 4 }}
-              spacing={4}
-              pt={6}
-              w="100%"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
+              {/* 2-Card Mini Product Row (Works cleanly on both Mobile & Desktop!) */}
+              <SimpleGrid columns={2} spacing={2.5}>
+                {(products?.slice(0, 2) || []).map((prod, idx) => (
+                  <Flex
+                    key={idx}
+                    as="button"
+                    onClick={() => router.push("/products")}
+                    bg="gray.50"
+                    p={2}
+                    rounded="xl"
+                    align="center"
+                    gap={2.5}
+                    textAlign="left"
+                    border="1px solid"
+                    borderColor="gray.100"
+                    _hover={{ borderColor: "blue.200", bg: "blue.50" }}
+                    transition="all 0.15s ease"
+                  >
+                    <Image
+                      src={prod.image}
+                      alt={prod.title}
+                      boxSize={{ base: "46px", md: "52px" }}
+                      rounded="lg"
+                      objectFit="cover"
+                      bg="white"
+                      flexShrink={0}
+                    />
+                    <Box minW={0} flex="1">
+                      <Text
+                        fontSize="xs"
+                        fontWeight="600"
+                        color="gray.800"
+                        noOfLines={1}
+                      >
+                        {prod.title}
+                      </Text>
+                      <Text fontSize="xs" fontWeight="800" color="blue.600" mt={0.5}>
+                        {prod.price}
+                      </Text>
+                      <HStack spacing={0.5} mt={0.5}>
+                        <Icon as={FiStar} color="amber.400" boxSize={2.5} />
+                        <Text fontSize="10px" color="gray.500" fontWeight="600">
+                          {prod.rating}
+                        </Text>
+                      </HStack>
+                    </Box>
+                  </Flex>
+                ))}
+              </SimpleGrid>
+            </Box>
+
+            {/* Dedicated Banner for Local Shopkeepers / Sellers */}
+            <Flex
+              bgGradient="linear(to-r, orange.50, amber.50)"
+              border="1px solid"
+              borderColor="orange.200"
+              rounded="2xl"
+              p={{ base: 3.5, md: 4 }}
+              align="center"
+              justify="space-between"
+              gap={3}
             >
-              {[
-                ["120K+", "Customers"],
-                ["4.9★", "Ratings"],
-                ["1K+", "Brands"],
-                ["24H", "Delivery"],
-              ].map(([value, label], index) => (
-                <MotionBox
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ y: -5, scale: 1.02, transition: { type: "spring", stiffness: 400 } }}
-                  bg="rgba(255,255,255,0.7)"
-                  border="1px solid rgba(0,0,0,0.06)"
-                  backdropFilter="blur(12px)"
-                  rounded="2xl"
-                  p={4}
-                  boxShadow="0 8px 20px rgba(0,0,0,0.02)"
+              <Box>
+                <Badge
+                  colorScheme="orange"
+                  fontSize="9px"
+                  rounded="md"
+                  px={1.5}
+                  mb={1}
                 >
-                  <Heading size="lg" color="gray.800" fontWeight="800">
-                    {value}
-                  </Heading>
-                  <Text color="gray.500" mt={1} fontSize="sm" fontWeight="500">
-                    {label}
-                  </Text>
-                </MotionBox>
-              ))}
-            </MotionSimpleGrid>
-          </MotionFlex>
-
-          {/* RIGHT SIDE - 3D Parallax & Floating Cards */}
-          <Flex
-            flex={1}
-            justify="center"
-            align="center"
-            position="relative"
-            w="100%"
-            minH={{ base: "460px", lg: "700px" }}
-          >
-            {/* MAIN CIRCLE with tilt and rotation */}
-            <MotionBox
-              animate={{
-                y: [0, -12, 0],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              position="relative"
-              style={{ perspective: 1000 }}
-            >
-              <MotionCircle
-                size={{ base: "280px", md: "460px", lg: "560px" }}
-                bg="rgba(255,255,255,0.6)"
-                backdropFilter="blur(20px)"
-                border="1px solid rgba(255,255,255,0.8)"
-                boxShadow="0 25px 50px -12px rgba(0,0,0,0.15)"
-                overflow="hidden"
-                position="relative"
-                style={{
-                  rotateX: rotateX,
-                  rotateY: rotateY,
-                  transformStyle: "preserve-3d",
-                }}
-                whileHover={{ scale: 1.02, transition: { type: "spring", stiffness: 300 } }}
+                  FOR SHOP OWNERS
+                </Badge>
+                <Text fontSize="sm" fontWeight="700" color="gray.800" lineHeight="1.2">
+                  Own a Local Shop or Business?
+                </Text>
+                <Text fontSize="xs" color="gray.600" mt={0.5}>
+                  List your products free & sell to customers near you.
+                </Text>
+              </Box>
+              <Button
+                size="sm"
+                colorScheme="orange"
+                rounded="xl"
+                px={4}
+                flexShrink={0}
+                rightIcon={<FiArrowRight />}
+                onClick={() => router.push("/register?role=seller")}
               >
-                {/* Rotating ring effect */}
-                <MotionCircle
-                  size="102%"
-                  position="absolute"
-                  top="-1%"
-                  left="-1%"
-                  border="2px solid"
-                  borderColor="rgba(124,58,237,0.3)"
-                  borderTopColor="transparent"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                />
-                <Image
-                  src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b"
-                  alt="Fashion model"
-                  objectFit="cover"
-                  w="88%"
-                  h="88%"
-                  rounded="full"
-                  transition="transform 0.3s"
-                  _hover={{ transform: "scale(1.02)" }}
-                />
-              </MotionCircle>
-            </MotionBox>
-
-            {/* FLOATING PRODUCT CARD 1 - Top Left */}
-            <MotionBox
-              position="absolute"
-              top={{ base: "5%", lg: "8%" }}
-              left={{ base: "0%", lg: "2%" }}
-              animate={{
-                y: [0, -18, 0],
-                rotate: [0, 2, -2, 0],
-              }}
-              transition={{
-                y: { duration: 4.5, repeat: Infinity, ease: "easeInOut", type: "spring", stiffness: 100 },
-                rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-              }}
-              style={{ x: useTransform(springX, [-300, 300], [-15, 15]) }}
-              zIndex={3}
-              whileHover={{ scale: 1.08, rotate: 0, transition: { type: "spring", stiffness: 400 } }}
-            >
-              <GlassProductCard product={products[0]} />
-            </MotionBox>
-
-            {/* FLOATING PRODUCT CARD 2 - Bottom Right */}
-            <MotionBox
-              position="absolute"
-              bottom={{ base: "8%", lg: "12%" }}
-              right={{ base: "0%", lg: "2%" }}
-              animate={{
-                y: [0, 18, 0],
-                rotate: [0, -2, 2, 0],
-              }}
-              transition={{
-                y: { duration: 5, repeat: Infinity, ease: "easeInOut", type: "spring", stiffness: 90 },
-                rotate: { duration: 7, repeat: Infinity, ease: "easeInOut" },
-              }}
-              style={{ x: useTransform(springX, [-300, 300], [15, -15]) }}
-              zIndex={3}
-              whileHover={{ scale: 1.08, rotate: 0, transition: { type: "spring", stiffness: 400 } }}
-            >
-              <GlassProductCard product={products[1]} />
-            </MotionBox>
-
-            {/* FLOATING PRODUCT CARD 3 - Left side (desktop only) */}
-            <MotionBox
-              position="absolute"
-              bottom="30%"
-              left="-30px"
-              display={{ base: "none", md: "block" }}
-              animate={{
-                x: [0, 16, 0],
-                rotate: [0, 3, -3, 0],
-              }}
-              transition={{
-                x: { duration: 4.2, repeat: Infinity, ease: "easeInOut", type: "spring", stiffness: 110 },
-                rotate: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
-              }}
-              style={{ y: useTransform(springY, [-300, 300], [-20, 20]) }}
-              zIndex={3}
-              whileHover={{ scale: 1.08, rotate: 0, transition: { type: "spring", stiffness: 400 } }}
-            >
-              <GlassProductCard product={products[2]} />
-            </MotionBox>
-
-            {/* FLOATING ICON - Shopping Bag with mouse follow */}
-            <MotionBox
-              position="absolute"
-              top="22%"
-              right="8%"
-              animate={{
-                rotate: [0, 12, 0],
-                y: [0, -12, 0],
-              }}
-              transition={{
-                rotate: { duration: 4.8, repeat: Infinity, ease: "easeInOut" },
-                y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-              }}
-              style={{ x: useTransform(springX, [-300, 300], [25, -25]), y: useTransform(springY, [-300, 300], [-15, 15]) }}
-              zIndex={3}
-              whileHover={{ scale: 1.2, rotate: 15 }}
-            >
-              <Circle
-                size="70px"
-                bg="rgba(255,255,255,0.85)"
-                backdropFilter="blur(8px)"
-                border="1px solid rgba(255,255,255,0.5)"
-                boxShadow="0 12px 24px -8px rgba(0,0,0,0.1)"
-              >
-                <Icon as={FaShoppingBag} color="#7c3aed" boxSize={7} />
-              </Circle>
-            </MotionBox>
+                Start Selling
+              </Button>
+            </Flex>
           </Flex>
-        </Flex>
+        </Grid>
+
+        {/* PART 3: Compact Trust Bar (2x2 on Mobile, 4-Column Row on Desktop) */}
+        <SimpleGrid
+          columns={{ base: 2, md: 4 }}
+          spacing={{ base: 2.5, md: 4 }}
+          mt={{ base: 3.5, md: 5 }}
+        >
+          {trustFeatures.map((item) => (
+            <HStack
+              key={item.title}
+              bg="white"
+              px={{ base: 3, md: 4 }}
+              py={{ base: 2.5, md: 3 }}
+              rounded="xl"
+              border="1px solid"
+              borderColor="gray.100"
+              spacing={3}
+            >
+              <Flex
+                w={{ base: "32px", md: "36px" }}
+                h={{ base: "32px", md: "36px" }}
+                rounded="lg"
+                bg="blue.50"
+                color="blue.600"
+                align="center"
+                justify="center"
+                flexShrink={0}
+              >
+                <Icon as={item.icon} boxSize={4} />
+              </Flex>
+              <Box minW={0}>
+                <Text
+                  fontSize={{ base: "11px", md: "xs" }}
+                  fontWeight="700"
+                  color="gray.800"
+                  noOfLines={1}
+                >
+                  {item.title}
+                </Text>
+                <Text
+                  fontSize="10px"
+                  color="gray.500"
+                  noOfLines={1}
+                  display={{ base: "none", sm: "block" }}
+                >
+                  {item.desc}
+                </Text>
+              </Box>
+            </HStack>
+          ))}
+        </SimpleGrid>
       </Container>
     </Box>
-  );
-};
-
-// Glass product card with hover bounce
-const GlassProductCard = ({ product }: { product: typeof products[0] }) => {
-  return (
-    <MotionBox
-      w={{ base: "160px", md: "210px" }}
-      bg="rgba(255,255,255,0.85)"
-      border="1px solid rgba(255,255,255,0.8)"
-      backdropFilter="blur(12px)"
-      rounded="2xl"
-      overflow="hidden"
-      boxShadow="0 20px 35px -12px rgba(0,0,0,0.12)"
-      whileHover={{
-        y: -8,
-        scale: 1.03,
-        boxShadow: "0 30px 40px -12px rgba(0,0,0,0.2)",
-        transition: { type: "spring", stiffness: 400, damping: 10 },
-      }}
-    >
-      <Box position="relative">
-        <Image
-          src={product.image}
-          alt={product.title}
-          h="160px"
-          w="100%"
-          objectFit="cover"
-        />
-        <Circle
-          size="34px"
-          bg="white"
-          position="absolute"
-          top={3}
-          right={3}
-          boxShadow="0 2px 8px rgba(0,0,0,0.1)"
-          cursor="pointer"
-          // whileHover={{ scale: 1.1, backgroundColor: "#fee2e2" }}
-          // transition={{ type: "spring", stiffness: 300 }}
-        >
-          <Icon as={FaHeart} color="#ef4444" boxSize={4} />
-        </Circle>
-      </Box>
-
-      <VStack align="start" spacing={1.5} p={3}>
-        <Text color="gray.800" fontWeight="bold" fontSize="sm" noOfLines={1}>
-          {product.title}
-        </Text>
-
-        <HStack justify="space-between" w="100%">
-          <Text color="#6d28d9" fontWeight="extrabold" fontSize="md">
-            {product.price}
-          </Text>
-
-          <HStack spacing={0.5}>
-            <Icon as={FaStar} color="#f59e0b" boxSize={3.5} />
-            <Text color="gray.600" fontSize="xs" fontWeight="medium">
-              {product.rating}
-            </Text>
-          </HStack>
-        </HStack>
-      </VStack>
-    </MotionBox>
   );
 };
 

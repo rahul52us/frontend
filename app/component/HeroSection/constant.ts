@@ -17,6 +17,30 @@ export const slides = [
     }
   ];
 
+  export const products = [
+  {
+    id: 1,
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+    title: "Premium Sneakers",
+    price: "$129",
+    rating: 4.9,
+  },
+  {
+    id: 2,
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518",
+    title: "Luxury Fashion",
+    price: "$89",
+    rating: 4.8,
+  },
+  {
+    id: 3,
+    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f",
+    title: "Modern Outfit",
+    price: "$149",
+    rating: 4.9,
+  },
+];
+
 // export const slides = [
 //   {
 //     title: "Discover Your Style Journey",
