@@ -16,11 +16,11 @@ import MapComponent from "../../component/maps/MapMarker";
 const Page = observer(() => {
   return (
     <Box maxW={{ base: "100%", md: "95%" }} mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
-      <CategoryFilter />
       
 
       {/* <VideoStories /> */}
       <HeroSection />
+      <CategoryFilter />
 
       <Box p={4}>
         <Box h="1px" bg="gray.100" w="100%" />

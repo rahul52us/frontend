@@ -1,30 +1,49 @@
 "use client";
-import { Box, Button } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
 
-const HeroNavButton = () => {
+import { Button, Icon } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
+import { FiUser } from "react-icons/fi";
+
+interface HeroNavButtonProps {
+  onClick?: () => void;
+}
+
+const HeroNavButton: React.FC<HeroNavButtonProps> = ({ onClick }) => {
   const router = useRouter();
 
+  const handleLogin = () => {
+    if (onClick) onClick();
+    router.push("/login");
+  };
+
   return (
-    <Box display="flex" gap={2}>
-      <Button
-        size="md"
-        bgGradient="linear(to-r, blue.500, teal.400)"
-        color="white"
-        fontWeight="semibold"
-        boxShadow="lg"
-        _hover={{
-          transform: "scale(1.03)",
-          boxShadow: "xl",
-          opacity: 0.95,
-        }}
-        _active={{ transform: "scale(0.98)" }}
-        transition="all 0.2s ease"
-        onClick={() => router.push("/login")}
-      >
-        Sign In
-      </Button>
-    </Box>
+    <Button
+      size="sm"
+      w={{ base: "full", md: "auto" }}
+      px={4}
+      h="34px"
+      borderRadius="full"
+      bgGradient="linear(to-r, blue.600, purple.600)"
+      color="white"
+      fontWeight="600"
+      fontSize="xs"
+      letterSpacing="0.2px"
+      leftIcon={<Icon as={FiUser} boxSize={3.5} />}
+      boxShadow="sm"
+      _hover={{
+        bgGradient: "linear(to-r, blue.700, purple.700)",
+        boxShadow: "md",
+        transform: "translateY(-1px)",
+      }}
+      _active={{
+        transform: "translateY(0)",
+        boxShadow: "xs",
+      }}
+      transition="all 0.15s ease"
+      onClick={handleLogin}
+    >
+      Sign In
+    </Button>
   );
 };
 

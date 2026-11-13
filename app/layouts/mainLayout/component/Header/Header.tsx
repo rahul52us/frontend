@@ -1,123 +1,111 @@
 "use client";
-
 import { HamburgerIcon } from "@chakra-ui/icons";
 import {
+  Avatar,
+  Badge,
   Box,
   Button,
-  Center,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
   DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
   DrawerOverlay,
-  Divider,
   Flex,
   HStack,
+  Icon,
   IconButton,
   Image,
   Text,
-  useBreakpointValue,
-  useDisclosure,
-  Badge,
-  Icon,
-  Stack,
-  Avatar,
   Tooltip,
-  // keyframes,
+  useDisclosure,
+  VStack,
 } from "@chakra-ui/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
-import stores from "../../../../store/stores";
 import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import {
-  FiShoppingCart,
-  FiHeart,
-  FiShoppingBag,
-  FiMapPin,
   FiCreditCard,
-  FiUser,
-  FiLogOut,
-  FiGrid,
-  FiPhone,
-  FiShield,
-  FiTruck,
-  FiZap,
   FiGift,
+  FiGrid,
+  FiHeart,
+  FiHelpCircle,
+  FiLogOut,
+  FiMapPin,
+  FiShoppingBag,
+  FiShoppingCart,
   FiStar,
   FiTrendingUp,
+  FiTruck,
+  FiUser,
+  FiZap,
 } from "react-icons/fi";
-import { Suspense, useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
-import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
+import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
+import stores from "../../../../store/stores";
 import HeroNavButton from "./component/HeroNavButton";
-import UserMenu from "./component/UserMenu";
 import NavItemsLayout from "./component/NavItemsLayout";
+import UserMenu from "./component/UserMenu";
 import SearchInput from "./element/SearchInput";
-import NotificationBell from "./Notification/NotificationBell";
-
-// Animation keyframes for cart bounce
-// const bounce = keyframes`
-//   0% { transform: scale(1); }
-//   50% { transform: scale(1.2); }
-//   100% { transform: scale(1); }
-// `;
-
-// const pulse = keyframes`
-//   0% { transform: scale(1); opacity: 1; }
-//   50% { transform: scale(1.15); opacity: 0.8; }
-//   100% { transform: scale(1); opacity: 1; }
-// `;
-
-// const slideIn = keyframes`
-//   from { transform: translateX(-10px); opacity: 0; }
-//   to { transform: translateX(0); opacity: 1; }
-// `;
 
 const promoMessages = [
-  { text: "🔥 Flash Sale: Up to 60% off on local treasures!", icon: FiZap },
-  { text: "🎁 Free gift on orders above ₹999", icon: FiGift },
-  { text: "⭐ New sellers added this week! Explore now", icon: FiStar },
-  { text: "🚚 Fast local delivery in 2-3 days", icon: FiTruck },
+  { text: "Flash Sale: Up to 60% off on local treasures!", icon: FiZap },
+  { text: "Free gift on orders above ₹999", icon: FiGift },
+  { text: "New local sellers added this week! Explore now", icon: FiStar },
+  { text: "Fast local delivery in 2-3 days", icon: FiTruck },
 ];
 
-const promoFeatures = [
-  { label: "Fast local delivery", icon: FiTruck, color: "blue.400" },
-  { label: "Secure checkout", icon: FiShield, color: "green.400" },
-  { label: "24/7 support", icon: FiPhone, color: "purple.400" },
+const QuickLinks = [
+  { label: "Today's Deals", path: "/deals" },
+  { label: "New Arrivals", path: "/new-arrivals" },
+  { label: "Top Rated", path: "/top-rated" },
+  { label: "Local Sellers", path: "/sellers" },
 ];
 
-const QuickAction = ({ icon, label, onClick, badge, color }: { icon: any; label: string; onClick: () => void; badge?: number | string | null; color?: string; }) => (
-  <motion.div
-    whileHover={{ x: 5, scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+interface QuickActionProps {
+  icon: any;
+  label: string;
+  onClick: () => void;
+  badge?: number | string | null;
+  color?: string;
+}
+
+const QuickAction = ({
+  icon,
+  label,
+  onClick,
+  badge,
+  color = "gray.600",
+}: QuickActionProps) => (
+  <Flex
+    as="button"
+    w="full"
+    align="center"
+    gap={3}
+    py={2.5}
+    px={3}
+    borderRadius="lg"
+    bg="transparent"
+    _hover={{ bg: "gray.50", color: "blue.600" }}
+    _active={{ bg: "gray.100" }}
+    transition="all 0.15s ease"
+    onClick={onClick}
+    textAlign="left"
   >
-    <Flex
-      align="center"
-      gap={3}
-      py={2.5}
-      px={4}
-      borderRadius="xl"
-      bg="white"
-      _hover={{ bg: "gray.50", cursor: "pointer", boxShadow: "sm" }}
-      transition="all 0.2s"
-      onClick={onClick}
-      border="1px solid"
-      borderColor="gray.100"
-    >
-      <Icon as={icon} color={color || "blue.500"} boxSize={5} />
-      <Text fontWeight="500" fontSize="sm" flex="1">
-        {label}
-      </Text>
-      {badge ? (
-        <Badge ml="auto" colorScheme="blue" borderRadius="full" px={2} fontSize="xs">
-          {badge}
-        </Badge>
-      ) : null}
-    </Flex>
-  </motion.div>
+    <Icon as={icon} color={color} boxSize={4} flexShrink={0} />
+    <Text fontWeight="500" fontSize="sm" color="gray.700" flex="1" noOfLines={1}>
+      {label}
+    </Text>
+    {badge ? (
+      <Badge colorScheme="blue" borderRadius="full" px={2} py={0.5} fontSize="2xs">
+        {badge}
+      </Badge>
+    ) : null}
+  </Flex>
 );
 
 const Header = observer(() => {
@@ -137,30 +125,30 @@ const Header = observer(() => {
     setIsMounted(true);
   }, []);
 
-  // Scroll effect for sticky header
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 12);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Cart bounce animation when item count changes
   useEffect(() => {
-    if (prevTotalItems.current !== cartStore.totalItems && cartStore.totalItems > 0) {
+    if (
+      prevTotalItems.current !== cartStore.totalItems &&
+      cartStore.totalItems > 0
+    ) {
       setCartBounce(true);
-      const timer = setTimeout(() => setCartBounce(false), 500);
+      const timer = setTimeout(() => setCartBounce(false), 400);
       return () => clearTimeout(timer);
     }
     prevTotalItems.current = cartStore.totalItems;
   }, [cartStore.totalItems]);
 
-  // Auto-rotate promo messages
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPromoIndex((prev) => (prev + 1) % promoMessages.length);
-    }, 5000);
+    }, 4500);
     return () => clearInterval(interval);
   }, []);
 
@@ -186,220 +174,209 @@ const Header = observer(() => {
     onClose();
   };
 
-  const drawerWidth = useBreakpointValue({
-    base: "92%",
-    md: "70%",
-    lg: "420px",
-  });
-
   const isAuthenticated = isMounted && Boolean(user);
-  const greetingName = user?.name?.split(" ")[0] || "Seller";
-  const userInitial = user?.name?.charAt(0)?.toUpperCase() || "U";
+  const greetingName = user?.name?.split(" ")[0] || "There";
+  const userAvatar =
+    user?.avatar ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      user?.name || "User"
+    )}&background=2563EB&color=fff&rounded=true&bold=true`;
 
-  // Get user avatar or fallback
-  const userAvatar = user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || "User"}&background=3B82F6&color=fff&rounded=true&bold=true`;
+  const CurrentPromoIcon = promoMessages[currentPromoIndex].icon;
 
   return (
-    <Box position="sticky" top="0" zIndex="1000">
-      {/* Top promo strip */}
+    <Box
+      as="header"
+      position="sticky"
+      top="0"
+      zIndex="1000"
+      bg={isScrolled ? "rgba(255, 255, 255, 0.95)" : "white"}
+      backdropFilter={isScrolled ? "blur(10px)" : "none"}
+      boxShadow={isScrolled ? "sm" : "none"}
+      borderBottom="1px solid"
+      borderColor="gray.100"
+      transition="all 0.2s ease"
+    >
+      {/* Slim Top Announcement Bar - Collapses smoothly on scroll for compact height */}
       <Box
-        display={{ base: "none", md: "flex" }}
-        alignItems="center"
-        justifyContent="space-between"
         bg="gray.900"
         color="white"
-        px={{ base: 4, md: 10 }}
-        py={1}
-        borderBottom="1px solid"
-        borderColor="whiteAlpha.200"
-        fontSize="xs"
-      >
-        <HStack spacing={4} flex="1" minW={0} overflow="hidden">
-          <Text whiteSpace="nowrap" fontWeight="semibold">
-            Free local delivery on select orders
-          </Text>
-          <Text whiteSpace="nowrap" display={{ base: "none", lg: "inline" }}>
-            24h fulfillment for nearby sellers · 7-day easy returns · Secure checkout
-          </Text>
-        </HStack>
-
-        <HStack spacing={3} flexShrink={0}>
-          <Text color="gray.300" whiteSpace="nowrap">
-            {promoMessages[currentPromoIndex].text}
-          </Text>
-          <Button
-            size="xs"
-            variant="outline"
-            borderColor="whiteAlpha.400"
-            color="white"
-            _hover={{ bg: "whiteAlpha.100" }}
-            onClick={() => router.push("/contact-us")}
-          >
-            Need help?
-          </Button>
-        </HStack>
-      </Box>
-
-      {/* Main header with dynamic scroll effect */}
-      <Box
-        bg={isScrolled ? "rgba(255, 255, 255, 0.96)" : "white"}
-        backdropFilter={isScrolled ? "blur(12px)" : "none"}
-        borderBottom="1px solid"
-        borderColor={isScrolled ? "gray.200" : "gray.100"}
-        boxShadow={isScrolled ? "lg" : "sm"}
-        transition="all 0.3s ease"
+        px={{ base: 3, md: 8 }}
+        h={isScrolled ? "0px" : "30px"}
+        opacity={isScrolled ? 0 : 1}
+        overflow="hidden"
+        transition="all 0.25s ease"
       >
         <Flex
-          align="center"
-          justify="space-between"
-          px={{ base: 2, md: 8 }}
-          py={{ base: 2, md: 3 }}
-          gap={2}
           maxW="8xl"
           mx="auto"
-          wrap="wrap"
+          h="full"
+          align="center"
+          justify={{ base: "center", md: "space-between" }}
+          fontSize="xs"
         >
-          {/* Brand and mobile menu */}
-          <Flex align="center" gap={3} minW={{ base: 0, md: "220px" }} flexShrink={0}>
+          <HStack spacing={2} overflow="hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPromoIndex}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Icon as={CurrentPromoIcon} color="amber.400" boxSize={3.5} />
+                <Text fontWeight="medium" noOfLines={1} color="gray.100">
+                  {promoMessages[currentPromoIndex].text}
+                </Text>
+              </motion.div>
+            </AnimatePresence>
+          </HStack>
+
+          <HStack
+            spacing={4}
+            display={{ base: "none", md: "flex" }}
+            color="gray.300"
+          >
+            <Text>24h local fulfillment</Text>
+            <Text color="whiteAlpha.400">•</Text>
+            <Button
+              variant="link"
+              size="xs"
+              color="white"
+              fontWeight="medium"
+              leftIcon={<FiHelpCircle />}
+              onClick={() => router.push("/contact-us")}
+              _hover={{ color: "blue.300", textDecoration: "none" }}
+            >
+              Help
+            </Button>
+          </HStack>
+        </Flex>
+      </Box>
+
+      {/* Main Primary Header Row */}
+      <Box px={{ base: 3, md: 8 }} py={{ base: 2, md: 2.5 }}>
+        <Flex
+          maxW="8xl"
+          mx="auto"
+          align="center"
+          justify="space-between"
+          gap={{ base: 2, md: 6 }}
+        >
+          {/* Left: Mobile Menu Trigger & Brand Logo */}
+          <HStack spacing={{ base: 1.5, md: 3 }} flexShrink={0}>
             <IconButton
               display={{ base: "flex", md: "none" }}
-              icon={<HamburgerIcon />}
+              icon={<HamburgerIcon boxSize={5} />}
               aria-label="Open menu"
               variant="ghost"
-              colorScheme="blue"
+              color="gray.700"
               size="sm"
               onClick={onOpen}
-              borderRadius="full"
+              borderRadius="lg"
             />
-            <Box
+
+            <Flex
               as="button"
               onClick={() => router.push("/")}
-              display="flex"
-              alignItems="center"
-              gap={3}
-              minW={0}
+              align="center"
+              gap={2.5}
+              textAlign="left"
+              _focus={{ outline: "none" }}
             >
-              <Box position="relative">
-                <Image
-                  src="/images/logo3.jpg"
-                  alt="Business Sahayata"
-                  h={{ base: "34px", md: "42px" }}
-                  objectFit="cover"
-                  borderRadius="md"
-                />
-              </Box>
-              <Box display={{ base: "none", md: "block" }} minW={0}>
+              <Image
+                src="/images/logo3.jpg"
+                alt="Business Sahayata"
+                h={{ base: "30px", md: "36px" }}
+                w="auto"
+                objectFit="contain"
+                borderRadius="md"
+              />
+              <Box display={{ base: "block", sm: "block" }}>
                 <Text
-                  fontWeight="extrabold"
-                  fontSize={{ base: "sm", md: "lg" }}
+                  fontWeight="800"
+                  fontSize={{ base: "sm", md: "md" }}
                   bgGradient="linear(to-r, blue.600, purple.600)"
                   bgClip="text"
-                  lineHeight="short"
+                  letterSpacing="tight"
+                  lineHeight="1.1"
                 >
                   Business Sahayata
                 </Text>
-                <Text fontSize="2xs" color="gray.500" lineHeight="short">
-                  Better shopping for local sellers
+                <Text
+                  display={{ base: "none", lg: "block" }}
+                  fontSize="10px"
+                  color="gray.500"
+                  fontWeight="medium"
+                >
+                  Local Marketplace
                 </Text>
               </Box>
-            </Box>
-          </Flex>
-
-          {/* Search input */}
-          <Box flex="1" minW="0" maxW={{ base: "100%", md: "640px" }}>
-            <Flex
-              align="center"
-              gap={2}
-              bg="gray.50"
-              borderRadius="full"
-              p={1.5}
-              border="1px solid"
-              borderColor="gray.200"
-              boxShadow="sm"
-            >
-              <Button
-                leftIcon={<FiGrid />}
-                size="sm"
-                variant="ghost"
-                color="gray.700"
-                px={3}
-                borderRadius="full"
-                _hover={{ bg: "gray.100" }}
-              >
-                All
-              </Button>
-              <Box flex="1" minW={0}>
-                <Suspense fallback={null}>
-                  <SearchInput />
-                </Suspense>
-              </Box>
             </Flex>
-            <Text display={{ base: "none", md: "block" }} color="gray.500" fontSize="xs" mt={2}>
-              Search 10,000+ local products, sellers, and exclusive deals.
-            </Text>
+          </HStack>
+
+          {/* Center: Clean Search Bar (Desktop & Tablet) */}
+          <Box
+            display={{ base: "none", md: "block" }}
+            flex="1"
+            maxW="580px"
+          >
+            <Suspense fallback={null}>
+              <SearchInput />
+            </Suspense>
           </Box>
 
-          {/* Action icons */}
-          <HStack spacing={1} align="center" flexShrink={0} display={{ base: "none", md: "flex" }}>
-            <Button
-              leftIcon={<FiMapPin />}
-              size="sm"
-              variant="ghost"
-              colorScheme="blue"
-              borderRadius="full"
-              px={3}
-              _hover={{ bg: "blue.50" }}
-            >
-              <Text fontSize="xs" color="gray.600">
-                Deliver to
-              </Text>
-              <Text fontSize="sm" fontWeight="bold">
-                Your City
-              </Text>
-            </Button>
-
-            <Tooltip label="Wishlist" hasArrow>
+          {/* Right: Quick Actions (Wishlist, Cart, Profile) */}
+          <HStack spacing={{ base: 1, md: 2 }} flexShrink={0}>
+            <Tooltip label="Wishlist" hasArrow openDelay={300}>
               <IconButton
                 icon={<FiHeart size={18} />}
                 aria-label="Wishlist"
                 variant="ghost"
-                color="red.500"
+                color="gray.700"
                 size="sm"
-                onClick={onWishlistOpen}
-                _hover={{ bg: "red.50" }}
                 borderRadius="full"
+                onClick={onWishlistOpen}
+                _hover={{ bg: "red.50", color: "red.500" }}
               />
             </Tooltip>
 
-            <Tooltip label="Shopping Cart" hasArrow>
+            <Tooltip label="Cart" hasArrow openDelay={300}>
               <Box position="relative">
                 <motion.div
-                  animate={cartBounce ? { scale: [1, 1.15, 1] } : {}}
+                  animate={cartBounce ? { scale: [1, 1.2, 1] } : {}}
                   transition={{ duration: 0.25 }}
                 >
                   <IconButton
                     icon={<FiShoppingCart size={18} />}
-                    aria-label="Cart"
+                    aria-label="Shopping Cart"
                     variant="ghost"
-                    color="blue.600"
+                    color="gray.700"
                     size="sm"
-                    onClick={onCartOpen}
                     borderRadius="full"
-                    _hover={{ bg: "blue.50" }}
+                    onClick={onCartOpen}
+                    _hover={{ bg: "blue.50", color: "blue.600" }}
                   />
                 </motion.div>
                 {cartStore.totalItems > 0 && (
                   <Badge
                     position="absolute"
-                    top="-1"
-                    right="-1"
-                    bg="linear-gradient(135deg, #F59E0B, #EF4444)"
+                    top="-2px"
+                    right="-2px"
+                    bg="blue.600"
                     color="white"
                     borderRadius="full"
-                    fontSize="0.6em"
+                    fontSize="10px"
+                    fontWeight="bold"
                     px={1.5}
                     minW="18px"
-                    textAlign="center"
+                    h="18px"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    border="2px solid white"
+                    pointerEvents="none"
                   >
                     {cartStore.totalItems > 9 ? "9+" : cartStore.totalItems}
                   </Badge>
@@ -407,308 +384,331 @@ const Header = observer(() => {
               </Box>
             </Tooltip>
 
-            <Box>
+            {/* Desktop Auth / User Menu */}
+            <Box display={{ base: "none", md: "block" }} pl={1}>
               {isAuthenticated ? <UserMenu /> : <HeroNavButton />}
+            </Box>
+
+            {/* Mobile Profile Avatar Shortcut */}
+            <Box display={{ base: "block", md: "none" }}>
+              {isAuthenticated ? (
+                <Avatar
+                  size="xs"
+                  name={user?.name}
+                  src={userAvatar}
+                  onClick={onOpen}
+                  cursor="pointer"
+                  border="1px solid"
+                  borderColor="gray.200"
+                />
+              ) : (
+                <IconButton
+                  icon={<FiUser size={18} />}
+                  aria-label="Account"
+                  variant="ghost"
+                  color="gray.700"
+                  size="sm"
+                  borderRadius="full"
+                  onClick={onOpen}
+                />
+              )}
             </Box>
           </HStack>
         </Flex>
 
-        {/* Desktop category navigation */}
-        <Box display={{ base: "none", md: "block" }} px={{ md: 10 }} pb={2}>
-          <Flex align="center" gap={2} wrap="wrap">
-            <Button size="sm" variant="ghost" colorScheme="blue" borderRadius="full" px={3} _hover={{ bg: "blue.50" }}>
-              Today's deals
-            </Button>
-            <Button size="sm" variant="ghost" colorScheme="purple" borderRadius="full" px={3} _hover={{ bg: "purple.50" }}>
-              New arrivals
-            </Button>
-            <Button size="sm" variant="ghost" colorScheme="green" borderRadius="full" px={3} _hover={{ bg: "green.50" }}>
-              Top rated
-            </Button>
-            <Button size="sm" variant="ghost" colorScheme="orange" borderRadius="full" px={3} _hover={{ bg: "orange.50" }}>
-              Local sellers
-            </Button>
-            <Box flex="1" minW="0" ml={2}>
-              <NavItemsLayout />
-            </Box>
-            <Button
-              size="sm"
-              variant="solid"
-              colorScheme="orange"
-              leftIcon={<FiTrendingUp />}
-              borderRadius="full"
-              _hover={{ bg: "orange.500" }}
-            >
-              Trending
-            </Button>
-          </Flex>
+        {/* Mobile Search Bar Row - Compact & Native Feel */}
+        <Box display={{ base: "block", md: "none" }} mt={2}>
+          <Suspense fallback={null}>
+            <SearchInput />
+          </Suspense>
         </Box>
       </Box>
 
-      {/* Mobile bottom bar (enhanced) */}
+      {/* Desktop Slim Secondary Navigation Bar */}
       <Box
-        display={{ base: "block", md: "none" }}
-        bg="white"
-        px={4}
-        py={2}
+        display={{ base: "none", md: "block" }}
+        bg="gray.50"
         borderTop="1px solid"
         borderColor="gray.100"
-        boxShadow="0 -1px 8px rgba(0,0,0,0.04)"
+        px={8}
+        py={1}
       >
-        <Flex direction="column" gap={3}>
-          <Box bg="gray.50" borderRadius="2xl" p={1}>
-            <Suspense fallback={null}>
-              <SearchInput />
-            </Suspense>
-          </Box>
+        <Flex
+          maxW="8xl"
+          mx="auto"
+          align="center"
+          justify="space-between"
+          gap={4}
+        >
+          <HStack spacing={1} overflowX="auto" className="no-scrollbar" py={0.5}>
+            <Button
+              size="xs"
+              variant="ghost"
+              color="gray.700"
+              fontWeight="600"
+              leftIcon={<FiGrid />}
+              onClick={() => router.push("/categories")}
+              _hover={{ bg: "white", color: "blue.600" }}
+              borderRadius="md"
+              px={2.5}
+            >
+              All Categories
+            </Button>
 
-          <Flex gap={2}>
-            <motion.div whileTap={{ scale: 0.97 }} style={{ flex: 1 }}>
+            <Divider orientation="vertical" h="14px" borderColor="gray.300" />
+
+            <Box flexShrink={0}>
+              <NavItemsLayout />
+            </Box>
+
+            <Divider orientation="vertical" h="14px" borderColor="gray.300" />
+
+            {QuickLinks.map((item) => (
               <Button
-                leftIcon={<FiGrid />}
-                variant="outline"
-                colorScheme="blue"
-                size="sm"
-                w="full"
-                onClick={() => router.push("/categories")}
-                borderRadius="xl"
+                key={item.label}
+                size="xs"
+                variant="ghost"
+                color="gray.600"
+                fontWeight="500"
+                onClick={() => router.push(item.path)}
+                _hover={{ bg: "white", color: "blue.600" }}
+                borderRadius="md"
+                px={2.5}
               >
-                Categories
+                {item.label}
               </Button>
-            </motion.div>
-            <motion.div whileTap={{ scale: 0.97 }} style={{ flex: 1 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                flex="1"
-                leftIcon={<FiHeart />}
-                onClick={onWishlistOpen}
-                _hover={{ borderColor: "red.300", color: "red.500" }}
-                borderRadius="xl"
-              >
-                Wishlist
-              </Button>
-            </motion.div>
-            <motion.div whileTap={{ scale: 0.97 }} style={{ flex: 1 }}>
-              <Button
-                variant="solid"
-                size="sm"
-                colorScheme="blue"
-                flex="1"
-                leftIcon={<FiShoppingCart />}
-                onClick={onCartOpen}
-                borderRadius="xl"
-                position="relative"
-              >
-                Cart {cartStore.totalItems > 0 && `(${cartStore.totalItems})`}
-              </Button>
-            </motion.div>
-          </Flex>
+            ))}
+          </HStack>
+
+          <Button
+            size="xs"
+            variant="ghost"
+            colorScheme="orange"
+            leftIcon={<FiTrendingUp />}
+            onClick={() => router.push("/trending")}
+            borderRadius="full"
+            fontWeight="600"
+            flexShrink={0}
+          >
+            Trending
+          </Button>
         </Flex>
       </Box>
 
-      {/* Mobile Drawer - Enhanced with animations and better design */}
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xs">
-        <DrawerOverlay backdropFilter="blur(4px)" />
-        <DrawerContent maxW={drawerWidth} borderRadius="2xl 0 0 2xl">
-          <DrawerCloseButton mt={4} mr={4} size="sm" borderRadius="full" />
-          <DrawerBody pt={8} px={0}>
-            <Box px={4} mb={4}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box
-                  bgGradient="linear(135deg, #EBF4FF 0%, #E0ECFF 100%)"
-                  borderRadius="2xl"
-                  p={5}
-                  mb={6}
-                  position="relative"
-                  overflow="hidden"
-                >
-                  <Flex align="center" gap={3} mb={2}>
-                    {isAuthenticated ? (
-                      <Avatar
-                        size="md"
-                        name={user?.name}
-                        src={userAvatar}
-                        bg="blue.500"
-                        border="2px solid white"
-                      />
-                    ) : (
-                      <Avatar
-                        size="md"
-                        bg="blue.500"
-                        icon={<FiUser color="white" />}
-                      />
-                    )}
-                    <Box>
-                      <Text fontSize="lg" fontWeight="bold" mb={0} color="blue.800">
-                        {isAuthenticated
-                          ? `Hey ${greetingName}! 👋`
-                          : "Welcome! ✨"}
-                      </Text>
-                      <Text fontSize="xs" color="gray.700">
-                        {isAuthenticated
-                          ? "Ready to shop local?"
-                          : "Sign in for exclusive deals"}
-                      </Text>
-                    </Box>
-                  </Flex>
-                  <Text fontSize="sm" color="gray.700">
-                    Shop local, support small businesses, and get best prices.
-                  </Text>
-                  <Box
-                    position="absolute"
-                    bottom="-10px"
-                    right="-10px"
-                    fontSize="60px"
-                    opacity={0.1}
-                  >
-                    🛍️
-                  </Box>
-                </Box>
-              </motion.div>
+      {/* Clean Mobile Navigation Drawer */}
+      <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
+        <DrawerOverlay backdropFilter="blur(3px)" bg="blackAlpha.400" />
+        <DrawerContent borderRightRadius="2xl" overflow="hidden">
+          <DrawerCloseButton top={4} right={4} borderRadius="full" size="sm" />
 
-              <Text fontSize="xs" fontWeight="bold" color="gray.400" mb={3} textTransform="uppercase" letterSpacing="wider">
-                Quick links
-              </Text>
-              <QuickAction
-                icon={FiGrid}
-                label="Shop by category"
-                onClick={() => {
-                  onClose();
-                  router.push("/categories");
-                }}
-                color="blue.500"
+          {/* Drawer Header Profile Section */}
+          <DrawerHeader
+            bg="gray.50"
+            borderBottom="1px solid"
+            borderColor="gray.100"
+            pt={5}
+            pb={4}
+            px={5}
+          >
+            <Flex align="center" gap={3}>
+              <Avatar
+                size="md"
+                name={isAuthenticated ? user?.name : undefined}
+                src={isAuthenticated ? userAvatar : undefined}
+                bg="blue.600"
+                icon={!isAuthenticated ? <FiUser color="white" /> : undefined}
               />
-              <Box ml={2} mt={2}>
-                <NavItemsLayout onClose={onClose} />
+              <Box overflow="hidden">
+                <Text fontSize="md" fontWeight="bold" color="gray.800" noOfLines={1}>
+                  {isAuthenticated ? `Hi, ${greetingName}` : "Welcome"}
+                </Text>
+                <Text fontSize="xs" color="gray.500" fontWeight="normal">
+                  {isAuthenticated
+                    ? user?.email || "Explore local treasures"
+                    : "Sign in for the best experience"}
+                </Text>
               </Box>
-            </Box>
+            </Flex>
 
-            <Divider />
+            {!isAuthenticated && (
+              <Box mt={4} onClick={onClose}>
+                <HeroNavButton />
+              </Box>
+            )}
+          </DrawerHeader>
 
-            <Box px={4} mt={4}>
-              {isAuthenticated ? (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: { transition: { staggerChildren: 0.05 } },
-                  }}
+          {/* Drawer Body Links */}
+          <DrawerBody px={3} py={4}>
+            <VStack align="stretch" spacing={4}>
+              {/* Shopping & Categories */}
+              <Box>
+                <Text
+                  px={3}
+                   mb={1.5}
+                  fontSize="11px"
+                  fontWeight="700"
+                  color="gray.400"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
                 >
-                  <Text
-                    fontSize="xs"
-                    fontWeight="bold"
-                    color="gray.400"
-                    mb={3}
-                    textTransform="uppercase"
-                    letterSpacing="wider"
-                  >
-                    My account
-                  </Text>
+                  Explore
+                </Text>
+                <VStack align="stretch" spacing={0.5}>
+                  <QuickAction
+                    icon={FiGrid}
+                    label="All Categories"
+                    color="blue.500"
+                    onClick={() => {
+                      onClose();
+                      router.push("/categories");
+                    }}
+                  />
+                  <QuickAction
+                    icon={FiTrendingUp}
+                    label="Trending Deals"
+                    color="orange.500"
+                    onClick={() => {
+                      onClose();
+                      router.push("/trending");
+                    }}
+                  />
+                </VStack>
 
+                <Box pl={3} mt={1}>
+                  <NavItemsLayout onClose={onClose} />
+                </Box>
+              </Box>
+
+              <Divider borderColor="gray.100" />
+
+              {/* Account Section */}
+              <Box>
+                <Text
+                  px={3}
+                  mb={1.5}
+                  fontSize="11px"
+                  fontWeight="700"
+                  color="gray.400"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                >
+                  My Account
+                </Text>
+                <VStack align="stretch" spacing={0.5}>
                   <QuickAction
                     icon={FiShoppingCart}
-                    label="Your Cart"
+                    label="Shopping Cart"
                     badge={cartStore.totalItems > 0 ? cartStore.totalItems : null}
+                    color="blue.500"
                     onClick={() => {
                       onClose();
                       onCartOpen();
                     }}
-                    color="blue.500"
                   />
-
                   <QuickAction
                     icon={FiHeart}
-                    label="Your Wishlist"
+                    label="Wishlist"
+                    color="red.500"
                     onClick={() => {
                       onClose();
                       onWishlistOpen();
                     }}
-                    color="red.500"
-                  />
-      
-                  <QuickAction
-                    icon={FiShoppingBag}
-                    label="Your Orders"
-                    onClick={() => {
-                      onClose();
-                      router.push("/account?tab=orders");
-                    }}
-                    color="blue.600"
                   />
 
-                  <QuickAction
-                    icon={FiMapPin}
-                    label="Address Book"
-                    onClick={() => {
-                      onClose();
-                      router.push("/account?tab=addresses");
-                    }}
-                    color="green.500"
-                  />
-
-                  <QuickAction
-                    icon={FiCreditCard}
-                    label="Payment Methods"
-                    onClick={() => {
-                      onClose();
-                      router.push("/dashboard/payments");
-                    }}
-                    color="purple.500"
-                  />
-
-                  {user?.type === "user" && (
-                    <QuickAction
-                      icon={FiGrid}
-                      label="Dashboard"
-                      onClick={() => {
-                        onClose();
-                        router.push("/dashboard");
-                      }}
-                      color="blue.500"
-                    />
+                  {isAuthenticated && (
+                    <>
+                      <QuickAction
+                        icon={FiShoppingBag}
+                        label="My Orders"
+                        color="purple.500"
+                        onClick={() => {
+                          onClose();
+                          router.push("/account?tab=orders");
+                        }}
+                      />
+                      <QuickAction
+                        icon={FiMapPin}
+                        label="Saved Addresses"
+                        color="green.500"
+                        onClick={() => {
+                          onClose();
+                          router.push("/account?tab=addresses");
+                        }}
+                      />
+                      <QuickAction
+                        icon={FiCreditCard}
+                        label="Payment Methods"
+                        color="teal.500"
+                        onClick={() => {
+                          onClose();
+                          router.push("/dashboard/payments");
+                        }}
+                      />
+                      {user?.type === "user" && (
+                        <QuickAction
+                          icon={FiGrid}
+                          label="User Dashboard"
+                          color="blue.600"
+                          onClick={() => {
+                            onClose();
+                            router.push("/dashboard");
+                          }}
+                        />
+                      )}
+                      {user?.type === "seller" && (
+                        <QuickAction
+                          icon={FiUser}
+                          label="Seller Dashboard"
+                          color="orange.500"
+                          onClick={() => {
+                            onClose();
+                            router.push("/dashboard");
+                          }}
+                        />
+                      )}
+                    </>
                   )}
 
-                  {user?.type === "seller" && (
-                    <QuickAction
-                      icon={FiUser}
-                      label="Seller Dashboard"
-                      onClick={() => {
-                        onClose();
-                        router.push("/dashboard");
-                      }}
-                      color="orange.500"
-                    />
-                  )}
-
-                  <Box mt={4} pt={2}>
-                    <QuickAction
-                      icon={FiLogOut}
-                      label="Logout"
-                      onClick={handleLogout}
-                      color="red.500"
-                    />
-                  </Box>
-                </motion.div>
-              ) : (
-                <Box mt={4}>
-                  <HeroNavButton />
-                </Box>
-              )}
-            </Box>
-
-            <Center mt={8} mb={4}>
-              <WhatsAppButton />
-            </Center>
+                  <QuickAction
+                    icon={FiHelpCircle}
+                    label="Help & Support"
+                    color="gray.500"
+                    onClick={() => {
+                      onClose();
+                      router.push("/contact-us");
+                    }}
+                  />
+                </VStack>
+              </Box>
+            </VStack>
           </DrawerBody>
+
+          {/* Drawer Footer */}
+          <DrawerFooter
+            borderTop="1px solid"
+            borderColor="gray.100"
+            bg="gray.50"
+            px={4}
+            py={3}
+            justifyContent="space-between"
+          >
+            <WhatsAppButton />
+            {isAuthenticated && (
+              <Button
+                size="sm"
+                variant="ghost"
+                colorScheme="red"
+                leftIcon={<FiLogOut />}
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            )}
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
 
-      {/* Drawers for cart and wishlist */}
+      {/* Cart & Wishlist Drawers */}
       <CartDrawer isOpen={isCartOpen} onClose={onCartClose} />
       <WishlistDrawer isOpen={isWishlistOpen} onClose={onWishlistClose} />
     </Box>

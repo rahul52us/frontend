@@ -1,20 +1,22 @@
 "use client";
 
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Text,
+  Collapse,
   Flex,
   Popover,
-  PopoverTrigger,
-  PopoverContent,
   PopoverBody,
+  PopoverContent,
+  PopoverTrigger,
+  Portal,
+  Text,
   useBreakpointValue,
+  useDisclosure,
+  VStack,
 } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
-import { ChevronDownIcon } from "@chakra-ui/icons";
-import { motion } from "framer-motion";
-
-const MotionPopoverContent = motion(PopoverContent);
+import { usePathname, useRouter } from "next/navigation";
+import React from "react";
 
 interface NavItemProps {
   item: {
@@ -27,113 +29,210 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
   const router = useRouter();
-  const hasChildren = !!item.children?.length;
-  const triggerType = useBreakpointValue<"click" | "hover">({ base: "click", md: "hover" }) || "click";
+  const pathname = usePathname();
+  const hasChildren = Boolean(item.children?.length);
 
-  return (
-    <Popover trigger={triggerType} placement="bottom-start" gutter={10} closeOnBlur>
-      <PopoverTrigger>
+  // Separate disclosure for mobile accordion
+  const { isOpen, onToggle } = useDisclosure();
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  const isActive =
+    pathname === item.link ||
+    item.children?.some((child) => pathname === child.link);
+
+  const handleNavigate = (link: string) => {
+    router.push(link);
+    onClose();
+  };
+
+  // 1. Mobile View: Clean Collapsible Accordion inside the Drawer
+  if (isMobile) {
+    return (
+      <Box w="full">
         <Flex
+          as="button"
+          w="full"
           align="center"
-          gap={1.5}
-          px={3}
+          justify="space-between"
           py={2}
-          cursor="pointer"
-          position="relative"
-          role="group"
-          borderRadius="md"
-          _hover={{ bg: "gray.50" }}   // subtle hit-area feedback
-          transition="background 0.2s ease"
+          px={3}
+          borderRadius="lg"
+          bg={isActive ? "blue.50" : "transparent"}
+          color={isActive ? "blue.600" : "gray.700"}
+          _hover={{ bg: "gray.50", color: "blue.600" }}
+          _active={{ bg: "gray.100" }}
+          transition="all 0.15s ease"
           onClick={() => {
-            if (!hasChildren) {
-              router.push(item.link);
+            if (hasChildren) {
+              onToggle();
+            } else {
+              handleNavigate(item.link);
             }
           }}
         >
           <Text
-            fontSize={{ base: "md", md: "lg" }}
-            fontWeight="500"
-            letterSpacing="0.2px"
-            transition="color 0.2s ease"
-            _groupHover={{ color: "blue.600" }}
+            fontSize="sm"
+            fontWeight={isActive ? "600" : "500"}
+            noOfLines={1}
           >
             {item.title}
           </Text>
 
           {hasChildren && (
             <ChevronDownIcon
-              fontSize="md"
-              color="gray.500"
-              transition="all 0.2s ease"
+              boxSize={4}
+              color={isActive ? "blue.600" : "gray.400"}
+              transform={isOpen ? "rotate(180deg)" : "rotate(0deg)"}
+              transition="transform 0.2s ease"
+            />
+          )}
+        </Flex>
+
+        {hasChildren && (
+          <Collapse in={isOpen} animateOpacity>
+            <VStack
+              align="stretch"
+              spacing={0.5}
+              pl={3}
+              ml={3}
+              mt={0.5}
+              mb={1}
+              borderLeft="1.5px solid"
+              borderColor="gray.200"
+            >
+              {item.children!.map((child) => {
+                const isChildActive = pathname === child.link;
+                return (
+                  <Flex
+                    as="button"
+                    key={child.title}
+                    align="center"
+                    py={1.5}
+                    px={2.5}
+                    borderRadius="md"
+                    fontSize="xs"
+                    fontWeight={isChildActive ? "600" : "500"}
+                    color={isChildActive ? "blue.600" : "gray.600"}
+                    bg={isChildActive ? "blue.50" : "transparent"}
+                    _hover={{ bg: "gray.50", color: "blue.600" }}
+                    textAlign="left"
+                    transition="all 0.15s ease"
+                    onClick={() => handleNavigate(child.link)}
+                  >
+                    <Text noOfLines={1}>{child.title}</Text>
+                  </Flex>
+                );
+              })}
+            </VStack>
+          </Collapse>
+        )}
+      </Box>
+    );
+  }
+
+  // 2. Desktop View: Compact Pill Button + Hover Popover Menu
+  return (
+    <Popover trigger="hover" placement="bottom-start" gutter={6} isLazy>
+      <PopoverTrigger>
+        <Flex
+          as="button"
+          align="center"
+          gap={1}
+          px={2.5}
+          py={1}
+          cursor="pointer"
+          position="relative"
+          role="group"
+          borderRadius="md"
+          bg={isActive ? "white" : "transparent"}
+          color={isActive ? "blue.600" : "gray.600"}
+          boxShadow={isActive ? "xs" : "none"}
+          _hover={{ bg: "white", color: "blue.600" }}
+          transition="all 0.15s ease"
+          whiteSpace="nowrap"
+          onClick={() => {
+            if (!hasChildren) {
+              handleNavigate(item.link);
+            }
+          }}
+        >
+          <Text fontSize="sm" fontWeight={isActive ? "600" : "500"}>
+            {item.title}
+          </Text>
+
+          {hasChildren && (
+            <ChevronDownIcon
+              boxSize={3.5}
+              color="gray.400"
+              transition="transform 0.2s ease, color 0.2s ease"
               _groupHover={{
                 transform: "rotate(180deg)",
                 color: "blue.600",
               }}
             />
           )}
-
-          {/* underline indicator (softer) */}
-          <Box
-            position="absolute"
-            bottom="2px"
-            left="50%"
-            w="0%"
-            h="2px"
-            bg="blue.500"
-            borderRadius="full"
-            transition="all 0.25s ease"
-            _groupHover={{ w: "70%", left: "15%" }}
-          />
         </Flex>
       </PopoverTrigger>
 
       {hasChildren && (
-        <MotionPopoverContent
-          w="220px"
-          bg="white"
-          borderRadius="lg"
-          boxShadow="xl"
-          border="1px solid"
-          borderColor="gray.100"     // lighter border
-          overflow="hidden"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          transition={{ duration: 0.15, ease: "easeOut" }}
-        >
-          <PopoverBody p={1.5}>
-            {item.children!.map((child, index) => (
-              <Flex
-                key={child.title}
-                align="center"
-                px={3}
-                py={2.5}
-                fontSize="sm"
-                fontWeight="500"
-                cursor="pointer"
-                borderRadius="md"
-                color="gray.700"
-                transition="all 0.15s ease"
-                _hover={{
-                  bg: "gray.50",
-                  color: "blue.600",
-                }}
-                borderBottom={
-                  index !== item.children!.length - 1
-                    ? "1px solid"
-                    : "none"
-                }
-                borderColor="gray.100"
-                onClick={() => {
-                  router.push(child.link);
-                  onClose();
-                }}
-              >
-                {child.title}
-              </Flex>
-            ))}
-          </PopoverBody>
-        </MotionPopoverContent>
+        <Portal>
+          <PopoverContent
+            w="200px"
+            bg="white"
+            borderRadius="xl"
+            boxShadow="lg"
+            border="1px solid"
+            borderColor="gray.100"
+            overflow="hidden"
+            _focus={{ outline: "none", boxShadow: "lg" }}
+            zIndex="1500"
+          >
+            <PopoverBody p={1.5}>
+              <VStack align="stretch" spacing={0.5}>
+                {item.children!.map((child) => {
+                  const isChildActive = pathname === child.link;
+                  return (
+                    <Flex
+                      as="button"
+                      key={child.title}
+                      align="center"
+                      justify="space-between"
+                      px={3}
+                      py={2}
+                      fontSize="xs"
+                      fontWeight={isChildActive ? "600" : "500"}
+                      cursor="pointer"
+                      borderRadius="lg"
+                      color={isChildActive ? "blue.600" : "gray.700"}
+                      bg={isChildActive ? "blue.50" : "transparent"}
+                      role="group"
+                      transition="all 0.15s ease"
+                      _hover={{
+                        bg: "blue.50",
+                        color: "blue.600",
+                      }}
+                      textAlign="left"
+                      onClick={() => handleNavigate(child.link)}
+                    >
+                      <Text noOfLines={1}>{child.title}</Text>
+                      <ChevronRightIcon
+                        boxSize={3.5}
+                        opacity={0}
+                        transform="translateX(-4px)"
+                        transition="all 0.15s ease"
+                        color="blue.500"
+                        _groupHover={{
+                          opacity: 1,
+                          transform: "translateX(0)",
+                        }}
+                      />
+                    </Flex>
+                  );
+                })}
+              </VStack>
+            </PopoverBody>
+          </PopoverContent>
+        </Portal>
       )}
     </Popover>
   );

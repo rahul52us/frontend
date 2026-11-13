@@ -7,25 +7,17 @@ import {
   InputGroup,
   InputLeftElement,
   InputRightElement,
-  useColorModeValue,
 } from "@chakra-ui/react";
-import { keyframes } from "@emotion/react";
 import { observer } from "mobx-react-lite";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import stores from "../../../../../store/stores";
 
-const placeholderFade = keyframes`
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
-`;
-
 const placeholderSuggestions = [
-  "Search for products",
-  "Find your brands",
-  "Explore deals",
-  "Discover more",
+  "Search products, brands, and more...",
+  "Find local sellers near you...",
+  "Explore today's exclusive deals...",
+  "Discover trending items...",
 ];
 
 const SearchInput = observer(() => {
@@ -37,10 +29,9 @@ const SearchInput = observer(() => {
   const { layout } = stores;
   const inputRef = useRef<HTMLInputElement>(null);
   const productsUrlSyncTimerRef = useRef<number | null>(null);
-  const bgColor = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const accentColor = "purple.500";
-  const productSearchParam = searchParams.get("search") || searchParams.get("q") || "";
+
+  const productSearchParam =
+    searchParams.get("search") || searchParams.get("q") || "";
 
   useEffect(() => {
     if (pathname?.startsWith("/products")) {
@@ -51,53 +42,58 @@ const SearchInput = observer(() => {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholderSuggestions.length);
-    }, 3000);
+      setPlaceholderIndex(
+        (prev) => (prev + 1) % placeholderSuggestions.length
+      );
+    }, 3500);
 
     return () => window.clearInterval(interval);
   }, []);
 
-  const getProductsSearchHref = useCallback((searchTerm: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const trimmedSearch = searchTerm.trim();
+  const getProductsSearchHref = useCallback(
+    (searchTerm: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const trimmedSearch = searchTerm.trim();
 
-    params.delete("q");
+      params.delete("q");
 
-    if (trimmedSearch) {
-      params.set("search", trimmedSearch);
-    } else {
-      params.delete("search");
-    }
+      if (trimmedSearch) {
+        params.set("search", trimmedSearch);
+      } else {
+        params.delete("search");
+      }
 
-    const queryString = params.toString();
-    return `/products${queryString ? `?${queryString}` : ""}`;
-  }, [searchParams]);
+      const queryString = params.toString();
+      return `/products${queryString ? `?${queryString}` : ""}`;
+    },
+    [searchParams]
+  );
 
-  const updateProductsSearch = useCallback((
-    value: string,
-    mode: "replace" | "push" = "replace"
-  ) => {
-    const trimmedValue = value.trim();
-    const isProductsPage = pathname?.startsWith("/products");
+  const updateProductsSearch = useCallback(
+    (value: string, mode: "replace" | "push" = "replace") => {
+      const trimmedValue = value.trim();
+      const isProductsPage = pathname?.startsWith("/products");
 
-    if (!trimmedValue && !isProductsPage) {
-      return;
-    }
+      if (!trimmedValue && !isProductsPage) {
+        return;
+      }
 
-    const href = getProductsSearchHref(trimmedValue);
+      const href = getProductsSearchHref(trimmedValue);
 
-    if (mode === "push") {
-      router.push(href);
-      return;
-    }
+      if (mode === "push") {
+        router.push(href);
+        return;
+      }
 
-    if (isProductsPage && typeof window !== "undefined") {
-      window.history.replaceState(window.history.state, "", href);
-      return;
-    }
+      if (isProductsPage && typeof window !== "undefined") {
+        window.history.replaceState(window.history.state, "", href);
+        return;
+      }
 
-    router.replace(href, { scroll: false });
-  }, [getProductsSearchHref, pathname, router]);
+      router.replace(href, { scroll: false });
+    },
+    [getProductsSearchHref, pathname, router]
+  );
 
   const clearProductsUrlSyncTimer = useCallback(() => {
     if (productsUrlSyncTimerRef.current) {
@@ -106,17 +102,20 @@ const SearchInput = observer(() => {
     }
   }, []);
 
-  const queueProductsUrlSync = useCallback((value: string) => {
-    if (!pathname?.startsWith("/products")) {
-      return;
-    }
+  const queueProductsUrlSync = useCallback(
+    (value: string) => {
+      if (!pathname?.startsWith("/products")) {
+        return;
+      }
 
-    clearProductsUrlSyncTimer();
-    productsUrlSyncTimerRef.current = window.setTimeout(() => {
-      updateProductsSearch(value);
-      productsUrlSyncTimerRef.current = null;
-    }, 450);
-  }, [clearProductsUrlSyncTimer, pathname, updateProductsSearch]);
+      clearProductsUrlSyncTimer();
+      productsUrlSyncTimerRef.current = window.setTimeout(() => {
+        updateProductsSearch(value);
+        productsUrlSyncTimerRef.current = null;
+      }, 450);
+    },
+    [clearProductsUrlSyncTimer, pathname, updateProductsSearch]
+  );
 
   const handleSearchChange = (value: string) => {
     setQuery(value);
@@ -142,7 +141,7 @@ const SearchInput = observer(() => {
     return () => window.clearTimeout(timer);
   }, [pathname, query, updateProductsSearch]);
 
-  const handleSubmit = (event: any) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const submittedSearch = String(formData.get("search") || "").trim();
@@ -165,57 +164,64 @@ const SearchInput = observer(() => {
   return (
     <Box position="relative" w="full">
       <Box as="form" action="/products" method="get" onSubmit={handleSubmit}>
-        <InputGroup size="lg" w="full">
-          <InputLeftElement pointerEvents="none" left="3">
+        <InputGroup size="md" w="full">
+          <InputLeftElement
+            pointerEvents="none"
+            h={{ base: "36px", md: "38px" }}
+            w="38px"
+          >
             <SearchIcon
-              color={query ? accentColor : "gray.400"}
-              transition="all 0.3s ease"
-              transform={query ? "scale(1.1)" : "scale(1)"}
+              boxSize={3.5}
+              color={query ? "blue.600" : "gray.400"}
+              transition="color 0.2s ease"
             />
           </InputLeftElement>
 
           <Input
             ref={inputRef}
             name="search"
-            placeholder={placeholderSuggestions[placeholderIndex]}
-            borderRadius="full"
-            borderWidth="2px"
-            borderColor={query ? accentColor : borderColor}
-            bg={bgColor}
             value={query}
             onChange={(event) => handleSearchChange(event.target.value)}
-            _focus={{
-              borderColor: accentColor,
-              boxShadow: `0 0 0 3px ${accentColor}30`,
+            placeholder={placeholderSuggestions[placeholderIndex]}
+            h={{ base: "36px", md: "38px" }}
+            pl="36px"
+            pr={query ? "36px" : "14px"}
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="normal"
+            color="gray.800"
+            bg={query ? "white" : "gray.50"}
+            borderRadius="full"
+            borderWidth="1px"
+            borderColor={query ? "blue.500" : "gray.200"}
+            _hover={{
+              borderColor: query ? "blue.500" : "gray.300",
               bg: "white",
             }}
-            _hover={{
-              borderColor: query ? accentColor : "gray.300",
+            _focus={{
+              bg: "white",
+              borderColor: "blue.500",
+              boxShadow: "0 0 0 3px rgba(37, 99, 235, 0.12)",
             }}
             _placeholder={{
-              color: "gray.500",
-              animation: `${placeholderFade} 2.5s infinite`,
-              fontStyle: "italic",
+              color: "gray.400",
+              fontWeight: "normal",
             }}
-            transition="all 0.3s ease"
-            fontSize="md"
-            py={5}
-            pl="3.5rem"
-            pr={query ? "4.5rem" : "3.5rem"}
-            fontWeight="medium"
-            boxShadow="sm"
+            transition="all 0.15s ease"
           />
 
           {query && (
-            <InputRightElement width="5rem">
+            <InputRightElement
+              h={{ base: "36px", md: "38px" }}
+              w="36px"
+            >
               <IconButton
-                icon={<CloseIcon boxSize={4} />}
-                aria-label="Clear Search"
-                size="md"
+                icon={<CloseIcon boxSize={2} />}
+                aria-label="Clear search"
+                size="xs"
                 variant="ghost"
-                color="gray.500"
-                _hover={{ color: accentColor, bg: "gray.100" }}
-                transition="all 0.3s ease"
+                borderRadius="full"
+                color="gray.400"
+                _hover={{ color: "gray.700", bg: "gray.100" }}
                 onClick={clearSearch}
               />
             </InputRightElement>
