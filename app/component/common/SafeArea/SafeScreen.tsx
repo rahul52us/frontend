@@ -27,7 +27,7 @@ export interface SafeScreenProps extends Omit<BoxProps, "top" | "bottom" | "left
 export const SafeScreen: React.FC<SafeScreenProps> = ({
   children,
   safeTop = true,
-  safeBottom = true,
+  safeBottom = false,
   safeLeft = true,
   safeRight = true,
   edges,

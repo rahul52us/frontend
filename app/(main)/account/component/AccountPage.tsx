@@ -314,7 +314,7 @@ const AccountPage = observer(() => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.18 }}
-            pb="calc(20px + env(safe-area-inset-bottom, 0px))"
+            pb={4}
           >
             {/* User Profile Card */}
             <Card
@@ -554,7 +554,7 @@ const AccountPage = observer(() => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18 }}
-              pb="calc(30px + env(safe-area-inset-bottom, 0px))"
+              pb={4}
             >
               {mobileSelectedTab === "details" && <ProfileSection user={user} />}
               {mobileSelectedTab === "cart" && <CartSection />}

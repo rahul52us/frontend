@@ -310,7 +310,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
       bg={pageBg}
       minH="100vh"
       pb={{
-        base: "calc(88px + env(safe-area-inset-bottom, 0px))",
+        base: "70px",
         lg: 12,
       }}
     >

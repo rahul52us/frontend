@@ -53,7 +53,11 @@ import ContactSection from "./components/ContactSection";
 import { footerData } from "./components/footerData";
 import NewsletterBanner from "./components/NewsletterBanner";
 
-export const Footer: React.FC = () => {
+export interface FooterProps {
+  hideBottomNav?: boolean;
+}
+
+export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -155,7 +159,7 @@ export const Footer: React.FC = () => {
         maxW="8xl"
         px={{ base: 3, md: 8 }}
         pt={{ base: 5, md: 8 }}
-        pb={{ base: 4, md: 6 }}
+        pb={{ base: hideBottomNav ? 4 : "76px", md: 6 }}
       >
   <NewsletterBanner email={email} setEmail={setEmail} isSubscribing={isSubscribing} handleSubscribe={handleSubscribe}  />
 
@@ -549,7 +553,7 @@ export const Footer: React.FC = () => {
           aria-label="Back to top"
           icon={<FiArrowUp size={15} />}
           position="fixed"
-          bottom={{ base: "82px", md: "88px" }}
+          bottom={{ base: hideBottomNav ? "24px" : "82px", md: "88px" }}
           right={{ base: "16px", md: "24px" }}
           zIndex={90}
           borderRadius="full"

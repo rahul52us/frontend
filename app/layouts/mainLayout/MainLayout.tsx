@@ -27,23 +27,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <Box
       minH="100dvh"
+      display="flex"
+      flexDirection="column"
       position="relative"
       overflowX="hidden"
       pl="env(safe-area-inset-left, 0px)"
       pr="env(safe-area-inset-right, 0px)"
     >
       <Header />
-      <Box
-        as="main"
-        pb={
-          hideBottomNav
-            ? "env(safe-area-inset-bottom, 0px)"
-            : { base: "calc(88px + env(safe-area-inset-bottom, 0px))", md: 0 }
-        }
-      >
+      <Box as="main" flex="1" w="full">
         {children}
       </Box>
-      {!isShopPage && <Footer />}
+      {!isShopPage && <Footer hideBottomNav={hideBottomNav} />}
       {!hideBottomNav && <MobileBottomNav />}
     </Box>
   );
