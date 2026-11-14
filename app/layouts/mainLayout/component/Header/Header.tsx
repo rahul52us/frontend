@@ -190,6 +190,7 @@ const Header = observer(() => {
       position="sticky"
       top="0"
       zIndex="1000"
+      pt="env(safe-area-inset-top, 0px)"
       bg={isScrolled ? "rgba(255, 255, 255, 0.95)" : "white"}
       backdropFilter={isScrolled ? "blur(10px)" : "none"}
       boxShadow={isScrolled ? "sm" : "none"}

@@ -107,6 +107,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
         <DrawerBody
           overflowY="auto"
           p={isDesktop ? "15px" : "6px"}
+          pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
           {...bodyProps}
         >
           <DrawerLoader loading={loading}>

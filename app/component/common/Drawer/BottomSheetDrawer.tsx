@@ -44,7 +44,13 @@ const BottomSheetDrawer = ({
   return (
     <Drawer isOpen={isOpen} placement="bottom" onClose={onClose} size={size} {...drawerProps}>
       <DrawerOverlay bg={overlayBg} />
-      <DrawerContent borderTopRadius="24px" overflow="hidden" {...contentProps}>
+      <DrawerContent
+        borderTopRadius="24px"
+        overflow="hidden"
+        maxH="calc(92dvh - env(safe-area-inset-top, 0px))"
+        pb={footer ? 0 : "calc(14px + env(safe-area-inset-bottom, 0px))"}
+        {...contentProps}
+      >
         {showHandle ? (
           <Box
             alignSelf="center"
@@ -70,7 +76,13 @@ const BottomSheetDrawer = ({
         </DrawerBody>
 
         {footer ? (
-          <DrawerFooter borderTopWidth="1px" borderTopColor="gray.100" gap={3} {...footerProps}>
+          <DrawerFooter
+            borderTopWidth="1px"
+            borderTopColor="gray.100"
+            gap={3}
+            pb="calc(14px + env(safe-area-inset-bottom, 0px))"
+            {...footerProps}
+          >
             {footer}
           </DrawerFooter>
         ) : null}

@@ -17,9 +17,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const isShopPage = !!params?.shopTitle || !!params?.shopId;
 
   return (
-    <Box>
+    <Box
+      minH="100dvh"
+      position="relative"
+      overflowX="hidden"
+      pl="env(safe-area-inset-left, 0px)"
+      pr="env(safe-area-inset-right, 0px)"
+    >
       <Header />
-      <Box pb={isShopPage ? 0 : { base: '60px', md: 0 }}>
+      <Box
+        as="main"
+        pb={
+          isShopPage
+            ? "env(safe-area-inset-bottom, 0px)"
+            : { base: "calc(88px + env(safe-area-inset-bottom, 0px))", md: 0 }
+        }
+      >
         {children}
       </Box>
       {!isShopPage && <Footer />}
