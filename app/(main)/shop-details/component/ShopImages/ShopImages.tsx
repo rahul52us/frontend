@@ -1,145 +1,100 @@
+"use client";
+
 import {
+  AspectRatio,
   Box,
-  Container,
+  Heading,
   Image,
   Text,
-  AspectRatio,
-  Heading,
-  HStack,
-  VStack,
-  Icon,
   useColorModeValue,
-  Grid,
-  GridItem,
+  VStack,
 } from "@chakra-ui/react";
-import { FiArrowRight, FiInfo } from "react-icons/fi";
-import { motion } from "framer-motion";
+import React from "react";
 
-const MotionBox = motion(Box);
+const extractImageUrl = (item: any): string => {
+  if (!item) return "";
+  if (typeof item === "string") return item;
+  return item?.file?.url || item?.url || item?.src || "";
+};
 
 const ShopImages = ({ shopData }: { shopData: any }) => {
-  // Enhanced detail-oriented data fetching
-  const gallery = shopData?.gallery || shopData?.images || shopData?.photos || shopData?.data?.gallery || [];
-  const stageBg = useColorModeValue("white", "gray.900");
-  const textColor = useColorModeValue("gray.900", "white");
-  const accentColor = "purple.500";
+  const textPrimary = useColorModeValue("gray.900", "white");
+  const textMuted = useColorModeValue("gray.500", "gray.400");
+  const cardBorder = useColorModeValue("gray.100", "gray.750");
 
-  // Data verification block
+  const rawGallery =
+    shopData?.gallery ||
+    shopData?.images ||
+    shopData?.photos ||
+    shopData?.data?.gallery ||
+    [];
+
+  const gallery: string[] = Array.isArray(rawGallery)
+    ? rawGallery.map(extractImageUrl).filter(Boolean)
+    : [];
+
   if (gallery.length === 0) {
-    return (
-      <Box py={10} textAlign="center" border="1px dashed" borderColor="gray.200" borderRadius="xl" m={8}>
-        <VStack spacing={4}>
-          <Icon as={FiInfo} color="gray.300" boxSize={8} />
-          <Text color="gray.400" fontWeight="800" fontSize="xs" letterSpacing="0.2em">
-            CURATING THE COLLECTION...
-          </Text>
-        </VStack>
-      </Box>
-    );
+    return null;
   }
 
   return (
-    <Box py={{ base: 20, md: 32 }} bg={stageBg} id="gallery" position="relative">
-      <Container maxW="7xl">
-        <VStack spacing={16} align="stretch">
-          {/* Elite Editorial Header */}
-          <VStack spacing={6} align="center" textAlign="center">
-            <VStack spacing={3}>
-              <Text
-                fontSize="xs"
-                fontWeight="900"
-                letterSpacing="0.5em"
-                color={accentColor}
-                textTransform="uppercase"
-              >
-                Visual Story
-              </Text>
-              <Heading
-                fontSize={{ base: "4xl", md: "5xl", lg: "70px" }}
-                fontWeight="900"
-                color="gray.900"
-                letterSpacing="-0.04em"
-                lineHeight="1"
-              >
-                Atmosphere & <Text as="span" color="gray.300" fontStyle="italic" fontWeight="400">Soul</Text>
-              </Heading>
-            </VStack>
-            <Box w="80px" h="1px" bg="purple.500" />
-          </VStack>
+    <VStack align="stretch" spacing={4} w="full">
+      <Box>
+        <Heading
+          as="h3"
+          fontSize={{ base: "lg", md: "xl" }}
+          fontWeight="800"
+          color={textPrimary}
+          letterSpacing="-0.02em"
+        >
+          Photo gallery
+        </Heading>
+        <Text fontSize="sm" color={textMuted} mt={0.5}>
+          Take a look inside the shop and explore recent highlights
+        </Text>
+      </Box>
 
-          {/* Mosaic Grid - Performance Optimized & High Visibility */}
-          <Grid
-            templateColumns={{
-              base: "1fr",
-              md: "repeat(3, 1fr)",
-            }}
-            gap={10}
+      {/* Horizontal Snap Scroll Gallery */}
+      <Box
+        mx={{ base: -4, md: 0 }}
+        px={{ base: 4, md: 0 }}
+        overflowX="auto"
+        display="flex"
+        gap={{ base: 3, md: 4 }}
+        css={{
+          scrollSnapType: "x mandatory",
+          "&::-webkit-scrollbar": { display: "none" },
+          scrollbarWidth: "none",
+        }}
+        pb={2}
+      >
+        {gallery.map((url, index) => (
+          <Box
+            key={`${url}-${index}`}
+            flexShrink={0}
+            w={{ base: "72%", sm: "45%", md: "31%", lg: "24%" }}
+            scrollSnapAlign="center"
+            borderRadius="2xl"
+            overflow="hidden"
+            border="1px solid"
+            borderColor={cardBorder}
+            bg="gray.100"
+            boxShadow="0 4px 12px rgba(0,0,0,0.04)"
+            transition="all 0.3s ease"
+            _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
           >
-            {gallery.map((image, index) => {
-              const isFeatured = index === 0;
-              const imageUrl = image?.file?.url || image?.url || image;
-
-              return (
-                <GridItem
-                  key={index}
-                  colSpan={{ base: 1, md: isFeatured ? 2 : 1 }}
-                >
-                  <Box
-                    role="group"
-                    position="relative"
-                    borderRadius="0" // Sharp Boutique Edge
-                    overflow="hidden"
-                    bg="gray.50"
-                    shadow="xl"
-                    transition="all 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
-                    _hover={{
-                      shadow: "2xl",
-                      transform: "scale(1.01)"
-                    }}
-                  >
-                    <AspectRatio ratio={isFeatured ? 1.6 : 1}>
-                      <Image
-                        src={imageUrl}
-                        alt={image?.title || `Boutique Detail ${index + 1}`}
-                        objectFit="cover"
-                        transition="transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)"
-                        _groupHover={{ transform: "scale(1.08)" }}
-                        fallbackSrc="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
-                      />
-                    </AspectRatio>
-
-                    {/* Minimalist Overlay Label */}
-                    <Box
-                      position="absolute"
-                      bottom={0}
-                      left={0}
-                      right={0}
-                      p={8}
-                      bgGradient="linear(to-t, blackAlpha.700, transparent)"
-                      opacity={0}
-                      _groupHover={{ opacity: 1 }}
-                      transition="all 0.4s ease"
-                    >
-                      <VStack align="flex-start" spacing={1}>
-                        <Text color="white" fontSize="xs" fontWeight="900" letterSpacing="0.2em">
-                          PIECE {String(index + 1).padStart(2, '0')}
-                        </Text>
-                        <HStack justify="space-between" w="full">
-                          <Heading color="white" fontSize="xl" fontWeight="900">
-                            {image?.title || "Boutique Study"}
-                          </Heading>
-                          <Icon as={FiArrowRight} color="white" />
-                        </HStack>
-                      </VStack>
-                    </Box>
-                  </Box>
-                </GridItem>
-              );
-            })}
-          </Grid>
-        </VStack>
-      </Container>
-    </Box>
+            <AspectRatio ratio={4 / 5} w="full">
+              <Image
+                src={url}
+                alt={`Shop photo ${index + 1}`}
+                objectFit="cover"
+                loading="lazy"
+              />
+            </AspectRatio>
+          </Box>
+        ))}
+      </Box>
+    </VStack>
   );
 };
 

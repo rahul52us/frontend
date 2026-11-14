@@ -1,148 +1,219 @@
 "use client";
+
 import {
   Box,
-  Container,
+  Circle,
+  Divider,
   Flex,
   Heading,
-  Text,
-  VStack,
   HStack,
   Icon,
   Link,
-  SimpleGrid,
-  Circle,
+  Text,
   Tooltip,
-  Badge,
-  Stack,
-} from '@chakra-ui/react';
-import React from 'react';
-import { motion } from 'framer-motion';
-import { FiInstagram, FiTwitter, FiFacebook, FiGlobe, FiPhoneCall, FiMail } from 'react-icons/fi';
-
-const MotionBox = motion(Box);
+  useColorModeValue,
+  VStack,
+} from "@chakra-ui/react";
+import React from "react";
+import {
+  FiFacebook,
+  FiGlobe,
+  FiInstagram,
+  FiMail,
+  FiPhone,
+  FiTwitter,
+} from "react-icons/fi";
 
 const ContactSection = ({ shopData }: any) => {
+  const cardBg = useColorModeValue("white", "gray.850");
+  const borderColor = useColorModeValue("gray.100", "gray.750");
+  const textPrimary = useColorModeValue("gray.900", "white");
+  const textMuted = useColorModeValue("gray.600", "gray.400");
+  const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.100");
+
+  const phone = shopData?.contactInfo?.phone;
+  const email = shopData?.contactInfo?.email;
+  const website =
+    shopData?.contactInfo?.website || shopData?.socialLinks?.website;
+
   const socials = [
-    { name: "Instagram", icon: FiInstagram, link: shopData.contactInfo?.socialMedia?.instagram || shopData.socialLinks?.instagram, color: "#E1306C" },
-    { name: "Twitter", icon: FiTwitter, link: shopData.contactInfo?.socialMedia?.twitter || shopData.socialLinks?.twitter, color: "#1DA1F2" },
-    { name: "Facebook", icon: FiFacebook, link: shopData.contactInfo?.socialMedia?.facebook || shopData.socialLinks?.facebook, color: "#4267B2" },
-    { name: "Website", icon: FiGlobe, link: shopData.contactInfo?.website || shopData.socialLinks?.website, color: "#4A5568" },
-  ].filter(s => s.link);
+    {
+      name: "Instagram",
+      icon: FiInstagram,
+      link:
+        shopData?.contactInfo?.socialMedia?.instagram ||
+        shopData?.socialLinks?.instagram,
+      color: "#E1306C",
+    },
+    {
+      name: "Facebook",
+      icon: FiFacebook,
+      link:
+        shopData?.contactInfo?.socialMedia?.facebook ||
+        shopData?.socialLinks?.facebook,
+      color: "#1877F2",
+    },
+    {
+      name: "Twitter",
+      icon: FiTwitter,
+      link:
+        shopData?.contactInfo?.socialMedia?.twitter ||
+        shopData?.socialLinks?.twitter,
+      color: "#1DA1F2",
+    },
+  ].filter((s) => s.link);
 
   return (
-    <Box position="relative" py={12} bg="white" id="contact">
-      <Container maxW="container.xl">
-        <Stack
-          direction={{ base: "column", md: "row" }}
-          spacing={{ base: 12, md: 20 }}
-          align="start"
+    <Box
+      bg={cardBg}
+      borderRadius="3xl"
+      p={{ base: 5, md: 6 }}
+      boxShadow="0 4px 20px -2px rgba(0, 0, 0, 0.05)"
+      border="1px solid"
+      borderColor={borderColor}
+      w="full"
+    >
+      <VStack align="stretch" spacing={3}>
+        <Heading
+          as="h3"
+          fontSize="md"
+          fontWeight="800"
+          color={textPrimary}
+          letterSpacing="-0.01em"
+          mb={1}
         >
-          {/* Left: Contact Info */}
-          <VStack align="flex-start" spacing={10} flex={1}>
-            <VStack align="flex-start" spacing={2}>
-              <Badge
-                variant="outline"
-                color="blue.600"
-                px={3}
-                py={1}
-                borderRadius="full"
-                fontSize="2xs"
-                letterSpacing="0.1em"
-                fontWeight="800"
-                borderColor="blue.100"
-              >
-                CONTACT US
-              </Badge>
-              <Heading size="xl" fontWeight="800" color="gray.900" letterSpacing="-0.02em">
-                Get in Touch
-              </Heading>
-              <Text color="gray.500" fontWeight="500">
-                Connect with us for inquiries or appointments.
+          Contact information
+        </Heading>
+
+        {phone && (
+          <Link
+            href={`tel:${phone}`}
+            borderRadius="xl"
+            px={3}
+            py={2.5}
+            transition="all 0.2s"
+            _hover={{ textDecoration: "none", bg: rowHoverBg }}
+          >
+            <HStack spacing={3}>
+              <Circle size="34px" bg="blue.50" color="blue.600">
+                <Icon as={FiPhone} boxSize={4} />
+              </Circle>
+              <Box minW={0} flex={1}>
+                <Text fontSize="xs" color={textMuted} fontWeight="bold">
+                  PHONE
+                </Text>
+                <Text
+                  fontSize="sm"
+                  fontWeight="semibold"
+                  color={textPrimary}
+                  noOfLines={1}
+                >
+                  {phone}
+                </Text>
+              </Box>
+            </HStack>
+          </Link>
+        )}
+
+        {email && (
+          <Link
+            href={`mailto:${email}`}
+            borderRadius="xl"
+            px={3}
+            py={2.5}
+            transition="all 0.2s"
+            _hover={{ textDecoration: "none", bg: rowHoverBg }}
+          >
+            <HStack spacing={3}>
+              <Circle size="34px" bg="purple.50" color="purple.600">
+                <Icon as={FiMail} boxSize={4} />
+              </Circle>
+              <Box minW={0} flex={1}>
+                <Text fontSize="xs" color={textMuted} fontWeight="bold">
+                  EMAIL
+                </Text>
+                <Text
+                  fontSize="sm"
+                  fontWeight="semibold"
+                  color={textPrimary}
+                  noOfLines={1}
+                >
+                  {email}
+                </Text>
+              </Box>
+            </HStack>
+          </Link>
+        )}
+
+        {website && (
+          <Link
+            href={website.startsWith("http") ? website : `https://${website}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            borderRadius="xl"
+            px={3}
+            py={2.5}
+            transition="all 0.2s"
+            _hover={{ textDecoration: "none", bg: rowHoverBg }}
+          >
+            <HStack spacing={3}>
+              <Circle size="34px" bg="teal.50" color="teal.600">
+                <Icon as={FiGlobe} boxSize={4} />
+              </Circle>
+              <Box minW={0} flex={1}>
+                <Text fontSize="xs" color={textMuted} fontWeight="bold">
+                  WEBSITE
+                </Text>
+                <Text
+                  fontSize="sm"
+                  fontWeight="semibold"
+                  color={textPrimary}
+                  noOfLines={1}
+                >
+                  {website.replace(/^https?:\/\//, "")}
+                </Text>
+              </Box>
+            </HStack>
+          </Link>
+        )}
+
+        {socials.length > 0 && (
+          <>
+            <Divider my={1} borderColor={borderColor} />
+            <Box px={3} pt={1}>
+              <Text fontSize="xs" fontWeight="bold" color={textMuted} mb={2}>
+                SOCIAL MEDIA
               </Text>
-            </VStack>
-
-            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={8} w="full">
-              <Link href={`tel:${shopData.contactInfo?.phone}`} _hover={{ textDecoration: "none" }}>
-                <HStack spacing={4} align="center">
-                  <Circle size="48px" bg="gray.900" color="white">
-                    <Icon as={FiPhoneCall} boxSize={5} />
-                  </Circle>
-                  <VStack align="flex-start" spacing={0}>
-                    <Text fontSize="xs" fontWeight="800" color="gray.400" letterSpacing="0.05em">CALL US</Text>
-                    <Text fontWeight="800" color="gray.900">{shopData.contactInfo?.phone}</Text>
-                  </VStack>
-                </HStack>
-              </Link>
-
-              <Link href={`mailto:${shopData.contactInfo?.email}`} _hover={{ textDecoration: "none" }}>
-                <HStack spacing={4} align="center">
-                  <Circle size="48px" bg="blue.600" color="white">
-                    <Icon as={FiMail} boxSize={5} />
-                  </Circle>
-                  <VStack align="flex-start" spacing={0}>
-                    <Text fontSize="xs" fontWeight="800" color="gray.400" letterSpacing="0.05em">EMAIL</Text>
-                    <Text fontWeight="800" color="gray.900" noOfLines={1}>{shopData.contactInfo?.email}</Text>
-                  </VStack>
-                </HStack>
-              </Link>
-            </SimpleGrid>
-          </VStack>
-
-          {/* Right: Social Orbit */}
-          <VStack align={{ base: "flex-start", lg: "flex-end" }} spacing={8} flex={1} w="full">
-            <VStack align={{ base: "flex-start", lg: "flex-end" }} spacing={2}>
-              <Text fontSize="xs" fontWeight="800" color="gray.400" letterSpacing="0.1em">FOLLOW OUR JOURNEY</Text>
-              <HStack spacing={4}>
-                {socials.map((social, index) => (
-                  <Tooltip key={index} label={social.name.toUpperCase()} hasArrow>
+              <HStack spacing={3}>
+                {socials.map((social) => (
+                  <Tooltip
+                    key={social.name}
+                    label={social.name}
+                    placement="top"
+                  >
                     <Circle
                       as="a"
                       href={social.link}
                       target="_blank"
-                      size="56px"
-                      bg="gray.50"
-                      color="gray.400"
-                      border="1px solid"
-                      borderColor="gray.100"
-                      transition="all 0.2s"
+                      rel="noopener noreferrer"
+                      size="36px"
+                      bg="gray.100"
+                      color={social.color}
                       _hover={{
-                        color: "white",
-                        bg: "gray.900",
-                        transform: "translateY(-2px)",
-                        borderColor: "gray.900"
+                        transform: "scale(1.1)",
+                        boxShadow: "md",
                       }}
+                      transition="all 0.2s"
                     >
-                      <Icon as={social.icon} boxSize={5} />
+                      <Icon as={social.icon} boxSize={4} />
                     </Circle>
                   </Tooltip>
                 ))}
               </HStack>
-            </VStack>
-
-            <Box
-              p={6}
-              borderRadius="24px"
-              bg="gray.50"
-              border="1px solid"
-              borderColor="gray.100"
-              w="full"
-              maxW={{ lg: "sm" }}
-            >
-              <HStack spacing={4}>
-                <Circle size="40px" bg="blue.50" color="blue.600">
-                  <Icon as={FiGlobe} boxSize={5} />
-                </Circle>
-                <VStack align="flex-start" spacing={0}>
-                  <Text fontSize="2xs" fontWeight="800" color="gray.400">OFFICIAL WEBSITE</Text>
-                  <Link href={shopData.contactInfo?.website || "#"} isExternal fontWeight="700" color="gray.900" fontSize="sm">
-                    Visit Site
-                  </Link>
-                </VStack>
-              </HStack>
             </Box>
-          </VStack>
-        </Stack>
-      </Container>
+          </>
+        )}
+      </VStack>
     </Box>
   );
 };
