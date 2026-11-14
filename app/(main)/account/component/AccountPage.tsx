@@ -285,19 +285,22 @@ const AccountPage = observer(() => {
           </VStack>
 
           {/* Desktop Main Content Card */}
-          <Card
-            borderRadius="2xl"
-            boxShadow="lg"
-            bg={cardBg}
-          >
-            <CardBody p={{ base: 4, sm: 6, md: 8 }}>
-              {activeTab === "details" && <ProfileSection user={user} />}
-              {activeTab === "cart" && <CartSection />}
-              {activeTab === "orders" && <OrdersSection />}
-              {activeTab === "addresses" && <AddressesSection />}
-              {activeTab === "wallet" && <WalletSection />}
-            </CardBody>
-          </Card>
+          {activeTab === "cart" ? (
+            <CartSection />
+          ) : (
+            <Card
+              borderRadius="2xl"
+              boxShadow="lg"
+              bg={cardBg}
+            >
+              <CardBody p={{ base: 4, sm: 6, md: 8 }}>
+                {activeTab === "details" && <ProfileSection user={user} />}
+                {activeTab === "orders" && <OrdersSection />}
+                {activeTab === "addresses" && <AddressesSection />}
+                {activeTab === "wallet" && <WalletSection />}
+              </CardBody>
+            </Card>
+          )}
         </Grid>
       </Box>
 

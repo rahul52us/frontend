@@ -4,18 +4,16 @@ import {
   Badge,
   Box,
   Button,
-  Card,
-  CardBody,
   Divider,
   Flex,
   Grid,
   Heading,
   HStack,
   Icon,
+  IconButton,
+  Image,
   Progress,
-  SimpleGrid,
   Text,
-  useColorModeValue,
   useDisclosure,
   useToast,
   VStack,
@@ -23,33 +21,133 @@ import {
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FaLocationDot, FaPlus } from "react-icons/fa6";
+import {
+  FaHouse,
+  FaLocationDot,
+  FaPhone,
+  FaPlus,
+} from "react-icons/fa6";
 import {
   FiArrowRight,
+  FiCheck,
+  FiHeadphones,
   FiLock,
+  FiMinus,
+  FiPlus,
   FiRotateCcw,
+  FiShield,
   FiShoppingBag,
   FiTrash2,
-  FiTruck
 } from "react-icons/fi";
+import { IoReceiptOutline } from "react-icons/io5";
 
-import CartItem from "../../../../component/Cart/component/CartItem/CartItem";
 import AddressModal from "../../../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import stores from "../../../../store/stores";
 
 const FREE_SHIPPING_THRESHOLD = 499;
 
+/* -------------------------------------------------------------------------- */
+/*  Exact Inline Illustrations matching Reference Design                      */
+/* -------------------------------------------------------------------------- */
+
+// Delivery Truck Illustration with teal motion lines & salmon cab
+const DeliveryTruckIllustration = () => (
+  <Box flexShrink={0}>
+    <svg
+      width="72"
+      height="36"
+      viewBox="0 0 72 36"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Wind / speed motion lines */}
+      <path d="M4 14H18" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" />
+      <path d="M1 20H13" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" />
+      <path d="M6 26H16" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" />
+      {/* Top energy rays */}
+      <path d="M60 5L62 1" stroke="#087F8C" strokeWidth="2" strokeLinecap="round" />
+      <path d="M65 8L69 7" stroke="#087F8C" strokeWidth="2" strokeLinecap="round" />
+      {/* Truck Cargo Box */}
+      <rect x="22" y="8" width="28" height="20" rx="4" fill="#FCA5A5" />
+      {/* Truck Cabin */}
+      <path
+        d="M50 14H58C59.2 14 60.2 14.8 60.5 16L62.2 21.5V28H50V14Z"
+        fill="#F87171"
+      />
+      {/* Window */}
+      <path d="M52 16H56.5L58 21.5H52V16Z" fill="#FFFFFF" opacity="0.9" />
+      {/* Front Bumper */}
+      <rect x="61" y="24" width="4" height="3" rx="1.5" fill="#334155" />
+      {/* Wheels */}
+      <circle cx="31" cy="28" r="4.5" fill="#1E293B" />
+      <circle cx="31" cy="28" r="2" fill="#E2E8F0" />
+      <circle cx="55" cy="28" r="4.5" fill="#1E293B" />
+      <circle cx="55" cy="28" r="2" fill="#E2E8F0" />
+    </svg>
+  </Box>
+);
+
+// House Illustration for Delivery Address Card
+const HouseIllustration = () => (
+  <Box
+    position="absolute"
+    right="8px"
+    bottom="6px"
+    pointerEvents="none"
+    userSelect="none"
+    opacity={{ base: 0.85, sm: 1 }}
+  >
+    <svg
+      width="72"
+      height="54"
+      viewBox="0 0 72 54"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Soft ground curve */}
+      <path d="M0 48C14 44 38 43 72 48V54H0V48Z" fill="#FCE7E7" />
+      {/* Left Tree */}
+      <circle cx="11" cy="38" r="8" fill="#0D9488" opacity="0.85" />
+      <rect x="10" y="42" width="2.5" height="7" rx="1" fill="#78350F" />
+      {/* Right Tree */}
+      <circle cx="63" cy="38" r="7" fill="#0D9488" opacity="0.8" />
+      <rect x="62" y="42" width="2" height="7" rx="1" fill="#78350F" />
+      {/* House Main Body */}
+      <rect
+        x="21"
+        y="26"
+        width="34"
+        height="23"
+        rx="2"
+        fill="#FFFFFF"
+        stroke="#E2E8F0"
+        strokeWidth="1"
+      />
+      {/* Roof */}
+      <path d="M17 27L38 12L59 27H17Z" fill="#EF4444" />
+      {/* Chimney */}
+      <rect x="48" y="16" width="4.5" height="8" fill="#B91C1C" rx="1" />
+      {/* Door */}
+      <rect x="34" y="37" width="8" height="12" rx="1" fill="#087F8C" />
+      {/* Windows */}
+      <rect x="25" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
+      <rect x="45" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
+    </svg>
+  </Box>
+);
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80";
+
+/* -------------------------------------------------------------------------- */
+/*  Main Cart Section Component                                               */
+/* -------------------------------------------------------------------------- */
+
 const CartSection = observer(() => {
   const { cartStore, auth } = stores;
   const router = useRouter();
   const toast = useToast();
-
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.100", "gray.700");
-  const textColor = useColorModeValue("gray.900", "white");
-  const mutedText = useColorModeValue("gray.500", "gray.400");
-  const highlightBg = useColorModeValue("purple.50", "whiteAlpha.50");
 
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -122,7 +220,7 @@ const CartSection = observer(() => {
     setIsClearModalOpen(false);
     toast({
       title: "Cart cleared",
-      description: "All items have been removed.",
+      description: "All items have been removed from your cart.",
       status: "info",
       duration: 2000,
       isClosable: true,
@@ -150,56 +248,100 @@ const CartSection = observer(() => {
   const isEmpty = cartStore.cartItems.length === 0;
 
   return (
-    <Box>
-      {/* ─── Header ─── */}
+    <Box
+      bg="#FFFFFF"
+      borderRadius="24px"
+      border="1px solid #E5EAF0"
+      boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.04)"
+      p={{ base: 4, sm: 6, lg: 7 }}
+      position="relative"
+    >
+      {/* ===================================================================
+          1. HEADER SECTION
+         =================================================================== */}
       <Flex
         justify="space-between"
         align="center"
-        mb={6}
         pb={4}
-        borderBottom="1px solid"
-        borderColor={borderColor}
+        borderBottom="1px solid #E5EAF0"
         flexWrap="wrap"
         gap={3}
       >
-        <HStack spacing={3}>
-          <Heading size="md" color={textColor}>
+        {/* Left: Icon + "My Cart" + Item Count Pill Badge */}
+        <HStack spacing={3} align="center">
+          <Flex
+            boxSize={{ base: "38px", sm: "44px" }}
+            bg="#E6F7F3"
+            borderRadius="12px"
+            align="center"
+            justify="center"
+            color="#087F8C"
+            flexShrink={0}
+          >
+            <Icon as={FiShoppingBag} boxSize={{ base: "18px", sm: "22px" }} />
+          </Flex>
+
+          <Heading
+            size="lg"
+            fontSize={{ base: "20px", sm: "24px" }}
+            fontWeight="800"
+            color="#172033"
+            letterSpacing="-0.02em"
+          >
             My Cart
           </Heading>
+
           {!isEmpty && (
             <Badge
-              colorScheme="purple"
-              variant="subtle"
+              bg="#E6F7F3"
+              color="#087F8C"
+              borderRadius="full"
+              px={3}
+              py={1}
               fontSize="xs"
-              px={2.5}
-              py={0.5}
-              rounded="full"
+              fontWeight="800"
+              letterSpacing="0.05em"
+              textTransform="uppercase"
             >
-              {cartStore.totalItems} {cartStore.totalItems === 1 ? "item" : "items"}
+              {cartStore.totalItems} {cartStore.totalItems === 1 ? "ITEM" : "ITEMS"}
             </Badge>
           )}
         </HStack>
 
+        {/* Right: "Clear Cart" Trash Action + Divider + "Continue Shopping" Pill */}
         {!isEmpty && (
-          <HStack spacing={2}>
+          <HStack spacing={2.5} align="center">
             <Button
               size="sm"
               variant="ghost"
-              colorScheme="red"
-              leftIcon={<Icon as={FiTrash2} />}
+              color="#E53E3E"
+              _hover={{ bg: "#FFF0F0", color: "#DC2626" }}
+              leftIcon={<Icon as={FiTrash2} boxSize={4} />}
               onClick={() => setIsClearModalOpen(true)}
               fontSize="xs"
-              rounded="lg"
+              fontWeight="600"
+              h="36px"
+              px={2.5}
             >
               Clear Cart
             </Button>
+
+            <Box h="20px" w="1px" bg="#E5EAF0" display={{ base: "none", sm: "block" }} />
+
             <Button
               size="sm"
               variant="outline"
-              colorScheme="purple"
+              borderColor="#087F8C"
+              color="#087F8C"
+              bg="transparent"
+              borderRadius="full"
+              _hover={{ bg: "#E6F7F3", borderColor: "#075B6B" }}
+              leftIcon={<Icon as={FiShoppingBag} boxSize={3.5} />}
               onClick={() => router.push("/products")}
               fontSize="xs"
-              rounded="lg"
+              fontWeight="700"
+              h="38px"
+              px={4}
             >
               Continue Shopping
             </Button>
@@ -207,203 +349,422 @@ const CartSection = observer(() => {
         )}
       </Flex>
 
-      {/* ─── Body ─── */}
+      {/* ===================================================================
+          2. EMPTY CART STATE
+         =================================================================== */}
       {isEmpty ? (
-        <Card
-          borderRadius="2xl"
-          border="1px dashed"
-          borderColor={borderColor}
-          bg="transparent"
-          p={10}
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          py={14}
+          px={4}
           textAlign="center"
         >
-          <CardBody>
-            <Flex
-              w="80px"
-              h="80px"
-              rounded="full"
-              bg="purple.50"
-              align="center"
-              justify="center"
-              mx="auto"
-              mb={4}
-            >
-              <Icon as={FiShoppingBag} boxSize={8} color="purple.500" />
-            </Flex>
-            <Heading size="sm" mb={2} color={textColor}>
-              Your Cart is Empty
-            </Heading>
-            <Text fontSize="sm" color={mutedText} maxW="340px" mx="auto" mb={6}>
-              Looks like you haven&apos;t added any items yet. Explore top local products
-              and enjoy great discounts!
-            </Text>
-            <Button
-              colorScheme="purple"
-              size="md"
-              rounded="xl"
-              px={8}
-              onClick={() => router.push("/products")}
-              boxShadow="0 8px 20px -4px rgba(107, 70, 193, 0.4)"
-            >
-              Browse Products
-            </Button>
-          </CardBody>
-        </Card>
+          <Flex
+            boxSize="84px"
+            rounded="full"
+            bg="#E6F7F3"
+            color="#087F8C"
+            align="center"
+            justify="center"
+            mb={4}
+            boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.25)"
+          >
+            <Icon as={FiShoppingBag} boxSize={9} />
+          </Flex>
+
+          <Heading size="md" color="#172033" fontWeight="800" mb={1.5}>
+            Your Cart is Empty
+          </Heading>
+          <Text fontSize="sm" color="#64748B" maxW="340px" mb={6} lineHeight="1.5">
+            Looks like you haven&apos;t added any items to your cart yet. Explore our
+            handpicked catalog and discover amazing deals!
+          </Text>
+
+          <Button
+            bgGradient="linear(to-r, #087F8C, #075B6B)"
+            color="white"
+            h="46px"
+            px={8}
+            borderRadius="full"
+            fontWeight="700"
+            fontSize="sm"
+            onClick={() => router.push("/products")}
+            boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.4)"
+            _hover={{ bgGradient: "linear(to-r, #07707C, #054855)" }}
+            _active={{ transform: "scale(0.98)" }}
+          >
+            Start Shopping
+          </Button>
+        </Flex>
       ) : (
-        <Grid templateColumns={{ base: "1fr", lg: "1.7fr 1fr" }} gap={6}>
-          {/* Left Column: Cart Items */}
-          <VStack spacing={3} align="stretch">
-            {/* Free Shipping Milestone Alert */}
+        /* ===================================================================
+            3. TWO-COLUMN LAYOUT (Desktop: ~64% Left, ~36% Right; Mobile: Stacks)
+           =================================================================== */
+        <Grid
+          templateColumns={{ base: "1fr", lg: "1.65fr 1fr" }}
+          gap={{ base: 5, lg: 6 }}
+          mt={5}
+        >
+          {/* ─────────────────────────────────────────────────────────────
+              LEFT COLUMN: Free Delivery Banner + Product Cards + Bag Image
+             ───────────────────────────────────────────────────────────── */}
+          <Flex
+            direction="column"
+            gap={3.5}
+            position="relative"
+            minH={{ base: "320px", lg: "440px" }}
+          >
+            {/* Background Shopping Bag Image Anchored at Bottom-Left */}
             <Box
-              p={3.5}
-              bg={highlightBg}
-              rounded="xl"
-              border="1px solid"
-              borderColor={useColorModeValue("purple.200", "purple.800")}
+              position="absolute"
+              bottom={0}
+              left={0}
+              zIndex={0}
+              pointerEvents="none"
+              userSelect="none"
+              maxW={{ base: "130px", sm: "160px", md: "190px" }}
+              lineHeight={0}
             >
-              <Flex justify="space-between" align="center" mb={1.5}>
-                <HStack spacing={2}>
-                  <Icon
-                    as={FiTruck}
-                    color={isFreeDelivery ? "green.600" : "purple.600"}
-                  />
-                  <Text
-                    fontSize="xs"
-                    fontWeight="700"
-                    color={isFreeDelivery ? "green.600" : "purple.600"}
-                  >
-                    {isFreeDelivery
-                      ? "🎉 You have qualified for FREE Delivery!"
-                      : `Add ₹${FREE_SHIPPING_THRESHOLD - subtotal} more for FREE Delivery`}
-                  </Text>
-                </HStack>
-                <Text fontSize="2xs" color={mutedText} fontWeight="600">
-                  ₹{subtotal} / ₹{FREE_SHIPPING_THRESHOLD}
-                </Text>
-              </Flex>
-              <Progress
-                value={progressToFree}
-                size="xs"
-                rounded="full"
-                colorScheme={isFreeDelivery ? "green" : "purple"}
+              <Image
+                src="/images/shopping-bag.jpg"
+                fallbackSrc="/shopping-bag.jpg"
+                alt="Shopping Bag"
+                w="full"
+                h="auto"
+                objectFit="contain"
               />
             </Box>
 
-            {/* Items list */}
-            {cartStore.cartItems
-              .filter((item) => item.product)
-              .map((item) => {
-                const id = item.product._id || item.product.id;
-                const image =
-                  item.product.image ||
-                  (Array.isArray(item.product.images)
-                    ? item.product.images[0]
-                    : "") ||
-                  "";
-                const price =
-                  item.product.discountPrice ?? item.product.price;
-                const originalPrice =
-                  item.product.originalPrice ?? item.product.mrp;
-
-                return (
-                  <Box
-                    key={id}
-                    p={4}
-                    bg={cardBg}
-                    rounded="xl"
-                    border="1px solid"
-                    borderColor={borderColor}
-                    boxShadow="xs"
-                  >
-                    <CartItem
-                      item={{
-                        id,
-                        name: item.product.name || item.product.title || "Product",
-                        image,
-                        price,
-                        originalPrice,
-                        quantity: item.quantity,
-                      }}
-                      updateQuantity={cartStore.updateQuantity}
-                      onRemove={cartStore.removeFromCart}
-                    />
-                  </Box>
-                );
-              })}
-          </VStack>
-
-          {/* Right Column: Address & Bill Details */}
-          <VStack spacing={4} align="stretch">
-            {/* Delivery Address Card */}
+            {/* Free Delivery Banner (Foreground) */}
             <Box
-              p={4}
-              bg={cardBg}
-              rounded="2xl"
-              border="1px solid"
-              borderColor={borderColor}
-              boxShadow="xs"
+              position="relative"
+              zIndex={1}
+              bg="#E6F7F3"
+              border="1px solid #B5E9DF"
+              borderRadius="16px"
+              p={{ base: 3, sm: "12px 18px" }}
             >
-              <Flex justify="space-between" align="center" mb={3}>
-                <HStack spacing={2}>
-                  <Icon as={FaLocationDot} color="purple.500" />
-                  <Text fontWeight="700" fontSize="sm" color={textColor}>
+              <Flex align="center" justify="space-between" gap={3}>
+                <HStack spacing={2.5} align="center" flex="1" minW={0}>
+                  <Flex
+                    boxSize="24px"
+                    borderRadius="full"
+                    bg="#159447"
+                    color="white"
+                    align="center"
+                    justify="center"
+                    flexShrink={0}
+                  >
+                    <Icon as={FiCheck} boxSize={3.5} strokeWidth={3} />
+                  </Flex>
+
+                  <Text
+                    fontSize={{ base: "xs", sm: "13px" }}
+                    fontWeight="700"
+                    color="#172033"
+                    lineHeight="1.3"
+                  >
+                    {isFreeDelivery
+                      ? "You have qualified for FREE Delivery!"
+                      : `Add ₹${FREE_SHIPPING_THRESHOLD - subtotal} more for FREE Delivery!`}
+                  </Text>
+                </HStack>
+
+                {/* Cute Truck Illustration with motion lines */}
+                <DeliveryTruckIllustration />
+              </Flex>
+
+              {!isFreeDelivery && (
+                <Box mt={2.5}>
+                  <Progress
+                    value={progressToFree}
+                    size="xs"
+                    borderRadius="full"
+                    colorScheme="teal"
+                    bg="#D1F2EB"
+                  />
+                </Box>
+              )}
+            </Box>
+
+            {/* Cart Product Cards List (Overlaps the background shopping bag) */}
+            <VStack spacing={3} align="stretch" position="relative" zIndex={1}>
+              {cartStore.cartItems
+                .filter((item) => item.product)
+                .map((item) => {
+                  const id = item.product._id || item.product.id;
+                  const image =
+                    item.product.image ||
+                    (Array.isArray(item.product.images)
+                      ? item.product.images[0]
+                      : "") ||
+                    FALLBACK_IMAGE;
+                  const price =
+                    Number(item.product.discountPrice ?? item.product.price) || 0;
+                  const title =
+                    item.product.name || item.product.title || "Product";
+
+                  return (
+                    <Box
+                      key={id}
+                      bg="whiteAlpha.400"
+                      backdropFilter={'auto'}
+                      backdropBlur={'10px'}
+                      border="1px solid #E5EAF0"
+                      borderRadius="16px"
+                      p={{ base: 3.5, sm: 4 }}
+                      boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
+                      transition="all 0.15s ease"
+                      _hover={{ borderColor: "#CBD5E1" }}
+                    >
+                      <Flex
+                        align="center"
+                        justify="space-between"
+                        gap={{ base: 3, sm: 4 }}
+                      >
+                        {/* Product Image + Details */}
+                        <HStack spacing={{ base: 3, sm: 4 }} flex="1" minW={0} align="center">
+                          {/* Image */}
+                          <Box
+                            boxSize={{ base: "64px", sm: "74px" }}
+                            borderRadius="14px"
+                            overflow="hidden"
+                            border="1px solid #E5EAF0"
+                            bg="#F8FAFC"
+                            flexShrink={0}
+                          >
+                            <Image
+                              src={image}
+                              fallbackSrc={FALLBACK_IMAGE}
+                              alt={title}
+                              w="full"
+                              h="full"
+                              objectFit="cover"
+                            />
+                          </Box>
+
+                          {/* Title & Bold Teal Price */}
+                          <Box flex="1" minW={0}>
+                            <Text
+                              fontWeight="700"
+                              fontSize={{ base: "sm", sm: "15px" }}
+                              color="#172033"
+                              noOfLines={2}
+                              lineHeight="1.3"
+                            >
+                              {title}
+                            </Text>
+
+                            <Text
+                              fontWeight="800"
+                              fontSize={{ base: "md", sm: "18px" }}
+                              color="#087F8C"
+                              mt={1}
+                              letterSpacing="-0.01em"
+                            >
+                              ₹{price}
+                            </Text>
+                          </Box>
+                        </HStack>
+
+                        {/* Right: Trash Icon (Top) + Mint Quantity Stepper (Bottom) */}
+                        <Flex
+                          direction="column"
+                          align="flex-end"
+                          justify="space-between"
+                          minH={{ base: "64px", sm: "74px" }}
+                          flexShrink={0}
+                        >
+                          {/* Delete Trash Icon */}
+                          <IconButton
+                            aria-label="Remove item"
+                            icon={<Icon as={FiTrash2} boxSize={4} />}
+                            size="xs"
+                            variant="ghost"
+                            color="#94A3B8"
+                            _hover={{ color: "#E53E3E", bg: "#FFF0F0" }}
+                            onClick={() => cartStore.removeFromCart(id)}
+                          />
+
+                          {/* Mint Quantity Pill Stepper */}
+                          <HStack
+                            spacing={0}
+                            bg="#E6F7F3"
+                            border="1px solid #B5E9DF"
+                            borderRadius="full"
+                            h="32px"
+                            px={1}
+                            align="center"
+                          >
+                            <IconButton
+                              aria-label="Decrease quantity"
+                              icon={<Icon as={FiMinus} boxSize={3.5} strokeWidth={3} />}
+                              size="xs"
+                              variant="ghost"
+                              color="#087F8C"
+                              _hover={{ bg: "whiteAlpha.600" }}
+                              borderRadius="full"
+                              boxSize="24px"
+                              minW="24px"
+                              onClick={() => {
+                                if (item.quantity <= 1) {
+                                  cartStore.removeFromCart(id);
+                                } else {
+                                  cartStore.updateQuantity(id, item.quantity - 1);
+                                }
+                              }}
+                            />
+
+                            <Text
+                              px={2}
+                              minW="22px"
+                              textAlign="center"
+                              fontSize="13px"
+                              fontWeight="800"
+                              color="#172033"
+                            >
+                              {item.quantity}
+                            </Text>
+
+                            <IconButton
+                              aria-label="Increase quantity"
+                              icon={<Icon as={FiPlus} boxSize={3.5} strokeWidth={3} />}
+                              size="xs"
+                              variant="ghost"
+                              color="#087F8C"
+                              _hover={{ bg: "whiteAlpha.600" }}
+                              borderRadius="full"
+                              boxSize="24px"
+                              minW="24px"
+                              onClick={() =>
+                                cartStore.updateQuantity(id, item.quantity + 1)
+                              }
+                            />
+                          </HStack>
+                        </Flex>
+                      </Flex>
+                    </Box>
+                  );
+                })}
+            </VStack>
+          </Flex>
+
+          {/* ─────────────────────────────────────────────────────────────
+              RIGHT COLUMN: Delivery Address Card + Order Summary Card
+             ───────────────────────────────────────────────────────────── */}
+          <VStack spacing={4} align="stretch">
+            {/* 1. Delivery Address Card */}
+            <Box
+              bg="#FFFFFF"
+              border="1px solid #E5EAF0"
+              borderRadius="18px"
+              p={{ base: 4, sm: "18px" }}
+              boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
+            >
+              {/* Header */}
+              <Flex justify="space-between" align="center">
+                <HStack spacing={2} align="center">
+                  <Icon as={FaLocationDot} color="#087F8C" boxSize={4} />
+                  <Text fontWeight="700" fontSize="15px" color="#172033">
                     Delivery Address
                   </Text>
                 </HStack>
+
                 <Button
-                  size="xs"
-                  variant="ghost"
-                  colorScheme="purple"
-                  onClick={onAddressOpen}
+                  variant="unstyled"
+                  color="#087F8C"
                   fontWeight="700"
+                  fontSize="13px"
+                  h="auto"
+                  p={0}
+                  _hover={{ textDecoration: "underline", color: "#075B6B" }}
+                  onClick={onAddressOpen}
                 >
-                  {currentAddress ? "Change" : "Add"}
+                  Change
                 </Button>
               </Flex>
 
+              {/* Light Blush Address Box */}
               {currentAddress &&
               (currentAddress.addressLine1 || currentAddress.line1) ? (
                 <Box
-                  p={3}
-                  bg={highlightBg}
-                  rounded="xl"
-                  border="1px solid"
-                  borderColor={useColorModeValue("purple.200", "purple.800")}
+                  mt={3}
+                  bg="#FFF0F0"
+                  border="1px solid #FFD5D5"
+                  borderRadius="14px"
+                  p="14px"
+                  position="relative"
+                  overflow="hidden"
                 >
-                  <HStack spacing={2} align="center">
-                    <Text fontWeight="700" fontSize="xs" color={textColor}>
-                      {currentAddress.name || "Home"}
+                  {/* Subtle House Illustration at bottom right */}
+                  <HouseIllustration />
+
+                  <Box position="relative" zIndex={1} pr="56px">
+                    {/* Top: Red House Icon + Label + DEFAULT badge */}
+                    <HStack spacing={1.5} align="center" mb={1}>
+                      <Icon as={FaHouse} color="#E53E3E" boxSize={3} />
+                      <Text fontWeight="700" fontSize="13px" color="#172033">
+                        {currentAddress.name || "Home"}
+                      </Text>
+                      {currentAddress.isDefault !== false && (
+                        <Badge
+                          bg="#FCE7E7"
+                          color="#E53E3E"
+                          fontSize="9px"
+                          fontWeight="800"
+                          px="6px"
+                          py="1px"
+                          borderRadius="full"
+                          letterSpacing="0.05em"
+                        >
+                          DEFAULT
+                        </Badge>
+                      )}
+                    </HStack>
+
+                    {/* Address Text */}
+                    <Text
+                      fontSize="12px"
+                      color="#64748B"
+                      lineHeight="1.45"
+                      noOfLines={2}
+                      mb={1}
+                    >
+                      {[
+                        currentAddress.addressLine1 || currentAddress.line1,
+                        currentAddress.addressLine2 || currentAddress.line2,
+                        currentAddress.city,
+                        currentAddress.state,
+                        currentAddress.postalCode,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
                     </Text>
-                    {currentAddress.isDefault && (
-                      <Badge colorScheme="purple" fontSize="3xs" rounded="sm">
-                        Default
-                      </Badge>
+
+                    {/* Phone Number */}
+                    {currentAddress.phone && (
+                      <HStack spacing={1.5} color="#64748B" fontSize="12px" align="center">
+                        <Icon as={FaPhone} boxSize={2.5} />
+                        <Text>Phone: {currentAddress.phone}</Text>
+                      </HStack>
                     )}
-                  </HStack>
-                  <Text fontSize="xs" color={mutedText} mt={1} lineHeight="1.4">
-                    {[
-                      currentAddress.addressLine1 || currentAddress.line1,
-                      currentAddress.city,
-                      currentAddress.state,
-                      currentAddress.postalCode,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </Text>
-                  {currentAddress.phone && (
-                    <Text fontSize="2xs" color={mutedText} mt={1}>
-                      Phone: {currentAddress.phone}
-                    </Text>
-                  )}
+                  </Box>
                 </Box>
               ) : (
                 <Button
+                  mt={3}
                   w="full"
                   variant="outline"
-                  colorScheme="purple"
+                  borderColor="#B5E9DF"
+                  color="#087F8C"
+                  bg="#E6F7F3"
+                  borderRadius="14px"
+                  h="42px"
                   leftIcon={<Icon as={FaPlus} />}
-                  size="sm"
-                  rounded="xl"
+                  fontSize="xs"
+                  fontWeight="700"
                   onClick={onAddressOpen}
                 >
                   Add Delivery Address
@@ -411,75 +772,130 @@ const CartSection = observer(() => {
               )}
             </Box>
 
-            {/* Bill Summary */}
+            {/* 2. Order Summary Card */}
             <Box
-              p={5}
-              bg={cardBg}
-              rounded="2xl"
-              border="1px solid"
-              borderColor={borderColor}
-              boxShadow="xs"
+              bg="#FFFFFF"
+              border="1px solid #E5EAF0"
+              borderRadius="18px"
+              p={{ base: 4, sm: "18px" }}
+              boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
             >
-              <Heading size="xs" color={textColor} mb={4} textTransform="uppercase" letterSpacing="wider">
-                Order Summary
-              </Heading>
+              {/* Header */}
+              <HStack spacing={2} align="center" mb={3.5}>
+                <Icon as={IoReceiptOutline} color="#087F8C" boxSize={4.5} />
+                <Text fontWeight="700" fontSize="15px" color="#172033">
+                  Order Summary
+                </Text>
+              </HStack>
 
-              <VStack spacing={2.5} align="stretch" fontSize="sm">
-                <Flex justify="space-between" color={mutedText}>
-                  <Text>Items Subtotal</Text>
-                  <Text fontWeight="600" color={textColor}>₹{subtotal}</Text>
+              {/* Rows */}
+              <VStack spacing={2.5} align="stretch">
+                <Flex justify="space-between" align="center">
+                  <Text fontSize="13px" color="#64748B">
+                    Items Subtotal
+                  </Text>
+                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                    ₹{subtotal}
+                  </Text>
                 </Flex>
-                <Flex justify="space-between" color={mutedText}>
-                  <Text>Delivery Fee</Text>
-                  <Text fontWeight="700" color={isFreeDelivery ? "green.600" : textColor}>
+
+                <Flex justify="space-between" align="center">
+                  <Text fontSize="13px" color="#64748B">
+                    Delivery Fee
+                  </Text>
+                  <Text
+                    fontSize="13px"
+                    fontWeight="800"
+                    color={isFreeDelivery ? "#159447" : "#172033"}
+                  >
                     {isFreeDelivery ? "FREE" : `₹${deliveryFee}`}
-                  </Text>
-                </Flex>
-                <Divider my={1} borderColor={borderColor} />
-                <Flex justify="space-between" align="baseline">
-                  <Text fontWeight="800" fontSize="md" color={textColor}>
-                    Total Amount
-                  </Text>
-                  <Text fontWeight="800" fontSize="lg" color="purple.600">
-                    ₹{grandTotal}
                   </Text>
                 </Flex>
               </VStack>
 
-              <Button
-                mt={5}
-                w="full"
-                h="48px"
-                bgGradient="linear(to-r, purple.600, blue.600)"
-                color="white"
-                rounded="xl"
-                fontWeight="700"
-                fontSize="sm"
-                rightIcon={<Icon as={FiArrowRight} />}
-                onClick={() => router.push("/checkout")}
-                boxShadow="0 8px 20px -4px rgba(107, 70, 193, 0.4)"
-                _hover={{ bgGradient: "linear(to-r, purple.700, blue.700)" }}
+              {/* Light Mint Total Amount Box */}
+              <Box
+                bg="#E6F7F3"
+                borderRadius="12px"
+                p="12px 16px"
+                my={3.5}
               >
-                Proceed to Checkout • ₹{grandTotal}
+                <Flex justify="space-between" align="center">
+                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                    Total Amount
+                  </Text>
+                  <Text
+                    fontSize="20px"
+                    fontWeight="800"
+                    color="#087F8C"
+                    letterSpacing="-0.02em"
+                  >
+                    ₹{grandTotal}
+                  </Text>
+                </Flex>
+              </Box>
+
+              {/* Teal Gradient Proceed to Checkout Button */}
+              <Button
+                w="full"
+                h="50px"
+                bgGradient="linear(to-r, #087F8C, #075B6B)"
+                color="white"
+                borderRadius="14px"
+                fontWeight="700"
+                fontSize="14px"
+                leftIcon={<Icon as={FiLock} boxSize={4} />}
+                rightIcon={<Icon as={FiArrowRight} boxSize={4} />}
+                onClick={() => router.push("/checkout")}
+                boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.4)"
+                _hover={{
+                  bgGradient: "linear(to-r, #07707C, #054855)",
+                  boxShadow: "0 10px 24px -4px rgba(8, 127, 140, 0.5)",
+                }}
+                _active={{ transform: "scale(0.99)" }}
+                transition="all 0.15s ease"
+              >
+                Proceed to Checkout
               </Button>
 
-              {/* Guarantees */}
-              <SimpleGrid columns={2} spacing={3} mt={5} pt={4} borderTop="1px dashed" borderColor={borderColor}>
-                <HStack spacing={2} color={mutedText} fontSize="2xs">
-                  <Icon as={FiLock} color="green.500" />
-                  <Text fontWeight="600">100% Secure Payments</Text>
+              {/* Divider below button */}
+              <Divider my={3.5} borderColor="#E5EAF0" />
+
+              {/* Trust Indicators Row */}
+              <Flex
+                justify="space-between"
+                align="center"
+                pt={0.5}
+                gap={1}
+                flexWrap="wrap"
+              >
+                <HStack spacing={1.5} align="center">
+                  <Icon as={FiShield} color="#087F8C" boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                    100% Secure Payments
+                  </Text>
                 </HStack>
-                <HStack spacing={2} color={mutedText} fontSize="2xs">
-                  <Icon as={FiRotateCcw} color="blue.500" />
-                  <Text fontWeight="600">Easy Returns</Text>
+
+                <HStack spacing={1.5} align="center">
+                  <Icon as={FiRotateCcw} color="#087F8C" boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                    Easy Returns
+                  </Text>
                 </HStack>
-              </SimpleGrid>
+
+                <HStack spacing={1.5} align="center">
+                  <Icon as={FiHeadphones} color="#087F8C" boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                    24/7 Support
+                  </Text>
+                </HStack>
+              </Flex>
             </Box>
           </VStack>
         </Grid>
       )}
 
-      {/* Address Modal / BottomSheet for Mobile */}
+      {/* Address Selection / Add Modal (Drawer on mobile) */}
       <AddressModal
         isOpen={isAddressOpen}
         onClose={onAddressClose}
@@ -491,7 +907,7 @@ const CartSection = observer(() => {
         onDeleteAddress={handleDeleteAddress}
       />
 
-      {/* Clear Cart Confirmation */}
+      {/* Clear Cart Confirmation Dialog */}
       <ConfirmationModal
         isOpen={isClearModalOpen}
         onClose={() => setIsClearModalOpen(false)}
@@ -500,10 +916,9 @@ const CartSection = observer(() => {
         message="Are you sure you want to remove all items from your cart?"
         confirmText="Clear All"
         confirmButtonProps={{ colorScheme: "red" }}
-        cancelText="Cancel"
+        cancelText="Keep Items"
       />
     </Box>
   );
 });
-
 export default CartSection;
