@@ -1,13 +1,8 @@
-"use client"
-import { Box } from '@chakra-ui/react'
-import BlogsPage from './components/BlogsPage'
+"use client";
+import { Box } from "@chakra-ui/react";
 
 const page = () => {
-  return (
-    <Box>
-        <BlogsPage/>
-    </Box>
-  )
-}
+  return <Box>page</Box>;
+};
 
-export default page
+export default page;

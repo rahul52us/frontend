@@ -1,12 +1,7 @@
-'use client'
-import React from 'react'
-import AddBlogForm from './component/forms/AddBlogForm'
+"use client";
+import React from "react";
 const page = () => {
-  return (
-    <div>
-        <AddBlogForm />
-    </div>
-  )
-}
+  return <div>page</div>;
+};
 
-export default page
+export default page;
