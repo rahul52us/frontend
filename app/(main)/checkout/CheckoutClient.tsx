@@ -1,546 +1,1486 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import {
-    Box,
-    Container,
-    Flex,
-    Heading,
-    Text,
-    Button,
-    VStack,
-    HStack,
-    Radio,
-    RadioGroup,
-    Divider,
-    useToast,
-    Icon,
     Badge,
+    Box,
+    Button,
+    Container,
+    Divider,
+    Flex,
     Grid,
     GridItem,
-    useDisclosure,
+    Heading,
+    HStack,
+    Icon,
+    Image,
+    Radio,
+    RadioGroup,
     Spinner,
+    Text,
+    useDisclosure,
+    useToast,
+    VStack,
 } from "@chakra-ui/react";
-import AddressModal from "../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
 import { observer } from "mobx-react-lite";
-import stores from "../../store/stores";
+import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FaMapMarkerAlt, FaCreditCard, FaMoneyBillWave, FaLock } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
+import {
+    FaCreditCard,
+    FaHouse,
+    FaLocationDot,
+    FaLock,
+    FaMoneyBillWave,
+    FaPhone,
+    FaPlus,
+    FaShieldHalved
+} from "react-icons/fa6";
+import {
+    FiAlertCircle,
+    FiArrowLeft,
+    FiHeadphones,
+    FiPackage,
+    FiRefreshCw,
+    FiRotateCcw,
+    FiShield,
+    FiShoppingBag,
+    FiTruck
+} from "react-icons/fi";
+import { IoReceiptOutline } from "react-icons/io5";
 
-const CheckoutPage = observer(() => {
-    const { cartStore, auth, orderStore, shopStore } = stores;
-    const router = useRouter();
-    const toast = useToast();
+import AddressModal from "../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
+import stores from "../../store/stores";
 
-    const [selectedAddress, setSelectedAddress] = useState<string>("");
-    const [paymentMethod, setPaymentMethod] = useState<string>("cod");
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+const FREE_SHIPPING_THRESHOLD = 499;
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80";
 
-    useEffect(() => {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => setIsScriptLoaded(true);
-        document.body.appendChild(script);
-    }, []);
+/* -------------------------------------------------------------------------- */
+/*  House Illustration (Consistent with Cart Design)                         */
+/* -------------------------------------------------------------------------- */
+const HouseIllustration = () => (
+  <Box
+    position="absolute"
+    right="8px"
+    bottom="6px"
+    pointerEvents="none"
+    userSelect="none"
+    opacity={{ base: 0.8, sm: 0.95 }}
+  >
+    <svg
+      width="70"
+      height="52"
+      viewBox="0 0 72 54"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M0 48C14 44 38 43 72 48V54H0V48Z" fill="#FCE7E7" />
+      <circle cx="11" cy="38" r="8" fill="#0D9488" opacity="0.85" />
+      <rect x="10" y="42" width="2.5" height="7" rx="1" fill="#78350F" />
+      <circle cx="63" cy="38" r="7" fill="#0D9488" opacity="0.8" />
+      <rect x="62" y="42" width="2" height="7" rx="1" fill="#78350F" />
+      <rect
+        x="21"
+        y="26"
+        width="34"
+        height="23"
+        rx="2"
+        fill="#FFFFFF"
+        stroke="#E2E8F0"
+        strokeWidth="1"
+      />
+      <path d="M17 27L38 12L59 27H17Z" fill="#EF4444" />
+      <rect x="48" y="16" width="4.5" height="8" fill="#B91C1C" rx="1" />
+      <rect x="34" y="37" width="8" height="12" rx="1" fill="#087F8C" />
+      <rect x="25" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
+      <rect x="45" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
+    </svg>
+  </Box>
+);
 
-    // Initialized Order State
-    const [initializedOrder, setInitializedOrder] = useState<any>(null);
-    const [isInitializing, setIsInitializing] = useState(false);
+/* -------------------------------------------------------------------------- */
+/*  Checkout Client Component                                                 */
+/* -------------------------------------------------------------------------- */
+const CheckoutClient = observer(() => {
+  const { cartStore, auth, orderStore, shopStore } = stores;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useToast();
 
-    // Addresses
-    const addresses = auth.addresses || [];
+  const buyNowId = searchParams.get("productId");
+  const isBuyNow = searchParams.get("buyNow") === "true";
 
-    useEffect(() => {
-        if (auth.token && auth.addresses.length === 0) {
-            auth.fetchAddresses();
+  const [buyNowProduct, setBuyNowProduct] = useState<any>(null);
+  const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cod");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+  // Initialized Order State
+  const [initializedOrder, setInitializedOrder] = useState<any>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+
+  // Load Razorpay Checkout Script
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ((window as any).Razorpay) {
+        setIsScriptLoaded(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => setIsScriptLoaded(true);
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // Fetch addresses if logged in
+  useEffect(() => {
+    if (auth.token && auth.addresses.length === 0) {
+      auth.fetchAddresses();
+    }
+  }, [auth.token, auth]);
+
+  const addresses = useMemo(() => auth.addresses || [], [auth.addresses]);
+
+  // Pre-select default or first address
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddress) {
+      const defaultAddr = addresses.find((a: any) => a.isDefault);
+      setSelectedAddress(
+        defaultAddr
+          ? defaultAddr._id || defaultAddr.id
+          : addresses[0]._id || addresses[0].id
+      );
+    }
+  }, [addresses, selectedAddress]);
+
+  // Fetch Buy Now product if applicable
+  useEffect(() => {
+    let isMounted = true;
+    if (isBuyNow && buyNowId) {
+      shopStore.getProductById(buyNowId).then((res: any) => {
+        if (isMounted && res?.data) {
+          setBuyNowProduct(res.data);
         }
-    }, [auth.token, auth.addresses.length, auth]);
-
-    const {
-        isOpen: isAddressModalOpen,
-        onOpen: onAddressModalOpen,
-        onClose: onAddressModalClose,
-    } = useDisclosure();
-
-    const handleAddNewAddress = async (newAddress: any) => {
-        try {
-            await auth.addAddress(newAddress);
-            auth.fetchAddresses();
-        } catch {
-            toast({ title: "Failed to add address", status: "error" });
-        }
+      }).catch((err: any) => {
+        console.error("Failed to fetch buy now product", err);
+      });
+    }
+    return () => {
+      isMounted = false;
     };
+  }, [isBuyNow, buyNowId, shopStore]);
 
-    const handleUpdateAddress = async (id: string, data: any) => {
-        try {
-            await auth.updateAddress(id, data);
-        } catch {
-            toast({ title: "Failed to update address", status: "error" });
+  // Initialize Order
+  const initOrder = async () => {
+    if (!auth.token) return;
+
+    setIsInitializing(true);
+    setInitError(null);
+    try {
+      let itemsPayload: any[] = [];
+
+      if (isBuyNow && buyNowId) {
+        let product = buyNowProduct;
+        if (!product) {
+          const res = await shopStore.getProductById(buyNowId);
+          if (res?.data) {
+            product = res.data;
+            setBuyNowProduct(product);
+          }
         }
-    };
-
-    const handleDeleteAddress = async (id: string) => {
-        try {
-            await auth.deleteAddress(id);
-        } catch {
-            toast({ title: "Failed to delete address", status: "error" });
+        if (product) {
+          itemsPayload.push({
+            product: product._id || product.id,
+            quantity: 1,
+            variant: product.variant,
+          });
         }
-    };
-
-    const handleSelectAddress = async (addressId: string) => {
-        setSelectedAddress(addressId);
-
-        if (!initializedOrder) return;
-
-        try {
-            const address = addresses.find((a: any) => a._id === addressId);
-            if (!address) return;
-
-            // Use cart items for re-initialization payload as initializedOrder structure is now complex
-            // or extract from current orders
-            const currentItems = cartStore.cartItems.length > 0
-                ? cartStore.cartItems.map(item => ({
-                    product: item.product._id || item.product.id,
-                    quantity: item.quantity,
-                    variant: item.product.variant
-                }))
-                : (initializedOrder.orders ? initializedOrder.orders.flatMap((o: any) => o.items.map((i: any) => ({
-                    product: i.product._id || i.product, // Schema specific
-                    quantity: i.quantity,
-                    variant: i.variant
-                }))) : []);
-
-            const payload = {
-                items: currentItems,
-                // company: null, // Let backend split by company
-                shippingAddress: address
-            };
-
-            const res = await orderStore.initializeOrder(payload);
-            if (res?.success) {
-                setInitializedOrder(res.data);
-                toast({ title: "Delivery address updated", status: "success", duration: 2000 });
-            }
-        } catch (error) {
-            console.error("Failed to update order address", error);
+      } else {
+        if (cartStore.cartItems.length === 0) {
+          await cartStore.fetchCart();
         }
-    };
+        if (cartStore.cartItems.length === 0) {
+          setIsInitializing(false);
+          return;
+        }
+        itemsPayload = cartStore.cartItems.map((item) => ({
+          product: item.product?._id || item.product?.id,
+          quantity: item.quantity || 1,
+          variant: item.product?.variant,
+        }));
+      }
 
-    // Buy Now Logic & Initialization
-    const searchParams = useSearchParams();
-    const buyNowId = searchParams.get('productId');
-    const isBuyNow = searchParams.get('buyNow') === 'true';
+      if (itemsPayload.length > 0) {
+        const address = addresses.find(
+          (a: any) => (a._id || a.id) === selectedAddress
+        ) || addresses[0];
 
-    useEffect(() => {
-        const initOrder = async () => {
-            if (!auth.token) return;
-
-            setIsInitializing(true);
-            try {
-                let itemsPayload = [];
-                // let companyId = null;
-
-                if (isBuyNow && buyNowId) {
-                    const res = await shopStore.getProductById(buyNowId);
-                    if (res?.data) {
-                        const product = res.data;
-                        itemsPayload.push({
-                            product: product._id || product.id,
-                            quantity: 1,
-                            variant: product.variant
-                        });
-                        // companyId = ...
-                    }
-                } else {
-                    if (cartStore.cartItems.length === 0) {
-                        setIsInitializing(false);
-                        return;
-                    }
-                    itemsPayload = cartStore.cartItems.map(item => ({
-                        product: item.product._id || item.product.id,
-                        quantity: item.quantity,
-                        variant: item.product.variant
-                    }));
-                }
-
-                if (itemsPayload.length > 0) {
-                    const payload = {
-                        items: itemsPayload,
-                        // company: companyId // Removed to allow backend split
-                    };
-                    const res = await orderStore.initializeOrder(payload);
-                    if (res?.success) {
-                        setInitializedOrder(res.data);
-                        // Access shippingAddress from top level of response data (we added it there)
-                        if (res.data.shippingAddress && res.data.shippingAddress._id) {
-                            setSelectedAddress(res.data.shippingAddress._id);
-                        }
-                    }
-                }
-
-            } catch (error: any) {
-                toast({
-                    title: "Failed to initialize order",
-                    description: error.message || "Please try again",
-                    status: "error"
-                });
-            } finally {
-                setIsInitializing(false);
-            }
+        const payload: any = {
+          items: itemsPayload,
         };
-
-        if (auth.token) {
-            initOrder();
-        }
-    }, [auth.token, isBuyNow, buyNowId, cartStore.cartItems, orderStore, shopStore, toast]);
-
-
-    // ... (Validation useEffect) ...
-
-    const handlePlaceOrder = async () => {
-        if (!auth.token) {
-            toast({ title: "Please login to place order", status: "error" });
-            router.push("/login?redirect=/checkout");
-            return;
-        }
-        if (!selectedAddress) {
-            toast({ title: "Please select a delivery address", status: "error", position: "top" });
-            return;
-        }
-        if (!initializedOrder) {
-            toast({ title: "Order not initialized", description: "Please refresh page", status: "error" });
-            return;
+        if (address) {
+          payload.shippingAddress = address;
         }
 
-        setIsProcessing(true);
-        try {
-            const address = addresses.find((a: any) => a._id === selectedAddress);
-
-            if (paymentMethod === "cod") {
-                const payload = {
-                    shippingAddress: address,
-                    paymentMethod: "cod"
-                };
-
-                // Confirm the initialized order(s)
-                await stores.orderStore.confirmOrder(payload);
-
-                toast({
-                    title: "Order Placed Successfully!",
-                    description: `Orders have been placed.`,
-                    status: "success",
-                    duration: 5000,
-                    isClosable: true,
-                });
-
-                if (!isBuyNow) {
-                    cartStore.clearCart();
-                }
-                router.push("/account?tab=orders");
-
-            } else if (paymentMethod === "online") {
-                if (!isScriptLoaded) {
-                    toast({ title: "Payment SDK not loaded", status: "warning" });
-                    return;
-                }
-
-                const orderIds = initializedOrder.orders
-                    ? initializedOrder.orders.map((o: any) => o._id)
-                    : [initializedOrder._id];
-
-                // 1. Create Payment Order
-                const paymentOrder = await stores.orderStore.createPaymentOrder({ orderIds });
-
-                if (!paymentOrder || !paymentOrder.success) {
-                    throw new Error(paymentOrder?.message || "Failed to initiate payment");
-                }
-
-                const { data: rzpOrder } = paymentOrder;
-
-                // 2. Open Razorpay
-                const options = {
-                    key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_0XDl7Od4MRUktB", // Fallback for dev
-                    amount: rzpOrder.amount,
-                    currency: rzpOrder.currency,
-                    name: "Business Sahayata", // Or store name
-                    description: "Order Payment",
-                    order_id: rzpOrder.id,
-                    handler: async (response: any) => {
-                        try {
-                            // 3. Verify Payment
-                            const verifyRes = await stores.orderStore.verifyPayment({
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature
-                            });
-
-                            if (verifyRes.success) {
-                                toast({
-                                    title: "Payment Successful!",
-                                    description: "Order placed successfully.",
-                                    status: "success",
-                                    duration: 5000,
-                                    isClosable: true,
-                                });
-                                if (!isBuyNow) {
-                                    cartStore.clearCart();
-                                }
-                                router.push("/account?tab=orders");
-                            } else {
-                                toast({ title: "Payment Verification Failed", description: verifyRes.message, status: "error" });
-                            }
-                        } catch (err: any) {
-                            toast({ title: "Payment Verification Failed", description: err.message, status: "error" });
-                        }
-                    },
-                    prefill: {
-                        name: auth.user?.name || "",
-                        email: auth.user?.email || "",
-                        contact: auth.user?.phone || ""
-                    },
-                    theme: {
-                        color: "#3182ce"
-                    }
-                };
-
-                const rzp = new (window as any).Razorpay(options);
-                rzp.on('payment.failed', function (response: any) {
-                    toast({ title: "Payment Failed", description: response.error.description, status: "error" });
-                });
-                rzp.open();
-            }
-
-        } catch (error: any) {
-            toast({
-                title: "Order Failed",
-                description: error.message || "Something went wrong.",
-                status: "error",
-            });
-        } finally {
-            setIsProcessing(false);
+        const res = await orderStore.initializeOrder(payload);
+        if (res?.success) {
+          setInitializedOrder(res.data);
+          if (res.data?.shippingAddress?._id) {
+            setSelectedAddress(res.data.shippingAddress._id);
+          }
+        } else {
+          setInitError(res?.message || "Failed to initialize order details.");
         }
-    };
+      }
+    } catch (error: any) {
+      console.error("Order initialization error:", error);
+      setInitError(error?.message || "Could not prepare order with current items.");
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
-    if (isInitializing) return <Box p={10} textAlign="center"><Spinner size="xl" /><Text mt={4}>Preparing your order...</Text></Box>;
-    if (!isBuyNow && cartStore.totalItems === 0) {
-        return <Box p={10} textAlign="center"><Text>Your cart is empty.</Text><Button mt={4} onClick={() => router.push('/products')}>Browse Products</Button></Box>;
+  useEffect(() => {
+    if (auth.token) {
+      initOrder();
+    }
+  }, [auth.token, isBuyNow, buyNowId, cartStore.cartItems.length]);
+
+  // Address modal controls
+  const {
+    isOpen: isAddressModalOpen,
+    onOpen: onAddressModalOpen,
+    onClose: onAddressModalClose,
+  } = useDisclosure();
+
+  const handleAddNewAddress = async (newAddress: any) => {
+    try {
+      const res = await auth.addAddress(newAddress);
+      await auth.fetchAddresses();
+      const newId = res?.data?._id || res?.data?.id;
+      if (newId) {
+        handleSelectAddress(newId);
+      }
+      toast({
+        title: "Address saved",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+    } catch {
+      toast({
+        title: "Failed to add address",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleUpdateAddress = async (id: string, data: any) => {
+    try {
+      await auth.updateAddress(id, data);
+      await auth.fetchAddresses();
+    } catch {
+      toast({ title: "Failed to update address", status: "error" });
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    try {
+      await auth.deleteAddress(id);
+      await auth.fetchAddresses();
+      if (selectedAddress === id) {
+        setSelectedAddress("");
+      }
+    } catch {
+      toast({ title: "Failed to delete address", status: "error" });
+    }
+  };
+
+  const handleSelectAddress = async (addressId: string) => {
+    setSelectedAddress(addressId);
+    const address = addresses.find((a: any) => (a._id || a.id) === addressId);
+    if (!address || !auth.token) return;
+
+    try {
+      let currentItems: any[] = [];
+      if (isBuyNow && buyNowProduct) {
+        currentItems = [{
+          product: buyNowProduct._id || buyNowProduct.id,
+          quantity: 1,
+          variant: buyNowProduct.variant,
+        }];
+      } else if (cartStore.cartItems.length > 0) {
+        currentItems = cartStore.cartItems.map((item) => ({
+          product: item.product?._id || item.product?.id,
+          quantity: item.quantity,
+          variant: item.product?.variant,
+        }));
+      } else if (initializedOrder?.orders) {
+        currentItems = initializedOrder.orders.flatMap((o: any) =>
+          (o.items || []).map((i: any) => ({
+            product: i.product?._id || i.product?.id || i.product,
+            quantity: i.quantity,
+            variant: i.variant,
+          }))
+        );
+      }
+
+      if (currentItems.length > 0) {
+        const payload = {
+          items: currentItems,
+          shippingAddress: address,
+        };
+        const res = await orderStore.initializeOrder(payload);
+        if (res?.success) {
+          setInitializedOrder(res.data);
+          toast({
+            title: "Delivery address updated",
+            status: "success",
+            duration: 2000,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update order address", error);
+    }
+  };
+
+  // Place Order Handler
+  const handlePlaceOrder = async () => {
+    if (!auth.token) {
+      toast({
+        title: "Please sign in to place your order",
+        status: "info",
+        position: "top",
+      });
+      router.push("/login?redirect=/checkout");
+      return;
     }
 
-    if (!initializedOrder) return <Box p={10} textAlign="center"><Text>Failed to load order details.</Text></Box>;
+    if (!selectedAddress) {
+      toast({
+        title: "Delivery address required",
+        description: "Please select or add a delivery address to proceed.",
+        status: "warning",
+        position: "top",
+      });
+      onAddressModalOpen();
+      return;
+    }
 
-    // Flatten items from all orders for display
-    const items = initializedOrder.orders ? initializedOrder.orders.flatMap((o: any) => o.items) : (initializedOrder.items || []);
-    const quote = initializedOrder.quote;
+    setIsProcessing(true);
+    try {
+      const address = addresses.find(
+        (a: any) => (a._id || a.id) === selectedAddress
+      );
 
-    // Calculate pricing from quote breakup
-    const subtotal = quote?.breakup
-        ?.filter((b: any) => b.title_type === 'item')
-        .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
+      if (paymentMethod === "cod") {
+        const payload = {
+          shippingAddress: address,
+          paymentMethod: "cod",
+        };
 
-    // ... rest of render ...
+        await stores.orderStore.confirmOrder(payload);
 
-    const tax = quote?.breakup
-        ?.filter((b: any) => b.title_type === 'tax')
-        .reduce((sum: number, b: any) => sum + parseFloat(b.price.value), 0) || 0;
+        toast({
+          title: "Order Placed Successfully! 🎉",
+          description: "Thank you for your order. We are preparing it for delivery.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
 
-    const deliveryCharges = quote?.breakup
-        ?.find((b: any) => b.title_type === 'delivery')?.price.value
-        ? parseFloat(quote.breakup.find((b: any) => b.title_type === 'delivery').price.value)
-        : 0;
+        if (!isBuyNow) {
+          cartStore.clearCart();
+        }
+        router.push("/account?tab=orders");
 
-    const total = parseFloat(quote?.price?.value || '0');
+      } else if (paymentMethod === "online") {
+        if (!isScriptLoaded || typeof window === "undefined" || !(window as any).Razorpay) {
+          toast({
+            title: "Payment SDK not ready",
+            description: "Please check your connection and try again.",
+            status: "warning",
+          });
+          return;
+        }
 
-    return (
-        <Box bg="gray.50" minH="100vh" py={8}>
-            <Container maxW="container.xl">
-                <Heading mb={6} fontSize="2xl" color="gray.800">Checkout</Heading>
+        let orderIds: string[] = [];
+        if (initializedOrder?.orders && Array.isArray(initializedOrder.orders)) {
+          orderIds = initializedOrder.orders.map((o: any) => o._id || o.id).filter(Boolean);
+        } else if (Array.isArray(initializedOrder)) {
+          orderIds = initializedOrder.map((o: any) => o._id || o.id).filter(Boolean);
+        } else if (initializedOrder?._id || initializedOrder?.id) {
+          orderIds = [initializedOrder._id || initializedOrder.id];
+        }
 
-                <Grid templateColumns={{ base: "1fr", lg: "1.5fr 1fr" }} gap={8}>
+        if (orderIds.length === 0) {
+          throw new Error("Unable to identify order references for payment.");
+        }
 
-                    {/* Left Column: Address & Payment */}
-                    <GridItem>
-                        <VStack spacing={6} align="stretch">
+        const paymentOrder = await stores.orderStore.createPaymentOrder({ orderIds });
 
-                            {/* 1. Delivery Address */}
-                            <Box bg="white" p={6} borderRadius="xl" shadow="sm">
-                                <Heading fontSize="lg" mb={4} display="flex" alignItems="center">
-                                    <Icon as={FaMapMarkerAlt} mr={2} color="blue.500" />
-                                    Delivery Address
-                                </Heading>
+        if (!paymentOrder || !paymentOrder.success) {
+          throw new Error(paymentOrder?.message || "Failed to initiate payment");
+        }
 
-                                {!selectedAddress ? (
-                                    <Box p={4} border="1px dashed" borderColor="gray.300" borderRadius="md" textAlign="center">
-                                        <Text color="gray.500" mb={4}>Please select a delivery address.</Text>
-                                        <Button size="sm" colorScheme="blue" onClick={onAddressModalOpen}>
-                                            Select Address
-                                        </Button>
-                                    </Box>
-                                ) : (
-                                    <Box
-                                        borderWidth="1px"
-                                        borderColor="blue.500"
-                                        p={4}
-                                        borderRadius="lg"
-                                        bg="blue.50"
-                                    >
-                                        {addresses.find((a: any) => a._id === selectedAddress) ? (
-                                            <Flex justify="space-between" align="start">
-                                                <VStack align="start" spacing={1}>
-                                                    <Text fontWeight="bold">
-                                                        {addresses.find((a: any) => a._id === selectedAddress)?.name}
-                                                        <Badge ml={2} colorScheme="blue">Selected</Badge>
-                                                    </Text>
-                                                    <Text fontSize="sm">
-                                                        {[
-                                                            addresses.find((a: any) => a._id === selectedAddress)?.addressLine1 || addresses.find((a: any) => a._id === selectedAddress)?.line1,
-                                                            addresses.find((a: any) => a._id === selectedAddress)?.city,
-                                                            addresses.find((a: any) => a._id === selectedAddress)?.state,
-                                                            addresses.find((a: any) => a._id === selectedAddress)?.postalCode
-                                                        ].filter(Boolean).join(", ")}
-                                                    </Text>
-                                                    <Text fontSize="sm" color="gray.600">
-                                                        Mobile: {addresses.find((a: any) => a._id === selectedAddress)?.phone}
-                                                    </Text>
-                                                </VStack>
-                                                <Button size="sm" variant="outline" colorScheme="blue" onClick={onAddressModalOpen}>
-                                                    Change
-                                                </Button>
-                                            </Flex>
-                                        ) : (
-                                            <Button size="sm" colorScheme="blue" onClick={onAddressModalOpen}>
-                                                Select Address
-                                            </Button>
-                                        )}
-                                    </Box>
-                                )}
-                            </Box>
+        const { data: rzpOrder } = paymentOrder;
 
-                            {/* 2. Payment Method */}
-                            <Box bg="white" p={6} borderRadius="xl" shadow="sm">
-                                <Heading fontSize="lg" mb={4} display="flex" alignItems="center">
-                                    <Icon as={FaCreditCard} mr={2} color="green.500" />
-                                    Payment Method
-                                </Heading>
+        const options = {
+          key:
+            process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+            "rzp_test_0XDl7Od4MRUktB",
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency || "INR",
+          name: "Business Sahayata",
+          description: "Order Payment",
+          order_id: rzpOrder.id,
+          handler: async (response: any) => {
+            try {
+              const verifyRes = await stores.orderStore.verifyPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              });
 
-                                <RadioGroup onChange={setPaymentMethod} value={paymentMethod}>
-                                    <VStack align="stretch" spacing={3}>
-                                        <Box
-                                            p={4}
-                                            borderWidth="1px"
-                                            borderRadius="lg"
-                                            borderColor={paymentMethod === "cod" ? "green.500" : "gray.200"}
-                                            bg={paymentMethod === "cod" ? "green.50" : "white"}
-                                            cursor="pointer"
-                                            onClick={() => setPaymentMethod("cod")}
-                                        >
-                                            <Radio value="cod" colorScheme="green">
-                                                <HStack>
-                                                    <Icon as={FaMoneyBillWave} color="green.600" />
-                                                    <Text fontWeight="medium">Cash on Delivery (COD)</Text>
-                                                </HStack>
-                                            </Radio>
-                                        </Box>
+              if (verifyRes.success) {
+                toast({
+                  title: "Payment Successful! 🎉",
+                  description: "Your order has been placed successfully.",
+                  status: "success",
+                  duration: 5000,
+                  isClosable: true,
+                });
+                if (!isBuyNow) {
+                  cartStore.clearCart();
+                }
+                router.push("/account?tab=orders");
+              } else {
+                toast({
+                  title: "Payment Verification Failed",
+                  description: verifyRes.message || "Please contact support.",
+                  status: "error",
+                });
+              }
+            } catch (err: any) {
+              toast({
+                title: "Payment Verification Failed",
+                description: err.message || "An unexpected error occurred.",
+                status: "error",
+              });
+            }
+          },
+          prefill: {
+            name: auth.user?.name || auth.user?.username || "",
+            email: auth.user?.email || "",
+            contact: auth.user?.phone || "",
+          },
+          theme: {
+            color: "#087F8C",
+          },
+        };
 
-                                        <Box
-                                            p={4}
-                                            borderWidth="1px"
-                                            borderRadius="lg"
-                                            borderColor={paymentMethod === "online" ? "blue.500" : "gray.200"}
-                                            bg={paymentMethod === "online" ? "blue.50" : "white"}
-                                            cursor="pointer"
-                                            onClick={() => setPaymentMethod("online")}
-                                        >
-                                            <Radio value="online" colorScheme="blue" isChecked={paymentMethod === "online"}>
-                                                <HStack>
-                                                    <Icon as={FaLock} color="blue.500" />
-                                                    <Text fontWeight="medium">Online Payment (Razorpay)</Text>
-                                                </HStack>
-                                            </Radio>
-                                        </Box>
-                                    </VStack>
-                                </RadioGroup>
-                            </Box>
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on("payment.failed", function (response: any) {
+          toast({
+            title: "Payment Failed",
+            description: response.error?.description || "Transaction was declined.",
+            status: "error",
+          });
+        });
+        rzp.open();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Order Failed",
+        description: error.message || "Could not complete your order. Please try again.",
+        status: "error",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-                        </VStack>
-                    </GridItem>
+  /* -------------------------------------------------------------------------- */
+  /*  Robust Normalized Display Items Calculation                              */
+  /* -------------------------------------------------------------------------- */
+  const displayItems = useMemo(() => {
+    // 1. Buy Now Mode
+    if (isBuyNow && buyNowProduct) {
+      const price = Number(
+        buyNowProduct.discountPrice ?? buyNowProduct.price ?? 0
+      );
+      const img =
+        buyNowProduct.images?.[0]?.url ||
+        buyNowProduct.images?.[0] ||
+        buyNowProduct.image ||
+        FALLBACK_IMAGE;
 
-                    {/* Right Column: Order Summary */}
-                    <GridItem>
-                        <Box bg="white" p={6} borderRadius="xl" shadow="sm" position="sticky" top="100px">
-                            <Heading fontSize="lg" mb={4}>Order Summary</Heading>
+      return [
+        {
+          id: buyNowProduct._id || buyNowProduct.id || "buy-now",
+          name:
+            buyNowProduct.title ||
+            buyNowProduct.name ||
+            buyNowProduct.productName ||
+            "Selected Product",
+          image: typeof img === "string" ? img : img?.url || FALLBACK_IMAGE,
+          quantity: 1,
+          unitPrice: price,
+          total: price,
+          variant: buyNowProduct.variant,
+        },
+      ];
+    }
 
-                            <VStack spacing={4} align="stretch">
-                                {items.map((item: any, idx: number) => (
-                                    <Flex key={idx} justify="space-between" align="center">
-                                        <HStack spacing={3}>
-                                            <Badge borderRadius="md" px={2}>{item.quantity}x</Badge>
-                                            <VStack align="start" spacing={0}>
-                                                <Text fontWeight="medium" noOfLines={1} title={item.productName}>{item.productName}</Text>
-                                                {item.variant && <Text fontSize="xs" color="gray.500">{JSON.stringify(item.variant)}</Text>}
-                                            </VStack>
-                                        </HStack>
-                                        <Text fontWeight="medium">₹{item.total}</Text>
-                                    </Flex>
-                                ))}
-                            </VStack>
+    // 2. From Initialized Order if populated
+    const rawItems = initializedOrder?.orders
+      ? initializedOrder.orders.flatMap((o: any) => o.items || [])
+      : initializedOrder?.items || [];
 
-                            <Divider my={4} />
+    if (rawItems.length > 0) {
+      return rawItems.map((item: any, idx: number) => {
+        const rawId =
+          item.product?._id ||
+          item.product?.id ||
+          item.product ||
+          item._id ||
+          `item-${idx}`;
 
-                            <VStack spacing={2} width="100%">
-                                <Flex justify="space-between" width="100%">
-                                    <Text color="gray.600">Subtotal</Text>
-                                    <Text fontWeight="medium">₹{subtotal.toFixed(2)}</Text>
-                                </Flex>
-                                <Flex justify="space-between" width="100%">
-                                    <Text color="gray.600">Tax</Text>
-                                    <Text fontWeight="medium">₹{tax.toFixed(2)}</Text>
-                                </Flex>
-                                <Flex justify="space-between" width="100%">
-                                    <Text color="gray.600">Shipping</Text>
-                                    <Text fontWeight="medium" color={deliveryCharges === 0 ? "green.500" : "black"}>
-                                        {deliveryCharges === 0 ? "Free" : `₹${deliveryCharges}`}
-                                    </Text>
-                                </Flex>
-                                <Divider />
-                                <Flex justify="space-between" width="100%" pt={2}>
-                                    <Text fontSize="lg" fontWeight="bold">Total</Text>
-                                    <Text fontSize="lg" fontWeight="bold" color="blue.600">₹{total.toFixed(2)}</Text>
-                                </Flex>
-                            </VStack>
+        const matchedCart = cartStore.cartItems.find(
+          (c) => (c.product?._id || c.product?.id) === rawId
+        );
 
-                            <Button
-                                mt={6}
-                                colorScheme="blue"
-                                size="lg"
-                                width="100%"
-                                isLoading={isProcessing}
-                                onClick={handlePlaceOrder}
-                            >
-                                Place Order
-                            </Button>
+        const name =
+          item.productName ||
+          item.product?.title ||
+          item.product?.name ||
+          item.title ||
+          item.name ||
+          matchedCart?.product?.title ||
+          matchedCart?.product?.name ||
+          "Cart Item";
 
-                            <Text fontSize="xs" color="gray.500" mt={3} textAlign="center">
-                                By placing order, you agree to our Terms & Conditions.
-                            </Text>
-                        </Box>
-                    </GridItem>
+        const rawImg =
+          item.image ||
+          item.images?.[0]?.url ||
+          item.images?.[0] ||
+          item.product?.images?.[0]?.url ||
+          item.product?.images?.[0] ||
+          item.product?.image ||
+          matchedCart?.product?.images?.[0]?.url ||
+          matchedCart?.product?.images?.[0] ||
+          matchedCart?.product?.image ||
+          FALLBACK_IMAGE;
 
-                </Grid>
+        const quantity = item.quantity || matchedCart?.quantity || 1;
+        const unitPrice = Number(
+          item.unitPrice ||
+          item.price ||
+          item.product?.discountPrice ||
+          item.product?.price ||
+          matchedCart?.product?.discountPrice ||
+          matchedCart?.product?.price ||
+          0
+        );
+        const lineTotal = Number(
+          item.total ||
+          item.itemTotal ||
+          unitPrice * quantity ||
+          0
+        );
 
-                <AddressModal
-                    isOpen={isAddressModalOpen}
-                    onClose={onAddressModalClose}
-                    addresses={addresses}
-                    selectedAddress={selectedAddress}
-                    onSelectAddress={handleSelectAddress}
-                    onAddNewAddress={handleAddNewAddress}
-                    onUpdateAddress={handleUpdateAddress}
-                    onDeleteAddress={handleDeleteAddress}
-                />
-            </Container>
-        </Box>
+        return {
+          id: rawId,
+          name,
+          image: typeof rawImg === "string" ? rawImg : rawImg?.url || FALLBACK_IMAGE,
+          quantity,
+          unitPrice,
+          total: lineTotal,
+          variant: item.variant || matchedCart?.product?.variant,
+        };
+      });
+    }
+
+    // 3. Fallback to cartStore items
+    return cartStore.cartItems.map((c, idx) => {
+      const p = c.product || {};
+      const unitPrice = Number(p.discountPrice ?? p.price ?? 0);
+      const rawImg =
+        p.images?.[0]?.url ||
+        p.images?.[0] ||
+        p.image ||
+        FALLBACK_IMAGE;
+
+      return {
+        id: p._id || p.id || `cart-${idx}`,
+        name: p.title || p.name || "Product Item",
+        image: typeof rawImg === "string" ? rawImg : rawImg?.url || FALLBACK_IMAGE,
+        quantity: c.quantity || 1,
+        unitPrice,
+        total: unitPrice * (c.quantity || 1),
+        variant: p.variant,
+      };
+    });
+  }, [isBuyNow, buyNowProduct, initializedOrder, cartStore.cartItems]);
+
+  /* -------------------------------------------------------------------------- */
+  /*  Robust Pricing Breakdown Calculation                                      */
+  /* -------------------------------------------------------------------------- */
+  const pricing = useMemo(() => {
+    const quote = initializedOrder?.quote;
+
+    // Subtotal
+    const quoteSubtotal = quote?.breakup
+      ?.filter((b: any) => b.title_type === "item")
+      ?.reduce((sum: number, b: any) => sum + parseFloat(b.price?.value || 0), 0);
+
+    const calculatedSubtotal = displayItems.reduce(
+      (sum, item) => sum + (item.total || item.unitPrice * item.quantity),
+      0
     );
+
+    const subtotal =
+      quoteSubtotal && quoteSubtotal > 0 ? quoteSubtotal : calculatedSubtotal;
+
+    // Tax
+    const quoteTax = quote?.breakup
+      ?.filter((b: any) => b.title_type === "tax")
+      ?.reduce((sum: number, b: any) => sum + parseFloat(b.price?.value || 0), 0);
+    const tax = quoteTax || 0;
+
+    // Delivery Fee
+    const quoteDelivery = quote?.breakup?.find(
+      (b: any) => b.title_type === "delivery"
+    )?.price?.value;
+
+    const isFreeDelivery = subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0;
+    const deliveryFee =
+      quoteDelivery !== undefined
+        ? parseFloat(quoteDelivery)
+        : isFreeDelivery
+        ? 0
+        : 40;
+
+    // Total
+    const quoteTotal = parseFloat(quote?.price?.value || "0");
+    const total =
+      quoteTotal && quoteTotal > 0
+        ? quoteTotal
+        : subtotal + tax + deliveryFee;
+
+    return {
+      subtotal,
+      tax,
+      deliveryFee,
+      isFreeDelivery: deliveryFee === 0,
+      total,
+    };
+  }, [initializedOrder, displayItems]);
+
+  const currentAddress =
+    addresses.find((a: any) => (a._id || a.id) === selectedAddress) ||
+    addresses[0];
+
+  /* -------------------------------------------------------------------------- */
+  /*  STATE 1: Not Logged In                                                    */
+  /* -------------------------------------------------------------------------- */
+  if (!auth.token) {
+    return (
+      <Box bg="#F8FAFC" minH="80vh" py={{ base: 8, md: 16 }} px={4}>
+        <Container maxW="md">
+          <Box
+            bg="#FFFFFF"
+            borderRadius="24px"
+            p={{ base: 6, sm: 8 }}
+            textAlign="center"
+            border="1px solid #E2E8F0"
+            boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.05)"
+          >
+            <Flex
+              w="64px"
+              h="64px"
+              borderRadius="full"
+              bg="#E6F7F3"
+              color="#087F8C"
+              align="center"
+              justify="center"
+              mx="auto"
+              mb={4}
+            >
+              <Icon as={FaLock} boxSize={6} />
+            </Flex>
+            <Heading fontSize="xl" fontWeight="800" color="#172033" mb={2}>
+              Sign In to Complete Checkout
+            </Heading>
+            <Text fontSize="sm" color="#64748B" mb={6} lineHeight="tall">
+              Please sign in or create an account to save your delivery address,
+              track orders, and complete your purchase securely.
+            </Text>
+            <VStack spacing={3}>
+              <Button
+                as={NextLink}
+                href="/login?redirect=/checkout"
+                w="full"
+                h="46px"
+                bg="#087F8C"
+                color="#FFFFFF"
+                fontWeight="700"
+                borderRadius="14px"
+                _hover={{ bg: "#075B6B" }}
+              >
+                Sign In / Register
+              </Button>
+              <Button
+                as={NextLink}
+                href="/products"
+                w="full"
+                h="46px"
+                variant="outline"
+                borderColor="#E2E8F0"
+                color="#64748B"
+                fontWeight="600"
+                borderRadius="14px"
+                _hover={{ bg: "#F8FAFC" }}
+              >
+                Continue Browsing
+              </Button>
+            </VStack>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*  STATE 2: Loading / Preparing                                              */
+  /* -------------------------------------------------------------------------- */
+  if (isInitializing && displayItems.length === 0) {
+    return (
+      <Box bg="#F8FAFC" minH="80vh" py={20} px={4} textAlign="center">
+        <Spinner size="xl" color="#087F8C" thickness="4px" speed="0.75s" />
+        <Heading fontSize="lg" fontWeight="700" color="#172033" mt={6} mb={1}>
+          Preparing Your Order...
+        </Heading>
+        <Text fontSize="sm" color="#64748B">
+          Validating pricing, inventory, and delivery options
+        </Text>
+      </Box>
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*  STATE 3: Cart is Empty (and not Buy Now)                                 */
+  /* -------------------------------------------------------------------------- */
+  if (!isBuyNow && displayItems.length === 0) {
+    return (
+      <Box bg="#F8FAFC" minH="80vh" py={{ base: 12, md: 20 }} px={4}>
+        <Container maxW="md">
+          <Box
+            bg="#FFFFFF"
+            borderRadius="24px"
+            p={{ base: 6, sm: 8 }}
+            textAlign="center"
+            border="1px solid #E2E8F0"
+            boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.05)"
+          >
+            <Flex
+              w="64px"
+              h="64px"
+              borderRadius="full"
+              bg="#FFF0F0"
+              color="#EF4444"
+              align="center"
+              justify="center"
+              mx="auto"
+              mb={4}
+            >
+              <Icon as={FiShoppingBag} boxSize={7} />
+            </Flex>
+            <Heading fontSize="xl" fontWeight="800" color="#172033" mb={2}>
+              Your Cart is Empty
+            </Heading>
+            <Text fontSize="sm" color="#64748B" mb={6}>
+              You do not have any items ready for checkout. Add some items to your
+              cart and proceed here.
+            </Text>
+            <Button
+              as={NextLink}
+              href="/products"
+              w="full"
+              h="46px"
+              bg="#087F8C"
+              color="#FFFFFF"
+              fontWeight="700"
+              borderRadius="14px"
+              _hover={{ bg: "#075B6B" }}
+            >
+              Explore Products
+            </Button>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*  MAIN CHECKOUT INTERFACE                                                   */
+  /* -------------------------------------------------------------------------- */
+  return (
+    <Box bg="#F8FAFC" minH="100vh" py={{ base: 4, md: 8 }} px={{ base: 2, sm: 4, lg: 6 }}>
+      <Container maxW="container.xl" px={{ base: 2, sm: 4 }}>
+        {/* Navigation Breadcrumb / Header */}
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={{ base: 4, md: 6 }}
+          wrap="wrap"
+          gap={2}
+        >
+          <HStack spacing={3}>
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<Icon as={FiArrowLeft} />}
+              onClick={() => router.back()}
+              color="#64748B"
+              _hover={{ color: "#087F8C", bg: "#E6F7F3" }}
+              borderRadius="10px"
+              px={3}
+            >
+              Back
+            </Button>
+            <Heading
+              fontSize={{ base: "xl", sm: "24px" }}
+              fontWeight="800"
+              color="#172033"
+              letterSpacing="-0.02em"
+            >
+              Secure Checkout
+            </Heading>
+          </HStack>
+
+          <HStack
+            spacing={2}
+            bg="#E6F7F3"
+            px={3}
+            py={1.5}
+            borderRadius="full"
+            color="#087F8C"
+            fontSize="xs"
+            fontWeight="700"
+          >
+            <Icon as={FaShieldHalved} boxSize={3.5} />
+            <Text>256-Bit SSL Encrypted</Text>
+          </HStack>
+        </Flex>
+
+        {/* Optional Init Error Warning with Retry */}
+        {initError && (
+          <Box
+            mb={6}
+            bg="#FFFBEB"
+            border="1px solid #FDE68A"
+            borderRadius="16px"
+            p={4}
+          >
+            <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
+              <HStack spacing={3}>
+                <Icon as={FiAlertCircle} color="#D97706" boxSize={5} />
+                <Box>
+                  <Text fontWeight="700" fontSize="sm" color="#92400E">
+                    Notice regarding order preview
+                  </Text>
+                  <Text fontSize="xs" color="#B45309">
+                    {initError} Pricing shown below is calculated from current item details.
+                  </Text>
+                </Box>
+              </HStack>
+              <Button
+                size="xs"
+                variant="outline"
+                borderColor="#D97706"
+                color="#D97706"
+                leftIcon={<Icon as={FiRefreshCw} />}
+                onClick={initOrder}
+                isLoading={isInitializing}
+              >
+                Retry Sync
+              </Button>
+            </Flex>
+          </Box>
+        )}
+
+        <Grid templateColumns={{ base: "1fr", lg: "1.45fr 1fr" }} gap={{ base: 4, lg: 7 }}>
+          {/* ─────────────────────────────────────────────────────────────
+              LEFT COLUMN: Delivery Address + Payment Method + Items Review
+             ───────────────────────────────────────────────────────────── */}
+          <GridItem>
+            <VStack spacing={{ base: 4, md: 5 }} align="stretch">
+              {/* 1. DELIVERY ADDRESS SECTION */}
+              <Box
+                bg="#FFFFFF"
+                borderRadius="20px"
+                border="1px solid #E5EAF0"
+                p={{ base: 4, sm: 5 }}
+                boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
+              >
+                <Flex justify="space-between" align="center" mb={3.5}>
+                  <HStack spacing={2.5} align="center">
+                    <Flex
+                      w="32px"
+                      h="32px"
+                      borderRadius="full"
+                      bg="#E6F7F3"
+                      color="#087F8C"
+                      align="center"
+                      justify="center"
+                    >
+                      <Icon as={FaLocationDot} boxSize={3.5} />
+                    </Flex>
+                    <Box>
+                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                        Delivery Address
+                      </Text>
+                      <Text fontSize="xs" color="#64748B">
+                        Where should we deliver your order?
+                      </Text>
+                    </Box>
+                  </HStack>
+
+                  {currentAddress && (
+                    <Button
+                      variant="unstyled"
+                      color="#087F8C"
+                      fontWeight="700"
+                      fontSize="13px"
+                      h="auto"
+                      p={0}
+                      _hover={{ textDecoration: "underline", color: "#075B6B" }}
+                      onClick={onAddressModalOpen}
+                    >
+                      Change
+                    </Button>
+                  )}
+                </Flex>
+
+                {currentAddress &&
+                (currentAddress.addressLine1 || currentAddress.line1) ? (
+                  <Box
+                    bg="#FFF0F0"
+                    border="1px solid #FFD5D5"
+                    borderRadius="16px"
+                    p={{ base: "14px", sm: "16px" }}
+                    position="relative"
+                    overflow="hidden"
+                  >
+                    <HouseIllustration />
+
+                    <Box position="relative" zIndex={1} pr={{ base: "48px", sm: "64px" }}>
+                      <HStack spacing={2} align="center" mb={1.5} wrap="wrap">
+                        <Icon as={FaHouse} color="#E53E3E" boxSize={3.5} />
+                        <Text fontWeight="800" fontSize="14px" color="#172033">
+                          {currentAddress.name || currentAddress.fullName || "Primary Address"}
+                        </Text>
+                        <Badge
+                          bg="#FCE7E7"
+                          color="#E53E3E"
+                          fontSize="10px"
+                          fontWeight="800"
+                          px="7px"
+                          py="1.5px"
+                          borderRadius="full"
+                          letterSpacing="0.04em"
+                        >
+                          {currentAddress.isDefault ? "DEFAULT" : "SELECTED"}
+                        </Badge>
+                      </HStack>
+
+                      <Text
+                        fontSize="13px"
+                        color="#475569"
+                        lineHeight="1.5"
+                        mb={2}
+                      >
+                        {[
+                          currentAddress.addressLine1 || currentAddress.line1,
+                          currentAddress.addressLine2 || currentAddress.line2,
+                          currentAddress.city,
+                          currentAddress.state,
+                          currentAddress.postalCode,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </Text>
+
+                      {(currentAddress.phone || auth.user?.phone) && (
+                        <HStack
+                          spacing={1.5}
+                          color="#475569"
+                          fontSize="12px"
+                          fontWeight="600"
+                          align="center"
+                        >
+                          <Icon as={FaPhone} boxSize={3} color="#64748B" />
+                          <Text>
+                            Contact: {currentAddress.phone || auth.user?.phone}
+                          </Text>
+                        </HStack>
+                      )}
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box
+                    border="2px dashed #B5E9DF"
+                    bg="#F0FDF4"
+                    borderRadius="16px"
+                    p={5}
+                    textAlign="center"
+                  >
+                    <Icon as={FaLocationDot} color="#087F8C" boxSize={6} mb={2} />
+                    <Text fontWeight="700" fontSize="14px" color="#172033" mb={1}>
+                      No Delivery Address Selected
+                    </Text>
+                    <Text fontSize="xs" color="#64748B" mb={4}>
+                      Please add or select a shipping destination to proceed with checkout.
+                    </Text>
+                    <Button
+                      size="sm"
+                      bg="#087F8C"
+                      color="#FFFFFF"
+                      fontWeight="700"
+                      borderRadius="12px"
+                      _hover={{ bg: "#075B6B" }}
+                      leftIcon={<Icon as={FaPlus} />}
+                      onClick={onAddressModalOpen}
+                    >
+                      Add Delivery Address
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+
+              {/* 2. PAYMENT METHOD SELECTION */}
+              <Box
+                bg="#FFFFFF"
+                borderRadius="20px"
+                border="1px solid #E5EAF0"
+                p={{ base: 4, sm: 5 }}
+                boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
+              >
+                <Flex align="center" mb={3.5}>
+                  <HStack spacing={2.5} align="center">
+                    <Flex
+                      w="32px"
+                      h="32px"
+                      borderRadius="full"
+                      bg="#E6F7F3"
+                      color="#087F8C"
+                      align="center"
+                      justify="center"
+                    >
+                      <Icon as={FaCreditCard} boxSize={3.5} />
+                    </Flex>
+                    <Box>
+                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                        Payment Method
+                      </Text>
+                      <Text fontSize="xs" color="#64748B">
+                        Choose how you would like to pay
+                      </Text>
+                    </Box>
+                  </HStack>
+                </Flex>
+
+                <RadioGroup onChange={setPaymentMethod} value={paymentMethod}>
+                  <VStack align="stretch" spacing={3}>
+                    {/* COD Option */}
+                    <Box
+                      p={4}
+                      border="1.5px solid"
+                      borderRadius="16px"
+                      borderColor={paymentMethod === "cod" ? "#087F8C" : "#E2E8F0"}
+                      bg={paymentMethod === "cod" ? "#F0FDFB" : "#FFFFFF"}
+                      cursor="pointer"
+                      transition="all 0.2s ease"
+                      onClick={() => setPaymentMethod("cod")}
+                      _hover={{ borderColor: "#087F8C" }}
+                    >
+                      <Flex justify="space-between" align="start">
+                        <HStack spacing={3} align="flex-start">
+                          <Radio
+                            value="cod"
+                            colorScheme="teal"
+                            mt={1}
+                            isChecked={paymentMethod === "cod"}
+                          />
+                          <Box>
+                            <HStack spacing={2}>
+                              <Icon as={FaMoneyBillWave} color="#0D9488" boxSize={4} />
+                              <Text fontWeight="800" fontSize="14px" color="#172033">
+                                Cash on Delivery (COD)
+                              </Text>
+                              <Badge
+                                bg="#DCFCE7"
+                                color="#15803D"
+                                fontSize="10px"
+                                fontWeight="800"
+                                px={2}
+                                py={0.5}
+                                borderRadius="full"
+                              >
+                                Popular
+                              </Badge>
+                            </HStack>
+                            <Text fontSize="xs" color="#64748B" mt={1}>
+                              Pay conveniently with cash or UPI at your doorstep upon arrival.
+                            </Text>
+                          </Box>
+                        </HStack>
+                      </Flex>
+                    </Box>
+
+                    {/* Online Payment Option */}
+                    <Box
+                      p={4}
+                      border="1.5px solid"
+                      borderRadius="16px"
+                      borderColor={paymentMethod === "online" ? "#087F8C" : "#E2E8F0"}
+                      bg={paymentMethod === "online" ? "#F0FDFB" : "#FFFFFF"}
+                      cursor="pointer"
+                      transition="all 0.2s ease"
+                      onClick={() => setPaymentMethod("online")}
+                      _hover={{ borderColor: "#087F8C" }}
+                    >
+                      <Flex justify="space-between" align="start">
+                        <HStack spacing={3} align="flex-start">
+                          <Radio
+                            value="online"
+                            colorScheme="teal"
+                            mt={1}
+                            isChecked={paymentMethod === "online"}
+                          />
+                          <Box>
+                            <HStack spacing={2} wrap="wrap">
+                              <Icon as={FaLock} color="#087F8C" boxSize={3.5} />
+                              <Text fontWeight="800" fontSize="14px" color="#172033">
+                                Online Payment (Razorpay)
+                              </Text>
+                              <Badge
+                                bg="#E6F7F3"
+                                color="#087F8C"
+                                fontSize="10px"
+                                fontWeight="800"
+                                px={2}
+                                py={0.5}
+                                borderRadius="full"
+                              >
+                                Instant
+                              </Badge>
+                            </HStack>
+                            <Text fontSize="xs" color="#64748B" mt={1}>
+                              Pay instantly via UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, or Net Banking.
+                            </Text>
+                          </Box>
+                        </HStack>
+                      </Flex>
+                    </Box>
+                  </VStack>
+                </RadioGroup>
+              </Box>
+
+              {/* 3. ORDER ITEMS REVIEW SECTION */}
+              <Box
+                bg="#FFFFFF"
+                borderRadius="20px"
+                border="1px solid #E5EAF0"
+                p={{ base: 4, sm: 5 }}
+                boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
+              >
+                <Flex justify="space-between" align="center" mb={3.5}>
+                  <HStack spacing={2.5} align="center">
+                    <Flex
+                      w="32px"
+                      h="32px"
+                      borderRadius="full"
+                      bg="#E6F7F3"
+                      color="#087F8C"
+                      align="center"
+                      justify="center"
+                    >
+                      <Icon as={FiPackage} boxSize={4} />
+                    </Flex>
+                    <Box>
+                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                        Review Items ({displayItems.length})
+                      </Text>
+                      <Text fontSize="xs" color="#64748B">
+                        Items included in this shipment
+                      </Text>
+                    </Box>
+                  </HStack>
+                </Flex>
+
+                <VStack spacing={3} align="stretch">
+                  {displayItems.map((item, idx) => (
+                    <Flex
+                      key={item.id || idx}
+                      p={3}
+                      border="1px solid #F1F5F9"
+                      borderRadius="14px"
+                      bg="#FAFBFD"
+                      align="center"
+                      justify="space-between"
+                      gap={3}
+                    >
+                      <HStack spacing={3} align="center" flex="1" minW={0}>
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          w={{ base: "52px", sm: "60px" }}
+                          h={{ base: "52px", sm: "60px" }}
+                          borderRadius="10px"
+                          objectFit="cover"
+                          bg="#F1F5F9"
+                          fallbackSrc={FALLBACK_IMAGE}
+                        />
+                        <Box minW={0} flex="1">
+                          <Text
+                            fontWeight="700"
+                            fontSize="14px"
+                            color="#172033"
+                            noOfLines={1}
+                            title={item.name}
+                          >
+                            {item.name}
+                          </Text>
+
+                          <HStack spacing={2} mt={1} wrap="wrap">
+                            <Badge
+                              bg="#E6F7F3"
+                              color="#087F8C"
+                              fontSize="11px"
+                              fontWeight="700"
+                              px={2}
+                              py={0.5}
+                              borderRadius="md"
+                            >
+                              Qty: {item.quantity}
+                            </Badge>
+                            {item.variant && (
+                              <Text fontSize="11px" color="#64748B">
+                                {typeof item.variant === "object"
+                                  ? Object.entries(item.variant)
+                                      .map(([k, v]) => `${k}: ${v}`)
+                                      .join(", ")
+                                  : String(item.variant)}
+                              </Text>
+                            )}
+                          </HStack>
+                        </Box>
+                      </HStack>
+
+                      <Box textAlign="right" flexShrink={0}>
+                        <Text
+                          fontWeight="800"
+                          fontSize="15px"
+                          color="#087F8C"
+                          letterSpacing="-0.01em"
+                        >
+                          ₹{item.total}
+                        </Text>
+                        {item.quantity > 1 && (
+                          <Text fontSize="11px" color="#94A3B8">
+                            (₹{item.unitPrice} each)
+                          </Text>
+                        )}
+                      </Box>
+                    </Flex>
+                  ))}
+                </VStack>
+              </Box>
+            </VStack>
+          </GridItem>
+
+          {/* ─────────────────────────────────────────────────────────────
+              RIGHT COLUMN: Sticky Order Summary & Place Order CTA
+             ───────────────────────────────────────────────────────────── */}
+          <GridItem>
+            <Box
+              bg="#FFFFFF"
+              borderRadius="20px"
+              border="1px solid #E5EAF0"
+              p={{ base: 4, sm: 6 }}
+              boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.04)"
+              position={{ lg: "sticky" }}
+              top={{ lg: "96px" }}
+            >
+              {/* Header */}
+              <HStack spacing={2.5} align="center" mb={4}>
+                <Flex
+                  w="32px"
+                  h="32px"
+                  borderRadius="full"
+                  bg="#E6F7F3"
+                  color="#087F8C"
+                  align="center"
+                  justify="center"
+                >
+                  <Icon as={IoReceiptOutline} boxSize={4} />
+                </Flex>
+                <Heading fontSize="17px" fontWeight="800" color="#172033">
+                  Order Summary
+                </Heading>
+              </HStack>
+
+              {/* Price Breakdown */}
+              <VStack spacing={3} align="stretch" mb={4}>
+                <Flex justify="space-between" align="center">
+                  <Text fontSize="14px" color="#64748B">
+                    Items Subtotal
+                  </Text>
+                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                    ₹{pricing.subtotal}
+                  </Text>
+                </Flex>
+
+                <Flex justify="space-between" align="center">
+                  <HStack spacing={1.5} align="center">
+                    <Text fontSize="14px" color="#64748B">
+                      Delivery Fee
+                    </Text>
+                    {pricing.isFreeDelivery && (
+                      <Icon as={FiTruck} color="#15803D" boxSize={3.5} />
+                    )}
+                  </HStack>
+                  <Text
+                    fontSize="14px"
+                    fontWeight="800"
+                    color={pricing.isFreeDelivery ? "#15803D" : "#172033"}
+                  >
+                    {pricing.isFreeDelivery ? "FREE" : `₹${pricing.deliveryFee}`}
+                  </Text>
+                </Flex>
+
+                {pricing.tax > 0 && (
+                  <Flex justify="space-between" align="center">
+                    <Text fontSize="14px" color="#64748B">
+                      Estimated Tax
+                    </Text>
+                    <Text fontSize="14px" fontWeight="700" color="#172033">
+                      ₹{pricing.tax.toFixed(0)}
+                    </Text>
+                  </Flex>
+                )}
+              </VStack>
+
+              {/* Total Box */}
+              <Box
+                bg="#E6F7F3"
+                borderRadius="14px"
+                p="14px 18px"
+                mb={5}
+                border="1px solid #B5E9DF"
+              >
+                <Flex justify="space-between" align="center">
+                  <Box>
+                    <Text fontSize="13px" fontWeight="700" color="#087F8C">
+                      Total Payable
+                    </Text>
+                    <Text fontSize="11px" color="#0D9488">
+                      Inclusive of all taxes
+                    </Text>
+                  </Box>
+                  <Text
+                    fontSize="22px"
+                    fontWeight="900"
+                    color="#087F8C"
+                    letterSpacing="-0.02em"
+                  >
+                    ₹{pricing.total}
+                  </Text>
+                </Flex>
+              </Box>
+
+              {/* Place Order CTA Button */}
+              <Button
+                w="full"
+                h="52px"
+                bg="#087F8C"
+                color="#FFFFFF"
+                fontWeight="800"
+                fontSize="15px"
+                borderRadius="16px"
+                boxShadow="0 4px 14px 0 rgba(8, 127, 140, 0.35)"
+                _hover={{
+                  bg: "#075B6B",
+                  boxShadow: "0 6px 18px 0 rgba(8, 127, 140, 0.45)",
+                  transform: "translateY(-1px)",
+                }}
+                _active={{
+                  transform: "translateY(0)",
+                }}
+                isLoading={isProcessing}
+                loadingText="Processing Order..."
+                onClick={handlePlaceOrder}
+                leftIcon={<Icon as={FaLock} boxSize={3.5} />}
+              >
+                {paymentMethod === "cod"
+                  ? `Confirm & Place Order (₹${pricing.total})`
+                  : `Pay ₹${pricing.total} Securely`}
+              </Button>
+
+              <Text
+                fontSize="11px"
+                color="#94A3B8"
+                mt={3}
+                textAlign="center"
+                lineHeight="tall"
+              >
+                By placing this order, you agree to our Terms of Service & Privacy Policy.
+              </Text>
+
+              <Divider my={4} borderColor="#E2E8F0" />
+
+              {/* Trust Badges */}
+              <VStack spacing={2.5} align="stretch">
+                <HStack spacing={2.5} color="#475569" fontSize="12px">
+                  <Icon as={FiShield} color="#087F8C" boxSize={4} />
+                  <Text fontWeight="600">100% Safe & Secure Checkout</Text>
+                </HStack>
+                <HStack spacing={2.5} color="#475569" fontSize="12px">
+                  <Icon as={FiRotateCcw} color="#087F8C" boxSize={4} />
+                  <Text fontWeight="600">7-Day Easy Returns & Replacements</Text>
+                </HStack>
+                <HStack spacing={2.5} color="#475569" fontSize="12px">
+                  <Icon as={FiHeadphones} color="#087F8C" boxSize={4} />
+                  <Text fontWeight="600">24/7 Dedicated Customer Support</Text>
+                </HStack>
+              </VStack>
+            </Box>
+          </GridItem>
+        </Grid>
+
+        {/* Address Selection Modal (BottomSheetDrawer on mobile, Modal on desktop) */}
+        <AddressModal
+          isOpen={isAddressModalOpen}
+          onClose={onAddressModalClose}
+          addresses={addresses}
+          selectedAddress={selectedAddress}
+          onSelectAddress={handleSelectAddress}
+          onAddNewAddress={handleAddNewAddress}
+          onUpdateAddress={handleUpdateAddress}
+          onDeleteAddress={handleDeleteAddress}
+        />
+      </Container>
+    </Box>
+  );
 });
 
-export default CheckoutPage;
+export default CheckoutClient;

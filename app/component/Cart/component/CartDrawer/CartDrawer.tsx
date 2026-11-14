@@ -580,7 +580,7 @@ const CartDrawer = observer(
                     <Box flex="1" minW={0}>
                       {hasAddress ? (
                         <>
-                          <Text
+                          {/* <Text
                             color={mutedText}
                             fontSize="10px"
                             fontWeight="700"
@@ -589,7 +589,7 @@ const CartDrawer = observer(
                             mb={0.5}
                           >
                             Deliver to
-                          </Text>
+                          </Text> */}
                           <HStack spacing={1.5}>
                             <Text
                               fontWeight="700"
