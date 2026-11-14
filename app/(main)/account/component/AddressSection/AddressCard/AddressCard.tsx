@@ -1,147 +1,209 @@
-import React from 'react';
 import {
-  Box, Card, CardBody, CardFooter, Flex, Heading, Text, VStack, Badge, Button, Divider
-} from '@chakra-ui/react';
-import { FaHome, FaMapMarkerAlt, FaCity, FaGlobeAmericas, FaEdit, FaTrash } from 'react-icons/fa';
+  Badge,
+  Box,
+  Button,
+  Flex,
+  Icon,
+  Text,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { useState } from "react";
+import {
+  FaCheckCircle,
+  FaEdit,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaTrash,
+} from "react-icons/fa";
 
-const AddressCard = ({ address, handleEdit, handleSetDefault, handleDelete }) => {
+type AddressCardProps = {
+  address: any;
+  handleEdit: (address: any) => void;
+  handleSetDefault: (id: string) => void | Promise<void>;
+  /** Receives the whole address object (the section needs its name + id) */
+  handleDelete: (address: any) => void;
+};
+
+const AddressCard = ({
+  address,
+  handleEdit,
+  handleSetDefault,
+  handleDelete,
+}: AddressCardProps) => {
+  const [isSettingDefault, setIsSettingDefault] = useState(false);
+  const isDefault = !!address.isDefault;
+  const id = address._id || address.id;
+
+  // Theme tokens
+  const cardBg = useColorModeValue(
+    isDefault ? "purple.50" : "white",
+    isDefault ? "whiteAlpha.100" : "whiteAlpha.50"
+  );
+  const cardBorder = useColorModeValue(
+    isDefault ? "purple.300" : "gray.200",
+    isDefault ? "purple.300" : "whiteAlpha.200"
+  );
+  const footerBorder = useColorModeValue(
+    isDefault ? "purple.100" : "gray.100",
+    "whiteAlpha.200"
+  );
+  const tileBg = useColorModeValue(
+    isDefault ? "purple.100" : "gray.100",
+    "whiteAlpha.200"
+  );
+  const tileColor = useColorModeValue(
+    isDefault ? "purple.600" : "gray.500",
+    isDefault ? "purple.200" : "gray.300"
+  );
+  const titleColor = useColorModeValue("gray.800", "white");
+  const bodyColor = useColorModeValue("gray.600", "gray.300");
+  const mutedColor = useColorModeValue("gray.500", "gray.400");
+  const actionColor = useColorModeValue("gray.700", "gray.200");
+  const actionHoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
+
+  // Address lines
+  const line1 = address.line1 || address.addressLine1;
+  const line2 = address.line2 || address.addressLine2;
+  const cityLine = [
+    [address.city, address.state].filter(Boolean).join(", "),
+    address.postalCode,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const onSetDefault = async () => {
+    setIsSettingDefault(true);
+    try {
+      await handleSetDefault(id);
+    } finally {
+      setIsSettingDefault(false);
+    }
+  };
+
+  const divider = <Box w="1px" alignSelf="stretch" bg={footerBorder} />;
+
   return (
-    <Card
-      key={address.id}
-      position="relative"
+    <Flex
+      direction="column"
       overflow="hidden"
-      borderWidth="1px"
-      borderColor="gray.100"
-      _hover={{
-        transform: "translateY(-2px)",
-        boxShadow: "lg",
-      }}
-      transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
-      boxShadow="md"
-      borderRadius="xl"
+      bg={cardBg}
+      borderWidth={isDefault ? "2px" : "1px"}
+      borderColor={cardBorder}
+      rounded="2xl"
+      minW={0}
     >
-      {/* Gradient accent for default address */}
-      {address.isDefault && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          w="4px"
-          h="full"
-          bgGradient="linear(to-b, teal.400, blue.400)"
-        />
-      )}
+      {/* Body */}
+      <Flex gap={3} p={4} flex={1}>
+        <Flex
+          boxSize={10}
+          flexShrink={0}
+          align="center"
+          justify="center"
+          rounded="xl"
+          bg={tileBg}
+          color={tileColor}
+        >
+          <Icon as={FaMapMarkerAlt} boxSize={4} />
+        </Flex>
 
-      <CardBody pb={2}>
-        <Flex align="center" gap={2} mb={4}>
-          <Box
-            p={2}
-            borderRadius="lg"
-            bg={address.isDefault ? "teal.50" : "gray.50"}
-          >
-            <FaHome size={20} color={address.isDefault ? "teal.500" : "gray.500"} />
-          </Box>
-          <Flex justify={'space-between'} w={'100%'}>
-            <Heading as="h3" size="md" fontWeight="semibold">
+        <Box minW={0} flex={1}>
+          <Flex align="center" justify="space-between" gap={2} wrap="wrap">
+            <Text fontWeight="bold" fontSize="md" color={titleColor} noOfLines={1}>
               {address.name}
-            </Heading>
-            {address.isDefault && (
+            </Text>
+            {isDefault && (
               <Badge
-                colorScheme="teal"
-                variant="subtle"
-                mt={1}
-                borderRadius="md"
-                px={2}
-                py={1}
+                colorScheme="purple"
+                variant="solid"
+                rounded="full"
+                px={2.5}
+                py={0.5}
+                fontSize="xs"
+                textTransform="none"
+                display="inline-flex"
+                alignItems="center"
+                gap={1}
               >
-                Primary Address
+                <Icon as={FaCheckCircle} boxSize={2.5} />
+                Default
               </Badge>
             )}
           </Flex>
-        </Flex>
 
-        <VStack spacing={2} align="start" color="gray.600" fontSize="sm">
-          <Flex align="center" gap={2}>
-            <FaMapMarkerAlt color="gray.400" />
-            <Text>{address.line1 || address.addressLine1}</Text>
-          </Flex>
-          {(address.line2 || address.addressLine2) && (
-            <Flex align="center" gap={2}>
-              <Box w="16px" /> {/* Spacer for alignment */}
-              <Text>{address.line2 || address.addressLine2}</Text>
+          {address.phone && (
+            <Flex align="center" gap={1.5} mt={0.5} color={mutedColor}>
+              <Icon as={FaPhoneAlt} boxSize={2.5} />
+              <Text fontSize="sm">{address.phone}</Text>
             </Flex>
           )}
-          <Flex align="center" gap={2}>
-            <FaCity color="gray.400" />
-            <Text>
-              {address.city}, {address.state} {address.postalCode}
-            </Text>
-          </Flex>
-          <Flex align="center" gap={2}>
-            <FaGlobeAmericas color="gray.400" />
-            <Text>{address.country}</Text>
-          </Flex>
-        </VStack>
-      </CardBody>
 
-      <CardFooter p={3} bg="gray.50">
-        <Flex justify="space-between" w="full" align="center">
-          <Button
-            size="sm"
-            variant="ghost"
-            colorScheme="gray"
-            leftIcon={<FaEdit />}
-            onClick={() => handleEdit(address)}
-            _hover={{ bg: "white", boxShadow: "sm" }}
-          >
-            Edit
-          </Button>
+          <Box mt={2} fontSize="sm" lineHeight="tall" color={bodyColor}>
+            {line1 && <Text>{line1}</Text>}
+            {line2 && <Text>{line2}</Text>}
+            {cityLine && <Text>{cityLine}</Text>}
+            {address.country && <Text>{address.country}</Text>}
+          </Box>
+        </Box>
+      </Flex>
 
-          <Flex gap={2} align="center">
-            {!address.isDefault && (
-              <Button
-                size="sm"
-                variant="outline"
-                colorScheme="blue"
-                onClick={() => handleSetDefault(address._id || address.id)}
-                _hover={{ transform: "scale(1.05)" }}
-              >
-                Set Default
-              </Button>
-            )}
-            <Divider orientation="vertical" h={6} />
+      {/* Actions: full-width, 48px-tall tap targets */}
+      <Flex borderTopWidth="1px" borderColor={footerBorder}>
+        <Button
+          flex={1}
+          h={12}
+          px={2}
+          rounded="none"
+          variant="ghost"
+          fontSize="sm"
+          fontWeight={600}
+          color={actionColor}
+          leftIcon={<FaEdit />}
+          _hover={{ bg: actionHoverBg }}
+          onClick={() => handleEdit(address)}
+        >
+          Edit
+        </Button>
+
+        {!isDefault && (
+          <>
+            {divider}
             <Button
+              flex={1}
+              h={12}
+              px={2}
+              rounded="none"
               variant="ghost"
-              colorScheme="red"
-              size="sm"
-              leftIcon={<FaTrash />}
-              onClick={() => handleDelete(address._id || address.id)}
-              _hover={{
-                bg: "red.50",
-                "& > svg": { transform: "scale(1.2)" }
-              }}
+              fontSize="sm"
+              fontWeight={600}
+              colorScheme="purple"
+              leftIcon={<FaCheckCircle />}
+              isLoading={isSettingDefault}
+              _hover={{ bg: actionHoverBg }}
+              onClick={onSetDefault}
             >
-              Delete
+              Set default
             </Button>
-          </Flex>
-        </Flex>
-      </CardFooter>
+          </>
+        )}
 
-      {/* Hover overlay */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        w="full"
-        h="full"
-        bg="blackAlpha.50"
-        opacity={0}
-        _hover={{ opacity: 1 }}
-        transition="opacity 0.2s"
-        pointerEvents="none"
-      />
-    </Card>
+        {divider}
+        <Button
+          flex={1}
+          h={12}
+          px={2}
+          rounded="none"
+          variant="ghost"
+          fontSize="sm"
+          fontWeight={600}
+          colorScheme="red"
+          leftIcon={<FaTrash />}
+          onClick={() => handleDelete(address)}
+        >
+          Delete
+        </Button>
+      </Flex>
+    </Flex>
   );
 };
 
-export default AddressCard;  
+export default AddressCard;

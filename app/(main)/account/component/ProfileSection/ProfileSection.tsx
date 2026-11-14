@@ -3,15 +3,20 @@
 import {
   Box,
   Button,
-  Card,
+  Divider,
   Flex,
   FormControl,
   FormErrorMessage,
   FormHelperText,
   FormLabel,
+  Grid,
   Heading,
   Icon,
   Input,
+  InputGroup,
+  InputLeftElement,
+  InputProps,
+  Link,
   SimpleGrid,
   Text,
   useColorModeValue,
@@ -19,56 +24,300 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FaEnvelope, FaExclamationCircle, FaInfoCircle, FaPhoneAlt, FaSave, FaUser, FaUserEdit, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaGlobe } from "react-icons/fa";
+import { IconType } from "react-icons";
+import {
+  FaCheck,
+  FaEnvelope,
+  FaExclamationCircle,
+  FaFacebook,
+  FaGlobe,
+  FaInfoCircle,
+  FaInstagram,
+  FaLinkedin,
+  FaPen,
+  FaPhoneAlt,
+  FaTwitter,
+  FaUser,
+} from "react-icons/fa";
 import stores from "../../../../store/stores";
+
+/* -------------------------------------------------------------------------- */
+/*  Config & helpers                                                          */
+/* -------------------------------------------------------------------------- */
+
+type SocialKey = "facebook" | "instagram" | "twitter" | "linkedin" | "website";
+
+const SOCIALS: {
+  key: SocialKey;
+  label: string;
+  icon: IconType;
+  placeholder: string;
+  color: string;
+}[] = [
+  { key: "facebook", label: "Facebook", icon: FaFacebook, placeholder: "facebook.com/username", color: "#1877F2" },
+  { key: "instagram", label: "Instagram", icon: FaInstagram, placeholder: "instagram.com/username", color: "#E4405F" },
+  { key: "twitter", label: "Twitter (X)", icon: FaTwitter, placeholder: "twitter.com/username", color: "#1DA1F2" },
+  { key: "linkedin", label: "LinkedIn", icon: FaLinkedin, placeholder: "linkedin.com/in/username", color: "#0A66C2" },
+  { key: "website", label: "Website", icon: FaGlobe, placeholder: "yourwebsite.com", color: "#805AD5" },
+];
+
+type FormState = {
+  email: string;
+  phone: string;
+  alternatePhone: string;
+  alternateEmail: string;
+} & Record<SocialKey, string>;
+
+type FormErrors = {
+  email: string;
+  phone: string;
+  alternatePhone: string;
+  alternateEmail: string;
+};
+
+const EMPTY_ERRORS: FormErrors = {
+  email: "",
+  phone: "",
+  alternatePhone: "",
+  alternateEmail: "",
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const buildForm = (user: any): FormState => ({
+  email: user.email || "",
+  phone: user.phone || "",
+  alternatePhone: user.alternatePhone || "",
+  alternateEmail: user.alternateEmail || "",
+  facebook: user.socialLinks?.facebook || "",
+  instagram: user.socialLinks?.instagram || "",
+  twitter: user.socialLinks?.twitter || "",
+  linkedin: user.socialLinks?.linkedin || "",
+  website: user.socialLinks?.website || "",
+});
+
+/** Adds https:// when the user typed a bare domain such as "site.com" */
+const normalizeUrl = (value: string) => {
+  const v = value.trim();
+  if (!v) return "";
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+};
+
+/** "https://www.facebook.com/john" -> "facebook.com/john" */
+const prettyUrl = (value: string) =>
+  value.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
+
+/* -------------------------------------------------------------------------- */
+/*  Small presentational pieces                                               */
+/* -------------------------------------------------------------------------- */
+
+/** Titled block. `divided` renders rows separated by hairlines (view mode). */
+function Group({
+  title,
+  children,
+  divided = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  divided?: boolean;
+}) {
+  const titleColor = useColorModeValue("gray.600", "gray.300");
+  const bg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const border = useColorModeValue("gray.100", "whiteAlpha.200");
+
+  return (
+    <Box>
+      <Text fontSize="sm" fontWeight="bold" color={titleColor} mb={2} px={1}>
+        {title}
+      </Text>
+      <Box bg={bg} borderWidth="1px" borderColor={border} rounded="2xl" overflow="hidden">
+        {divided ? (
+          <VStack divider={<Divider borderColor={border} />} spacing={0} align="stretch">
+            {children}
+          </VStack>
+        ) : (
+          <Box p={{ base: 3, md: 5 }}>{children}</Box>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+/** One read-only line: icon tile, label, value (optionally tappable). */
+function InfoRow({
+  icon,
+  label,
+  value,
+  href,
+  external = false,
+  iconColor,
+  display,
+}: {
+  icon: IconType;
+  label: string;
+  value?: string;
+  href?: string;
+  external?: boolean;
+  iconColor?: string;
+  display?: string;
+}) {
+  const labelColor = useColorModeValue("gray.500", "gray.400");
+  const valueColor = useColorModeValue("gray.800", "gray.100");
+  const emptyColor = useColorModeValue("gray.400", "gray.500");
+  const tileBg = useColorModeValue("white", "whiteAlpha.100");
+  const tileBorder = useColorModeValue("gray.100", "whiteAlpha.200");
+  const defaultIconColor = useColorModeValue("purple.500", "purple.200");
+
+  return (
+    <Flex align="center" gap={3} px={{ base: 3, md: 4 }} py={3}>
+      <Flex
+        boxSize={10}
+        flexShrink={0}
+        align="center"
+        justify="center"
+        rounded="xl"
+        bg={tileBg}
+        borderWidth="1px"
+        borderColor={tileBorder}
+        color={iconColor || defaultIconColor}
+      >
+        <Icon as={icon} boxSize={4} />
+      </Flex>
+
+      <Box minW={0} flex={1}>
+        <Text fontSize="xs" color={labelColor} fontWeight="medium">
+          {label}
+        </Text>
+        {value ? (
+          href ? (
+            <Link
+              href={href}
+              isExternal={external}
+              display="block"
+              fontWeight="semibold"
+              color={valueColor}
+              noOfLines={1}
+              _hover={{ textDecoration: "none", color: "purple.500" }}
+            >
+              {display || value}
+            </Link>
+          ) : (
+            <Text fontWeight="semibold" color={valueColor} noOfLines={1}>
+              {value}
+            </Text>
+          )
+        ) : (
+          <Text fontSize="sm" color={emptyColor}>
+            Not added
+          </Text>
+        )}
+      </Box>
+    </Flex>
+  );
+}
+
+/** Input with an inline icon, sized for thumbs (48px, 16px text = no iOS zoom). */
+function Field({
+  label,
+  icon,
+  error,
+  helper,
+  ...inputProps
+}: {
+  label: string;
+  icon: IconType;
+  error?: string;
+  helper?: string;
+} & InputProps) {
+  const labelColor = useColorModeValue("gray.700", "gray.200");
+  const inputBg = useColorModeValue("white", "whiteAlpha.100");
+  const iconColor = useColorModeValue("gray.400", "gray.500");
+  const helperColor = useColorModeValue("gray.500", "gray.400");
+
+  return (
+    <FormControl isInvalid={!!error}>
+      <FormLabel fontSize="sm" fontWeight="semibold" color={labelColor} mb={1.5}>
+        {label}
+      </FormLabel>
+      <InputGroup size="lg">
+        <InputLeftElement pointerEvents="none" color={iconColor}>
+          <Icon as={icon} boxSize={4} />
+        </InputLeftElement>
+        <Input
+          bg={inputBg}
+          rounded="xl"
+          fontSize="md"
+          focusBorderColor="purple.400"
+          {...inputProps}
+        />
+      </InputGroup>
+      {error ? (
+        <FormErrorMessage fontSize="sm" mt={1.5}>
+          <Icon as={FaExclamationCircle} mr={2} />
+          {error}
+        </FormErrorMessage>
+      ) : helper ? (
+        <FormHelperText fontSize="xs" color={helperColor} mt={1.5}>
+          {helper}
+        </FormHelperText>
+      ) : null}
+    </FormControl>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Main component                                                            */
+/* -------------------------------------------------------------------------- */
 
 export function ProfileSection({ user }: { user: any }) {
   const toast = useToast();
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: user.email || "",
-    phone: user.phone || "",
-    alternatePhone: user.alternatePhone || "",
-    alternateEmail: user.alternateEmail || "",
-    facebook: user.socialLinks?.facebook || "",
-    instagram: user.socialLinks?.instagram || "",
-    twitter: user.socialLinks?.twitter || "",
-    linkedin: user.socialLinks?.linkedin || "",
-    website: user.socialLinks?.website || "",
-  });
-  const [errors, setErrors] = useState({
-    email: "",
-    phone: "",
-    alternatePhone: "",
-    alternateEmail: "",
-  });
+  const [formData, setFormData] = useState<FormState>(() => buildForm(user));
+  const [errors, setErrors] = useState<FormErrors>(EMPTY_ERRORS);
 
-  // Validation function
+  const headingColor = useColorModeValue("gray.800", "white");
+  const mutedColor = useColorModeValue("gray.500", "gray.400");
+  const barBg = useColorModeValue("whiteAlpha.950", "gray.800");
+  const barBorder = useColorModeValue("gray.200", "whiteAlpha.300");
+  const noteColor = useColorModeValue("gray.500", "gray.400");
+
+  const startEdit = () => {
+    // Always start from the latest saved values
+    setFormData(buildForm(user));
+    setErrors(EMPTY_ERRORS);
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setFormData(buildForm(user));
+    setErrors(EMPTY_ERRORS);
+    setIsEditing(false);
+  };
+
   const validateForm = () => {
-    const newErrors = { email: "", phone: "", alternatePhone: "", alternateEmail: "" };
+    const newErrors: FormErrors = { ...EMPTY_ERRORS };
     let isValid = true;
 
-    // Email validation
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const altEmail = formData.alternateEmail.trim();
+    const altPhone = formData.alternatePhone.trim();
+
+    if (email && !EMAIL_REGEX.test(email)) {
+      newErrors.email = "Enter a valid email address, like name@example.com.";
       isValid = false;
     }
-
-    // Phone validation
-    if (formData.phone && formData.phone.length < 10) {
-      newErrors.phone = "Phone number must be at least 10 characters.";
+    if (phone && phone.length < 10) {
+      newErrors.phone = "Phone number must be at least 10 digits.";
       isValid = false;
     }
-
-    // Alternate Phone validation
-    if (formData.alternatePhone && formData.alternatePhone.length < 10) {
-      newErrors.alternatePhone = "Alternate phone number must be at least 10 characters.";
+    if (altPhone && altPhone.length < 10) {
+      newErrors.alternatePhone = "Alternate phone must be at least 10 digits.";
       isValid = false;
     }
-
-    // Alternate Email validation
-    if (formData.alternateEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.alternateEmail)) {
-      newErrors.alternateEmail = "Please enter a valid alternate email address.";
+    if (altEmail && !EMAIL_REGEX.test(altEmail)) {
+      newErrors.alternateEmail = "Enter a valid alternate email address.";
       isValid = false;
     }
 
@@ -76,331 +325,312 @@ export function ProfileSection({ user }: { user: any }) {
     return isValid;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
 
-    if (validateForm()) {
-      setIsLoading(true);
+    setIsLoading(true);
+    try {
+      const updateData: Record<string, any> = {};
 
-      try {
-        const updateData: { phone?: string; email?: string } = {};
-        if (formData.phone && formData.phone !== user.phone) {
-          updateData.phone = formData.phone;
-        }
-        if (formData.email && formData.email !== user.email) {
-          updateData.email = formData.email;
-        }
+      const email = formData.email.trim();
+      const phone = formData.phone.trim();
+      const altEmail = formData.alternateEmail.trim();
+      const altPhone = formData.alternatePhone.trim();
 
-        // Alternate contacts
-        if (formData.alternatePhone !== (user.alternatePhone || "")) {
-          (updateData as any).alternatePhone = formData.alternatePhone;
-        }
-        if (formData.alternateEmail !== (user.alternateEmail || "")) {
-          (updateData as any).alternateEmail = formData.alternateEmail;
-        }
+      if (phone && phone !== user.phone) updateData.phone = phone;
+      if (email && email !== user.email) updateData.email = email;
 
-        // Social Links
-        const socialLinks: any = {};
-        if (formData.facebook !== (user.socialLinks?.facebook || "")) socialLinks.facebook = formData.facebook;
-        if (formData.instagram !== (user.socialLinks?.instagram || "")) socialLinks.instagram = formData.instagram;
-        if (formData.twitter !== (user.socialLinks?.twitter || "")) socialLinks.twitter = formData.twitter;
-        if (formData.linkedin !== (user.socialLinks?.linkedin || "")) socialLinks.linkedin = formData.linkedin;
-        if (formData.website !== (user.socialLinks?.website || "")) socialLinks.website = formData.website;
+      // Alternate contacts (can be cleared)
+      if (altPhone !== (user.alternatePhone || "")) updateData.alternatePhone = altPhone;
+      if (altEmail !== (user.alternateEmail || "")) updateData.alternateEmail = altEmail;
 
-        if (Object.keys(socialLinks).length > 0) {
-          (updateData as any).socialLinks = socialLinks;
-        }
+      // Social links (can be cleared)
+      const socialLinks: Partial<Record<SocialKey, string>> = {};
+      SOCIALS.forEach(({ key }) => {
+        const next = normalizeUrl(formData[key]);
+        if (next !== (user.socialLinks?.[key] || "")) socialLinks[key] = next;
+      });
+      if (Object.keys(socialLinks).length > 0) updateData.socialLinks = socialLinks;
 
-        if (Object.keys(updateData).length === 0) {
-          toast({
-            title: "No changes",
-            description: "No changes were made to your profile.",
-            status: "info",
-            duration: 3000,
-            isClosable: true,
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        await stores.auth.updateProfile(updateData);
-
+      if (Object.keys(updateData).length === 0) {
         toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
-          status: "success",
+          title: "No changes",
+          description: "Nothing was changed on your profile.",
+          status: "info",
           duration: 3000,
           isClosable: true,
         });
-      } catch (error: any) {
-        toast({
-          title: "Update failed",
-          description: error?.message || "Failed to update profile. Please try again.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
+        setIsEditing(false);
+        return;
       }
+
+      await stores.auth.updateProfile(updateData);
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsEditing(false);
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error?.message || "We couldn't save your changes. Please try again.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear a field's error as soon as the user starts fixing it
+    if (name in errors && errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
+  const filledSocials = SOCIALS.filter(({ key }) => !!user.socialLinks?.[key]);
+
   return (
-    <Box>
-      <VStack spacing={4} align="stretch">
-        {/* Header Section */}
-        <Box pb={4} borderBottomWidth="2px" borderColor={useColorModeValue('purple.100', 'blue.800')}>
-          <Heading as="h2" size="md" fontWeight="extrabold" color={useColorModeValue('purple.600', 'blue.300')}>
-            <Icon as={FaUserEdit} mr={3} />
-            Profile Details
+    <VStack spacing={5} align="stretch">
+      {/* Header */}
+      <Flex justify="space-between" align="center" gap={3}>
+        <Box minW={0}>
+          <Heading as="h2" size="md" color={headingColor}>
+            {isEditing ? "Edit profile" : "Profile details"}
           </Heading>
-          <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.400')} mt={3}>
-            Update your contact information
+          <Text fontSize="sm" color={mutedColor} mt={0.5}>
+            {isEditing
+              ? "Change your details, then save."
+              : "Your contact information and links."}
           </Text>
         </Box>
 
-        {/* Name Display (Read Only) */}
-        <Card variant="elevated" p={6} borderRadius="xl">
-          <FormControl>
-            <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-              <Icon as={FaUser} mr={2} />
-              Full Name
-            </FormLabel>
-            <Text fontSize="lg" fontWeight="medium" color={useColorModeValue('gray.800', 'gray.200')}>
-              {user.name}
-            </Text>
-            <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.500', 'gray.400')} mt={2}>
-              <Icon as={FaInfoCircle} mr={2} />
-              Name cannot be changed
-            </FormHelperText>
-          </FormControl>
-        </Card>
+        {!isEditing && (
+          <Button
+            leftIcon={<FaPen size="12px" />}
+            size="sm"
+            h={10}
+            px={4}
+            rounded="full"
+            variant="outline"
+            colorScheme="purple"
+            flexShrink={0}
+            onClick={startEdit}
+          >
+            Edit
+          </Button>
+        )}
+      </Flex>
 
-        {/* Form Section */}
-        <Box as="form" onSubmit={handleSubmit} w="full">
-          <VStack spacing={4} align="stretch">
-            {/* Contact Section */}
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              {/* Email Field */}
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl isInvalid={!!errors.email}>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaEnvelope} mr={2} />
-                    Email Address
-                  </FormLabel>
-                  <Input
-                    type="email"
-                    placeholder="john@example.com"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
+      {/* ------------------------------ VIEW MODE ------------------------------ */}
+      {!isEditing && (
+        <VStack spacing={5} align="stretch">
+          <Group title="Personal" divided>
+            <InfoRow icon={FaUser} label="Full name" value={user.name} />
+          </Group>
+
+          <Group title="Contact" divided>
+            <Grid templateColumns={{md:'1fr 1fr'}}>
+
+            <InfoRow
+              icon={FaEnvelope}
+              label="Email"
+              value={user.email}
+              href={user.email ? `mailto:${user.email}` : undefined}
+              />
+            <InfoRow
+              icon={FaPhoneAlt}
+              label="Phone"
+              value={user.phone}
+              href={user.phone ? `tel:${user.phone}` : undefined}
+              />
+              </Grid>
+          </Group>
+
+          <Group title="Alternate contact" divided>
+            <InfoRow
+              icon={FaEnvelope}
+              label="Alternate email"
+              value={user.alternateEmail}
+              href={user.alternateEmail ? `mailto:${user.alternateEmail}` : undefined}
+            />
+            <InfoRow
+              icon={FaPhoneAlt}
+              label="Alternate phone"
+              value={user.alternatePhone}
+              href={user.alternatePhone ? `tel:${user.alternatePhone}` : undefined}
+            />
+          </Group>
+
+          <Group title="Social links" divided>
+            {filledSocials.length > 0 ? (
+              filledSocials.map(({ key, label, icon, color }) => {
+                const url = normalizeUrl(user.socialLinks[key]);
+                return (
+                  <InfoRow
+                    key={key}
+                    icon={icon}
+                    label={label}
+                    value={url}
+                    display={prettyUrl(url)}
+                    href={url}
+                    external
+                    iconColor={color}
                   />
-                  <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.600', 'gray.400')} mt={2}>
-                    <Icon as={FaInfoCircle} mr={2} />
-                    Used for order confirmations and account security
-                  </FormHelperText>
-                  <FormErrorMessage fontSize="sm" mt={1}>
-                    <Icon as={FaExclamationCircle} mr={2} />
-                    {errors.email}
-                  </FormErrorMessage>
-                </FormControl>
-              </Card>
+                );
+              })
+            ) : (
+              <Box px={4} py={4}>
+                <Text fontSize="sm" color={mutedColor}>
+                  No links added yet. Tap Edit to add your social profiles or website.
+                </Text>
+              </Box>
+            )}
+          </Group>
+        </VStack>
+      )}
 
-              {/* Phone Field */}
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl isInvalid={!!errors.phone}>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaPhoneAlt} mr={2} />
-                    Phone Number
-                  </FormLabel>
-                  <Input
-                    type="tel"
-                    placeholder="9876543210"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                  <FormHelperText fontSize={'xs'} color={useColorModeValue('gray.600', 'gray.400')} mt={2}>
-                    <Icon as={FaInfoCircle} mr={2} />
-                    Used for delivery updates and OTP verification
-                  </FormHelperText>
-                  <FormErrorMessage fontSize="sm" mt={1}>
-                    <Icon as={FaExclamationCircle} mr={2} />
-                    {errors.phone}
-                  </FormErrorMessage>
-                </FormControl>
-              </Card>
-            </SimpleGrid>
-
-            {/* Alternate Contact Section */}
-            <Box pb={2} borderBottomWidth="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
-              <Text fontSize="md" fontWeight="bold" color={useColorModeValue('gray.700', 'gray.300')}>
-                Alternate Contact Information
+      {/* ------------------------------ EDIT MODE ------------------------------ */}
+      {isEditing && (
+        <Box as="form" onSubmit={handleSubmit} noValidate w="full">
+          <VStack spacing={5} align="stretch">
+            <Group title="Personal" divided>
+              <InfoRow icon={FaUser} label="Full name" value={user.name} />
+            </Group>
+            <Flex align="center" gap={2} mt={-3} px={1}>
+              <Icon as={FaInfoCircle} boxSize={3} color={noteColor} />
+              <Text fontSize="xs" color={noteColor}>
+                Your name can't be changed.
               </Text>
-            </Box>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              {/* Alternate Email Field */}
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl isInvalid={!!errors.alternateEmail}>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaEnvelope} mr={2} />
-                    Alternate Email
-                  </FormLabel>
-                  <Input
-                    type="email"
-                    placeholder="alternate@example.com"
-                    name="alternateEmail"
-                    value={formData.alternateEmail}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                  <FormErrorMessage fontSize="sm" mt={1}>
-                    <Icon as={FaExclamationCircle} mr={2} />
-                    {errors.alternateEmail}
-                  </FormErrorMessage>
-                </FormControl>
-              </Card>
+            </Flex>
 
-              {/* Alternate Phone Field */}
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl isInvalid={!!errors.alternatePhone}>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaPhoneAlt} mr={2} />
-                    Alternate Phone
-                  </FormLabel>
-                  <Input
-                    type="tel"
-                    placeholder="9876543210"
-                    name="alternatePhone"
-                    value={formData.alternatePhone}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                  <FormErrorMessage fontSize="sm" mt={1}>
-                    <Icon as={FaExclamationCircle} mr={2} />
-                    {errors.alternatePhone}
-                  </FormErrorMessage>
-                </FormControl>
-              </Card>
-            </SimpleGrid>
+            <Group title="Contact">
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <Field
+                  label="Email address"
+                  icon={FaEnvelope}
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={errors.email}
+                  helper="Used for order confirmations and account security."
+                />
+                <Field
+                  label="Phone number"
+                  icon={FaPhoneAlt}
+                  name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="9876543210"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  error={errors.phone}
+                  helper="Used for delivery updates and OTP verification."
+                />
+              </SimpleGrid>
+            </Group>
 
-            {/* Social Media Section */}
-            <Box pb={2} borderBottomWidth="1px" borderColor={useColorModeValue('gray.200', 'gray.700')}>
-              <Text fontSize="md" fontWeight="bold" color={useColorModeValue('gray.700', 'gray.300')}>
-                Social Media Links
-              </Text>
-            </Box>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaFacebook} mr={2} /> Facebook
-                  </FormLabel>
-                  <Input
-                    placeholder="https://facebook.com/username"
-                    name="facebook"
-                    value={formData.facebook}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                </FormControl>
-              </Card>
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaInstagram} mr={2} /> Instagram
-                  </FormLabel>
-                  <Input
-                    placeholder="https://instagram.com/username"
-                    name="instagram"
-                    value={formData.instagram}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                </FormControl>
-              </Card>
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaTwitter} mr={2} /> Twitter (X)
-                  </FormLabel>
-                  <Input
-                    placeholder="https://twitter.com/username"
-                    name="twitter"
-                    value={formData.twitter}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                </FormControl>
-              </Card>
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaLinkedin} mr={2} /> LinkedIn
-                  </FormLabel>
-                  <Input
-                    placeholder="https://linkedin.com/in/username"
-                    name="linkedin"
-                    value={formData.linkedin}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                </FormControl>
-              </Card>
-              <Card variant="elevated" p={6} borderRadius="xl">
-                <FormControl>
-                  <FormLabel fontWeight="semibold" color={useColorModeValue('gray.700', 'gray.300')}>
-                    <Icon as={FaGlobe} mr={2} /> Website
-                  </FormLabel>
-                  <Input
-                    placeholder="https://yourwebsite.com"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleInputChange}
-                    focusBorderColor="blue.400"
-                    variant="flushed"
-                  />
-                </FormControl>
-              </Card>
-            </SimpleGrid>
+            <Group title="Alternate contact">
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <Field
+                  label="Alternate email"
+                  icon={FaEnvelope}
+                  name="alternateEmail"
+                  type="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  placeholder="alternate@example.com"
+                  value={formData.alternateEmail}
+                  onChange={handleInputChange}
+                  error={errors.alternateEmail}
+                />
+                <Field
+                  label="Alternate phone"
+                  icon={FaPhoneAlt}
+                  name="alternatePhone"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="9876543210"
+                  value={formData.alternatePhone}
+                  onChange={handleInputChange}
+                  error={errors.alternatePhone}
+                />
+              </SimpleGrid>
+            </Group>
 
-            {/* Submit Button */}
-            <Flex justify={'end'} pt={2}>
+            <Group title="Social links">
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                {SOCIALS.map(({ key, label, icon, placeholder }) => (
+                  <Field
+                    key={key}
+                    label={label}
+                    icon={icon}
+                    name={key}
+                    type="text"
+                    inputMode="url"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    placeholder={placeholder}
+                    value={formData[key]}
+                    onChange={handleInputChange}
+                  />
+                ))}
+              </SimpleGrid>
+            </Group>
+
+            {/* Floating action bar: always reachable on long mobile forms */}
+            <Flex
+              position="sticky"
+              bottom={3}
+              zIndex={2}
+              gap={3}
+              rounded="2xl"
+              bg={barBg}
+              justify={{ base: "stretch", md: "flex-end" }}
+            >
+              <Button
+                variant="ghost"
+                h={12}
+                px={6}
+                rounded="xl"
+                flex={{ base: 1, md: "none" }}
+                onClick={cancelEdit}
+                isDisabled={isLoading}
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
-                colorScheme="blue"
-                isLoading={isLoading}
-                leftIcon={<FaSave />}
-                w={{ base: 'full', md: 'auto' }}
+                colorScheme="purple"
+                h={12}
+                px={8}
+                rounded="xl"
+                flex={{ base: 2, md: "none" }}
                 fontWeight="bold"
-                boxShadow="md"
-                _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
-                transition="all 0.2s"
+                leftIcon={<FaCheck />}
+                isLoading={isLoading}
+                loadingText="Saving"
               >
-                {isLoading ? "Saving Changes..." : "Update Profile"}
+                Save changes
               </Button>
             </Flex>
           </VStack>
         </Box>
-      </VStack>
-    </Box>
+      )}
+    </VStack>
   );
 }

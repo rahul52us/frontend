@@ -22,17 +22,16 @@ import {
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { FaLocationDot, FaPlus } from "react-icons/fa6";
 import {
   FiArrowRight,
-  FiCheckCircle,
   FiLock,
   FiRotateCcw,
   FiShoppingBag,
   FiTrash2,
-  FiTruck,
+  FiTruck
 } from "react-icons/fi";
-import { FaLocationDot, FaPlus } from "react-icons/fa6";
 
 import CartItem from "../../../../component/Cart/component/CartItem/CartItem";
 import AddressModal from "../../../../component/Cart/component/DeliveryAddressModal/DelivaryAddressModal";
