@@ -1,9 +1,14 @@
 "use client";
-import { ChevronLeftIcon } from '@chakra-ui/icons';
+
+import { ChevronLeftIcon } from "@chakra-ui/icons";
 import {
+  Badge,
   Box,
-  Button, Flex,
+  Button,
+  Flex,
+  HStack,
   Icon,
+  IconButton,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -12,42 +17,47 @@ import {
   ModalHeader,
   ModalOverlay,
   Radio,
-  RadioGroup, Stack,
-  Text
-} from '@chakra-ui/react';
-import { useState } from 'react';
-import { FaPlus } from 'react-icons/fa6';
-import { AddressForm } from '../../../../(main)/account/component/AddressSection/AddressModal/AddressModal';
-import ConfirmationModal from '../../../common/ConfirmationModal/ConfirmationModal';
+  RadioGroup,
+  Stack,
+  Text,
+  useBreakpointValue,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import { FaLocationDot, FaPlus, FaTrash, FaPen } from "react-icons/fa6";
+import { AddressForm } from "../../../../(main)/account/component/AddressSection/AddressModal/AddressModal";
+import ConfirmationModal from "../../../common/ConfirmationModal/ConfirmationModal";
+import BottomSheetDrawer from "../../../common/Drawer/BottomSheetDrawer";
 
 interface Address {
-  _id: string; // Backend uses _id
+  _id?: string;
+  id?: string;
   name: string;
   fullName?: string;
   addressLine1: string;
   addressLine2?: string;
+  line1?: string;
+  line2?: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
-  isDefault: boolean;
+  isDefault?: boolean;
   phone?: string;
 }
 
 interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  addresses: any[]; // Relaxing type to any for now to avoid conflicts with backend schema or update interface below
+  addresses: any[];
   selectedAddress: string;
-  onSelectAddress: any;
-  onAddNewAddress: any;
-  isEditing?: boolean;
-  currentAddress?: Address;
-  onUpdateAddress?: any;
-  onDeleteAddress?: any; // New prop
+  onSelectAddress: (id: string) => void;
+  onAddNewAddress: (address: any) => Promise<any> | void;
+  onUpdateAddress?: (id: string, address: any) => Promise<any> | void;
+  onDeleteAddress?: (id: string) => Promise<any> | void;
 }
 
-const AddressModal = ({
+const AddressModal: React.FC<AddressModalProps> = ({
   isOpen,
   onClose,
   addresses,
@@ -55,188 +65,349 @@ const AddressModal = ({
   onSelectAddress,
   onAddNewAddress,
   onUpdateAddress,
-  onDeleteAddress
-}: AddressModalProps) => {
-  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false)
+  onDeleteAddress,
+}) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [editingAddress, setEditingAddress] = useState<any>(null);
   const [deletingAddress, setDeletingAddress] = useState<any>(null);
-  const [tempSelectedAddress, setTempSelectedAddress] = useState<any>(selectedAddress)
+  const [tempSelectedAddress, setTempSelectedAddress] = useState<string>(selectedAddress);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync tempSelectedAddress when modal opens or selectedAddress changes
+  useEffect(() => {
+    setTempSelectedAddress(selectedAddress);
+  }, [selectedAddress, isOpen]);
+
+  // Reset internal states when modal closes
+  const handleClose = () => {
+    setIsAddingNewAddress(false);
+    setIsEditingMode(false);
+    setEditingAddress(null);
+    onClose();
+  };
 
   const handleEditClick = (address: any) => {
     setEditingAddress(address);
     setIsEditingMode(true);
+    setIsAddingNewAddress(false);
+  };
+
+  const handleBackToList = () => {
+    setIsAddingNewAddress(false);
+    setIsEditingMode(false);
+    setEditingAddress(null);
   };
 
   const handleSaveAddress = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget as HTMLFormElement)
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
 
     const newAddress = {
-      name: formData.get('name') as string,
-      phone: formData.get('phone') as string,
-      addressLine1: formData.get('line1') as string,
-      line1: formData.get('line1') as string, // Keep for legacy if needed, but addressLine1 is main
-      line2: formData.get('line2') as string || undefined,
-      addressLine2: formData.get('line2') as string || undefined,
-      city: formData.get('city') as string,
-      state: formData.get('state') as string,
-      postalCode: formData.get('postalCode') as string,
-      country: formData.get('country') as string,
-      isDefault: formData.get('isDefault') === 'on'
-    }
+      name: (formData.get("name") as string) || "Home",
+      phone: (formData.get("phone") as string) || "",
+      addressLine1: (formData.get("line1") as string) || "",
+      line1: (formData.get("line1") as string) || "",
+      line2: (formData.get("line2") as string) || undefined,
+      addressLine2: (formData.get("line2") as string) || undefined,
+      city: (formData.get("city") as string) || "",
+      state: (formData.get("state") as string) || "",
+      postalCode: (formData.get("postalCode") as string) || "",
+      country: (formData.get("country") as string) || "India",
+      isDefault: formData.get("isDefault") === "on",
+    };
 
-    if (isEditingMode && onUpdateAddress && editingAddress) {
-      await onUpdateAddress(editingAddress._id, newAddress);
-      setIsEditingMode(false);
-      setEditingAddress(null);
-    } else {
-      await onAddNewAddress(newAddress)
-      setIsAddingNewAddress(false)
+    try {
+      setIsSubmitting(true);
+      if (isEditingMode && onUpdateAddress && editingAddress) {
+        const id = editingAddress._id || editingAddress.id;
+        await onUpdateAddress(id, newAddress);
+      } else {
+        await onAddNewAddress(newAddress);
+      }
+      handleBackToList();
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleSelectAddress = () => {
-    onSelectAddress(tempSelectedAddress)
-    onClose()
-  }
+    if (tempSelectedAddress) {
+      onSelectAddress(tempSelectedAddress);
+    }
+    handleClose();
+  };
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
-      <ModalOverlay />
-      <ModalContent borderRadius="xl">
-        <ModalHeader borderBottomWidth="1px">
-          <Flex gap={2} align="center">
-            {(isAddingNewAddress || isEditingMode) && (
+  const isFormMode = isAddingNewAddress || isEditingMode;
 
-              <Icon as={ChevronLeftIcon} onClick={() => {
-                setIsAddingNewAddress(false);
-                setIsEditingMode(false);
-                setEditingAddress(null);
-              }} cursor="pointer" />
-            )}
-            <Text fontSize="lg" fontWeight="bold">
-              {isAddingNewAddress || isEditingMode ?
-                (isEditingMode ? "Edit Address" : "Add New Address") :
-                "Select Delivery Address"}
+  const titleText = isAddingNewAddress
+    ? "Add New Address"
+    : isEditingMode
+    ? "Edit Address"
+    : "Select Delivery Address";
+
+  // Reusable Body Content
+  const renderBodyContent = () => {
+    if (isFormMode) {
+      return (
+        <Box py={2}>
+          <AddressForm
+            currentAddress={isEditingMode ? editingAddress : undefined}
+            onSubmit={handleSaveAddress}
+          />
+        </Box>
+      );
+    }
+
+    return (
+      <Box py={2}>
+        {addresses.length === 0 ? (
+          <Box textAlign="center" py={8}>
+            <Icon as={FaLocationDot} boxSize={8} color="gray.300" mb={3} />
+            <Text fontWeight="600" color="gray.700" fontSize="md">
+              No addresses saved yet
             </Text>
-            <ModalCloseButton />
-          </Flex>
-        </ModalHeader>
+            <Text fontSize="xs" color="gray.500" mt={1} mb={4}>
+              Add your delivery address to proceed with checkout.
+            </Text>
+          </Box>
+        ) : (
+          <RadioGroup
+            value={tempSelectedAddress ? tempSelectedAddress.toString() : ""}
+            onChange={(val) => setTempSelectedAddress(val)}
+          >
+            <Stack spacing={3}>
+              {addresses.map((address: any, idx: number) => {
+                const addrId = address._id || address.id || String(idx);
+                const isChecked = tempSelectedAddress === addrId;
 
-        <ModalBody py={4}>
-          {!(isAddingNewAddress || isEditingMode) ? (
-            <>
-              <RadioGroup
-                value={tempSelectedAddress ? tempSelectedAddress.toString() : ""}
-                onChange={(value) => setTempSelectedAddress(value)}
-              >
-                <Stack spacing={4}>
-                  {addresses.map((address: any, idx: number) => (
-                    <Box
-                      key={address._id || address.id || idx}
-                      borderWidth="1px"
-                      borderRadius="lg"
-                      p={4}
-                      cursor="pointer"
-                      _hover={{ borderColor: 'purple.300' }}
-                      borderColor={(address._id || address.id) === tempSelectedAddress ? 'purple.500' : 'gray.200'}
-                      position="relative"
+                return (
+                  <Box
+                    key={addrId}
+                    borderWidth="1.5px"
+                    borderRadius="xl"
+                    p={3.5}
+                    cursor="pointer"
+                    transition="all 0.15s ease"
+                    borderColor={isChecked ? "purple.500" : "gray.200"}
+                    bg={isChecked ? "purple.50" : "white"}
+                    boxShadow={isChecked ? "0 2px 8px rgba(107, 70, 193, 0.12)" : "none"}
+                    onClick={() => setTempSelectedAddress(addrId)}
+                    position="relative"
+                  >
+                    <Flex align="flex-start" gap={3}>
+                      <Radio
+                        value={addrId}
+                        colorScheme="purple"
+                        mt={1}
+                        size="md"
+                      />
+
+                      <Box flex="1" minW={0} pr={14}>
+                        <HStack spacing={2} align="center">
+                          <Text fontWeight="700" fontSize="sm" color="gray.900">
+                            {address.name || "Delivery Address"}
+                          </Text>
+                          {address.isDefault && (
+                            <Badge
+                              colorScheme="purple"
+                              variant="subtle"
+                              fontSize="2xs"
+                              px={1.5}
+                              rounded="md"
+                            >
+                              Default
+                            </Badge>
+                          )}
+                        </HStack>
+
+                        <Text fontSize="xs" color="gray.600" mt={1} lineHeight="1.4">
+                          {[
+                            address.addressLine1 || address.line1,
+                            address.addressLine2 || address.line2,
+                            address.city,
+                            address.state,
+                            address.postalCode,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </Text>
+
+                        {address.phone && (
+                          <Text fontSize="2xs" color="gray.500" mt={1}>
+                            Phone: {address.phone}
+                          </Text>
+                        )}
+                      </Box>
+                    </Flex>
+
+                    {/* Action buttons (Edit & Delete) */}
+                    <HStack
+                      position="absolute"
+                      top={3}
+                      right={3}
+                      spacing={1}
                     >
-                      <Radio value={address._id || address.id} spacing={3} w="full">
-                        <Box ml={2}>
-                          <Flex justify="space-between">
-                            <Text fontWeight="bold">{address.name}</Text>
-                            {address.isDefault && (
-                              <Box bg="purple.100" px={2} py={1} borderRadius="md">
-                                <Text fontSize="xs" color="purple.800">Default</Text>
-                              </Box>
-                            )}
-                          </Flex>
-                          <Text fontSize="sm" color="gray.600" mt={1}>
-                            {address.addressLine1 || address.line1}{address.addressLine2 || address.line2 ? `, ${address.addressLine2 || address.line2}` : ''}
-                          </Text>
-                          <Text fontSize="sm" color="gray.600" mt={1}>
-                            {address.city}, {address.state} {address.postalCode}
-                          </Text>
-                          <Text fontSize="sm" color="gray.600" mt={1}>
-                            {address.country}
-                          </Text>
-                        </Box>
-                      </Radio>
-                      <Flex position="absolute" top={4} right={4} gap={2}>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          colorScheme="blue"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEditClick(address);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
+                      <IconButton
+                        aria-label="Edit address"
+                        icon={<FaPen size={11} />}
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="purple"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(address);
+                        }}
+                      />
+                      {onDeleteAddress && (
+                        <IconButton
+                          aria-label="Delete address"
+                          icon={<FaTrash size={11} />}
                           size="xs"
                           variant="ghost"
                           colorScheme="red"
                           onClick={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            if (onDeleteAddress) setDeletingAddress(address);
+                            setDeletingAddress(address);
                           }}
-                        >
-                          Delete
-                        </Button>
-                      </Flex>
-                    </Box>
-                  ))}
-                </Stack>
-              </RadioGroup>
-
-              <Button
-                leftIcon={<Icon as={FaPlus} />}
-                variant="outline"
-                colorScheme="purple"
-                w="full"
-                mt={4}
-                onClick={() => setIsAddingNewAddress(true)}
-              >
-                Add New Address
-              </Button>
-            </>
-          ) : (
-            <AddressForm
-              currentAddress={isEditingMode ? editingAddress : undefined}
-              onSubmit={handleSaveAddress}
-            />
-          )}
-        </ModalBody>
-
-        {!(isAddingNewAddress || isEditingMode) ? (
-          <ModalFooter borderTopWidth="1px">
-            <Button
-              colorScheme="purple"
-              w="full"
-              onClick={handleSelectAddress}
-            >
-              Deliver to this Address
-            </Button>
-          </ModalFooter>
-        ) : (
-          <ModalFooter borderTopWidth="1px">
-            <Button
-              type="submit"
-              form="address-form"
-              colorScheme="purple"
-              w="full"
-            >
-              {isEditingMode ? "Save Changes" : "Add Address"}
-            </Button>
-          </ModalFooter>
+                        />
+                      )}
+                    </HStack>
+                  </Box>
+                );
+              })}
+            </Stack>
+          </RadioGroup>
         )}
-      </ModalContent>
+
+        {/* Add New Address Button */}
+        <Button
+          leftIcon={<FaPlus size={12} />}
+          variant="outline"
+          colorScheme="purple"
+          w="full"
+          h="44px"
+          rounded="xl"
+          mt={3.5}
+          fontWeight="600"
+          fontSize="sm"
+          onClick={() => {
+            setEditingAddress(null);
+            setIsEditingMode(false);
+            setIsAddingNewAddress(true);
+          }}
+        >
+          Add New Address
+        </Button>
+      </Box>
+    );
+  };
+
+  // Reusable Footer Content
+  const renderFooterContent = () => {
+    if (isFormMode) {
+      return (
+        <Button
+          type="submit"
+          form="address-form"
+          colorScheme="purple"
+          w="full"
+          h="46px"
+          rounded="xl"
+          fontWeight="700"
+          isLoading={isSubmitting}
+        >
+          {isEditingMode ? "Save Changes" : "Save Address"}
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        colorScheme="purple"
+        w="full"
+        h="46px"
+        rounded="xl"
+        fontWeight="700"
+        isDisabled={addresses.length === 0 || !tempSelectedAddress}
+        onClick={handleSelectAddress}
+      >
+        Deliver to this Address
+      </Button>
+    );
+  };
+
+  return (
+    <>
+      {/* ─── Mobile View: BottomSheetDrawer ─── */}
+      {isMobile ? (
+        <BottomSheetDrawer
+          isOpen={isOpen}
+          onClose={handleClose}
+          showHandle={true}
+          title={
+            <Flex align="center" gap={2}>
+              {isFormMode && (
+                <IconButton
+                  aria-label="Back to address list"
+                  icon={<ChevronLeftIcon boxSize={6} />}
+                  size="xs"
+                  variant="ghost"
+                  onClick={handleBackToList}
+                />
+              )}
+              <Text fontSize="md" fontWeight="700">
+                {titleText}
+              </Text>
+            </Flex>
+          }
+          footer={renderFooterContent()}
+          contentProps={{
+            maxH: "88dvh",
+          }}
+          bodyProps={{
+            overflowY: "auto",
+            px: 4,
+          }}
+        >
+          {renderBodyContent()}
+        </BottomSheetDrawer>
+      ) : (
+        /* ─── Desktop View: Centered Modal ─── */
+        <Modal isOpen={isOpen} onClose={handleClose} size="lg" isCentered>
+          <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+          <ModalContent borderRadius="2xl" overflow="hidden">
+            <ModalHeader borderBottomWidth="1px" borderColor="gray.100" py={4}>
+              <Flex align="center" justify="space-between">
+                <Flex align="center" gap={2}>
+                  {isFormMode && (
+                    <IconButton
+                      aria-label="Back to address list"
+                      icon={<ChevronLeftIcon boxSize={6} />}
+                      size="xs"
+                      variant="ghost"
+                      onClick={handleBackToList}
+                    />
+                  )}
+                  <Text fontSize="lg" fontWeight="700">
+                    {titleText}
+                  </Text>
+                </Flex>
+                <ModalCloseButton position="static" />
+              </Flex>
+            </ModalHeader>
+
+            <ModalBody py={4} maxH="65vh" overflowY="auto">
+              {renderBodyContent()}
+            </ModalBody>
+
+            <ModalFooter borderTopWidth="1px" borderColor="gray.100" py={3}>
+              {renderFooterContent()}
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deletingAddress && (
@@ -245,19 +416,20 @@ const AddressModal = ({
           onClose={() => setDeletingAddress(null)}
           onConfirm={async () => {
             if (deletingAddress && onDeleteAddress) {
-              await onDeleteAddress(deletingAddress._id || deletingAddress.id);
+              const id = deletingAddress._id || deletingAddress.id;
+              await onDeleteAddress(id);
               setDeletingAddress(null);
             }
           }}
           title="Delete Address"
-          message={`Are you sure you want to delete ${deletingAddress.name}?`}
+          message={`Are you sure you want to remove the address "${deletingAddress.name}"?`}
           confirmText="Delete"
           confirmButtonProps={{ colorScheme: "red" }}
           cancelText="Cancel"
         />
       )}
-    </Modal>
-  )
-}
+    </>
+  );
+};
 
-export default AddressModal
+export default AddressModal;

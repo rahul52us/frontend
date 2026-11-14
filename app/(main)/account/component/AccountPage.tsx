@@ -1,36 +1,67 @@
-import { Avatar, Box, Button, Card, CardBody, Flex, Grid, Text, VStack, useColorModeValue, useDisclosure } from "@chakra-ui/react";
+"use client";
+
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Card,
+  CardBody,
+  Flex,
+  Grid,
+  Text,
+  VStack,
+  useColorModeValue,
+  useDisclosure,
+} from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { FaBox, FaHome, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
+import {
+  FaBox,
+  FaHome,
+  FaShoppingCart,
+  FaSignOutAlt,
+  FaUser,
+  FaWallet,
+} from "react-icons/fa";
 import { AddressesSection } from "./AddressSection/AddressSection";
-// import { OrdersSection } from "./OrderSection/OrderSection";
 import OrdersSection from "./OrderSection/OrderSection";
 import { ProfileSection } from "./ProfileSection/ProfileSection";
 import SidebarButton from "./SidebarButton/SidebarButton";
 import { WalletSection } from "./WalletSection/WalletSection";
+import CartSection from "./CartSection/CartSection";
 import stores from "../../../store/stores";
 
 const AccountPage = observer(() => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams?.get('tab') || "details";
+  const initialTab = searchParams?.get("tab") || "details";
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
-    const tab = searchParams?.get('tab') || "details";
+    const tab = searchParams?.get("tab") || "details";
     if (tab === "dashboard") {
       router.replace("/dashboard");
       return;
     }
     setActiveTab(tab);
   }, [router, searchParams]);
+
   const accentColor = useColorModeValue("purple.500", "purple.200");
-  const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
-  const { isOpen: isLogoutOpen, onOpen: onLogoutOpen, onClose: onLogoutClose } = useDisclosure();
+  const activeBorder = `2px solid ${useColorModeValue(
+    "purple.500",
+    "purple.200"
+  )}`;
+  const {
+    isOpen: isLogoutOpen,
+    onOpen: onLogoutOpen,
+    onClose: onLogoutClose,
+  } = useDisclosure();
 
   const { user: authUser, logout } = stores.auth;
+  const { cartStore } = stores;
 
   const handleLogout = () => {
     logout();
@@ -42,7 +73,11 @@ const AccountPage = observer(() => {
     name: authUser?.name || "User",
     email: authUser?.email || "",
     phone: authUser?.phone || "",
-    avatar: authUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.name || 'User')}&background=6B46C1&color=fff&size=128`,
+    avatar:
+      authUser?.avatar ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        authUser?.name || "User"
+      )}&background=6B46C1&color=fff&size=128`,
   };
 
   // Update URL when tab changes
@@ -53,17 +88,46 @@ const AccountPage = observer(() => {
 
   const menuItems = [
     { label: "Profile Details", icon: <FaUser size="18px" />, tab: "details" },
+    {
+      label: "My Cart",
+      icon: <FaShoppingCart size="18px" />,
+      tab: "cart",
+      badge:
+        cartStore.totalItems > 0 ? (
+          <Badge
+            colorScheme="purple"
+            variant="solid"
+            fontSize="2xs"
+            rounded="full"
+            px={2}
+            py={0.5}
+          >
+            {cartStore.totalItems}
+          </Badge>
+        ) : null,
+    },
     { label: "Orders", icon: <FaBox size="18px" />, tab: "orders" },
     { label: "Addresses", icon: <FaHome size="18px" />, tab: "addresses" },
     { label: "Wallet", icon: <FaWallet size="18px" />, tab: "wallet" },
   ];
 
-
   return (
-    <Box maxW="container.xl" mx="auto" py={12} px={4} bg={useColorModeValue("gray.50", "gray.800")}>
+    <Box
+      maxW="container.xl"
+      mx="auto"
+      py={{ base: 6, md: 12 }}
+      px={4}
+      bg={useColorModeValue("gray.50", "gray.800")}
+    >
       <Grid templateColumns={{ base: "1fr", md: "320px 1fr" }} gap={8}>
         {/* Sidebar */}
-        <VStack spacing={6} align="stretch" position={'sticky'} top={44} h={'fit-content'}>
+        <VStack
+          spacing={6}
+          align="stretch"
+          position={"sticky"}
+          top={44}
+          h={"fit-content"}
+        >
           <Card borderRadius="2xl" boxShadow="md">
             <CardBody>
               <Flex align="center" gap={4}>
@@ -89,7 +153,7 @@ const AccountPage = observer(() => {
 
           <Card borderRadius="2xl" boxShadow="lg" py={2}>
             <VStack spacing={1} align="stretch" p={2}>
-              {menuItems.map(({ label, icon, tab }) => (
+              {menuItems.map(({ label, icon, tab, badge }) => (
                 <SidebarButton
                   key={tab}
                   label={label}
@@ -97,6 +161,7 @@ const AccountPage = observer(() => {
                   isActive={activeTab === tab}
                   onClick={() => handleTabChange(tab)}
                   color={accentColor}
+                  badge={badge}
                 />
               ))}
 
@@ -120,9 +185,14 @@ const AccountPage = observer(() => {
         </VStack>
 
         {/* Main Content */}
-          <Card borderRadius="2xl" boxShadow="lg" bg={useColorModeValue("white", "gray.700")}>
-          <CardBody p={8}>
+        <Card
+          borderRadius="2xl"
+          boxShadow="lg"
+          bg={useColorModeValue("white", "gray.700")}
+        >
+          <CardBody p={{ base: 4, sm: 6, md: 8 }}>
             {activeTab === "details" && <ProfileSection user={user} />}
+            {activeTab === "cart" && <CartSection />}
             {activeTab === "orders" && <OrdersSection />}
             {activeTab === "addresses" && <AddressesSection />}
             {activeTab === "wallet" && <WalletSection />}

@@ -1,16 +1,33 @@
-import { Button, Divider, useColorModeValue } from "@chakra-ui/react";
+import { Box, Button, Divider, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
+import React from "react";
 
-const SidebarButton = ({ label, icon, isActive, onClick, color }) => {
+interface SidebarButtonProps {
+  label: string;
+  icon: React.ReactElement;
+  isActive: boolean;
+  onClick: () => void;
+  color?: string;
+  badge?: React.ReactNode;
+}
+
+const SidebarButton = ({
+  label,
+  icon,
+  isActive,
+  onClick,
+  color,
+  badge,
+}: SidebarButtonProps) => {
   const hoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
-  // const activeBg = isActive ? useColorModeValue("purple.50", "whiteAlpha.100") : "transparent"
-  const activeBg = isActive ? "purple.50" : "transparent"
+  const activeBg = isActive ? "purple.50" : "transparent";
 
   return (
     <>
       <Button
         variant="ghost"
-        justifyContent="flex-start"
+        justifyContent="space-between"
+        w="full"
         h={14}
         borderRadius="lg"
         leftIcon={icon}
@@ -30,7 +47,10 @@ const SidebarButton = ({ label, icon, isActive, onClick, color }) => {
           borderRadius: "full",
         }}
       >
-        {label}
+        <Box as="span" flex="1" textAlign="left" ml={1}>
+          {label}
+        </Box>
+        {badge}
       </Button>
       <Divider opacity={0.5} />
     </>

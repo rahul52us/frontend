@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Modal,
   ModalOverlay,
@@ -13,59 +15,132 @@ import {
   Input,
   Grid,
   Checkbox,
+  useBreakpointValue,
 } from "@chakra-ui/react";
+import React from "react";
+import BottomSheetDrawer from "../../../../../component/common/Drawer/BottomSheetDrawer";
 
-export const AddressForm = ({ currentAddress, onSubmit }) => {
+export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any; onSubmit: any }) => {
   return (
     <form onSubmit={onSubmit} id="address-form">
-      <VStack spacing={5} align="stretch">
-        <FormControl>
-          <FormLabel fontWeight="bold">Address Name</FormLabel>
-          <Input name="name" placeholder="Home, Work, etc." defaultValue={currentAddress?.name || ""} />
+      <VStack spacing={4} align="stretch">
+        <FormControl isRequired>
+          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            Address Label / Name
+          </FormLabel>
+          <Input
+            name="name"
+            placeholder="e.g. Home, Work, Parents"
+            defaultValue={currentAddress?.name || ""}
+            rounded="lg"
+            fontSize="sm"
+          />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            Phone Number
+          </FormLabel>
+          <Input
+            name="phone"
+            type="tel"
+            placeholder="10-digit mobile number"
+            defaultValue={currentAddress?.phone || ""}
+            rounded="lg"
+            fontSize="sm"
+          />
+        </FormControl>
+
+        <FormControl isRequired>
+          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            Address Line 1 (House/Flat No., Building)
+          </FormLabel>
+          <Input
+            name="line1"
+            placeholder="Street address or flat number"
+            defaultValue={currentAddress?.line1 || currentAddress?.addressLine1 || ""}
+            rounded="lg"
+            fontSize="sm"
+          />
         </FormControl>
 
         <FormControl>
-          <FormLabel fontWeight="bold">Phone Number</FormLabel>
-          <Input name="phone" placeholder="Enter phone number" defaultValue={currentAddress?.phone || ""} />
+          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            Address Line 2 (Area, Landmark) (Optional)
+          </FormLabel>
+          <Input
+            name="line2"
+            placeholder="Area, colony or nearby landmark"
+            defaultValue={currentAddress?.line2 || currentAddress?.addressLine2 || ""}
+            rounded="lg"
+            fontSize="sm"
+          />
         </FormControl>
 
-        <FormControl>
-          <FormLabel fontWeight="bold">Address Line 1</FormLabel>
-          <Input name="line1" placeholder="Street address" defaultValue={currentAddress?.line1 || ""} />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel fontWeight="bold">Address Line 2 (Optional)</FormLabel>
-          <Input name="line2" placeholder="Apartment, suite, unit, etc." defaultValue={currentAddress?.line2 || ""} />
-        </FormControl>
-
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
-          <FormControl>
-            <FormLabel fontWeight="bold">City</FormLabel>
-            <Input name="city" placeholder="City" defaultValue={currentAddress?.city || ""} />
+        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={3}>
+          <FormControl isRequired>
+            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+              City
+            </FormLabel>
+            <Input
+              name="city"
+              placeholder="City"
+              defaultValue={currentAddress?.city || ""}
+              rounded="lg"
+              fontSize="sm"
+            />
           </FormControl>
 
-          <FormControl>
-            <FormLabel fontWeight="bold">State/Province</FormLabel>
-            <Input name="state" placeholder="State" defaultValue={currentAddress?.state || ""} />
+          <FormControl isRequired>
+            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+              State
+            </FormLabel>
+            <Input
+              name="state"
+              placeholder="State"
+              defaultValue={currentAddress?.state || ""}
+              rounded="lg"
+              fontSize="sm"
+            />
           </FormControl>
         </Grid>
 
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
-          <FormControl>
-            <FormLabel fontWeight="bold">Postal Code</FormLabel>
-            <Input name="postalCode" placeholder="Postal code" defaultValue={currentAddress?.postalCode || ""} />
+        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={3}>
+          <FormControl isRequired>
+            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+              PIN / Postal Code
+            </FormLabel>
+            <Input
+              name="postalCode"
+              placeholder="6-digit PIN"
+              defaultValue={currentAddress?.postalCode || ""}
+              rounded="lg"
+              fontSize="sm"
+            />
           </FormControl>
 
           <FormControl>
-            <FormLabel fontWeight="bold">Country</FormLabel>
-            <Input name="country" placeholder="Country" defaultValue={currentAddress?.country || ""} />
+            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+              Country
+            </FormLabel>
+            <Input
+              name="country"
+              placeholder="India"
+              defaultValue={currentAddress?.country || "India"}
+              rounded="lg"
+              fontSize="sm"
+            />
           </FormControl>
         </Grid>
 
-        <FormControl>
-          <Checkbox name="isDefault" defaultChecked={currentAddress?.isDefault || false}>
-            Set as default address
+        <FormControl pt={1}>
+          <Checkbox
+            name="isDefault"
+            defaultChecked={currentAddress?.isDefault || false}
+            colorScheme="purple"
+            fontSize="sm"
+          >
+            Set as default delivery address
           </Checkbox>
         </FormControl>
       </VStack>
@@ -73,20 +148,70 @@ export const AddressForm = ({ currentAddress, onSubmit }) => {
   );
 };
 
-const AddressModal = ({ isOpen, onClose, currentAddress, isEditing, handleSubmit }) => {
+interface AddressModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentAddress?: any;
+  isEditing?: boolean;
+  handleSubmit: (e: any) => Promise<any> | void;
+}
+
+const AddressModal: React.FC<AddressModalProps> = ({
+  isOpen,
+  onClose,
+  currentAddress,
+  isEditing,
+  handleSubmit,
+}) => {
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const title = isEditing ? "Edit Address" : "Add New Address";
+
+  const formElement = (
+    <AddressForm currentAddress={currentAddress} onSubmit={handleSubmit} />
+  );
+
+  const footerButton = (
+    <Button
+      type="submit"
+      form="address-form"
+      colorScheme="purple"
+      width="full"
+      h="44px"
+      rounded="xl"
+      fontWeight="700"
+    >
+      {isEditing ? "Save Changes" : "Save Address"}
+    </Button>
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheetDrawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title={title}
+        footer={footerButton}
+        contentProps={{ maxH: "88dvh" }}
+        bodyProps={{ overflowY: "auto", px: 4 }}
+      >
+        {formElement}
+      </BottomSheetDrawer>
+    );
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <ModalOverlay />
-      <ModalContent borderRadius="lg" p={4} boxShadow="xl">
-        <ModalHeader>{isEditing ? "Edit Address" : "Add New Address"}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <AddressForm currentAddress={currentAddress} onSubmit={handleSubmit} />
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+      <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+      <ModalContent borderRadius="2xl" p={2} boxShadow="xl">
+        <ModalHeader borderBottomWidth="1px" borderColor="gray.100" py={3.5}>
+          {title}
+        </ModalHeader>
+        <ModalCloseButton top={4} right={4} />
+        <ModalBody py={4} maxH="65vh" overflowY="auto">
+          {formElement}
         </ModalBody>
-        <ModalFooter>
-          <Button type="submit" form="address-form" colorScheme="blue" width="full">
-            {isEditing ? "Save Changes" : "Add Address"}
-          </Button>
+        <ModalFooter borderTopWidth="1px" borderColor="gray.100" py={3}>
+          {footerButton}
         </ModalFooter>
       </ModalContent>
     </Modal>
