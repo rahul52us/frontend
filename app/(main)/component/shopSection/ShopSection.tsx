@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FiShoppingBag } from "react-icons/fi";
 import useDebounce from "../../../component/config/component/customHooks/useDebounce";
 import stores from "../../../store/stores";
@@ -211,8 +211,8 @@ const ShopSection = observer(
     <AnimatePresence mode="wait">
           {!loading && shops.length > 0 && (
             <MotionSimpleGrid
-              columns={{ base: 1, md: 2, lg: 3, xl: 4 }}
-              spacing={{ base: 2.5, md: 5 }}
+              columns={{ base: 1, md: 2, lg: 3, xl: 5 }}
+              spacing={{ base: 2.5, md: 4 }}
               variants={containerVariants}
               initial="hidden"
               animate="show"

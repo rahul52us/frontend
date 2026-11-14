@@ -1,5 +1,5 @@
 "use client"
-import { Box, Heading, Text, Flex, VStack, useColorModeValue, Divider } from '@chakra-ui/react';
+import { Box, Divider, Flex, Heading, Text, VStack, useColorModeValue } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 
 interface ProductAboutSectionProps {

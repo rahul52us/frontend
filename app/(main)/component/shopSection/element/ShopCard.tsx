@@ -426,7 +426,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         transition={{ duration: 0.2 }}
         boxShadow="0 4px 16px rgba(0, 0, 0, 0.04)"
         _hover={{
-          borderColor: "blue.300",
+          // borderColor: "blue.300",
           boxShadow: "0 16px 32px -10px rgba(37, 99, 235, 0.16)",
         }}
       >
@@ -565,7 +565,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
               borderRadius="lg"
             >
               <Icon as={FaStar} color="amber.400" boxSize={3} />
-              <Text fontSize="xs" fontWeight="800" color="gray.800">
+              <Text fontSize="xs" fontWeight="800" color="gray.700">
                 {rating}
               </Text>
               <Text fontSize="10px" color="gray.500" fontWeight="600">
