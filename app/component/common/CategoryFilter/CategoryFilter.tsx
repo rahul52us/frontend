@@ -125,6 +125,7 @@ const CategorySection = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
+
       <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* Compact Section Header */}
         <Flex
@@ -238,8 +239,8 @@ const CategorySection = observer(() => {
                   onClick={() => handleCategoryClick(category)}
                   w={{ base: '112px', sm: '136px', md: '168px' }}
                   flexShrink={0}
-                  bg={cardBg}
-                  border="1px solid"
+                  // bg={cardBg}
+                  // border="1px solid"
                   borderColor={borderColor}
                   rounded={{ base: 'xl', md: '2xl' }}
                   p={{ base: 2, md: 2.5 }}
@@ -258,8 +259,8 @@ const CategorySection = observer(() => {
                   {/* Image Container */}
                   <Box
                     w="full"
-                    h={{ base: '92px', sm: '110px', md: '132px' }}
-                    rounded={{ base: 'lg', md: 'xl' }}
+                    h={{ base: '92px', sm: '100px', md: '120px' }}
+                    rounded={{ base: 'lg', md: '3xl' }}
                     overflow="hidden"
                     bg={imageBg}
                     position="relative"
@@ -311,7 +312,7 @@ const CategorySection = observer(() => {
                         {category.name}
                       </Text>
 
-                      <Text
+                      {/* <Text
                         display={{ base: 'none', md: 'block' }}
                         fontSize="11px"
                         color={subTextColor}
@@ -319,7 +320,7 @@ const CategorySection = observer(() => {
                         mt={0.5}
                       >
                         {category.description || 'Explore collection'}
-                      </Text>
+                      </Text> */}
                     </Box>
 
                     <Flex

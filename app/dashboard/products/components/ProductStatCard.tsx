@@ -98,7 +98,7 @@ export function ProductStatCard({
       <Box flex="1">
         {/* Number */}
         <Text
-          fontFamily="'Space Grotesk', 'DM Sans', sans-serif"
+          fontFamily="heading"
           fontSize={{ base: "16px", md: "28px" }}
           fontWeight="700"
           color={text}

@@ -384,7 +384,7 @@ const Rating = ({ p }: { p: Product }) => (
 const Qty = ({ value, onChange }: { value: number; onChange: (n: number) => void }) => (
   <HStack spacing={1} borderWidth="1px" borderColor="blackAlpha.200" _dark={{ borderColor: 'whiteAlpha.300' }} borderRadius="full" p="3px">
     <IconButton aria-label="Decrease quantity" onClick={() => onChange(value - 1)} variant="ghost" isRound size="sm" icon={<FiMinus />} />
-    <Text minW="22px" textAlign="center" fontWeight={800} fontSize="15px" aria-live="polite">{value}</Text>
+    <Text minW="22px" textAlign="center" fontWeight={700} fontSize="15px" aria-live="polite">{value}</Text>
     <IconButton aria-label="Increase quantity" onClick={() => onChange(value + 1)} variant="ghost" isRound size="sm" icon={<FiPlus />} />
   </HStack>
 );
@@ -449,10 +449,10 @@ const HeroCard = ({ p, actions }: { p: Product; actions: TileActions }) => {
       <Hit label={`Quick view ${p.name}`} onClick={() => actions.onOpen(p)} />
 
       <Box position="absolute" top={{ base: '16px', md: '24px' }} left={{ base: '16px', md: '24px' }} zIndex={2} pointerEvents="none" maxW="62%">
-        <Badge bg={C.citron} color={C.ink} borderRadius="full" px={3} py="3px" textTransform="none" fontSize="11px" fontWeight={800}>
+        <Badge bg={C.citron} color={C.ink} borderRadius="full" px={3} py="3px" textTransform="none" fontSize="11px" fontWeight={700}>
           {p.tag}
         </Badge>
-        <Heading as="h2" mt={2} fontSize={{ base: '36px', md: '56px' }} lineHeight={0.95} fontWeight={800} letterSpacing="-0.04em">
+        <Heading as="h2" mt={2} fontSize={{ base: '36px', md: '56px' }} lineHeight={0.95} fontWeight={700} letterSpacing="-0.04em">
           {p.name}
         </Heading>
         <Text mt={2} fontSize={{ base: '13px', md: '15px' }} opacity={0.82} lineHeight={1.35} noOfLines={3}>
@@ -475,7 +475,7 @@ const HeroCard = ({ p, actions }: { p: Product; actions: TileActions }) => {
         pointerEvents="none"
       >
         <Icon as={FaStar} color="#F5B301" boxSize="12px" />
-        <Text fontSize="12px" fontWeight={800}>{p.rating.toFixed(1)}</Text>
+        <Text fontSize="12px" fontWeight={700}>{p.rating.toFixed(1)}</Text>
         <Text fontSize="11px" color="#5B6078">{compact.format(p.reviews)} reviews</Text>
       </HStack>
 
@@ -496,7 +496,7 @@ const HeroCard = ({ p, actions }: { p: Product; actions: TileActions }) => {
       >
         <Text fontSize={{ base: '22px', md: '28px' }} fontWeight={900} lineHeight={1} letterSpacing="-0.03em">{fmt(p.price)}</Text>
         <Text fontSize="11px" textDecoration="line-through" opacity={0.65}>{fmt(p.compareAt)}</Text>
-        <Box position="absolute" top="-10px" right="-12px" bg={C.coral} color="white" borderRadius="full" px="8px" py="2px" fontSize="11px" fontWeight={800}>
+        <Box position="absolute" top="-10px" right="-12px" bg={C.coral} color="white" borderRadius="full" px="8px" py="2px" fontSize="11px" fontWeight={700}>
           -{pct(p)}%
         </Box>
       </Box>
@@ -510,7 +510,7 @@ const HeroCard = ({ p, actions }: { p: Product; actions: TileActions }) => {
           color={actions.isAdded(p.id) ? 'white' : C.ink}
           _hover={{ bg: actions.isAdded(p.id) ? '#1F9D63' : C.citron }}
           _active={{ transform: 'scale(.97)' }}
-          fontWeight={800}
+          fontWeight={700}
           leftIcon={<Icon as={actions.isAdded(p.id) ? FiCheck : FiShoppingBag} />}
           onClick={() => actions.onAdd(p.id)}
         >
@@ -552,7 +552,7 @@ const PromoCard = ({ onShop }: { onShop: () => void }) => {
       <Flex h="100%" justify="space-between" align="stretch" position="relative" zIndex={1} gap={2}>
         <Flex direction="column" justify="space-between" minW={0}>
           <Box>
-            <Heading as="h3" fontSize={{ base: '20px', md: '34px' }} fontWeight={800} letterSpacing="-0.03em" lineHeight={1}>
+            <Heading as="h3" fontSize={{ base: '20px', md: '34px' }} fontWeight={700} letterSpacing="-0.03em" lineHeight={1}>
               Flash sale
             </Heading>
             <Text mt="4px" fontSize={{ base: '12px', md: '15px' }} fontWeight={600}>Up to 40% off gadgets</Text>
@@ -576,7 +576,7 @@ const PromoCard = ({ onShop }: { onShop: () => void }) => {
         <HStack spacing="6px" align="flex-start" aria-label={`Sale ends in ${h} hours ${m} minutes ${s} seconds`} role="timer">
           {[[h, 'hr'], [m, 'min'], [s, 'sec']].map(([v, l]) => (
             <Flex key={l} direction="column" align="center" justify="center" bg={C.ink} color={C.citron} borderRadius="12px" w={{ base: '38px', md: '56px' }} h={{ base: '48px', md: '72px' }}>
-              <Text fontSize={{ base: '18px', md: '28px' }} fontWeight={800} lineHeight={1} sx={{ fontVariantNumeric: 'tabular-nums' }}>{v}</Text>
+              <Text fontSize={{ base: '18px', md: '28px' }} fontWeight={700} lineHeight={1} sx={{ fontVariantNumeric: 'tabular-nums' }}>{v}</Text>
               <Text fontSize="9px" opacity={0.7}>{l}</Text>
             </Flex>
           ))}
@@ -596,7 +596,7 @@ const JustInCard = ({ items, orderBase, onOpen, onAll }: { items: Product[]; ord
     {...surface}
   >
     <Flex justify="space-between" align="center" mb="10px">
-      <Text fontWeight={800} fontSize={{ base: '16px', md: '20px' }} letterSpacing="-0.02em">New this week</Text>
+      <Text fontWeight={700} fontSize={{ base: '16px', md: '20px' }} letterSpacing="-0.02em">New this week</Text>
       <Button variant="link" size="xs" color={C.ultra} _dark={{ color: C.citron }} rightIcon={<FiArrowRight />} onClick={onAll}>All picks</Button>
     </Flex>
     <Box display="grid" gridTemplateColumns="repeat(3, minmax(0, 1fr))" gap="8px">
@@ -618,7 +618,7 @@ const JustInCard = ({ items, orderBase, onOpen, onAll }: { items: Product[]; ord
             <SafeImage src={p.image} alt={p.name} tint={TINTS[(i + 2) % TINTS.length]} />
           </Box>
           <Text mt="5px" fontSize="12px" fontWeight={700} noOfLines={1}>{p.name}</Text>
-          <Text fontSize="11px" fontWeight={800} color={C.ultra} _dark={{ color: C.citron }}>{fmt(p.price)}</Text>
+          <Text fontSize="11px" fontWeight={700} color={C.ultra} _dark={{ color: C.citron }}>{fmt(p.price)}</Text>
         </chakra.button>
       ))}
     </Box>
@@ -634,7 +634,7 @@ const ProductTile = ({ p, variant, i, order, actions }: { p: Product; variant: V
   const isMini = variant === 'mini';
 
   const chipEl = (
-    <Badge bg={p.tag ? C.citron : C.coral} color={p.tag ? C.ink : 'white'} borderRadius="full" px="8px" py="2px" fontSize="10px" fontWeight={800} textTransform="none" boxShadow="0 2px 8px rgba(19,21,43,.2)">
+    <Badge bg={p.tag ? C.citron : C.coral} color={p.tag ? C.ink : 'white'} borderRadius="full" px="8px" py="2px" fontSize="10px" fontWeight={700} textTransform="none" boxShadow="0 2px 8px rgba(19,21,43,.2)">
       {chip}
     </Badge>
   );
@@ -650,12 +650,12 @@ const ProductTile = ({ p, variant, i, order, actions }: { p: Product; variant: V
           <Flex flex={1} minW={0} direction="column" justify="space-between" p="12px">
             <Box>
               <Text fontSize="11px" {...mutedText}>{p.category}</Text>
-              <Text fontWeight={800} fontSize={{ base: '15px', md: '17px' }} lineHeight={1.15} noOfLines={2} letterSpacing="-0.01em">{p.name}</Text>
+              <Text fontWeight={700} fontSize={{ base: '15px', md: '17px' }} lineHeight={1.15} noOfLines={2} letterSpacing="-0.01em">{p.name}</Text>
               <Box mt="4px"><Rating p={p} /></Box>
             </Box>
             <Flex justify="space-between" align="flex-end" gap={2}>
               <Box>
-                <Text fontWeight={800} fontSize="16px" lineHeight={1.1}>{fmt(p.price)}</Text>
+                <Text fontWeight={700} fontSize="16px" lineHeight={1.1}>{fmt(p.price)}</Text>
                 <Text fontSize="11px" textDecoration="line-through" {...mutedText}>{fmt(p.compareAt)}</Text>
               </Box>
               <Box position="relative" zIndex={3}><AddButton added={added} onAdd={() => actions.onAdd(p.id)} label={`Add ${p.name} to cart`} /></Box>
@@ -682,7 +682,7 @@ const ProductTile = ({ p, variant, i, order, actions }: { p: Product; variant: V
 
       {isMini ? (
         <Flex position="absolute" left="6px" right="6px" bottom="6px" justify="space-between" align="center" zIndex={2} pointerEvents="none">
-          <Box borderRadius="full" px="10px" py="4px" fontSize="12px" fontWeight={800} {...surface}>{fmt(p.price)}</Box>
+          <Box borderRadius="full" px="10px" py="4px" fontSize="12px" fontWeight={700} {...surface}>{fmt(p.price)}</Box>
           <Box pointerEvents="auto" position="relative" zIndex={3}>
             <AddButton added={added} onAdd={() => actions.onAdd(p.id)} size={32} label={`Add ${p.name} to cart`} />
           </Box>
@@ -690,10 +690,10 @@ const ProductTile = ({ p, variant, i, order, actions }: { p: Product; variant: V
       ) : (
         <Box position="absolute" left="6px" right="6px" bottom="6px" zIndex={2} borderRadius="20px" p="10px" pointerEvents="none" {...surface}>
           {variant === 'tall' && <Rating p={p} />}
-          <Text fontWeight={800} fontSize="13px" noOfLines={1} letterSpacing="-0.01em" mt={variant === 'tall' ? '2px' : 0}>{p.name}</Text>
+          <Text fontWeight={700} fontSize="13px" noOfLines={1} letterSpacing="-0.01em" mt={variant === 'tall' ? '2px' : 0}>{p.name}</Text>
           <Flex justify="space-between" align="center" mt="4px">
             <Box>
-              <Text fontWeight={800} fontSize="15px" lineHeight={1.1}>{fmt(p.price)}</Text>
+              <Text fontWeight={700} fontSize="15px" lineHeight={1.1}>{fmt(p.price)}</Text>
               <Text fontSize="11px" textDecoration="line-through" {...mutedText}>{fmt(p.compareAt)}</Text>
             </Box>
             <Box pointerEvents="auto" position="relative" zIndex={3}>
@@ -736,7 +736,7 @@ const CategoryTile = ({
         <WishButton liked={liked} onToggle={onLike} label={`Wishlist ${name}`} size={34} />
       </Box>
       <VStack position="absolute" left={0} right={0} bottom={0} p="12px" align="flex-start" spacing="4px" color="white" zIndex={2}>
-        <Heading as="h3" fontSize={{ base: '18px', md: '22px' }} fontWeight={800} letterSpacing="-0.02em" noOfLines={1} w="100%">{name}</Heading>
+        <Heading as="h3" fontSize={{ base: '18px', md: '22px' }} fontWeight={700} letterSpacing="-0.02em" noOfLines={1} w="100%">{name}</Heading>
         <Text fontSize="12px" opacity={0.9}>{productCount > 0 ? `${productCount}+ products` : 'Explore collection'}{discount ? ` · ${discount}` : ''}</Text>
         <Button size="sm" h="32px" variant="outline" color="white" borderColor="whiteAlpha.700" borderRadius="full" rightIcon={<FiArrowRight />} _hover={{ bg: 'white', color: C.ink }} _active={{ transform: 'scale(.96)' }}>
           Shop now
@@ -773,7 +773,7 @@ const QuickView = ({
           <Box p="18px">
             <Flex justify="space-between" align="flex-start" gap={3}>
               <Box minW={0}>
-                <Heading as="h3" fontSize="24px" fontWeight={800} letterSpacing="-0.03em" lineHeight={1.1}>{product.name}</Heading>
+                <Heading as="h3" fontSize="24px" fontWeight={700} letterSpacing="-0.03em" lineHeight={1.1}>{product.name}</Heading>
                 <Box mt="6px"><Rating p={product} /></Box>
               </Box>
               <Box textAlign="right" flexShrink={0}>
@@ -791,7 +791,7 @@ const QuickView = ({
                 flex={1}
                 h="52px"
                 borderRadius="full"
-                fontWeight={800}
+                fontWeight={700}
                 bg={added ? '#1F9D63' : C.ink}
                 color={added ? 'white' : 'white'}
                 _dark={{ bg: added ? '#1F9D63' : C.citron, color: added ? 'white' : C.ink }}
@@ -832,7 +832,7 @@ const CartDrawer = ({
       <DrawerContent borderTopRadius={{ base: '28px', md: 0 }} borderLeftRadius={{ md: '28px' }} maxH={{ base: '88dvh', md: '100dvh' }} h={{ base: 'auto', md: '100dvh' }} mt="auto" {...surface}>
         <DrawerCloseButton top="14px" right="14px" borderRadius="full" />
         <Box px="18px" pt="18px" pb="8px">
-          <Heading as="h3" fontSize="22px" fontWeight={800} letterSpacing="-0.03em">Your cart</Heading>
+          <Heading as="h3" fontSize="22px" fontWeight={700} letterSpacing="-0.03em">Your cart</Heading>
         </Box>
         <DrawerBody px="18px" pb="calc(16px + env(safe-area-inset-bottom))">
           {lines.length === 0 ? (
@@ -851,7 +851,7 @@ const CartDrawer = ({
                   </Box>
                   <Box flex={1} minW={0}>
                     <Text fontWeight={700} fontSize="14px" noOfLines={1}>{p.name}</Text>
-                    <Text fontSize="13px" fontWeight={800} color={C.ultra} _dark={{ color: C.citron }}>{fmt(p.price * qty)}</Text>
+                    <Text fontSize="13px" fontWeight={700} color={C.ultra} _dark={{ color: C.citron }}>{fmt(p.price * qty)}</Text>
                   </Box>
                   <Qty value={qty} onChange={(n) => onQty(p.id, n)} />
                 </Flex>
@@ -860,7 +860,7 @@ const CartDrawer = ({
                 <Text fontSize="14px" {...mutedText}>Subtotal</Text>
                 <Text fontSize="22px" fontWeight={900} letterSpacing="-0.03em">{fmt(total)}</Text>
               </Flex>
-              <Button mt="12px" w="100%" h="52px" borderRadius="full" fontWeight={800} bg={C.ink} color="white" _dark={{ bg: C.citron, color: C.ink }} _hover={{}} _active={{ transform: 'scale(.98)' }} rightIcon={<FiArrowRight />} onClick={onCheckout}>
+              <Button mt="12px" w="100%" h="52px" borderRadius="full" fontWeight={700} bg={C.ink} color="white" _dark={{ bg: C.citron, color: C.ink }} _hover={{}} _active={{ transform: 'scale(.98)' }} rightIcon={<FiArrowRight />} onClick={onCheckout}>
                 Checkout
               </Button>
             </>
@@ -1034,7 +1034,7 @@ const BentoGridSection = observer(() => {
         {/* Header */}
         <Flex justify="space-between" align="center" mb="10px" gap={3}>
           <Box minW={0}>
-            <Heading as="h2" fontSize={{ base: '26px', md: '40px' }} fontWeight={800} letterSpacing="-0.04em" lineHeight={1.05}>
+            <Heading as="h2" fontSize={{ base: '26px', md: '40px' }} fontWeight={700} letterSpacing="-0.04em" lineHeight={1.05}>
               Fresh picks
             </Heading>
             <Text fontSize={{ base: '13px', md: '15px' }} {...mutedText} noOfLines={1}>
@@ -1044,7 +1044,7 @@ const BentoGridSection = observer(() => {
           <HStack spacing={2} flexShrink={0}>
             <Flex align="center" gap="5px" h="42px" px="12px" borderRadius="full" aria-label={`${likedItems.size} in wishlist`} {...surface}>
               <Icon as={FaHeart} color={C.coral} boxSize="14px" />
-              <Text fontSize="13px" fontWeight={800}>{likedItems.size}</Text>
+              <Text fontSize="13px" fontWeight={700}>{likedItems.size}</Text>
             </Flex>
             <Box position="relative">
               <IconButton
@@ -1075,7 +1075,7 @@ const BentoGridSection = observer(() => {
                   bg={C.coral}
                   color="white"
                   fontSize="11px"
-                  fontWeight={800}
+                  fontWeight={700}
                   borderWidth="2px"
                   borderColor={bg}
                   animation={anim(`${pop} .4s ease`)}
@@ -1140,7 +1140,7 @@ const BentoGridSection = observer(() => {
         {(loading || catCount > 0) && (
           <Box mt={{ base: 6, md: 10 }}>
             <Flex justify="space-between" align="baseline" mb="10px">
-              <Heading as="h2" fontSize={{ base: '20px', md: '28px' }} fontWeight={800} letterSpacing="-0.03em">Shop by category</Heading>
+              <Heading as="h2" fontSize={{ base: '20px', md: '28px' }} fontWeight={700} letterSpacing="-0.03em">Shop by category</Heading>
               {!loading && <Text fontSize="12px" {...mutedText}>{catCount} collections</Text>}
             </Flex>
             {loading ? (

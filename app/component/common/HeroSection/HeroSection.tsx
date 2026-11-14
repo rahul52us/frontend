@@ -42,7 +42,6 @@ const HeroSection = () => {
                 lineHeight="1.15"
                 textAlign={{ base: "center", lg: "start" }}
                 position="relative"
-                // fontFamily="Gilroy"
                 letterSpacing="-3%"
               >
                 For Better <br />
@@ -50,7 +49,6 @@ const HeroSection = () => {
                   as="span"
                   fontWeight={600}
                   position="relative"
-                  // fontFamily="Gilroy"
                   letterSpacing="-3%"
                 >
                   Mental Health

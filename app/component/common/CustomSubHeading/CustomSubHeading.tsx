@@ -29,7 +29,7 @@ const CustomSubHeading = ({
       as={"h2"}
       fontWeight={fontWeight}
       fontSize={fontSize}
-      fontFamily="'Montserrat', sans-serif !important"
+      fontFamily="heading"
       my={my}
       px={px}
       {...props}

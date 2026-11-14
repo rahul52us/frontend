@@ -559,7 +559,7 @@ const ProductBanner = observer(() => {
           </SimpleGrid>
         ) : filteredProducts.length > 0 ? (
           <SimpleGrid
-            columns={{ base: 2, sm: 2, md: 3, lg: 4 }}
+            columns={{ base: 2, sm: 2, md: 3, lg:6 }}
             spacing={{ base: 2.5, sm: 3.5, md: 5 }}
           >
             {filteredProducts.map((product, index) => (

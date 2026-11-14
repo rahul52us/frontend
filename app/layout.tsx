@@ -5,11 +5,12 @@ import MainLayout from "./layouts/mainLayout/MainLayout";
 import AuthenticationLayout from "./layouts/authenticationLayout/AuthenticationLayout";
 import DashboardLayout from "./layouts/dashboardLayout/DashboardLayout";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import stores from "./store/stores";
 import Notification from "./component/common/Notification/Notification";
 import WhatsAppButton from "./component/common/whatsApp/whatsAppButton";
 import Image from "next/image";
+import { headingFont, bodyFont } from "../lib/fonts";
 import "./globals.css";
 
 export default function RootLayout({
@@ -19,11 +20,21 @@ export default function RootLayout({
 }>) {
   const { companyStore: { getCompanyDetails } } = stores;
   const pathname = usePathname();
-  const theme = extendTheme(stores.themeStore);
+
+  const theme = useMemo(
+    () =>
+      extendTheme(stores.themeStore, {
+        fonts: {
+          heading: "var(--font-heading), system-ui, sans-serif",
+          body: "var(--font-body), system-ui, sans-serif",
+        },
+      }),
+    []
+  );
 
   useEffect(() => {
     getCompanyDetails();
-  }, [getCompanyDetails]); // This is fine as is
+  }, [getCompanyDetails]);
 
   const getLayout = () => {
     if (pathname === '/login' || pathname === '/register' || pathname === "/forgot-password" || pathname === '/signUp') {
@@ -37,17 +48,16 @@ export default function RootLayout({
   const LayoutComponent = getLayout();
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <head>
         <ColorModeScript initialColorMode="light" />
       </head>
 
       <body
+        className={`${headingFont.variable} ${bodyFont.variable} font-body`}
         style={{
           margin: 0,
           padding: 0,
-          fontFamily:
-            "'Montserrat', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
         }}
       >
         <noscript>

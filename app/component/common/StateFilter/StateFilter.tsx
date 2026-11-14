@@ -1,86 +1,126 @@
-import React, { useState, useEffect, useRef } from 'react';
+'use client';
+
 import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  SimpleGrid,
-  VStack,
-  HStack,
+  Avatar,
   Badge,
-  Icon,
-  Flex,
-  Circle,
-  Progress,
+  Box,
   Button,
-  useColorModeValue,
+  Container,
+  Flex,
+  Heading,
+  HStack,
+  Icon,
   Input,
   InputGroup,
   InputLeftElement,
   Menu,
   MenuButton,
-  MenuList,
   MenuItem,
-  Avatar,
+  MenuList,
+  SimpleGrid,
+  Skeleton,
+  Text,
+  useColorModeValue,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
-import { FaGift, FaHeart, FaStore, FaSearch, FaChevronDown } from 'react-icons/fa';
-import { FiTrendingUp } from 'react-icons/fi';
 import { observer } from 'mobx-react-lite';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  FiCheck,
+  FiChevronDown,
+  FiCompass,
+  FiMapPin,
+  FiPackage,
+  FiSearch,
+} from 'react-icons/fi';
 import ProductCard from '../../../(main)/products/components/ProductCard/ProductCard';
-import { shopStore } from "../../../store/shopStore/shopStore";
-
-// ---------- MOCK STATES (will be used if API fails) ----------
-const MOCK_STATES: StateData[] = [
-  { _id: 'up', name: 'Uttar Pradesh', image: 'https://picsum.photos/id/10/50/50' },
-  { _id: 'mh', name: 'Maharashtra', image: 'https://picsum.photos/id/11/50/50' },
-  { _id: 'rj', name: 'Rajasthan', image: 'https://picsum.photos/id/12/50/50' },
-  { _id: 'tn', name: 'Tamil Nadu', image: 'https://picsum.photos/id/13/50/50' },
-  { _id: 'wb', name: 'West Bengal', image: 'https://picsum.photos/id/14/50/50' },
-  { _id: 'dl', name: 'Delhi', image: 'https://picsum.photos/id/15/50/50' },
-];
+import { shopStore } from '../../../store/shopStore/shopStore';
 
 interface StateData {
   _id: string;
   name: string;
   image: string;
   code?: string;
+  tagline?: string;
 }
+
+// ---------- CURATED FALLBACK STATES ----------
+const MOCK_STATES: StateData[] = [
+  {
+    _id: 'mh',
+    name: 'Maharashtra',
+    tagline: 'Handlooms, spices & local crafts',
+    image: 'https://images.unsplash.com/photo-1567157577867-05ccb1388e66?w=120&q=80',
+  },
+  {
+    _id: 'rj',
+    name: 'Rajasthan',
+    tagline: 'ethnic wear, decor & handicrafts',
+    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=120&q=80',
+  },
+  {
+    _id: 'up',
+    name: 'Uttar Pradesh',
+    tagline: 'Chikankari, brassware & sweets',
+    image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=120&q=80',
+  },
+  {
+    _id: 'dl',
+    name: 'Delhi NCR',
+    tagline: 'Trending fashion & electronics',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=120&q=80',
+  },
+  {
+    _id: 'tn',
+    name: 'Tamil Nadu',
+    tagline: 'Silk sarees, filter coffee & bronze',
+    image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=120&q=80',
+  },
+  {
+    _id: 'wb',
+    name: 'West Bengal',
+    tagline: 'Terracotta, cottons & specialties',
+    image: 'https://images.unsplash.com/photo-1558431382-27e303142255?w=120&q=80',
+  },
+];
 
 const StateFilter = observer(() => {
   const toast = useToast();
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const sectionBg = useColorModeValue('gray.50', 'gray.900');
-  const menuBg = useColorModeValue('white', 'gray.800');
 
-  const [states, setStates] = useState<StateData[]>(MOCK_STATES); // start with mock
+  // Hoisted Theme Tokens
+  const sectionBg = useColorModeValue('white', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const subtleBg = useColorModeValue('#F8FAFC', 'gray.850');
+  const borderColor = useColorModeValue('gray.100', 'gray.700');
+  const titleColor = useColorModeValue('gray.900', 'white');
+  const mutedText = useColorModeValue('gray.500', 'gray.400');
+  const menuBg = useColorModeValue('white', 'gray.800');
+  const searchInputBg = useColorModeValue('gray.50', 'gray.700');
+
+  const [states, setStates] = useState<StateData[]>(MOCK_STATES);
   const [selectedState, setSelectedState] = useState<StateData | null>(MOCK_STATES[0]);
   const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loaderProgress, setLoaderProgress] = useState(0);
-  const [loaderMessage, setLoaderMessage] = useState('Discovering top products...');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isStatesLoading, setIsStatesLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isStatesLoading, setIsStatesLoading] = useState<boolean>(true);
 
-  const progressInterval = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Try to load states from real API, fallback to mock
+  // Load states from API, fallback cleanly to MOCK_STATES
   useEffect(() => {
     const fetchStates = async () => {
       try {
         const response = await fetch('/api/states');
         if (response.ok) {
           const data = await response.json();
-          if (data?.status === 'success' && Array.isArray(data.data)) {
+          if (data?.status === 'success' && Array.isArray(data.data) && data.data.length > 0) {
             setStates(data.data);
             setSelectedState(data.data[0]);
           }
         }
       } catch (error) {
-        console.warn('Using mock states because /api/states failed:', error);
+        console.warn('Using fallback states list:', error);
       } finally {
         setIsStatesLoading(false);
       }
@@ -88,276 +128,456 @@ const StateFilter = observer(() => {
     fetchStates();
   }, []);
 
-  // Load products for selected state
-  const fetchProductsForState = async (stateId: string, stateName: string) => {
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    startLoader(stateName);
-    setProducts([]);
-
-    try {
-      // Adjust payload to match your backend – common patterns:
-      // Option 1: send stateId
-      // Option 2: send stateName
-      const payload = {
-        stateId: stateId,        // change to 'state' or 'location.state' as needed
-        page: 1,
-        limit: 12,
-      };
-      const response = await shopStore.getAllProducts(payload, true);
-      if (abortController.signal.aborted) return;
-
-      let productList: any[] = [];
-      if (response?.status === 'success') {
-        if (Array.isArray(response.data)) productList = response.data;
-        else if (response.data?.products) productList = response.data.products;
-      } else if (Array.isArray(response?.data)) productList = response.data;
-      else if (Array.isArray(response)) productList = response;
-
-      if (!Array.isArray(productList)) productList = [];
-      setProducts(productList);
-      stopLoader();
-    } catch (error: any) {
-      if (error?.name !== 'AbortError') {
-        console.error(error);
-        toast({ title: 'Error', description: `Failed to load products for ${stateName}`, status: 'error', duration: 3000 });
-        setProducts([]);
-        stopLoader();
+  // Single unified fetch function
+  const fetchProductsForState = useCallback(
+    async (stateId: string, stateName: string) => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-    }
-  };
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-  const startLoader = (stateName: string) => {
-    if (progressInterval.current) clearInterval(progressInterval.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setLoading(true);
 
-    setLoaderProgress(0);
-    setLoaderMessage(`Discovering top products from ${stateName}...`);
-    setLoading(true);
+      try {
+        const payload = {
+          stateId,
+          page: 1,
+          limit: 12,
+        };
+        const response = await shopStore.getAllProducts(payload, true);
+        if (abortController.signal.aborted) return;
 
-    const LOADER_DURATION_MS = 2000;
-    const stepPercent = 100 / (LOADER_DURATION_MS / 40);
-    progressInterval.current = setInterval(() => {
-      setLoaderProgress(prev => {
-        const next = Math.min(prev + stepPercent, 100);
-        if (next >= 100 && progressInterval.current) clearInterval(progressInterval.current);
-        if (next < 30) setLoaderMessage(`Exploring ${stateName} treasures...`);
-        else if (next < 70) setLoaderMessage(`Finding best sellers ✨`);
-        else setLoaderMessage(`Almost ready! 🎁`);
-        return next;
-      });
-    }, 40);
+        let productList: any[] = [];
+        if (response?.status === 'success') {
+          if (Array.isArray(response.data)) productList = response.data;
+          else if (response.data?.products) productList = response.data.products;
+        } else if (Array.isArray(response?.data)) {
+          productList = response.data;
+        } else if (Array.isArray(response)) {
+          productList = response;
+        }
 
-    timeoutRef.current = setTimeout(() => {
-      setLoading(false);
-      setLoaderProgress(100);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-      timeoutRef.current = null;
-    }, LOADER_DURATION_MS);
-  };
-
-  const stopLoader = () => {
-    if (progressInterval.current) clearInterval(progressInterval.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setLoading(false);
-    setLoaderProgress(100);
-  };
-
-  const handleStateSelect = (state: StateData) => {
-    if (!selectedState || state._id === selectedState._id) return;
-    setSelectedState(state);
-    fetchProductsForState(state._id, state.name);
-  };
-
-  const filteredStates = states.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+        if (!Array.isArray(productList)) productList = [];
+        setProducts(productList);
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          console.error(error);
+          toast({
+            title: 'Unable to load state products',
+            description: `Could not fetch products for ${stateName}.`,
+            status: 'error',
+            duration: 3000,
+          });
+          setProducts([]);
+        }
+      } finally {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    },
+    [toast]
   );
 
-  useEffect(() => {
-    return () => {
-      if (progressInterval.current) clearInterval(progressInterval.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (abortControllerRef.current) abortControllerRef.current.abort();
-    };
-  }, []);
-
-  // Fetch products for the initially selected state
+  // Trigger fetch whenever selectedState changes (prevents duplicate calls)
   useEffect(() => {
     if (selectedState && !isStatesLoading) {
       fetchProductsForState(selectedState._id, selectedState.name);
     }
-  }, [selectedState, isStatesLoading]);
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [selectedState, isStatesLoading, fetchProductsForState]);
 
-  if (isStatesLoading) {
-    return (
-      <Box py={12} textAlign="center">
-        <Text>Loading states...</Text>
-      </Box>
-    );
-  }
+  const handleStateSelect = (state: StateData) => {
+    if (!selectedState || state._id === selectedState._id) return;
+    setSelectedState(state);
+  };
 
-  if (!selectedState) return null;
+  const filteredStates = useMemo(
+    () =>
+      states.filter((s) =>
+        s.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
+      ),
+    [states, searchTerm]
+  );
+
+  if (!selectedState && !isStatesLoading) return null;
 
   return (
-    <Box py={{ base: 8, md: 12 }} bg={sectionBg} minH="100vh">
-      <Container maxW="container.xl" px={{ base: 4, md: 6 }}>
-        {/* Header (same as before) */}
-        <VStack spacing={4} mb={{ base: 6, md: 8 }}>
-          <HStack spacing={2}>
-            <Circle size="45px" bg="blue.100" _dark={{ bg: 'blue.900' }}>
-              <Icon as={FaStore} color="blue.600" boxSize={5} />
-            </Circle>
-            <Badge colorScheme="blue" fontSize="xs" px={3} py={1.5} borderRadius="full">
-              STATE WISE BESTSELLERS
-            </Badge>
-          </HStack>
-          <Heading
-            size={{ base: 'xl', md: '2xl' }}
-            fontWeight="900"
-            textAlign="center"
-            bgGradient="linear(135deg, #1e3a8a 0%, #3b82f6 100%)"
-            bgClip="text"
-          >
-            Discover Top Products by State
-          </Heading>
-          <Text color="gray.600" _dark={{ color: 'gray.400' }} textAlign="center" maxW="2xl">
-            Select any state to see the most loved and highest-selling products from local artisans
-          </Text>
-        </VStack>
-
-        {/* Dropdown (same) */}
-        <Flex justify="center" mb={8}>
-          <Menu>
-            <MenuButton
-              as={Button}
-              rightIcon={<FaChevronDown />}
-              leftIcon={<Avatar src={selectedState.image} size="xs" mr={2} />}
-              bg={cardBg}
-              border="1px solid"
-              borderColor={borderColor}
-              borderRadius="2xl"
-              px={6}
-              py={5}
-              _hover={{ bg: 'blue.50', borderColor: 'blue.400' }}
-              fontWeight="600"
+    <Box
+      as="section"
+      py={{ base: 5, md: 9 }}
+      bg={sectionBg}
+      borderBottom="1px solid"
+      borderColor={borderColor}
+    >
+      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
+        {/* 1. Compact Header + Searchable State Dropdown */}
+        <Flex
+          direction={{ base: 'column', sm: 'row' }}
+          justify="space-between"
+          align={{ base: 'flex-start', sm: 'flex-end' }}
+          mb={{ base: 3.5, md: 5 }}
+          gap={3}
+        >
+          <Box>
+            <HStack spacing={1.5} mb={1}>
+              <Icon as={FiCompass} color="blue.600" boxSize={3.5} />
+              <Text
+                fontSize="11px"
+                fontWeight="700"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="blue.600"
+              >
+                Regional Specialties
+              </Text>
+            </HStack>
+            <Heading
+              as="h2"
+              fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+              fontWeight="800"
+              color={titleColor}
+              letterSpacing="tight"
+              lineHeight="1.2"
             >
-              <HStack>
-                <Text>{selectedState.name}</Text>
-              </HStack>
-            </MenuButton>
-            <MenuList bg={menuBg} borderColor={borderColor} borderRadius="2xl" boxShadow="xl" p={2} minW="260px">
-              <Box px={2} pb={2}>
-                <InputGroup size="sm">
-                  <InputLeftElement pointerEvents="none">
-                    <Icon as={FaSearch} color="gray.400" />
-                  </InputLeftElement>
-                  <Input
-                    placeholder="Search state..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    borderRadius="full"
-                    bg={useColorModeValue('gray.50', 'gray.700')}
+              Shop Famous Finds by State
+            </Heading>
+            <Text
+              display={{ base: 'none', sm: 'block' }}
+              fontSize="xs"
+              color={mutedText}
+              mt={0.5}
+            >
+              Explore authentic local bestsellers and specialties across India
+            </Text>
+          </Box>
+
+          {/* Searchable State Selector Menu (For quick jump across all states) */}
+          {selectedState && (
+            <Menu isLazy placement="bottom-end">
+              <MenuButton
+                as={Button}
+                size="xs"
+                h={{ base: '32px', md: '36px' }}
+                px={3}
+                rounded="full"
+                bg={subtleBg}
+                color={titleColor}
+                border="1px solid"
+                borderColor={borderColor}
+                rightIcon={<FiChevronDown />}
+                _hover={{ borderColor: 'blue.300', bg: cardBg }}
+                _active={{ bg: cardBg }}
+                fontWeight="700"
+                flexShrink={0}
+              >
+                <HStack spacing={2}>
+                  <Avatar
+                    src={selectedState.image}
+                    name={selectedState.name}
+                    size="2xs"
                   />
-                </InputGroup>
-              </Box>
-              <Box maxH="300px" overflowY="auto">
-                {filteredStates.map((state) => (
-                  <MenuItem
-                    key={state._id}
-                    onClick={() => handleStateSelect(state)}
-                    borderRadius="xl"
-                    _hover={{ bg: 'blue.50' }}
-                    bg={selectedState._id === state._id ? 'blue.100' : 'transparent'}
-                  >
-                    <HStack spacing={3}>
-                      <Avatar src={state.image} size="sm" />
-                      <Text fontWeight={selectedState._id === state._id ? '800' : '500'}>
-                        {state.name}
-                      </Text>
-                      {selectedState._id === state._id && (
-                        <Badge colorScheme="blue" fontSize="9px" ml="auto">
-                          Selected
-                        </Badge>
-                      )}
-                    </HStack>
-                  </MenuItem>
-                ))}
-                {filteredStates.length === 0 && (
-                  <Text px={3} py={2} color="gray.500" fontSize="sm">
-                    No states found
-                  </Text>
-                )}
-              </Box>
-            </MenuList>
-          </Menu>
+                  <Text fontSize="xs">{selectedState.name}</Text>
+                </HStack>
+              </MenuButton>
+
+              <MenuList
+                bg={menuBg}
+                borderColor={borderColor}
+                borderRadius="2xl"
+                boxShadow="lg"
+                p={2}
+                minW="240px"
+                zIndex={20}
+              >
+                <Box px={1} pb={2}>
+                  <InputGroup size="xs">
+                    <InputLeftElement pointerEvents="none" h="30px">
+                      <Icon as={FiSearch} color="gray.400" boxSize={3} />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search state..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      h="30px"
+                      borderRadius="full"
+                      bg={searchInputBg}
+                      fontSize="xs"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </InputGroup>
+                </Box>
+
+                <Box
+                  maxH="240px"
+                  overflowY="auto"
+                  sx={{
+                    '&::-webkit-scrollbar': { width: '4px' },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#CBD5E0',
+                      borderRadius: 'full',
+                    },
+                  }}
+                >
+                  {filteredStates.map((state) => {
+                    const isSelected = selectedState._id === state._id;
+                    return (
+                      <MenuItem
+                        key={state._id}
+                        onClick={() => handleStateSelect(state)}
+                        borderRadius="xl"
+                        py={2}
+                        px={2.5}
+                        bg={isSelected ? 'blue.50' : 'transparent'}
+                        _hover={{ bg: isSelected ? 'blue.50' : subtleBg }}
+                      >
+                        <HStack spacing={2.5} w="full">
+                          <Avatar
+                            src={state.image}
+                            name={state.name}
+                            size="xs"
+                          />
+                          <Text
+                            fontSize="xs"
+                            fontWeight={isSelected ? '700' : '500'}
+                            color={isSelected ? 'blue.600' : titleColor}
+                            flex="1"
+                            noOfLines={1}
+                          >
+                            {state.name}
+                          </Text>
+                          {isSelected && (
+                            <Icon as={FiCheck} color="blue.600" boxSize={3.5} />
+                          )}
+                        </HStack>
+                      </MenuItem>
+                    );
+                  })}
+
+                  {filteredStates.length === 0 && (
+                    <Text
+                      px={3}
+                      py={4}
+                      color={mutedText}
+                      fontSize="xs"
+                      textAlign="center"
+                    >
+                      No matching state found
+                    </Text>
+                  )}
+                </Box>
+              </MenuList>
+            </Menu>
+          )}
         </Flex>
 
-        {/* Products / Loader */}
-        {loading ? (
+        {/* 2. Horizontal Swipeable State Pill Bar (Instant 1-Tap State Switching on Mobile) */}
+        <Flex
+          gap={2}
+          overflowX="auto"
+          pb={3}
+          mb={3}
+          sx={{
+            scrollSnapType: 'x mandatory',
+            '& > *': { scrollSnapAlign: 'start' },
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          {states.map((state) => {
+            const isSelected = selectedState?._id === state._id;
+            return (
+              <HStack
+                key={state._id}
+                as="button"
+                onClick={() => handleStateSelect(state)}
+                spacing={2}
+                pl={1.5}
+                pr={3.5}
+                py={1.5}
+                h={{ base: '38px', md: '42px' }}
+                rounded="full"
+                bg={isSelected ? 'blue.600' : subtleBg}
+                color={isSelected ? 'white' : titleColor}
+                border="1px solid"
+                borderColor={isSelected ? 'blue.600' : borderColor}
+                boxShadow={
+                  isSelected
+                    ? '0 6px 16px -4px rgba(37, 99, 235, 0.4)'
+                    : 'none'
+                }
+                flexShrink={0}
+                transition="all 0.2s ease"
+                _hover={{
+                  borderColor: isSelected ? 'blue.600' : 'blue.300',
+                  transform: 'translateY(-1px)',
+                }}
+                _active={{ transform: 'scale(0.97)' }}
+              >
+                <Avatar
+                  src={state.image}
+                  name={state.name}
+                  size="xs"
+                  boxSize={{ base: '26px', md: '28px' }}
+                  border="1.5px solid"
+                  borderColor={isSelected ? 'white' : 'transparent'}
+                />
+                <Text
+                  fontSize="xs"
+                  fontWeight={isSelected ? '700' : '600'}
+                  whiteSpace="nowrap"
+                >
+                  {state.name}
+                </Text>
+              </HStack>
+            );
+          })}
+        </Flex>
+
+        {/* Active State Context Bar */}
+        {selectedState && (
           <Flex
-            direction="column"
+            bg={subtleBg}
+            px={3.5}
+            py={2}
+            rounded="xl"
+            border="1px solid"
+            borderColor={borderColor}
+            mb={4}
             align="center"
-            justify="center"
-            minH="400px"
-            gap={6}
-            bg="whiteAlpha.700"
-            _dark={{ bg: 'blackAlpha.500' }}
-            borderRadius="3xl"
-            backdropFilter="blur(8px)"
-            p={8}
+            justify="space-between"
+            gap={2}
           >
-            <Box position="relative" boxSize="80px">
-              <Icon
-                as={FaGift}
-                boxSize="80px"
-                color="blue.400"
-                animation="pulse 0.8s infinite"
-                sx={{
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)', opacity: 1 },
-                    '50%': { transform: 'scale(1.1)', opacity: 0.8 },
-                    '100%': { transform: 'scale(1)', opacity: 1 },
-                  },
-                }}
-              />
-              <Icon
-                as={FaHeart}
-                position="absolute"
-                top="-10px"
-                right="-10px"
-                boxSize="24px"
-                color="red.500"
-                animation="bounce 0.6s infinite"
-                sx={{
-                  '@keyframes bounce': {
-                    '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-5px)' },
-                  },
-                }}
-              />
-            </Box>
-            <Text fontWeight="800" fontSize="lg" color="blue.600">
-              {loaderMessage}
-            </Text>
-            <Progress
-              value={loaderProgress}
-              size="sm"
-              width="250px"
-              colorScheme="blue"
-              borderRadius="full"
-              hasStripe
-              isAnimated
-            />
-            <Text fontSize="sm" color="gray.500">Just a moment, loading top products...</Text>
+            <HStack spacing={2} minW={0}>
+              <Icon as={FiMapPin} color="blue.600" boxSize={3.5} flexShrink={0} />
+              <Text fontSize="xs" fontWeight="700" color={titleColor} noOfLines={1}>
+                Showing specialties from {selectedState.name}
+              </Text>
+              {selectedState.tagline && (
+                <Text
+                  fontSize="xs"
+                  color={mutedText}
+                  noOfLines={1}
+                  display={{ base: 'none', md: 'inline' }}
+                >
+                  • {selectedState.tagline}
+                </Text>
+              )}
+            </HStack>
+
+            {!loading && (
+              <Badge
+                colorScheme="blue"
+                variant="subtle"
+                rounded="full"
+                px={2.5}
+                py={0.5}
+                fontSize="10px"
+                fontWeight="700"
+                flexShrink={0}
+              >
+                {products.length} {products.length === 1 ? 'Product' : 'Products'}
+              </Badge>
+            )}
           </Flex>
-        ) : (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5 }} spacing={6}>
-            {products.map((product) => (
-              <ProductCard key={product._id || product.id} product={product} />
+        )}
+
+        {/* 3. Products Grid (2 Columns on Mobile, 3 on Tablet, 4 on Desktop) */}
+        {loading || isStatesLoading ? (
+          <SimpleGrid
+            columns={{ base: 2, sm: 2, md: 4, lg: 6 }}
+            spacing={{ base: 2.5, sm: 3.5, md: 5 }}
+          >
+            {[...Array(8)].map((_, idx) => (
+              <Box
+                key={idx}
+                bg={cardBg}
+                rounded="2xl"
+                p={2.5}
+                border="1px solid"
+                borderColor={borderColor}
+              >
+                <Skeleton
+                  h={{ base: '140px', sm: '165px', md: '190px' }}
+                  w="full"
+                  rounded="xl"
+                  mb={3}
+                />
+                <Skeleton h="10px" w="45%" mb={2} rounded="sm" />
+                <Skeleton h="14px" w="90%" mb={1.5} rounded="sm" />
+                <Skeleton h="14px" w="65%" mb={3} rounded="sm" />
+                <Flex justify="space-between" align="center">
+                  <Skeleton h="18px" w="40%" rounded="md" />
+                  <Skeleton h="28px" w="56px" rounded="lg" />
+                </Flex>
+              </Box>
             ))}
           </SimpleGrid>
+        ) : products.length > 0 ? (
+          <SimpleGrid
+            columns={{ base: 2, sm: 2, md: 3, lg: 6 }}
+            spacing={{ base: 2.5, sm: 3.5, md: 5 }}
+          >
+            {products.map((product) => (
+              <ProductCard
+                key={product._id || product.id}
+                product={product}
+              />
+            ))}
+          </SimpleGrid>
+        ) : (
+          /* Clean Empty State when a state has no products yet */
+          <VStack
+            py={12}
+            px={4}
+            spacing={3}
+            bg={subtleBg}
+            rounded="2xl"
+            border="1px dashed"
+            borderColor={borderColor}
+            textAlign="center"
+          >
+            <Flex
+              w="44px"
+              h="44px"
+              rounded="full"
+              bg="blue.50"
+              color="blue.600"
+              align="center"
+              justify="center"
+            >
+              <Icon as={FiPackage} boxSize={5} />
+            </Flex>
+            <Box>
+              <Text fontSize="md" fontWeight="700" color={titleColor}>
+                No products listed in {selectedState?.name} yet
+              </Text>
+              <Text fontSize="xs" color={mutedText} mt={0.5} maxW="xs">
+                Local sellers from {selectedState?.name} are onboarding soon. Explore another state in the meantime!
+              </Text>
+            </Box>
+            {states.length > 1 && (
+              <Button
+                size="xs"
+                h="34px"
+                px={4}
+                colorScheme="blue"
+                rounded="full"
+                onClick={() => {
+                  const nextState =
+                    states.find((s) => s._id !== selectedState?._id) || states[0];
+                  handleStateSelect(nextState);
+                }}
+              >
+                Explore {states.find((s) => s._id !== selectedState?._id)?.name}
+              </Button>
+            )}
+          </VStack>
         )}
       </Container>
     </Box>

@@ -281,7 +281,8 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             <HStack spacing={1} w="full" align="center">
               <Text
                 fontSize="sm"
-                fontWeight="800"
+                textTransform={'capitalize'}
+                fontWeight="700"
                 color={titleColor}
                 noOfLines={1}
                 lineHeight="1.2"
@@ -578,7 +579,8 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             <HStack spacing={1.5} align="center">
               <Text
                 fontSize="md"
-                fontWeight="800"
+                textTransform={'capitalize'}
+                fontWeight="700"
                 color={titleColor}
                 noOfLines={1}
                 letterSpacing="-0.01em"
@@ -597,7 +599,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
 
             <HStack spacing={1} mt={0.5} color={mutedText}>
               <Icon as={FiMapPin} boxSize={3} color="blue.500" flexShrink={0} />
-              <Text fontSize="xs" fontWeight="500" noOfLines={1}>
+              <Text fontSize="xs" fontWeight="400" noOfLines={1}>
                 {locationLabel}
               </Text>
             </HStack>

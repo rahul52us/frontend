@@ -1,9 +1,9 @@
 import { extendTheme, StyleFunctionProps } from "@chakra-ui/react";
 import stores from "../store/stores";
 const bodyFontStack =
-  "'Lato', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
+  "var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const headingFontStack =
-  "'Montserrat', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
+  "var(--font-heading), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 const breakpoints = {
   sm: "30em",

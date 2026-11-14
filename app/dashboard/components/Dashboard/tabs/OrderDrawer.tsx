@@ -225,7 +225,7 @@ const buildOrderInvoiceHtml = ({
         body {
           margin: 0;
           padding: 32px;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family: var(--font-body), Arial, Helvetica, sans-serif;
           color: var(--ink);
           background: #ffffff;
         }

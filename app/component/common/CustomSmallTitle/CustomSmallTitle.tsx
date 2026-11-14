@@ -20,7 +20,7 @@ const CustomSmallTitle = ({
 }: Props) => {
   return (
     <Text
-      fontFamily="Montserrat, sans-serif"
+      fontFamily="heading"
       textTransform="uppercase"
       color={color}
       textAlign={textAlign}

@@ -35,7 +35,7 @@ const MissionStatement = () => {
           {/* Title Section */}
           <Text
             fontSize={{ base: "16px", md: "18px", lg: "22px" }}
-            fontFamily="Montserrat, sans-serif"
+            fontFamily="heading"
             letterSpacing="-2%"
             lineHeight={{ base: "22px", md: "26px", lg: "32px" }}
             mt={4}
@@ -51,7 +51,7 @@ const MissionStatement = () => {
           {/* Body Text Section */}
           <Text
             fontSize={{ base: "16px", md: "18px", lg: "24px" }}
-            fontFamily="Montserrat, sans-serif"
+            fontFamily="body"
             letterSpacing="-2%"
             lineHeight={{ base: "22px", md: "26px", lg: "32px" }}
             mt={4}

@@ -80,9 +80,9 @@ const FreebieProductModal: React.FC<FreebieProductModalProps> = ({
         <ModalHeader borderBottomWidth="1px" borderBottomColor={dashboardPalette.border} pb={4}>
           <Text
             fontSize="xl"
-            fontWeight="500"
+            fontWeight="bold"
             color={dashboardPalette.text}
-            fontFamily='Georgia, "Times New Roman", serif'
+            fontFamily="heading"
           >
             Select Freebie Product
           </Text>

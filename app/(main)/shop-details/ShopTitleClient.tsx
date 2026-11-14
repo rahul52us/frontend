@@ -108,7 +108,7 @@ const Page = observer(() => {
             fontSize={{ base: "2xl", md: "3xl" }}
             fontWeight="bold"
             color={textColor}
-            fontFamily="'Caveat', cursive"
+            fontFamily="heading"
             textAlign="center"
             mb={4}
           >
@@ -140,7 +140,7 @@ const Page = observer(() => {
           <Text
             fontSize="md"
             color="gray.600"
-            fontFamily="'Lora', serif"
+            fontFamily="body"
             textAlign="center"
             mb={6}
           >
@@ -181,7 +181,7 @@ const Page = observer(() => {
           <Text
             fontSize="sm"
             color={textColor}
-            fontFamily="'Caveat', cursive"
+            fontFamily="heading"
             fontStyle="italic"
             textAlign="center"
             mb={2}
@@ -195,7 +195,7 @@ const Page = observer(() => {
             px={6}
             borderColor={accentColor}
             color={accentColor}
-            fontFamily="'Lora', serif"
+            fontFamily="body"
             _hover={{ bg: "pink.50", transform: "scale(1.05)" }}
             transition="all 0.3s ease"
             alignSelf="center"
@@ -242,7 +242,7 @@ const Page = observer(() => {
               fontSize={{ base: "2xl", md: "3xl" }}
               fontWeight="bold"
               color={textColor}
-              fontFamily="'Caveat', cursive"
+              fontFamily="heading"
               textAlign="center"
             >
               A New Story Begins
@@ -273,7 +273,7 @@ const Page = observer(() => {
             <Text
               fontSize="md"
               color="gray.600"
-              fontFamily="'Lora', serif"
+              fontFamily="body"
               textAlign="center"
             >
               This shop hasn’t started yet. It’s waiting for its magic moment.
@@ -297,7 +297,7 @@ const Page = observer(() => {
             <Text
               fontSize="sm"
               color={textColor}
-              fontFamily="'Caveat', cursive"
+              fontFamily="heading"
               fontStyle="italic"
               textAlign="center"
             >
@@ -311,7 +311,7 @@ const Page = observer(() => {
               px={6}
               borderColor={accentColor}
               color={accentColor}
-              fontFamily="'Lora', serif"
+              fontFamily="body"
               _hover={{ bg: "pink.50", transform: "scale(1.05)" }}
               transition="all 0.3s ease"
             >

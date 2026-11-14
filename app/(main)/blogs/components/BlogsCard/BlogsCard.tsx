@@ -58,7 +58,7 @@ const BlogsCard: React.FC<BlogCardProps> = ({ image, date, title, description, t
         {otherBlog ? (
           <Flex alignItems={'center'} gap={{ base: 2, lg: 4 }}>
             <Stack spacing={0} alignItems="center">
-              <Text fontSize={"sm"} color="brand.100" fontWeight={600} fontFamily={"Montserrat, sans-serif"}>
+              <Text fontSize={"sm"} color="brand.100" fontWeight={600} fontFamily="heading">
                 {formattedDate.month}
               </Text>
               <Text fontSize={"2xl"} fontWeight={700}>

@@ -71,7 +71,8 @@ const SidebarLogo: React.FC = observer(() => {
                 <Text
                   textAlign="left"
                   fontSize="32px"
-                  fontFamily="Georgia, 'Times New Roman', serif"
+                  fontFamily="heading"
+                  fontWeight="bold"
                   lineHeight="0.95"
                   letterSpacing="0.08em"
                   color={cAccentStrong}
