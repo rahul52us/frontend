@@ -128,7 +128,7 @@ const TableActions: React.FC<TableActionsProps> = ({
       }
     >
       <Flex columnGap={0} justifyContent={"center"}>
-        <Menu isLazy>
+        <Menu isLazy strategy="fixed">
           <MenuButton
             as={IconButton}
             icon={<HiDotsVertical />}

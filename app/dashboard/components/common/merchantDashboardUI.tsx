@@ -126,7 +126,7 @@ export const MerchantPageShell = ({
   };
 
   return (
-    <Box minH="100vh" bg={pageBg} py={{ base: 4, md: 6 }} style={themeVars as any}>
+    <Box minH="100vh" bg={pageBg} py={{ base: 0, md: 0 }} style={themeVars as any}>
       <Container maxW={maxW} sx={useMerchantFormSx()}>
         {children}
       </Container>
