@@ -1,40 +1,39 @@
-import React, { useState, useEffect, useRef } from 'react';
 import {
+  Badge,
   Box,
+  Button,
+  Circle,
   Container,
+  Flex,
   Heading,
-  Text,
-  Image,
-  VStack,
   HStack,
   Icon,
+  Image,
   SimpleGrid,
-  Badge,
-  Flex,
-  Circle,
-  Button,
-  useColorModeValue,
   Skeleton,
+  Text,
+  useColorModeValue,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  FaGift,
-  FaHeart,
-  FaStar,
-  FaShoppingBag,
-  FaClock,
-  FaTshirt,
-  FaMobileAlt,
-  FaHome,
-  FaRegHeart,
   FaBabyCarriage,
-  FaShoePrints,
-  FaGamepad,
   FaBook,
   FaCamera,
+  FaGamepad,
+  FaGift,
+  FaHeart,
+  FaHome,
+  FaMobileAlt,
+  FaRegHeart,
+  FaShoePrints,
+  FaShoppingBag,
+  FaStar,
+  FaTshirt
 } from 'react-icons/fa';
-import { FiTrendingUp, FiArrowRight, FiCompass, FiZap } from 'react-icons/fi';
-import { observer } from 'mobx-react-lite';
+import { FiArrowRight, FiCompass, FiTrendingUp, FiZap } from 'react-icons/fi';
 import categoryStore from '../../../../store/categoryStore/categoryStore';
 import { shopStore } from '../../../../store/shopStore/shopStore';
 
@@ -512,5 +511,4 @@ const BentoGridSection = observer(() => {
     </Box>
   );
 });
-
 export default BentoGridSection;

@@ -10,6 +10,7 @@ import stores from "./store/stores";
 import Notification from "./component/common/Notification/Notification";
 import WhatsAppButton from "./component/common/whatsApp/whatsAppButton";
 import Image from "next/image";
+import "./globals.css";
 
 export default function RootLayout({
   children,

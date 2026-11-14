@@ -1,17 +1,15 @@
 "use client";
-import { Suspense } from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
+import { Suspense } from "react";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import ProductBanner from "../../component/common/ProductBanner/ProductBanner";
 import IndianStateFilter from "../../component/common/StateFilter/StateFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
-import CategoryTabs from "./components/CategoryTabs/CategoryTabs";
+import MapComponent from "../../component/maps/MapMarker";
 import BentoGridSection from "./components/BentoGridSection/BentoGridSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
-import VideoStories from "./components/VideoStories/VideoStories";
-import MapComponent from "../../component/maps/MapMarker";
 
 const Page = observer(() => {
   return (
@@ -49,7 +47,7 @@ const Page = observer(() => {
         </Box>
       </Flex>
       <MapComponent />
-      <CategoryTabs />
+      {/* <CategoryTabs /> */}
       <IndianStateFilter />
 
       <Box mb={{ base: 4, md: 6 }}>

@@ -1,17 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { observer } from 'mobx-react-lite';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Flex, Text, Badge, IconButton, useBreakpointValue } from '@chakra-ui/react';
+'use client';
+
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import {
-  FaChevronLeft,
-  FaChevronRight,
-  FaStar,
-  FaShoppingCart,
-  FaHeart,
-  FaEye,
-  FaRegHeart,
-} from 'react-icons/fa';
-import { shopStore } from '../../../../store/shopStore/shopStore'; // adjust path
+  Badge,
+  Box,
+  Button,
+  Container,
+  Flex,
+  Heading,
+  HStack,
+  Icon,
+  IconButton,
+  Image,
+  Skeleton,
+  Text,
+  VStack,
+  useColorModeValue,
+  useToast,
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import { observer } from 'mobx-react-lite';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaCartPlus, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
+import { FiArrowRight, FiAward, FiPlus, FiShoppingCart } from 'react-icons/fi';
+import { shopStore } from '../../../../store/shopStore/shopStore';
+
+const MotionBox = motion(Box);
 
 // ─── Types ──────────────────────────────────────────────────────────────
 interface Product {
@@ -27,205 +42,381 @@ interface Product {
   isNew?: boolean;
 }
 
-// ─── Inline SVG Icons (no external deps) ────────────────────────────────
-const ShoppingBagIcon = ({ size = 80, color = "#3182ce" }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <path d="M16 10a4 4 0 0 1-8 0" />
-  </svg>
-);
-
-// ─── E-Commerce Loader Component ──────────────────────────────────────────
-const EcommerceLoader = () => {
-  return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      minH="500px"
-      bg="gray.50"
-      borderRadius="2xl"
-      gap={6}
-    >
-      <Box position="relative" width="80px" height="80px">
-        <motion.div
-          animate={{ y: [0, -15, 0], rotate: [0, -5, 5, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ShoppingBagIcon />
-        </motion.div>
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            style={{
-              position: 'absolute',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: i === 0 ? '#38b2ac' : i === 1 ? '#ed8936' : '#e53e3e',
-              top: '50%',
-              left: '50%',
-            }}
-            animate={{
-              x: [0, (i - 1) * 40, 0],
-              y: [0, -30, 0],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{ duration: 2, repeat: Infinity, delay: i * 0.4, ease: "easeOut" }}
-          />
-        ))}
-      </Box>
-      <Flex direction="column" align="center" gap={2}>
-        <Text fontSize="xl" fontWeight="bold" color="gray.700" letterSpacing="wide">
-          Loading Top Picks
-        </Text>
-        <Text fontSize="sm" color="gray.500">
-          Curating the best for you...
-        </Text>
-      </Flex>
-      <Box width="200px" height="4px" bg="gray.200" borderRadius="full" overflow="hidden">
-        <motion.div
-          style={{ height: '100%', background: 'linear-gradient(90deg, #3182ce, #38b2ac)', borderRadius: 'full' }}
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 2.5, ease: "easeInOut" }}
-        />
-      </Box>
-    </Flex>
-  );
-};
-
 // ─── Helper: Map API product to UI Product interface ────────────────────
-const mapApiProductToProduct = (apiProduct: any): Product => {
+const mapApiProductToProduct = (apiProduct: any, index: number): Product => {
+  const rawPrice = parseFloat(apiProduct.price ?? apiProduct.sellingPrice) || 0;
+  const rawOriginal =
+    parseFloat(apiProduct.originalPrice ?? apiProduct.mrp) ||
+    Math.round(rawPrice * 1.25);
+
+  const imageUrl =
+    typeof apiProduct.image === 'string'
+      ? apiProduct.image
+      : apiProduct.image?.url ||
+        (typeof apiProduct.images?.[0] === 'string'
+          ? apiProduct.images[0]
+          : apiProduct.images?.[0]?.url) ||
+        `https://picsum.photos/seed/prod-${apiProduct._id || index}/400/400`;
+
+  const categoryName =
+    typeof apiProduct.category === 'string'
+      ? apiProduct.category
+      : apiProduct.category?.name || apiProduct.categoryName || 'Local Pick';
+
+  const isRecent =
+    Boolean(apiProduct.isNew) ||
+    (Boolean(apiProduct.createdAt) &&
+      Date.now() - new Date(apiProduct.createdAt).getTime() <
+        7 * 24 * 60 * 60 * 1000);
+
   return {
-    id: apiProduct.id,
-    name: apiProduct.name,
-    price: parseFloat(apiProduct.price) || 0,
-    originalPrice: parseFloat(apiProduct.originalPrice) || parseFloat(apiProduct.price) * 1.2 || 0,
-    rating: apiProduct.rating || 4.5,
-    reviews: apiProduct.reviews || Math.floor(Math.random() * 1000) + 100,
-    image: apiProduct.image || apiProduct.images?.[0] || 'https://via.placeholder.com/500',
-    category: apiProduct.category || apiProduct.categoryName || 'General',
-    badge: apiProduct.badge || (apiProduct.isBestSeller ? 'Best Seller' : undefined),
-    isNew: apiProduct.isNew || apiProduct.createdAt && (Date.now() - new Date(apiProduct.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000),
+    id: apiProduct._id || apiProduct.id || index,
+    name: apiProduct.name || apiProduct.title || 'Featured Product',
+    price: rawPrice,
+    originalPrice: rawOriginal > rawPrice ? rawOriginal : Math.round(rawPrice * 1.2),
+    rating: Number(apiProduct.rating) || 4.6,
+    reviews: Number(apiProduct.reviews ?? apiProduct.numReviews) || 48 + (index * 17) % 150,
+    image: imageUrl,
+    category: categoryName,
+    badge:
+      apiProduct.badge || (apiProduct.isBestSeller ? 'Bestseller' : undefined),
+    isNew: isRecent,
   };
 };
 
-// ─── Product Card Component (unchanged) ─────────────────────────────────
-const ProductCard = ({ product, index }: { product: Product; index: number }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+// ─── Compact Skeleton Loader ────────────────────────────────────────────
+const ProductCarouselSkeleton = () => {
+  const sectionBg = useColorModeValue('#F8FAFC', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.100', 'gray.700');
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -8 }}
-      style={{ height: '100%' }}
-    >
-      <Box
-        bg="white"
-        borderRadius="2xl"
-        overflow="hidden"
-        boxShadow="0 4px 20px rgba(0,0,0,0.08)"
-        transition="box-shadow 0.3s ease"
-        _hover={{ boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
-        position="relative"
-        height="100%"
-        display="flex"
-        flexDirection="column"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Box position="relative" overflow="hidden" paddingTop="100%" bg="gray.100">
-          <motion.img
-            src={product.image}
-            alt={product.name}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-            animate={{ scale: isHovered ? 1.1 : 1 }}
-            transition={{ duration: 0.4 }}
-          />
-          <Flex position="absolute" top={3} left={3} gap={2} zIndex={2}>
-            {product.isNew && <Badge colorScheme="green" borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="bold">NEW</Badge>}
-            <Badge colorScheme="red" borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="bold">-{discount}%</Badge>
-          </Flex>
-          <motion.div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }} whileTap={{ scale: 0.8 }}>
-            <IconButton
-              aria-label="Add to wishlist"
-              icon={isLiked ? <FaHeart size={18} color="#e53e3e" /> : <FaRegHeart size={18} color="white" />}
-              size="sm"
-              borderRadius="full"
-              bg="rgba(0,0,0,0.3)"
-              _hover={{ bg: "rgba(0,0,0,0.5)" }}
-              backdropFilter="blur(4px)"
-              onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked); }}
-            />
-          </motion.div>
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
-              >
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <IconButton aria-label="Quick view" icon={<FaEye size={20} />} size="md" borderRadius="full" bg="white" color="gray.800" _hover={{ bg: "gray.100" }} />
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <IconButton aria-label="Add to cart" icon={<FaShoppingCart size={20} />} size="md" borderRadius="full" bg="#3182ce" color="white" _hover={{ bg: "#2c5282" }} />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Box>
-        <Flex direction="column" p={4} gap={2} flex={1}>
-          <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wider">{product.category}</Text>
-          <Text fontSize="md" fontWeight="bold" color="gray.800" noOfLines={2} lineHeight="short">{product.name}</Text>
-          <Flex align="center" gap={1}>
-            <Flex>{[...Array(5)].map((_, i) => <FaStar key={i} size={14} color={i < Math.floor(product.rating) ? "#ecc94b" : "#cbd5e0"} style={{ marginRight: '1px' }} />)}</Flex>
-            <Text fontSize="sm" color="gray.600" fontWeight="medium">{product.rating}</Text>
-            <Text fontSize="xs" color="gray.400">({product.reviews.toLocaleString()})</Text>
-          </Flex>
-          <Flex align="baseline" gap={2} mt="auto" pt={2}>
-            <Text fontSize="xl" fontWeight="bold" color="#3182ce">${product.price.toFixed(2)}</Text>
-            <Text fontSize="sm" color="gray.400" textDecoration="line-through">${product.originalPrice.toFixed(2)}</Text>
-          </Flex>
+    <Box bg={sectionBg} py={{ base: 6, md: 10 }}>
+      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
+        <Flex justify="space-between" align="flex-end" mb={{ base: 4, md: 6 }}>
+          <Box>
+            <Skeleton h="14px" w="100px" mb={2} rounded="md" />
+            <Skeleton h="26px" w="210px" rounded="md" />
+          </Box>
+          <Skeleton h="32px" w="90px" rounded="full" />
         </Flex>
-      </Box>
-    </motion.div>
+
+        <Flex gap={{ base: 3, md: 4 }} overflow="hidden">
+          {[...Array(5)].map((_, i) => (
+            <Box
+              key={i}
+              w={{ base: '162px', sm: '195px', md: '230px' }}
+              bg={cardBg}
+              rounded="2xl"
+              p={2.5}
+              border="1px solid"
+              borderColor={borderColor}
+              flexShrink={0}
+            >
+              <Skeleton
+                h={{ base: '140px', sm: '165px', md: '190px' }}
+                w="full"
+                rounded="xl"
+                mb={3}
+              />
+              <Skeleton h="10px" w="50%" mb={2} rounded="sm" />
+              <Skeleton h="14px" w="90%" mb={1.5} rounded="sm" />
+              <Skeleton h="14px" w="65%" mb={3} rounded="sm" />
+              <Flex justify="space-between" align="center" pt={1}>
+                <Skeleton h="20px" w="45%" rounded="md" />
+                <Skeleton h="30px" w="64px" rounded="lg" />
+              </Flex>
+            </Box>
+          ))}
+        </Flex>
+      </Container>
+    </Box>
   );
 };
 
-// ─── Main Carousel Component (Dynamic) ───────────────────────────────────
+// ─── Mobile-First Product Card Component ────────────────────────────────
+const ProductCard = ({
+  product,
+  onSelect,
+  onAddToCart,
+}: {
+  product: Product;
+  onSelect: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
+}) => {
+  const [isLiked, setIsLiked] = useState(false);
+
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.100', 'gray.700');
+  const titleColor = useColorModeValue('gray.800', 'gray.100');
+  const mutedColor = useColorModeValue('gray.500', 'gray.400');
+
+  const discount =
+    product.originalPrice > product.price
+      ? Math.round(
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100
+        )
+      : 0;
+
+  return (
+    <MotionBox
+      w={{ base: '162px', sm: '195px', md: '232px' }}
+      flexShrink={0}
+      bg={cardBg}
+      borderRadius="2xl"
+      border="1px solid"
+      borderColor={borderColor}
+      overflow="hidden"
+      display="flex"
+      flexDirection="column"
+      cursor="pointer"
+      role="group"
+      position="relative"
+      onClick={() => onSelect(product)}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      _hover={{
+        borderColor: 'blue.200',
+        boxShadow: '0 12px 28px -8px rgba(37, 99, 235, 0.12)',
+      }}
+    >
+      {/* Image Box */}
+      <Box
+        position="relative"
+        w="full"
+        h={{ base: '145px', sm: '170px', md: '195px' }}
+        bg="gray.50"
+        overflow="hidden"
+      >
+        <Image
+          src={product.image}
+          alt={product.name}
+          w="full"
+          h="full"
+          objectFit="cover"
+          loading="lazy"
+          transition="transform 0.35s ease"
+          _groupHover={{ transform: 'scale(1.06)' }}
+        />
+
+        {/* Top-Left Badges (Discount / New / Bestseller) */}
+        <HStack position="absolute" top={2} left={2} spacing={1} zIndex={2}>
+          {discount > 0 && (
+            <Badge
+              bg="red.500"
+              color="white"
+              borderRadius="md"
+              px={1.5}
+              py={0.5}
+              fontSize="10px"
+              fontWeight="700"
+            >
+              {discount}% OFF
+            </Badge>
+          )}
+          {product.badge ? (
+            <Badge
+              bg="amber.400"
+              color="gray.900"
+              borderRadius="md"
+              px={1.5}
+              py={0.5}
+              fontSize="9px"
+              fontWeight="700"
+              display={{ base: 'none', sm: 'inline-block' }}
+            >
+              {product.badge}
+            </Badge>
+          ) : product.isNew ? (
+            <Badge
+              bg="green.500"
+              color="white"
+              borderRadius="md"
+              px={1.5}
+              py={0.5}
+              fontSize="9px"
+              fontWeight="700"
+            >
+              NEW
+            </Badge>
+          ) : null}
+        </HStack>
+
+        {/* Top-Right Wishlist Button */}
+        <IconButton
+          aria-label="Add to wishlist"
+          icon={
+            isLiked ? (
+              <FaHeart size={13} color="#EF4444" />
+            ) : (
+              <FaRegHeart size={13} color="#4B5563" />
+            )
+          }
+          size="xs"
+          w="28px"
+          h="28px"
+          minW="28px"
+          borderRadius="full"
+          bg="whiteAlpha.900"
+          backdropFilter="blur(4px)"
+          boxShadow="xs"
+          position="absolute"
+          top={2}
+          right={2}
+          zIndex={2}
+          _hover={{ bg: 'white', transform: 'scale(1.08)' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLiked((prev) => !prev);
+          }}
+        />
+
+        {/* Bottom-Left Compact Rating Pill (Saves vertical space inside card body) */}
+        <HStack
+          position="absolute"
+          bottom={2}
+          left={2}
+          bg="whiteAlpha.900"
+          backdropFilter="blur(6px)"
+          px={2}
+          py={0.5}
+          rounded="full"
+          spacing={1}
+          boxShadow="2xs"
+          zIndex={2}
+        >
+          <Icon as={FaStar} color="amber.400" boxSize={2.5} />
+          <Text fontSize="10px" fontWeight="700" color="gray.800">
+            {product.rating.toFixed(1)}
+          </Text>
+          <Text fontSize="9px" color="gray.500" fontWeight="500">
+            ({product.reviews})
+          </Text>
+        </HStack>
+      </Box>
+
+      {/* Card Details */}
+      <Flex
+        direction="column"
+        p={{ base: 2.5, md: 3.5 }}
+        flex="1"
+        justify="space-between"
+      >
+        <Box>
+          {/* <Text
+            fontSize="10px"
+            color={mutedColor}
+            fontWeight="600"
+            textTransform="uppercase"
+            letterSpacing="wider"
+            noOfLines={1}
+          >
+            {product.category}
+          </Text> */}
+
+          <Text
+            fontSize={{ base: 'xs', md: 'sm' }}
+            fontWeight="700"
+            color={titleColor}
+            noOfLines={2}
+            lineHeight="1.3"
+            mt={0.5}
+            minH={{ base: '31px', md: '36px' }}
+            _groupHover={{ color: 'blue.600' }}
+            transition="color 0.15s ease"
+          >
+            {product.name}
+          </Text>
+        </Box>
+
+        {/* Bottom Price + Always-Accessible Add Button */}
+        <Flex
+          align="center"
+          justify="space-between"
+          mt={2.5}
+          pt={2}
+          borderTop="1px solid"
+          borderColor={borderColor}
+          gap={1}
+        >
+          <Box minW={0}>
+            <Text
+              fontSize={{ base: 'sm', md: 'md' }}
+              fontWeight="700"
+              color="gray.900"
+              lineHeight="1.1"
+            >
+              ₹{Math.round(product.price).toLocaleString('en-IN')}
+            </Text>
+            {product.originalPrice > product.price && (
+              <Text
+                fontSize="10px"
+                color="gray.400"
+                textDecoration="line-through"
+                fontWeight="500"
+              >
+                ₹{Math.round(product.originalPrice).toLocaleString('en-IN')}
+              </Text>
+            )}
+          </Box>
+
+          <IconButton
+            size="xs"
+            aria-label='add to cart'
+            h={{ base: '28px', md: '32px' }}
+            px={{ base: 2.5, md: 3 }}
+            rounded="lg"
+            colorScheme="blue"
+            variant="subtle"
+            bg="blue.50"
+            color="blue.600"
+            fontWeight="700"
+            fontSize="xs"
+            icon={<FaCartPlus size={12} />}
+            _hover={{ bg: 'blue.600', color: 'white' }}
+            _active={{ transform: 'scale(0.95)' }}
+            flexShrink={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(product);
+            }}
+          />
+         
+        </Flex>
+      </Flex>
+    </MotionBox>
+  );
+};
+
+// ─── Main Carousel Component ────────────────────────────────────────────
 const ProductCarousel = observer(() => {
+  const router = useRouter();
+  const toast = useToast();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [direction, setDirection] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const itemsPerPage = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 4 }) || 4;
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const sectionBg = useColorModeValue('#F8FAFC', 'gray.900');
+  const borderColor = useColorModeValue('gray.100', 'gray.800');
+  const titleColor = useColorModeValue('gray.900', 'white');
+  const subTextColor = useColorModeValue('gray.500', 'gray.400');
 
-  // Fetch products from shopStore
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        // Using getAllShopProducts (fetches all products from /product/allproducts)
         const response = await shopStore.getAllShopProducts();
-        // response is the data returned from API (e.g., { products: [...] } or just array)
-        let productsArray = Array.isArray(response) ? response : response?.products || response?.data || [];
-        // Map to our Product interface
+        const productsArray = Array.isArray(response)
+          ? response
+          : response?.products || response?.data || [];
         const mapped = productsArray.map(mapApiProductToProduct);
         setProducts(mapped);
       } catch (error) {
-        console.error("Failed to load products", error);
+        console.error('Failed to load products', error);
         setProducts([]);
       } finally {
         setIsLoading(false);
@@ -234,127 +425,231 @@ const ProductCarousel = observer(() => {
     fetchProducts();
   }, []);
 
-  const paginate = useCallback((newDirection: number) => {
-    if (totalPages === 0) return;
-    setDirection(newDirection);
-    setCurrentPage((prev) => {
-      if (newDirection === 1) return prev === totalPages - 1 ? 0 : prev + 1;
-      return prev === 0 ? totalPages - 1 : prev - 1;
-    });
-  }, [totalPages]);
+  const checkScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
+  }, []);
 
-  const currentProducts = products.slice(
-    currentPage * itemsPerPage,
-    currentPage * itemsPerPage + itemsPerPage
-  );
-
-  // Auto-play
   useEffect(() => {
-    if (isLoading || totalPages <= 1) return;
-    const interval = setInterval(() => paginate(1), 5000);
-    return () => clearInterval(interval);
-  }, [isLoading, paginate, totalPages]);
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [checkScroll, products.length]);
 
-  const slideVariants = {
-    enter: (direction: number) => ({ x: direction > 0 ? 300 : -300, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit: (direction: number) => ({ x: direction < 0 ? 300 : -300, opacity: 0 }),
+  const scroll = (direction: 'left' | 'right') => {
+    if (!scrollRef.current) return;
+    const scrollAmount = direction === 'left' ? -440 : 440;
+    scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+  };
+
+  const handleSelectProduct = (product: Product) => {
+    router.push(`/products/${product.id}`);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    toast({
+      title: 'Added to cart',
+      description: `${product.name} added to your cart.`,
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+      position: 'bottom-right',
+    });
   };
 
   if (isLoading) {
-    return (
-      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 8 }} py={12}>
-        <EcommerceLoader />
-      </Box>
-    );
+    return <ProductCarouselSkeleton />;
   }
 
   if (products.length === 0) {
-    return (
-      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 8 }} py={12} textAlign="center">
-        <Text fontSize="xl" color="gray.500">No products found.</Text>
-      </Box>
-    );
+    return null;
   }
 
   return (
-    <Box bg="gray.50" py={{ base: 12, md: 20 }} overflow="hidden">
-      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 8 }}>
-        {/* Section Header (unchanged) */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <Flex direction="column" align={{ base: "center", md: "flex-start" }} mb={10} gap={3}>
-            <Badge colorScheme="blue" borderRadius="full" px={4} py={1} fontSize="sm" textTransform="uppercase" letterSpacing="widest">
-              Curated For You
-            </Badge>
-            <Text fontSize={{ base: "3xl", md: "4xl", lg: "5xl" }} fontWeight="extrabold" color="gray.900" lineHeight="1.1" textAlign={{ base: "center", md: "left" }}>
-              Top Rated{" "}
-              <Text as="span" color="#3182ce" position="relative">
-                Products
-                <svg style={{ position: 'absolute', bottom: '-8px', left: 0, width: '100%' }} viewBox="0 0 200 12" fill="none">
-                  <motion.path d="M2 8C50 2 150 2 198 8" stroke="#3182ce" strokeWidth="4" strokeLinecap="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.5 }} />
-                </svg>
+    <Box
+      as="section"
+      bg={sectionBg}
+      py={{ base: 6, md: 10 }}
+      borderBottom="1px solid"
+      borderColor={borderColor}
+    >
+      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
+        {/* Compact Section Header */}
+        <Flex
+          justify="space-between"
+          align="flex-end"
+          mb={{ base: 4, md: 6 }}
+          gap={4}
+        >
+          <Box>
+            <HStack spacing={1.5} mb={1}>
+              <Icon as={FiAward} color="blue.600" boxSize={3.5} />
+              <Text
+                fontSize="11px"
+                fontWeight="700"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="blue.600"
+              >
+                Customer Favorites
               </Text>
+            </HStack>
+            <Heading
+              as="h2"
+              fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+              fontWeight="800"
+              color={titleColor}
+              letterSpacing="tight"
+              lineHeight="1.2"
+            >
+              Top Rated Products
+            </Heading>
+            <Text
+              display={{ base: 'none', sm: 'block' }}
+              fontSize="xs"
+              color={subTextColor}
+              mt={0.5}
+            >
+              Most loved items from verified neighborhood stores near you
             </Text>
-            <Text fontSize="lg" color="gray.600" maxW="600px" textAlign={{ base: "center", md: "left" }}>
-              Discover our community's favorite picks, rated and reviewed by thousands of happy customers.
-            </Text>
-          </Flex>
-        </motion.div>
+          </Box>
 
-        <Box position="relative">
-          {/* Navigation Arrows */}
-          <motion.div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <IconButton aria-label="Previous" icon={<FaChevronLeft size={24} />} size="lg" borderRadius="full" bg="white" boxShadow="lg" color="gray.700" _hover={{ bg: "gray.50" }} onClick={() => paginate(-1)} display={{ base: "none", md: "flex" }} />
-          </motion.div>
-          <motion.div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', zIndex: 10 }} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <IconButton aria-label="Next" icon={<FaChevronRight size={24} />} size="lg" borderRadius="full" bg="white" boxShadow="lg" color="gray.700" _hover={{ bg: "gray.50" }} onClick={() => paginate(1)} display={{ base: "none", md: "flex" }} />
-          </motion.div>
+          {/* Right Controls: View All + Desktop Scroll Arrows */}
+          <HStack spacing={2} flexShrink={0}>
+            <Button
+              size="xs"
+              h={{ base: '30px', md: '34px' }}
+              px={3.5}
+              rounded="full"
+              variant="ghost"
+              colorScheme="blue"
+              fontWeight="600"
+              rightIcon={<FiArrowRight />}
+              onClick={() => router.push('/products')}
+            >
+              View All
+            </Button>
 
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div key={currentPage} custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              <Flex gap={6}>
-                {currentProducts.map((product, index) => (
-                  <Box key={product.id} flex={`0 0 calc(${100 / itemsPerPage}% - ${(itemsPerPage - 1) * 24 / itemsPerPage}px)`}>
-                    <ProductCard product={product} index={index} />
-                  </Box>
-                ))}
-              </Flex>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Mobile Navigation */}
-          <Flex justify="center" gap={4} mt={8} display={{ base: "flex", md: "none" }}>
-            <IconButton aria-label="Previous" icon={<FaChevronLeft size={20} />} borderRadius="full" bg="white" boxShadow="md" onClick={() => paginate(-1)} />
-            <IconButton aria-label="Next" icon={<FaChevronRight size={20} />} borderRadius="full" bg="white" boxShadow="md" onClick={() => paginate(1)} />
-          </Flex>
-
-          {/* Pagination Dots */}
-          <Flex justify="center" gap={2} mt={8}>
-            {[...Array(totalPages)].map((_, i) => (
-              <motion.button
-                key={i}
-                onClick={() => { setDirection(i > currentPage ? 1 : -1); setCurrentPage(i); }}
-                style={{ width: i === currentPage ? 32 : 12, height: 12, borderRadius: 999, border: 'none', background: i === currentPage ? '#3182ce' : '#cbd5e0', cursor: 'pointer' }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                animate={{ width: i === currentPage ? 32 : 12 }}
-                transition={{ duration: 0.3 }}
+            <HStack spacing={1.5} display={{ base: 'none', md: 'flex' }}>
+              <IconButton
+                aria-label="Previous products"
+                icon={<ChevronLeftIcon boxSize={5} />}
+                onClick={() => scroll('left')}
+                isDisabled={!canScrollLeft}
+                size="sm"
+                h="34px"
+                w="34px"
+                rounded="full"
+                bg="white"
+                variant="outline"
+                borderColor="gray.200"
+                color={titleColor}
+                _hover={{ bg: 'gray.50', borderColor: 'gray.300' }}
+                _disabled={{ opacity: 0.35, cursor: 'not-allowed' }}
               />
-            ))}
-          </Flex>
-        </Box>
-
-        {/* View All Button */}
-        <Flex justify="center" mt={12}>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Box as="button" px={8} py={4} bg="gray.900" color="white" borderRadius="full" fontWeight="bold" fontSize="md" letterSpacing="wide" boxShadow="0 10px 30px rgba(0,0,0,0.2)" transition="all 0.3s" _hover={{ bg: "#3182ce", boxShadow: "0 15px 40px rgba(49, 130, 206, 0.3)" }}>
-              View All Products
-            </Box>
-          </motion.div>
+              <IconButton
+                aria-label="Next products"
+                icon={<ChevronRightIcon boxSize={5} />}
+                onClick={() => scroll('right')}
+                isDisabled={!canScrollRight}
+                size="sm"
+                h="34px"
+                w="34px"
+                rounded="full"
+                bg="white"
+                variant="outline"
+                borderColor="gray.200"
+                color={titleColor}
+                _hover={{ bg: 'gray.50', borderColor: 'gray.300' }}
+                _disabled={{ opacity: 0.35, cursor: 'not-allowed' }}
+              />
+            </HStack>
+          </HStack>
         </Flex>
-      </Box>
+
+        {/* Horizontal Touch-Friendly Product Rail */}
+        <Flex
+          ref={scrollRef}
+          gap={{ base: 3, sm: 3.5, md: 4 }}
+          overflowX="auto"
+          py={1}
+          px={0.5}
+          sx={{
+            scrollSnapType: 'x mandatory',
+            '& > *': { scrollSnapAlign: 'start' },
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onSelect={handleSelectProduct}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
+
+          {/* End Card: Explore All Products */}
+          <Flex
+            as="button"
+            onClick={() => router.push('/products')}
+            w={{ base: '130px', sm: '150px', md: '180px' }}
+            flexShrink={0}
+            bg="white"
+            border="1px dashed"
+            borderColor="blue.200"
+            rounded="2xl"
+            p={4}
+            direction="column"
+            align="center"
+            justify="center"
+            gap={2.5}
+            role="group"
+            transition="all 0.2s ease"
+            _hover={{
+              borderColor: 'blue.400',
+              bg: 'blue.50',
+            }}
+          >
+            <Flex
+              w="42px"
+              h="42px"
+              rounded="full"
+              bg="blue.50"
+              color="blue.600"
+              align="center"
+              justify="center"
+              transition="transform 0.2s ease"
+              _groupHover={{
+                bg: 'blue.600',
+                color: 'white',
+                transform: 'scale(1.08)',
+              }}
+            >
+              <Icon as={FiShoppingCart} boxSize={4} />
+            </Flex>
+            <VStack spacing={0.5}>
+              <Text fontSize="xs" fontWeight="700" color="gray.800">
+                View All Products
+              </Text>
+              <Text fontSize="10px" color="blue.600" fontWeight="600">
+                Explore {products.length}+ items →
+              </Text>
+            </VStack>
+          </Flex>
+        </Flex>
+      </Container>
     </Box>
   );
 });
-
 export default ProductCarousel;

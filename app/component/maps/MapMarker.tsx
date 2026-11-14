@@ -1,45 +1,61 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Box,
   Button,
-  Flex,
-  HStack,
-  Select,
-  Skeleton,
-  Text,
-  useColorModeValue,
-  VStack,
-  Icon,
   Circle,
   Container,
+  Flex,
   Heading,
+  HStack,
+  Icon,
+  IconButton,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
   SimpleGrid,
-  Tooltip,
-  Progress,
-  Fade,
-  ScaleFade,
+  Skeleton,
   Spinner,
+  Text,
+  Tooltip,
+  useColorModeValue,
+  VStack,
 } from '@chakra-ui/react';
-import { GoogleMap, useLoadScript, MarkerF, InfoWindowF, CircleF } from '@react-google-maps/api';
-import { 
-  FaCrosshairs, 
-  FaStore, 
-  FaMapMarkerAlt, 
-  FaPhoneAlt, 
-  FaCity, 
-  FaStar, 
-  FaShippingFast,
-  FaShieldAlt,
-  FaAward,
-  FaLocationArrow,
+import {
+  CircleF,
+  GoogleMap,
+  InfoWindowF,
+  MarkerF,
+  useLoadScript,
+} from '@react-google-maps/api';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AiFillCloseCircle } from 'react-icons/ai';
+import {
+  FaCheckCircle,
+  FaCrosshairs,
   FaHeart,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
   FaRegHeart,
-  FaGift,
+  FaShippingFast,
+  FaStar,
+  FaStore,
+  FaTimes,
 } from 'react-icons/fa';
-import { FiNavigation, FiMapPin } from 'react-icons/fi';
+import {
+  FiArrowUpRight,
+  // FiClose,
+  FiCompass,
+  FiList,
+  FiMap,
+  FiMapPin,
+  FiMaximize2,
+  FiNavigation,
+  FiSearch,
+} from 'react-icons/fi';
 
 type LatLng = { lat: number; lng: number };
 
@@ -61,7 +77,7 @@ type NearbyShop = {
   distanceKm?: number;
   distanceMeters?: number;
   mapPoint?: LatLng;
-  rating?: number;
+  rating?: number | string;
   totalReviews?: number;
   isVerified?: boolean;
   openingHours?: string;
@@ -79,8 +95,8 @@ const mapContainerStyle = {
 
 const mapOptions: google.maps.MapOptions = {
   disableDefaultUI: true,
-  zoomControl: true,
-  fullscreenControl: true,
+  zoomControl: false,
+  fullscreenControl: false,
   streetViewControl: false,
   mapTypeControl: false,
   gestureHandling: 'greedy',
@@ -92,9 +108,21 @@ const mapOptions: google.maps.MapOptions = {
   ],
 };
 
+const radiusOptions = [2, 5, 10, 20, 50];
+
 const safeNumber = (value: any) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+// Deterministic hash so fallback ratings/reviews don't flicker on re-render
+const getStableSeed = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 };
 
 const normalizeCoordinates = (coordinates: any): LatLng | null => {
@@ -124,6 +152,10 @@ const buildCompanyEndpoint = () => {
 };
 
 const MapComponent = () => {
+  const router = useRouter();
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const mobileCardsRef = useRef<HTMLDivElement | null>(null);
+
   const [radiusKm, setRadiusKm] = useState<number>(5);
   const [geoLoading, setGeoLoading] = useState<boolean>(false);
   const [shopLoading, setShopLoading] = useState<boolean>(false);
@@ -131,70 +163,74 @@ const MapComponent = () => {
   const [shops, setShops] = useState<NearbyShop[]>([]);
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [selectedShop, setSelectedShop] = useState<NearbyShop | null>(null);
-  const [hoveredShop, setHoveredShop] = useState<string | null>(null);
-  const [isShopDataLoading, setIsShopDataLoading] = useState<boolean>(false);
   const [likedShops, setLikedShops] = useState<Set<string>>(new Set());
-  const [loaderProgress, setLoaderProgress] = useState<number>(0);
-  const [loaderMessage, setLoaderMessage] = useState<string>('Finding great deals...');
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const panelBg = useColorModeValue('rgba(255,255,255,0.92)', 'rgba(26,32,44,0.92)');
+  // New interactive controls for smoother UX
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filterVerified, setFilterVerified] = useState<boolean>(false);
+  const [filterDelivery, setFilterDelivery] = useState<boolean>(false);
+  const [filterTopRated, setFilterTopRated] = useState<boolean>(false);
+  const [mobileViewMode, setMobileViewMode] = useState<'map' | 'list'>('map');
+
+  // Theme tokens hoisted to top
+  const sectionBg = useColorModeValue('#F8FAFC', 'gray.950');
   const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.800', 'white');
+  const subtleBg = useColorModeValue('gray.50', 'gray.900');
+  const textColor = useColorModeValue('gray.900', 'white');
+  const mutedText = useColorModeValue('gray.500', 'gray.400');
   const borderColor = useColorModeValue('gray.100', 'gray.700');
-  const glassBg = useColorModeValue('rgba(255,255,255,0.7)', 'rgba(26,32,44,0.7)');
-  const blueGradient = 'linear(135deg, #1e3a8a 0%, #3b82f6 100%)';
-  const glowGradient = 'linear(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.05) 100%)';
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
-  const handleShopSelect = useCallback((shop: NearbyShop) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-    }
-    if (selectedShop?._id === shop._id && !isShopDataLoading) return;
-
-    // Reset loader state
-    setLoaderProgress(0);
-    setLoaderMessage('Finding great deals...');
-    setIsShopDataLoading(true);
+  // Smoothly pan & zoom map when a shop is selected
+  const handleShopSelect = useCallback((shop: NearbyShop, index?: number) => {
     setSelectedShop(shop);
-
-    // Simulate progress over 2 seconds
-    progressInterval.current = setInterval(() => {
-      setLoaderProgress(prev => {
-        const next = prev + 2; // 2% per 40ms = 100% in 2000ms
-        if (next >= 100) {
-          if (progressInterval.current) clearInterval(progressInterval.current);
-          return 100;
-        }
-        if (next < 30) setLoaderMessage('Finding great deals...');
-        else if (next < 70) setLoaderMessage('Preparing your store ✨');
-        else setLoaderMessage('Almost there! 🎁');
-        return next;
+    if (shop.mapPoint && mapRef.current) {
+      mapRef.current.panTo(shop.mapPoint);
+      const currentZoom = mapRef.current.getZoom() || 13;
+      if (currentZoom < 14) {
+        mapRef.current.setZoom(14);
+      }
+    }
+    // Scroll mobile bottom card rail to matching card
+    if (typeof index === 'number' && mobileCardsRef.current) {
+      const cardWidth = 272; // card width + gap
+      mobileCardsRef.current.scrollTo({
+        left: index * cardWidth,
+        behavior: 'smooth',
       });
-    }, 40);
-
-    timeoutRef.current = setTimeout(() => {
-      setIsShopDataLoading(false);
-      setLoaderProgress(100);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-      timeoutRef.current = null;
-    }, 2000);
-  }, [selectedShop?._id, isShopDataLoading]);
+    }
+  }, []);
 
   const toggleLikeShop = (shopId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setLikedShops(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(shopId)) newSet.delete(shopId);
-      else newSet.add(shopId);
-      return newSet;
+    setLikedShops((prev) => {
+      const next = new Set(prev);
+      if (next.has(shopId)) next.delete(shopId);
+      else next.add(shopId);
+      return next;
     });
+  };
+
+  const handleVisitStore = (shop: NearbyShop, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const slug = shop.name?.replace(/\s+/g, '-').toLowerCase() || 'shop';
+    if (shop._id) {
+      router.push(`/shop?id=${shop._id}&slug=${slug}`);
+      return;
+    }
+    router.push(`/shop-details?title=${slug}`);
+  };
+
+  const handleGetDirections = (shop: NearbyShop, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!shop.mapPoint) return;
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${shop.mapPoint.lat},${shop.mapPoint.lng}`,
+      '_blank'
+    );
   };
 
   const fetchShops = useCallback(
@@ -211,6 +247,7 @@ const MapComponent = () => {
         } else {
           payload.sortBy = 'latest';
         }
+
         const response = await fetch(buildCompanyEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -218,26 +255,35 @@ const MapComponent = () => {
         });
         const data = await response.json();
         const apiShops: NearbyShop[] = data?.data?.data || [];
+
         const normalized = apiShops
-          .map((shop) => {
+          .map((shop, idx) => {
             const point = normalizeCoordinates(shop?.location?.coordinates);
             if (!point) return null;
-            return { 
-              ...shop, 
+            const seed = getStableSeed(shop._id || shop.name || String(idx));
+            const fallbackRating = (4.1 + (seed % 9) * 0.1).toFixed(1);
+            const distKm =
+              typeof shop.distanceKm === 'number'
+                ? shop.distanceKm
+                : typeof shop.distanceMeters === 'number'
+                ? Number((shop.distanceMeters / 1000).toFixed(1))
+                : undefined;
+
+            return {
+              ...shop,
+              distanceKm: distKm,
               mapPoint: point,
-              rating: shop.rating || (Math.random() * 2 + 3).toFixed(1),
-              totalReviews: shop.totalReviews || Math.floor(Math.random() * 500) + 50,
-              isVerified: Math.random() > 0.3,
-              deliveryAvailable: Math.random() > 0.2,
-              openingHours: '9:00 AM - 8:00 PM',
+              rating: shop.rating || fallbackRating,
+              totalReviews: shop.totalReviews || 40 + (seed % 260),
+              isVerified: shop.isVerified ?? seed % 10 > 2,
+              deliveryAvailable: shop.deliveryAvailable ?? seed % 10 > 1,
+              openingHours: shop.openingHours || '9:00 AM – 9:00 PM',
             };
           })
           .filter(Boolean) as NearbyShop[];
+
         setShops(normalized);
-        setSelectedShop(null);
-        setIsShopDataLoading(false);
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        if (progressInterval.current) clearInterval(progressInterval.current);
+        setSelectedShop(normalized[0] || null);
       } catch (error: any) {
         setErrorMessage(error?.message || 'Unable to load nearby sellers.');
       } finally {
@@ -263,11 +309,15 @@ const MapComponent = () => {
         };
         setUserLocation(location);
         setGeoLoading(false);
+        if (mapRef.current) {
+          mapRef.current.panTo(location);
+          mapRef.current.setZoom(13);
+        }
         fetchShops(location, radiusKm);
       },
-      (error) => {
+      () => {
         setGeoLoading(false);
-        setErrorMessage(error.message || 'Location permission denied. Showing general sellers.');
+        setErrorMessage('Location permission off — showing popular local stores.');
         fetchShops(null, radiusKm);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -284,34 +334,75 @@ const MapComponent = () => {
     }
   }, [radiusKm, userLocation, fetchShops]);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-    };
-  }, []);
+  // Client-side instant search & quick filters
+  const filteredShops = useMemo(() => {
+    return shops.filter((shop) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        shop.name?.toLowerCase().includes(q) ||
+        shop.location?.city?.toLowerCase().includes(q) ||
+        shop.location?.address?.toLowerCase().includes(q);
+
+      const matchesVerified = !filterVerified || Boolean(shop.isVerified);
+      const matchesDelivery = !filterDelivery || Boolean(shop.deliveryAvailable);
+      const matchesRating = !filterTopRated || Number(shop.rating || 0) >= 4.5;
+
+      return matchesSearch && matchesVerified && matchesDelivery && matchesRating;
+    });
+  }, [shops, searchQuery, filterVerified, filterDelivery, filterTopRated]);
 
   const center = useMemo(() => {
     if (userLocation) return userLocation;
-    if (shops.length > 0 && shops[0].mapPoint) return shops[0].mapPoint;
+    if (filteredShops.length > 0 && filteredShops[0].mapPoint) {
+      return filteredShops[0].mapPoint;
+    }
     return FALLBACK_CENTER;
-  }, [shops, userLocation]);
+  }, [filteredShops, userLocation]);
 
-  const radiusOptions = [
-    { value: 2, label: '2 km', icon: FaMapMarkerAlt, color: 'blue' },
-    { value: 5, label: '5 km', icon: FaMapMarkerAlt, color: 'teal' },
-    { value: 10, label: '10 km', icon: FaMapMarkerAlt, color: 'purple' },
-    { value: 20, label: '20 km', icon: FaMapMarkerAlt, color: 'orange' },
-    { value: 50, label: '50 km', icon: FaMapMarkerAlt, color: 'pink' },
-  ];
+  // Fit all visible markers on map
+  const handleFitBounds = useCallback(() => {
+    if (!mapRef.current || typeof window === 'undefined' || !window.google) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    let count = 0;
+
+    if (userLocation) {
+      bounds.extend(userLocation);
+      count++;
+    }
+    filteredShops.forEach((s) => {
+      if (s.mapPoint) {
+        bounds.extend(s.mapPoint);
+        count++;
+      }
+    });
+
+    if (count > 1) {
+      mapRef.current.fitBounds(bounds, 48);
+    } else if (count === 1) {
+      mapRef.current.panTo(bounds.getCenter());
+      mapRef.current.setZoom(14);
+    }
+  }, [filteredShops, userLocation]);
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
-      <Container maxW="container.xl" py={12}>
-        <Box p={10} borderRadius="3xl" bg="yellow.50" border="2px solid" borderColor="yellow.200" textAlign="center" _dark={{ bg: "yellow.900", borderColor: "yellow.700" }}>
-          <Icon as={FaMapMarkerAlt} boxSize={12} color="yellow.600" mb={4} />
-          <Heading size="md" color="yellow.800" _dark={{ color: "yellow.200" }}>Missing API Key</Heading>
-          <Text color="yellow.600" mt={2}>Please configure NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</Text>
+      <Container maxW="7xl" py={8}>
+        <Box
+          p={6}
+          borderRadius="2xl"
+          bg="amber.50"
+          border="1px solid"
+          borderColor="amber.200"
+          textAlign="center"
+        >
+          <Icon as={FaMapMarkerAlt} boxSize={8} color="amber.600" mb={2} />
+          <Heading size="sm" color="amber.900">
+            Google Maps API Key Required
+          </Heading>
+          <Text fontSize="xs" color="amber.700" mt={1}>
+            Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.
+          </Text>
         </Box>
       </Container>
     );
@@ -319,236 +410,909 @@ const MapComponent = () => {
 
   if (loadError) {
     return (
-      <Container maxW="container.xl" py={12}>
-        <Box p={10} borderRadius="3xl" bg="red.50" border="2px solid" borderColor="red.200" textAlign="center" _dark={{ bg: "red.900", borderColor: "red.700" }}>
-          <Icon as={FaMapMarkerAlt} boxSize={12} color="red.600" mb={4} />
-          <Heading size="md" color="red.800" _dark={{ color: "red.200" }}>Map Loading Failed</Heading>
-          <Text color="red.600" mt={2}>Please check your internet connection and API key</Text>
+      <Container maxW="7xl" py={8}>
+        <Box
+          p={6}
+          borderRadius="2xl"
+          bg="red.50"
+          border="1px solid"
+          borderColor="red.200"
+          textAlign="center"
+        >
+          <Icon as={FaMapMarkerAlt} boxSize={8} color="red.500" mb={2} />
+          <Heading size="sm" color="red.800">
+            Unable to Load Map
+          </Heading>
+          <Text fontSize="xs" color="red.600" mt={1}>
+            Please check your internet connection and Google Maps API configuration.
+          </Text>
         </Box>
       </Container>
     );
   }
 
   return (
-    <Box position="relative" minH="100vh" bgGradient={glowGradient}>
-      <Container maxW="100%" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 8, md: 12 }}>
-        {/* Floating Orbs */}
-        <Box position="fixed" top="10%" left="-5%" w="300px" h="300px" borderRadius="full" bg="blue.200" filter="blur(80px)" opacity="0.3" pointerEvents="none" zIndex={0} />
-        <Box position="fixed" bottom="5%" right="-5%" w="400px" h="400px" borderRadius="full" bg="purple.200" filter="blur(100px)" opacity="0.2" pointerEvents="none" zIndex={0} />
-
-        {/* Header */}
-        <VStack spacing={5} mb={10} textAlign="center" position="relative" zIndex={1}>
-          <HStack spacing={2}>
-            <Circle size="55px" bg="blue.100" _dark={{ bg: "blue.900" }} boxShadow="lg">
-              <Icon as={FaStore} boxSize={7} color="blue.600" />
-            </Circle>
-            <Badge colorScheme="blue" fontSize="xs" px={3} py={1.5} borderRadius="full" letterSpacing="wider">LIVE TRACKING</Badge>
-          </HStack>
-          <Heading size={{ base: "xl", md: "2xl" }} fontWeight="900" bgGradient={blueGradient} bgClip="text" letterSpacing="tight">Discover Nearby Stores</Heading>
-          <Text color="gray.600" _dark={{ color: "gray.400" }} maxW="2xl" fontSize="lg">Find authentic products from trusted sellers in your neighborhood</Text>
-        </VStack>
-
-        {/* Controls Bar */}
-        <Flex mb={8} justify="space-between" align="center" wrap="wrap" gap={4} p={5} bg={glassBg} backdropFilter="blur(12px)" borderRadius="3xl" border="1px solid" borderColor={useColorModeValue('whiteAlpha.500', 'whiteAlpha.100')} boxShadow="xl" position="relative" zIndex={1}>
-          <HStack spacing={4}>
-            <Circle size="45px" bg="blue.500" boxShadow="lg"><Icon as={FaStore} color="white" boxSize={5} /></Circle>
-            <Box>
-              <Text fontSize="lg" fontWeight="800" color={textColor}>{shops.length} Sellers Found</Text>
+    <Box
+      as="section"
+      bg={sectionBg}
+      py={{ base: 5, md: 9 }}
+      borderBottom="1px solid"
+      borderColor={borderColor}
+    >
+      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
+        {/* 1. Compact Header + Location Action Row */}
+        <Flex
+          direction={{ base: 'column', md: 'row' }}
+          justify="space-between"
+          align={{ base: 'flex-start', md: 'flex-end' }}
+          mb={{ base: 3.5, md: 5 }}
+          gap={3}
+        >
+          <Box>
+            <HStack spacing={1.5} mb={1}>
+              <Icon as={FiCompass} color="blue.600" boxSize={3.5} />
+              <Text
+                fontSize="11px"
+                fontWeight="700"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="blue.600"
+              >
+                Live Store Radar
+              </Text>
               {userLocation && (
-                <HStack spacing={1}>
-                  <Icon as={FiMapPin} color="green.500" boxSize={3} />
-                  <Text fontSize="sm" color="green.600" fontWeight="500">Within {radiusKm} km radius</Text>
-                </HStack>
+                <Badge
+                  colorScheme="green"
+                  variant="subtle"
+                  rounded="full"
+                  px={2}
+                  fontSize="9px"
+                >
+                  ● GPS Active
+                </Badge>
               )}
-            </Box>
-          </HStack>
-          <HStack spacing={4} flexWrap="wrap">
-            <Select value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))} w="160px" size="lg" borderRadius="2xl" bg={cardBg} fontWeight="600" cursor="pointer" _hover={{ borderColor: "blue.400" }}>
-              {radiusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </Select>
-            <Button size="lg" colorScheme="blue" variant="solid" leftIcon={<FaCrosshairs />} onClick={requestCurrentLocation} isLoading={geoLoading} borderRadius="2xl" px={8} _hover={{ transform: "scale(1.02)", boxShadow: "xl" }} transition="all 0.2s" fontWeight="700">My Location</Button>
+            </HStack>
+            <Heading
+              as="h2"
+              fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+              fontWeight="800"
+              color={textColor}
+              letterSpacing="tight"
+              lineHeight="1.2"
+            >
+              Explore Nearby Local Stores
+            </Heading>
+          </Box>
+
+          {/* Radius Selector Pills + Locate Me Button */}
+          <HStack
+            spacing={1.5}
+            w={{ base: 'full', md: 'auto' }}
+            justify="space-between"
+            overflowX="auto"
+            pb={{ base: 1, md: 0 }}
+            sx={{
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            <HStack
+              spacing={1}
+              bg={cardBg}
+              p={1}
+              rounded="full"
+              border="1px solid"
+              borderColor={borderColor}
+              flexShrink={0}
+            >
+              {radiusOptions.map((r) => {
+                const isActive = radiusKm === r;
+                return (
+                  <Button
+                    key={r}
+                    size="xs"
+                    h="26px"
+                    px={2.5}
+                    rounded="full"
+                    fontSize="11px"
+                    fontWeight="700"
+                    bg={isActive ? 'blue.600' : 'transparent'}
+                    color={isActive ? 'white' : mutedText}
+                    _hover={{ bg: isActive ? 'blue.700' : subtleBg }}
+                    onClick={() => setRadiusKm(r)}
+                  >
+                    {r} km
+                  </Button>
+                );
+              })}
+            </HStack>
+
+            <Button
+              size="xs"
+              h="34px"
+              px={3.5}
+              rounded="full"
+              colorScheme="blue"
+              leftIcon={<FaCrosshairs />}
+              isLoading={geoLoading}
+              onClick={requestCurrentLocation}
+              fontWeight="700"
+              flexShrink={0}
+              boxShadow="xs"
+            >
+              Near Me
+            </Button>
           </HStack>
         </Flex>
 
-        {/* Map and Sidebar Grid */}
-        <SimpleGrid columns={{ base: 1, lg: 3 }} gap={6} position="relative" zIndex={1}>
-          {/* Sidebar */}
-          <Box bg={cardBg} borderRadius="3xl" border="1px solid" borderColor={borderColor} overflow="hidden" maxH={{ base: "400px", lg: "650px" }} overflowY="auto" boxShadow="2xl" sx={{ '&::-webkit-scrollbar': { width: '6px' }, '&::-webkit-scrollbar-track': { background: '#f1f1f1', borderRadius: '10px' }, '&::-webkit-scrollbar-thumb': { background: '#3b82f6', borderRadius: '10px' } }}>
-            <Box p={5} borderBottom="2px solid" borderColor={borderColor} bgGradient="linear(to-r, blue.50, white)">
-              <Text fontWeight="900" fontSize="xl" color="blue.700" _dark={{ color: "blue.300" }}>✨ Nearby Sellers</Text>
-              <Text fontSize="sm" color="gray.500" mt={1}>Tap on any store to see magical details</Text>
-            </Box>
-            {shopLoading ? (
-              <Box p={5}>{[1,2,3].map(i => <Skeleton key={i} height="110px" mb={4} borderRadius="2xl" />)}</Box>
-            ) : shops.length === 0 ? (
-              <Box p={10} textAlign="center"><Icon as={FaStore} boxSize={12} color="gray.300" mb={4} /><Text color="gray.500" fontWeight="600">No sellers found nearby</Text><Text fontSize="sm" color="gray.400" mt={2}>Try increasing the radius</Text></Box>
-            ) : (
-              <VStack spacing={3} p={4} align="stretch">
-                {shops.map((shop) => (
-                  <ScaleFade in key={shop._id} initialScale={0.9}>
-                    <Box p={4} borderRadius="2xl" bg={selectedShop?._id === shop._id ? "blue.50" : "transparent"} _dark={{ bg: selectedShop?._id === shop._id ? "blue.900" : "transparent" }} border="1.5px solid" borderColor={selectedShop?._id === shop._id ? "blue.400" : borderColor} cursor="pointer" transition="all 0.25s" _hover={{ transform: "translateX(6px)", borderColor: "blue.400", boxShadow: "md" }} onClick={() => handleShopSelect(shop)} onMouseEnter={() => setHoveredShop(shop._id)} onMouseLeave={() => setHoveredShop(null)} position="relative" overflow="hidden">
-                      {selectedShop?._id === shop._id && isShopDataLoading && <Box position="absolute" top={2} right={2}><Spinner size="xs" color="blue.500" thickness="3px" /></Box>}
-                      <Flex justify="space-between" align="start">
-                        <Box flex={1}>
-                          <HStack mb={2} spacing={2}>
-                            <Text fontWeight="800" fontSize="md">{shop.name}</Text>
-                            {shop.isVerified && <Tooltip label="Verified Seller" hasArrow><Icon as={FaShieldAlt} color="blue.500" boxSize={3.5} /></Tooltip>}
-                            {shop.deliveryAvailable && <Tooltip label="Delivery Available" hasArrow><Icon as={FaShippingFast} color="green.500" boxSize={3.5} /></Tooltip>}
-                          </HStack>
-                          <HStack spacing={3} mb={2}>
-                            {shop.rating && <HStack spacing={1}><Icon as={FaStar} color="yellow.400" boxSize={3.5} /><Text fontSize="sm" fontWeight="700">{shop.rating}</Text><Text fontSize="xs" color="gray.500">({shop.totalReviews})</Text></HStack>}
-                            {shop.distanceKm && <Badge colorScheme="green" fontSize="xs" borderRadius="full" px={2}>{shop.distanceKm.toFixed(1)} km away</Badge>}
-                          </HStack>
-                          {shop.location?.city && <HStack spacing={1}><Icon as={FaCity} color="gray.400" boxSize={3} /><Text fontSize="xs" color="gray.600">{shop.location.city}, {shop.location.state}</Text></HStack>}
-                        </Box>
-                        <HStack spacing={2}>
-                          <Tooltip label={likedShops.has(shop._id!) ? "Remove from favorites" : "Save to favorites"}>
-                            <Circle size="36px" bg={likedShops.has(shop._id!) ? "red.100" : "gray.100"} cursor="pointer" onClick={(e) => toggleLikeShop(shop._id!, e)} _hover={{ transform: "scale(1.1)", bg: "red.50" }} transition="all 0.2s">
-                              <Icon as={likedShops.has(shop._id!) ? FaHeart : FaRegHeart} color={likedShops.has(shop._id!) ? "red.500" : "gray.500"} boxSize={4} />
-                            </Circle>
-                          </Tooltip>
-                          <Circle size="36px" bg={hoveredShop === shop._id ? "blue.500" : "blue.100"} transition="all 0.2s">
-                            <Icon as={FiNavigation} color={hoveredShop === shop._id ? "white" : "blue.600"} boxSize={4.5} />
-                          </Circle>
-                        </HStack>
-                      </Flex>
-                    </Box>
-                  </ScaleFade>
-                ))}
-              </VStack>
+        {/* 2. Search, Filter Chips & Mobile Map/List Toggle Bar */}
+        <Flex
+          bg={cardBg}
+          p={{ base: 2.5, md: 3 }}
+          rounded="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          mb={4}
+          gap={2.5}
+          align="center"
+          justify="space-between"
+          flexWrap="wrap"
+          boxShadow="2xs"
+        >
+          {/* Search Input */}
+          <InputGroup size="sm" maxW={{ base: 'full', md: '280px' }} flex="1" minW="180px">
+            <InputLeftElement pointerEvents="none" h="34px">
+              <Icon as={FiSearch} color="gray.400" boxSize={3.5} />
+            </InputLeftElement>
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search store name or area..."
+              h="34px"
+              rounded="full"
+              bg={subtleBg}
+              border="1px solid"
+              borderColor={borderColor}
+              fontSize="xs"
+              _focus={{
+                bg: cardBg,
+                borderColor: 'blue.500',
+                boxShadow: '0 0 0 2px rgba(37,99,235,0.12)',
+              }}
+            />
+            {searchQuery && (
+              <InputRightElement h="34px">
+                <IconButton
+                  aria-label="Clear search"
+                  icon={<AiFillCloseCircle size={11} />}
+                  size="xs"
+                  variant="ghost"
+                  rounded="full"
+                  onClick={() => setSearchQuery('')}
+                />
+              </InputRightElement>
             )}
+          </InputGroup>
+
+          {/* Quick Filter Chips */}
+          <HStack
+            spacing={1.5}
+            overflowX="auto"
+            flexShrink={0}
+            maxW="full"
+            sx={{
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            <Badge
+              px={2.5}
+              py={1}
+              rounded="full"
+              bg="blue.50"
+              color="blue.700"
+              fontSize="11px"
+              fontWeight="700"
+            >
+              {filteredShops.length} Stores
+            </Badge>
+
+            {/* <Button
+              size="xs"
+              h="28px"
+              px={2.5}
+              rounded="full"
+              variant={filterVerified ? 'solid' : 'outline'}
+              colorScheme={filterVerified ? 'blue' : 'gray'}
+              leftIcon={<FaCheckCircle size={10} />}
+              onClick={() => setFilterVerified((v) => !v)}
+              fontSize="11px"
+            >
+              Verified
+            </Button> */}
+
+            <Button
+              size="xs"
+              h="28px"
+              px={2.5}
+              rounded="full"
+              variant={filterDelivery ? 'solid' : 'outline'}
+              colorScheme={filterDelivery ? 'green' : 'gray'}
+              leftIcon={<FaShippingFast size={11} />}
+              onClick={() => setFilterDelivery((v) => !v)}
+              fontSize="11px"
+            >
+              Delivery
+            </Button>
+
+            <Button
+              size="xs"
+              h="28px"
+              px={2.5}
+              rounded="full"
+              variant={filterTopRated ? 'solid' : 'outline'}
+              colorScheme={filterTopRated ? 'orange' : 'gray'}
+              leftIcon={<FaStar size={10} />}
+              onClick={() => setFilterTopRated((v) => !v)}
+              fontSize="11px"
+            >
+              4.5★+
+            </Button>
+
+            {/* Mobile View Switcher (Map vs List) */}
+            <HStack
+              display={{ base: 'flex', lg: 'none' }}
+              bg={subtleBg}
+              p={0.5}
+              rounded="full"
+              border="1px solid"
+              borderColor={borderColor}
+              ml={1}
+            >
+              <Button
+                size="xs"
+                h="24px"
+                px={2.5}
+                rounded="full"
+                leftIcon={<FiMap size={11} />}
+                bg={mobileViewMode === 'map' ? 'blue.600' : 'transparent'}
+                color={mobileViewMode === 'map' ? 'white' : mutedText}
+                onClick={() => setMobileViewMode('map')}
+                fontSize="10px"
+              >
+                Map
+              </Button>
+              <Button
+                size="xs"
+                h="24px"
+                px={2.5}
+                rounded="full"
+                leftIcon={<FiList size={11} />}
+                bg={mobileViewMode === 'list' ? 'blue.600' : 'transparent'}
+                color={mobileViewMode === 'list' ? 'white' : mutedText}
+                onClick={() => setMobileViewMode('list')}
+                fontSize="10px"
+              >
+                List
+              </Button>
+            </HStack>
+          </HStack>
+        </Flex>
+
+        {/* 3. Main Interactive Map + Sidebar Layout */}
+        <SimpleGrid columns={{ base: 1, lg: 12 }} spacing={4} alignItems="stretch">
+          {/* LEFT: Store List Sidebar (Always visible on Desktop, visible on Mobile when 'list' is active) */}
+          <Box
+            display={{
+              base: mobileViewMode === 'list' ? 'block' : 'none',
+              lg: 'block',
+            }}
+            gridColumn={{ lg: 'span 4' }}
+            bg={cardBg}
+            borderRadius="2xl"
+            border="1px solid"
+            borderColor={borderColor}
+            overflow="hidden"
+            h={{ base: '440px', lg: '540px' }}
+            flexDirection="column"
+            boxShadow="xs"
+          >
+            <Flex
+              px={4}
+              py={3}
+              borderBottom="1px solid"
+              borderColor={borderColor}
+              justify="space-between"
+              align="center"
+              bg={subtleBg}
+            >
+              <Text fontWeight="800" fontSize="xs" textTransform="uppercase" letterSpacing="wider" color={mutedText}>
+                Nearby Directory ({filteredShops.length})
+              </Text>
+              {(filterVerified || filterDelivery || filterTopRated || searchQuery) && (
+                <Button
+                  size="xs"
+                  variant="link"
+                  colorScheme="red"
+                  fontSize="11px"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterVerified(false);
+                    setFilterDelivery(false);
+                    setFilterTopRated(false);
+                  }}
+                >
+                  Reset
+                </Button>
+              )}
+            </Flex>
+
+            <Box
+              overflowY="auto"
+              h="calc(100% - 45px)"
+              p={2.5}
+              sx={{
+                '&::-webkit-scrollbar': { width: '4px' },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#CBD5E0',
+                  borderRadius: 'full',
+                },
+              }}
+            >
+              {shopLoading ? (
+                <VStack spacing={2.5} align="stretch">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} height="88px" borderRadius="xl" />
+                  ))}
+                </VStack>
+              ) : filteredShops.length === 0 ? (
+                <VStack py={12} px={4} spacing={2} textAlign="center">
+                  <Circle size="44px" bg="blue.50" color="blue.500">
+                    <Icon as={FaStore} boxSize={5} />
+                  </Circle>
+                  <Text fontSize="sm" fontWeight="700" color={textColor}>
+                    No matching stores nearby
+                  </Text>
+                  <Text fontSize="xs" color={mutedText}>
+                    Try expanding the km radius above or clearing filters.
+                  </Text>
+                </VStack>
+              ) : (
+                <VStack spacing={2} align="stretch">
+                  {filteredShops.map((shop, idx) => {
+                    const isSelected = selectedShop?._id === shop._id;
+                    const isLiked = likedShops.has(shop._id || '');
+
+                    return (
+                      <Box
+                        key={shop._id || idx}
+                        p={3}
+                        borderRadius="xl"
+                        bg={isSelected ? 'blue.50' : cardBg}
+                        _dark={{ bg: isSelected ? 'whiteAlpha.100' : cardBg }}
+                        border="1px solid"
+                        borderColor={isSelected ? 'blue.400' : borderColor}
+                        cursor="pointer"
+                        transition="all 0.15s ease"
+                        _hover={{
+                          borderColor: 'blue.300',
+                          bg: isSelected ? 'blue.50' : subtleBg,
+                        }}
+                        onClick={() => {
+                          handleShopSelect(shop, idx);
+                          if (mobileViewMode === 'list') setMobileViewMode('map');
+                        }}
+                      >
+                        <Flex justify="space-between" align="flex-start" gap={2}>
+                          <Box minW={0} flex="1">
+                            <HStack spacing={1.5} mb={1}>
+                              <Text
+                                fontWeight="700"
+                                fontSize="sm"
+                                textTransform={'capitalize'}
+                                color={textColor}
+                                noOfLines={1}
+                              >
+                                {shop.name}
+                              </Text>
+                              {shop.isVerified && (
+                                <Icon
+                                  as={FaCheckCircle}
+                                  color="blue.500"
+                                  boxSize={3}
+                                  flexShrink={0}
+                                />
+                              )}
+                            </HStack>
+
+                            {/* Rating & Distance Pill Row */}
+                            <HStack spacing={2} mb={1.5} flexWrap="wrap">
+                              <HStack
+                                spacing={0.5}
+                                bg="green.600"
+                                color="white"
+                                px={1.5}
+                                py={0.2}
+                                rounded="md"
+                                fontSize="10px"
+                                fontWeight="800"
+                              >
+                                <Text>{shop.rating}</Text>
+                                <Icon as={FaStar} boxSize={2} />
+                              </HStack>
+
+                              {typeof shop.distanceKm === 'number' && (
+                                <Badge
+                                  colorScheme="blue"
+                                  variant="subtle"
+                                  fontSize="10px"
+                                  rounded="md"
+                                  px={1.5}
+                                >
+                                  {shop.distanceKm.toFixed(1)} km
+                                </Badge>
+                              )}
+
+                              {shop.deliveryAvailable && (
+                                <Badge
+                                  colorScheme="green"
+                                  variant="subtle"
+                                  fontSize="9px"
+                                  rounded="md"
+                                  px={1.5}
+                                >
+                                  Delivery
+                                </Badge>
+                              )}
+                            </HStack>
+
+                            <HStack spacing={1} color={mutedText} fontSize="11px">
+                              <Icon as={FiMapPin} boxSize={3} flexShrink={0} />
+                              <Text noOfLines={1}>
+                                {[shop.location?.address, shop.location?.city]
+                                  .filter(Boolean)
+                                  .join(', ') || 'Local Store'}
+                              </Text>
+                            </HStack>
+                          </Box>
+
+                          {/* Right Quick Actions */}
+                          <VStack spacing={1.5} flexShrink={0}>
+                            <IconButton
+                              aria-label="Favorite store"
+                              icon={
+                                <Icon
+                                  as={isLiked ? FaHeart : FaRegHeart}
+                                  color={isLiked ? 'red.500' : 'gray.400'}
+                                  boxSize={3.5}
+                                />
+                              }
+                              size="xs"
+                              w="26px"
+                              h="26px"
+                              minW="26px"
+                              rounded="full"
+                              variant="ghost"
+                              onClick={(e) => toggleLikeShop(shop._id || '', e)}
+                            />
+                            <IconButton
+                              aria-label="Visit store"
+                              icon={<FiArrowUpRight size={13} />}
+                              size="xs"
+                              w="26px"
+                              h="26px"
+                              minW="26px"
+                              rounded="full"
+                              colorScheme="blue"
+                              variant={isSelected ? 'solid' : 'subtle'}
+                              onClick={(e) => handleVisitStore(shop, e)}
+                            />
+                          </VStack>
+                        </Flex>
+                      </Box>
+                    );
+                  })}
+                </VStack>
+              )}
+            </Box>
           </Box>
 
-          {/* Map Container */}
-          <Box gridColumn={{ lg: "span 2" }} h={{ base: "450px", md: "550px", lg: "650px" }} borderRadius="3xl" overflow="hidden" border="3px solid" borderColor={useColorModeValue('white', 'gray.700')} boxShadow="2xl" position="relative" bg={cardBg}>
+          {/* RIGHT: Interactive Map + Floating Mobile Store Carousel */}
+          <Box
+            display={{
+              base: mobileViewMode === 'map' ? 'block' : 'none',
+              lg: 'block',
+            }}
+            gridColumn={{ lg: 'span 8' }}
+            h={{ base: '440px', sm: '480px', lg: '540px' }}
+            borderRadius="2xl"
+            overflow="hidden"
+            border="1px solid"
+            borderColor={borderColor}
+            boxShadow="sm"
+            position="relative"
+            bg={cardBg}
+          >
+            {/* Subtle non-intrusive status banner */}
             {errorMessage && (
-              <Fade in>
-                <Box position="absolute" top={4} left={4} zIndex={2} bg={panelBg} backdropFilter="blur(10px)" px={4} py={2} borderRadius="full" boxShadow="lg">
-                  <HStack spacing={2}><Icon as={FaMapMarkerAlt} color="red.500" /><Text fontSize="sm" color="red.500" fontWeight="600">{errorMessage}</Text></HStack>
-                </Box>
-              </Fade>
+              <HStack
+                position="absolute"
+                top={3}
+                left={3}
+                right="56px"
+                zIndex={3}
+                bg="whiteAlpha.950"
+                backdropFilter="blur(8px)"
+                px={3}
+                py={1.5}
+                rounded="full"
+                boxShadow="sm"
+                spacing={2}
+                maxW="fit-content"
+              >
+                <Icon as={FaMapMarkerAlt} color="orange.500" boxSize={3} />
+                <Text fontSize="11px" color="gray.700" fontWeight="600" noOfLines={1}>
+                  {errorMessage}
+                </Text>
+              </HStack>
             )}
+
+            {/* Floating Map Control Buttons (Top-Right) */}
+            <VStack position="absolute" top={3} right={3} zIndex={3} spacing={2}>
+              <Tooltip label="My Location" placement="left" hasArrow>
+                <IconButton
+                  aria-label="Center on my location"
+                  icon={<FaCrosshairs size={14} />}
+                  size="sm"
+                  w="34px"
+                  h="34px"
+                  rounded="xl"
+                  bg="white"
+                  color="gray.700"
+                  boxShadow="md"
+                  _hover={{ bg: 'blue.50', color: 'blue.600' }}
+                  isLoading={geoLoading}
+                  onClick={requestCurrentLocation}
+                />
+              </Tooltip>
+
+              <Tooltip label="Fit all stores" placement="left" hasArrow>
+                <IconButton
+                  aria-label="Fit all stores on screen"
+                  icon={<FiMaximize2 size={14} />}
+                  size="sm"
+                  w="34px"
+                  h="34px"
+                  rounded="xl"
+                  bg="white"
+                  color="gray.700"
+                  boxShadow="md"
+                  _hover={{ bg: 'blue.50', color: 'blue.600' }}
+                  onClick={handleFitBounds}
+                />
+              </Tooltip>
+            </VStack>
+
             {!isLoaded || shopLoading ? (
-              <Flex h="100%" align="center" justify="center" direction="column" gap={4}>
-                <Spinner size="xl" color="blue.500" thickness="4px" speed="0.65s" />
-                <Text color="gray.500" fontWeight="500">Loading magical map...</Text>
+              <Flex h="100%" align="center" justify="center" direction="column" gap={3}>
+                <Spinner size="lg" color="blue.500" thickness="3px" />
+                <Text fontSize="xs" color={mutedText} fontWeight="600">
+                  Finding stores near you...
+                </Text>
               </Flex>
             ) : (
-              <GoogleMap mapContainerStyle={mapContainerStyle} center={center} zoom={13} options={mapOptions}>
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={center}
+                zoom={13}
+                options={mapOptions}
+                onLoad={(map) => {
+                  mapRef.current = map;
+                }}
+              >
+                {/* User GPS Marker & Radius Circle */}
                 {userLocation && (
                   <>
-                    <MarkerF position={userLocation} title="You are here" icon={{ path: window.google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: '#3b82f6', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 }} />
-                    <CircleF center={userLocation} radius={radiusKm * 1000} options={{ fillColor: '#3b82f6', fillOpacity: 0.1, strokeColor: '#3b82f6', strokeOpacity: 0.4, strokeWeight: 2 }} />
+                    <MarkerF
+                      position={userLocation}
+                      title="Your Location"
+                      icon={{
+                        path: window.google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#2563EB',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 3,
+                      }}
+                    />
+                    <CircleF
+                      center={userLocation}
+                      radius={radiusKm * 1000}
+                      options={{
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.08,
+                        strokeColor: '#2563EB',
+                        strokeOpacity: 0.35,
+                        strokeWeight: 1.5,
+                      }}
+                    />
                   </>
                 )}
-                {shops.map((shop) => {
+
+                {/* Store Markers */}
+                {filteredShops.map((shop, idx) => {
                   if (!shop.mapPoint) return null;
                   const isSelected = selectedShop?._id === shop._id;
                   return (
                     <MarkerF
-                      key={shop._id || `${shop.name}-${shop.mapPoint.lat}-${shop.mapPoint.lng}`}
+                      key={shop._id || `${shop.name}-${idx}`}
                       position={shop.mapPoint}
-                      title={shop.name || 'Seller'}
-                      onClick={() => handleShopSelect(shop)}
-                      icon={{ path: window.google.maps.SymbolPath.CIRCLE, scale: isSelected ? 14 : 10, fillColor: isSelected ? '#f97316' : '#3b82f6', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 }}
+                      title={shop.name || 'Store'}
+                      onClick={() => handleShopSelect(shop, idx)}
+                      icon={{
+                        path: window.google.maps.SymbolPath.CIRCLE,
+                        scale: isSelected ? 12 : 9,
+                        fillColor: isSelected ? '#EA580C' : '#2563EB',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2.5,
+                      }}
                     />
                   );
                 })}
-                {selectedShop?.mapPoint && (
-                  <InfoWindowF
-                    position={selectedShop.mapPoint}
-                    onCloseClick={() => {
-                      setSelectedShop(null);
-                      setIsShopDataLoading(false);
-                      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                      if (progressInterval.current) clearInterval(progressInterval.current);
-                    }}
-                    options={{ pixelOffset: new window.google.maps.Size(0, -40) }}
-                  >
-                    <Box maxW="300px" p={3} borderRadius="2xl">
-                      {isShopDataLoading ? (
-                        <VStack spacing={4} py={6} px={2}>
-                          {/* Animated Gift Box Loader */}
-                          <Box position="relative" boxSize="70px">
-                            <Icon 
-                              as={FaGift} 
-                              boxSize="70px" 
-                              color="blue.400" 
-                              transition="all 0.2s"
-                              animation="pulse 0.8s infinite"
-                              sx={{
-                                '@keyframes pulse': {
-                                  '0%': { transform: 'scale(1)', opacity: 1 },
-                                  '50%': { transform: 'scale(1.1)', opacity: 0.8 },
-                                  '100%': { transform: 'scale(1)', opacity: 1 },
-                                }
-                              }}
-                            />
-                            <Icon 
-                              as={FaHeart} 
-                              position="absolute" 
-                              top="-10px" 
-                              right="-10px" 
-                              boxSize="20px" 
-                              color="red.500"
-                              transition="all 0.2s"
-                              animation="bounce 0.6s infinite"
-                              sx={{
-                                '@keyframes bounce': {
-                                  '0%, 100%': { transform: 'translateY(0)' },
-                                  '50%': { transform: 'translateY(-5px)' },
-                                }
-                              }}
-                            />
-                          </Box>
-                          <Text fontWeight="800" fontSize="md" color="blue.600">{loaderMessage}</Text>
-                          <Progress value={loaderProgress} size="sm" width="100%" colorScheme="blue" borderRadius="full" hasStripe isAnimated />
-                          <Text fontSize="xs" color="gray.500">Opening shop in a moment...</Text>
-                        </VStack>
-                      ) : (
-                        <VStack align="stretch" spacing={3}>
-                          <Flex justify="space-between" align="start">
-                            <Heading size="sm" color="blue.700" fontWeight="900">{selectedShop.name || 'Seller'}</Heading>
-                            {selectedShop.isVerified && <Tooltip label="Verified"><Icon as={FaShieldAlt} color="blue.500" boxSize={4} /></Tooltip>}
-                          </Flex>
-                          <Text fontSize="sm" color="gray.600" noOfLines={2}>{selectedShop.description || 'Local seller near your location offering quality products'}</Text>
-                          {selectedShop.rating && <HStack spacing={1}><Icon as={FaStar} color="#fbbf24" boxSize={3.5} /><Text fontSize="md" fontWeight="800">{selectedShop.rating}</Text><Text fontSize="xs" color="gray.500">({selectedShop.totalReviews} reviews)</Text></HStack>}
-                          {(selectedShop.location?.city || selectedShop.location?.state) && <HStack spacing={1}><Icon as={FaCity} color="gray.400" boxSize={3} /><Text fontSize="xs" fontWeight="500">{ [selectedShop.location?.city, selectedShop.location?.state].filter(Boolean).join(', ') }</Text></HStack>}
-                          {selectedShop.contactInfo?.phone && <HStack spacing={2}><Icon as={FaPhoneAlt} color="green.500" boxSize={3} /><Text fontSize="xs" color="green.600" fontWeight="600">{selectedShop.contactInfo.phone}</Text></HStack>}
-                          <HStack spacing={2} wrap="wrap">
-                            {selectedShop.distanceKm && <Badge colorScheme="green" fontSize="xs" px={2} py={1} borderRadius="full">📍 {selectedShop.distanceKm.toFixed(1)} km away</Badge>}
-                            {selectedShop.deliveryAvailable && <Badge colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="full">🚚 Delivery Available</Badge>}
-                            {selectedShop.openingHours && <Badge colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="full">🕒 {selectedShop.openingHours}</Badge>}
-                          </HStack>
-                          <Button size="sm" colorScheme="blue" borderRadius="2xl" leftIcon={<FaLocationArrow />} onClick={() => window.open(`https://maps.google.com/?q=${selectedShop.mapPoint?.lat},${selectedShop.mapPoint?.lng}`, '_blank')} fontWeight="700" mt={1} _hover={{ transform: "scale(1.02)" }}>Get Directions</Button>
-                        </VStack>
-                      )}
-                    </Box>
-                  </InfoWindowF>
-                )}
+
+                {/* Instant Store Preview InfoWindow (No 2-second fake delay!) */}
+            {selectedShop?.mapPoint && (
+  <InfoWindowF
+    position={selectedShop.mapPoint}
+    onCloseClick={() => setSelectedShop(null)}
+    options={{
+      headerDisabled: true,
+      pixelOffset: new window.google.maps.Size(0, -10),
+      disableAutoPan: false,
+    }}
+  >
+    <Box
+      w="220px"
+      maxW="220px"
+      minW="0"
+      p={0}
+      m={0}
+      boxSizing="border-box"
+      overflow="hidden"
+      color="gray.800"
+    >
+      {/* Header */}
+      <HStack justify="space-between" align="center" spacing={1} mb={1.5}>
+        <HStack spacing={1} minW={0} flex="1">
+          <Text
+            fontWeight="800"
+            fontSize="13px"
+            color="gray.900"
+            noOfLines={1}
+          >
+            {selectedShop.name || "Local Store"}
+          </Text>
+
+          {selectedShop.isVerified && (
+            <Icon
+              as={FaCheckCircle}
+              color="blue.500"
+              boxSize={3.5}
+              flexShrink={0}
+            />
+          )}
+        </HStack>
+
+        <IconButton
+          aria-label="Close store details"
+          icon={<Icon as={FaTimes} boxSize={3} />}
+          size="xs"
+          variant="ghost"
+          color="gray.500"
+          minW="22px"
+          w="22px"
+          h="22px"
+          onClick={() => setSelectedShop(null)}
+        />
+      </HStack>
+
+      {/* Rating and reviews */}
+      <HStack spacing={2} mb={1.5}>
+        <HStack
+          bg="green.600"
+          color="white"
+          px={1.5}
+          py={0.5}
+          rounded="md"
+          spacing={1}
+        >
+          <Text fontSize="10px" fontWeight="800">
+            {selectedShop.rating || "New"}
+          </Text>
+          {selectedShop.rating && (
+            <Icon as={FaStar} boxSize={2.5} />
+          )}
+        </HStack>
+
+        <Text fontSize="10px" color="gray.500">
+          {selectedShop.totalReviews || 0} reviews
+        </Text>
+
+        {typeof selectedShop.distanceKm === "number" && (
+          <Text fontSize="10px" color="blue.600" fontWeight="600">
+            {selectedShop.distanceKm.toFixed(1)} km
+          </Text>
+        )}
+      </HStack>
+
+      {/* Description */}
+      <Text
+        fontSize="11px"
+        color="gray.600"
+        noOfLines={1}
+        lineHeight="16px"
+        mb={2}
+      >
+        {selectedShop.description ||
+          [
+            selectedShop.location?.address,
+            selectedShop.location?.city,
+          ].filter(Boolean).join(", ") ||
+          "Trusted neighborhood store near you."}
+      </Text>
+
+      {/* Actions */}
+      <HStack spacing={1.5} w="100%">
+        <Button
+          size="xs"
+          flex="1"
+          minW={0}
+          h="29px"
+          fontSize="11px"
+          fontWeight="700"
+          colorScheme="blue"
+          rounded="md"
+          rightIcon={<FiArrowUpRight size={13} />}
+          onClick={(e) => handleVisitStore(selectedShop, e)}
+        >
+          Visit Store
+        </Button>
+
+        <IconButton
+          aria-label="Get directions"
+          icon={<FiNavigation size={13} />}
+          size="xs"
+          h="29px"
+          w="29px"
+          minW="29px"
+          rounded="md"
+          variant="outline"
+          colorScheme="blue"
+          onClick={(e) => handleGetDirections(selectedShop, e)}
+        />
+
+        {selectedShop.contactInfo?.phone && (
+          <IconButton
+            aria-label="Call store"
+            icon={<FaPhoneAlt size={12} />}
+            size="xs"
+            h="29px"
+            w="29px"
+            minW="29px"
+            rounded="md"
+            variant="outline"
+            colorScheme="green"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.href = `tel:${selectedShop.contactInfo.phone}`;
+            }}
+          />
+        )}
+      </HStack>
+    </Box>
+  </InfoWindowF>
+)}
               </GoogleMap>
             )}
-          </Box>
-        </SimpleGrid>
 
-        {/* Features Footer */}
-        <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} gap={5} mt={10} position="relative" zIndex={1}>
-          <Flex align="center" gap={4} p={4} bg={glassBg} backdropFilter="blur(8px)" borderRadius="2xl" border="1px solid" borderColor={borderColor} transition="all 0.2s" _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}>
-            <Circle size="45px" bg="blue.100" _dark={{ bg: "blue.900" }}><Icon as={FaShieldAlt} color="blue.600" boxSize={5} /></Circle>
-            <Box><Text fontWeight="800" fontSize="sm">Verified Sellers</Text><Text fontSize="xs" color="gray.500">100% authentic stores</Text></Box>
-          </Flex>
-          <Flex align="center" gap={4} p={4} bg={glassBg} backdropFilter="blur(8px)" borderRadius="2xl" border="1px solid" borderColor={borderColor} transition="all 0.2s" _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}>
-            <Circle size="45px" bg="green.100" _dark={{ bg: "green.900" }}><Icon as={FaShippingFast} color="green.600" boxSize={5} /></Circle>
-            <Box><Text fontWeight="800" fontSize="sm">Fast Delivery</Text><Text fontSize="xs" color="gray.500">Same day dispatch</Text></Box>
-          </Flex>
-          <Flex align="center" gap={4} p={4} bg={glassBg} backdropFilter="blur(8px)" borderRadius="2xl" border="1px solid" borderColor={borderColor} transition="all 0.2s" _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}>
-            <Circle size="45px" bg="orange.100" _dark={{ bg: "orange.900" }}><Icon as={FaAward} color="orange.600" boxSize={5} /></Circle>
-            <Box><Text fontWeight="800" fontSize="sm">Quality Guarantee</Text><Text fontSize="xs" color="gray.500">Best price assured</Text></Box>
-          </Flex>
-          <Flex align="center" gap={4} p={4} bg={glassBg} backdropFilter="blur(8px)" borderRadius="2xl" border="1px solid" borderColor={borderColor} transition="all 0.2s" _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}>
-            <Circle size="45px" bg="pink.100" _dark={{ bg: "pink.900" }}><Icon as={FaHeart} color="pink.600" boxSize={5} /></Circle>
-            <Box><Text fontWeight="800" fontSize="sm">Trusted by Many</Text><Text fontSize="xs" color="gray.500">50K+ happy customers</Text></Box>
-          </Flex>
+            {/* FLOATING MOBILE BOTTOM STORE RAIL (Swiggy / Google Maps style) */}
+            {filteredShops.length > 0 && (
+              <Box
+                display={{ base: 'block', lg: 'none' }}
+                position="absolute"
+                bottom={2.5}
+                left={0}
+                right={0}
+                zIndex={3}
+              >
+                <Flex
+                  ref={mobileCardsRef}
+                  gap={2.5}
+                  overflowX="auto"
+                  px={3}
+                  py={1}
+                  sx={{
+                    scrollSnapType: 'x mandatory',
+                    '& > *': { scrollSnapAlign: 'center' },
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                  }}
+                >
+                  {filteredShops.map((shop, idx) => {
+                    const isSelected = selectedShop?._id === shop._id;
+                    return (
+                      <Box
+                        key={shop._id || idx}
+                        w="260px"
+                        flexShrink={0}
+                        bg="whiteAlpha.950"
+                        backdropFilter="blur(10px)"
+                        p={3}
+                        rounded="xl"
+                        border="1.5px solid"
+                        borderColor={isSelected ? 'blue.500' : 'gray.200'}
+                        boxShadow="0 8px 20px rgba(0,0,0,0.12)"
+                        onClick={() => handleShopSelect(shop, idx)}
+                      >
+                        <Flex justify="space-between" align="start" gap={2}>
+                          <Box minW={0} flex="1">
+                            <HStack spacing={1}>
+                              <Text fontSize="xs" fontWeight="800" color="gray.900" noOfLines={1}>
+                                {shop.name}
+                              </Text>
+                              {shop.isVerified && (
+                                <Icon as={FaCheckCircle} color="blue.500" boxSize={3} />
+                              )}
+                            </HStack>
+                            <HStack spacing={1.5} mt={1}>
+                              <Badge colorScheme="green" fontSize="9px" rounded="sm">
+                                ★ {shop.rating}
+                              </Badge>
+                              {typeof shop.distanceKm === 'number' && (
+                                <Text fontSize="10px" fontWeight="700" color="blue.600">
+                                  {shop.distanceKm.toFixed(1)} km
+                                </Text>
+                              )}
+                              <Text fontSize="10px" color="gray.500" noOfLines={1}>
+                                • {shop.location?.city || 'Nearby'}
+                              </Text>
+                            </HStack>
+                          </Box>
+
+                          <HStack spacing={1}>
+                            <IconButton
+                              aria-label="Directions"
+                              icon={<FiNavigation size={12} />}
+                              size="xs"
+                              w="26px"
+                              h="26px"
+                              minW="26px"
+                              rounded="lg"
+                              bg="gray.100"
+                              color="gray.700"
+                              onClick={(e) => handleGetDirections(shop, e)}
+                            />
+                            <IconButton
+                              aria-label="Visit Shop"
+                              icon={<FiArrowUpRight size={13} />}
+                              size="xs"
+                              w="26px"
+                              h="26px"
+                              minW="26px"
+                              rounded="lg"
+                              colorScheme="blue"
+                              onClick={(e) => handleVisitStore(shop, e)}
+                            />
+                          </HStack>
+                        </Flex>
+                      </Box>
+                    );
+                  })}
+                </Flex>
+              </Box>
+            )}
+          </Box>
         </SimpleGrid>
       </Container>
     </Box>

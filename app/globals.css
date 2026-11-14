@@ -1,0 +1,27 @@
+/* Google Maps InfoWindow */
+.gm-style .gm-style-iw-c {
+  padding: 10px !important;
+  max-width: calc(100vw - 40px) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent horizontal and vertical scrolling */
+.gm-style .gm-style-iw-d {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  max-height: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove default InfoWindow header spacing */
+.gm-style .gm-style-iw-chr {
+  display: none !important;
+}
+
+/* Prevent content from expanding the popup */
+.gm-style .gm-style-iw-d > div {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}

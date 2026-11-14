@@ -1,41 +1,37 @@
 import {
+  Badge,
   Box,
+  Button,
   Container,
   Divider,
+  Fade,
+  Heading,
+  HStack,
+  IconButton,
+  Input,
+  InputGroup,
+  InputRightElement,
   Link,
   SimpleGrid,
   Stack,
   Text,
   useColorModeValue,
-  HStack,
-  VStack,
-  Heading,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Button,
-  Badge,
   useToast,
-  IconButton,
-  Fade,
-  ScaleFade,
+  VStack
 } from "@chakra-ui/react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { FaAmazonPay, FaApple, FaCcMastercard, FaCcVisa, FaFacebookF, FaGooglePlay, FaInstagram, FaLinkedinIn, FaTwitter } from "react-icons/fa";
 import {
-  FiCheckCircle,
-  FiShield,
-  FiTruck,
-  FiRefreshCw,
   FiArrowUp,
+  FiCheckCircle,
   FiHeart,
-  FiStar,
+  FiShield,
+  FiStar
 } from "react-icons/fi";
-import { FaApple, FaGooglePlay, FaCcVisa, FaCcMastercard, FaAmazonPay, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { SiGooglepay, SiPhonepe } from "react-icons/si";
-import ContactSection from "./components/ContactSection";
-import FooterSection from "./components/FooterSection";
-import { footerData } from "./components/footerData";
 import Conditions from "./components/Conditions";
+import ContactSection from "./components/ContactSection";
+import { footerData } from "./components/footerData";
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -96,12 +92,6 @@ export const Footer: React.FC = () => {
     }, 1000);
   };
 
-  const trustBadges = [
-    { icon: FiTruck, label: "Free Shipping", desc: "On orders over ₹499", gradient: "linear-gradient(135deg, #3b82f6, #06b6d4)" },
-    { icon: FiShield, label: "Secure Payment", desc: "100% protected", gradient: "linear-gradient(135deg, #10b981, #34d399)" },
-    { icon: FiRefreshCw, label: "Easy Returns", desc: "30-day policy", gradient: "linear-gradient(135deg, #f59e0b, #fbbf24)" },
-    { icon: FiCheckCircle, label: "Verified Sellers", desc: "Trusted vendors", gradient: "linear-gradient(135deg, #8b5cf6, #a78bfa)" },
-  ];
 
   const paymentMethods = [
     { name: "Visa", icon: FaCcVisa },
@@ -124,45 +114,7 @@ export const Footer: React.FC = () => {
       {/* Gradient top border */}
       <Box h="1px" w="full" bgGradient="linear(to-r, transparent, blue.400, purple.500, pink.500, blue.400, transparent)" />
 
-      {/* Trust Bar */}
-      <Box bg={trustBg} borderBottom="1px solid" borderColor={borderColor} py={10}>
-        <Container maxW="7xl" px={{ base: 4, md: 8 }}>
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={{ base: 6, md: 8 }}>
-            {trustBadges.map((badge, idx) => (
-              <ScaleFade key={badge.label} initialScale={0.9} in={true} delay={idx * 0.1}>
-                <HStack
-                  spacing={4}
-                  p={4}
-                  borderRadius="2xl"
-                  bg={cardBg}
-                  shadow="sm"
-                  transition="all 0.3s"
-                  _hover={{ transform: "translateY(-6px)", shadow: "xl", borderColor: accentColor, borderWidth: "1px" }}
-                  border="1px solid"
-                  borderColor="transparent"
-                >
-                  <Box
-                    p={3}
-                    borderRadius="xl"
-                    bgGradient={badge.gradient}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    flexShrink={0}
-                  >
-                    <badge.icon size={20} color="white" />
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" fontWeight="bold" color={headingColor}>{badge.label}</Text>
-                    <Text fontSize="xs" color={mutedText}>{badge.desc}</Text>
-                  </Box>
-                </HStack>
-              </ScaleFade>
-            ))}
-          </SimpleGrid>
-        </Container>
-      </Box>
-
+ 
       {/* Newsletter Section */}
       <Box bg={newsletterBg} py={12} position="relative" overflow="hidden">
         <Container maxW="7xl" px={{ base: 4, md: 8 }} position="relative" zIndex={2}>
