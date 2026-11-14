@@ -6,7 +6,7 @@ import Header from "./component/Header/Header";
 import { Footer } from "./component/Footer/Footer";
 import MobileBottomNav from "./component/MobileBottomNav/MobileBottomNav";
 
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -14,7 +14,15 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const params = useParams();
+  const pathname = usePathname();
   const isShopPage = !!params?.shopTitle || !!params?.shopId;
+  const isProductDetailPage =
+    pathname === "/product" ||
+    pathname === "/individual-product" ||
+    pathname?.startsWith("/product/") ||
+    pathname?.startsWith("/individual-product/");
+
+  const hideBottomNav = isShopPage || isProductDetailPage;
 
   return (
     <Box
@@ -28,7 +36,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <Box
         as="main"
         pb={
-          isShopPage
+          hideBottomNav
             ? "env(safe-area-inset-bottom, 0px)"
             : { base: "calc(88px + env(safe-area-inset-bottom, 0px))", md: 0 }
         }
@@ -36,7 +44,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {children}
       </Box>
       {!isShopPage && <Footer />}
-      {!isShopPage && <MobileBottomNav />}
+      {!hideBottomNav && <MobileBottomNav />}
     </Box>
   );
 };

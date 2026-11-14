@@ -1,468 +1,1415 @@
-'use client';
+'use client'
 
 import {
-  Box,
-  Text,
-  Flex,
-  Button,
-  Heading,
-  Container,
-  SimpleGrid,
-  VStack,
-  Icon,
-  Avatar,
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Badge,
+  Box,
+  BoxProps,
+  Button,
   Circle,
+  Container,
+  Flex,
+  Heading,
   HStack,
-  Image,
+  Icon,
+  // keyframes,
+  SimpleGrid,
   Stack,
-} from '@chakra-ui/react';
-
+  Text,
+  usePrefersReducedMotion,
+  VStack,
+} from '@chakra-ui/react'
+import { keyframes } from '@emotion/react'
+import { useRouter } from 'next/navigation'
+import { ReactNode, useEffect, useRef, useState } from 'react'
+import type { IconType } from 'react-icons'
+import { FaStar } from 'react-icons/fa'
 import {
-  FaStore,
-  FaRocket,
-  FaUsers,
-  FaHeart,
-  FaShoppingCart,
-  FaStar,
-  FaGift,
-} from 'react-icons/fa';
-import { FiTrendingUp, FiCompass, FiZap } from 'react-icons/fi';
+  FiArrowRight,
+  FiBook,
+  FiCoffee,
+  FiEdit3,
+  FiHeart,
+  FiHome,
+  FiMapPin,
+  FiPlusCircle,
+  FiPlusSquare,
+  FiScissors,
+  FiSearch,
+  FiShield,
+  FiShoppingBag,
+  FiShoppingCart,
+  FiSmartphone,
+  FiTag,
+  FiTool,
+  FiTrendingUp,
+  FiUsers,
+  FiZap,
+} from 'react-icons/fi'
 
-// ================= DATA =================
-const features = [
-  {
-    icon: FaStore,
-    title: 'Empowering Vendors',
-    desc: 'We help local businesses grow digitally with smarter tools and better visibility.',
-    color: 'blue',
-  },
-  {
-    icon: FaShoppingCart,
-    title: 'Smarter Shopping',
-    desc: 'Discover nearby stores, compare products, and shop with confidence.',
-    color: 'cyan',
-  },
-  {
-    icon: FaHeart,
-    title: 'Community First',
-    desc: 'Every purchase supports local families and strengthens communities.',
-    color: 'purple',
-  },
-];
+/* ================= CONFIG ================= */
+// Swap these with your real route constants
+const ROUTES = { shops: '/shops', becomeVendor: '/register' }
 
-const steps = [
-  {
-    icon: FaStore,
-    title: 'Discover Shops',
-    desc: 'Find trusted nearby vendors instantly.',
-    color: 'blue',
-  },
-  {
-    icon: FaUsers,
-    title: 'Compare & Explore',
-    desc: 'View products, ratings, and pricing easily.',
-    color: 'cyan',
-  },
-  {
-    icon: FaRocket,
-    title: 'Shop Easily',
-    desc: 'Order online or visit stores directly.',
-    color: 'purple',
-  },
-];
+const pagePx = { base: 4, md: 6, lg: 8 }
+const ease = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
+/* ================= KEYFRAMES ================= */
+const fadeSlideUp = keyframes`
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+`
+const float = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+`
+const bob = keyframes`
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-8px) rotate(1deg); }
+`
+const orbFloat = keyframes`
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(14px, -18px) scale(1.08); }
+`
+const pulseRing = keyframes`
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+`
+const shimmer = keyframes`
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+`
+const marquee = keyframes`
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+`
+
+/* ================= DATA ================= */
+const categories: { label: string; icon: IconType; color: string }[] = [
+  { label: 'Grocery', icon: FiShoppingCart, color: 'green.500' },
+  { label: 'Fashion', icon: FiShoppingBag, color: 'pink.500' },
+  { label: 'Electronics', icon: FiSmartphone, color: 'blue.500' },
+  { label: 'Restaurants', icon: FiCoffee, color: 'orange.500' },
+  { label: 'Beauty & Salons', icon: FiScissors, color: 'purple.500' },
+  { label: 'Home & Living', icon: FiHome, color: 'teal.500' },
+  { label: 'Pharmacy', icon: FiPlusSquare, color: 'red.500' },
+  { label: 'Repairs & Services', icon: FiTool, color: 'gray.600' },
+  { label: 'Books & Stationery', icon: FiBook, color: 'cyan.600' },
+]
+
+const phoneShops = [
+  { name: 'Fresh Basket', meta: '0.4 km · Grocery', icon: FiShoppingCart, grad: 'linear(to-br, #34D399, #10B981)' },
+  { name: 'Urban Threads', meta: '0.9 km · Fashion', icon: FiShoppingBag, grad: 'linear(to-br, #F472B6, #EC4899)' },
+  { name: 'Chai & Co.', meta: '1.2 km · Café', icon: FiCoffee, grad: 'linear(to-br, #FBBF24, #F59E0B)' },
+  { name: 'Glow Studio', meta: '1.6 km · Beauty', icon: FiScissors, grad: 'linear(to-br, #A78BFA, #7C3AED)' },
+]
+
+const journeys = {
+  shopper: [
+    { icon: FiSearch, title: 'Find shops near you', desc: 'Search by name or category, or let us find the stores around your location.' },
+    { icon: FiTag, title: 'Compare & explore', desc: 'Browse products, ratings and offers before you step out of the house.' },
+    { icon: FiShoppingBag, title: 'Shop your way', desc: 'Visit the store in person or order online, whichever suits you.' },
+  ],
+  vendor: [
+    { icon: FiEdit3, title: 'Create your shop', desc: 'Sign up in minutes and add your store details, photos and timings.' },
+    { icon: FiPlusCircle, title: 'List products & offers', desc: 'Showcase what you sell and run offers your neighbours will notice.' },
+    { icon: FiTrendingUp, title: 'Get discovered', desc: 'Nearby shoppers find you, and your footfall and orders grow.' },
+  ],
+}
+
+const values = [
+  { icon: FiShield, title: 'Trusted vendors', desc: 'Real businesses from your own neighbourhood.' },
+  { icon: FiZap, title: 'Simple by design', desc: 'Fast to browse on any phone, easy for vendors to manage.' },
+  { icon: FiUsers, title: 'Community driven', desc: 'Every purchase keeps money and jobs close to home.' },
+]
+
+const stats = [
+  { to: 20, suffix: 'K+', decimals: 0, label: 'Happy shoppers' },
+  { to: 500, suffix: '+', decimals: 0, label: 'Local shops' },
+  { to: 100, suffix: '+', decimals: 0, label: 'Cities connected' },
+  { to: 4.9, suffix: '', decimals: 1, label: 'Average rating' },
+]
 
 const reviews = [
   {
     name: 'Priya Sharma',
-    img: 'https://randomuser.me/api/portraits/women/44.jpg',
+    role: 'Shopper',
     text: 'BusinessSahayata helped me discover amazing nearby stores and made local shopping incredibly simple.',
-    rating: 5,
+    grad: 'linear(to-br, #A78BFA, #7C3AED)',
   },
   {
     name: 'Amit Joshi',
-    img: 'https://randomuser.me/api/portraits/men/32.jpg',
+    role: 'Store owner',
     text: 'This platform helped my offline store attract more customers and grow digitally.',
-    rating: 5,
+    grad: 'linear(to-br, #60A5FA, #2563EB)',
   },
-];
+  {
+    name: 'Rohan Mehta',
+    role: 'Café owner',
+    text: 'Customers now find us on their phones before they walk in. It feels like we finally have a shopfront online.',
+    grad: 'linear(to-br, #F472B6, #DB2777)',
+  },
+]
 
-// ================= MAIN COMPONENT =================
-export default function AboutPage() {
+const faqs = [
+  {
+    q: 'Is BusinessSahayata free for shoppers?',
+    a: 'Yes. Browsing shops, comparing products and finding nearby stores is free for shoppers.',
+  },
+  {
+    q: 'How does nearby search work?',
+    a: 'Allow location access and choose a radius from 2 km up to 50 km. We show the shops within that distance, and you stay in control of how far to look.',
+  },
+  {
+    q: 'How do I list my shop?',
+    a: 'Create a vendor account, add your shop details and products, and your store becomes visible to shoppers around you.',
+  },
+  {
+    q: 'Can I order online or visit the store?',
+    a: 'Both, depending on the shop. Each store page shows how you can buy from them.',
+  },
+]
+
+/* ================= HOOKS ================= */
+const useAnim = () => {
+  const reduce = usePrefersReducedMotion()
+  return (value: string) => (reduce ? undefined : value)
+}
+
+const useInView = <T extends HTMLElement>(threshold = 0.15) => {
+  const ref = useRef<T>(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true)
+          io.disconnect()
+        }
+      },
+      { threshold, rootMargin: '0px 0px -40px 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [threshold])
+
+  return { ref, inView }
+}
+
+/* ================= SMALL BUILDING BLOCKS ================= */
+// Fades + slides children in when they scroll into view
+const Reveal = ({ children, delay = 0, ...rest }: BoxProps & { delay?: number }) => {
+  const reduce = usePrefersReducedMotion()
+  const { ref, inView } = useInView<HTMLDivElement>()
+  const visible = reduce || inView
   return (
-    <Box bg="gray.50" overflow="hidden">
+    <Box
+      ref={ref}
+      opacity={visible ? undefined : 0}
+      animation={!reduce && inView ? `${fadeSlideUp} 0.8s ${ease} ${delay}s both` : undefined}
+      {...rest}
+    >
+      {children}
+    </Box>
+  )
+}
 
-      {/* ================= HERO SECTION ================= */}
-      <Box
-        minH="90vh"
-        position="relative"
-        bgGradient="linear(135deg, #0f172a 0%, #1e3a8a 100%)"
-      >
-        <Container maxW="1200px" position="relative" zIndex={2} py={{ base: 20, md: 28 }}>
-          <Flex
-            direction={{ base: 'column', lg: 'row' }}
-            align="center"
-            justify="space-between"
-            gap={{ base: 12, lg: 16 }}
-          >
-            {/* Left Content */}
-            <VStack flex={1} align={{ base: 'center', lg: 'start' }} textAlign={{ base: 'center', lg: 'left' }} spacing={6}>
-              <Badge
-                bg="whiteAlpha.300"
-                backdropFilter="blur(8px)"
-                color="white"
-                px={4}
-                py={2}
+// Counts up when scrolled into view
+const CountUp = ({
+  to,
+  decimals = 0,
+  suffix = '',
+  duration = 1600,
+}: {
+  to: number
+  decimals?: number
+  suffix?: string
+  duration?: number
+}) => {
+  const reduce = usePrefersReducedMotion()
+  const { ref, inView } = useInView<HTMLSpanElement>(0.4)
+  const [val, setVal] = useState(0)
+
+  useEffect(() => {
+    if (!inView) return
+    if (reduce) {
+      setVal(to)
+      return
+    }
+    let raf = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / duration, 1)
+      setVal(to * (1 - Math.pow(1 - p, 3)))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, to, duration, reduce])
+
+  return (
+    <span ref={ref}>
+      {val.toFixed(decimals)}
+      {suffix}
+    </span>
+  )
+}
+
+const GradientText = ({ children }: { children: ReactNode }) => {
+  const anim = useAnim()
+  return (
+    <Box
+      as="span"
+      bgGradient="linear(to-r, #7C3AED, #6366F1, #2563EB, #7C3AED)"
+      bgClip="text"
+      backgroundSize="200% auto"
+      animation={anim(`${shimmer} 6s linear infinite`)}
+    >
+      {children}
+    </Box>
+  )
+}
+
+const Eyebrow = ({ children }: { children: ReactNode }) => (
+  <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="purple.500">
+    {children}
+  </Text>
+)
+
+const SectionHeading = ({ eyebrow, title, sub }: { eyebrow: string; title: ReactNode; sub?: string }) => (
+  <VStack spacing={3} textAlign="center" maxW="2xl" mx="auto">
+    <Eyebrow>{eyebrow}</Eyebrow>
+    <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+      {title}
+    </Heading>
+    {sub && (
+      <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }}>
+        {sub}
+      </Text>
+    )}
+  </VStack>
+)
+
+const cardStyle: BoxProps = {
+  bg: 'white',
+  border: '1px solid',
+  borderColor: 'gray.100',
+  borderRadius: '2xl',
+  p: { base: 4, md: 6 },
+  boxShadow: '0 2px 10px rgba(79, 70, 229, 0.05)',
+  transition: 'all 0.3s ease',
+  _hover: {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 16px 32px rgba(124, 58, 237, 0.12)',
+    borderColor: 'purple.200',
+  },
+}
+
+const FeatureCard = ({
+  icon,
+  title,
+  desc,
+  grad,
+  delay = 0,
+}: {
+  icon: IconType
+  title: string
+  desc: string
+  grad: string
+  delay?: number
+}) => (
+  <Reveal delay={delay} h="full">
+    <Box {...cardStyle} h="full">
+      <Circle size={{ base: '40px', md: '48px' }} bgGradient={grad} color="white" mb={3} boxShadow="0 8px 18px rgba(79, 70, 229, 0.25)">
+        <Icon as={icon} boxSize={{ base: 5, md: 6 }} />
+      </Circle>
+      <Heading fontSize={{ base: 'sm', md: 'lg' }} fontWeight="800" mb={1.5} color="gray.800">
+        {title}
+      </Heading>
+      <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.600" lineHeight="1.6">
+        {desc}
+      </Text>
+    </Box>
+  </Reveal>
+)
+
+const FloatChip = ({
+  icon,
+  iconColor,
+  label,
+  delay = 0,
+  ...rest
+}: BoxProps & { icon: IconType; iconColor: string; label: string; delay?: number }) => {
+  const anim = useAnim()
+  return (
+    <Flex
+      position="absolute"
+      zIndex={2}
+      align="center"
+      gap={1.5}
+      bg="white"
+      border="1px solid"
+      borderColor="purple.100"
+      borderRadius="full"
+      px={3}
+      py={1.5}
+      boxShadow="0 10px 24px rgba(79, 70, 229, 0.18)"
+      animation={anim(`${bob} 4.5s ease-in-out ${delay}s infinite`)}
+      {...rest}
+    >
+      <Icon as={icon} color={iconColor} boxSize={3.5} />
+      <Text fontSize="12px" fontWeight="700" color="gray.700" whiteSpace="nowrap">
+        {label}
+      </Text>
+    </Flex>
+  )
+}
+
+/* ================= PAGE ================= */
+export default function AboutPage() {
+  const router = useRouter()
+  const anim = useAnim()
+  const [tab, setTab] = useState<'shopper' | 'vendor'>('shopper')
+  const steps = journeys[tab]
+
+  return (
+    <Box bg="white" overflow="hidden">
+      {/* ================= HERO ================= */}
+      <Box position="relative" overflow="hidden" bgGradient="linear(to-b, #F5F3FF 0%, #FFFFFF 100%)">
+        {/* dot grid */}
+        <Box
+          position="absolute"
+          inset={0}
+          pointerEvents="none"
+          opacity={0.5}
+          backgroundImage="radial-gradient(#C4B5FD 1.2px, transparent 1.2px)"
+          backgroundSize="24px 24px"
+          sx={{
+            maskImage: 'radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)',
+          }}
+        />
+        {/* orbs */}
+        <Box
+          position="absolute"
+          top="-80px"
+          right="-60px"
+          w="260px"
+          h="260px"
+          borderRadius="full"
+          bg="purple.200"
+          opacity={0.5}
+          filter="blur(60px)"
+          pointerEvents="none"
+          animation={anim(`${orbFloat} 9s ease-in-out infinite`)}
+        />
+        <Box
+          position="absolute"
+          bottom="-60px"
+          left="-60px"
+          w="240px"
+          h="240px"
+          borderRadius="full"
+          bg="blue.200"
+          opacity={0.45}
+          filter="blur(60px)"
+          pointerEvents="none"
+          animation={anim(`${orbFloat} 11s ease-in-out infinite reverse`)}
+        />
+
+        <Container maxW="1200px" px={pagePx} position="relative" pt={{ base: 4, sm: 6, md: 14 }} pb={{ base: 6, sm: 8, md: 18 }}>
+          <Flex direction={{ base: 'column', lg: 'row' }} align="center" gap={{ base: 4, sm: 6, lg: 14 }}>
+            {/* text */}
+            <VStack
+              flex={1}
+              align={{ base: 'center', lg: 'flex-start' }}
+              textAlign={{ base: 'center', lg: 'left' }}
+              spacing={{ base: 3, sm: 4, md: 5 }}
+            >
+              <Flex
+                align="center"
+                gap={2}
+                bg="white"
+                border="1px solid"
+                borderColor="purple.100"
                 borderRadius="full"
-                fontSize="sm"
-                fontWeight="600"
+                px={3}
+                py={1}
+                boxShadow="xs"
+                animation={anim(`${fadeSlideUp} 0.7s ${ease} both`)}
               >
-                <HStack spacing={2}>
-                  <Icon as={FiZap} />
-                  <Text>Empowering Local Businesses Digitally</Text>
-                </HStack>
-              </Badge>
+                <Box position="relative" w="7px" h="7px">
+                  <Box position="absolute" inset={0} borderRadius="full" bg="green.400" animation={anim(`${pulseRing} 1.8s ease-out infinite`)} />
+                  <Box position="absolute" inset={0} borderRadius="full" bg="green.500" />
+                </Box>
+                <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="purple.700">
+                  Built for local businesses
+                </Text>
+              </Flex>
 
               <Heading
-                fontSize={{ base: '4xl', md: '6xl', lg: '7xl' }}
+                fontSize={{ base: '28px', sm: '36px', md: '48px', lg: '58px' }}
                 fontWeight="900"
-                lineHeight="1.1"
-                color="white"
+                lineHeight={{ base: '1.15', md: '1.08' }}
+                letterSpacing="-0.03em"
+                color="gray.900"
+                animation={anim(`${fadeSlideUp} 0.8s ${ease} 0.1s both`)}
               >
-                Discover.
-                <Text as="span" bgGradient="linear(135deg, #60a5fa, #c084fc)" bgClip="text">
-                  {' '}Support. Grow.
-                </Text>
+                Shop local.
+                <br />
+                <GradientText>Grow together.</GradientText>
               </Heading>
 
-              <Text fontSize={{ base: 'lg', md: 'xl' }} color="gray.200" maxW="lg">
-                BusinessSahayata connects customers with trusted local vendors,
-                making shopping smarter, faster, and more community‑focused.
+              <Text
+                color="gray.600"
+                fontSize={{ base: '13px', sm: 'sm', md: 'lg' }}
+                maxW="lg"
+                lineHeight={{ base: '1.55', md: '1.7' }}
+                animation={anim(`${fadeSlideUp} 0.8s ${ease} 0.2s both`)}
+              >
+                BusinessSahayata connects neighbours with trusted local shops, making everyday nearby shopping effortless while giving every local store a digital home.
               </Text>
 
-              <HStack spacing={4} flexWrap="wrap" justify={{ base: 'center', lg: 'flex-start' }}>
+              <Stack
+                direction={{ base: 'row', sm: 'row' }}
+                spacing={{ base: 2.5, sm: 3 }}
+                w={{ base: 'full', sm: 'auto' }}
+                animation={anim(`${fadeSlideUp} 0.8s ${ease} 0.3s both`)}
+              >
                 <Button
-                  bgGradient="linear(135deg, #3b82f6, #2563eb)"
-                  color="white"
-                  size="lg"
+                  flex={{ base: 1, sm: 'initial' }}
+                  h={{ base: '42px', md: '50px' }}
+                  px={{ base: 4, sm: 7 }}
                   borderRadius="full"
-                  px={8}
-                  rightIcon={<FiTrendingUp />}
-                  transition="all 0.2s"
-                  _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
+                  color="white"
+                  fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+                  fontWeight="700"
+                  rightIcon={<FiArrowRight size={14} />}
+                  bgGradient="linear(to-r, #7C3AED, #6366F1, #7C3AED)"
+                  backgroundSize="200% auto"
+                  boxShadow="0 8px 20px rgba(124, 58, 237, 0.3)"
+                  transition="all 0.25s"
+                  _hover={{
+                    animation: anim(`${shimmer} 2s linear infinite`),
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 14px 30px rgba(124, 58, 237, 0.45)',
+                  }}
+                  _active={{ transform: 'scale(0.97)' }}
+                  onClick={() => router.push(ROUTES.shops)}
                 >
                   Explore Shops
                 </Button>
                 <Button
-                  variant="outline"
-                  borderColor="whiteAlpha.400"
-                  color="white"
-                  size="lg"
+                  flex={{ base: 1, sm: 'initial' }}
+                  h={{ base: '42px', md: '50px' }}
+                  px={{ base: 4, sm: 7 }}
                   borderRadius="full"
-                  px={8}
-                  transition="all 0.2s"
-                  _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-2px)' }}
+                  bg="white"
+                  color="purple.700"
+                  fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
+                  border="1px solid"
+                  borderColor="purple.200"
+                  fontWeight="700"
+                  transition="all 0.25s"
+                  _hover={{ transform: 'translateY(-2px)', bg: 'purple.50' }}
+                  _active={{ transform: 'scale(0.97)' }}
+                  onClick={() => router.push(ROUTES.becomeVendor)}
                 >
-                  Become Vendor
+                  Become a Vendor
                 </Button>
+              </Stack>
+
+              {/* social proof & trust pills */}
+              <HStack
+                spacing={{ base: 2.5, sm: 3 }}
+                pt={{ base: 0.5, md: 1 }}
+                animation={anim(`${fadeSlideUp} 0.8s ${ease} 0.4s both`)}
+                flexWrap="wrap"
+                justify={{ base: 'center', lg: 'flex-start' }}
+              >
+                <HStack spacing={1.5} bg="white" px={2.5} py={1} rounded="full" border="1px solid" borderColor="purple.100" boxShadow="xs">
+                  <HStack spacing={0.5}>
+                    {[...Array(5)].map((_, i) => (
+                      <Icon key={i} as={FaStar} color="yellow.400" boxSize={2.5} />
+                    ))}
+                  </HStack>
+                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="gray.700">
+                    4.9 (20K+ shoppers)
+                  </Text>
+                </HStack>
+
+                <HStack spacing={1.5} bg="white" px={2.5} py={1} rounded="full" border="1px solid" borderColor="purple.100" boxShadow="xs">
+                  <Icon as={FiShoppingBag} color="purple.600" boxSize={3} />
+                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="gray.700">
+                    500+ Local Shops
+                  </Text>
+                </HStack>
               </HStack>
             </VStack>
 
-            {/* Right Image with Floating Stats */}
-            <Box flex={1} position="relative">
+            {/* MOBILE NATIVE SPOTLIGHT WIDGET (Compact, native mobile app feel) */}
+            <Box
+              display={{ base: 'block', lg: 'none' }}
+              w="full"
+              maxW="440px"
+              mx="auto"
+              mt={1}
+            >
               <Box
-                borderRadius="3xl"
+                bg="white"
+                border="1px solid"
+                borderColor="purple.100"
+                borderRadius="2xl"
+                p={3}
+                boxShadow="0 4px 16px rgba(124, 58, 237, 0.06)"
+                position="relative"
                 overflow="hidden"
-                boxShadow="2xl"
-                transition="all 0.3s"
-                _hover={{ transform: 'rotate(0deg) scale(1.02)' }}
               >
-                <Image
-                  src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?q=80&w=2070&auto=format&fit=crop"
-                  alt="Shopping"
-                  w="100%"
-                  h={{ base: '300px', md: '450px' }}
-                  objectFit="cover"
-                />
-              </Box>
+                <Flex justify="space-between" align="center" mb={2}>
+                  <HStack spacing={1.5}>
+                    <Box position="relative" w="6px" h="6px">
+                      <Box position="absolute" inset={0} borderRadius="full" bg="purple.400" animation={anim(`${pulseRing} 1.8s ease-out infinite`)} />
+                      <Box position="absolute" inset={0} borderRadius="full" bg="purple.600" />
+                    </Box>
+                    <Text fontSize="xs" fontWeight="800" color="gray.800">
+                      Nearby Shops
+                    </Text>
+                    <Badge colorScheme="purple" fontSize="9px" rounded="full" px={1.5} py={0.2}>
+                      within 3 km
+                    </Badge>
+                  </HStack>
 
-              {/* Floating Card 1 */}
-              <Box
-                position="absolute"
-                bottom={{ base: '-20px', md: '-30px' }}
-                left={{ base: '-10px', md: '-30px' }}
-                bg="white"
-                p={5}
-                borderRadius="2xl"
-                boxShadow="xl"
-                transition="all 0.3s"
-                _hover={{ transform: 'scale(1.05)' }}
-              >
-                <Heading size="lg" color="blue.600">20K+</Heading>
-                <Text fontWeight="500">Happy Customers</Text>
-              </Box>
+                  <Button
+                    variant="link"
+                    size="xs"
+                    color="purple.600"
+                    fontWeight="700"
+                    rightIcon={<FiArrowRight size={10} />}
+                    onClick={() => router.push(ROUTES.shops)}
+                    _hover={{ textDecoration: 'none' }}
+                  >
+                    View all
+                  </Button>
+                </Flex>
 
-              {/* Floating Card 2 */}
-              <Box
-                position="absolute"
-                top={{ base: '-10px', md: '-20px' }}
-                right={{ base: '-10px', md: '-20px' }}
-                bg="white"
-                p={4}
-                borderRadius="2xl"
-                boxShadow="xl"
-                transition="all 0.3s"
-                _hover={{ transform: 'scale(1.05)' }}
-              >
-                <HStack>
-                  <Icon as={FaStar} color="yellow.400" />
-                  <Text fontWeight="bold">4.9 Rating</Text>
-                </HStack>
+                <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={2}>
+                  {phoneShops.slice(0, 2).map((s) => (
+                    <Flex
+                      key={s.name}
+                      p={2}
+                      align="center"
+                      gap={2.5}
+                      bg="gray.50"
+                      border="1px solid"
+                      borderColor="gray.100"
+                      borderRadius="xl"
+                      as="button"
+                      onClick={() => router.push(ROUTES.shops)}
+                      textAlign="left"
+                      _active={{ bg: 'purple.50', transform: 'scale(0.99)' }}
+                      transition="all 0.15s ease"
+                    >
+                      <Circle size="30px" bgGradient={s.grad} color="white" flexShrink={0}>
+                        <Icon as={s.icon} boxSize={3.5} />
+                      </Circle>
+                      <Box minW={0} flex={1}>
+                        <Text fontSize="11px" fontWeight="700" color="gray.800" noOfLines={1}>
+                          {s.name}
+                        </Text>
+                        <Text fontSize="9px" color="gray.500" noOfLines={1}>
+                          {s.meta}
+                        </Text>
+                      </Box>
+                      <Badge colorScheme="green" fontSize="8px" rounded="full" px={1.5}>
+                        Open
+                      </Badge>
+                    </Flex>
+                  ))}
+                </SimpleGrid>
+
+                <Flex
+                  mt={2}
+                  px={2.5}
+                  py={1.5}
+                  bg="purple.50"
+                  borderRadius="lg"
+                  align="center"
+                  justify="space-between"
+                >
+                  <HStack spacing={1.5}>
+                    <Icon as={FiZap} color="purple.600" boxSize={3} />
+                    <Text fontSize="10px" fontWeight="700" color="purple.800">
+                      Same-day local doorstep delivery
+                    </Text>
+                  </HStack>
+                  <Text fontSize="9px" fontWeight="700" color="purple.600">
+                    0% markup
+                  </Text>
+                </Flex>
               </Box>
             </Box>
+
+            {/* DESKTOP PHONE MOCKUP (Visible on lg and above) */}
+            <Box
+              display={{ base: 'none', lg: 'block' }}
+              position="relative"
+              w="full"
+              maxW="360px"
+              mx="auto"
+              flex={1}
+            >
+              <FloatChip icon={FaStar} iconColor="#FACC15" label="4.9 rating" top="24px" right="0" delay={0} />
+              <FloatChip icon={FiMapPin} iconColor="#7C3AED" label="0.4 km away" top="48%" left="0" delay={1} />
+              <FloatChip icon={FiTag} iconColor="#10B981" label="20% off today" bottom="40px" right="4px" delay={2} />
+
+              <Box
+                position="relative"
+                w="262px"
+                mx="auto"
+                animation={anim(`${float} 7s ease-in-out infinite`)}
+              >
+                {/* side buttons */}
+                <Box position="absolute" left="-9px" top="70px" w="3px" h="28px" bg="gray.900" borderRadius="full" />
+                <Box position="absolute" right="-9px" top="100px" w="3px" h="46px" bg="gray.900" borderRadius="full" />
+
+                {/* phone frame */}
+                <Box
+                  position="relative"
+                  display="flex"
+                  flexDirection="column"
+                  aspectRatio="7 / 12"
+                  bg="white"
+                  border="7px solid"
+                  borderColor="gray.900"
+                  borderRadius="40px"
+                  overflow="hidden"
+                  boxShadow="0 30px 60px rgba(79, 70, 229, 0.28)"
+                >
+                  {/* status bar + notch */}
+                  <Flex align="center" justify="space-between" px={5} pt="10px" h="30px" flexShrink={0}>
+                    <Text fontSize="10px" fontWeight="700" color="gray.800">
+                      9:41
+                    </Text>
+                    <Box position="absolute" top="7px" left="50%" transform="translateX(-50%)" w="62px" h="18px" bg="gray.900" borderRadius="full" />
+                    <Box w="14px" h="7px" borderRadius="2px" border="1.5px solid" borderColor="gray.800" position="relative">
+                      <Box position="absolute" inset="1px" right="3px" bg="gray.800" borderRadius="1px" />
+                    </Box>
+                  </Flex>
+
+                  {/* screen content */}
+                  <Flex direction="column" flex={1} minH={0} px={3} pt={2}>
+                    <HStack justify="space-between" mb={2.5} flexShrink={0}>
+                      <Text fontSize="13px" fontWeight="800" color="gray.800">
+                        Shops near you
+                      </Text>
+                      <HStack spacing={1} color="purple.500">
+                        <Icon as={FiMapPin} boxSize={3} />
+                        <Text fontSize="10px" fontWeight="700">
+                          5 km
+                        </Text>
+                      </HStack>
+                    </HStack>
+
+                    <HStack bg="gray.100" borderRadius="full" px={3} h="30px" spacing={2} mb={2.5} flexShrink={0}>
+                      <Icon as={FiSearch} boxSize={3} color="gray.400" />
+                      <Text fontSize="11px" color="gray.400">
+                        Search shops
+                      </Text>
+                    </HStack>
+
+                    <HStack spacing={1.5} mb={2.5} overflow="hidden" flexShrink={0}>
+                      {['All', 'Grocery', 'Café', 'Fashion'].map((c, i) => (
+                        <Box
+                          key={c}
+                          px={2.5}
+                          py={1}
+                          borderRadius="full"
+                          fontSize="10px"
+                          fontWeight="700"
+                          bg={i === 0 ? 'purple.500' : 'gray.100'}
+                          color={i === 0 ? 'white' : 'gray.600'}
+                        >
+                          {c}
+                        </Box>
+                      ))}
+                    </HStack>
+
+                    {/* promo banner */}
+                    <Flex
+                      align="center"
+                      justify="space-between"
+                      px={3}
+                      py={2.5}
+                      mb={2.5}
+                      borderRadius="xl"
+                      color="white"
+                      flexShrink={0}
+                      bgGradient="linear(to-r, #7C3AED, #6366F1)"
+                    >
+                      <Box>
+                        <Text fontSize="9px" fontWeight="700" opacity={0.85} textTransform="uppercase" letterSpacing="0.08em">
+                          Flash sale nearby
+                        </Text>
+                        <Text fontSize="12px" fontWeight="800">
+                          Up to 20% off
+                        </Text>
+                      </Box>
+                      <Circle size="26px" bg="whiteAlpha.300">
+                        <Icon as={FiTag} boxSize={3.5} />
+                      </Circle>
+                    </Flex>
+
+                    {/* shop list */}
+                    <Box position="relative" flex={1} minH={0} overflow="hidden">
+                      <VStack spacing={2} align="stretch">
+                        {phoneShops.map((s, i) => (
+                          <HStack
+                            key={s.name}
+                            p={2}
+                            spacing={2.5}
+                            border="1px solid"
+                            borderColor="gray.100"
+                            borderRadius="xl"
+                            animation={anim(`${fadeSlideUp} 0.6s ${ease} ${0.5 + i * 0.15}s both`)}
+                          >
+                            <Circle size="34px" bgGradient={s.grad} color="white" flexShrink={0}>
+                              <Icon as={s.icon} boxSize={4} />
+                            </Circle>
+                            <VStack align="flex-start" spacing={0} flex={1} minW={0}>
+                              <Text fontSize="12px" fontWeight="700" color="gray.800" noOfLines={1}>
+                                {s.name}
+                              </Text>
+                              <Text fontSize="10px" color="gray.500" noOfLines={1}>
+                                {s.meta}
+                              </Text>
+                            </VStack>
+                            <Badge colorScheme="green" fontSize="9px" borderRadius="full" px={2}>
+                              Open
+                            </Badge>
+                          </HStack>
+                        ))}
+                      </VStack>
+                      <Box position="absolute" bottom={0} left={0} right={0} h="32px" bgGradient="linear(to-t, white, transparent)" pointerEvents="none" />
+                    </Box>
+                  </Flex>
+
+                  {/* bottom tab bar */}
+                  <Box flexShrink={0} borderTop="1px solid" borderColor="gray.100" bg="white">
+                    <HStack justify="space-around" px={3} pt={2.5}>
+                      {[
+                        { icon: FiHome, active: true },
+                        { icon: FiSearch, active: false },
+                        { icon: FiHeart, active: false },
+                        { icon: FiShoppingBag, active: false },
+                      ].map((t, i) => (
+                        <Icon key={i} as={t.icon} boxSize={4} color={t.active ? 'purple.500' : 'gray.400'} />
+                      ))}
+                    </HStack>
+                    <Box w="64px" h="4px" bg="gray.800" borderRadius="full" mx="auto" mt={2.5} mb={1.5} />
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
           </Flex>
         </Container>
       </Box>
 
-      {/* ================= FEATURES ================= */}
-      <Container maxW="1200px" py={{ base: 16, md: 24 }}>
-        <VStack spacing={3} textAlign="center" mb={12}>
-          <Badge colorScheme="blue" px={3} py={1} borderRadius="full">WHY CHOOSE US</Badge>
-          <Heading size="2xl" fontWeight="800">Designed for Local Growth</Heading>
-          <Text color="gray.600" fontSize="lg" maxW="2xl">Modern tools that empower both shoppers and vendors</Text>
-        </VStack>
+      {/* ================= CATEGORY MARQUEE ================= */}
+      <Box borderY="1px solid" borderColor="purple.50" bg="white" py={4} overflow="hidden">
+        <Text textAlign="center" fontSize="11px" fontWeight="700" letterSpacing="0.12em" textTransform="uppercase" color="gray.500" mb={3}>
+          Shops across every category
+        </Text>
+        <Box
+          overflow="hidden"
+          sx={{
+            maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+          }}
+        >
+          <Flex
+            w="max-content"
+            mt={2}
+            gap={3}
+            pr={3}
+            animation={anim(`${marquee} 38s linear infinite`)}
+            _hover={{ animationPlayState: 'paused' }}
+          >
+            {[...categories, ...categories].map((c, i) => (
+              <HStack
+                key={`${c.label}-${i}`}
+                spacing={2}
+                px={4}
+                py={2}
+                bg="white"
+                border="1px solid"
+                borderColor="gray.200"
+                borderRadius="full"
+                flexShrink={0}
+                transition="all 0.2s"
+                _hover={{ borderColor: 'purple.300', transform: 'translateY(-2px)' }}
+              >
+                <Icon as={c.icon} color={c.color} boxSize={4} />
+                <Text fontSize="13px" fontWeight="700" color="gray.700" whiteSpace="nowrap">
+                  {c.label}
+                </Text>
+              </HStack>
+            ))}
+          </Flex>
+        </Box>
+      </Box>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
-          {features.map((item, i) => (
-            <FeatureCard key={i} {...item} />
-          ))}
+      {/* ================= FEATURES (BENTO) ================= */}
+      <Container maxW="1200px" px={pagePx} py={{ base: 12, md: 20 }}>
+        <Reveal>
+          <SectionHeading
+            eyebrow="Why BusinessSahayata"
+            title={
+              <>
+                Built for <GradientText>local growth</GradientText>
+              </>
+            }
+            sub="Simple tools that work for the people shopping and the people selling."
+          />
+        </Reveal>
+
+        <SimpleGrid columns={{ base: 2, md: 3 }} spacing={{ base: 3, md: 5 }} mt={{ base: 8, md: 12 }}>
+          {/* big discover card */}
+          <Reveal gridColumn="span 2" h="full">
+            <Flex
+              {...cardStyle}
+              h="full"
+              direction={{ base: 'column', md: 'row' }}
+              align="center"
+              gap={{ base: 4, md: 8 }}
+              bgGradient="linear(to-br, #F5F3FF, #FFFFFF)"
+              overflow="hidden"
+            >
+              <Box position="relative" w="150px" h="150px" flexShrink={0}>
+                {['0px', '25px', '50px'].map((inset) => (
+                  <Box key={inset} position="absolute" inset={inset} borderRadius="full" border="1.5px solid" borderColor="purple.200" />
+                ))}
+                <Box
+                  position="absolute"
+                  inset="53px"
+                  borderRadius="full"
+                  bg="purple.300"
+                  animation={anim(`${pulseRing} 2.4s ease-out infinite`)}
+                />
+                <Circle
+                  size="44px"
+                  position="absolute"
+                  top="50%"
+                  left="50%"
+                  transform="translate(-50%, -50%)"
+                  bgGradient="linear(to-br, #7C3AED, #6366F1)"
+                  color="white"
+                  boxShadow="0 8px 18px rgba(124, 58, 237, 0.4)"
+                >
+                  <Icon as={FiMapPin} boxSize={5} />
+                </Circle>
+                {[
+                  { top: '8px', left: '70px', c: 'green.400', d: 0 },
+                  { top: '88px', left: '8px', c: 'pink.400', d: 0.8 },
+                  { top: '104px', left: '112px', c: 'orange.400', d: 1.6 },
+                ].map((dot) => (
+                  <Circle
+                    key={dot.c}
+                    size="12px"
+                    position="absolute"
+                    top={dot.top}
+                    left={dot.left}
+                    bg={dot.c}
+                    border="2px solid white"
+                    boxShadow="sm"
+                    animation={anim(`${bob} 3.5s ease-in-out ${dot.d}s infinite`)}
+                  />
+                ))}
+              </Box>
+
+              <Box textAlign={{ base: 'center', md: 'left' }}>
+                <Heading fontSize={{ base: 'lg', md: '2xl' }} fontWeight="800" color="gray.800" mb={2}>
+                  Discover shops right around you
+                </Heading>
+                <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600" lineHeight="1.7">
+                  Pick your radius from 2 km to 50 km and see every shop nearby: groceries, salons, cafés, repairs and more.
+                </Text>
+              </Box>
+            </Flex>
+          </Reveal>
+
+          <FeatureCard
+            icon={FiShoppingBag}
+            title="Empowering vendors"
+            desc="A digital storefront for products and offers, no tech skills needed."
+            grad="linear(to-br, #6366F1, #2563EB)"
+            delay={0.05}
+          />
+          <FeatureCard
+            icon={FiHeart}
+            title="Community first"
+            desc="Every purchase keeps money and jobs in your neighbourhood."
+            grad="linear(to-br, #F472B6, #DB2777)"
+            delay={0.1}
+          />
+          <FeatureCard
+            icon={FiShield}
+            title="Clear & trustworthy"
+            desc="See ratings, prices and shop details before you step out."
+            grad="linear(to-br, #34D399, #059669)"
+            delay={0.15}
+          />
+          <FeatureCard
+            icon={FiZap}
+            title="Fast on every phone"
+            desc="Light, smooth and easy to use, built mobile-first."
+            grad="linear(to-br, #FBBF24, #F59E0B)"
+            delay={0.2}
+          />
         </SimpleGrid>
       </Container>
 
-      {/* ================= ABOUT SECTION ================= */}
-      <Box bg="white" py={{ base: 16, md: 24 }}>
-        <Container maxW="1200px">
-          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} alignItems="center">
-            <Box position="relative">
-              <Box borderRadius="3xl" overflow="hidden" boxShadow="2xl" transition="0.3s" _hover={{ transform: 'scale(1.02)' }}>
-                <Image
-                  src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1974&auto=format&fit=crop"
-                  alt="Team"
-                  w="100%"
-                  h={{ base: '350px', md: '500px' }}
-                  objectFit="cover"
-                />
-              </Box>
-              <Box
-                position="absolute"
-                bottom="-20px"
-                right="-20px"
-                bgGradient="linear(135deg, #3b82f6, #2563eb)"
-                color="white"
-                p={6}
-                borderRadius="2xl"
-                boxShadow="xl"
-                transition="0.3s"
-                _hover={{ transform: 'scale(1.05)' }}
+      {/* ================= HOW IT WORKS ================= */}
+      <Box bg="gray.50" borderY="1px solid" borderColor="gray.100">
+        <Container maxW="1200px" px={pagePx} py={{ base: 12, md: 20 }}>
+          <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 8, lg: 16 }} alignItems="start">
+            <Reveal>
+              <VStack
+                align={{ base: 'center', lg: 'flex-start' }}
+                textAlign={{ base: 'center', lg: 'left' }}
+                spacing={4}
+                position={{ lg: 'sticky' }}
+                top={{ lg: '120px' }}
               >
-                <Heading size="2xl">100+</Heading>
-                <Text fontWeight="600">Cities Connected</Text>
-              </Box>
-            </Box>
+                <Eyebrow>Simple process</Eyebrow>
+                <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+                  Up and running in <GradientText>3 easy steps</GradientText>
+                </Heading>
+                <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }} maxW="md">
+                  Whether you’re here to shop or to sell, getting started takes just a few minutes.
+                </Text>
 
-            <VStack align="start" spacing={6}>
-              <Badge colorScheme="blue" px={3} py={1} borderRadius="full">OUR STORY</Badge>
-              <Heading size="2xl" fontWeight="800">Transforming Local Shopping into a Modern Experience</Heading>
-              <Text color="gray.600" fontSize="lg">
-                BusinessSahayata bridges the gap between local businesses and modern customers.
-                We help users discover trusted nearby stores while empowering vendors with
-                digital visibility, growth opportunities, and stronger customer connections.
-              </Text>
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4} w="full">
-                <InfoItem text="✓ Trusted Local Vendors" />
-                <InfoItem text="✓ Modern Shopping Experience" />
-                <InfoItem text="✓ Fast Business Growth" />
-                <InfoItem text="✓ Community Driven Platform" />
-              </SimpleGrid>
-            </VStack>
+                {/* segmented toggle */}
+                <Flex
+                  position="relative"
+                  w="full"
+                  maxW="360px"
+                  bg="white"
+                  border="1px solid"
+                  borderColor="gray.200"
+                  borderRadius="full"
+                  p="4px"
+                  boxShadow="sm"
+                  mt={2}
+                >
+                  <Box
+                    position="absolute"
+                    top="4px"
+                    bottom="4px"
+                    left="4px"
+                    w="calc(50% - 4px)"
+                    borderRadius="full"
+                    bgGradient="linear(to-r, #7C3AED, #6366F1)"
+                    boxShadow="0 6px 14px rgba(124, 58, 237, 0.35)"
+                    transform={tab === 'vendor' ? 'translateX(100%)' : 'translateX(0)'}
+                    transition={`transform 0.4s ${ease}`}
+                  />
+                  {(['shopper', 'vendor'] as const).map((key) => (
+                    <Button
+                      key={key}
+                      flex={1}
+                      h="42px"
+                      variant="unstyled"
+                      position="relative"
+                      zIndex={1}
+                      fontSize="sm"
+                      fontWeight="700"
+                      borderRadius="full"
+                      color={tab === key ? 'white' : 'gray.600'}
+                      transition="color 0.25s"
+                      onClick={() => setTab(key)}
+                    >
+                      {key === 'shopper' ? 'For Shoppers' : 'For Vendors'}
+                    </Button>
+                  ))}
+                </Flex>
+              </VStack>
+            </Reveal>
+
+            {/* timeline */}
+            <Box key={tab}>
+              {steps.map((s, i) => (
+                <Flex
+                  key={s.title}
+                  gap={4}
+                  align="stretch"
+                  animation={anim(`${fadeSlideUp} 0.6s ${ease} ${i * 0.12}s both`)}
+                >
+                  <Flex direction="column" align="center" flexShrink={0}>
+                    <Circle
+                      size="46px"
+                      position="relative"
+                      bgGradient="linear(to-br, #7C3AED, #6366F1)"
+                      color="white"
+                      boxShadow="0 8px 18px rgba(124, 58, 237, 0.3)"
+                    >
+                      <Icon as={s.icon} boxSize={5} />
+                      <Circle
+                        size="18px"
+                        position="absolute"
+                        top="-4px"
+                        right="-4px"
+                        bg="white"
+                        color="purple.600"
+                        fontSize="10px"
+                        fontWeight="800"
+                        boxShadow="sm"
+                      >
+                        {i + 1}
+                      </Circle>
+                    </Circle>
+                    {i < steps.length - 1 && (
+                      <Box flex={1} w="2px" minH="20px" my={1} borderRadius="full" bgGradient="linear(to-b, purple.300, purple.100)" />
+                    )}
+                  </Flex>
+
+                  <Box {...cardStyle} flex={1} mb={i < steps.length - 1 ? 4 : 0}>
+                    <Heading fontSize={{ base: 'md', md: 'lg' }} fontWeight="800" color="gray.800">
+                      {s.title}
+                    </Heading>
+                    <Text fontSize="sm" color="gray.600" mt={1} lineHeight="1.6">
+                      {s.desc}
+                    </Text>
+                  </Box>
+                </Flex>
+              ))}
+            </Box>
           </SimpleGrid>
         </Container>
       </Box>
 
-      {/* ================= HOW IT WORKS ================= */}
-      <Container maxW="1200px" py={{ base: 16, md: 24 }}>
-        <VStack spacing={3} textAlign="center" mb={12}>
-          <Badge colorScheme="blue" px={3} py={1} borderRadius="full">SIMPLE PROCESS</Badge>
-          <Heading size="2xl" fontWeight="800">Get Started in 3 Easy Steps</Heading>
-          <Text color="gray.600" fontSize="lg">From discovery to delivery – we make it seamless</Text>
-        </VStack>
+      {/* ================= STORY + STATS ================= */}
+      <Container maxW="1200px" px={pagePx} py={{ base: 12, md: 20 }}>
+        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 8, lg: 14 }} alignItems="center">
+          <Reveal>
+            <VStack align={{ base: 'center', lg: 'flex-start' }} textAlign={{ base: 'center', lg: 'left' }} spacing={4}>
+              <Eyebrow>Our story</Eyebrow>
+              <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+                Local shops deserve a <GradientText>modern storefront</GradientText>
+              </Heading>
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }} lineHeight="1.8">
+                The best shops are often the ones around the corner, but they’re hard to find online. BusinessSahayata bridges
+                that gap: shoppers discover trusted stores nearby, and vendors get the digital visibility and tools to grow.
+              </Text>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
-          {steps.map((item, i) => (
-            <StepCard key={i} {...item} index={i} />
-          ))}
+              <VStack align="stretch" spacing={3} w="full" pt={2}>
+                {values.map((v) => (
+                  <HStack
+                    key={v.title}
+                    align="center"
+                    spacing={3.5}
+                    textAlign="left"
+                    p={3}
+                    borderRadius="2xl"
+                    transition="all 0.25s"
+                    _hover={{ bg: 'purple.50', transform: 'translateX(4px)' }}
+                  >
+                    <Circle size="42px" bg="purple.50" color="purple.600" flexShrink={0}>
+                      <Icon as={v.icon} boxSize={5} />
+                    </Circle>
+                    <Box>
+                      <Text fontWeight="700" color="gray.800" fontSize="sm">
+                        {v.title}
+                      </Text>
+                      <Text color="gray.600" fontSize="sm">
+                        {v.desc}
+                      </Text>
+                    </Box>
+                  </HStack>
+                ))}
+              </VStack>
+            </VStack>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <Box
+              position="relative"
+              overflow="hidden"
+              color="white"
+              borderRadius="3xl"
+              p={{ base: 6, md: 10 }}
+              bgGradient="linear(to-br, #0F172A, #1E1B4B, #312E81)"
+              boxShadow="0 24px 50px rgba(49, 46, 129, 0.35)"
+            >
+              <Box
+                position="absolute"
+                top="-60px"
+                right="-40px"
+                w="200px"
+                h="200px"
+                borderRadius="full"
+                bg="purple.500"
+                opacity={0.35}
+                filter="blur(50px)"
+                animation={anim(`${orbFloat} 9s ease-in-out infinite`)}
+              />
+              <Box
+                position="absolute"
+                bottom="-70px"
+                left="-40px"
+                w="200px"
+                h="200px"
+                borderRadius="full"
+                bg="blue.500"
+                opacity={0.3}
+                filter="blur(50px)"
+                animation={anim(`${orbFloat} 12s ease-in-out infinite reverse`)}
+              />
+              <Box position="relative">
+                <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="purple.200" mb={1}>
+                  Our impact
+                </Text>
+                <Heading fontSize={{ base: 'xl', md: '2xl' }} fontWeight="800" mb={6}>
+                  Growing with every neighbourhood
+                </Heading>
+                <SimpleGrid columns={2} spacing={0}>
+                  {stats.map((s, i) => (
+                    <Box
+                      key={s.label}
+                      py={5}
+                      pl={i % 2 === 1 ? 5 : 0}
+                      borderLeft={i % 2 === 1 ? '1px solid' : 'none'}
+                      borderTop={i > 1 ? '1px solid' : 'none'}
+                      borderColor="whiteAlpha.200"
+                    >
+                      <Text
+                        fontSize={{ base: '3xl', md: '5xl' }}
+                        fontWeight="900"
+                        lineHeight="1"
+                        bgGradient="linear(to-r, #FFFFFF, #DDD6FE)"
+                        bgClip="text"
+                        sx={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        <CountUp to={s.to} decimals={s.decimals} suffix={s.suffix} />
+                      </Text>
+                      <Text fontSize="sm" color="whiteAlpha.700" mt={1.5}>
+                        {s.label}
+                      </Text>
+                    </Box>
+                  ))}
+                </SimpleGrid>
+              </Box>
+            </Box>
+          </Reveal>
         </SimpleGrid>
       </Container>
 
       {/* ================= TESTIMONIALS ================= */}
-      <Box bg="white" py={{ base: 16, md: 24 }}>
-        <Container maxW="1200px">
-          <VStack spacing={3} textAlign="center" mb={12}>
-            <Badge colorScheme="blue" px={3} py={1} borderRadius="full">LOVED BY USERS</Badge>
-            <Heading size="2xl" fontWeight="800">Real Experiences</Heading>
-            <Text color="gray.600" fontSize="lg">What our community says about us</Text>
-          </VStack>
+      <Box bg="gray.50" borderY="1px solid" borderColor="gray.100" py={{ base: 12, md: 20 }}>
+        <Container maxW="1200px" px={pagePx}>
+          <Reveal>
+            <SectionHeading
+              eyebrow="Loved by our community"
+              title={
+                <>
+                  Real stories, <GradientText>real neighbours</GradientText>
+                </>
+              }
+              sub="What shoppers and shop owners say about us."
+            />
+          </Reveal>
 
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
-            {reviews.map((item, i) => (
-              <TestimonialCard key={i} {...item} />
+          <Flex
+            mt={{ base: 8, md: 12 }}
+            gap={4}
+            mx={{ base: -4, md: 0 }}
+            px={{ base: 4, md: 0 }}
+            pb={3}
+            overflowX={{ base: 'auto', md: 'visible' }}
+            flexWrap={{ base: 'nowrap', md: 'wrap' }}
+            css={{
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+              '&::-webkit-scrollbar': { display: 'none' },
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {reviews.map((r, i) => (
+              <Reveal
+                key={r.name}
+                delay={i * 0.1}
+                flexShrink={0}
+                w={{ base: '82%', md: 'calc((100% - 32px) / 3)' }}
+                sx={{ scrollSnapAlign: 'start' }}
+              >
+                <Box {...cardStyle} h="full" p={{ base: 5, md: 6 }} display="flex" flexDirection="column">
+                  <Text fontSize="5xl" lineHeight="0.6" fontWeight="900" color="purple.200" mb={2}>
+                    “
+                  </Text>
+                  <HStack spacing={0.5} mb={3}>
+                    {[...Array(5)].map((_, k) => (
+                      <Icon key={k} as={FaStar} color="yellow.400" boxSize={3.5} />
+                    ))}
+                  </HStack>
+                  <Text color="gray.700" fontSize="sm" lineHeight="1.75" flex={1}>
+                    {r.text}
+                  </Text>
+                  <HStack spacing={3} mt={5} pt={4} borderTop="1px solid" borderColor="gray.100">
+                    <Circle size="40px" bgGradient={r.grad} color="white" fontWeight="800" fontSize="sm">
+                      {r.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </Circle>
+                    <Box>
+                      <Text fontWeight="700" fontSize="sm" color="gray.800">
+                        {r.name}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        {r.role}
+                      </Text>
+                    </Box>
+                  </HStack>
+                </Box>
+              </Reveal>
             ))}
-          </SimpleGrid>
+          </Flex>
         </Container>
       </Box>
 
-      {/* ================= MISSION SECTION ================= */}
-      <Container maxW="1200px" py={{ base: 16, md: 24 }}>
-        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={12} alignItems="center">
-          <VStack align="start" spacing={6}>
-            <Badge colorScheme="blue" px={3} py={1} borderRadius="full">OUR MISSION</Badge>
-            <Heading size="2xl" fontWeight="800">Building Stronger Communities Through Technology</Heading>
-            <Text color="gray.600" fontSize="lg">
-              Our mission is to empower local businesses with modern digital tools while helping
-              customers shop locally with trust, convenience, and confidence.
-            </Text>
-            <Button
-              bgGradient="linear(135deg, #3b82f6, #2563eb)"
-              color="white"
-              size="lg"
-              borderRadius="full"
-              px={8}
-              rightIcon={<FiCompass />}
-              transition="0.2s"
-              _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
-            >
-              Learn More
-            </Button>
-          </VStack>
-
-          <Box borderRadius="3xl" overflow="hidden" boxShadow="2xl" transition="0.3s" _hover={{ transform: 'scale(1.02)' }}>
-            <Image
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop"
-              alt="Mission"
-              w="100%"
-              h={{ base: '350px', md: '450px' }}
-              objectFit="cover"
-            />
-          </Box>
-        </SimpleGrid>
+      {/* ================= FAQ ================= */}
+      <Container maxW="760px" px={pagePx} py={{ base: 12, md: 20 }}>
+        <Reveal>
+          <SectionHeading eyebrow="Good to know" title="Questions, answered" />
+        </Reveal>
+        <Reveal delay={0.1} mt={{ base: 8, md: 10 }}>
+          <Accordion allowToggle>
+            {faqs.map((f) => (
+              <AccordionItem
+                key={f.q}
+                border="1px solid"
+                borderColor="gray.100"
+                _last={{ borderBottomWidth: '1px' }}
+                borderRadius="2xl"
+                bg="white"
+                mb={3}
+                overflow="hidden"
+                boxShadow="0 2px 10px rgba(79, 70, 229, 0.05)"
+              >
+                <AccordionButton py={4} px={5} _hover={{ bg: 'purple.50' }} _expanded={{ bg: 'purple.50', color: 'purple.700' }}>
+                  <Box flex="1" textAlign="left" fontWeight="700" fontSize={{ base: 'sm', md: 'md' }}>
+                    {f.q}
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb={5} px={5} color="gray.600" fontSize="sm" lineHeight="1.75">
+                  {f.a}
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Reveal>
       </Container>
 
-      {/* ================= CTA BANNER ================= */}
-      <Container maxW="1100px" py={{ base: 12, md: 20 }}>
-        <Box
-          borderRadius="3xl"
-          overflow="hidden"
-          bgGradient="linear(135deg, #1e3a8a, #3b82f6)"
-          p={{ base: 10, md: 16 }}
-          textAlign="center"
-          boxShadow="2xl"
-          transition="0.3s"
-          _hover={{ transform: 'scale(1.02)' }}
-        >
-          <Icon as={FaGift} boxSize={12} color="whiteAlpha.800" mb={4} />
-          <Heading size="2xl" color="white" mb={4}>Ready To Support Local Businesses?</Heading>
-          <Text color="whiteAlpha.900" fontSize="lg" maxW="2xl" mx="auto" mb={8}>
-            Join thousands of customers and vendors creating a smarter, stronger,
-            and more connected local shopping experience.
-          </Text>
-          <Button
-            bg="white"
-            color="blue.600"
-            size="lg"
-            borderRadius="full"
-            px={10}
-            rightIcon={<FiTrendingUp />}
-            transition="0.2s"
-            _hover={{ transform: 'translateY(-2px)', boxShadow: 'xl' }}
+      {/* ================= CTA ================= */}
+      <Container maxW="1100px" px={pagePx} pb={{ base: 10, md: 20 }}>
+        <Reveal>
+          <Box
+            position="relative"
+            overflow="hidden"
+            borderRadius={{ base: '2xl', md: '3xl' }}
+            px={{ base: 5, md: 16 }}
+            py={{ base: 10, md: 16 }}
+            textAlign="center"
+            color="white"
+            bgGradient="linear(to-br, #7C3AED, #4F46E5, #2563EB)"
+            boxShadow="0 24px 50px rgba(79, 70, 229, 0.35)"
           >
-            Get Started
-          </Button>
-        </Box>
+            <Box
+              position="absolute"
+              top="-60px"
+              left="-40px"
+              w="220px"
+              h="220px"
+              borderRadius="full"
+              bg="whiteAlpha.300"
+              filter="blur(50px)"
+              animation={anim(`${orbFloat} 10s ease-in-out infinite`)}
+            />
+            <Box
+              position="absolute"
+              bottom="-80px"
+              right="-40px"
+              w="240px"
+              h="240px"
+              borderRadius="full"
+              bg="blue.300"
+              opacity={0.4}
+              filter="blur(60px)"
+              animation={anim(`${orbFloat} 12s ease-in-out infinite reverse`)}
+            />
+
+            <VStack position="relative" spacing={{ base: 4, md: 5 }}>
+              <Box position="relative">
+                <Circle position="absolute" inset={0} bg="whiteAlpha.500" animation={anim(`${pulseRing} 2.2s ease-out infinite`)} />
+                <Circle size="56px" position="relative" bg="white" color="purple.600" boxShadow="xl">
+                  <Icon as={FiShoppingBag} boxSize={6} />
+                </Circle>
+              </Box>
+              <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.2">
+                Your neighbourhood is waiting
+              </Heading>
+              <Text color="whiteAlpha.900" fontSize={{ base: 'sm', md: 'lg' }} maxW="xl" lineHeight="1.7">
+                Join the shoppers and shop owners building a smarter, stronger and more connected local community.
+              </Text>
+              <Stack direction={{ base: 'column', sm: 'row' }} spacing={3} w={{ base: 'full', sm: 'auto' }} pt={2}>
+                <Button
+                  h="52px"
+                  px={9}
+                  borderRadius="full"
+                  bg="white"
+                  color="purple.700"
+                  fontWeight="700"
+                  rightIcon={<FiArrowRight />}
+                  transition="all 0.25s"
+                  _hover={{ transform: 'translateY(-2px)', boxShadow: '0 12px 26px rgba(0,0,0,0.25)' }}
+                  _active={{ transform: 'scale(0.97)' }}
+                  onClick={() => router.push(ROUTES.shops)}
+                >
+                  Explore Shops
+                </Button>
+                <Button
+                  h="52px"
+                  px={9}
+                  borderRadius="full"
+                  variant="outline"
+                  color="white"
+                  borderColor="whiteAlpha.500"
+                  fontWeight="700"
+                  transition="all 0.25s"
+                  _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-2px)' }}
+                  _active={{ transform: 'scale(0.97)' }}
+                  onClick={() => router.push(ROUTES.becomeVendor)}
+                >
+                  Become a Vendor
+                </Button>
+              </Stack>
+            </VStack>
+          </Box>
+        </Reveal>
       </Container>
     </Box>
-  );
+  )
 }
-
-// ================= SUBCOMPONENTS =================
-const FeatureCard = ({ icon, title, desc, color }) => {
-  const colorMap = { blue: 'blue.50', cyan: 'cyan.50', purple: 'purple.50' };
-  const iconColorMap = { blue: 'blue.500', cyan: 'cyan.500', purple: 'purple.500' };
-  return (
-    <Box
-      bg="white"
-      p={8}
-      borderRadius="3xl"
-      boxShadow="lg"
-      textAlign="center"
-      transition="all 0.3s"
-      _hover={{ transform: 'translateY(-8px)', boxShadow: 'xl' }}
-    >
-      <Circle size="70px" bg={colorMap[color]} mx="auto" mb={5}>
-        <Icon as={icon} boxSize={7} color={iconColorMap[color]} />
-      </Circle>
-      <Heading size="md" mb={3}>{title}</Heading>
-      <Text color="gray.600">{desc}</Text>
-    </Box>
-  );
-};
-
-const StepCard = ({ icon, title, desc, index }) => {
-  const gradients = ['blue', 'cyan', 'purple'];
-  const bgGradients = {
-    blue: 'linear(135deg, #eff6ff, #dbeafe)',
-    cyan: 'linear(135deg, #ecfeff, #cffafe)',
-    purple: 'linear(135deg, #faf5ff, #f3e8ff)',
-  };
-  const color = gradients[index % gradients.length];
-  return (
-    <Flex
-      bg={bgGradients[color]}
-      p={6}
-      borderRadius="2xl"
-      align="center"
-      gap={5}
-      transition="all 0.3s"
-      _hover={{ transform: 'translateX(8px)', boxShadow: 'md' }}
-    >
-      <Circle size="50px" bg="white" boxShadow="md">
-        <Icon as={icon} boxSize={6} color={`${color}.500`} />
-      </Circle>
-      <Box>
-        <Heading size="sm" mb={1}>{title}</Heading>
-        <Text fontSize="sm" color="gray.600">{desc}</Text>
-      </Box>
-    </Flex>
-  );
-};
-
-const TestimonialCard = ({ name, img, text, rating }) => (
-  <Box bg="white" p={6} borderRadius="3xl" boxShadow="lg" transition="0.3s" _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}>
-    <HStack spacing={4} mb={4}>
-      <Avatar src={img} name={name} size="md" />
-      <Box>
-        <Text fontWeight="bold">{name}</Text>
-        <HStack spacing={1}>
-          {[...Array(rating)].map((_, i) => <Icon key={i} as={FaStar} color="yellow.400" boxSize={3} />)}
-        </HStack>
-      </Box>
-    </HStack>
-    <Text color="gray.600" fontStyle="italic">"{text}"</Text>
-  </Box>
-);
-
-const InfoItem = ({ text }) => (
-  <HStack spacing={3}>
-    <Circle size="8px" bg="blue.500" />
-    <Text fontWeight="500">{text}</Text>
-  </HStack>
-);

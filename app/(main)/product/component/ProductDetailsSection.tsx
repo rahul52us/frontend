@@ -1,7 +1,6 @@
 "use client";
 
 import {
-    AlertIcon,
   Badge,
   Box,
   Divider,
@@ -16,7 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import React, { useState } from "react";
-import { FiCheckCircle, FiPackage } from "react-icons/fi";
+import { FiAlertCircle, FiCheckCircle, FiPackage } from "react-icons/fi";
 import ProductColorSelector from "../../individual-product/component/ProductColorSelector/ProductColorSelector";
 import ProductPrice from "../../individual-product/component/ProductPrice/ProductPrice";
 import ProductRating from "../../individual-product/component/ProductRating/ProductRating";
@@ -182,7 +181,7 @@ const ProductDetailsSection = observer(({ product }: { product: Product }) => {
               </>
             ) : (
               <>
-                <Icon as={AlertIcon} color="red.500" boxSize={3.5} />
+                <Icon as={FiAlertCircle} color="red.500" boxSize={3.5} />
                 <Text fontSize="xs" color="red.600" fontWeight="700">
                   Out of Stock
                 </Text>

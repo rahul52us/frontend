@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerContent,
@@ -10,23 +11,20 @@ import {
   DrawerOverlay,
   Flex,
   Icon,
+  Image,
   Text,
   useDisclosure,
   VStack,
-  Divider,
-  Image,
 } from "@chakra-ui/react";
-import { useEffect, useState, useMemo } from "react";
-import { FaLocationDot, FaPlus } from "react-icons/fa6";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { FaLocationDot, FaPlus } from "react-icons/fa6";
 
+import { authentication } from "../../../../config/utils/routes";
+import stores from "../../../../store/stores";
 import CartItem from "../CartItem/CartItem";
 import AddressModal from "../DeliveryAddressModal/DelivaryAddressModal";
-import stores from "../../../../store/stores";
-import { authentication } from "../../../../config/utils/routes";
-
-
 
 const CartDrawer = observer(
   ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {

@@ -6,14 +6,12 @@ import {
   Box,
   Flex,
   HStack,
-  Icon,
   IconButton,
   Image,
   Modal,
   ModalBody,
   ModalContent,
   ModalOverlay,
-  Text,
   Tooltip,
   useBreakpointValue,
   useColorModeValue,
@@ -29,9 +27,6 @@ import {
   FiZoomIn,
   FiZoomOut,
 } from "react-icons/fi";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80";
@@ -57,8 +52,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mobileSliderRef = useRef<Slider | null>(null);
-  const modalSliderRef = useRef<Slider | null>(null);
+  const mobileScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Hoisted Theme Tokens
   const viewerBg = useColorModeValue("#F8FAFC", "gray.800");
@@ -83,6 +77,9 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
   useEffect(() => {
     setSelectedIndex(0);
     setZoomLevel(1);
+    if (mobileScrollRef.current) {
+      mobileScrollRef.current.scrollTo({ left: 0, behavior: "instant" as any });
+    }
   }, [rawImages]);
 
   if (!isMounted) {
@@ -99,8 +96,22 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
   const handleSelectImage = (index: number) => {
     setSelectedIndex(index);
     setZoomLevel(1);
-    mobileSliderRef.current?.slickGoTo(index);
-    modalSliderRef.current?.slickGoTo(index);
+    if (mobileScrollRef.current) {
+      const containerWidth = mobileScrollRef.current.clientWidth;
+      mobileScrollRef.current.scrollTo({
+        left: index * containerWidth,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const handleMobileScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (!el.clientWidth) return;
+    const newIdx = Math.round(el.scrollLeft / el.clientWidth);
+    if (newIdx !== selectedIndex && newIdx >= 0 && newIdx < images.length) {
+      setSelectedIndex(newIdx);
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -126,44 +137,52 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
     setZoomLevel(Math.max(1, Math.min(newZoom, 2.5)));
   };
 
-  const mobileSliderSettings = {
-    dots: false,
-    infinite: images.length > 1,
-    speed: 350,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    beforeChange: (_current: number, next: number) => setSelectedIndex(next),
+  const nextImage = () => {
+    const nextIdx = (selectedIndex + 1) % images.length;
+    handleSelectImage(nextIdx);
   };
 
-  const modalSliderSettings = {
-    dots: false,
-    infinite: images.length > 1,
-    speed: 350,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    initialSlide: selectedIndex,
-    beforeChange: (_current: number, next: number) => setSelectedIndex(next),
+  const prevImage = () => {
+    const prevIdx = (selectedIndex - 1 + images.length) % images.length;
+    handleSelectImage(prevIdx);
   };
 
   return (
     <Box w="full">
       {/* ===================================================================
-          1. MOBILE & TABLET VIEW (Swipeable Gallery + Counter Pill + Thumb Strip)
+          1. MOBILE VIEW (Native Swipeable Carousel + Counter Pill + Thumb Strip)
          =================================================================== */}
       {isMobile ? (
         <Box w="full">
-          {/* Main Swipeable Image Frame */}
+          {/* Main Swipeable Image Container */}
           <Box
             position="relative"
             borderRadius="xl"
             overflow="hidden"
             bg={viewerBg}
           >
-            <Slider ref={mobileSliderRef} {...mobileSliderSettings}>
+            <Box
+              ref={mobileScrollRef}
+              display="flex"
+              overflowX="auto"
+              scrollSnapType="x mandatory"
+              scrollBehavior="smooth"
+              onScroll={handleMobileScroll}
+              w="full"
+              sx={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}
+            >
               {images.map((img, index) => (
-                <Box key={index} outline="none">
+                <Box
+                  key={index}
+                  w="full"
+                  minW="100%"
+                  flexShrink={0}
+                  scrollSnapAlign="center"
+                >
                   <AspectRatio ratio={1} w="full">
                     <Image
                       src={img}
@@ -178,7 +197,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
                   </AspectRatio>
                 </Box>
               ))}
-            </Slider>
+            </Box>
 
             {/* Top-Right Fullscreen Expand Trigger */}
             <IconButton
@@ -221,7 +240,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
             )}
           </Box>
 
-          {/* Horizontal Thumbnail Strip (Synced with Swipe Slider) */}
+          {/* Horizontal Thumbnail Strip */}
           {images.length > 1 && (
             <HStack
               spacing={2}
@@ -231,6 +250,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
               px={0.5}
               sx={{
                 scrollbarWidth: "none",
+                msOverflowStyle: "none",
                 "&::-webkit-scrollbar": { display: "none" },
               }}
             >
@@ -270,7 +290,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
         </Box>
       ) : (
         /* ===================================================================
-            2. DESKTOP VIEW (Left Vertical Squircle Rail + Interactive Zoom Stage)
+            2. DESKTOP VIEW (Left Vertical Thumbnail Rail + Interactive Zoom Stage)
            =================================================================== */
         <Flex gap={3.5} align="flex-start">
           {/* Left Vertical Thumbnail Rail */}
@@ -283,6 +303,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
               pr={0.5}
               sx={{
                 scrollbarWidth: "none",
+                msOverflowStyle: "none",
                 "&::-webkit-scrollbar": { display: "none" },
               }}
             >
@@ -357,7 +378,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
                 fallbackSrc={FALLBACK_IMAGE}
               />
 
-              {/* Top-Right Floating Controls (Isolated from parent click) */}
+              {/* Top-Right Floating Controls */}
               <Flex
                 position="absolute"
                 direction="column"
@@ -417,7 +438,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
                 </Tooltip>
               </Flex>
 
-              {/* Left / Right Prev-Next Arrows (Only if multiple images) */}
+              {/* Left / Right Prev-Next Arrows */}
               {images.length > 1 && (
                 <>
                   <IconButton
@@ -439,9 +460,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
                     _hover={{ bg: "white", transform: "translateY(-50%) scale(1.06)" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSelectImage(
-                        (selectedIndex - 1 + images.length) % images.length
-                      );
+                      prevImage();
                     }}
                   />
 
@@ -464,7 +483,7 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
                     _hover={{ bg: "white", transform: "translateY(-50%) scale(1.06)" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSelectImage((selectedIndex + 1) % images.length);
+                      nextImage();
                     }}
                   />
                 </>
@@ -557,105 +576,103 @@ const ProductImageViewer = ({ images: rawImages }: { images?: any[] }) => {
               />
             </Flex>
 
-            {/* Center Swipeable Fullscreen Stage */}
-            <Box flex="1" position="relative" display="flex" alignItems="center">
-              <Box w="full">
-                <Slider ref={modalSliderRef} {...modalSliderSettings}>
-                  {images.map((img, idx) => (
-                    <Box key={idx} outline="none" px={{ base: 2, md: 12 }}>
-                      <Flex
-                        h={{ base: "68vh", md: "74vh" }}
-                        align="center"
-                        justify="center"
-                      >
-                        <Image
-                          src={img}
-                          alt={`Fullscreen view ${idx + 1}`}
-                          objectFit="contain"
-                          maxH="100%"
-                          maxW="100%"
-                          fallbackSrc={FALLBACK_IMAGE}
-                        />
-                      </Flex>
-                    </Box>
-                  ))}
-                </Slider>
-              </Box>
+            {/* Center Fullscreen Image Stage with Left/Right Navigation */}
+            <Box flex="1" position="relative" display="flex" alignItems="center" justifyContent="center">
+              <Flex
+                h={{ base: "68vh", md: "74vh" }}
+                align="center"
+                justify="center"
+                w="full"
+                px={{ base: 4, md: 16 }}
+              >
+                <Image
+                  src={images[selectedIndex]}
+                  alt={`Fullscreen view ${selectedIndex + 1}`}
+                  objectFit="contain"
+                  maxH="100%"
+                  maxW="100%"
+                  fallbackSrc={FALLBACK_IMAGE}
+                />
+              </Flex>
 
               {images.length > 1 && (
                 <>
                   <IconButton
-                    display={{ base: "none", md: "inline-flex" }}
-                    aria-label="Previous"
-                    icon={<FiChevronLeft size={22} />}
+                    aria-label="Previous image"
+                    icon={<FiChevronLeft size={24} />}
                     position="absolute"
-                    left={6}
+                    left={{ base: 2, md: 6 }}
                     top="50%"
                     transform="translateY(-50%)"
+                    size="md"
                     borderRadius="full"
                     bg="whiteAlpha.200"
                     color="white"
-                    _hover={{ bg: "whiteAlpha.400" }}
-                    onClick={() => modalSliderRef.current?.slickPrev()}
+                    _hover={{ bg: "whiteAlpha.300" }}
+                    onClick={prevImage}
                   />
+
                   <IconButton
-                    display={{ base: "none", md: "inline-flex" }}
-                    aria-label="Next"
-                    icon={<FiChevronRight size={22} />}
+                    aria-label="Next image"
+                    icon={<FiChevronRight size={24} />}
                     position="absolute"
-                    right={6}
+                    right={{ base: 2, md: 6 }}
                     top="50%"
                     transform="translateY(-50%)"
+                    size="md"
                     borderRadius="full"
                     bg="whiteAlpha.200"
                     color="white"
-                    _hover={{ bg: "whiteAlpha.400" }}
-                    onClick={() => modalSliderRef.current?.slickNext()}
+                    _hover={{ bg: "whiteAlpha.300" }}
+                    onClick={nextImage}
                   />
                 </>
               )}
             </Box>
 
-            {/* Bottom Thumbnail Dock inside Lightbox */}
+            {/* Bottom Modal Thumbnail Strip */}
             {images.length > 1 && (
-              <Flex justify="center" py={4} px={4} zIndex={10}>
-                <HStack
-                  spacing={2}
-                  overflowX="auto"
-                  maxW="full"
-                  py={1}
-                  sx={{
-                    scrollbarWidth: "none",
-                    "&::-webkit-scrollbar": { display: "none" },
-                  }}
-                >
-                  {images.map((img, idx) => (
+              <HStack
+                justify="center"
+                spacing={2.5}
+                px={4}
+                py={4}
+                zIndex={10}
+                overflowX="auto"
+                sx={{
+                  scrollbarWidth: "none",
+                  "&::-webkit-scrollbar": { display: "none" },
+                }}
+              >
+                {images.map((img, idx) => {
+                  const isCur = selectedIndex === idx;
+                  return (
                     <Box
                       key={idx}
                       as="button"
                       type="button"
-                      onClick={() => handleSelectImage(idx)}
-                      boxSize="48px"
+                      boxSize={{ base: "48px", md: "56px" }}
                       borderRadius="lg"
                       overflow="hidden"
                       border="2px solid"
-                      borderColor={
-                        selectedIndex === idx ? "blue.400" : "transparent"
-                      }
-                      opacity={selectedIndex === idx ? 1 : 0.5}
+                      borderColor={isCur ? "white" : "whiteAlpha.300"}
+                      opacity={isCur ? 1 : 0.5}
+                      transition="all 0.15s ease"
+                      onClick={() => handleSelectImage(idx)}
                       flexShrink={0}
                     >
                       <Image
                         src={img}
-                        alt={`Thumb ${idx + 1}`}
+                        alt={`Modal thumb ${idx + 1}`}
                         w="full"
                         h="full"
                         objectFit="cover"
+                        fallbackSrc={FALLBACK_IMAGE}
                       />
                     </Box>
-                  ))}
-                </HStack>
-              </Flex>
+                  );
+                })}
+              </HStack>
             )}
           </ModalBody>
         </ModalContent>

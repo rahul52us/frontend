@@ -61,10 +61,14 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
   };
 
   const sellerName = brand || product?.seller?.name || "Local Seller";
-  const offers = product?.offers || [
-    "Instant 5% Cashback on Partner UPI & Credit Cards",
-    "Extra ₹100 off on local express delivery",
-  ];
+  const rawOffers = product?.offers;
+  const offers =
+    Array.isArray(rawOffers) && rawOffers.length > 0
+      ? rawOffers
+      : [
+          "Instant 5% Cashback on Partner UPI & Credit Cards",
+          "Extra ₹100 off on local express delivery",
+        ];
 
   return (
     <Box w="full">

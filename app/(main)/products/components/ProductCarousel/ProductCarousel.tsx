@@ -25,12 +25,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCartPlus, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
 import { FiArrowRight, FiAward, FiPlus, FiShoppingCart } from 'react-icons/fi';
 import { shopStore } from '../../../../store/shopStore/shopStore';
+import stores from '../../../../store/stores';
+import { useCartToast } from '../../../../hooks/useCartToast';
 
 const MotionBox = motion(Box);
 
 // ─── Types ──────────────────────────────────────────────────────────────
 interface Product {
   id: number | string;
+  productId?: string;
+  _id?: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -40,6 +44,7 @@ interface Product {
   category: string;
   badge?: string;
   isNew?: boolean;
+  raw?: any;
 }
 
 // ─── Helper: Map API product to UI Product interface ────────────────────
@@ -69,8 +74,13 @@ const mapApiProductToProduct = (apiProduct: any, index: number): Product => {
       Date.now() - new Date(apiProduct.createdAt).getTime() <
         7 * 24 * 60 * 60 * 1000);
 
+  const resolvedId = apiProduct.productId || apiProduct._id || apiProduct.id || index;
+
   return {
-    id: apiProduct._id || apiProduct.id || index,
+    id: resolvedId,
+    productId: apiProduct.productId,
+    _id: apiProduct._id,
+    raw: apiProduct,
     name: apiProduct.name || apiProduct.title || 'Featured Product',
     price: rawPrice,
     originalPrice: rawOriginal > rawPrice ? rawOriginal : Math.round(rawPrice * 1.2),
@@ -450,19 +460,29 @@ const ProductCarousel = observer(() => {
     scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
+  const { cartStore } = stores;
+  const { showAddToCartToast } = useCartToast();
+
   const handleSelectProduct = (product: Product) => {
-    router.push(`/products/${product.id}`);
+    const targetId = product.productId || product._id || product.id;
+    router.push(`/product?productId=${targetId}`);
   };
 
-  const handleAddToCart = (product: Product) => {
-    toast({
-      title: 'Added to cart',
-      description: `${product.name} added to your cart.`,
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-      position: 'bottom-right',
-    });
+  const handleAddToCart = async (product: Product) => {
+    try {
+      const productToAdd = product.raw || product;
+      await cartStore.addToCart(productToAdd);
+      showAddToCartToast(productToAdd);
+    } catch (err) {
+      toast({
+        title: 'Added to cart',
+        description: `${product.name} added to your cart.`,
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+        position: 'bottom-right',
+      });
+    }
   };
 
   if (isLoading) {

@@ -23,7 +23,7 @@ const ProductAboutSection = observer(({ product }: ProductAboutSectionProps) => 
     if (!description && dynamicSpecs.length === 0) return null;
 
     return (
-        <VStack spacing={12} align="stretch" mt={16}>
+        <VStack spacing={{md:4,lg:12}} align="stretch" mt={{lg:16}}>
             <Divider borderColor={dividerColor} />
 
             <Flex direction={{ base: "column", lg: "row" }} gap={{ base: 10, lg: 20 }}>
@@ -75,7 +75,9 @@ const ProductAboutSection = observer(({ product }: ProductAboutSectionProps) => 
                                         color={valueColor}
                                         fontWeight="bold"
                                     >
-                                        {String(value)}
+                                        {typeof value === 'object'
+                                          ? (Array.isArray(value) ? value.join(', ') : JSON.stringify(value))
+                                          : String(value)}
                                     </Text>
                                 </Flex>
                             ))}

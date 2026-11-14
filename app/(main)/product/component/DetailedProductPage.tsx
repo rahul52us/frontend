@@ -309,7 +309,10 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
     <Box
       bg={pageBg}
       minH="100vh"
-      pb={{ base: "150px", lg: 12 }} // Leaves room for MobileStickyBar + MobileBottomNav
+      pb={{
+        base: "calc(88px + env(safe-area-inset-bottom, 0px))",
+        lg: 12,
+      }}
     >
       <Container maxW="8xl" px={{ base: 3, md: 8 }} pt={{ base: 2.5, md: 5 }}>
         {/* 1. Top Navigation Bar: Compact Back + Share on Mobile, Breadcrumbs on Desktop */}
