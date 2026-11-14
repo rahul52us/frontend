@@ -1,35 +1,33 @@
 "use client";
+import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Box,
   Button,
+  Center,
   Container,
   Flex,
   Grid,
   GridItem,
   Heading,
-  Text,
-  Spinner,
-  Center,
   HStack,
+  Spinner,
+  Text,
   VStack,
 } from "@chakra-ui/react";
-import { motion, AnimatePresence } from "framer-motion";
-import CommonHeading from "../../../../component/common/CommonHeading/CommonHeading";
+import { AnimatePresence, motion } from "framer-motion";
+import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
+import stores from "../../../../store/stores";
 import ProductCard from "../../../products/components/ProductCard/ProductCard";
 import ContactSection from "../ContactSection/ContactSection";
+import LocationSection from "../LocationSection/LocationSection";
 import NewsLetter from "../NewsLetter/NewsLetter";
 import OperatingHours from "../OperatingHours/OperatingHours";
 import ShopAbout from "../ShopAbout/ShopAbout";
 import ShopFooterSection from "../ShopFooterSection/ShopFooterSection";
 import ShopHeroSection from "../ShopHeroSection/ShopHeroSection";
 import ShopImages from "../ShopImages/ShopImages";
-import StickyNav from "../StickyNav/StickyNav";
-import LocationSection from "../LocationSection/LocationSection";
-import { observer } from "mobx-react-lite";
-import stores from "../../../../store/stores";
-import { useEffect, useState } from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 
 const MotionBox = motion(Box);
 const MotionGrid = motion(Grid);
@@ -121,7 +119,6 @@ const ShopPage = observer(({ shopData }: any) => {
         transition={{ duration: 0.8 }}
       >
         <ShopHeroSection shopData={shopData} />
-        <StickyNav shopData={shopData} />
 
         {/* Integrated Balanced Grid */}
         <Box position="relative" bg="white" py={{ base: 12, md: 24 }}>
