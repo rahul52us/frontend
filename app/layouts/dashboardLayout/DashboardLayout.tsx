@@ -9,9 +9,8 @@ import stores from '../../store/stores';
 // import { authenticastion } from '../../config/utils/routes';
 import HeaderLayout from './HeaderLayout/HeaderLayout';
 import SidebarLayout from './SidebarLayout/SidebarLayout';
-// import PermissionDeniedPage from '../../component/common/Loader/PermissionDeniedPage';
+import DashboardMobileBottomNav from './DashboardMobileBottomNav/DashboardMobileBottomNav';
 import { ChevronRightIcon, CloseIcon } from '@chakra-ui/icons';
-import { FaClipboardList, FaHome, FaPlus, FaStore, FaUsers } from 'react-icons/fa';
 import PageLoader from '../../component/common/Loader/PageLoader';
 import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
 import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
@@ -72,7 +71,7 @@ const ContentContainer = styled.div<{
     $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
   padding-bottom: ${({ $isMobile, $hasMobileBottomNav }) =>
     $isMobile && $hasMobileBottomNav
-      ? '64px'
+      ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
       : $isMobile
       ? `${contentSmallBodyPadding}`
       : `${contentLargeBodyPadding}`};
@@ -84,137 +83,11 @@ const ContentContainer = styled.div<{
   margin-top: calc(${headerHeight} + max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
   color: ${(props) => props.$textColor};
   background: ${(props) => props.$bgContent};
+
+  @media (max-width: 1023px) {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
 `;
-
-const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
-  const router = useRouter();
-  const navBg = useColorModeValue('rgba(255, 255, 255, 0.96)', 'rgba(11, 17, 32, 0.94)');
-  const navBorder = useColorModeValue('rgba(226, 232, 240, 0.95)', dashboardPalette.border);
-  const activeColor = 'var(--color-primary)';
-  const mutedColor = useColorModeValue('#64748B', dashboardPalette.textMuted);
-
-  const items = [
-    {
-      id: 'home',
-      label: 'Home',
-      icon: FaHome,
-      url: '/dashboard',
-      sidebarId: 1,
-      active: pathname === '/dashboard',
-    },
-    {
-      id: 'orders',
-      label: 'Orders',
-      icon: FaClipboardList,
-      url: '/dashboard/orders',
-      sidebarId: 7,
-      active: pathname.startsWith('/dashboard/orders'),
-    },
-    {
-      id: 'add',
-      label: '',
-      icon: FaPlus,
-      url: '/dashboard/products',
-      sidebarId: 6,
-      active: pathname.startsWith('/dashboard/products'),
-    },
-    {
-      id: 'customers',
-      label: 'Customers',
-      icon: FaUsers,
-      url: '/dashboard/customers',
-      sidebarId: 8,
-      active: pathname.startsWith('/dashboard/customers'),
-    },
-    {
-      id: 'shop',
-      label: 'Shop',
-      icon: FaStore,
-      url: '/dashboard/shop',
-      sidebarId: 2,
-      active: pathname.startsWith('/dashboard/shop'),
-    },
-  ];
-
-  const handleNavigate = (url: string, sidebarId: number) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('activeSidebarItemId', String(sidebarId));
-    }
-    router.push(url);
-  };
-
-  return (
-    <Box
-      position="fixed"
-      left={0}
-      right={0}
-      bottom={0}
-      zIndex={120}
-      bg={navBg}
-      borderTop="1px solid"
-      borderTopColor={navBorder}
-      backdropFilter="blur(18px)"
-      pb={0}
-    >
-      <Flex
-        maxW="560px"
-        mx="auto"
-        align="flex-end"
-        justify="space-between"
-        px={4}
-        pt={2}
-        pb="6px"
-      >
-        {items.map((item) => {
-          if (item.id === 'add') {
-            return (
-              <Box
-                key={item.id}
-                as="button"
-                onClick={() => handleNavigate(item.url, item.sidebarId)}
-                mt="-26px"
-                w="50px"
-                h="50px"
-                borderRadius="20px"
-                bgGradient="linear(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)"
-                color="white"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                boxShadow={item.active ? '0 16px 36px rgba(91, 108, 255, 0.34)' : '0 14px 30px rgba(91, 108, 255, 0.24)'}
-                transition="transform 0.18s ease"
-                _active={{ transform: 'scale(0.96)' }}
-              >
-                <Icon as={item.icon} boxSize={5} />
-              </Box>
-            );
-          }
-
-          return (
-            <Box
-              key={item.id}
-              as="button"
-              onClick={() => handleNavigate(item.url, item.sidebarId)}
-              flex="1"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-              gap="4px"
-              color={item.active ? activeColor : mutedColor}
-              transition="color 0.18s ease"
-            >
-              <Icon as={item.icon} boxSize={5} />
-              <Text fontSize="10px" fontWeight={item.active ? '800' : '600'}>
-                {item.label}
-              </Text>
-            </Box>
-          );
-        })}
-      </Flex>
-    </Box>
-  );
-});
 
 const DashboardLayout = observer(({ children }: { children: React.ReactNode }) => {
   const {
@@ -223,7 +96,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     themeStore: { themeConfig },
   } = stores;
   const theme = useTheme();
-  const pathname = usePathname();
+  const pathname = usePathname() || '/dashboard';
 
   const [sizeStatus] = useMediaQuery(`(max-width: ${theme.breakpoints.xl})`);
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
@@ -235,9 +108,18 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const isSuperAdmin =
     user?.type === 'superAdmin' ||
     user?.role === 'superAdmin' ||
-    normalizedRoles.includes('superAdmin');
-  const isBuyerOnlyUser = !isSuperAdmin && !hasCompany && user?.type !== 'seller';
-  const showMobileSellerNav = isMobile && !isSuperAdmin && !isBuyerOnlyUser;
+    normalizedRoles.includes('superAdmin') ||
+    pathname.startsWith('/dashboard/super-admin');
+  const isSeller =
+    user?.type === 'seller' ||
+    user?.role === 'seller' ||
+    normalizedRoles.includes('seller') ||
+    user?.type === 'admin' ||
+    user?.role === 'admin' ||
+    normalizedRoles.includes('admin') ||
+    hasCompany;
+  const isBuyerOnlyUser = !isSuperAdmin && !hasCompany && !isSeller;
+  const showMobileBottomNav = isMobile && !isBuyerOnlyUser;
 
   // Navy (#070B14) base with Electric Blue radial glows — elevation replaces near-black
   const bgPagePatternDark = `radial-gradient(circle at top right, rgba(59, 130, 246, 0.10), transparent 28%), radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.08), transparent 32%), ${dashboardPalette.page}`;
@@ -463,7 +345,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   $runtimeTopInset={runtimeTopInset}
   $textColor={textColor}
   $bgContent={bgContent}
-  $hasMobileBottomNav={showMobileSellerNav}
+  $hasMobileBottomNav={showMobileBottomNav}
 >
   {shouldRenderShopStatusBanner ? (
     <Alert
@@ -553,7 +435,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
 </ContentContainer>
         </Container>
       </MainContainer>
-      {showMobileSellerNav ? <MobileSellerBottomNav pathname={pathname || '/dashboard'} /> : null}
+      {showMobileBottomNav ? <DashboardMobileBottomNav /> : null}
       <ThemeChangeContainer />
     </Box>
   ) : (

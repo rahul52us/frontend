@@ -7,12 +7,15 @@ import { observer } from "mobx-react-lite";
 import { headerHeight, headerPadding } from "../../../component/config/utils/variable";
 import { dashboardPalette } from "../dashboardPalette";
 import stores from "../../../store/stores";
-import { FaSearch, FaStore } from "react-icons/fa";
+import { FaSearch, FaStore, FaShieldAlt } from "react-icons/fa";
 import HeaderNotification from "./component/HeaderNavbar/HeaderNotification/HeaderNotification";
+import HeaderProfile from "./component/HeaderNavbar/HeaderProfile/HeaderProfile";
+import { usePathname } from "next/navigation";
 
 const HeaderLayout = observer(() => {
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
   const isLargerThan1020 = useBreakpointValue({ base: false, xl: true }) ?? false;
+  const pathname = usePathname() || "";
   const {
     auth: { user },
   } = stores;
@@ -22,10 +25,22 @@ const HeaderLayout = observer(() => {
   const iconBorder = useColorModeValue("gray.200", dashboardPalette.border);
   const textPrimary = useColorModeValue("gray.800", dashboardPalette.text);
   const textMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const companyName =
-    (user?.company && typeof user.company === "object" ? user.company.name : null) ||
-    user?.companyName ||
-    "Seller Dashboard";
+
+  const normalizedRoles = Array.isArray(user?.role)
+    ? user.role.filter(Boolean)
+    : [user?.role].filter(Boolean);
+
+  const isSuperAdmin =
+    user?.type === "superAdmin" ||
+    user?.role === "superAdmin" ||
+    normalizedRoles.includes("superAdmin") ||
+    pathname.startsWith("/dashboard/super-admin");
+
+  const displayName = isSuperAdmin
+    ? user?.name || "Super Admin"
+    : (user?.company && typeof user.company === "object" ? user.company.name : null) ||
+      user?.companyName ||
+      "Seller Dashboard";
 
   if (isMobile) {
     return (
@@ -35,25 +50,29 @@ const HeaderLayout = observer(() => {
             w="40px"
             h="40px"
             borderRadius="18px"
-            bgGradient="linear(135deg, #5B6CFF 0%, #C44AE8 100%)"
+            bgGradient={
+              isSuperAdmin
+                ? "linear(135deg, #7C3AED 0%, #C026D3 100%)"
+                : "linear(135deg, #5B6CFF 0%, #C44AE8 100%)"
+            }
             align="center"
             justify="center"
             boxShadow="0 12px 28px rgba(91, 108, 255, 0.22)"
             color="white"
           >
-            <FaStore size={16} />
+            {isSuperAdmin ? <FaShieldAlt size={16} /> : <FaStore size={16} />}
           </Flex>
-          <Box>
+          <Box maxW="180px">
             <Text fontSize="11px" color={textMuted} fontWeight="600" lineHeight="1">
-              Welcome back
+              {isSuperAdmin ? "Control Center" : "Welcome back"}
             </Text>
-            <Text mt={1} fontSize="sm" color={textPrimary} fontWeight="800" lineHeight="1">
-              {companyName}
+            <Text mt={1} fontSize="sm" color={textPrimary} fontWeight="800" lineHeight="1" noOfLines={1}>
+              {displayName}
             </Text>
           </Box>
         </HStack>
 
-        <HStack spacing={2}>
+        <HStack spacing={2} align="center">
           <IconButton
             aria-label="Search dashboard"
             icon={<FaSearch size={15} />}
@@ -68,6 +87,7 @@ const HeaderLayout = observer(() => {
             _active={{ bg: iconHoverBg }}
           />
           <HeaderNotification buttonVariant="mobileSquare" badgeVariant="dot" />
+          <HeaderProfile />
         </HStack>
       </Flex>
     );

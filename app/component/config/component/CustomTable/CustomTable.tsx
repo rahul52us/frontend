@@ -1,17 +1,22 @@
-'use client'
+"use client";
 import {
   Box,
+  Button,
+  Checkbox,
   Flex,
   Heading,
+  HStack,
   IconButton,
   Input,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
+  ScaleFade,
   Table,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tooltip,
@@ -21,17 +26,18 @@ import {
 } from "@chakra-ui/react";
 import dynamic from "next/dynamic";
 import React from "react";
-import { FaEdit, FaEye } from "react-icons/fa";
+import { FaEdit, FaEnvelope, FaEye, FaWpforms } from "react-icons/fa";
 import { FcClearFilters } from "react-icons/fc";
-import { HiDotsVertical } from "react-icons/hi";
+import { FiDownload, FiSliders } from "react-icons/fi";
 import { IoMdAdd, IoMdInformationCircle } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
-import { dashboardPalette } from "../../../../layouts/dashboardLayout/dashboardPalette";
 import { formatDate } from "../../utils/dateUtils";
 import Pagination from "../pagination/Pagination";
 import TableLoader from "./TableLoader";
-const MultiDropdown = dynamic(() => import('../multiDropdown/MultiDropdown'), { ssr: false });
-const CustomDateRange = dynamic(() => import('../CustomDateRange/CustomDateRange'), { ssr: false });
+import { RepeatIcon } from "@chakra-ui/icons";
+
+const MultiDropdown = dynamic(() => import("../multiDropdown/MultiDropdown"), { ssr: false });
+const CustomDateRange = dynamic(() => import("../CustomDateRange/CustomDateRange"), { ssr: false });
 
 interface Column {
   headerName?: string;
@@ -41,15 +47,10 @@ interface Column {
   addkey?: any;
   props?: any;
   actions?: any;
-  metaData?: {
-    component?: any;
-    function?: any;
-  };
+  metaData?: { component?: any; function?: any };
 }
 
-interface RowData {
-  [key: string]: any;
-}
+interface RowData { [key: string]: any; }
 
 interface CustomTableProps {
   title?: string;
@@ -61,265 +62,248 @@ interface CustomTableProps {
   actions?: any;
   cells?: boolean;
   tableProps?: any;
+  subTitle?: any;
   onRowClick?: (row: RowData) => void;
-  variant?: "default" | "merchant";
 }
 
-interface TableActionsProps {
-  actions: any;
-  column: any;
-  row: any;
-  cells: boolean;
-  variant?: "default" | "merchant";
-}
-
-const getColumnTextAlign = (column: any) =>
-  column?.props?.row?.textAlign ||
-  column?.props?.column?.textAlign ||
-  (column?.type === "table-actions" ? "center" : "left");
-
-const getSharedCellLayoutProps = (column: any) => ({
-  textAlign: getColumnTextAlign(column),
-  verticalAlign: "middle" as const,
-  px: 4,
-  py: 3,
-});
-
-const TableActions: React.FC<TableActionsProps> = ({
-  actions,
-  column,
-  row,
-  variant = "default",
-  // cells,
-}) => {
-  if (!actions) {
-    actions = {};
-  }
-  const { actionBtn } = actions;
-  const isMerchant = variant === "merchant";
-
-  // Theme-aware colors
-  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cSurface = useColorModeValue("white", dashboardPalette.surface);
-  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
-
-  const iconColor = isMerchant
-    ? cTextMuted
-    : useColorModeValue("gray.700", "gray.200");
-  const deleteColor = isMerchant
-    ? cDanger
-    : useColorModeValue("red.500", "red.300");
+const TableActions: React.FC<any> = ({ actions, column, row }) => {
+  const { actionBtn } = actions || {};
+  const iconColor = useColorModeValue("gray.600", "gray.300");
 
   return (
     <Td
-      {...column?.props?.row}
       position={column?.props?.isSticky ? "sticky" : "relative"}
       right={column?.props?.isSticky ? "0" : undefined}
-      {...getSharedCellLayoutProps(column)}
-      zIndex={column?.props?.isSticky ? "5" : undefined}
-      bgColor={
-        column?.props?.isSticky
-          ? isMerchant
-            ? cSurface
-            : useColorModeValue("white", "gray.800")
-          : undefined
-      }
+      zIndex={column?.props?.isSticky ? 10 : undefined}
+      bg={useColorModeValue("white", "gray.800")}
+      borderBottomWidth="1px"
+      borderBottomColor={useColorModeValue("gray.300", "gray.600")}
+      p={1}
+      textAlign="center"
     >
-      <Flex columnGap={0} justifyContent={"center"}>
-        <Menu isLazy strategy="fixed">
-          <MenuButton
-            as={IconButton}
-            icon={<HiDotsVertical />}
-            size="sm"
-            variant="ghost"
-            color={iconColor}
-            _hover={{ bg: cSurfaceSoft, color: cText }}
-            aria-label="Actions"
-          />
-          <MenuList zIndex={10} bg={cSurface} borderColor={cSurfaceSoft}>
-            {actionBtn?.editKey?.showEditButton && (
-              <MenuItem
-                icon={<FaEdit />}
-                onClick={() => {
-                  if (actionBtn?.editKey?.function)
-                    actionBtn?.editKey.function(row);
-                }}
-              >
-                {actionBtn?.editKey?.title || "Edit"}
-              </MenuItem>
-            )}
-            {actionBtn?.viewKey?.showViewButton && (
-              <MenuItem
-                icon={<FaEye />}
-                onClick={() => {
-                  if (actionBtn?.viewKey?.function)
-                    actionBtn?.viewKey.function(row);
-                }}
-              >
-                {actionBtn?.viewKey?.title || "View"}
-              </MenuItem>
-            )}
-            {actionBtn?.deleteKey?.showDeleteButton && (
-              <MenuItem
-                icon={<MdDelete />}
-                color={deleteColor}
-                _hover={{ bg: "rgba(239, 107, 107, 0.12)" }}
-                onClick={() => {
-                  if (actionBtn?.deleteKey?.function)
-                    actionBtn?.deleteKey.function(row);
-                }}
-              >
-                {actionBtn?.deleteKey?.title || "Delete"}
-              </MenuItem>
-            )}
-          </MenuList>
-        </Menu>
-      </Flex>
+      <HStack gap={1} justify="center">
+        {actionBtn?.editKey?.showEditButton && (
+          <Tooltip label={actionBtn?.editKey?.title || "Edit"} hasArrow placement="top">
+            <IconButton
+              aria-label="edit"
+              icon={<FaEdit />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{
+                bg: "var(--color-primary-light, #EFF6FF)",
+                color: "var(--color-primary-600, #1D4ED8)",
+                transform: "scale(1.12) rotate(8deg)",
+              }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => {
+                e.stopPropagation();
+                actionBtn?.editKey?.function?.(row);
+              }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.viewKey?.showViewButton && (
+          <Tooltip label={actionBtn?.viewKey?.title || "View"} hasArrow placement="top">
+            <IconButton
+              aria-label="view"
+              icon={<FaEye />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{
+                bg: "var(--color-primary-light, #EFF6FF)",
+                color: "var(--color-primary-600, #1D4ED8)",
+                transform: "scale(1.12)",
+              }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => {
+                e.stopPropagation();
+                actionBtn?.viewKey?.function?.(row);
+              }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.smtpKey?.showSmtpButton && (
+          <Tooltip label={actionBtn?.smtpKey?.title || "SMTP settings"} hasArrow placement="top">
+            <IconButton
+              aria-label="smtp settings"
+              icon={<FaEnvelope />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{
+                bg: "var(--color-primary-light, #EFF6FF)",
+                color: "var(--color-primary-600, #1D4ED8)",
+                transform: "scale(1.12)",
+              }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => {
+                e.stopPropagation();
+                actionBtn?.smtpKey?.function?.(row);
+              }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.onboardingKey?.showOnboardingButton && (
+          <Tooltip label={actionBtn?.onboardingKey?.title || "Configure vendor onboarding"} hasArrow placement="left">
+            <IconButton
+              aria-label="configure vendor onboarding"
+              icon={<FaWpforms />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ bg: "var(--color-primary-light, #EFF6FF)", color: "var(--color-primary-600, #1D4ED8)", transform: "scale(1.12)" }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => { e.stopPropagation(); actionBtn?.onboardingKey?.function?.(row); }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.financeFormKey?.showFinanceFormButton && (
+          <Tooltip label={row?.financeFormId ? "Edit Finance Form" : actionBtn?.financeFormKey?.title || "Create Finance Form"} hasArrow placement="left">
+            <IconButton
+              aria-label={row?.financeFormId ? "edit finance form" : "create finance form"}
+              icon={<FaWpforms />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ bg: "var(--color-primary-light, #EFF6FF)", color: "var(--color-primary-700, #1D4ED8)", transform: "scale(1.12)" }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => { e.stopPropagation(); actionBtn?.financeFormKey?.function?.(row); }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.configureSchemaKey?.showConfigureSchemaButton && (
+          <Tooltip label="Configure Schema" hasArrow placement="left">
+            <IconButton
+              aria-label="Configure Schema"
+              icon={<FiSliders />}
+              size="sm"
+              variant="ghost"
+              color={iconColor}
+              _hover={{ bg: "var(--color-primary-light, #EFF6FF)", color: "var(--color-primary-700, #1D4ED8)", transform: "scale(1.12)" }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => { e.stopPropagation(); actionBtn?.configureSchemaKey?.function?.(row); }}
+            />
+          </Tooltip>
+        )}
+
+        {actionBtn?.deleteKey?.showDeleteButton && (
+          <Tooltip label={actionBtn?.deleteKey?.title || "Delete"} hasArrow placement="top">
+            <IconButton
+              aria-label="delete"
+              icon={<MdDelete />}
+              size="sm"
+              variant="ghost"
+              color={useColorModeValue("red.500", "red.400")}
+              _hover={{
+                bg: "red.50",
+                color: "red.600",
+                transform: "scale(1.12)",
+              }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              onClick={(e) => {
+                e.stopPropagation();
+                actionBtn?.deleteKey?.function?.(row);
+              }}
+            />
+          </Tooltip>
+        )}
+      </HStack>
     </Td>
   );
 };
 
-const GenerateRows: React.FC<{
-  column: Column;
-  row: RowData;
-  action: any;
-  cells: boolean;
-  variant?: "default" | "merchant";
-}> = ({ column, row, action, cells, variant }: any) => {
-  const cellBorder = useColorModeValue("gray.200", "gray.700");
-  const cellProps = cells
-    ? { border: `1px solid ${cellBorder}` }
-    : {};
+const GenerateRows: React.FC<any> = ({ column, row, action, cells }) => {
+  const borderColor = useColorModeValue("gray.300", "gray.600");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const cellBg = useColorModeValue("white", "gray.800");
+
+const baseCellProps = {
+  py: 3,
+  px: 5,
+  fontSize: "sm",
+  color: textColor,
+  borderBottomWidth: "1px",
+  borderBottomColor: borderColor,
+  transition:
+    "background 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+  whiteSpace: "nowrap" as const,
+  position: column?.props?.isSticky ? "sticky" as const : undefined,
+  right: column?.props?.isSticky ? 0 : undefined,
+  zIndex: column?.props?.isSticky ? 5 : undefined,
+  bg: column?.props?.isSticky ? cellBg : undefined,
+};
 
   switch (column.type) {
     case "date":
       return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-        >
+        <Td {...baseCellProps}>
           {row[column.key] ? formatDate(row[column.key]) : "--"}
         </Td>
       );
+
     case "link":
       return (
         <Td
-          whiteSpace="normal"
+          {...baseCellProps}
+          color="var(--color-primary-600, #1D4ED8)"
+          fontWeight="medium"
           cursor="pointer"
-          fontSize="sm"
-          color="var(--color-secondary)"
-          textDecoration="underline"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-          onClick={() => {
-            if (column?.function) {
-              column?.function(row);
-            }
-          }}
+          _hover={{ color: "var(--color-primary-700, #1E40AF)", textDecoration: "underline" }}
+          onClick={() => column?.function?.(row)}
         >
           {row[column.key] || "--"}
         </Td>
       );
+
     case "tooltip":
       return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-        >
-          <Tooltip label={row[column.key]}>
-            {typeof row[column.key] === "string"
-              ? row[column.key].substring(0, 15) || "--"
-              : "-"}
+        <Td {...baseCellProps}>
+          <Tooltip label={row[column.key]} hasArrow placement="top">
+            <Text isTruncated maxW="180px" fontWeight="medium">
+              {typeof row[column.key] === "string" ? row[column.key].substring(0, 28) : "--"}
+            </Text>
           </Tooltip>
         </Td>
       );
+
     case "array":
       return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-        >
-          <Tooltip label={JSON.stringify(row[column.key])}>
+        <Td {...baseCellProps} textAlign="center">
+          <Tooltip label={JSON.stringify(row[column.key], null, 2)} hasArrow>
             <IconButton
-              aria-label="array info"
-              size="lg"
-              bgColor="transparent"
-              color={useColorModeValue("gray.700", "gray.200")}
-            >
-              <IoMdInformationCircle />
-            </IconButton>
+              aria-label="info"
+              icon={<IoMdInformationCircle />}
+              size="sm"
+              variant="ghost"
+              color="gray.500"
+              _hover={{ color: "var(--color-primary-600, #1D4ED8)", transform: "rotate(12deg)" }}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+            />
           </Tooltip>
         </Td>
       );
+
     case "table-actions":
-      return (
-        <TableActions
-          actions={action}
-          column={column}
-          row={row}
-          cells={cells}
-          variant={variant}
-        />
-      );
-    case "combineKey":
-      return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-          isTruncated={true}
-        >
-          {row[column.key] || "--"}
-        </Td>
-      );
+      return <TableActions actions={action} column={column} row={row} />;
+
     case "component":
       return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-        >
+        <Td {...baseCellProps}>
           {column.metaData?.component ? column.metaData.component(row) : null}
         </Td>
       );
+
     default:
-      const cellValue = row[column.key];
       return (
-        <Td
-          whiteSpace="normal"
-          cursor="pointer"
-          fontSize="sm"
-          {...getSharedCellLayoutProps(column)}
-          {...column?.props?.row}
-          {...cellProps}
-          isTruncated={true}
-        >
-          {React.isValidElement(cellValue)
-            ? cellValue
-            : (typeof cellValue === 'object' && cellValue !== null)
-              ? JSON.stringify(cellValue)
-              : (cellValue || "--")}
+        <Td {...baseCellProps} isTruncated maxW="220px" fontWeight="medium">
+          {row[column.key] || "--"}
         </Td>
       );
   }
@@ -334,366 +318,451 @@ const CustomTable: React.FC<CustomTableProps> = ({
   actions,
   cells = false,
   tableProps = {},
+  subTitle,
   onRowClick,
-  variant = "default",
 }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const isMerchant = variant === "merchant";
+  const cardBg = useColorModeValue("white", "brand.900");
+  const headerBg = useColorModeValue("white", "brand.800");
+  const accent = useColorModeValue("brand.600", "brand.400");
+  const borderColor = useColorModeValue("white", "brand.700");
+  const rowHover = useColorModeValue("var(--color-primary-light, #EFF6FF)", "gray.800");
+  const shadow = useColorModeValue(
+    "0 20px 40px -15px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02)",
+    "0 20px 40px -15px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)"
+  );
 
-  // Dynamic Theme Colors
-  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
-  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cTextSoft = useColorModeValue("gray.400", dashboardPalette.textSoft);
-  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
-  const cSurface = useColorModeValue("white", dashboardPalette.surface);
-  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cShell = useColorModeValue("white", dashboardPalette.shell);
-
-  const headerBg = useColorModeValue("gray.700", "gray.800");
-  const bodyBg = useColorModeValue("white", "gray.900");
-  const hoverBg = useColorModeValue("blue.100", "blue.700");
-  const menuItemHover = useColorModeValue("blue.100", "blue.700");
-  const menuListBg = useColorModeValue("white", "gray.800");
-  const titleColor = useColorModeValue("blue.500", "white");
-  const boxBorder = useColorModeValue("gray.200", "gray.700");
-  const mainBox = useColorModeValue("white", "gray.900");
-
-  const activeHeaderBg = isMerchant ? cSurfaceAlt : headerBg;
-  const activeBodyBg = isMerchant ? cSurface : bodyBg;
-  const activeHoverBg = isMerchant ? useColorModeValue("rgba(214, 183, 114, 0.10)", "rgba(255,255,255,0.03)") : hoverBg;
-  const activeMenuItemHover = isMerchant ? cSurfaceSoft : menuItemHover;
-  const activeMenuListBg = isMerchant ? cSurface : menuListBg;
-  const activeTitleColor = isMerchant ? cText : titleColor;
-  const activeBoxBorder = isMerchant ? cBorder : boxBorder;
-  const activeMainBox = isMerchant ? cShell : mainBox;
-  const inputBorderColor = isMerchant ? cBorderStrong : useColorModeValue("gray.300", "gray.600");
-
-  const inputFocusStyles = isMerchant
-    ? {
-        borderColor: cAccent,
-        boxShadow: `0 0 0 1px ${cAccent}`,
-      }
-    : { borderColor: "blue.500", boxShadow: "outline" };
+  const tableHeaderBg = "brand.600";
 
   return (
     <Box
-      rounded={12}
-      bg={activeMainBox}
-      boxShadow={isMerchant ? useColorModeValue("sm", "0 28px 60px rgba(0, 0, 0, 0.24)") : "rgb(0 0 0 / 20%) 0px 0px 8px"}
-      border={"1px solid"}
-      borderColor={activeBoxBorder}
-      sx={
-        isMerchant
-          ? {
-              "& .pagination": {
-                gap: "6px",
-              },
-              "& .pagination a": {
-                color: cTextMuted,
-                borderRadius: "12px",
-                minWidth: "38px",
-                minHeight: "38px",
-                padding: "6px 12px",
-                transition: "all 0.2s ease",
-              },
-              "& .pagination a:hover": {
-                color: cAccentStrong,
-                background: useColorModeValue("rgba(214, 183, 114, 0.08)", "rgba(255,255,255,0.05)"),
-              },
-              "& .paginationActive a": {
-                color: `${cAccentStrong} !important`,
-                background: useColorModeValue("rgba(214, 183, 114, 0.12)", "rgba(255,255,255,0.08)"),
-                border: `1px solid ${cBorder}`,
-              },
-              "& .paginationDisabled": {
-                color: `${cTextSoft} !important`,
-              },
-              "& .custom-table-pagination .chakra-icon-button": {
-                bg: cSurfaceAlt,
-                color: cTextMuted,
-                border: "1px solid",
-                borderColor: cBorderStrong,
-              },
-              "& .custom-table-pagination .chakra-icon-button:hover": {
-                bg: cSurfaceSoft,
-                color: cText,
-              },
-              "& .custom-table-pagination .chakra-icon-button[disabled]": {
-                opacity: 0.5,
-                cursor: "not-allowed",
-              },
-            }
-          : undefined
-      }
+      bg={cardBg}
+      borderRadius="3xl"
+      // boxShadow="0 10px 40px -15px rgba(0, 0, 0, 0.15)"
+      shadow={'md'}
+      border="1px solid"
+      borderColor={borderColor}
+      overflow="hidden"
+      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
     >
+      {/* HEADER */}
       <Flex
-        justifyContent="space-between"
-        alignItems="center"
-        p={title ? 3 : 0}
-        borderBottom={isMerchant && title ? "1px solid" : undefined}
-        borderColor={isMerchant ? cBorder : undefined}
-        gap={3}
-        flexWrap="wrap"
+        justify="space-between"
+        align="center"
+        px={6}
+        py={3}
+        bg={headerBg}
+        borderBottom="1px solid"
+        borderColor={borderColor}
       >
-        {title ? (
-          <Heading color={activeTitleColor} fontSize={isMobile ? "sm" : "xl"} fontWeight={isMerchant ? "600" : undefined}>
-            {title || ""}
-          </Heading>
-        ) : null}
+        <Flex direction="column" gap={0.5}>
+          {title && (
+            <Heading
+              size="md"
+              color={accent}
+              fontWeight="600"
+              letterSpacing="-0.02em"
+            >
+              {title}
+            </Heading>
+          )}
+          {subTitle && (
+            <Text fontSize="sm" color="gray.500" noOfLines={1}>
+              {subTitle}
+            </Text>
+          )}
+        </Flex>
 
-        <Flex alignItems="center" columnGap={2} ml="auto">
-          {!isMobile && actions?.search && actions?.search?.show && (
+        <Flex align="center" gap={3} ml="auto" flexWrap="wrap">
+          {!isMobile && actions?.search?.show && (
             <Input
-              size="sm"
-              fontWeight="normal"
-              placeholder={actions?.search?.placeholder || "Search"}
+              placeholder={actions?.search?.placeholder || "Search..."}
               value={actions?.search?.searchValue}
               onChange={actions?.search?.onSearchChange}
-              borderRadius="5rem"
-              bg={isMerchant ? cSurfaceAlt : undefined}
-              color={isMerchant ? cText : undefined}
-              borderColor={inputBorderColor}
-              _placeholder={isMerchant ? { color: cTextSoft } : undefined}
-              _hover={isMerchant ? { borderColor: cAccent } : undefined}
-              _focus={inputFocusStyles}
-              maxW="25rem"
+              size="sm"
+              width="260px"
+              borderRadius="full"
+              bg={useColorModeValue("white", "gray.800")}
+              borderColor={borderColor}
+              _focus={{
+                borderColor: accent,
+                boxShadow: "0 0 0 3px var(--color-primary-ring, rgba(37, 99, 235, 0.2))",
+              }}
+              transition="all 0.2s ease"
             />
           )}
-          {actions?.datePicker?.show && actions?.datePicker?.date && (
-            <Box display={isMobile ? "none" : undefined}>
+
+          {actions?.datePicker?.show && !isMobile && (
+            <HStack spacing={2} align="center">
               <CustomDateRange
-                isMobile={actions?.datePicker?.isMobile}
-                startDate={actions?.datePicker?.date.startDate}
-                endDate={actions?.datePicker?.date.endDate}
-                variant={variant}
-                onStartDateChange={(e) => {
-                  if (actions?.datePicker?.onDateChange) {
-                    actions?.datePicker?.onDateChange(e, "startDate");
-                  }
-                }}
-                onEndDateChange={(e) => {
-                  if (actions?.datePicker?.onDateChange) {
-                    actions?.datePicker?.onDateChange(e, "endDate");
-                  }
-                }}
+                startDate={actions?.datePicker?.date?.startDate}
+                endDate={actions?.datePicker?.date?.endDate}
+                onStartDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "startDate")}
+                onEndDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "endDate")}
               />
-            </Box>
+              {actions?.datePicker?.onApply && (
+                <Button
+                  size="sm"
+                  bg="var(--color-primary-600, #1D4ED8)"
+                  color="#FFFFFF"
+                  _hover={{
+                    bg: "var(--color-primary-700, #1E40AF)",
+                    transform: "translateY(-1px)",
+                    shadow: "sm",
+                  }}
+                  _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
+                  borderRadius="full"
+                  px={4}
+                  h="36px"
+                  fontWeight="600"
+                  fontSize="xs"
+                  transition="all 0.2s ease"
+                  onClick={actions?.datePicker?.onApply}
+                >
+                  Apply
+                </Button>
+              )}
+              {actions?.datePicker?.onReset && (
+                <IconButton
+                  size="sm"
+                  aria-label="reset"
+                  icon={<RepeatIcon/>}
+                  variant="outline"
+                  borderColor={borderColor}
+                  color={useColorModeValue("gray.700", "gray.200")}
+                  _hover={{
+                    bg: useColorModeValue("gray.100", "gray.700"),
+                    borderColor: "var(--color-primary-500, #2563EB)",
+                  }}
+                  borderRadius="full"
+                  px={4}
+                  h="36px"
+                  fontWeight="500"
+                  fontSize="xs"
+                  transition="all 0.2s ease"
+                  onClick={actions?.datePicker?.onReset}
+                />
+               
+              )}
+            </HStack>
           )}
-          {actions?.multidropdown?.show && (
-            <Box display={isMobile ? "block" : undefined}>
-              <MultiDropdown
-                title={actions?.multidropdown?.title}
-                dropdowns={actions?.multidropdown?.dropdowns || []}
-                onDropdownChange={actions?.multidropdown?.onDropdownChange}
-                selectedOptions={actions?.multidropdown?.selectedOptions}
-                onApply={actions?.multidropdown?.onApply}
-                search={{
-                  visible: actions?.multidropdown?.search?.visible,
-                  placeholder: actions?.multidropdown?.search?.placeholder,
-                  searchValue: actions?.multidropdown?.search?.searchValue,
-                  onSearchChange:
-                    actions?.multidropdown?.search?.onSearchChange,
-                }}
-                actions={actions}
-                variant={variant}
-              />
-            </Box>
+
+          {actions?.downloadExcel?.show && (
+            <Button
+              bg="green.600"
+              color="#FFFFFF"
+              _hover={{ bg: "green.700", transform: "translateY(-1px)", shadow: "md" }}
+              _active={{ bg: "green.800" }}
+              borderRadius="full"
+              leftIcon={<FiDownload />}
+              size="sm"
+              isLoading={actions?.downloadExcel?.loading}
+              onClick={actions?.downloadExcel?.onClick}
+              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+            >
+              {actions?.downloadExcel?.text || "Download Excel"}
+            </Button>
           )}
-          {actions?.resetData?.show && (
-            <Menu>
-              <MenuButton
-                as={IconButton}
-                icon={<HiDotsVertical />}
-                variant="outline"
-                size="sm"
-                colorScheme={isMerchant ? undefined : "gray"}
-                borderColor={isMerchant ? cBorderStrong : undefined}
-                color={isMerchant ? cTextMuted : undefined}
-                bg={isMerchant ? cSurfaceAlt : undefined}
-                _hover={isMerchant ? { bg: cSurfaceSoft, color: cText } : undefined}
-                aria-label="Actions"
-              />
-              <MenuList
-                zIndex={15}
-                bg={activeMenuListBg}
-                border="1px solid"
-                borderColor={isMerchant ? cBorder : undefined}
-                boxShadow={isMerchant ? "0 20px 40px rgba(0, 0, 0, 0.35)" : "md"}
-                minW={"10rem"}
-                py={0}
-                color={isMerchant ? cText : undefined}
-              >
-                {actions?.actionBtn?.addKey?.showAddButton && (
-                  <MenuItem
-                    onClick={() =>
-                      actions?.actionBtn?.addKey?.function?.("add")
-                    }
-                    _hover={{ bg: activeHoverBg }}
-                    icon={<IoMdAdd fontSize={"20px"} />}
-                    p={"0.7rem"}
-                    bg="transparent"
+
+          {actions?.bulkActions?.show && (
+            <HStack spacing={2}>
+              {actions.bulkActions.approve?.show && (
+                <Button
+                  size="sm"
+                  rounded="full"
+                  colorScheme="green"
+                  onClick={actions.bulkActions.approve.onClick}
+                  isDisabled={!actions.bulkActions.selectedCount}
+                >
+                  Bulk Approve ({actions.bulkActions.selectedCount})
+                </Button>
+              )}
+              {actions.bulkActions.reject?.show && (
+                <Button
+                  size="sm"
+                  rounded="full"
+                  borderColor="red.500"
+                  _hover={{bg:"red.50"}}
+                  color="red.500"
+                  variant="outline"
+                  onClick={actions.bulkActions.reject.onClick}
+                  isDisabled={!actions.bulkActions.selectedCount}
+                >
+                  Bulk Reject ({actions.bulkActions.selectedCount})
+                </Button>
+              )}
+            </HStack>
+          )}
+
+          {actions?.multidropdown?.show && <MultiDropdown {...actions?.multidropdown} />}
+
+          {(actions?.actionBtn?.addKey?.showAddButton || actions?.resetData?.show) && (
+            <>
+              {actions?.actionBtn?.addKey?.showAddButton && actions?.resetData?.show && !actions?.actionBtn?.addKey?.showAsButton ? (
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    bg="var(--color-primary-600, #1D4ED8)"
+                    color="#FFFFFF"
+                    _hover={{ bg: "var(--color-primary-700, #1E40AF)", transform: "translateY(-1px)", shadow: "lg" }}
+                    _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
+                    borderRadius="full"
+                    leftIcon={<IoMdAdd />}
+                    size="md"
+                    transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
                   >
-                    Add
-                  </MenuItem>
-                )}
-                {actions?.resetData?.show && (
-                  <MenuItem
-                    onClick={actions?.resetData?.function}
-                    icon={<FcClearFilters fontSize={"20px"} />}
-                    _hover={{ bg: activeMenuItemHover }}
-                    p={"0.7rem"}
-                    bg="transparent"
-                  >
-                    {actions?.resetData?.text || "Reset"}
-                  </MenuItem>
-                )}
-              </MenuList>
-            </Menu>
+                    Actions
+                  </MenuButton>
+                  <MenuList borderRadius="2xl" py={2} shadow="xl">
+                    <MenuItem
+                      onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
+                      icon={<IoMdAdd />}
+                      fontWeight="medium"
+                    >
+                      {actions?.actionBtn?.addKey?.text || "Add New"}
+                    </MenuItem>
+                    <MenuItem
+                      onClick={actions?.resetData?.function}
+                      icon={<FcClearFilters />}
+                      fontWeight="medium"
+                    >
+                      {actions?.resetData?.text || "Reset Filters"}
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              ) : (
+                <>
+                  {actions?.actionBtn?.addKey?.showAddButton && (
+                    <Button
+                      bg="var(--color-primary-600, #1D4ED8)"
+                      color="#FFFFFF"
+                      _hover={{ bg: "var(--color-primary-700, #1E40AF)", transform: "translateY(-1px)", shadow: "lg" }}
+                      _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
+                      borderRadius="full"
+                      leftIcon={<IoMdAdd />}
+                      size="md"
+                      transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                      onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
+                    >
+                      {actions?.actionBtn?.addKey?.text || "Add New"}
+                    </Button>
+                  )}
+                  {actions?.resetData?.show && (
+                    <Button
+                      variant="outline"
+                      borderRadius="full"
+                      leftIcon={<FcClearFilters />}
+                      size="md"
+                      onClick={actions?.resetData?.function}
+                    >
+                      Reset
+                    </Button>
+                  )}
+                </>
+              )}
+            </>
           )}
         </Flex>
       </Flex>
 
-      <Box
-        overflow="auto"
-        className="customScrollBar"
-        minH={"65vh"}
-        maxH={"65vh"}
-        rounded={2}
-        px={2}
-        bg={isMerchant ? cShell : undefined}
-        {...tableProps.tableBox}
-      >
-        <Table
-          size={isMobile ? "xs" : "sm"}
-          variant={isMerchant ? "simple" : "striped"}
-          {...tableProps.table}
-          bg={activeBodyBg}
-          color={isMerchant ? cText : undefined}
-          borderRadius="md"
-          overflow="hidden"
-          sx={{
-            th: {
-              verticalAlign: "middle",
-            },
-            td: {
-              verticalAlign: "middle",
-            },
-            ...(tableProps.table?.sx || {}),
-          }}
-        >
-          <Thead
-            bg={activeHeaderBg}
-            position="sticky"
-            top="0"
-            zIndex="9"
-            height="50px"
-          >
-            <Tr>
-              {serial?.show && (
-                <Th
-                  color={isMerchant ? cTextMuted : "white"}
-                  w={serial?.width || undefined}
-                  border="none"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  fontSize="xs"
-                  textAlign="center"
-                  verticalAlign="middle"
-                  px={4}
-                  py={3}
-                >
-                  {serial?.text || "S.No."}
-                </Th>
-              )}
-              {columns.map((column, colIndex) => (
-                <Th
-                  key={colIndex}
-                  textAlign={getColumnTextAlign(column)}
-                  position={column?.props?.isSticky ? "sticky" : "relative"}
-                  right={column?.props?.isSticky ? "0" : undefined}
-                  bg={activeHeaderBg}
-                  fontSize="xs"
-                  textTransform="uppercase"
-                  letterSpacing="wider"
-                  color={isMerchant ? cTextMuted : "white"}
-                  fontWeight="bold"
-                  verticalAlign="middle"
-                  px={4}
-                  py={3}
-                  border="none"
-                  {...column?.props?.column}
-                >
-                  {column.headerName}
-                </Th>
-              ))}
-            </Tr>
-          </Thead>
 
-          <TableLoader loader={loading} show={data.length} variant={variant}>
-            <Tbody >
-              {data.map((row, rowIndex) => (
-                <Tr
-                  key={rowIndex}
-                  onClick={() => onRowClick && onRowClick(row)}
-                  _hover={{
-                    bg: activeHoverBg,
-                    cursor: "pointer",
-                    transition: "0.3s",
+      {/* TABLE */}
+      {/* TABLE */}
+<Box
+  px={{ base: 3, md: 5 }}
+  py={{ base: 3, md: 4 }}
+  bg={cardBg}
+>
+  <Box
+    overflowX="auto"
+    overflowY="auto"
+    maxH="64vh"
+    border="1px solid"
+    borderColor={borderColor}
+    borderRadius="xl"
+    className="customScrollBar"
+    boxShadow="sm"
+    sx={{
+      '&::-webkit-scrollbar': {
+        width: '6px',
+        height: '6px',
+      },
+      '&::-webkit-scrollbar-track': {
+        background: 'transparent',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        background: 'var(--color-primary-600, #60A5FA)',
+        borderRadius: '9999px',
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        background: 'var(--color-primary-600, #1D4ED8)',
+      },
+      scrollbarWidth: 'thin',
+      scrollbarColor:
+        'var(--color-primary-600, #60A5FA) transparent',
+    }}
+    {...tableProps.tableBox}
+  >
+    <ScaleFade in={true} initialScale={0.98}>
+      <Table
+        size="sm"
+        variant="simple"
+        bg={cardBg}
+        {...tableProps.table}
+      >
+        <Thead
+          bg={tableHeaderBg}
+          position="sticky"
+          top={0}
+          zIndex={20}
+        >
+          <Tr>
+            {serial?.show && (
+              <Th
+                fontSize="xs"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="#FFFFFF"
+                bg={tableHeaderBg}
+                fontWeight="700"
+                py={4}
+                px={5}
+                borderBottom="none"
+              >
+                {serial?.text || "#"}
+              </Th>
+            )}
+
+            {actions?.selection?.show && (
+              <Th color="#FFFFFF" bg={tableHeaderBg} px={3} width="44px">
+                <Checkbox
+                  aria-label="Select all rows"
+                  isChecked={data.length > 0 && data.every((row) => actions.selection.isSelected(row))}
+                  isIndeterminate={data.some((row) => actions.selection.isSelected(row)) && !data.every((row) => actions.selection.isSelected(row))}
+                  onChange={(event) => {
+                    event.stopPropagation();
+                    actions.selection.onToggleAll(event.target.checked, data);
                   }}
-                  bg={isMerchant ? cSurface : undefined}
-                >
-                  {serial?.show && (
-                    <Td
-                      fontWeight="bold"
-                      w={serial?.width || undefined}
-                      textAlign="center"
-                      verticalAlign="middle"
-                      px={4}
-                      py={3}
-                      fontSize="sm"
-                      border="none"
-                      color={isMerchant ? cTextMuted : undefined}
-                    >
-                      {(actions?.pagination?.currentPage && actions?.pagination?.limit)
-                        ? ((actions.pagination.currentPage - 1) * actions.pagination.limit + rowIndex + 1)
-                        : (rowIndex + 1)}
-                    </Td>
-                  )}
-                  {columns.map((column, colIndex) => (
+                />
+              </Th>
+            )}
+
+            {columns.map((col, idx) => (
+              <Th
+                key={idx}
+                textAlign="left"
+                fontSize="xs"
+                textTransform="uppercase"
+                letterSpacing="wider"
+                color="#FFFFFF"
+                whiteSpace="nowrap"
+                fontWeight="700"
+                py={4}
+                px={5}
+                position={
+                  col?.props?.isSticky
+                    ? "sticky"
+                    : undefined
+                }
+                right={
+                  col?.props?.isSticky
+                    ? 0
+                    : undefined
+                }
+                bg={tableHeaderBg}
+                zIndex={
+                  col?.props?.isSticky
+                    ? 10
+                    : undefined
+                }
+                borderBottom="none"
+              >
+                {col.headerName}
+              </Th>
+            ))}
+          </Tr>
+        </Thead>
+
+        <TableLoader
+          loader={loading}
+          show={safeData.length}
+        >
+          <Tbody>
+            {safeData.map((row, rowIndex) => (
+              <Tr
+                key={rowIndex}
+                _hover={{
+                  bg: rowHover,
+                }}
+                transition="background 0.2s ease"
+                cursor={onRowClick ? "pointer" : "default"}
+                onClick={() => onRowClick?.(row)}
+              >
+                {serial?.show && (
+                  <Td
+                    fontWeight="600"
+                    color="gray.400"
+                    py={3}
+                    px={5}
+                    fontSize="sm"
+                    borderBottomWidth="1px"
+                    borderBottomColor={useColorModeValue(
+                      "gray.200",
+                      "gray.700"
+                    )}
+                  >
+                    {rowIndex + 1}
+                  </Td>
+                )}
+
+                {actions?.selection?.show && (
+                  <Td px={3} width="44px" onClick={(event) => event.stopPropagation()}>
+                    <Checkbox
+                      aria-label="Select row"
+                      isChecked={actions.selection.isSelected(row)}
+                      onChange={(event) => {
+                        event.stopPropagation();
+                        actions.selection.onToggle(row, event.target.checked);
+                      }}
+                    />
+                  </Td>
+                )}
+
+                {columns.map(
+                  (column, colIndex) => (
                     <GenerateRows
                       key={colIndex}
                       column={column}
                       row={row}
                       action={actions}
                       cells={cells}
-                      variant={variant}
                     />
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </TableLoader>
-        </Table>
-      </Box>
+                  )
+                )}
+              </Tr>
+            ))}
+          </Tbody>
+        </TableLoader>
+      </Table>
+    </ScaleFade>
+  </Box>
+</Box>
+      {/* PAGINATION */}
       {actions?.pagination?.show && (
-        <Pagination
-          currentPage={actions?.pagination?.currentPage || 1}
-          onPageChange={(e) => {
-            if (actions?.pagination?.onClick) {
-              actions?.pagination?.onClick(e);
-            }
-          }}
-          totalPages={actions?.pagination?.totalPages || 1}
-          props={{
-            style: { marginTop: "15px" },
-            className: isMerchant ? "custom-table-pagination" : undefined,
-          }}
-        />
+        <Box
+          px={6}
+          py={4}
+          borderTop="1px solid"
+          borderColor={borderColor}
+          bg={headerBg}
+        >
+          <Pagination
+            currentPage={actions?.pagination?.currentPage || 1}
+            totalPages={actions?.pagination?.totalPages || 1}
+            onPageChange={actions?.pagination?.onClick}
+          />
+        </Box>
       )}
     </Box>
   );

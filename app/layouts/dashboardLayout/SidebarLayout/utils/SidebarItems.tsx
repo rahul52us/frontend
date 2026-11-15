@@ -1,11 +1,11 @@
 import { BsBoxSeam, BsShop } from "react-icons/bs";
 import {
+  FaBell,
+  FaBox,
   FaChartPie,
   FaCog,
-  FaBox,
   FaTag,
   FaUsers,
-  FaBell,
 } from "react-icons/fa";
 
 interface SidebarItem {
@@ -147,4 +147,5 @@ const getSidebarDataByRole = (role: string[] = ["user"]): SidebarItem[] => {
 const userRole = ["user"]; // Example role
 const sidebarData = getSidebarDataByRole(userRole);
 
-export { sidebarData, getSidebarDataByRole };
+export { getSidebarDataByRole, sidebarData };
+

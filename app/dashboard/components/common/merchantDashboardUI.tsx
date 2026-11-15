@@ -8,18 +8,48 @@ import {
   HStack,
   Heading,
   Icon,
+  Skeleton,
   Stat,
   StatLabel,
   StatNumber,
   Text,
+  // keyframes,
   useColorModeValue,
 } from "@chakra-ui/react";
 import React from "react";
 import { dashboardHeroGradient, dashboardHeroGradientLight, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import { useMerchantFormSx } from "../../shop/component/merchantTheme";
-// import { merchantFormSx } from "../../shop/component/merchantTheme";
+import { keyframes } from "@emotion/react";
 
 type MerchantBadgeTone = "accent" | "success" | "danger" | "soft" | "info" | "warning";
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                              */
+/* ------------------------------------------------------------------ */
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+export const merchantSpin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+export const merchantPulse = keyframes`
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  70%  { box-shadow: 0 0 0 7px transparent; opacity: 0.85; }
+  100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+`;
+
+/** Staggered entrance animation. Usage: <Box animation={merchantFadeUp(index * 60)} /> */
+export const merchantFadeUp = (delay = 0) =>
+  `${fadeUp} 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both`;
+
+/* ------------------------------------------------------------------ */
+/* Badge                                                               */
+/* ------------------------------------------------------------------ */
 
 export const merchantBadgeStyles = {
   borderRadius: "full",
@@ -86,23 +116,35 @@ export const MerchantBadge = ({
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+
 export const merchantGhostButtonProps: ButtonProps = {
-  borderRadius: "16px",
+  borderRadius: "14px",
   border: "1px solid",
   borderColor: "var(--merchant-border-strong)",
   bg: "var(--merchant-surface-alt)",
   color: "var(--merchant-text-muted)",
+  fontWeight: "600",
+  transition: "all 0.2s ease",
   _hover: { bg: "var(--merchant-surface-soft)", color: "var(--merchant-text)" },
   _active: { transform: "scale(0.98)" },
 };
 
 export const merchantPrimaryButtonProps: ButtonProps = {
-  borderRadius: "16px",
+  borderRadius: "14px",
   bg: "var(--merchant-accent)",
   color: "white",
+  fontWeight: "600",
+  transition: "all 0.2s ease",
   _hover: { bg: "var(--merchant-accent-strong)" },
   _active: { transform: "scale(0.98)" },
 };
+
+/* ------------------------------------------------------------------ */
+/* Page shell                                                          */
+/* ------------------------------------------------------------------ */
 
 export const MerchantPageShell = ({
   children,
@@ -111,28 +153,152 @@ export const MerchantPageShell = ({
   children: React.ReactNode;
   maxW?: any;
 }) => {
-  const pageBg = useColorModeValue("white", dashboardPalette.page);
+  const pageBg = useColorModeValue("gray.50", dashboardPalette.page);
+  const formSx = useMerchantFormSx();
 
-  // CSS variables — blue-tinted tokens for all child components
+  // CSS variables shared by every child component
   const themeVars = {
+    "--merchant-border": useColorModeValue("var(--chakra-colors-gray-200)", dashboardPalette.border),
     "--merchant-border-strong": useColorModeValue("var(--chakra-colors-blue-100)", dashboardPalette.borderStrong),
+    "--merchant-surface": useColorModeValue("var(--chakra-colors-white)", dashboardPalette.surface),
     "--merchant-surface-alt": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.surfaceAlt),
     "--merchant-surface-soft": useColorModeValue("var(--chakra-colors-gray-100)", dashboardPalette.surfaceSoft),
     "--merchant-text-muted": useColorModeValue("var(--chakra-colors-gray-500)", dashboardPalette.textMuted),
     "--merchant-text": useColorModeValue("var(--chakra-colors-gray-800)", dashboardPalette.text),
     "--merchant-accent": useColorModeValue("var(--chakra-colors-blue-600)", dashboardPalette.accent),
     "--merchant-accent-strong": useColorModeValue("var(--chakra-colors-blue-700)", dashboardPalette.accentStrong),
-    "--merchant-page-bg": useColorModeValue("white", dashboardPalette.page),
+    "--merchant-page-bg": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.page),
   };
 
   return (
-    <Box minH="100vh" bg={pageBg} py={{ base: 0, md: 0 }} style={themeVars as any}>
-      <Container maxW={maxW} sx={useMerchantFormSx()}>
+    <Box minH="100vh" bg={pageBg} style={themeVars as any}>
+      <Container
+        maxW={maxW}
+        px={{ base: 3, sm: 4, md: 6 }}
+        py={{ base: 3, md: 6 }}
+        sx={{
+          ...(formSx as any),
+          "@media (prefers-reduced-motion: reduce)": {
+            "*": { animation: "none !important", transition: "none !important" },
+          },
+        }}
+      >
         {children}
       </Container>
     </Box>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Page header — one slim row on mobile                                */
+/* ------------------------------------------------------------------ */
+
+export const MerchantPageHeader = ({
+  icon,
+  title,
+  description,
+  badges,
+  actions,
+  mobileActions,
+  mb = { base: 3, md: 6 },
+}: {
+  icon?: any;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  /** Desktop only */
+  badges?: React.ReactNode;
+  /** Desktop only */
+  actions?: React.ReactNode;
+  /** Mobile only — keep it to compact icon buttons */
+  mobileActions?: React.ReactNode;
+  mb?: any;
+}) => {
+  const iconBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const iconColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
+
+  return (
+    <Flex justify="space-between" align="center" gap={3} mb={mb} animation={merchantFadeUp(0)}>
+      <HStack spacing={{ base: 2.5, md: 3 }} align="center" minW={0}>
+        {icon ? (
+          <Circle size={{ base: "9", md: "12" }} bg={iconBg} flexShrink={0}>
+            <Icon as={icon} boxSize={{ base: 4, md: 6 }} color={iconColor} />
+          </Circle>
+        ) : null}
+        <Box minW={0}>
+          <Heading
+            as="h1"
+            fontSize={{ base: "lg", md: "2xl" }}
+            fontWeight="800"
+            letterSpacing="-0.02em"
+            lineHeight="1.2"
+            color="var(--merchant-text)"
+            noOfLines={1}
+          >
+            {title}
+          </Heading>
+          {description ? (
+            <Text
+              display={{ base: "none", md: "block" }}
+              fontSize="sm"
+              color="var(--merchant-text-muted)"
+              mt={0.5}
+              noOfLines={1}
+            >
+              {description}
+            </Text>
+          ) : null}
+        </Box>
+      </HStack>
+
+      {mobileActions ? (
+        <HStack display={{ base: "flex", md: "none" }} spacing={2} flexShrink={0}>
+          {mobileActions}
+        </HStack>
+      ) : null}
+
+      {(badges || actions) && (
+        <Flex display={{ base: "none", md: "flex" }} align="center" gap={2} flexWrap="wrap" justify="flex-end">
+          {badges}
+          {actions}
+        </Flex>
+      )}
+    </Flex>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Section title                                                       */
+/* ------------------------------------------------------------------ */
+
+export const MerchantSectionHeader = ({
+  title,
+  subtitle,
+  right,
+  mb = 4,
+}: {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  right?: React.ReactNode;
+  mb?: any;
+}) => (
+  <Flex justify="space-between" align="center" gap={3} mb={mb}>
+    <Box minW={0}>
+      <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700" color="var(--merchant-text)" noOfLines={1}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text fontSize="xs" color="var(--merchant-text-muted)" mt={0.5}>
+          {subtitle}
+        </Text>
+      ) : null}
+    </Box>
+    {right}
+  </Flex>
+);
+
+/* ------------------------------------------------------------------ */
+/* Hero (kept for other pages that still use it)                       */
+/* ------------------------------------------------------------------ */
 
 export const MerchantHeroSection = ({
   icon,
@@ -170,7 +336,6 @@ export const MerchantHeroSection = ({
   const textColor = useColorModeValue("white", dashboardPalette.text);
   const textMuted = useColorModeValue("whiteAlpha.800", dashboardPalette.textMuted);
   const iconColor = useColorModeValue("white", dashboardPalette.accentStrong);
-  // Blue glassmorphism glow orb — replaces amber
   const glowBg = useColorModeValue("whiteAlpha.200", dashboardPalette.accentSoft);
 
   return (
@@ -226,13 +391,7 @@ export const MerchantHeroSection = ({
             </MerchantBadge>
             {extraBadges}
           </HStack>
-          <Heading
-            size="2xl"
-            color={textColor}
-            fontWeight="900"
-            letterSpacing="-0.02em"
-            mb={2}
-          >
+          <Heading size="2xl" color={textColor} fontWeight="900" letterSpacing="-0.02em" mb={2}>
             {title}
           </Heading>
           <Text fontSize="lg" color={textMuted} maxW={descriptionMaxW}>
@@ -246,9 +405,13 @@ export const MerchantHeroSection = ({
   );
 };
 
+/* ------------------------------------------------------------------ */
+/* Panel                                                               */
+/* ------------------------------------------------------------------ */
+
 export const MerchantPanel = ({
   children,
-  p = { base: 5, md: 7 },
+  p = { base: 4, md: 6 },
   ...props
 }: {
   children: React.ReactNode;
@@ -256,16 +419,15 @@ export const MerchantPanel = ({
   [key: string]: any;
 }) => {
   const bg = useColorModeValue("white", dashboardPalette.shell);
-  // Blue-tinted border — gives panels the "alive" quality
-  const borderColor = useColorModeValue("blue.100", dashboardPalette.border);
-  
+  const borderColor = useColorModeValue("gray.200", dashboardPalette.border);
+
   return (
     <Box
       bg={bg}
-      borderRadius="30px"
+      borderRadius={{ base: "20px", md: "24px" }}
       border="1px solid"
       borderColor={borderColor}
-      boxShadow={useColorModeValue("0 4px 20px rgba(37, 99, 235, 0.06)", "0 28px 60px rgba(0, 0, 0, 0.28)")}
+      boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
       p={p}
       {...props}
     >
@@ -273,6 +435,10 @@ export const MerchantPanel = ({
     </Box>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Stat card                                                           */
+/* ------------------------------------------------------------------ */
 
 export const MerchantStatCard = ({
   label,
@@ -282,6 +448,9 @@ export const MerchantStatCard = ({
   iconColor,
   iconBg,
   variant = "hero",
+  isLoading = false,
+  onClick,
+  helper,
 }: {
   label: React.ReactNode;
   value: React.ReactNode;
@@ -289,51 +458,214 @@ export const MerchantStatCard = ({
   icon?: any;
   iconColor?: string;
   iconBg?: string;
-  variant?: "hero" | "panel";
+  variant?: "hero" | "panel" | "compact";
+  isLoading?: boolean;
+  onClick?: () => void;
+  helper?: React.ReactNode;
 }) => {
-  const isPanel = variant === "panel";
-  
   const defaultText = useColorModeValue("gray.800", dashboardPalette.text);
   const defaultTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
   const defaultIconColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
-  // Electric Blue icon bg — replaces amber
   const defaultIconBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const defaultBorder = useColorModeValue("blue.100", dashboardPalette.border);
+  const defaultBorder = useColorModeValue("gray.200", dashboardPalette.border);
+  const hoverBorder = useColorModeValue("blue.300", dashboardPalette.borderAccent);
   const panelBg = useColorModeValue("white", dashboardPalette.surface);
   const heroBg = useColorModeValue("whiteAlpha.50", "rgba(59, 130, 246, 0.04)");
+  const panelShadow = useColorModeValue("0 1px 2px rgba(15, 23, 42, 0.04)", "0 18px 40px rgba(0, 0, 0, 0.28)");
+  const hoverShadow = useColorModeValue("0 10px 24px rgba(37, 99, 235, 0.10)", "0 22px 44px rgba(0, 0, 0, 0.36)");
 
+  const interactiveProps = onClick
+    ? {
+        as: "button" as const,
+        onClick,
+        cursor: "pointer",
+        textAlign: "left" as const,
+        w: "full",
+        _hover: { transform: "translateY(-2px)", borderColor: hoverBorder, boxShadow: hoverShadow },
+        _active: { transform: "scale(0.98)" },
+        _focusVisible: { outline: "2px solid", outlineColor: hoverBorder, outlineOffset: "2px" },
+      }
+    : {};
+
+  /* ---- Hero variant (original look, used inside hero sections) ---- */
+  if (variant === "hero") {
+    return (
+      <Box bg={heroBg} border="1px solid" borderColor={defaultBorder} borderRadius="22px" px={4} py={4}>
+        <Stat>
+          <HStack spacing={3} mb={3} align="center">
+            {icon ? (
+              <Circle size="10" bg={iconBg || defaultIconBg}>
+                <Icon as={icon} color={iconColor || defaultIconColor} />
+              </Circle>
+            ) : null}
+            <StatLabel color={defaultTextSoft} fontWeight="700" textTransform="uppercase" letterSpacing="0.12em" mb={0}>
+              {label}
+            </StatLabel>
+          </HStack>
+          <StatNumber color={valueColor || defaultText}>{value}</StatNumber>
+        </Stat>
+      </Box>
+    );
+  }
+
+  /* ---- Compact variant (secondary metrics) ---- */
+  if (variant === "compact") {
+    return (
+      <Flex
+        align="center"
+        gap={3}
+        bg={panelBg}
+        border="1px solid"
+        borderColor={defaultBorder}
+        borderRadius="16px"
+        px={{ base: 3, md: 4 }}
+        py={{ base: 3, md: 3.5 }}
+        transition="all 0.25s ease"
+        {...(interactiveProps as any)}
+      >
+        {icon ? (
+          <Circle size={{ base: "8", md: "9" }} bg={iconBg || defaultIconBg} flexShrink={0}>
+            <Icon as={icon} boxSize={4} color={iconColor || defaultIconColor} />
+          </Circle>
+        ) : null}
+        <Box minW={0}>
+          {isLoading ? (
+            <Skeleton h="18px" w="36px" borderRadius="md" mb={1} />
+          ) : (
+            <Text fontSize={{ base: "md", md: "lg" }} fontWeight="800" lineHeight="1.2" color={valueColor || defaultText}>
+              {value}
+            </Text>
+          )}
+          <Text fontSize="xs" color={defaultTextSoft} fontWeight="500" noOfLines={1}>
+            {label}
+          </Text>
+        </Box>
+      </Flex>
+    );
+  }
+
+  /* ---- Panel variant (primary KPIs) with faded watermark icon ---- */
   return (
-    <Box
-      bg={isPanel ? panelBg : heroBg}
+    <Flex
+      direction="column"
+      justify="space-between"
+      gap={{ base: 3, md: 4 }}
+      position="relative"
+      overflow="hidden"
+      bg={panelBg}
       border="1px solid"
       borderColor={defaultBorder}
-      borderRadius={isPanel ? "24px" : "22px"}
-      px={isPanel ? 5 : 4}
-      py={isPanel ? 5 : 4}
-      boxShadow={isPanel ? useColorModeValue("0 2px 12px rgba(37,99,235,0.06)", "0 18px 40px rgba(0, 0, 0, 0.28)") : "none"}
+      borderRadius={{ base: "18px", md: "22px" }}
+      p={{ base: 3, md: 5 }}
+      boxShadow={panelShadow}
+      transition="all 0.25s ease"
+      {...(interactiveProps as any)}
     >
-      <Stat>
-        <HStack spacing={3} mb={3} align="center">
-          {icon ? (
-            <Circle size="10" bg={iconBg || defaultIconBg}>
-              <Icon as={icon} color={iconColor || defaultIconColor} />
-            </Circle>
-          ) : null}
-          <StatLabel
-            color={defaultTextSoft}
+      {icon ? (
+        <Icon
+          as={icon}
+          position="absolute"
+          right={{ base: "-10px", md: "-8px" }}
+          bottom={{ base: "-14px", md: "-12px" }}
+          boxSize={{ base: "70px", md: "96px" }}
+          color={iconColor || defaultIconColor}
+          opacity={0.07}
+          pointerEvents="none"
+        />
+      ) : null}
+
+      <Flex justify="space-between" align="center" gap={2} position="relative">
+        <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="600" color={defaultTextSoft} noOfLines={1}>
+          {label}
+        </Text>
+        {icon ? (
+          <Circle size={{ base: "8", md: "10" }} bg={iconBg || defaultIconBg} flexShrink={0}>
+            <Icon as={icon} boxSize={{ base: 4, md: 5 }} color={iconColor || defaultIconColor} />
+          </Circle>
+        ) : null}
+      </Flex>
+      <Box position="relative">
+        {isLoading ? (
+          <Skeleton h={{ base: "26px", md: "32px" }} w="90px" borderRadius="md" />
+        ) : (
+          <Text
+            fontSize={{ base: "lg", md: "3xl" }}
             fontWeight="700"
-            textTransform="uppercase"
-            letterSpacing="0.12em"
-            mb={0}
+            letterSpacing="-0.02em"
+            lineHeight="1.1"
+            color={valueColor || defaultText}
+            noOfLines={1}
           >
-            {label}
-          </StatLabel>
-        </HStack>
-        <StatNumber color={valueColor || defaultText}>{value}</StatNumber>
-      </Stat>
-    </Box>
+            {value}
+          </Text>
+        )}
+        {helper ? (
+          <Text fontSize="xs" color={defaultTextSoft} mt={1}>
+            {helper}
+          </Text>
+        ) : null}
+      </Box>
+    </Flex>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Quick action tile                                                   */
+/* ------------------------------------------------------------------ */
+
+export const MerchantActionTile = ({
+  icon,
+  label,
+  onClick,
+  color,
+  bg,
+}: {
+  icon: any;
+  label: string;
+  onClick?: () => void;
+  color?: string;
+  bg?: string;
+}) => {
+  const border = useColorModeValue("gray.200", dashboardPalette.border);
+  const hoverBorder = useColorModeValue("blue.300", dashboardPalette.borderAccent);
+  const tileBg = useColorModeValue("white", dashboardPalette.surface);
+  const hoverBg = useColorModeValue("blue.50", dashboardPalette.surfaceAlt);
+  const defaultColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
+  const defaultBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+
+  return (
+    <Flex
+      as="button"
+      type="button"
+      onClick={onClick}
+      direction="column"
+      align="center"
+      justify="center"
+      gap={2}
+      py={{ base: 3, md: 4 }}
+      px={2}
+      bg={tileBg}
+      border="1px solid"
+      borderColor={border}
+      borderRadius="16px"
+      transition="all 0.2s ease"
+      _hover={{ bg: hoverBg, borderColor: hoverBorder, transform: "translateY(-2px)" }}
+      _active={{ transform: "scale(0.97)" }}
+      _focusVisible={{ outline: "2px solid", outlineColor: hoverBorder, outlineOffset: "2px" }}
+    >
+      <Circle size="9" bg={bg || defaultBg}>
+        <Icon as={icon} boxSize={4} color={color || defaultColor} />
+      </Circle>
+      <Text fontSize="xs" fontWeight="600" color="var(--merchant-text)" noOfLines={1}>
+        {label}
+      </Text>
+    </Flex>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Table props                                                         */
+/* ------------------------------------------------------------------ */
 
 export const getMerchantTableProps = (height = "62vh") => ({
   variant: "merchant" as const,
@@ -349,7 +681,6 @@ export const getMerchantTableProps = (height = "62vh") => ({
           tr: {
             td: {
               borderBottom: "1px solid",
-              // Blue-tinted row separator
               borderColor: "var(--chakra-colors-blue-100)",
             },
           },

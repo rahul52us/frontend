@@ -1,6 +1,6 @@
 "use client"; // Add this directive since this is a client component
 
-import React, { useState, useEffect } from "react";
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Accordion,
   AccordionButton,
@@ -23,14 +23,14 @@ import {
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { getSidebarDataByRole, sidebarFooterData } from "./utils/SidebarItems";
 import { observer } from "mobx-react-lite";
 import { usePathname, useRouter } from "next/navigation"; // Replace useNavigate with Next.js useRouter
-import SidebarLogo from "./component/SidebarLogo";
-import stores from "../../../store/stores";
+import React, { useEffect, useState } from "react";
 import { mediumSidebarWidth, sidebarWidth } from "../../../component/config/utils/variable";
+import stores from "../../../store/stores";
 import { dashboardPalette } from "../dashboardPalette";
+import SidebarLogo from "./component/SidebarLogo";
+import { getSidebarDataByRole, sidebarFooterData } from "./utils/SidebarItems";
 
 // Define interfaces with TypeScript
 export interface SidebarItem {
@@ -51,7 +51,7 @@ interface SidebarProps {
 
 const renderIcon = (depth: number, icon: any, colorMode: string) => {
   const isLight = colorMode === "light";
-  const accentColor = isLight ? "var(--chakra-colors-blue-600)" : dashboardPalette.accent;
+  const accentColor = isLight ? "brand.600" : dashboardPalette.accent;
   const mutedColor = isLight ? "var(--chakra-colors-gray-400)" : dashboardPalette.textMuted;
   const iconColor = depth === 0 ? accentColor : mutedColor;
 
@@ -149,9 +149,9 @@ const SidebarPopover = observer(({
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { colorMode } = useColorMode();
   
-  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cAccentSoft = useColorModeValue("brand.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("brand.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("brand.600", dashboardPalette.accent);
   const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
   const cText = useColorModeValue("gray.800", dashboardPalette.text);
   const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
@@ -317,9 +317,9 @@ const SidebarAccordion = observer(({
 }) => {
   const { colorMode } = useColorMode();
   
-  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const cAccentSoft = useColorModeValue("brand.50", dashboardPalette.accentSoft);
+  const cAccentStrong = useColorModeValue("brand.700", dashboardPalette.accentStrong);
+  const cAccent = useColorModeValue("brand.600", dashboardPalette.accent);
   const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
   const cText = useColorModeValue("gray.800", dashboardPalette.text);
   const cHoverBg = useColorModeValue("gray.100", "rgba(255,255,255,0.03)");
