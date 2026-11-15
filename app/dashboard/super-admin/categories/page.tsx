@@ -428,7 +428,7 @@ const CategoryPage = () => {
       show: true,
       currentPage: 1,
       totalPages: 1,
-      onClick: () => {},
+      onClick: () => { },
     },
   };
 
@@ -519,35 +519,35 @@ const CategoryPage = () => {
             Product Filters
           </Tab>
         </TabList>
-            <Button
-                    leftIcon={<FiFolderPlus />}
-                    onClick={handleAddClick}
-                    {...merchantPrimaryButtonProps}
-                  >
-                    Add Category
-                  </Button>
 
         <TabPanels>
           {/* ============================ TAB 1: Categories ============================ */}
           <TabPanel px={0} pb={0} pt={5}>
-            {/* Tablet / desktop: one table card, header sits inside it */}
+            {/* Tablet / desktop: Clean header Flex + Table card */}
             <Box display={{ base: "none", md: "block" }} dir="ltr" w="100%">
+              <Flex justify="space-between" align="center" mb={4}>
+                <Text
+                  fontSize="lg"
+                  fontWeight="700"
+                  color="var(--merchant-text)"
+                >
+                  All Categories ({categoryStore.categories.length})
+                </Text>
+                <Button
+                  leftIcon={<FiFolderPlus />}
+                  onClick={handleAddClick}
+                  {...merchantPrimaryButtonProps}
+                >
+                  Add Category
+                </Button>
+              </Flex>
+
               <CustomTable
-                title={`All Categories (${categoryStore.categories.length})`}
                 data={categoryStore.categories}
                 columns={columns}
                 loading={categoryStore.loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
-                headerRight={
-                  <Button
-                    leftIcon={<FiFolderPlus />}
-                    onClick={handleAddClick}
-                    {...merchantPrimaryButtonProps}
-                  >
-                    Add Category
-                  </Button>
-                }
                 {...merchantTableProps}
                 tableProps={{
                   ...(merchantTableProps.tableProps || {}),
