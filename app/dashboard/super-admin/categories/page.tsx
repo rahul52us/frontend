@@ -428,7 +428,7 @@ const CategoryPage = () => {
       show: true,
       currentPage: 1,
       totalPages: 1,
-      onClick: () => {},
+      onClick: () => { },
     },
   };
 
@@ -519,35 +519,35 @@ const CategoryPage = () => {
             Product Filters
           </Tab>
         </TabList>
-            <Button
-                    leftIcon={<FiFolderPlus />}
-                    onClick={handleAddClick}
-                    {...merchantPrimaryButtonProps}
-                  >
-                    Add Category
-                  </Button>
 
         <TabPanels>
           {/* ============================ TAB 1: Categories ============================ */}
           <TabPanel px={0} pb={0} pt={5}>
-            {/* Tablet / desktop: one table card, header sits inside it */}
+            {/* Tablet / desktop: Clean header Flex + Table card */}
             <Box display={{ base: "none", md: "block" }} dir="ltr" w="100%">
+              <Flex justify="space-between" align="center" mb={4}>
+                <Text
+                  fontSize="lg"
+                  fontWeight="700"
+                  color="var(--merchant-text)"
+                >
+                  All Categories ({categoryStore.categories.length})
+                </Text>
+                <Button
+                  leftIcon={<FiFolderPlus />}
+                  onClick={handleAddClick}
+                  {...merchantPrimaryButtonProps}
+                >
+                  Add Category
+                </Button>
+              </Flex>
+
               <CustomTable
-                title={`All Categories (${categoryStore.categories.length})`}
                 data={categoryStore.categories}
                 columns={columns}
                 loading={categoryStore.loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
-                headerRight={
-                  <Button
-                    leftIcon={<FiFolderPlus />}
-                    onClick={handleAddClick}
-                    {...merchantPrimaryButtonProps}
-                  >
-                    Add Category
-                  </Button>
-                }
                 {...merchantTableProps}
                 tableProps={{
                   ...(merchantTableProps.tableProps || {}),
@@ -646,99 +646,126 @@ const CategoryPage = () => {
               </MerchantBadge>
             </Flex>
 
-            <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} spacing={4}>
-              {categoryStore.categories.map((category: any) => {
-                const filterConfig = category.filterConfig || [];
-                const activeFilterCount = filterConfig.filter(
-                  (item: any) => item.isActive !== false,
-                ).length;
-                const previewFilters = filterConfig.slice(0, 4);
+            {categoryStore.categories.length === 0 ? (
+              <Text textAlign="center" py={10} fontSize="sm" color="var(--merchant-text-muted)">
+                No categories found.
+              </Text>
+            ) : (
+              <SimpleGrid columns={{ base: 2, lg: 2, xl: 3 }} spacing={{ base: 3, md: 4 }}>
+                {categoryStore.categories.map((category: any) => {
+                  const filterConfig = category.filterConfig || [];
+                  const activeFilterCount = filterConfig.filter(
+                    (item: any) => item.isActive !== false,
+                  ).length;
+                  const previewFilters = filterConfig.slice(0, 3);
 
-                return (
-                  <Box
-                    key={category._id}
-                    border="1px solid"
-                    borderColor="var(--merchant-border-strong)"
-                    borderRadius="22px"
-                    p={5}
-                    bg="var(--merchant-surface-alt)"
-                  >
-                    <VStack align="stretch" spacing={4}>
-                      <Box>
-                        <HStack
-                          justify="space-between"
-                          align="start"
-                          spacing={3}
-                        >
-                          <Box minW={0}>
-                            <Text
-                              fontWeight="800"
-                              color="var(--merchant-text)"
-                              noOfLines={1}
-                            >
-                              {category.name}
-                            </Text>
-                            <HStack spacing={2} mt={2} flexWrap="wrap">
-                              <MerchantBadge
-                                tone={category.parent ? "info" : "soft"}
-                              >
-                                {category.parent
-                                  ? typeof category.parent === "object"
-                                    ? category.parent.name
-                                    : "Child"
-                                  : "Root"}
-                              </MerchantBadge>
-                              <MerchantBadge
-                                tone={category.isActive ? "success" : "danger"}
-                              >
-                                {category.isActive ? "Active" : "Inactive"}
-                              </MerchantBadge>
-                            </HStack>
-                          </Box>
-                          <MerchantBadge
-                            tone={activeFilterCount > 0 ? "accent" : "soft"}
+                  return (
+                    <Box
+                      key={category._id}
+                      border="1px solid"
+                      borderColor="var(--merchant-border-strong)"
+                      borderRadius="16px"
+                      p={{ base: 3, md: 4 }}
+                      bg="var(--merchant-surface-alt)"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="space-between"
+                    >
+                      <VStack align="stretch" spacing={3}>
+                        {/* Category Name & Status Badges */}
+                        <Box>
+                          <Text
+                            fontWeight="700"
+                            fontSize={{ base: "sm", md: "md" }}
+                            color="var(--merchant-text)"
+                            noOfLines={1}
                           >
-                            {activeFilterCount} Filters
-                          </MerchantBadge>
-                        </HStack>
-                      </Box>
-
-                      {previewFilters.length > 0 ? (
-                        <HStack spacing={2} flexWrap="wrap">
-                          {previewFilters.map((filter: any, index: number) => (
+                            {category.name}
+                          </Text>
+                          <HStack spacing={1.5} mt={1.5} flexWrap="wrap">
                             <MerchantBadge
-                              key={`${filter.label}-${index}`}
-                              tone={
-                                filter.isActive === false ? "soft" : "accent"
-                              }
+                              tone={category.parent ? "info" : "soft"}
+                              size="sm"
                             >
-                              {filter.label}
+                              {category.parent
+                                ? typeof category.parent === "object"
+                                  ? category.parent.name
+                                  : "Child"
+                                : "Root"}
                             </MerchantBadge>
-                          ))}
-                          {filterConfig.length > previewFilters.length && (
-                            <MerchantBadge tone="soft">
-                              +{filterConfig.length - previewFilters.length}
+                            <MerchantBadge
+                              tone={category.isActive ? "success" : "danger"}
+                              size="sm"
+                            >
+                              {category.isActive ? "Active" : "Inactive"}
                             </MerchantBadge>
-                          )}
-                        </HStack>
-                      ) : (
-                        <Text color="var(--merchant-text-muted)" fontSize="sm">
-                          No product filters configured for this category.
-                        </Text>
-                      )}
+                          </HStack>
+                        </Box>
 
-                      <Button
-                        leftIcon={<FiSliders />}
-                        onClick={() => handleConfigureFilters(category)}
-                        {...merchantPrimaryButtonProps}
-                      >
-                        Configure Filters
-                      </Button>
-                    </VStack>
-                  </Box>
-                );
-              })}
-            </SimpleGrid>
+                        {/* Filter Summary & Preview */}
+                        <Box>
+                          <Text fontSize={{ base: "xs", md: "sm" }} color="var(--merchant-text-muted)" fontWeight="600" mb={1}>
+                            {activeFilterCount} active filter{activeFilterCount === 1 ? "" : "s"}
+                          </Text>
+                          {previewFilters.length > 0 ? (
+                            <HStack spacing={1} flexWrap="wrap">
+                              {previewFilters.map((filter: any, index: number) => (
+                                <MerchantBadge
+                                  key={`${filter.label}-${index}`}
+                                  tone={filter.isActive === false ? "soft" : "accent"}
+                                  size="sm"
+                                >
+                                  {filter.label}
+                                </MerchantBadge>
+                              ))}
+                              {filterConfig.length > previewFilters.length && (
+                                <MerchantBadge tone="soft" size="sm">
+                                  +{filterConfig.length - previewFilters.length}
+                                </MerchantBadge>
+                              )}
+                            </HStack>
+                          ) : (
+                            <Text color="var(--merchant-text-muted)" fontSize="xs">
+                              No filters configured.
+                            </Text>
+                          )}
+                        </Box>
+                      </VStack>
+
+                      {/* Action Button: Icon Button on Mobile, Full Button on Tablet/Desktop */}
+                      <Box mt={4}>
+                        {/* Mobile View */}
+                        <Box display={{ base: "block", md: "none" }}>
+                          <IconButton
+                            aria-label="Configure Filters"
+                            icon={<FiSliders size={16} />}
+                            onClick={() => handleConfigureFilters(category)}
+                            w="100%"
+                            size="sm"
+                            borderRadius="10px"
+                            {...merchantPrimaryButtonProps}
+                          />
+                        </Box>
+
+                        {/* Desktop / Tablet View */}
+                        <Box display={{ base: "none", md: "block" }}>
+                          <Button
+                            leftIcon={<FiSliders />}
+                            onClick={() => handleConfigureFilters(category)}
+                            w="100%"
+                            size="sm"
+                            borderRadius="10px"
+                            {...merchantPrimaryButtonProps}
+                          >
+                            Configure Filters
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </SimpleGrid>
+            )}
           </TabPanel>
         </TabPanels>
       </Tabs>
