@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       overlaysWebView: true,
       style: 'DARK',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#070B14',
     },
     SafeArea: {
       detectViewportFitCoverChanges: true,

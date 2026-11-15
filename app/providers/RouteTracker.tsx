@@ -63,6 +63,18 @@ class NavigationHistory {
     this.notify();
   }
 
+  /**
+   * Return target previous URL and pop the top state
+   */
+  popToPrevious(): string | null {
+    if (this.stack.length <= 1) return null;
+    this.stack.pop(); // pop current
+    const prev = this.stack[this.stack.length - 1] || null;
+    this.persist();
+    this.notify();
+    return prev;
+  }
+
   pop(): string | null {
     if (this.stack.length <= 1) return null;
     const popped = this.stack.pop() || null;

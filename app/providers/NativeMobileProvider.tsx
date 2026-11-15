@@ -118,18 +118,16 @@ export const NativeMobileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const isRoot = (currentPath === '/' || currentPath === '/home') && !currentSearch;
 
       if (!isRoot) {
-        // Check our comprehensive navigationHistory tracker
-        const prevUrl = navigationHistory.previous;
-        const hasHistory = navigationHistory.length > 1;
-
-        if (prevUrl && hasHistory) {
-          // Pop current and navigate to recorded previous route
-          navigationHistory.pop();
-          router.push(prevUrl);
-          return;
+        // Priority 2a: Check our navigationHistory tracker
+        if (navigationHistory.length > 1) {
+          const prevUrl = navigationHistory.popToPrevious();
+          if (prevUrl) {
+            router.push(prevUrl);
+            return;
+          }
         }
 
-        // Fallback to browser history if available
+        // Priority 2b: Fallback to browser history if available
         if (typeof window !== 'undefined' && window.history.length > 1) {
           window.history.back();
           return;

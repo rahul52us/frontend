@@ -15,6 +15,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const params = useParams();
   const pathname = usePathname();
+  const isHomePage = pathname === "/" || pathname === "/home";
   const isShopPage = !!params?.shopTitle || !!params?.shopId;
   const isProductDetailPage =
     pathname === "/product" ||
@@ -51,7 +52,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       >
         {children}
       </Box>
-      {!isShopPage && <Footer hideBottomNav={hideBottomNav} />}
+      {/* On mobile devices, footer is only shown on the home page; on desktop, shown everywhere except shop subpage */}
+      {!isShopPage && (
+        <Box display={{ base: isHomePage ? "block" : "none", md: "block" }}>
+          <Footer hideBottomNav={hideBottomNav} />
+        </Box>
+      )}
       {!hideBottomNav && <MobileBottomNav />}
     </Box>
   );

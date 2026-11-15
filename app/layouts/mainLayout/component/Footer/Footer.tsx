@@ -159,7 +159,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
         maxW="8xl"
         px={{ base: 3, md: 8 }}
         pt={{ base: 5, md: 8 }}
-        pb={{ base: hideBottomNav ? 4 : "64px", md: 6 }}
+        pb={{ base: hideBottomNav ? "16px" : "calc(var(--mobile-bottom-nav-height, 56px) + 24px)", md: 6 }}
       >
   <NewsletterBanner email={email} setEmail={setEmail} isSubscribing={isSubscribing} handleSubscribe={handleSubscribe}  />
 
