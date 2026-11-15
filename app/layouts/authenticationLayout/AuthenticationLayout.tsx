@@ -15,9 +15,21 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
   const borderCard = useColorModeValue('gray.200', 'var(--color-border)');
 
   return (
-    <Box position="relative" minHeight="100vh" bg={bgPage} transition="background-color 0.2s ease">
+    <Box
+      position="relative"
+      minHeight="100vh"
+      bg={bgPage}
+      pt="var(--safe-area-top, env(safe-area-inset-top, 0px))"
+      pb={0}
+      transition="background-color 0.2s ease"
+    >
       {/* Top right Theme Switcher on Auth Pages */}
-      <Box position="fixed" top={4} right={4} zIndex={100}>
+      <Box
+        position="fixed"
+        top="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
+        right={4}
+        zIndex={100}
+      >
         <ThemeModeMenu size="sm" />
       </Box>
 

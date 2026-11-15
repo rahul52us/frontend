@@ -14,6 +14,7 @@ import {
 import { useRef } from "react";
 import DrawerLoader from "../Loader/DrawerLoader";
 import stores from "../../../store/stores";
+import useRegisterOverlay from "../../../hooks/useRegisterOverlay";
 
 interface CustomDrawerProps {
   open: boolean;
@@ -62,6 +63,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
     close();
   };
 
+  // Register custom drawer for native back button dismissal
+  useRegisterOverlay(open, handleCloseDrawer, 'custom_drawer');
+
   return (
     <Drawer
       isOpen={open}
@@ -86,7 +90,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
           <Flex
             justify="space-between"
             alignItems="center"
-            p={4}
+            px={4}
+            pt="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
+            pb={4}
             bg={headerBgColor}
             color={headerTextColor}
             fontWeight="bold"
@@ -98,7 +104,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
               bg="red.500"
               _hover={{ color: "#00000" }}
               size="lg"
-              mt={1}
+              top="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
               {...closeButtonProps}
             />
           </Flex>
@@ -107,7 +113,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = ({
         <DrawerBody
           overflowY="auto"
           p={isDesktop ? "15px" : "6px"}
-          pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
+          pb="16px"
           {...bodyProps}
         >
           <DrawerLoader loading={loading}>

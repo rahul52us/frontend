@@ -39,6 +39,7 @@ import stores from "../../../../store/stores";
 import ConfirmationModal from "../../../common/ConfirmationModal/ConfirmationModal";
 import CartItem from "../CartItem/CartItem";
 import AddressModal from "../DeliveryAddressModal/DelivaryAddressModal";
+import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 
 const FREE_SHIPPING_THRESHOLD = 499;
 const DELIVERY_FEE = 40;
@@ -53,6 +54,9 @@ const CartDrawer = observer(
     const { cartStore, auth } = stores;
     const router = useRouter();
     const toast = useToast();
+
+    // Register cart drawer for native back button dismissal
+    useRegisterOverlay(isOpen, onClose, 'cart_drawer');
 
     // Keep every color-mode hook at the top level so the hook order stays stable.
     const drawerBg = useColorModeValue("gray.50", "gray.900");
@@ -235,7 +239,8 @@ const CartDrawer = observer(
             <DrawerHeader
               bg={surfaceBg}
               px={{ base: 4, sm: 5 }}
-              py={4}
+              pt="2"
+              pb={4}
               borderBottom="1px solid"
               borderColor={borderColor}
             >
@@ -532,7 +537,7 @@ const CartDrawer = observer(
                 borderColor={borderColor}
                 px={{ base: 4, sm: 5 }}
                 pt={4}
-                pb="calc(16px + env(safe-area-inset-bottom, 0px))"
+                pb={4}
                 flexDirection="column"
                 alignItems="stretch"
                 gap={3}

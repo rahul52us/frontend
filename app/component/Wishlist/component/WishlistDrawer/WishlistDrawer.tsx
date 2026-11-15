@@ -35,6 +35,7 @@ import { authentication } from "../../../../config/utils/routes";
 import { useCartToast } from "../../../../hooks/useCartToast";
 import stores from "../../../../store/stores";
 import BottomSheetDrawer from "../../../common/Drawer/BottomSheetDrawer";
+import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 
 interface WishlistDrawerProps {
   isOpen: boolean;
@@ -46,6 +47,9 @@ const WishlistDrawer = observer(({ isOpen, onClose }: WishlistDrawerProps) => {
   const router = useRouter();
   const { showAddToCartToast } = useCartToast();
   const isMobile = useBreakpointValue({ base: true, md: false });
+
+  // Register wishlist drawer for native back button dismissal
+  useRegisterOverlay(isOpen, onClose, 'wishlist_drawer');
 
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -317,9 +321,13 @@ const WishlistDrawer = observer(({ isOpen, onClose }: WishlistDrawerProps) => {
         borderColor="var(--color-border)"
         boxShadow="2xl"
       >
-        <DrawerCloseButton top={4} right={4} />
+        <DrawerCloseButton
+          top="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
+          right={4}
+        />
         <DrawerHeader
-          py={4}
+          pt="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
+          pb={4}
           px={5}
           borderBottom="1px solid"
           borderColor="var(--color-border)"
@@ -347,7 +355,12 @@ const WishlistDrawer = observer(({ isOpen, onClose }: WishlistDrawerProps) => {
           </HStack>
         </DrawerHeader>
 
-        <DrawerBody px={5} py={4} overflowY="auto">
+        <DrawerBody
+          px={5}
+          py={4}
+          pb={4}
+          overflowY="auto"
+        >
           {renderWishlistContent()}
         </DrawerBody>
       </DrawerContent>

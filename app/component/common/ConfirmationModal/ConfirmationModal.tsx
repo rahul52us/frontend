@@ -1,4 +1,5 @@
 import React from "react";
+import useRegisterOverlay from "../../../hooks/useRegisterOverlay";
 import {
     Modal,
     ModalOverlay,
@@ -40,6 +41,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     isLoading = false,
     image,
 }) => {
+    // Register confirmation modal for native back button dismissal
+    useRegisterOverlay(isOpen, onClose, 'confirmation_modal', 10);
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} isCentered>
             <ModalOverlay />

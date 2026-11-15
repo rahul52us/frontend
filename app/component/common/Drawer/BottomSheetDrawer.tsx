@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerOverlay,
 } from "@chakra-ui/react";
+import useRegisterOverlay from "../../../hooks/useRegisterOverlay";
 
 type BottomSheetDrawerProps = {
   isOpen: boolean;
@@ -41,14 +42,17 @@ const BottomSheetDrawer = ({
   footerProps,
   drawerProps,
 }: BottomSheetDrawerProps) => {
+  // Register bottom sheet drawer for native back button dismissal
+  useRegisterOverlay(isOpen, onClose, 'bottom_sheet_drawer');
+
   return (
     <Drawer isOpen={isOpen} placement="bottom" onClose={onClose} size={size} {...drawerProps}>
       <DrawerOverlay bg={overlayBg} />
       <DrawerContent
         borderTopRadius="24px"
         overflow="hidden"
-        maxH="calc(92dvh - env(safe-area-inset-top, 0px))"
-        pb={footer ? 0 : "calc(14px + env(safe-area-inset-bottom, 0px))"}
+        maxH="calc(92dvh - var(--safe-area-top, env(safe-area-inset-top, 0px)))"
+        pb={footer ? 0 : 3}
         {...contentProps}
       >
         {showHandle ? (
@@ -80,7 +84,7 @@ const BottomSheetDrawer = ({
             borderTopWidth="1px"
             borderTopColor="var(--color-border)"
             gap={3}
-            pb="calc(14px + env(safe-area-inset-bottom, 0px))"
+            pb={4}
             {...footerProps}
           >
             {footer}

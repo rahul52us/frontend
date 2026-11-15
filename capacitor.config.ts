@@ -11,9 +11,13 @@ const config: CapacitorConfig = {
   },
   plugins: {
     StatusBar: {
-      overlaysWebView: false,
+      overlaysWebView: true,
       style: 'DARK',
       backgroundColor: '#ffffff',
+    },
+    SafeArea: {
+      detectViewportFitCoverChanges: true,
+      initialViewportFitCover: true,
     },
   },
 };

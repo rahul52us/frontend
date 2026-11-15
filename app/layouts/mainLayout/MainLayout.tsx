@@ -31,14 +31,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       flexDirection="column"
       position="relative"
       overflowX="hidden"
-      pl="env(safe-area-inset-left, 0px)"
-      pr="env(safe-area-inset-right, 0px)"
+      pl="var(--safe-area-left, env(safe-area-inset-left, 0px))"
+      pr="var(--safe-area-right, env(safe-area-inset-right, 0px))"
       bg="var(--color-bg)"
       color="var(--color-text-primary)"
       transition="background-color 0.2s ease, color 0.2s ease"
     >
       <Header />
-      <Box as="main" flex="1" w="full">
+      <Box
+        as="main"
+        flex="1"
+        w="full"
+        pb={{
+          base: hideBottomNav ? "0px" : "60px",
+          md: 0,
+        }}
+      >
         {children}
       </Box>
       {!isShopPage && <Footer hideBottomNav={hideBottomNav} />}

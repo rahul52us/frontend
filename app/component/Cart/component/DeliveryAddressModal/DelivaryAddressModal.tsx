@@ -28,6 +28,7 @@ import { FaLocationDot, FaPlus, FaTrash, FaPen } from "react-icons/fa6";
 import { AddressForm } from "../../../../(main)/account/component/AddressSection/AddressModal/AddressModal";
 import ConfirmationModal from "../../../common/ConfirmationModal/ConfirmationModal";
 import BottomSheetDrawer from "../../../common/Drawer/BottomSheetDrawer";
+import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 
 interface Address {
   _id?: string;
@@ -67,6 +68,9 @@ const AddressModal: React.FC<AddressModalProps> = ({
   onUpdateAddress,
   onDeleteAddress,
 }) => {
+  // Register address modal for native back button dismissal with priority over parent drawer
+  useRegisterOverlay(isOpen, onClose, 'delivery_address_modal', 5);
+
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);

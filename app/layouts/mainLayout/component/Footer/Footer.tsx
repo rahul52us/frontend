@@ -159,7 +159,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
         maxW="8xl"
         px={{ base: 3, md: 8 }}
         pt={{ base: 5, md: 8 }}
-        pb={{ base: hideBottomNav ? 4 : "76px", md: 6 }}
+        pb={{ base: hideBottomNav ? 4 : "64px", md: 6 }}
       >
   <NewsletterBanner email={email} setEmail={setEmail} isSubscribing={isSubscribing} handleSubscribe={handleSubscribe}  />
 
@@ -553,7 +553,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
           aria-label="Back to top"
           icon={<FiArrowUp size={15} />}
           position="fixed"
-          bottom={{ base: hideBottomNav ? "24px" : "82px", md: "88px" }}
+          bottom={{ base: hideBottomNav ? "20px" : "68px", md: "88px" }}
           right={{ base: "16px", md: "24px" }}
           zIndex={90}
           borderRadius="full"

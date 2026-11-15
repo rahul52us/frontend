@@ -1,9 +1,9 @@
 :root {
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
-  --mobile-bottom-nav-height: 84px;
+  --safe-area-top: max(env(safe-area-inset-top, 0px), var(--capacitor-safe-area-top, 0px));
+  --safe-area-bottom: 0px;
+  --safe-area-left: max(env(safe-area-inset-left, 0px), var(--capacitor-safe-area-left, 0px));
+  --safe-area-right: max(env(safe-area-inset-right, 0px), var(--capacitor-safe-area-right, 0px));
+  --mobile-bottom-nav-height: 56px;
 
   /* Centralized Brand Colors (Default Light) */
   --color-primary: #065F68;

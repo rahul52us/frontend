@@ -4,7 +4,7 @@ import { Badge, Box, Flex, Icon, Text, useColorModeValue } from '@chakra-ui/reac
 import { motion } from 'framer-motion';
 import { observer } from 'mobx-react-lite';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FiGrid,
   FiHome,
@@ -102,23 +102,20 @@ const MobileBottomNav = observer(() => {
       right={0}
       zIndex={1000}
       display={{ base: 'block', md: 'none' }}
-      px={3}
-      pb="calc(8px + env(safe-area-inset-bottom, 0px))"
-      pt={2}
-      pointerEvents="none"
+      bg={dockBg}
+      backdropFilter="blur(16px)"
+      borderTop="1px solid"
+      borderColor={dockBorder}
+      boxShadow="0 -4px 20px rgba(0, 0, 0, 0.05)"
+      pb={4}
+      pt={0}
+      transition="background-color 0.2s ease, border-color 0.2s ease"
     >
-      {/* Floating Glassmorphic Dock */}
       <Flex
-        pointerEvents="auto"
-        maxW="440px"
+        w="full"
+        maxW="540px"
         mx="auto"
-        h="62px"
-        bg={dockBg}
-        backdropFilter="blur(16px)"
-        border="1px solid"
-        borderColor={dockBorder}
-        borderRadius="2xl"
-        boxShadow="0 10px 30px -5px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06)"
+        h="56px"
         justify="space-around"
         align="center"
         px={1.5}
@@ -146,18 +143,18 @@ const MobileBottomNav = observer(() => {
               >
                 {/* Elevated Floating Circle */}
                 <MotionFlex
-                  mt="-26px"
-                  w="52px"
-                  h="52px"
+                  mt="-20px"
+                  w="48px"
+                  h="48px"
                   borderRadius="full"
                   bg={centerRingBg}
-                  p="4px"
-                  boxShadow="0 -4px 14px rgba(37, 99, 235, 0.12)"
+                  p="3px"
+                  boxShadow="0 -3px 12px rgba(6, 95, 104, 0.16)"
                   align="center"
                   justify="center"
                   whileTap={{ scale: 0.9 }}
                   animate={{
-                    y: isActive ? -3 : 0,
+                    y: isActive ? -2 : 0,
                   }}
                   transition={{
                     type: 'spring',

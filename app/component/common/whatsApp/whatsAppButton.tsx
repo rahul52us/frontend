@@ -44,9 +44,12 @@ const WhatsAppButton = () => {
   return (
     <Box
       position="fixed"
-      bottom={{ base: "140px", md: "120px" }} // Adjusted to 40px for standard desktop spacing
+      bottom={{
+        base: "72px",
+        md: "40px",
+      }}
       right={{ base: "16px", md: "24px" }}
-      zIndex={1000}
+      zIndex={990}
     >
       <Tooltip
         label="Chat with us!"

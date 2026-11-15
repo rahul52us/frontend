@@ -13,6 +13,7 @@ import Image from "next/image";
 import { headingFont, bodyFont } from "../lib/fonts";
 import { theme } from "./theme/theme";
 import { ThemeProvider } from "./theme/ThemeContext";
+import NativeMobileProvider from "./providers/NativeMobileProvider";
 import "./globals.css";
 
 export default function RootLayout({
@@ -91,9 +92,11 @@ export default function RootLayout({
 
         <ChakraProvider theme={theme}>
           <ThemeProvider>
-            <Notification />
-            <LayoutComponent>{children}</LayoutComponent>
-            <WhatsAppButton />
+            <NativeMobileProvider>
+              <Notification />
+              <LayoutComponent>{children}</LayoutComponent>
+              <WhatsAppButton />
+            </NativeMobileProvider>
           </ThemeProvider>
         </ChakraProvider>
       </body>

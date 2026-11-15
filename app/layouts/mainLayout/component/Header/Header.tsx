@@ -25,6 +25,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { ThemeModeMenu, ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
+import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
@@ -175,6 +176,10 @@ const Header = observer(() => {
     onOpen: onWishlistOpen,
     onClose: onWishlistClose,
   } = useDisclosure();
+
+  // Register mobile drawer & wishlist drawer for native back-button dismissal
+  useRegisterOverlay(isOpen, onClose, 'header_nav_drawer');
+  useRegisterOverlay(isWishlistOpen, onWishlistClose, 'wishlist_drawer');
 
   const handleLogout = () => {
     logout();
@@ -530,14 +535,19 @@ const Header = observer(() => {
       <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
         <DrawerOverlay backdropFilter="blur(3px)" bg="blackAlpha.400" />
         <DrawerContent borderRightRadius="2xl" overflow="hidden" bg={drawerBg} color={drawerTextColor}>
-          <DrawerCloseButton top={4} right={4} borderRadius="full" size="sm" />
+          <DrawerCloseButton
+            top="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
+            right={4}
+            borderRadius="full"
+            size="sm"
+          />
 
           {/* Drawer Header Profile Section */}
           <DrawerHeader
             bg={drawerHeaderBg}
             borderBottom="1px solid"
             borderColor={drawerBorder}
-            pt={5}
+            pt="max(20px, calc(20px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
             pb={4}
             px={5}
           >

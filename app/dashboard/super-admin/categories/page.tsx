@@ -519,6 +519,13 @@ const CategoryPage = () => {
             Product Filters
           </Tab>
         </TabList>
+            <Button
+                    leftIcon={<FiFolderPlus />}
+                    onClick={handleAddClick}
+                    {...merchantPrimaryButtonProps}
+                  >
+                    Add Category
+                  </Button>
 
         <TabPanels>
           {/* ============================ TAB 1: Categories ============================ */}

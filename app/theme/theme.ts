@@ -189,6 +189,12 @@ export function createAppTheme(config: ThemeConfig = themeConfig) {
           borderColor: mode(tokens.light.border, tokens.dark.border)(props),
           borderWidth: mode("0px", "1px")(props),
         },
+        dialogContainer: {
+          paddingTop: "var(--safe-area-top, env(safe-area-inset-top, 0px))",
+          paddingBottom: "0px",
+          paddingLeft: "var(--safe-area-left, env(safe-area-inset-left, 0px))",
+          paddingRight: "var(--safe-area-right, env(safe-area-inset-right, 0px))",
+        },
       }),
     },
     Drawer: {
@@ -196,6 +202,12 @@ export function createAppTheme(config: ThemeConfig = themeConfig) {
         dialog: {
           bg: mode(tokens.light.surface, tokens.dark.surface)(props),
           color: mode(tokens.light.textPrimary, tokens.dark.textPrimary)(props),
+        },
+        header: {
+          paddingTop: "max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))",
+        },
+        closeButton: {
+          top: "max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))",
         },
       }),
     },

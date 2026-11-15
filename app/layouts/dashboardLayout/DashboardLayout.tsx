@@ -16,6 +16,7 @@ import PageLoader from '../../component/common/Loader/PageLoader';
 import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
 import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
 import { dashboardPalette } from './dashboardPalette';
+import useRegisterOverlay from '../../hooks/useRegisterOverlay';
 
 const MainContainer = styled.div<{ $isMobile: boolean; $bgPattern: string }>`
   display: flex;
@@ -44,8 +45,8 @@ const HeaderContainer = styled.div<{
   $borderColor: string;
 }>`
   z-index: 99;
-  height: calc(${headerHeight} + ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
-  padding-top: ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`};
+  height: calc(${headerHeight} + max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
+  padding-top: max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px)));
   box-sizing: border-box;
   position: fixed;
   top: 0;
@@ -70,13 +71,17 @@ const ContentContainer = styled.div<{
   padding: ${({ $isMobile }) =>
     $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
   padding-bottom: ${({ $isMobile, $hasMobileBottomNav }) =>
-    $isMobile && $hasMobileBottomNav ? '60px' : $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
+    $isMobile && $hasMobileBottomNav
+      ? '64px'
+      : $isMobile
+      ? `${contentSmallBodyPadding}`
+      : `${contentLargeBodyPadding}`};
   width: ${({ $isMobile }) =>
     $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
   overflow-x: hidden;
-  height: calc(100vh - ${headerHeight} - ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
+  height: calc(100vh - ${headerHeight} - max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
   transition: all 0.3s ease-in-out;
-  margin-top: calc(${headerHeight} + ${({ $runtimeTopInset }) => `${$runtimeTopInset}px`});
+  margin-top: calc(${headerHeight} + max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
   color: ${(props) => props.$textColor};
   background: ${(props) => props.$bgContent};
 `;
@@ -149,6 +154,7 @@ const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
       borderTop="1px solid"
       borderTopColor={navBorder}
       backdropFilter="blur(18px)"
+      pb={0}
     >
       <Flex
         maxW="560px"
@@ -157,7 +163,7 @@ const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
         justify="space-between"
         px={4}
         pt={2}
-        pb="calc(10px + env(safe-area-inset-bottom, 0px))"
+        pb="6px"
       >
         {items.map((item) => {
           if (item.id === 'add') {
@@ -255,6 +261,9 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const closeDrawerModel = () => {
     setOpenMobileSideDrawer(false);
   };
+
+  // Register dashboard side drawer for native back button dismissal
+  useRegisterOverlay(openMobileSideDrawer, closeDrawerModel, 'dashboard_side_drawer');
 
   const handleSidebarItemClick = (item: any) => {
     if (!item.children || item.url) {
