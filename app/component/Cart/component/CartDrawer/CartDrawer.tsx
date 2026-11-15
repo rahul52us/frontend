@@ -239,7 +239,7 @@ const CartDrawer = observer(
             <DrawerHeader
               bg={surfaceBg}
               px={{ base: 4, sm: 5 }}
-              pt="2"
+              pt={4}
               pb={4}
               borderBottom="1px solid"
               borderColor={borderColor}

@@ -5,6 +5,7 @@ import {
     Flex,
     HStack,
     Text,
+    useColorModeValue,
 } from '@chakra-ui/react';
 import React from 'react';
 
@@ -67,6 +68,14 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
     };
   };
 
+  const inactiveBg = useColorModeValue('white', 'var(--color-surface)');
+  const inactiveBorder = useColorModeValue('gray.200', 'var(--color-border)');
+  const inactiveHoverBorder = useColorModeValue('gray.300', 'var(--color-border-strong)');
+  const inactiveIconBg = useColorModeValue('gray.50', 'var(--color-surface-soft)');
+  const inactiveTextColor = useColorModeValue('gray.700', 'var(--color-text-primary)');
+  const inactiveSubtextColor = useColorModeValue('gray.500', 'var(--color-text-secondary)');
+  const inactiveRadioBorder = useColorModeValue('gray.300', 'var(--color-border-strong)');
+
   return (
     <Box position="relative" {...boxProps}>
       <Text
@@ -95,9 +104,9 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
               position="relative"
               overflow="hidden"
               border="1.5px solid"
-              borderColor={isActive ? c!.border : 'gray.200'}
+              borderColor={isActive ? c!.border : inactiveBorder}
               borderRadius="xl"
-              bg={isActive ? c!.bg : 'white'}
+              bg={isActive ? c!.bg : inactiveBg}
               p={{ base: 2, md: 3 }}
               cursor="pointer"
               transition="all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
@@ -108,7 +117,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   : '0 1px 2px rgba(0,0,0,0.05)'
               }
               _hover={{
-                borderColor: isActive ? c!.border : 'gray.300',
+                borderColor: isActive ? c!.border : inactiveHoverBorder,
                 boxShadow: isActive
                   ? `0 0 30px ${c!.primary}35, 0 6px 16px ${c!.primary}20`
                   : '0 2px 8px rgba(0,0,0,0.08)',
@@ -165,7 +174,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   w={{ base: '28px', md: '40px' }}
                   h={{ base: '28px', md: '40px' }}
                   borderRadius={isActive ? 'lg' : 'md'}
-                  bg={isActive ? `${c!.primary}15` : 'gray.50'}
+                  bg={isActive ? `${c!.primary}15` : inactiveIconBg}
                   align="center"
                   justify="center"
                   flexShrink={0}
@@ -207,7 +216,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   <Text
                     fontWeight="700"
                     fontSize={{ base: 'xs', md: 'sm' }}
-                    color={isActive ? c!.text : 'gray.700'}
+                    color={isActive ? c!.text : inactiveTextColor}
                     lineHeight="1.2"
                     transition="color 0.3s ease"
                   >
@@ -216,7 +225,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   <Text
                     display={{ base: 'none', md: 'block' }}
                     fontSize="xs"
-                    color={isActive ? c!.subText : 'gray.400'}
+                    color={isActive ? c!.subText : inactiveSubtextColor}
                     mt="2px"
                     fontWeight="500"
                     transition="color 0.3s ease"
@@ -231,7 +240,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
                   borderRadius="full"
                   bg={isActive ? c!.primary : 'transparent'}
                   border={isActive ? 'none' : '2px solid'}
-                  borderColor="gray.200"
+                  borderColor={isActive ? 'transparent' : inactiveRadioBorder}
                   display="flex"
                   alignItems="center"
                   justifyContent="center"

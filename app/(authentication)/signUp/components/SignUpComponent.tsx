@@ -1521,8 +1521,10 @@ const roleOptions :any= [
                 zIndex={2}
               >
                 <Box
-                  bg="white"
+                  bg={panelBg}
                   borderRadius="xl"
+                  border="1px solid"
+                  borderColor={headerBorder}
                   boxShadow="0 2px 8px rgba(0,0,0,0.12)"
                   overflow="hidden"
                 >
@@ -1533,6 +1535,7 @@ const roleOptions :any= [
                       border="none"
                       fontSize="sm"
                       bg="transparent"
+                      color={headerText}
                       _focus={{ boxShadow: "none" }}
                       px={4}
                     />
@@ -1547,22 +1550,26 @@ const roleOptions :any= [
                   icon={<FiNavigation />}
                   onClick={() => detectCurrentLocation()}
                   isLoading={detectingLocation || geocoding}
-                  bg="white"
+                  bg={panelBg}
+                  border="1px solid"
+                  borderColor={headerBorder}
                   color="var(--color-primary)"
                   borderRadius="xl"
                   boxShadow="0 2px 8px rgba(0,0,0,0.15)"
                   h="44px"
                   w="44px"
                   minW="44px"
-                  _hover={{ bg: "blue.50" }}
-                  _active={{ bg: "blue.100" }}
+                  _hover={{ bg: "var(--color-surface-soft)" }}
+                  _active={{ bg: "var(--color-surface-soft)" }}
                 />
               </Box>
 
               {/* Pin Status Badge — floated bottom-left */}
               <Box position="absolute" bottom={3} left={3} zIndex={2}>
                 <HStack
-                  bg="white"
+                  bg={panelBg}
+                  border="1px solid"
+                  borderColor={headerBorder}
                   borderRadius="full"
                   px={3}
                   py={1.5}
@@ -1782,17 +1789,17 @@ const roleOptions :any= [
 
   const renderOtpStep = () => (
     <VStack spacing={{ base: 4, md: 8 }} align="center">
-      <Text textAlign="center" color="gray.600" fontSize={{ base: "sm", md: "md" }}>
+      <Text textAlign="center" color={headerSub} fontSize={{ base: "sm", md: "md" }}>
         Enter the OTP sent to {userData.phone}
       </Text>
-      <HStack>
+      <HStack justify="center" spacing={{ base: 2, sm: 3 }}>
         <PinInput
           otp
           type="number"
           value={otp}
           onChange={handleOtpChange}
           size="md"
-          focusBorderColor="blue.500"
+          focusBorderColor={PRIMARY_COLOR}
           autoFocus={isOtpStep}
         >
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -1802,15 +1809,20 @@ const roleOptions :any= [
               inputMode="numeric"
               pattern="[0-9]*"
               autoComplete="one-time-code"
-              borderRadius="12px"
-              bg="#F8FAFD"
+              borderRadius="14px"
+              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
               border="1.5px solid"
-              borderColor="gray.200"
-              h="48px"
-              w="42px"
+              borderColor={useColorModeValue("gray.200", "var(--color-border-strong)")}
+              color={useColorModeValue("gray.900", "white")}
+              fontSize={{ base: "lg", sm: "xl" }}
+              fontWeight="700"
+              textAlign="center"
+              h={{ base: "46px", sm: "52px" }}
+              w={{ base: "46px", sm: "52px" }}
               _focus={{
                 borderWidth: "2px",
-                bg: "white",
+                borderColor: PRIMARY_COLOR,
+                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
                 boxShadow: `0 0 0 3px ${intent === "seller" ? "rgba(20, 184, 166, 0.15)" : "rgba(59, 130, 246, 0.15)"}`
               }}
             />
@@ -1818,7 +1830,7 @@ const roleOptions :any= [
         </PinInput>
       </HStack>
       <FieldError message={errors.otp} />
-      <Text fontSize="xs" color="gray.500" textAlign="center">
+      <Text fontSize="xs" color={headerSub} textAlign="center">
         You can go back if you want to change the phone number or signup details.
       </Text>
     </VStack>
@@ -2156,13 +2168,13 @@ const roleOptions :any= [
             bottom={0}
             left={0}
             right={0}
-            bg="white"
+            bg={panelBg}
             px={5}
             pt={3}
-            pb="calc(env(safe-area-inset-bottom, 0px) + 16px)"
+            pb={3}
             zIndex={30}
             borderTop="1px solid"
-            borderColor="gray.100"
+            borderColor={headerBorder}
             boxShadow="0 -4px 20px rgba(0,0,0,0.05)"
           >
             <VStack spacing={3}>

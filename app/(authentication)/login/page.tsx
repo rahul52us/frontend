@@ -645,10 +645,10 @@ const LoginFormContent = observer(() => {
                   ) : (
                     <VStack align="stretch" spacing={7}>
                       <FormControl isInvalid={Boolean(errors.otp)}>
-                        <FormLabel color="gray.700" fontWeight="700" fontSize="sm" mb={4}>
+                        <FormLabel color={textHeading} fontWeight="700" fontSize="sm" mb={4}>
                           OTP Code
                         </FormLabel>
-                        <HStack justify="center" spacing={3}>
+                        <HStack justify="center" spacing={{ base: 2, sm: 3 }}>
                           <PinInput
                             otp
                             type="number"
@@ -657,12 +657,109 @@ const LoginFormContent = observer(() => {
                             focusBorderColor={meta.accent}
                             autoFocus={step === 2}
                           >
-                            <PinInputField ref={otpInputRef} h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
-                            <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
-                            <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
-                            <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
-                            <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
-                            <PinInputField h="56px" w={{ base: "42px", md: "52px" }} borderRadius="14px" borderColor="#E2E8F0" bg="#F8FAFD" _focus={{ bg: "white", borderWidth: "2px" }} />
+                            <PinInputField
+                              ref={otpInputRef}
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
+                            <PinInputField
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
+                            <PinInputField
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
+                            <PinInputField
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
+                            <PinInputField
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
+                            <PinInputField
+                              h={{ base: "46px", sm: "52px" }}
+                              w={{ base: "46px", sm: "52px" }}
+                              borderRadius="14px"
+                              borderWidth="1.5px"
+                              borderColor={useColorModeValue("#E2E8F0", "var(--color-border-strong)")}
+                              bg={useColorModeValue("#F8FAFD", "var(--color-surface-soft)")}
+                              color={useColorModeValue("gray.900", "white")}
+                              fontSize={{ base: "lg", sm: "xl" }}
+                              fontWeight="700"
+                              textAlign="center"
+                              _focus={{
+                                bg: useColorModeValue("white", "var(--color-surface-elevated)"),
+                                borderWidth: "2px",
+                                borderColor: meta.accent,
+                              }}
+                            />
                           </PinInput>
                         </HStack>
                         {errors.otp && (
@@ -683,7 +780,7 @@ const LoginFormContent = observer(() => {
                           variant="ghost"
                           leftIcon={<Icon as={FiArrowLeft} />}
                           onClick={handleStepBack}
-                          color="gray.600"
+                          color={useColorModeValue("gray.600", "gray.300")}
                           size="sm"
                           _hover={{ color: meta.accent, bg: "transparent" }}
                         >
@@ -702,7 +799,7 @@ const LoginFormContent = observer(() => {
                         </Button>
                       </Stack>
 
-                      <Text fontSize="sm" color="gray.500" textAlign="center">
+                      <Text fontSize="sm" color={textSub} textAlign="center">
                         OTP expires in{" "}
                         <Text as="span" color={meta.accent} fontWeight="700">
                           {otpTimer}s
@@ -760,10 +857,12 @@ const LoginFormContent = observer(() => {
             bottom={0}
             left={0}
             right={0}
-            bg="white"
+            bg={formPanelBg}
+            borderTop="1px solid"
+            borderColor={useColorModeValue("gray.100", "var(--color-border)")}
             px={5}
             pt={3}
-            pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
+            pb={3}
             zIndex={30}
             boxShadow="0 -4px 20px rgba(0,0,0,0.05)"
           >

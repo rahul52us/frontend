@@ -244,7 +244,7 @@ const ShopsPage = () => {
                 fontWeight="700"
                 fontSize="13px"
                 onClick={() => setRadiusKm(r)}
-                colorScheme={active ? 'purple' : 'gray'}
+                colorScheme={active ? 'brand' : 'gray'}
                 variant={active ? 'solid' : 'outline'}
                 transition="all 0.2s"
                 _active={{ transform: 'scale(0.95)' }}
@@ -522,7 +522,7 @@ const ShopsPage = () => {
                       whiteSpace="nowrap"
                       leftIcon={<Icon as={category.icon} boxSize={3.5} />}
                       bg={isActive ? undefined : surface}
-                      bgGradient={isActive ? 'linear(to-r, #7C3AED, #6366F1)' : undefined}
+                      bgGradient={isActive ? 'linear(to-r, brand.400, brand.500)' : undefined}
                       color={isActive ? 'white' : textColor}
                       border="1px solid"
                       borderColor={isActive ? 'transparent' : borderColor}
@@ -530,7 +530,7 @@ const ShopsPage = () => {
                       transition="all 0.2s"
                       _hover={{
                         transform: 'translateY(-1px)',
-                        borderColor: isActive ? 'transparent' : 'purple.300',
+                        borderColor: isActive ? 'transparent' : 'brand.300',
                       }}
                       _active={{ transform: 'scale(0.96)' }}
                       sx={{ scrollSnapAlign: 'start' }}

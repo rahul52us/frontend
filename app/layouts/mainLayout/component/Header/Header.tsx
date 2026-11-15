@@ -298,7 +298,7 @@ const Header = observer(() => {
         >
           {/* Left: Mobile Menu Trigger & Brand Logo */}
           <HStack spacing={{ base: 1.5, md: 3 }} flexShrink={0}>
-            <IconButton
+            {/* <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<HamburgerIcon boxSize={5} />}
               aria-label="Open menu"
@@ -307,7 +307,7 @@ const Header = observer(() => {
               size="sm"
               onClick={onOpen}
               borderRadius="lg"
-            />
+            /> */}
 
             <Flex
               as="button"
