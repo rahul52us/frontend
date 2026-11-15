@@ -14,14 +14,19 @@ import {
     HStack,
     Text,
     IconButton,
+    Stack,
+    useBreakpointValue,
+    Flex,
 } from "@chakra-ui/react";
 import { Formik, Form, Field, FieldArray } from "formik";
 import * as Yup from "yup";
 import { observer } from "mobx-react-lite";
 import stores from "../../../../store/stores";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
+import CustomInput from "../../../../component/config/component/customInput/CustomInput";
 import { convertImageFileToWebp } from "../../../../config/utils/imageUpload";
-import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiUploadCloud, FiImage, FiX } from "react-icons/fi";
 
 interface CategoryFormProps {
     isOpen: boolean;
@@ -185,273 +190,480 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
         }
     }, [categoryStore]);
 
+    const isMobile = useBreakpointValue({ base: true, md: false });
+    const drawerTitle = initialValues ? "Edit Category" : "Add New Category";
+
+    const parentOptions = [
+        { label: "None (Root)", value: "" },
+        ...categoryStore.categories
+            .filter((c: any) => c._id !== initialValues?._id)
+            .map((cat: any) => ({
+                label: cat.name,
+                value: cat._id,
+            })),
+    ];
+
+    const formContent = (
+        <Formik
+            initialValues={formValues}
+            validationSchema={CategoryValidationSchema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+        >
+            {(props: any) => (
+                <Form id="category-form">
+                    <VStack spacing={4} align="stretch">
+                        <Field name="name">
+                            {({ field, form }: any) => (
+                                <CustomInput
+                                    label="Category Name"
+                                    placeholder="Enter category name"
+                                    name="name"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    required
+                                    showError={Boolean(form.errors.name && form.touched.name)}
+                                    error={form.errors.name}
+                                />
+                            )}
+                        </Field>
+
+                        <Field name="parent">
+                            {({ field, form }: any) => (
+                                <CustomInput
+                                    type="select"
+                                    label="Parent Category"
+                                    placeholder="Select parent category (optional)"
+                                    name="parent"
+                                    value={parentOptions.find((opt) => opt.value === field.value) || { label: "None (Root)", value: "" }}
+                                    options={parentOptions}
+                                    onChange={(opt: any) => {
+                                        form.setFieldValue("parent", opt ? opt.value : "");
+                                    }}
+                                    isPortal
+                                />
+                            )}
+                        </Field>
+
+                        <Field name="description">
+                            {({ field }: any) => (
+                                <CustomInput
+                                    type="textarea"
+                                    label="Description"
+                                    placeholder="Enter description"
+                                    name="description"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    rows={3}
+                                />
+                            )}
+                        </Field>
+
+                        {/* Cover Image Upload Area */}
+                        <Box>
+                            <FormLabel fontSize="sm" fontWeight="600" color="var(--dashboard-text-muted, #4A5568)" mb={2}>
+                                Cover Image
+                            </FormLabel>
+
+                            {previewUrl || initialValues?.image?.url ? (
+                                <Box
+                                    position="relative"
+                                    borderWidth="1px"
+                                    borderColor="var(--dashboard-input-border, #CBD5E0)"
+                                    borderRadius="20px"
+                                    overflow="hidden"
+                                    bg="var(--dashboard-surface, #ffffff)"
+                                    boxShadow="sm"
+                                    p={2.5}
+                                >
+                                    <Box
+                                        position="relative"
+                                        w="100%"
+                                        h={{ base: "160px", sm: "200px" }}
+                                        borderRadius="16px"
+                                        overflow="hidden"
+                                        bg="blackAlpha.50"
+                                    >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={previewUrl || initialValues?.image?.url}
+                                            alt="Cover Preview"
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+
+                                        {/* Change photo overlay button */}
+                                        <HStack
+                                            position="absolute"
+                                            bottom={2.5}
+                                            right={2.5}
+                                            spacing={2}
+                                        >
+                                            <Button
+                                                as="label"
+                                                htmlFor="category-cover-image-input"
+                                                size="sm"
+                                                leftIcon={<FiUploadCloud />}
+                                                borderRadius="12px"
+                                                bg="whiteAlpha.900"
+                                                color="gray.800"
+                                                backdropFilter="blur(8px)"
+                                                boxShadow="md"
+                                                cursor="pointer"
+                                                _hover={{ bg: "white" }}
+                                            >
+                                                Change
+                                            </Button>
+                                            {previewUrl && (
+                                                <IconButton
+                                                    aria-label="Remove selected image"
+                                                    icon={<FiX size={16} />}
+                                                    size="sm"
+                                                    borderRadius="12px"
+                                                    bg="blackAlpha.700"
+                                                    color="white"
+                                                    backdropFilter="blur(8px)"
+                                                    _hover={{ bg: "blackAlpha.900" }}
+                                                    onClick={() => {
+                                                        if (previewUrl) {
+                                                            URL.revokeObjectURL(previewUrl);
+                                                        }
+                                                        setPreviewUrl(null);
+                                                        props.setFieldValue("image", null);
+                                                    }}
+                                                />
+                                            )}
+                                        </HStack>
+                                    </Box>
+
+                                    <input
+                                        id="category-cover-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={(event: any) => {
+                                            const file = event.currentTarget.files[0];
+                                            props.setFieldValue("image", file);
+                                            if (file) {
+                                                setPreviewUrl(URL.createObjectURL(file));
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            ) : (
+                                <Box
+                                    as="label"
+                                    htmlFor="category-cover-image-input"
+                                    display="block"
+                                    cursor="pointer"
+                                    borderWidth="1.5px"
+                                    borderStyle="dashed"
+                                    borderColor="var(--dashboard-input-border, #CBD5E0)"
+                                    borderRadius="20px"
+                                    bg="var(--merchant-surface-alt, #F8FAFC)"
+                                    p={{ base: 5, sm: 6 }}
+                                    textAlign="center"
+                                    transition="all 0.2s ease"
+                                    _hover={{
+                                        borderColor: "var(--dashboard-accent, #3182CE)",
+                                        bg: "var(--dashboard-accent-soft, #EBF8FF)",
+                                    }}
+                                >
+                                    <VStack spacing={2.5}>
+                                        <Flex
+                                            w="50px"
+                                            h="50px"
+                                            borderRadius="16px"
+                                            align="center"
+                                            justify="center"
+                                            bg="var(--dashboard-accent-soft, #EBF8FF)"
+                                            color="var(--dashboard-accent, #3182CE)"
+                                        >
+                                            <FiUploadCloud size={24} />
+                                        </Flex>
+                                        <Box>
+                                            <Text fontSize="sm" fontWeight="700" color="var(--dashboard-text, #1A202C)">
+                                                Click or tap to upload cover photo
+                                            </Text>
+                                            <Text fontSize="xs" color="var(--dashboard-input-placeholder, #718096)" mt={0.5}>
+                                                PNG, JPG or WebP (recommended 4:3 or 16:9 ratio)
+                                            </Text>
+                                        </Box>
+                                    </VStack>
+                                    <input
+                                        id="category-cover-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={(event: any) => {
+                                            const file = event.currentTarget.files[0];
+                                            props.setFieldValue("image", file);
+                                            if (file) {
+                                                setPreviewUrl(URL.createObjectURL(file));
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
+
+                        <FieldArray name="filterConfig">
+                            {({ push, remove }) => (
+                                <Box>
+                                    <HStack justify="space-between" mb={3}>
+                                        <Box>
+                                            <FormLabel mb={0} fontSize="sm" fontWeight="700">Product Filters</FormLabel>
+                                            <Text fontSize="xs" color="gray.500">
+                                                Approved filters shown on product search for this category.
+                                            </Text>
+                                        </Box>
+                                        <Button
+                                            size="sm"
+                                            leftIcon={<FiPlus />}
+                                            borderRadius="12px"
+                                            onClick={() => push(createFilterConfigItem())}
+                                        >
+                                            Add Filter
+                                        </Button>
+                                    </HStack>
+
+                                    <VStack align="stretch" spacing={3}>
+                                        {(props.values.filterConfig || []).map((item: any, index: number) => {
+                                            const needsKey = sourcesNeedingKey.has(item.source);
+
+                                            return (
+                                                <Box
+                                                    key={index}
+                                                    border="1px solid"
+                                                    borderColor="var(--dashboard-input-border, #CBD5E0)"
+                                                    borderRadius="16px"
+                                                    p={3.5}
+                                                    bg="var(--merchant-surface-alt, #fafafa)"
+                                                >
+                                                    <Stack
+                                                        direction={{ base: "column", sm: "row" }}
+                                                        align={{ base: "stretch", sm: "flex-start" }}
+                                                        spacing={3}
+                                                    >
+                                                        <Box flex="1">
+                                                            <Field name={`filterConfig.${index}.label`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        label="Label"
+                                                                        name={`filterConfig.${index}.label`}
+                                                                        placeholder="Storage"
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <Box flex="1">
+                                                            <Field name={`filterConfig.${index}.source`}>
+                                                                {({ field, form }: any) => (
+                                                                    <CustomInput
+                                                                        type="select"
+                                                                        label="Source"
+                                                                        name={`filterConfig.${index}.source`}
+                                                                        options={filterSourceOptions}
+                                                                        value={filterSourceOptions.find((opt) => opt.value === field.value)}
+                                                                        onChange={(opt: any) => {
+                                                                            const val = opt ? opt.value : "";
+                                                                            form.setFieldValue(`filterConfig.${index}.source`, val);
+                                                                            if (!sourcesNeedingKey.has(val)) {
+                                                                                form.setFieldValue(`filterConfig.${index}.sourceKey`, "");
+                                                                            }
+                                                                        }}
+                                                                        isPortal
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <Box flex="1">
+                                                            <Field name={`filterConfig.${index}.sourceKey`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        label="Field Key"
+                                                                        name={`filterConfig.${index}.sourceKey`}
+                                                                        placeholder={needsKey ? "Color" : "-"}
+                                                                        disabled={!needsKey}
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <IconButton
+                                                            mt={{ base: 0, sm: 8 }}
+                                                            alignSelf={{ base: "flex-end", sm: "auto" }}
+                                                            aria-label="Remove filter"
+                                                            icon={<FiTrash2 />}
+                                                            variant="ghost"
+                                                            colorScheme="red"
+                                                            borderRadius="12px"
+                                                            onClick={() => remove(index)}
+                                                        />
+                                                    </Stack>
+
+                                                    <Stack
+                                                        direction={{ base: "column", sm: "row" }}
+                                                        align={{ base: "stretch", sm: "flex-start" }}
+                                                        spacing={3}
+                                                        mt={3}
+                                                    >
+                                                        <Box flex="1">
+                                                            <Field name={`filterConfig.${index}.type`}>
+                                                                {({ field, form }: any) => (
+                                                                    <CustomInput
+                                                                        type="select"
+                                                                        label="Display"
+                                                                        name={`filterConfig.${index}.type`}
+                                                                        options={filterTypeOptions}
+                                                                        value={filterTypeOptions.find((opt) => opt.value === field.value)}
+                                                                        onChange={(opt: any) => {
+                                                                            form.setFieldValue(`filterConfig.${index}.type`, opt ? opt.value : "checkbox");
+                                                                        }}
+                                                                        isPortal
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <Box flex="1">
+                                                            <Field name={`filterConfig.${index}.allowedValuesText`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        label="Allowed Values"
+                                                                        name={`filterConfig.${index}.allowedValuesText`}
+                                                                        placeholder="Samsung, Apple, Xiaomi"
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <Box maxW={{ base: "full", sm: "120px" }}>
+                                                            <Field name={`filterConfig.${index}.sortOrder`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        type="number"
+                                                                        label="Order"
+                                                                        name={`filterConfig.${index}.sortOrder`}
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        </Box>
+
+                                                        <Field name={`filterConfig.${index}.isActive`}>
+                                                            {({ field, form }: any) => (
+                                                                <FormControl maxW={{ base: "full", sm: "110px" }} pt={{ base: 1, sm: 8 }}>
+                                                                    <HStack spacing={2} align="center">
+                                                                        <FormLabel mb="0" fontSize="xs" color="gray.500" display={{ base: "inline-block", sm: "none" }}>
+                                                                            Active:
+                                                                        </FormLabel>
+                                                                        <Switch
+                                                                            {...field}
+                                                                            isChecked={field.value}
+                                                                            onChange={(e) => form.setFieldValue(`filterConfig.${index}.isActive`, e.target.checked)}
+                                                                        />
+                                                                    </HStack>
+                                                                </FormControl>
+                                                            )}
+                                                        </Field>
+                                                    </Stack>
+                                                </Box>
+                                            );
+                                        })}
+                                    </VStack>
+                                </Box>
+                            )}
+                        </FieldArray>
+
+                        <Field name="isActive">
+                            {({ field, form }: any) => (
+                                <FormControl display="flex" alignItems="center">
+                                    <FormLabel htmlFor="isActive" mb="0" fontSize="sm" fontWeight="600">
+                                        Is Active?
+                                    </FormLabel>
+                                    <Switch
+                                        id="isActive"
+                                        isChecked={field.value}
+                                        onChange={(e) => form.setFieldValue("isActive", e.target.checked)}
+                                    />
+                                </FormControl>
+                            )}
+                        </Field>
+
+                        <Field name="isFeatured">
+                            {({ field, form }: any) => (
+                                <FormControl display="flex" alignItems="center">
+                                    <FormLabel htmlFor="isFeatured" mb="0" fontSize="sm" fontWeight="600">
+                                        Show on Home Page?
+                                    </FormLabel>
+                                    <Switch
+                                        id="isFeatured"
+                                        isChecked={field.value}
+                                        onChange={(e) => form.setFieldValue("isFeatured", e.target.checked)}
+                                    />
+                                </FormControl>
+                            )}
+                        </Field>
+
+                        <Box pt={4}>
+                            <Button
+                                type="submit"
+                                colorScheme="brand"
+                                width="full"
+                                minH="48px"
+                                borderRadius="16px"
+                                isLoading={props.isSubmitting}
+                            >
+                                {initialValues ? "Update Category" : "Add Category"}
+                            </Button>
+                        </Box>
+                    </VStack>
+                </Form>
+            )}
+        </Formik>
+    );
+
+    if (isMobile) {
+        return (
+            <BottomSheetDrawer
+                isOpen={isOpen}
+                onClose={onClose}
+                title={drawerTitle}
+                contentProps={{
+                    maxH: "90dvh",
+                }}
+                bodyProps={{
+                    overflowY: "auto",
+                    px: 4,
+                    py: 4,
+                }}
+            >
+                {formContent}
+            </BottomSheetDrawer>
+        );
+    }
+
     return (
         <CustomDrawer
-            title={initialValues ? "Edit Category" : "Add New Category"}
+            title={drawerTitle}
             open={isOpen}
             close={onClose}
             width="52vw"
         >
-            <Formik
-                initialValues={formValues}
-                validationSchema={CategoryValidationSchema}
-                onSubmit={handleSubmit}
-                enableReinitialize
-            >
-                {(props: any) => (
-                    <Form>
-                        <VStack spacing={4} align="stretch">
-                            <Field name="name">
-                                {({ field, form }: any) => (
-                                    <FormControl
-                                        isInvalid={form.errors.name && form.touched.name}
-                                        isRequired
-                                    >
-                                        <FormLabel>Category Name</FormLabel>
-                                        <Input {...field} placeholder="Enter category name" />
-                                        <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-                                    </FormControl>
-                                )}
-                            </Field>
-
-                            <Field name="parent">
-                                {({ field }: any) => (
-                                    <FormControl>
-                                        <FormLabel>Parent Category</FormLabel>
-                                        <Select {...field} placeholder="Select parent category (optional)">
-                                            <option value="">None (Root)</option>
-                                            {categoryStore.categories
-                                                .filter((c: any) => c._id !== initialValues?._id) // Prevent self-parenting
-                                                .map((category: any) => (
-                                                    <option key={category._id} value={category._id}>
-                                                        {category.name}
-                                                    </option>
-                                                ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
-                            </Field>
-
-                            <Field name="description">
-                                {({ field }: any) => (
-                                    <FormControl>
-                                        <FormLabel>Description</FormLabel>
-                                        <Textarea
-                                            {...field}
-                                            placeholder="Enter description"
-                                            rows={3}
-                                        />
-                                    </FormControl>
-                                )}
-                            </Field>
-
-                            <FormControl>
-                                <FormLabel>Cover Image</FormLabel>
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(event: any) => {
-                                        const file = event.currentTarget.files[0];
-                                        props.setFieldValue("image", file);
-                                        if (file) {
-                                            setPreviewUrl(URL.createObjectURL(file));
-                                        }
-                                    }}
-                                    pt={1}
-                                />
-                                {previewUrl ? (
-                                    <Box mt={2} w="100px" h="100px" borderRadius="md" overflow="hidden">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </Box>
-                                ) : initialValues?.image?.url ? (
-                                    <Box mt={2} w="100px" h="100px" borderRadius="md" overflow="hidden">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={initialValues.image.url} alt="Current" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </Box>
-                                ) : null}
-                            </FormControl>
-
-                            <FieldArray name="filterConfig">
-                                {({ push, remove }) => (
-                                    <Box>
-                                        <HStack justify="space-between" mb={3}>
-                                            <Box>
-                                                <FormLabel mb={0}>Product Filters</FormLabel>
-                                                <Text fontSize="sm" color="gray.500">
-                                                    Approved filters shown on product search for this category.
-                                                </Text>
-                                            </Box>
-                                            <Button
-                                                size="sm"
-                                                leftIcon={<FiPlus />}
-                                                onClick={() => push(createFilterConfigItem())}
-                                            >
-                                                Add Filter
-                                            </Button>
-                                        </HStack>
-
-                                        <VStack align="stretch" spacing={3}>
-                                            {(props.values.filterConfig || []).map((item: any, index: number) => {
-                                                const needsKey = sourcesNeedingKey.has(item.source);
-
-                                                return (
-                                                    <Box
-                                                        key={index}
-                                                        border="1px solid"
-                                                        borderColor="gray.200"
-                                                        borderRadius="md"
-                                                        p={3}
-                                                    >
-                                                        <HStack align="flex-start" spacing={3}>
-                                                            <Field name={`filterConfig.${index}.label`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Label</FormLabel>
-                                                                        <Input {...field} placeholder="Storage" />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.source`}>
-                                                                {({ field, form }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Source</FormLabel>
-                                                                        <Select
-                                                                            {...field}
-                                                                            onChange={(event) => {
-                                                                                field.onChange(event);
-                                                                                if (!sourcesNeedingKey.has(event.target.value)) {
-                                                                                    form.setFieldValue(`filterConfig.${index}.sourceKey`, "");
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            {filterSourceOptions.map((option) => (
-                                                                                <option key={option.value} value={option.value}>
-                                                                                    {option.label}
-                                                                                </option>
-                                                                            ))}
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.sourceKey`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl isDisabled={!needsKey}>
-                                                                        <FormLabel fontSize="sm">Field Key</FormLabel>
-                                                                        <Input {...field} placeholder={needsKey ? "Color" : "-"} />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <IconButton
-                                                                mt={8}
-                                                                aria-label="Remove filter"
-                                                                icon={<FiTrash2 />}
-                                                                variant="ghost"
-                                                                colorScheme="red"
-                                                                onClick={() => remove(index)}
-                                                            />
-                                                        </HStack>
-
-                                                        <HStack align="flex-start" spacing={3} mt={3}>
-                                                            <Field name={`filterConfig.${index}.type`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Display</FormLabel>
-                                                                        <Select {...field}>
-                                                                            {filterTypeOptions.map((option) => (
-                                                                                <option key={option.value} value={option.value}>
-                                                                                    {option.label}
-                                                                                </option>
-                                                                            ))}
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.allowedValuesText`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Allowed Values</FormLabel>
-                                                                        <Input {...field} placeholder="Samsung, Apple, Xiaomi" />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.sortOrder`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl maxW="120px">
-                                                                        <FormLabel fontSize="sm">Order</FormLabel>
-                                                                        <Input {...field} type="number" min={0} />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.isActive`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl maxW="110px" pt={8}>
-                                                                        <Switch
-                                                                            {...field}
-                                                                            isChecked={field.value}
-                                                                        />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-                                                        </HStack>
-                                                    </Box>
-                                                );
-                                            })}
-                                        </VStack>
-                                    </Box>
-                                )}
-                            </FieldArray>
-
-                            <Field name="isActive">
-                                {({ field }: any) => (
-                                    <FormControl display="flex" alignItems="center">
-                                        <FormLabel htmlFor="isActive" mb="0">
-                                            Is Active?
-                                        </FormLabel>
-                                        <Switch
-                                            id="isActive"
-                                            {...field}
-                                            isChecked={field.value}
-                                        />
-                                    </FormControl>
-                                )}
-                            </Field>
-
-                            <Field name="isFeatured">
-                                {({ field }: any) => (
-                                    <FormControl display="flex" alignItems="center">
-                                        <FormLabel htmlFor="isFeatured" mb="0">
-                                            Show on Home Page?
-                                        </FormLabel>
-                                        <Switch
-                                            id="isFeatured"
-                                            {...field}
-                                            isChecked={field.value}
-                                        />
-                                    </FormControl>
-                                )}
-                            </Field>
-
-                            <Box pt={4}>
-                                <Button
-                                    type="submit"
-                                    colorScheme="brand"
-                                    width="full"
-                                    isLoading={props.isSubmitting}
-                                >
-                                    {initialValues ? "Update Category" : "Add Category"}
-                                </Button>
-                            </Box>
-                        </VStack>
-                    </Form>
-                )}
-            </Formik>
+            {formContent}
         </CustomDrawer>
     );
 };

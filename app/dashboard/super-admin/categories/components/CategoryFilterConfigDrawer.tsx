@@ -15,12 +15,15 @@ import {
     Text,
     useToast,
     VStack,
+    useBreakpointValue,
 } from "@chakra-ui/react";
 import { Field, FieldArray, Form, Formik } from "formik";
 import { observer } from "mobx-react-lite";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
 import stores from "../../../../store/stores";
+import CustomInput from "../../../../component/config/component/customInput/CustomInput";
 import {
     createFilterConfigItem,
     filterSourceOptions,
@@ -103,182 +106,216 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
         setSubmitting(false);
     };
 
+    const isMobile = useBreakpointValue({ base: true, md: false });
+    const drawerTitle = `Product Filters - ${category.name}`;
+
+    const formContent = (
+        <Formik
+            initialValues={{
+                filterConfig: toFormFilterConfig(category.filterConfig || []),
+            }}
+            onSubmit={handleSubmit}
+            enableReinitialize
+        >
+            {(props: any) => (
+                <Form>
+                    <VStack spacing={5} align="stretch">
+                        <FieldArray name="filterConfig">
+                            {({ push, remove }) => (
+                                <Box>
+                                    <HStack justify="space-between" mb={4} align={{ base: "start", md: "center" }} spacing={4}>
+                                        <Box>
+                                            <Text fontWeight="800" fontSize="lg">Product Filters</Text>
+                                            <Text fontSize="sm" color="gray.500" mt={1}>
+                                                {(props.values.filterConfig || []).length} configured for {category.name}
+                                            </Text>
+                                        </Box>
+                                        <Button size="sm" leftIcon={<FiPlus />} colorScheme="brand" variant="outline" onClick={() => push(createFilterConfigItem())}>
+                                            Add Filter
+                                        </Button>
+                                    </HStack>
+
+                                    <VStack align="stretch" spacing={3}>
+                                        {(props.values.filterConfig || []).length === 0 && (
+                                            <Box border="1px dashed" borderColor="gray.300" borderRadius="md" p={5}>
+                                                <Text color="gray.500" fontSize="sm">
+                                                    No filters configured yet. Add a filter to make this category show advanced buyer filters.
+                                                </Text>
+                                            </Box>
+                                        )}
+
+                                        {(props.values.filterConfig || []).map((item: any, index: number) => {
+                                            const needsKey = sourcesNeedingKey.has(item.source);
+                                            const keyMeta = fieldKeyMeta[item.source] || fieldKeyMeta.productDetails;
+
+                                            return (
+                                                <Box key={index} border="1px solid" borderColor="gray.200" borderRadius="lg" p={4} bg="white">
+                                                    <HStack justify="space-between" align="center" mb={4}>
+                                                        <HStack spacing={2}>
+                                                            <Badge colorScheme="brand" borderRadius="full" px={3} py={1}>
+                                                                Filter {index + 1}
+                                                            </Badge>
+                                                            <Text fontWeight="800" noOfLines={1}>
+                                                                {item.label || "Untitled filter"}
+                                                            </Text>
+                                                        </HStack>
+
+                                                        <HStack spacing={3}>
+                                                            <Field name={`filterConfig.${index}.isActive`}>
+                                                                {({ field }: any) => (
+                                                                    <HStack spacing={2}>
+                                                                        <Text fontSize="sm" color="gray.600">Active</Text>
+                                                                        <Switch {...field} isChecked={field.value} colorScheme="brand" />
+                                                                    </HStack>
+                                                                )}
+                                                            </Field>
+
+                                                            <IconButton
+                                                                aria-label="Remove filter"
+                                                                icon={<FiTrash2 />}
+                                                                variant="ghost"
+                                                                colorScheme="red"
+                                                                onClick={() => remove(index)}
+                                                            />
+                                                        </HStack>
+                                                    </HStack>
+
+                                                    <SimpleGrid columns={{ base: 1, md: needsKey ? 3 : 2 }} spacing={3}>
+                                                        <Field name={`filterConfig.${index}.label`}>
+                                                            {({ field }: any) => (
+                                                                <CustomInput
+                                                                    label="Buyer filter name"
+                                                                    name={`filterConfig.${index}.label`}
+                                                                    placeholder="Brand, Color, Storage"
+                                                                    value={field.value}
+                                                                    onChange={field.onChange}
+                                                                />
+                                                            )}
+                                                        </Field>
+
+                                                        <Field name={`filterConfig.${index}.source`}>
+                                                            {({ field, form }: any) => (
+                                                                <CustomInput
+                                                                    type="select"
+                                                                    label="Values come from"
+                                                                    name={`filterConfig.${index}.source`}
+                                                                    options={filterSourceOptions}
+                                                                    value={filterSourceOptions.find((opt) => opt.value === field.value)}
+                                                                    onChange={(opt: any) => {
+                                                                        const val = opt ? opt.value : "";
+                                                                        form.setFieldValue(`filterConfig.${index}.source`, val);
+                                                                        if (!sourcesNeedingKey.has(val)) {
+                                                                            form.setFieldValue(`filterConfig.${index}.sourceKey`, "");
+                                                                        }
+                                                                    }}
+                                                                    isPortal
+                                                                />
+                                                            )}
+                                                        </Field>
+
+                                                        {needsKey && (
+                                                            <Field name={`filterConfig.${index}.sourceKey`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        label={keyMeta.label}
+                                                                        name={`filterConfig.${index}.sourceKey`}
+                                                                        placeholder={keyMeta.placeholder}
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        )}
+                                                    </SimpleGrid>
+
+                                                    <SimpleGrid columns={{ base: 1, md: supportsAllowedValues(item.source) ? 3 : 2 }} spacing={3} mt={3}>
+                                                        <Field name={`filterConfig.${index}.type`}>
+                                                            {({ field, form }: any) => (
+                                                                <CustomInput
+                                                                    type="select"
+                                                                    label="Display style"
+                                                                    name={`filterConfig.${index}.type`}
+                                                                    options={filterTypeOptions}
+                                                                    value={filterTypeOptions.find((opt) => opt.value === field.value)}
+                                                                    onChange={(opt: any) => {
+                                                                        form.setFieldValue(`filterConfig.${index}.type`, opt ? opt.value : "checkbox");
+                                                                    }}
+                                                                    isPortal
+                                                                />
+                                                            )}
+                                                        </Field>
+
+                                                        {supportsAllowedValues(item.source) && (
+                                                            <Field name={`filterConfig.${index}.allowedValuesText`}>
+                                                                {({ field }: any) => (
+                                                                    <CustomInput
+                                                                        label="Limit to options (optional)"
+                                                                        name={`filterConfig.${index}.allowedValuesText`}
+                                                                        placeholder={allowedValuePlaceholder[item.source] || "Option 1, Option 2"}
+                                                                        value={field.value}
+                                                                        onChange={field.onChange}
+                                                                    />
+                                                                )}
+                                                            </Field>
+                                                        )}
+
+                                                        <Field name={`filterConfig.${index}.sortOrder`}>
+                                                            {({ field }: any) => (
+                                                                <CustomInput
+                                                                    type="number"
+                                                                    label="Position"
+                                                                    name={`filterConfig.${index}.sortOrder`}
+                                                                    value={field.value}
+                                                                    onChange={field.onChange}
+                                                                />
+                                                            )}
+                                                        </Field>
+                                                    </SimpleGrid>
+                                                </Box>
+                                            );
+                                        })}
+                                    </VStack>
+                                </Box>
+                            )}
+                        </FieldArray>
+
+                        <Button type="submit" colorScheme="brand" isLoading={props.isSubmitting || categoryStore.loading}>
+                            Save Product Filters
+                        </Button>
+                    </VStack>
+                </Form>
+            )}
+        </Formik>
+    );
+
+    if (isMobile) {
+        return (
+            <BottomSheetDrawer
+                isOpen={isOpen}
+                onClose={onClose}
+                title={drawerTitle}
+                contentProps={{
+                    maxH: "90dvh",
+                }}
+                bodyProps={{
+                    overflowY: "auto",
+                    px: 4,
+                    py: 4,
+                }}
+            >
+                {formContent}
+            </BottomSheetDrawer>
+        );
+    }
+
     return (
         <CustomDrawer
-            title={`Product Filters - ${category.name}`}
+            title={drawerTitle}
             open={isOpen}
             close={onClose}
             width="62vw"
         >
-            <Formik
-                initialValues={{
-                    filterConfig: toFormFilterConfig(category.filterConfig || []),
-                }}
-                onSubmit={handleSubmit}
-                enableReinitialize
-            >
-                {(props: any) => (
-                    <Form>
-                        <VStack spacing={5} align="stretch">
-                            <FieldArray name="filterConfig">
-                                {({ push, remove }) => (
-                                    <Box>
-                                        <HStack justify="space-between" mb={4} align={{ base: "start", md: "center" }} spacing={4}>
-                                            <Box>
-                                                <Text fontWeight="800" fontSize="lg">Product Filters</Text>
-                                                <Text fontSize="sm" color="gray.500" mt={1}>
-                                                    {(props.values.filterConfig || []).length} configured for {category.name}
-                                                </Text>
-                                            </Box>
-                                            <Button size="sm" leftIcon={<FiPlus />} colorScheme="brand" variant="outline" onClick={() => push(createFilterConfigItem())}>
-                                                Add Filter
-                                            </Button>
-                                        </HStack>
-
-                                        <VStack align="stretch" spacing={3}>
-                                            {(props.values.filterConfig || []).length === 0 && (
-                                                <Box border="1px dashed" borderColor="gray.300" borderRadius="md" p={5}>
-                                                    <Text color="gray.500" fontSize="sm">
-                                                        No filters configured yet. Add a filter to make this category show advanced buyer filters.
-                                                    </Text>
-                                                </Box>
-                                            )}
-
-                                            {(props.values.filterConfig || []).map((item: any, index: number) => {
-                                                const needsKey = sourcesNeedingKey.has(item.source);
-                                                const keyMeta = fieldKeyMeta[item.source] || fieldKeyMeta.productDetails;
-
-                                                return (
-                                                    <Box key={index} border="1px solid" borderColor="gray.200" borderRadius="lg" p={4} bg="white">
-                                                        <HStack justify="space-between" align="center" mb={4}>
-                                                            <HStack spacing={2}>
-                                                                <Badge colorScheme="brand" borderRadius="full" px={3} py={1}>
-                                                                    Filter {index + 1}
-                                                                </Badge>
-                                                                <Text fontWeight="800" noOfLines={1}>
-                                                                    {item.label || "Untitled filter"}
-                                                                </Text>
-                                                            </HStack>
-
-                                                            <HStack spacing={3}>
-                                                                <Field name={`filterConfig.${index}.isActive`}>
-                                                                    {({ field }: any) => (
-                                                                        <HStack spacing={2}>
-                                                                            <Text fontSize="sm" color="gray.600">Active</Text>
-                                                                            <Switch {...field} isChecked={field.value} colorScheme="brand" />
-                                                                        </HStack>
-                                                                    )}
-                                                                </Field>
-
-                                                                <IconButton
-                                                                    aria-label="Remove filter"
-                                                                    icon={<FiTrash2 />}
-                                                                    variant="ghost"
-                                                                    colorScheme="red"
-                                                                    onClick={() => remove(index)}
-                                                                />
-                                                            </HStack>
-                                                        </HStack>
-
-                                                        <SimpleGrid columns={{ base: 1, xl: needsKey ? 3 : 2 }} spacing={3}>
-                                                            <Field name={`filterConfig.${index}.label`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Buyer filter name</FormLabel>
-                                                                        <Input {...field} placeholder="Brand, Color, Storage" />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            <Field name={`filterConfig.${index}.source`}>
-                                                                {({ field, form }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Values come from</FormLabel>
-                                                                        <Select
-                                                                            {...field}
-                                                                            onChange={(event) => {
-                                                                                field.onChange(event);
-                                                                                if (!sourcesNeedingKey.has(event.target.value)) {
-                                                                                    form.setFieldValue(`filterConfig.${index}.sourceKey`, "");
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            {filterSourceOptions.map((option) => (
-                                                                                <option key={option.value} value={option.value}>
-                                                                                    {option.label}
-                                                                                </option>
-                                                                            ))}
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            {needsKey && (
-                                                                <Field name={`filterConfig.${index}.sourceKey`}>
-                                                                    {({ field }: any) => (
-                                                                        <FormControl>
-                                                                            <FormLabel fontSize="sm">{keyMeta.label}</FormLabel>
-                                                                            <Input {...field} placeholder={keyMeta.placeholder} />
-                                                                        </FormControl>
-                                                                    )}
-                                                                </Field>
-                                                            )}
-                                                        </SimpleGrid>
-
-                                                        <SimpleGrid columns={{ base: 1, xl: supportsAllowedValues(item.source) ? 3 : 2 }} spacing={3} mt={3}>
-                                                            <Field name={`filterConfig.${index}.type`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Display style</FormLabel>
-                                                                        <Select {...field}>
-                                                                            {filterTypeOptions.map((option) => (
-                                                                                <option key={option.value} value={option.value}>
-                                                                                    {option.label}
-                                                                                </option>
-                                                                            ))}
-                                                                        </Select>
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-
-                                                            {supportsAllowedValues(item.source) && (
-                                                                <Field name={`filterConfig.${index}.allowedValuesText`}>
-                                                                    {({ field }: any) => (
-                                                                        <FormControl>
-                                                                            <FormLabel fontSize="sm">Limit to options</FormLabel>
-                                                                            <Input {...field} placeholder={allowedValuePlaceholder[item.source] || "Option 1, Option 2"} />
-                                                                            <FormHelperText fontSize="xs">
-                                                                                Optional. Leave empty to show values from products.
-                                                                            </FormHelperText>
-                                                                        </FormControl>
-                                                                    )}
-                                                                </Field>
-                                                            )}
-
-                                                            <Field name={`filterConfig.${index}.sortOrder`}>
-                                                                {({ field }: any) => (
-                                                                    <FormControl>
-                                                                        <FormLabel fontSize="sm">Position</FormLabel>
-                                                                        <Input {...field} type="number" min={0} />
-                                                                    </FormControl>
-                                                                )}
-                                                            </Field>
-                                                        </SimpleGrid>
-                                                    </Box>
-                                                );
-                                            })}
-                                        </VStack>
-                                    </Box>
-                                )}
-                            </FieldArray>
-
-                            <Button type="submit" colorScheme="brand" isLoading={props.isSubmitting || categoryStore.loading}>
-                                Save Product Filters
-                            </Button>
-                        </VStack>
-                    </Form>
-                )}
-            </Formik>
+            {formContent}
         </CustomDrawer>
     );
 };
