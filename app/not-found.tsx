@@ -310,7 +310,7 @@ export default function NotFoundPage() {
               borderRadius="full"
               p={{ base: '9px', md: '14px' }}
               cursor="pointer"
-              bgGradient="linear(to-br, #8B5CF6, #4F46E5, #2563EB)"
+              bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
               boxShadow="0 16px 36px rgba(79, 70, 229, 0.38)"
               transition="transform 0.15s"
               _active={{ transform: 'scale(0.9)' }}
@@ -318,7 +318,7 @@ export default function NotFoundPage() {
             >
               <Flex align="center" justify="center" w="full" h="full" borderRadius="full" bg="white" overflow="hidden">
                 <Box key={`pin-${taps}`} animation={anim(`${hop} ${taps ? '0.6s' : '2.4s'} ease-in-out ${taps ? '1' : 'infinite'}`)}>
-                  <Icon as={FiMapPin} boxSize={{ base: 9, md: 16 }} color="purple.500" />
+                  <Icon as={FiMapPin} boxSize={{ base: 9, md: 16 }} color="var(--color-primary)" />
                 </Box>
               </Flex>
             </Box>
@@ -350,7 +350,7 @@ export default function NotFoundPage() {
                 transform="translateX(-50%)"
                 fontSize="11px"
                 fontWeight="700"
-                color="purple.400"
+                color="var(--color-secondary)"
                 whiteSpace="nowrap"
                 animation={anim(`${textSwap} 0.6s ease 1s both`)}
               >
@@ -378,7 +378,7 @@ export default function NotFoundPage() {
           Oops! This page{' '}
           <Box
             as="span"
-            bgGradient="linear(to-r, #7C3AED, #6366F1, #2563EB, #7C3AED)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
             bgClip="text"
             backgroundSize="200% auto"
             animation={anim(`${shimmer} 6s linear infinite`)}
@@ -400,12 +400,12 @@ export default function NotFoundPage() {
             px={4}
             py={2}
             borderRadius="full"
-            bg="purple.50"
+            bg="var(--color-surface-hover)"
             border="1px solid"
-            borderColor="purple.100"
+            borderColor="var(--color-border)"
             animation={anim(`${popIn} 0.5s ${ease} both`)}
           >
-            <Text fontSize="xs" fontWeight="700" color="purple.700">
+            <Text fontSize="xs" fontWeight="700" color="var(--color-primary)">
               You really like tapping things. Let’s get you home!
             </Text>
           </Flex>
@@ -426,7 +426,7 @@ export default function NotFoundPage() {
             color="white"
             fontWeight="700"
             leftIcon={<FiHome />}
-            bgGradient="linear(to-r, #7C3AED, #6366F1, #7C3AED)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
             backgroundSize="200% auto"
             boxShadow="0 10px 24px rgba(124, 58, 237, 0.35)"
             transition="all 0.25s"
@@ -445,9 +445,9 @@ export default function NotFoundPage() {
             px={8}
             borderRadius="full"
             bg="white"
-            color="purple.700"
+            color="var(--color-primary)"
             border="1px solid"
-            borderColor="purple.200"
+            borderColor="var(--color-border)"
             fontWeight="700"
             leftIcon={<FiCompass />}
             transition="all 0.25s"
@@ -462,7 +462,7 @@ export default function NotFoundPage() {
         <Button
           mt={3}
           variant="link"
-          colorScheme="purple"
+          colorScheme="brand"
           fontWeight="600"
           fontSize="sm"
           leftIcon={<FiArrowLeft />}

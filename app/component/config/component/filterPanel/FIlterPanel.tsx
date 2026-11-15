@@ -90,7 +90,7 @@ const FilterPanel = () => {
           icon={isOpen ? <FaChevronUp /> : <FaChevronDown />}
           size="sm"
           onClick={onToggle}
-          colorScheme="teal"
+          colorScheme="brand"
           variant="ghost"
           aria-label="Toggle filters"
         />

@@ -22,7 +22,7 @@ const CompanyRequiredState: React.FC<CompanyRequiredStateProps> = ({
         <Text color="gray.500">
           Complete shop setup to access buyers, orders, products, and other seller features.
         </Text>
-        <Button colorScheme="blue" onClick={() => router.push("/dashboard/shop")}>
+        <Button colorScheme="brand" onClick={() => router.push("/dashboard/shop")}>
           Create Shop
         </Button>
       </VStack>

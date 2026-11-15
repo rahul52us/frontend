@@ -101,7 +101,7 @@ const ChangePasswordModal = observer(({ isOpen, onClose }: ChangePasswordModalPr
                 />
 
                 <Flex justify="flex-end">
-                  <Button onClick={() => setShowError(true)} width="100%" colorScheme="teal" type="submit" isDisabled={isLoading}>
+                  <Button onClick={() => setShowError(true)} width="100%" colorScheme="brand" type="submit" isDisabled={isLoading}>
                     {isLoading ? <Spinner size="sm" color="white" /> : "Change Password"}
                   </Button>
                 </Flex>

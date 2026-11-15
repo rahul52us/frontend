@@ -37,7 +37,7 @@ const CreativeEcommerceSection = () => {
             Collections That Inspire
           </Heading>
           
-          <Tabs variant="soft-rounded" colorScheme="purple" size="lg">
+          <Tabs variant="soft-rounded" colorScheme="brand" size="lg">
             <TabList justifyContent="center" mb={10}>
               <Tab mx={2}>Bestsellers</Tab>
               <Tab mx={2}>New Arrivals</Tab>
@@ -71,7 +71,7 @@ const CreativeEcommerceSection = () => {
                           p={6}
                           bgGradient="linear(to-t, blackAlpha.800, transparent)"
                         >
-                          <Badge colorScheme="purple" mb={2}>FEATURED</Badge>
+                          <Badge colorScheme="brand" mb={2}>FEATURED</Badge>
                           <Heading size="lg" color="white" mb={2}>
                             {tabIndex === 1 ? 'Customer Favorites' : 
                              tabIndex === 2 ? 'Spring 2025 Collection' : 
@@ -84,7 +84,7 @@ const CreativeEcommerceSection = () => {
                           </Text>
                           <Button 
                             rightIcon={<FaArrowRight />} 
-                            colorScheme="purple" 
+                            colorScheme="brand" 
                             variant="solid"
                           >
                             Explore Collection

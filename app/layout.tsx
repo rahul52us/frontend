@@ -1,16 +1,18 @@
 'use client';
 
-import { ChakraProvider, ColorModeScript, extendTheme } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import MainLayout from "./layouts/mainLayout/MainLayout";
 import AuthenticationLayout from "./layouts/authenticationLayout/AuthenticationLayout";
 import DashboardLayout from "./layouts/dashboardLayout/DashboardLayout";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import stores from "./store/stores";
 import Notification from "./component/common/Notification/Notification";
 import WhatsAppButton from "./component/common/whatsApp/whatsAppButton";
 import Image from "next/image";
 import { headingFont, bodyFont } from "../lib/fonts";
+import { theme } from "./theme/theme";
+import { ThemeProvider } from "./theme/ThemeContext";
 import "./globals.css";
 
 export default function RootLayout({
@@ -20,17 +22,6 @@ export default function RootLayout({
 }>) {
   const { companyStore: { getCompanyDetails } } = stores;
   const pathname = usePathname();
-
-  const theme = useMemo(
-    () =>
-      extendTheme(stores.themeStore, {
-        fonts: {
-          heading: "var(--font-heading), system-ui, sans-serif",
-          body: "var(--font-body), system-ui, sans-serif",
-        },
-      }),
-    []
-  );
 
   useEffect(() => {
     getCompanyDetails();
@@ -48,13 +39,37 @@ export default function RootLayout({
   const LayoutComponent = getLayout();
 
   return (
-    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
+    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`} suppressHydrationWarning>
       <head>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
         />
-        <ColorModeScript initialColorMode="light" />
+        {/* Anti-flash inline script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var mode = localStorage.getItem('app_theme_mode') || localStorage.getItem('chakra-ui-color-mode') || 'system';
+                  var resolved = mode;
+                  if (mode === 'system') {
+                    resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', resolved);
+                  if (resolved === 'dark') {
+                    document.documentElement.classList.add('chakra-ui-dark');
+                    document.documentElement.classList.remove('chakra-ui-light');
+                  } else {
+                    document.documentElement.classList.add('chakra-ui-light');
+                    document.documentElement.classList.remove('chakra-ui-dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       </head>
 
       <body
@@ -75,9 +90,11 @@ export default function RootLayout({
         </noscript>
 
         <ChakraProvider theme={theme}>
-          <Notification />
-          <LayoutComponent>{children}</LayoutComponent>
-          <WhatsAppButton />
+          <ThemeProvider>
+            <Notification />
+            <LayoutComponent>{children}</LayoutComponent>
+            <WhatsAppButton />
+          </ThemeProvider>
         </ChakraProvider>
       </body>
     </html>

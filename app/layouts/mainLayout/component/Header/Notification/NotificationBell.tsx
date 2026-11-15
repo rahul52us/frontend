@@ -28,7 +28,7 @@ const NotificationBell = ({ count }: NotificationBellProps) => {
           aria-label="Notifications"
           size="md"                     // ✅ SAME size
           variant="ghost"               // ✅ SAME variant
-          color="blue.600"              // ✅ SAME color
+          color="var(--color-primary)"              // ✅ SAME color
         />
 
         {badgeCount > 0 && (

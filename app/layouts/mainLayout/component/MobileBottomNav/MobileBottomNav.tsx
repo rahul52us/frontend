@@ -23,7 +23,12 @@ const MobileBottomNav = observer(() => {
   const { cartStore, auth } = stores;
 
   const [cartBounce, setCartBounce] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const prevCartCount = useRef(cartStore?.totalItems || 0);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Trigger a spring bounce on the Cart icon whenever items are added
   useEffect(() => {
@@ -39,17 +44,17 @@ const MobileBottomNav = observer(() => {
 
   // Theme-aware tokens hoisted to top
   const dockBg = useColorModeValue(
-    'rgba(255, 255, 255, 0.92)',
-    'rgba(17, 24, 39, 0.92)'
+    'rgba(255, 255, 255, 0.94)',
+    'rgba(11, 17, 32, 0.94)'
   );
   const dockBorder = useColorModeValue(
     'rgba(226, 232, 240, 0.9)',
     'rgba(255, 255, 255, 0.1)'
   );
-  const activeColor = useColorModeValue('blue.600', 'blue.400');
+  const activeColor = 'var(--color-primary)';
   const inactiveColor = useColorModeValue('gray.500', 'gray.400');
-  const activePillBg = useColorModeValue('blue.50', 'whiteAlpha.100');
-  const centerRingBg = useColorModeValue('white', 'gray.900');
+  const activePillBg = 'var(--color-primary-soft)';
+  const centerRingBg = useColorModeValue('white', 'var(--color-surface)');
 
   // Ordered with HOME in the exact center (index 2)
   const navItems = [
@@ -166,7 +171,7 @@ const MobileBottomNav = observer(() => {
                     borderRadius="full"
                     bgGradient={
                       isActive
-                        ? 'linear(to-tr, blue.600, purple.600)'
+                        ? 'linear(to-tr, var(--color-primary), var(--color-secondary))'
                         : 'linear(to-tr, gray.800, gray.700)'
                     }
                     color="white"
@@ -174,7 +179,7 @@ const MobileBottomNav = observer(() => {
                     justify="center"
                     boxShadow={
                       isActive
-                        ? '0 8px 20px -4px rgba(37, 99, 235, 0.55)'
+                        ? '0 8px 20px -4px var(--color-primary-soft)'
                         : '0 6px 14px -4px rgba(0, 0, 0, 0.25)'
                     }
                     transition="all 0.25s ease"
@@ -255,7 +260,7 @@ const MobileBottomNav = observer(() => {
                 />
 
                 {/* Live Cart Counter Badge */}
-                {item.isCart && totalCartItems > 0 && (
+                {item.isCart && isMounted && totalCartItems > 0 && (
                   <Badge
                     position="absolute"
                     top="-6px"
@@ -280,7 +285,7 @@ const MobileBottomNav = observer(() => {
                 )}
 
                 {/* Logged-In Online Dot on Account Icon */}
-                {item.isAccount && Boolean(auth?.user) && (
+                {item.isAccount && isMounted && Boolean(auth?.user) && (
                   <Box
                     position="absolute"
                     top="-2px"
@@ -319,7 +324,7 @@ const MobileBottomNav = observer(() => {
                   w="14px"
                   h="2.5px"
                   borderRadius="full"
-                  bgGradient="linear(to-r, blue.600, purple.600)"
+                  bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                   transition={{
                     type: 'spring',
                     stiffness: 400,

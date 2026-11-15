@@ -44,7 +44,7 @@ export default function MainPagePagination({
     <Flex justifyContent={placement} mt={2} gap={2}>
       <MotionButton
         variant="solid"
-        colorScheme="teal"
+        colorScheme="brand"
         shadow="md"
         size={size}
         p={0}
@@ -75,7 +75,7 @@ export default function MainPagePagination({
       ))}
       <MotionButton
         variant="solid"
-        colorScheme="teal"
+        colorScheme="brand"
         size={size}
         p={0}
         shadow="md"

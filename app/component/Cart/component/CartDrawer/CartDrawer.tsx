@@ -353,7 +353,7 @@ const CartDrawer = observer(
                       justify="center"
                       boxShadow="0 16px 35px -18px rgba(128, 90, 213, 0.65)"
                     >
-                      <Icon as={FiShoppingBag} boxSize={9} color="purple.500" />
+                      <Icon as={FiShoppingBag} boxSize={9} color="var(--color-primary)" />
                     </Flex>
                   </Flex>
 
@@ -378,7 +378,7 @@ const CartDrawer = observer(
                   </Text>
 
                   <Button
-                    colorScheme="purple"
+                    colorScheme="brand"
                     size="md"
                     h="46px"
                     rounded="xl"
@@ -569,7 +569,7 @@ const CartDrawer = observer(
                       h="38px"
                       rounded="xl"
                       bg={purpleSurfaceBg}
-                      color="purple.500"
+                      color="var(--color-primary)"
                       align="center"
                       justify="center"
                       flexShrink={0}
@@ -601,7 +601,7 @@ const CartDrawer = observer(
                             </Text>
                             {currentAddress.isDefault && (
                               <Badge
-                                colorScheme="purple"
+                                colorScheme="brand"
                                 variant="subtle"
                                 fontSize="9px"
                                 rounded="md"
@@ -639,7 +639,7 @@ const CartDrawer = observer(
                       )}
                     </Box>
 
-                    <HStack spacing={1} color="purple.500" flexShrink={0}>
+                    <HStack spacing={1} color="var(--color-primary)" flexShrink={0}>
                       {!hasAddress && <Icon as={FaPlus} boxSize={3} />}
                       <Text fontSize="xs" fontWeight="700">
                         {hasAddress ? "Change" : "Add"}
@@ -711,7 +711,7 @@ const CartDrawer = observer(
                 <Button
                   w="full"
                   h="50px"
-                  colorScheme="purple"
+                  colorScheme="brand"
                   bg="purple.600"
                   color="white"
                   rounded="xl"

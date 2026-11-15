@@ -19,6 +19,7 @@ import {
   Progress,
   Stack,
   Text,
+  useColorModeValue,
   VStack
 } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -132,6 +133,15 @@ const LoginFormContent = observer(() => {
     : "";
 
   const meta = useMemo(() => stepMeta[activeStep.title] || stepMeta["Welcome back"], [activeStep.title]);
+
+  const formPanelBg = useColorModeValue("white", "var(--color-surface)");
+  const textHeading = useColorModeValue("gray.900", "var(--color-text-primary)");
+  const textSub = useColorModeValue("gray.600", "var(--color-text-secondary)");
+  const backBtnBg = useColorModeValue("gray.50", "var(--color-surface-soft)");
+  const leftPanelBg = useColorModeValue(meta.bg, "var(--color-surface-alt)");
+  const leftCardBg = useColorModeValue("white", "var(--color-surface-elevated)");
+  const leftTextColor = useColorModeValue("gray.900", "var(--color-text-primary)");
+  const leftSubtextColor = useColorModeValue("gray.700", "var(--color-text-secondary)");
 
   useEffect(() => {
     const savedInfo = sessionStorage.getItem("loginInfo");
@@ -386,12 +396,12 @@ const LoginFormContent = observer(() => {
           position="sticky"
           top={0}
           h="100vh"
-          bg={meta.bg}
+          bg={leftPanelBg}
           transition="background 0.4s ease"
           px={{ md: 10, xl: 14 }}
           py={12}
           overflow="hidden"
-          bgGradient={`linear(to-br, ${meta.bg}, ${meta.softAccent}30)`}
+          bgGradient={`linear(to-br, ${leftPanelBg}, ${meta.softAccent}20)`}
         >
           {/* Decorative Blobs */}
           <Box
@@ -461,7 +471,7 @@ const LoginFormContent = observer(() => {
                 transition={{ duration: 0.3, delay: 0.08 }}
               >
                 <Text
-                  fontSize={{ md: "2xl", xl: "3xl" }} fontWeight="800" color="gray.900"
+                  fontSize={{ md: "2xl", xl: "3xl" }} fontWeight="800" color={leftTextColor}
                   letterSpacing="-0.03em" lineHeight="1.2" mb={5}
                 >
                   {meta.tagline}
@@ -471,13 +481,13 @@ const LoginFormContent = observer(() => {
                     <HStack key={i} spacing={4} align="center">
                       <Flex
                         w="32px" h="32px" borderRadius="10px" flexShrink={0}
-                        bg="white"
+                        bg={leftCardBg}
                         boxShadow="0 2px 8px rgba(0,0,0,0.04)"
                         align="center" justify="center"
                       >
                         <Icon as={point.icon} boxSize={4} color={meta.accent} />
                       </Flex>
-                      <Text fontSize="md" fontWeight="600" color="gray.700">
+                      <Text fontSize="md" fontWeight="600" color={leftSubtextColor}>
                         {point.text}
                       </Text>
                     </HStack>
@@ -517,7 +527,7 @@ const LoginFormContent = observer(() => {
           flex={1}
           h={{ base: "auto", md: "100vh" }}
           overflowY={{ base: "visible", md: "auto" }}
-          bg="white"
+          bg={formPanelBg}
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -532,7 +542,7 @@ const LoginFormContent = observer(() => {
           <Box
             display={{ base: "block", md: "none" }}
             w="full"
-            bg="white"
+            bg={formPanelBg}
             position="sticky"
             top={0}
             zIndex={20}
@@ -562,7 +572,7 @@ const LoginFormContent = observer(() => {
               value={progress}
               size="xs"
               borderRadius="full"
-              colorScheme="blue"
+              colorScheme="brand"
               bg="gray.100"
             />
           </Box>
@@ -589,17 +599,17 @@ const LoginFormContent = observer(() => {
                   size="md"
                   borderRadius="full"
                   onClick={handleStepBack}
-                  bg="gray.50"
-                  _hover={{ bg: "gray.100" }}
+                  bg={backBtnBg}
+                  _hover={{ bg: "var(--color-surface-alt)" }}
                   mt={1.5}
                   flexShrink={0}
                   display={{ base: "none", md: step > 1 ? "flex" : "none" }}
                 />
                 <Box>
-                  <Heading fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em" mb={2}>
+                  <Heading fontSize={{ base: "2xl", md: "3xl", xl: "4xl" }} color={textHeading} fontWeight="800" letterSpacing="-0.02em" mb={2}>
                     {activeStep.title}
                   </Heading>
-                  <Text color="gray.500" fontSize={{ base: "sm", md: "md" }} fontWeight="500">
+                  <Text color={textSub} fontSize={{ base: "sm", md: "md" }} fontWeight="500">
                     {step === 1 ? activeStep.subtitle : `We sent a 6-digit code to ${maskedPhone}.`}
                   </Text>
                 </Box>

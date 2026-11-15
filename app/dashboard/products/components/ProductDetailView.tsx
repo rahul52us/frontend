@@ -429,7 +429,7 @@ export default function ProductDetailView({
               px={3}
               py={1.5}
               borderRadius="full"
-              bgGradient="linear(to-r, blue.500, blue.400)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
               color="white"
               fontSize="11px"
               fontWeight="800"

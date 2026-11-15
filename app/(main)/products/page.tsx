@@ -20,9 +20,7 @@ const Page = observer(() => {
       <HeroSection />
       <CategoryFilter />
 
-      <Box p={4}>
-        <Box h="1px" bg="gray.100" w="100%" />
-      </Box>
+      
 
       <Box>
         <ProductCarousel />

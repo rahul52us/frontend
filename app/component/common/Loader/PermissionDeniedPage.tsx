@@ -88,7 +88,7 @@ import { dashboard } from "../../../config/utils/routes";
 
             <Button
               leftIcon={<FaHome />}
-              colorScheme="teal"
+              colorScheme="brand"
               variant="solid"
               onClick={() => {
                 if (onClick) {

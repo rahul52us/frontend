@@ -502,7 +502,7 @@ const OrdersTab = observer(() => {
         {/* Mobile List */}
         <Grid display={{ base: "grid", lg: "none" }} templateColumns="1fr" gap={3}>
           {orderStore.isLoading ? (
-            <Center py={10}><Spinner size="xl" color="blue.500" /></Center>
+            <Center py={10}><Spinner size="xl" color="var(--color-primary)" /></Center>
           ) : orderStore.companyOrders.length === 0 ? (
             <EmptyState />
           ) : (
@@ -515,7 +515,7 @@ const OrdersTab = observer(() => {
         {/* Desktop Table */}
         <Box display={{ base: "none", lg: "block" }} overflow="hidden" borderRadius="3xl" border="1px solid" borderColor={borderColor} bg={cardBg} boxShadow="sm">
           {orderStore.isLoading ? (
-            <Center py={20}><Spinner size="xl" color="blue.500" /></Center>
+            <Center py={20}><Spinner size="xl" color="var(--color-primary)" /></Center>
           ) : orderStore.companyOrders.length === 0 ? (
             <EmptyState />
           ) : (
@@ -640,7 +640,7 @@ function EmptyState() {
 
   return (
     <Flex direction="column" align="center" justify="center" borderRadius="3xl" border="1px dashed" borderColor={borderColor} bg={useColorModeValue("gray.50", "gray.800")} px={6} py={12} textAlign="center">
-      <Flex h={14} w={14} align="center" justify="center" borderRadius="2xl" bg={useColorModeValue("blue.50", "blue.900")} color="blue.500">
+      <Flex h={14} w={14} align="center" justify="center" borderRadius="2xl" bg={useColorModeValue("blue.50", "blue.900")} color="var(--color-primary)">
         <Icon as={FaRupeeSign} boxSize={6} />
       </Flex>
       <Heading mt={3} fontFamily="heading" fontSize="base" fontWeight="semibold" color={textColor}>

@@ -132,7 +132,7 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
                 {shop.name}
               </Text>
               <HStack spacing={2} flexWrap="wrap">
-                <Badge colorScheme="blue">{shop.companyCode || "No code"}</Badge>
+                <Badge colorScheme="brand">{shop.companyCode || "No code"}</Badge>
                 <Badge colorScheme={getReviewStatusColor(shop.reviewStatus)}>
                   {shop.reviewStatus || "pending"}
                 </Badge>

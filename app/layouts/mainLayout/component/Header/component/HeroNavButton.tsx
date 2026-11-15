@@ -23,7 +23,7 @@ const HeroNavButton: React.FC<HeroNavButtonProps> = ({ onClick }) => {
       px={4}
       h="34px"
       borderRadius="full"
-      bgGradient="linear(to-r, blue.600, purple.600)"
+      bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
       color="white"
       fontWeight="600"
       fontSize="xs"

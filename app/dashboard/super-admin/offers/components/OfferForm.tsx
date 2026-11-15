@@ -166,7 +166,7 @@ const OfferForm: React.FC<OfferFormProps> = ({ isOpen, onClose, initialValues })
               <Box pt={4}>
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorScheme="brand"
                   width="full"
                   isLoading={props.isSubmitting}
                 >

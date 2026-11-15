@@ -213,7 +213,7 @@ const GenerateRows: React.FC<{
           whiteSpace="normal"
           cursor="pointer"
           fontSize="sm"
-          color="blue.400"
+          color="var(--color-secondary)"
           textDecoration="underline"
           {...getSharedCellLayoutProps(column)}
           {...column?.props?.row}

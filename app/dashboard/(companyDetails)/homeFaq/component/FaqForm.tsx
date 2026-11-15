@@ -54,7 +54,7 @@ const homeFaq = observer(({ initialData, onSubmit, isOpen, onClose }: any) => {
           fontSize="lg"
           fontWeight="bold"
           textAlign="center"
-          bgGradient="linear(to-r, blue.400, purple.400)"
+          bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
         >
           {initialData?.username ? "Edit Home FAQ" : "Add Home FAQ"}
         </DrawerHeader>
@@ -166,7 +166,7 @@ const homeFaq = observer(({ initialData, onSubmit, isOpen, onClose }: any) => {
 
                       {/* Add FAQ Button */}
                       <Button
-                        colorScheme="teal"
+                        colorScheme="brand"
                         onClick={() => push({ title: "", paragraph: "" })}
                         size="sm"
                         variant="solid"
@@ -188,7 +188,7 @@ const homeFaq = observer(({ initialData, onSubmit, isOpen, onClose }: any) => {
                   </Button>
                   <Button
                     type="submit"
-                    colorScheme="teal"
+                    colorScheme="brand"
                     isLoading={isSubmitting}
                     loadingText="Submitting"
                     size="lg"

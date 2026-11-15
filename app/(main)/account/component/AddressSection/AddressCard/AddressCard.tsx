@@ -1,3 +1,4 @@
+
 import {
   Badge,
   Box,
@@ -31,48 +32,64 @@ const AddressCard = ({
   handleDelete,
 }: AddressCardProps) => {
   const [isSettingDefault, setIsSettingDefault] = useState(false);
+
   const isDefault = !!address.isDefault;
   const id = address._id || address.id;
 
-  // Theme tokens
+  // Theme tokens - Light mode
   const cardBg = useColorModeValue(
-    isDefault ? "purple.50" : "white",
-    isDefault ? "whiteAlpha.100" : "whiteAlpha.50"
+    "white",
+    "var(--color-surface)"
   );
-  const cardBorder = useColorModeValue(
-    isDefault ? "purple.300" : "gray.200",
-    isDefault ? "purple.300" : "whiteAlpha.200"
-  );
-  const footerBorder = useColorModeValue(
-    isDefault ? "purple.100" : "gray.100",
-    "whiteAlpha.200"
-  );
-  const tileBg = useColorModeValue(
-    isDefault ? "purple.100" : "gray.100",
-    "whiteAlpha.200"
-  );
-  const tileColor = useColorModeValue(
-    isDefault ? "purple.600" : "gray.500",
-    isDefault ? "purple.200" : "gray.300"
-  );
-  const titleColor = useColorModeValue("gray.800", "white");
-  const bodyColor = useColorModeValue("gray.600", "gray.300");
-  const mutedColor = useColorModeValue("gray.500", "gray.400");
-  const actionColor = useColorModeValue("gray.700", "gray.200");
-  const actionHoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
 
-  // Address lines
-  const line1 = address.line1 || address.addressLine1;
-  const line2 = address.line2 || address.addressLine2;
-  const cityLine = [
-    [address.city, address.state].filter(Boolean).join(", "),
-    address.postalCode,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const cardBorder = useColorModeValue(
+    isDefault ? "var(--color-primary)" : "gray.200",
+    "var(--color-border)"
+  );
+
+  const footerBorder = useColorModeValue(
+    "gray.100",
+    "var(--color-border)"
+  );
+
+  const tileBg = useColorModeValue(
+    isDefault ? "rgba(6, 95, 104, 0.07)" : "gray.50",
+    "var(--color-surface-hover)"
+  );
+
+  const tileColor = useColorModeValue(
+    "var(--color-primary)",
+    isDefault ? "brand.300" : "var(--color-primary)"
+  );
+
+  const titleColor = useColorModeValue(
+    "gray.800",
+    "var(--color-text)"
+  );
+
+  const bodyColor = useColorModeValue(
+    "gray.600",
+    "var(--color-text-muted)"
+  );
+
+  const mutedColor = useColorModeValue(
+    "gray.500",
+    "var(--color-text-muted)"
+  );
+
+  const actionColor = useColorModeValue(
+    "gray.600",
+    "var(--color-text)"
+  );
+
+  const actionHoverBg = useColorModeValue(
+    "gray.50",
+    "var(--color-surface-hover)"
+  );
 
   const onSetDefault = async () => {
     setIsSettingDefault(true);
+
     try {
       await handleSetDefault(id);
     } finally {
@@ -80,20 +97,45 @@ const AddressCard = ({
     }
   };
 
-  const divider = <Box w="1px" alignSelf="stretch" bg={footerBorder} />;
+  // Address lines
+  const line1 = address.line1 || address.addressLine1;
+  const line2 = address.line2 || address.addressLine2;
+
+  const cityLine = [
+    [address.city, address.state].filter(Boolean).join(", "),
+    address.postalCode,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const divider = (
+    <Box
+      w="1px"
+      alignSelf="stretch"
+      bg={footerBorder}
+    />
+  );
 
   return (
     <Flex
       direction="column"
       overflow="hidden"
       bg={cardBg}
-      borderWidth={isDefault ? "2px" : "1px"}
+      borderWidth={isDefault ? "1.5px" : "1px"}
       borderColor={cardBorder}
       rounded="2xl"
       minW={0}
+      transition="all 0.2s ease"
+      _hover={{
+        borderColor: isDefault
+          ? "var(--color-primary)"
+          : "gray.300",
+        shadow: "sm",
+      }}
     >
       {/* Body */}
       <Flex gap={3} p={4} flex={1}>
+        {/* Location Icon */}
         <Flex
           boxSize={10}
           flexShrink={0}
@@ -106,14 +148,26 @@ const AddressCard = ({
           <Icon as={FaMapMarkerAlt} boxSize={4} />
         </Flex>
 
+        {/* Address Details */}
         <Box minW={0} flex={1}>
-          <Flex align="center" justify="space-between" gap={2} wrap="wrap">
-            <Text fontWeight="bold" fontSize="md" color={titleColor} noOfLines={1}>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={2}
+            wrap="wrap"
+          >
+            <Text
+              fontWeight="bold"
+              fontSize="md"
+              color={titleColor}
+              noOfLines={1}
+            >
               {address.name}
             </Text>
+
             {isDefault && (
               <Badge
-                colorScheme="purple"
+                colorScheme="brand"
                 variant="solid"
                 rounded="full"
                 px={2.5}
@@ -130,24 +184,45 @@ const AddressCard = ({
             )}
           </Flex>
 
+          {/* Phone */}
           {address.phone && (
-            <Flex align="center" gap={1.5} mt={0.5} color={mutedColor}>
+            <Flex
+              align="center"
+              gap={1.5}
+              mt={0.5}
+              color={mutedColor}
+            >
               <Icon as={FaPhoneAlt} boxSize={2.5} />
-              <Text fontSize="sm">{address.phone}</Text>
+              <Text fontSize="sm">
+                {address.phone}
+              </Text>
             </Flex>
           )}
 
-          <Box mt={2} fontSize="sm" lineHeight="tall" color={bodyColor}>
+          {/* Address */}
+          <Box
+            mt={2}
+            fontSize="sm"
+            lineHeight="tall"
+            color={bodyColor}
+          >
             {line1 && <Text>{line1}</Text>}
             {line2 && <Text>{line2}</Text>}
             {cityLine && <Text>{cityLine}</Text>}
-            {address.country && <Text>{address.country}</Text>}
+            {address.country && (
+              <Text>{address.country}</Text>
+            )}
           </Box>
         </Box>
       </Flex>
 
-      {/* Actions: full-width, 48px-tall tap targets */}
-      <Flex borderTopWidth="1px" borderColor={footerBorder}>
+      {/* Actions */}
+      <Flex
+        borderTopWidth="1px"
+        borderColor={footerBorder}
+        bg={cardBg}
+      >
+        {/* Edit */}
         <Button
           flex={1}
           h={12}
@@ -164,9 +239,11 @@ const AddressCard = ({
           Edit
         </Button>
 
+        {/* Set Default */}
         {!isDefault && (
           <>
             {divider}
+
             <Button
               flex={1}
               h={12}
@@ -175,7 +252,7 @@ const AddressCard = ({
               variant="ghost"
               fontSize="sm"
               fontWeight={600}
-              colorScheme="purple"
+              colorScheme="brand"
               leftIcon={<FaCheckCircle />}
               isLoading={isSettingDefault}
               _hover={{ bg: actionHoverBg }}
@@ -187,6 +264,8 @@ const AddressCard = ({
         )}
 
         {divider}
+
+        {/* Delete */}
         <Button
           flex={1}
           h={12}
@@ -197,6 +276,12 @@ const AddressCard = ({
           fontWeight={600}
           colorScheme="red"
           leftIcon={<FaTrash />}
+          _hover={{
+            bg: useColorModeValue(
+              "red.50",
+              "rgba(229, 62, 62, 0.12)"
+            ),
+          }}
           onClick={() => handleDelete(address)}
         >
           Delete

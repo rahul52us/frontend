@@ -178,7 +178,7 @@ const ColorPickerComponent: React.FC<ColorPickerProps> = ({
                 />
 
                 <Button
-                  colorScheme="teal"
+                  colorScheme="brand"
                   size="md"
                   onClick={handleLightConfirm}
                   width="full"
@@ -225,7 +225,7 @@ const ColorPickerComponent: React.FC<ColorPickerProps> = ({
                 />
 
                 <Button
-                  colorScheme="teal"
+                  colorScheme="brand"
                   size="md"
                   onClick={handleDarkConfirm}
                   width="full"

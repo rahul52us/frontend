@@ -40,23 +40,26 @@ const HeaderNavbar = observer(() => {
           <HeaderProfile />
         </>
       ) : (
-        <IconButton
-          aria-label="Open Sidebar"
-          fontSize="xl"
-          bg={cSurfaceAlt}
-          color={cText}
-          border="1px solid"
-          borderColor={cBorder}
-          _hover={{ color: cAccentStrong, bg: cSurfaceSoft }}
-          _active={{ bg: cSurfaceSoft }}
-          icon={
-            <FaBars
-              cursor="pointer"
-              onClick={() => setOpenMobileSideDrawer(true)}
-            />
-          }
-          borderRadius="12px"
-        />
+        <Flex align="center" gap={2}>
+          <HeaderThemeSwitch />
+          <IconButton
+            aria-label="Open Sidebar"
+            fontSize="xl"
+            bg={cSurfaceAlt}
+            color={cText}
+            border="1px solid"
+            borderColor={cBorder}
+            _hover={{ color: cAccentStrong, bg: cSurfaceSoft }}
+            _active={{ bg: cSurfaceSoft }}
+            icon={
+              <FaBars
+                cursor="pointer"
+                onClick={() => setOpenMobileSideDrawer(true)}
+              />
+            }
+            borderRadius="12px"
+          />
+        </Flex>
       )}
     </Flex>
   );

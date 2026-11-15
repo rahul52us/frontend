@@ -14,6 +14,7 @@ import {
   Image,
   Progress,
   Text,
+  useColorModeValue,
   useDisclosure,
   useToast,
   VStack,
@@ -66,8 +67,8 @@ const DeliveryTruckIllustration = () => (
       <path d="M1 20H13" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" />
       <path d="M6 26H16" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" />
       {/* Top energy rays */}
-      <path d="M60 5L62 1" stroke="#087F8C" strokeWidth="2" strokeLinecap="round" />
-      <path d="M65 8L69 7" stroke="#087F8C" strokeWidth="2" strokeLinecap="round" />
+      <path d="M60 5L62 1" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M65 8L69 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" />
       {/* Truck Cargo Box */}
       <rect x="22" y="8" width="28" height="20" rx="4" fill="#FCA5A5" />
       {/* Truck Cabin */}
@@ -129,7 +130,7 @@ const HouseIllustration = () => (
       {/* Chimney */}
       <rect x="48" y="16" width="4.5" height="8" fill="#B91C1C" rx="1" />
       {/* Door */}
-      <rect x="34" y="37" width="8" height="12" rx="1" fill="#087F8C" />
+      <rect x="34" y="37" width="8" height="12" rx="1" fill="var(--color-primary)" />
       {/* Windows */}
       <rect x="25" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
       <rect x="45" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
@@ -247,11 +248,24 @@ const CartSection = observer(() => {
 
   const isEmpty = cartStore.cartItems.length === 0;
 
+  const cSurface = useColorModeValue("#FFFFFF", "var(--color-surface)");
+  const cSurfaceElevated = useColorModeValue("#FAFBFD", "var(--color-surface-elevated)");
+  const cBorder = useColorModeValue("#E5EAF0", "var(--color-border)");
+  const cBorderLight = useColorModeValue("#F1F5F9", "var(--color-border)");
+  const cText = useColorModeValue("#172033", "var(--color-text-primary)");
+  const cTextMuted = useColorModeValue("#64748B", "var(--color-text-muted)");
+  const cPrimary = "var(--color-primary)";
+  const cPrimaryHover = "var(--color-primary-hover)";
+  const cPrimarySoft = useColorModeValue("#E6F7F3", "rgba(6, 95, 104, 0.2)");
+  const cBannerBg = useColorModeValue("#FFF0F0", "rgba(239, 68, 68, 0.12)");
+  const cBannerBorder = useColorModeValue("#FFD5D5", "rgba(239, 68, 68, 0.25)");
+
   return (
     <Box
-      bg="#FFFFFF"
+      bg={cSurface}
       borderRadius="24px"
-      border="1px solid #E5EAF0"
+      border="1px solid"
+      borderColor={cBorder}
       boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.04)"
       p={{ base: 4, sm: 6, lg: 7 }}
       position="relative"
@@ -263,7 +277,8 @@ const CartSection = observer(() => {
         justify="space-between"
         align="center"
         pb={4}
-        borderBottom="1px solid #E5EAF0"
+        borderBottom="1px solid"
+        borderColor={cBorder}
         flexWrap="wrap"
         gap={3}
       >
@@ -271,11 +286,11 @@ const CartSection = observer(() => {
         <HStack spacing={3} align="center">
           <Flex
             boxSize={{ base: "38px", sm: "44px" }}
-            bg="#E6F7F3"
+            bg={cPrimarySoft}
             borderRadius="12px"
             align="center"
             justify="center"
-            color="#087F8C"
+            color={cPrimary}
             flexShrink={0}
           >
             <Icon as={FiShoppingBag} boxSize={{ base: "18px", sm: "22px" }} />
@@ -285,7 +300,7 @@ const CartSection = observer(() => {
             size="lg"
             fontSize={{ base: "20px", sm: "24px" }}
             fontWeight="800"
-            color="#172033"
+            color={cText}
             letterSpacing="-0.02em"
           >
             My Cart
@@ -293,8 +308,8 @@ const CartSection = observer(() => {
 
           {!isEmpty && (
             <Badge
-              bg="#E6F7F3"
-              color="#087F8C"
+              bg={cPrimarySoft}
+              color={cPrimary}
               borderRadius="full"
               px={3}
               py={1}
@@ -315,7 +330,7 @@ const CartSection = observer(() => {
               size="sm"
               variant="ghost"
               color="#E53E3E"
-              _hover={{ bg: "#FFF0F0", color: "#DC2626" }}
+              _hover={{ bg: cBannerBg, color: "#DC2626" }}
               leftIcon={<Icon as={FiTrash2} boxSize={4} />}
               onClick={() => setIsClearModalOpen(true)}
               fontSize="xs"
@@ -326,16 +341,16 @@ const CartSection = observer(() => {
               Clear Cart
             </Button>
 
-            <Box h="20px" w="1px" bg="#E5EAF0" display={{ base: "none", sm: "block" }} />
+            <Box h="20px" w="1px" bg={cBorder} display={{ base: "none", sm: "block" }} />
 
             <Button
               size="sm"
               variant="outline"
-              borderColor="#087F8C"
-              color="#087F8C"
+              borderColor={cPrimary}
+              color={cPrimary}
               bg="transparent"
               borderRadius="full"
-              _hover={{ bg: "#E6F7F3", borderColor: "#075B6B" }}
+              _hover={{ bg: cPrimarySoft, borderColor: cPrimaryHover }}
               leftIcon={<Icon as={FiShoppingBag} boxSize={3.5} />}
               onClick={() => router.push("/products")}
               fontSize="xs"
@@ -364,26 +379,26 @@ const CartSection = observer(() => {
           <Flex
             boxSize="84px"
             rounded="full"
-            bg="#E6F7F3"
-            color="#087F8C"
+            bg={cPrimarySoft}
+            color={cPrimary}
             align="center"
             justify="center"
             mb={4}
-            boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.25)"
+            boxShadow="0 8px 20px -4px rgba(6, 95, 104, 0.25)"
           >
             <Icon as={FiShoppingBag} boxSize={9} />
           </Flex>
 
-          <Heading size="md" color="#172033" fontWeight="800" mb={1.5}>
+          <Heading size="md" color={cText} fontWeight="800" mb={1.5}>
             Your Cart is Empty
           </Heading>
-          <Text fontSize="sm" color="#64748B" maxW="340px" mb={6} lineHeight="1.5">
+          <Text fontSize="sm" color={cTextMuted} maxW="340px" mb={6} lineHeight="1.5">
             Looks like you haven&apos;t added any items to your cart yet. Explore our
             handpicked catalog and discover amazing deals!
           </Text>
 
           <Button
-            bgGradient="linear(to-r, #087F8C, #075B6B)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
             color="white"
             h="46px"
             px={8}
@@ -391,8 +406,8 @@ const CartSection = observer(() => {
             fontWeight="700"
             fontSize="sm"
             onClick={() => router.push("/products")}
-            boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.4)"
-            _hover={{ bgGradient: "linear(to-r, #07707C, #054855)" }}
+            boxShadow="0 8px 20px -4px rgba(6, 95, 104, 0.4)"
+            _hover={{ opacity: 0.9 }}
             _active={{ transform: "scale(0.98)" }}
           >
             Start Shopping
@@ -417,7 +432,7 @@ const CartSection = observer(() => {
             minH={{ base: "320px", lg: "440px" }}
           >
             {/* Background Shopping Bag Image Anchored at Bottom-Left */}
-            <Box
+            {/* <Box
               position="absolute"
               bottom={0}
               left={0}
@@ -435,14 +450,15 @@ const CartSection = observer(() => {
                 h="auto"
                 objectFit="contain"
               />
-            </Box>
+            </Box> */}
 
             {/* Free Delivery Banner (Foreground) */}
             <Box
               position="relative"
               zIndex={1}
-              bg="#E6F7F3"
-              border="1px solid #B5E9DF"
+              bg={cPrimarySoft}
+              border="1px solid"
+              borderColor={useColorModeValue("#B5E9DF", "rgba(6, 95, 104, 0.4)")}
               borderRadius="16px"
               p={{ base: 3, sm: "12px 18px" }}
             >
@@ -463,7 +479,7 @@ const CartSection = observer(() => {
                   <Text
                     fontSize={{ base: "xs", sm: "13px" }}
                     fontWeight="700"
-                    color="#172033"
+                    color={cText}
                     lineHeight="1.3"
                   >
                     {isFreeDelivery
@@ -482,8 +498,8 @@ const CartSection = observer(() => {
                     value={progressToFree}
                     size="xs"
                     borderRadius="full"
-                    colorScheme="teal"
-                    bg="#D1F2EB"
+                    colorScheme="brand"
+                    bg={useColorModeValue("#D1F2EB", "whiteAlpha.200")}
                   />
                 </Box>
               )}
@@ -509,15 +525,16 @@ const CartSection = observer(() => {
                   return (
                     <Box
                       key={id}
-                      bg="whiteAlpha.400"
+                      bg={cSurfaceElevated}
                       backdropFilter={'auto'}
                       backdropBlur={'10px'}
-                      border="1px solid #E5EAF0"
+                      border="1px solid"
+                      borderColor={cBorderLight}
                       borderRadius="16px"
                       p={{ base: 3.5, sm: 4 }}
                       boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
                       transition="all 0.15s ease"
-                      _hover={{ borderColor: "#CBD5E1" }}
+                      _hover={{ borderColor: cPrimary }}
                     >
                       <Flex
                         align="center"
@@ -531,8 +548,9 @@ const CartSection = observer(() => {
                             boxSize={{ base: "64px", sm: "74px" }}
                             borderRadius="14px"
                             overflow="hidden"
-                            border="1px solid #E5EAF0"
-                            bg="#F8FAFC"
+                            border="1px solid"
+                            borderColor={cBorder}
+                            bg={cSurface}
                             flexShrink={0}
                           >
                             <Image
@@ -550,7 +568,7 @@ const CartSection = observer(() => {
                             <Text
                               fontWeight="700"
                               fontSize={{ base: "sm", sm: "15px" }}
-                              color="#172033"
+                              color={cText}
                               noOfLines={2}
                               lineHeight="1.3"
                             >
@@ -560,7 +578,7 @@ const CartSection = observer(() => {
                             <Text
                               fontWeight="800"
                               fontSize={{ base: "md", sm: "18px" }}
-                              color="#087F8C"
+                              color={cPrimary}
                               mt={1}
                               letterSpacing="-0.01em"
                             >
@@ -584,15 +602,16 @@ const CartSection = observer(() => {
                             size="xs"
                             variant="ghost"
                             color="#94A3B8"
-                            _hover={{ color: "#E53E3E", bg: "#FFF0F0" }}
+                            _hover={{ color: "#E53E3E", bg: cBannerBg }}
                             onClick={() => cartStore.removeFromCart(id)}
                           />
 
                           {/* Mint Quantity Pill Stepper */}
                           <HStack
                             spacing={0}
-                            bg="#E6F7F3"
-                            border="1px solid #B5E9DF"
+                            bg={cPrimarySoft}
+                            border="1px solid"
+                            borderColor={useColorModeValue("#B5E9DF", "rgba(6, 95, 104, 0.4)")}
                             borderRadius="full"
                             h="32px"
                             px={1}
@@ -603,7 +622,7 @@ const CartSection = observer(() => {
                               icon={<Icon as={FiMinus} boxSize={3.5} strokeWidth={3} />}
                               size="xs"
                               variant="ghost"
-                              color="#087F8C"
+                              color={cPrimary}
                               _hover={{ bg: "whiteAlpha.600" }}
                               borderRadius="full"
                               boxSize="24px"
@@ -623,7 +642,7 @@ const CartSection = observer(() => {
                               textAlign="center"
                               fontSize="13px"
                               fontWeight="800"
-                              color="#172033"
+                              color={cText}
                             >
                               {item.quantity}
                             </Text>
@@ -633,7 +652,7 @@ const CartSection = observer(() => {
                               icon={<Icon as={FiPlus} boxSize={3.5} strokeWidth={3} />}
                               size="xs"
                               variant="ghost"
-                              color="#087F8C"
+                              color={cPrimary}
                               _hover={{ bg: "whiteAlpha.600" }}
                               borderRadius="full"
                               boxSize="24px"
@@ -657,8 +676,9 @@ const CartSection = observer(() => {
           <VStack spacing={4} align="stretch">
             {/* 1. Delivery Address Card */}
             <Box
-              bg="#FFFFFF"
-              border="1px solid #E5EAF0"
+              bg={cSurface}
+              border="1px solid"
+              borderColor={cBorder}
               borderRadius="18px"
               p={{ base: 4, sm: "18px" }}
               boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
@@ -666,20 +686,20 @@ const CartSection = observer(() => {
               {/* Header */}
               <Flex justify="space-between" align="center">
                 <HStack spacing={2} align="center">
-                  <Icon as={FaLocationDot} color="#087F8C" boxSize={4} />
-                  <Text fontWeight="700" fontSize="15px" color="#172033">
+                  <Icon as={FaLocationDot} color={cPrimary} boxSize={4} />
+                  <Text fontWeight="700" fontSize="15px" color={cText}>
                     Delivery Address
                   </Text>
                 </HStack>
 
                 <Button
                   variant="unstyled"
-                  color="#087F8C"
+                  color={cPrimary}
                   fontWeight="700"
                   fontSize="13px"
                   h="auto"
                   p={0}
-                  _hover={{ textDecoration: "underline", color: "#075B6B" }}
+                  _hover={{ textDecoration: "underline", color: cPrimaryHover }}
                   onClick={onAddressOpen}
                 >
                   Change
@@ -691,8 +711,9 @@ const CartSection = observer(() => {
               (currentAddress.addressLine1 || currentAddress.line1) ? (
                 <Box
                   mt={3}
-                  bg="#FFF0F0"
-                  border="1px solid #FFD5D5"
+                  bg={cBannerBg}
+                  border="1px solid"
+                  borderColor={cBannerBorder}
                   borderRadius="14px"
                   p="14px"
                   position="relative"
@@ -705,7 +726,7 @@ const CartSection = observer(() => {
                     {/* Top: Red House Icon + Label + DEFAULT badge */}
                     <HStack spacing={1.5} align="center" mb={1}>
                       <Icon as={FaHouse} color="#E53E3E" boxSize={3} />
-                      <Text fontWeight="700" fontSize="13px" color="#172033">
+                      <Text fontWeight="700" fontSize="13px" color={cText}>
                         {currentAddress.name || "Home"}
                       </Text>
                       {currentAddress.isDefault !== false && (
@@ -727,7 +748,7 @@ const CartSection = observer(() => {
                     {/* Address Text */}
                     <Text
                       fontSize="12px"
-                      color="#64748B"
+                      color={cTextMuted}
                       lineHeight="1.45"
                       noOfLines={2}
                       mb={1}
@@ -745,7 +766,7 @@ const CartSection = observer(() => {
 
                     {/* Phone Number */}
                     {currentAddress.phone && (
-                      <HStack spacing={1.5} color="#64748B" fontSize="12px" align="center">
+                      <HStack spacing={1.5} color={cTextMuted} fontSize="12px" align="center">
                         <Icon as={FaPhone} boxSize={2.5} />
                         <Text>Phone: {currentAddress.phone}</Text>
                       </HStack>
@@ -757,14 +778,15 @@ const CartSection = observer(() => {
                   mt={3}
                   w="full"
                   variant="outline"
-                  borderColor="#B5E9DF"
-                  color="#087F8C"
-                  bg="#E6F7F3"
+                  borderColor={cPrimary}
+                  color={cPrimary}
+                  bg={cPrimarySoft}
                   borderRadius="14px"
                   h="42px"
                   leftIcon={<Icon as={FaPlus} />}
                   fontSize="xs"
                   fontWeight="700"
+                  _hover={{ bg: cPrimarySoft, borderColor: cPrimaryHover }}
                   onClick={onAddressOpen}
                 >
                   Add Delivery Address
@@ -774,16 +796,17 @@ const CartSection = observer(() => {
 
             {/* 2. Order Summary Card */}
             <Box
-              bg="#FFFFFF"
-              border="1px solid #E5EAF0"
+              bg={cSurface}
+              border="1px solid"
+              borderColor={cBorder}
               borderRadius="18px"
               p={{ base: 4, sm: "18px" }}
               boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
             >
               {/* Header */}
               <HStack spacing={2} align="center" mb={3.5}>
-                <Icon as={IoReceiptOutline} color="#087F8C" boxSize={4.5} />
-                <Text fontWeight="700" fontSize="15px" color="#172033">
+                <Icon as={IoReceiptOutline} color={cPrimary} boxSize={4.5} />
+                <Text fontWeight="700" fontSize="15px" color={cText}>
                   Order Summary
                 </Text>
               </HStack>
@@ -791,22 +814,22 @@ const CartSection = observer(() => {
               {/* Rows */}
               <VStack spacing={2.5} align="stretch">
                 <Flex justify="space-between" align="center">
-                  <Text fontSize="13px" color="#64748B">
+                  <Text fontSize="13px" color={cTextMuted}>
                     Items Subtotal
                   </Text>
-                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                  <Text fontSize="15px" fontWeight="700" color={cText}>
                     ₹{subtotal}
                   </Text>
                 </Flex>
 
                 <Flex justify="space-between" align="center">
-                  <Text fontSize="13px" color="#64748B">
+                  <Text fontSize="13px" color={cTextMuted}>
                     Delivery Fee
                   </Text>
                   <Text
                     fontSize="13px"
                     fontWeight="800"
-                    color={isFreeDelivery ? "#159447" : "#172033"}
+                    color={isFreeDelivery ? "#159447" : cText}
                   >
                     {isFreeDelivery ? "FREE" : `₹${deliveryFee}`}
                   </Text>
@@ -815,19 +838,19 @@ const CartSection = observer(() => {
 
               {/* Light Mint Total Amount Box */}
               <Box
-                bg="#E6F7F3"
+                bg={cPrimarySoft}
                 borderRadius="12px"
                 p="12px 16px"
                 my={3.5}
               >
                 <Flex justify="space-between" align="center">
-                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                  <Text fontSize="15px" fontWeight="700" color={cText}>
                     Total Amount
                   </Text>
                   <Text
                     fontSize="20px"
                     fontWeight="800"
-                    color="#087F8C"
+                    color={cPrimary}
                     letterSpacing="-0.02em"
                   >
                     ₹{grandTotal}
@@ -839,7 +862,7 @@ const CartSection = observer(() => {
               <Button
                 w="full"
                 h="50px"
-                bgGradient="linear(to-r, #087F8C, #075B6B)"
+                bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                 color="white"
                 borderRadius="14px"
                 fontWeight="700"
@@ -847,10 +870,10 @@ const CartSection = observer(() => {
                 leftIcon={<Icon as={FiLock} boxSize={4} />}
                 rightIcon={<Icon as={FiArrowRight} boxSize={4} />}
                 onClick={() => router.push("/checkout")}
-                boxShadow="0 8px 20px -4px rgba(8, 127, 140, 0.4)"
+                boxShadow="0 8px 20px -4px rgba(6, 95, 104, 0.4)"
                 _hover={{
-                  bgGradient: "linear(to-r, #07707C, #054855)",
-                  boxShadow: "0 10px 24px -4px rgba(8, 127, 140, 0.5)",
+                  opacity: 0.9,
+                  boxShadow: "0 10px 24px -4px rgba(6, 95, 104, 0.5)",
                 }}
                 _active={{ transform: "scale(0.99)" }}
                 transition="all 0.15s ease"
@@ -859,7 +882,7 @@ const CartSection = observer(() => {
               </Button>
 
               {/* Divider below button */}
-              <Divider my={3.5} borderColor="#E5EAF0" />
+              <Divider my={3.5} borderColor={cBorder} />
 
               {/* Trust Indicators Row */}
               <Flex
@@ -870,22 +893,22 @@ const CartSection = observer(() => {
                 flexWrap="wrap"
               >
                 <HStack spacing={1.5} align="center">
-                  <Icon as={FiShield} color="#087F8C" boxSize={3.5} />
-                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                  <Icon as={FiShield} color={cPrimary} boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color={cTextMuted} lineHeight="1.2">
                     100% Secure Payments
                   </Text>
                 </HStack>
 
                 <HStack spacing={1.5} align="center">
-                  <Icon as={FiRotateCcw} color="#087F8C" boxSize={3.5} />
-                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                  <Icon as={FiRotateCcw} color={cPrimary} boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color={cTextMuted} lineHeight="1.2">
                     Easy Returns
                   </Text>
                 </HStack>
 
                 <HStack spacing={1.5} align="center">
-                  <Icon as={FiHeadphones} color="#087F8C" boxSize={3.5} />
-                  <Text fontSize="11px" fontWeight="600" color="#64748B" lineHeight="1.2">
+                  <Icon as={FiHeadphones} color={cPrimary} boxSize={3.5} />
+                  <Text fontSize="11px" fontWeight="600" color={cTextMuted} lineHeight="1.2">
                     24/7 Support
                   </Text>
                 </HStack>

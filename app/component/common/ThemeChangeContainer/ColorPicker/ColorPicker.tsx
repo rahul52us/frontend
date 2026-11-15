@@ -35,7 +35,7 @@ const ColorPickerComponent = observer(() => {
     <>
       <Button
         onClick={isOpen ? onClose : onOpen}
-        colorScheme="teal"
+        colorScheme="brand"
         size="sm"
         fontWeight="normal"
       >

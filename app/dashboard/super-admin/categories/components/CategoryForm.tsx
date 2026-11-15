@@ -441,7 +441,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
                             <Box pt={4}>
                                 <Button
                                     type="submit"
-                                    colorScheme="blue"
+                                    colorScheme="brand"
                                     width="full"
                                     isLoading={props.isSubmitting}
                                 >

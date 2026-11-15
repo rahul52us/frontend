@@ -64,7 +64,7 @@ function FormModel({
               <Button variant="outline" onClick={close} colorScheme="gray">
                 Cancel
               </Button>
-              <Button colorScheme="blue" onClick={() => {}}>
+              <Button colorScheme="brand" onClick={() => {}}>
                 Submit
               </Button>
             </Flex>

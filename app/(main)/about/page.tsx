@@ -97,7 +97,7 @@ const categories: { label: string; icon: IconType; color: string }[] = [
   { label: 'Beauty & Salons', icon: FiScissors, color: 'purple.500' },
   { label: 'Home & Living', icon: FiHome, color: 'teal.500' },
   { label: 'Pharmacy', icon: FiPlusSquare, color: 'red.500' },
-  { label: 'Repairs & Services', icon: FiTool, color: 'gray.600' },
+  { label: 'Repairs & Services', icon: FiTool, color: 'var(--color-primary)' },
   { label: 'Books & Stationery', icon: FiBook, color: 'cyan.600' },
 ]
 
@@ -271,7 +271,7 @@ const GradientText = ({ children }: { children: ReactNode }) => {
   return (
     <Box
       as="span"
-      bgGradient="linear(to-r, #7C3AED, #6366F1, #2563EB, #7C3AED)"
+      bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
       bgClip="text"
       backgroundSize="200% auto"
       animation={anim(`${shimmer} 6s linear infinite`)}
@@ -282,7 +282,7 @@ const GradientText = ({ children }: { children: ReactNode }) => {
 }
 
 const Eyebrow = ({ children }: { children: ReactNode }) => (
-  <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="purple.500">
+  <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="var(--color-primary)">
     {children}
   </Text>
 )
@@ -290,11 +290,11 @@ const Eyebrow = ({ children }: { children: ReactNode }) => (
 const SectionHeading = ({ eyebrow, title, sub }: { eyebrow: string; title: ReactNode; sub?: string }) => (
   <VStack spacing={3} textAlign="center" maxW="2xl" mx="auto">
     <Eyebrow>{eyebrow}</Eyebrow>
-    <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+    <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="var(--color-text)">
       {title}
     </Heading>
     {sub && (
-      <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }}>
+      <Text color="var(--color-text-muted)" fontSize={{ base: 'sm', md: 'lg' }}>
         {sub}
       </Text>
     )}
@@ -302,17 +302,17 @@ const SectionHeading = ({ eyebrow, title, sub }: { eyebrow: string; title: React
 )
 
 const cardStyle: BoxProps = {
-  bg: 'white',
+  bg: 'var(--color-surface)',
   border: '1px solid',
-  borderColor: 'gray.100',
+  borderColor: 'var(--color-border)',
   borderRadius: '2xl',
   p: { base: 4, md: 6 },
-  boxShadow: '0 2px 10px rgba(79, 70, 229, 0.05)',
+  boxShadow: 'sm',
   transition: 'all 0.3s ease',
   _hover: {
     transform: 'translateY(-4px)',
-    boxShadow: '0 16px 32px rgba(124, 58, 237, 0.12)',
-    borderColor: 'purple.200',
+    boxShadow: 'lg',
+    borderColor: 'var(--color-primary)',
   },
 }
 
@@ -334,10 +334,10 @@ const FeatureCard = ({
       <Circle size={{ base: '40px', md: '48px' }} bgGradient={grad} color="white" mb={3} boxShadow="0 8px 18px rgba(79, 70, 229, 0.25)">
         <Icon as={icon} boxSize={{ base: 5, md: 6 }} />
       </Circle>
-      <Heading fontSize={{ base: 'sm', md: 'lg' }} fontWeight="800" mb={1.5} color="gray.800">
+      <Heading fontSize={{ base: 'sm', md: 'lg' }} fontWeight="800" mb={1.5} color="var(--color-text)">
         {title}
       </Heading>
-      <Text fontSize={{ base: 'xs', md: 'sm' }} color="gray.600" lineHeight="1.6">
+      <Text fontSize={{ base: 'xs', md: 'sm' }} color="var(--color-text-muted)" lineHeight="1.6">
         {desc}
       </Text>
     </Box>
@@ -358,9 +358,9 @@ const FloatChip = ({
       zIndex={2}
       align="center"
       gap={1.5}
-      bg="white"
+      bg="var(--color-surface)"
       border="1px solid"
-      borderColor="purple.100"
+      borderColor="var(--color-border)"
       borderRadius="full"
       px={3}
       py={1.5}
@@ -369,7 +369,7 @@ const FloatChip = ({
       {...rest}
     >
       <Icon as={icon} color={iconColor} boxSize={3.5} />
-      <Text fontSize="12px" fontWeight="700" color="gray.700" whiteSpace="nowrap">
+      <Text fontSize="12px" fontWeight="700" color="var(--color-text)" whiteSpace="nowrap">
         {label}
       </Text>
     </Flex>
@@ -384,16 +384,16 @@ export default function AboutPage() {
   const steps = journeys[tab]
 
   return (
-    <Box bg="white" overflow="hidden">
+    <Box bg="var(--color-bg)" color="var(--color-text)" overflow="hidden">
       {/* ================= HERO ================= */}
-      <Box position="relative" overflow="hidden" bgGradient="linear(to-b, #F5F3FF 0%, #FFFFFF 100%)">
+      <Box position="relative" overflow="hidden" bg="var(--color-bg)">
         {/* dot grid */}
         <Box
           position="absolute"
           inset={0}
           pointerEvents="none"
           opacity={0.5}
-          backgroundImage="radial-gradient(#C4B5FD 1.2px, transparent 1.2px)"
+          backgroundImage="radial-gradient(var(--color-border) 1.2px, transparent 1.2px)"
           backgroundSize="24px 24px"
           sx={{
             maskImage: 'radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%)',
@@ -440,9 +440,9 @@ export default function AboutPage() {
               <Flex
                 align="center"
                 gap={2}
-                bg="white"
+                bg="var(--color-surface)"
                 border="1px solid"
-                borderColor="purple.100"
+                borderColor="var(--color-border)"
                 borderRadius="full"
                 px={3}
                 py={1}
@@ -453,7 +453,7 @@ export default function AboutPage() {
                   <Box position="absolute" inset={0} borderRadius="full" bg="green.400" animation={anim(`${pulseRing} 1.8s ease-out infinite`)} />
                   <Box position="absolute" inset={0} borderRadius="full" bg="green.500" />
                 </Box>
-                <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="purple.700">
+                <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="var(--color-primary)">
                   Built for local businesses
                 </Text>
               </Flex>
@@ -463,7 +463,7 @@ export default function AboutPage() {
                 fontWeight="900"
                 lineHeight={{ base: '1.15', md: '1.08' }}
                 letterSpacing="-0.03em"
-                color="gray.900"
+                color="var(--color-text)"
                 animation={anim(`${fadeSlideUp} 0.8s ${ease} 0.1s both`)}
               >
                 Shop local.
@@ -472,7 +472,7 @@ export default function AboutPage() {
               </Heading>
 
               <Text
-                color="gray.600"
+                color="var(--color-text-muted)"
                 fontSize={{ base: '13px', sm: 'sm', md: 'lg' }}
                 maxW="lg"
                 lineHeight={{ base: '1.55', md: '1.7' }}
@@ -496,7 +496,7 @@ export default function AboutPage() {
                   fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                   fontWeight="700"
                   rightIcon={<FiArrowRight size={14} />}
-                  bgGradient="linear(to-r, #7C3AED, #6366F1, #7C3AED)"
+                  bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
                   backgroundSize="200% auto"
                   boxShadow="0 8px 20px rgba(124, 58, 237, 0.3)"
                   transition="all 0.25s"
@@ -515,11 +515,11 @@ export default function AboutPage() {
                   h={{ base: '42px', md: '50px' }}
                   px={{ base: 4, sm: 7 }}
                   borderRadius="full"
-                  bg="white"
-                  color="purple.700"
+                  bg="var(--color-surface)"
+                  color="var(--color-primary)"
                   fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                   border="1px solid"
-                  borderColor="purple.200"
+                  borderColor="var(--color-border)"
                   fontWeight="700"
                   transition="all 0.25s"
                   _hover={{ transform: 'translateY(-2px)', bg: 'purple.50' }}
@@ -538,20 +538,20 @@ export default function AboutPage() {
                 flexWrap="wrap"
                 justify={{ base: 'center', lg: 'flex-start' }}
               >
-                <HStack spacing={1.5} bg="white" px={2.5} py={1} rounded="full" border="1px solid" borderColor="purple.100" boxShadow="xs">
+                <HStack spacing={1.5} bg="var(--color-surface)" px={2.5} py={1} rounded="full" border="1px solid" borderColor="var(--color-border)" boxShadow="xs">
                   <HStack spacing={0.5}>
                     {[...Array(5)].map((_, i) => (
                       <Icon key={i} as={FaStar} color="yellow.400" boxSize={2.5} />
                     ))}
                   </HStack>
-                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="gray.700">
+                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="var(--color-text)">
                     4.9 (20K+ shoppers)
                   </Text>
                 </HStack>
 
-                <HStack spacing={1.5} bg="white" px={2.5} py={1} rounded="full" border="1px solid" borderColor="purple.100" boxShadow="xs">
-                  <Icon as={FiShoppingBag} color="purple.600" boxSize={3} />
-                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="gray.700">
+                <HStack spacing={1.5} bg="var(--color-surface)" px={2.5} py={1} rounded="full" border="1px solid" borderColor="var(--color-border)" boxShadow="xs">
+                  <Icon as={FiShoppingBag} color="var(--color-primary)" boxSize={3} />
+                  <Text fontSize={{ base: '11px', md: 'xs' }} fontWeight="700" color="var(--color-text)">
                     500+ Local Shops
                   </Text>
                 </HStack>
@@ -567,9 +567,9 @@ export default function AboutPage() {
               mt={1}
             >
               <Box
-                bg="white"
+                bg="var(--color-surface)"
                 border="1px solid"
-                borderColor="purple.100"
+                borderColor="var(--color-border)"
                 borderRadius="2xl"
                 p={3}
                 boxShadow="0 4px 16px rgba(124, 58, 237, 0.06)"
@@ -582,10 +582,10 @@ export default function AboutPage() {
                       <Box position="absolute" inset={0} borderRadius="full" bg="purple.400" animation={anim(`${pulseRing} 1.8s ease-out infinite`)} />
                       <Box position="absolute" inset={0} borderRadius="full" bg="purple.600" />
                     </Box>
-                    <Text fontSize="xs" fontWeight="800" color="gray.800">
+                    <Text fontSize="xs" fontWeight="800" color="var(--color-text)">
                       Nearby Shops
                     </Text>
-                    <Badge colorScheme="purple" fontSize="9px" rounded="full" px={1.5} py={0.2}>
+                    <Badge colorScheme="brand" fontSize="9px" rounded="full" px={1.5} py={0.2}>
                       within 3 km
                     </Badge>
                   </HStack>
@@ -593,7 +593,7 @@ export default function AboutPage() {
                   <Button
                     variant="link"
                     size="xs"
-                    color="purple.600"
+                    color="var(--color-primary)"
                     fontWeight="700"
                     rightIcon={<FiArrowRight size={10} />}
                     onClick={() => router.push(ROUTES.shops)}
@@ -610,9 +610,9 @@ export default function AboutPage() {
                       p={2}
                       align="center"
                       gap={2.5}
-                      bg="gray.50"
+                      bg="var(--color-surface)"
                       border="1px solid"
-                      borderColor="gray.100"
+                      borderColor="var(--color-border)"
                       borderRadius="xl"
                       as="button"
                       onClick={() => router.push(ROUTES.shops)}
@@ -624,10 +624,10 @@ export default function AboutPage() {
                         <Icon as={s.icon} boxSize={3.5} />
                       </Circle>
                       <Box minW={0} flex={1}>
-                        <Text fontSize="11px" fontWeight="700" color="gray.800" noOfLines={1}>
+                        <Text fontSize="11px" fontWeight="700" color="var(--color-text)" noOfLines={1}>
                           {s.name}
                         </Text>
-                        <Text fontSize="9px" color="gray.500" noOfLines={1}>
+                        <Text fontSize="9px" color="var(--color-text-muted)" noOfLines={1}>
                           {s.meta}
                         </Text>
                       </Box>
@@ -642,18 +642,18 @@ export default function AboutPage() {
                   mt={2}
                   px={2.5}
                   py={1.5}
-                  bg="purple.50"
+                  bg="var(--color-surface-hover)"
                   borderRadius="lg"
                   align="center"
                   justify="space-between"
                 >
                   <HStack spacing={1.5}>
-                    <Icon as={FiZap} color="purple.600" boxSize={3} />
-                    <Text fontSize="10px" fontWeight="700" color="purple.800">
+                    <Icon as={FiZap} color="var(--color-primary)" boxSize={3} />
+                    <Text fontSize="10px" fontWeight="700" color="var(--color-primary)">
                       Same-day local doorstep delivery
                     </Text>
                   </HStack>
-                  <Text fontSize="9px" fontWeight="700" color="purple.600">
+                  <Text fontSize="9px" fontWeight="700" color="var(--color-primary)">
                     0% markup
                   </Text>
                 </Flex>
@@ -680,8 +680,8 @@ export default function AboutPage() {
                 animation={anim(`${float} 7s ease-in-out infinite`)}
               >
                 {/* side buttons */}
-                <Box position="absolute" left="-9px" top="70px" w="3px" h="28px" bg="gray.900" borderRadius="full" />
-                <Box position="absolute" right="-9px" top="100px" w="3px" h="46px" bg="gray.900" borderRadius="full" />
+                <Box position="absolute" left="-9px" top="70px" w="3px" h="28px" bg="var(--color-text)" borderRadius="full" />
+                <Box position="absolute" right="-9px" top="100px" w="3px" h="46px" bg="var(--color-text)" borderRadius="full" />
 
                 {/* phone frame */}
                 <Box
@@ -689,31 +689,31 @@ export default function AboutPage() {
                   display="flex"
                   flexDirection="column"
                   aspectRatio="7 / 12"
-                  bg="white"
+                  bg="var(--color-surface)"
                   border="7px solid"
-                  borderColor="gray.900"
+                  borderColor="var(--color-border)"
                   borderRadius="40px"
                   overflow="hidden"
                   boxShadow="0 30px 60px rgba(79, 70, 229, 0.28)"
                 >
                   {/* status bar + notch */}
                   <Flex align="center" justify="space-between" px={5} pt="10px" h="30px" flexShrink={0}>
-                    <Text fontSize="10px" fontWeight="700" color="gray.800">
+                    <Text fontSize="10px" fontWeight="700" color="var(--color-text)">
                       9:41
                     </Text>
-                    <Box position="absolute" top="7px" left="50%" transform="translateX(-50%)" w="62px" h="18px" bg="gray.900" borderRadius="full" />
-                    <Box w="14px" h="7px" borderRadius="2px" border="1.5px solid" borderColor="gray.800" position="relative">
-                      <Box position="absolute" inset="1px" right="3px" bg="gray.800" borderRadius="1px" />
+                    <Box position="absolute" top="7px" left="50%" transform="translateX(-50%)" w="62px" h="18px" bg="var(--color-text)" borderRadius="full" />
+                    <Box w="14px" h="7px" borderRadius="2px" border="1.5px solid" borderColor="var(--color-text)" position="relative">
+                      <Box position="absolute" inset="1px" right="3px" bg="var(--color-text)" borderRadius="1px" />
                     </Box>
                   </Flex>
 
                   {/* screen content */}
                   <Flex direction="column" flex={1} minH={0} px={3} pt={2}>
                     <HStack justify="space-between" mb={2.5} flexShrink={0}>
-                      <Text fontSize="13px" fontWeight="800" color="gray.800">
+                      <Text fontSize="13px" fontWeight="800" color="var(--color-text)">
                         Shops near you
                       </Text>
-                      <HStack spacing={1} color="purple.500">
+                      <HStack spacing={1} color="var(--color-primary)">
                         <Icon as={FiMapPin} boxSize={3} />
                         <Text fontSize="10px" fontWeight="700">
                           5 km
@@ -721,9 +721,9 @@ export default function AboutPage() {
                       </HStack>
                     </HStack>
 
-                    <HStack bg="gray.100" borderRadius="full" px={3} h="30px" spacing={2} mb={2.5} flexShrink={0}>
-                      <Icon as={FiSearch} boxSize={3} color="gray.400" />
-                      <Text fontSize="11px" color="gray.400">
+                    <HStack bg="var(--color-surface-hover)" borderRadius="full" px={3} h="30px" spacing={2} mb={2.5} flexShrink={0}>
+                      <Icon as={FiSearch} boxSize={3} color="var(--color-text-muted)" />
+                      <Text fontSize="11px" color="var(--color-text-muted)">
                         Search shops
                       </Text>
                     </HStack>
@@ -737,8 +737,8 @@ export default function AboutPage() {
                           borderRadius="full"
                           fontSize="10px"
                           fontWeight="700"
-                          bg={i === 0 ? 'purple.500' : 'gray.100'}
-                          color={i === 0 ? 'white' : 'gray.600'}
+                          bg={i === 0 ? 'var(--color-primary)' : 'var(--color-surface-hover)'}
+                          color={i === 0 ? 'white' : 'var(--color-text-muted)'}
                         >
                           {c}
                         </Box>
@@ -755,7 +755,7 @@ export default function AboutPage() {
                       borderRadius="xl"
                       color="white"
                       flexShrink={0}
-                      bgGradient="linear(to-r, #7C3AED, #6366F1)"
+                      bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                     >
                       <Box>
                         <Text fontSize="9px" fontWeight="700" opacity={0.85} textTransform="uppercase" letterSpacing="0.08em">
@@ -779,7 +779,7 @@ export default function AboutPage() {
                             p={2}
                             spacing={2.5}
                             border="1px solid"
-                            borderColor="gray.100"
+                            borderColor="var(--color-border)"
                             borderRadius="xl"
                             animation={anim(`${fadeSlideUp} 0.6s ${ease} ${0.5 + i * 0.15}s both`)}
                           >
@@ -787,10 +787,10 @@ export default function AboutPage() {
                               <Icon as={s.icon} boxSize={4} />
                             </Circle>
                             <VStack align="flex-start" spacing={0} flex={1} minW={0}>
-                              <Text fontSize="12px" fontWeight="700" color="gray.800" noOfLines={1}>
+                              <Text fontSize="12px" fontWeight="700" color="var(--color-text)" noOfLines={1}>
                                 {s.name}
                               </Text>
-                              <Text fontSize="10px" color="gray.500" noOfLines={1}>
+                              <Text fontSize="10px" color="var(--color-text-muted)" noOfLines={1}>
                                 {s.meta}
                               </Text>
                             </VStack>
@@ -800,12 +800,12 @@ export default function AboutPage() {
                           </HStack>
                         ))}
                       </VStack>
-                      <Box position="absolute" bottom={0} left={0} right={0} h="32px" bgGradient="linear(to-t, white, transparent)" pointerEvents="none" />
+                      <Box position="absolute" bottom={0} left={0} right={0} h="32px" bgGradient="linear(to-t, var(--color-surface), transparent)" pointerEvents="none" />
                     </Box>
                   </Flex>
 
                   {/* bottom tab bar */}
-                  <Box flexShrink={0} borderTop="1px solid" borderColor="gray.100" bg="white">
+                  <Box flexShrink={0} borderTop="1px solid" borderColor="var(--color-border)" bg="var(--color-surface)">
                     <HStack justify="space-around" px={3} pt={2.5}>
                       {[
                         { icon: FiHome, active: true },
@@ -813,10 +813,10 @@ export default function AboutPage() {
                         { icon: FiHeart, active: false },
                         { icon: FiShoppingBag, active: false },
                       ].map((t, i) => (
-                        <Icon key={i} as={t.icon} boxSize={4} color={t.active ? 'purple.500' : 'gray.400'} />
+                        <Icon key={i} as={t.icon} boxSize={4} color={t.active ? 'var(--color-primary)' : 'var(--color-text-muted)'} />
                       ))}
                     </HStack>
-                    <Box w="64px" h="4px" bg="gray.800" borderRadius="full" mx="auto" mt={2.5} mb={1.5} />
+                    <Box w="64px" h="4px" bg="var(--color-border)" borderRadius="full" mx="auto" mt={2.5} mb={1.5} />
                   </Box>
                 </Box>
               </Box>
@@ -827,8 +827,8 @@ export default function AboutPage() {
       </Box>
 
       {/* ================= CATEGORY MARQUEE ================= */}
-      <Box borderY="1px solid" borderColor="purple.50" bg="white" py={4} overflow="hidden">
-        <Text textAlign="center" fontSize="11px" fontWeight="700" letterSpacing="0.12em" textTransform="uppercase" color="gray.500" mb={3}>
+      <Box borderY="1px solid" borderColor="var(--color-border)" bg="var(--color-surface)" py={4} overflow="hidden">
+        <Text textAlign="center" fontSize="11px" fontWeight="700" letterSpacing="0.12em" textTransform="uppercase" color="var(--color-text-muted)" mb={3}>
           Shops across every category
         </Text>
         <Box
@@ -852,16 +852,16 @@ export default function AboutPage() {
                 spacing={2}
                 px={4}
                 py={2}
-                bg="white"
+                bg="var(--color-surface)"
                 border="1px solid"
-                borderColor="gray.200"
+                borderColor="var(--color-border)"
                 borderRadius="full"
                 flexShrink={0}
                 transition="all 0.2s"
                 _hover={{ borderColor: 'purple.300', transform: 'translateY(-2px)' }}
               >
                 <Icon as={c.icon} color={c.color} boxSize={4} />
-                <Text fontSize="13px" fontWeight="700" color="gray.700" whiteSpace="nowrap">
+                <Text fontSize="13px" fontWeight="700" color="var(--color-text)" whiteSpace="nowrap">
                   {c.label}
                 </Text>
               </HStack>
@@ -893,12 +893,12 @@ export default function AboutPage() {
               direction={{ base: 'column', md: 'row' }}
               align="center"
               gap={{ base: 4, md: 8 }}
-              bgGradient="linear(to-br, #F5F3FF, #FFFFFF)"
+              bg="var(--color-surface)"
               overflow="hidden"
             >
               <Box position="relative" w="150px" h="150px" flexShrink={0}>
                 {['0px', '25px', '50px'].map((inset) => (
-                  <Box key={inset} position="absolute" inset={inset} borderRadius="full" border="1.5px solid" borderColor="purple.200" />
+                  <Box key={inset} position="absolute" inset={inset} borderRadius="full" border="1.5px solid" borderColor="var(--color-border)" />
                 ))}
                 <Box
                   position="absolute"
@@ -913,7 +913,7 @@ export default function AboutPage() {
                   top="50%"
                   left="50%"
                   transform="translate(-50%, -50%)"
-                  bgGradient="linear(to-br, #7C3AED, #6366F1)"
+                  bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
                   color="white"
                   boxShadow="0 8px 18px rgba(124, 58, 237, 0.4)"
                 >
@@ -939,10 +939,10 @@ export default function AboutPage() {
               </Box>
 
               <Box textAlign={{ base: 'center', md: 'left' }}>
-                <Heading fontSize={{ base: 'lg', md: '2xl' }} fontWeight="800" color="gray.800" mb={2}>
+                <Heading fontSize={{ base: 'lg', md: '2xl' }} fontWeight="800" color="var(--color-text)" mb={2}>
                   Discover shops right around you
                 </Heading>
-                <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600" lineHeight="1.7">
+                <Text fontSize={{ base: 'sm', md: 'md' }} color="var(--color-text-muted)" lineHeight="1.7">
                   Pick your radius from 2 km to 50 km and see every shop nearby: groceries, salons, cafés, repairs and more.
                 </Text>
               </Box>
@@ -981,7 +981,7 @@ export default function AboutPage() {
       </Container>
 
       {/* ================= HOW IT WORKS ================= */}
-      <Box bg="gray.50" borderY="1px solid" borderColor="gray.100">
+      <Box bg="var(--color-surface)" borderY="1px solid" borderColor="var(--color-border)">
         <Container maxW="1200px" px={pagePx} py={{ base: 12, md: 20 }}>
           <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 8, lg: 16 }} alignItems="start">
             <Reveal>
@@ -993,10 +993,10 @@ export default function AboutPage() {
                 top={{ lg: '120px' }}
               >
                 <Eyebrow>Simple process</Eyebrow>
-                <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+                <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="var(--color-text)">
                   Up and running in <GradientText>3 easy steps</GradientText>
                 </Heading>
-                <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }} maxW="md">
+                <Text color="var(--color-text-muted)" fontSize={{ base: 'sm', md: 'lg' }} maxW="md">
                   Whether you’re here to shop or to sell, getting started takes just a few minutes.
                 </Text>
 
@@ -1005,9 +1005,9 @@ export default function AboutPage() {
                   position="relative"
                   w="full"
                   maxW="360px"
-                  bg="white"
+                  bg="var(--color-surface)"
                   border="1px solid"
-                  borderColor="gray.200"
+                  borderColor="var(--color-border)"
                   borderRadius="full"
                   p="4px"
                   boxShadow="sm"
@@ -1020,7 +1020,7 @@ export default function AboutPage() {
                     left="4px"
                     w="calc(50% - 4px)"
                     borderRadius="full"
-                    bgGradient="linear(to-r, #7C3AED, #6366F1)"
+                    bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                     boxShadow="0 6px 14px rgba(124, 58, 237, 0.35)"
                     transform={tab === 'vendor' ? 'translateX(100%)' : 'translateX(0)'}
                     transition={`transform 0.4s ${ease}`}
@@ -1036,7 +1036,7 @@ export default function AboutPage() {
                       fontSize="sm"
                       fontWeight="700"
                       borderRadius="full"
-                      color={tab === key ? 'white' : 'gray.600'}
+                      color={tab === key ? 'white' : 'var(--color-text-muted)'}
                       transition="color 0.25s"
                       onClick={() => setTab(key)}
                     >
@@ -1060,7 +1060,7 @@ export default function AboutPage() {
                     <Circle
                       size="46px"
                       position="relative"
-                      bgGradient="linear(to-br, #7C3AED, #6366F1)"
+                      bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
                       color="white"
                       boxShadow="0 8px 18px rgba(124, 58, 237, 0.3)"
                     >
@@ -1070,8 +1070,8 @@ export default function AboutPage() {
                         position="absolute"
                         top="-4px"
                         right="-4px"
-                        bg="white"
-                        color="purple.600"
+                        bg="var(--color-surface)"
+                        color="var(--color-primary)"
                         fontSize="10px"
                         fontWeight="800"
                         boxShadow="sm"
@@ -1080,15 +1080,15 @@ export default function AboutPage() {
                       </Circle>
                     </Circle>
                     {i < steps.length - 1 && (
-                      <Box flex={1} w="2px" minH="20px" my={1} borderRadius="full" bgGradient="linear(to-b, purple.300, purple.100)" />
+                      <Box flex={1} w="2px" minH="20px" my={1} borderRadius="full" bgGradient="linear(to-b, var(--color-secondary), var(--color-surface-hover))" />
                     )}
                   </Flex>
 
                   <Box {...cardStyle} flex={1} mb={i < steps.length - 1 ? 4 : 0}>
-                    <Heading fontSize={{ base: 'md', md: 'lg' }} fontWeight="800" color="gray.800">
+                    <Heading fontSize={{ base: 'md', md: 'lg' }} fontWeight="800" color="var(--color-text)">
                       {s.title}
                     </Heading>
-                    <Text fontSize="sm" color="gray.600" mt={1} lineHeight="1.6">
+                    <Text fontSize="sm" color="var(--color-text-muted)" mt={1} lineHeight="1.6">
                       {s.desc}
                     </Text>
                   </Box>
@@ -1105,10 +1105,10 @@ export default function AboutPage() {
           <Reveal>
             <VStack align={{ base: 'center', lg: 'flex-start' }} textAlign={{ base: 'center', lg: 'left' }} spacing={4}>
               <Eyebrow>Our story</Eyebrow>
-              <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="gray.800">
+              <Heading fontSize={{ base: '2xl', md: '4xl' }} fontWeight="800" letterSpacing="-0.02em" lineHeight="1.15" color="var(--color-text)">
                 Local shops deserve a <GradientText>modern storefront</GradientText>
               </Heading>
-              <Text color="gray.600" fontSize={{ base: 'sm', md: 'lg' }} lineHeight="1.8">
+              <Text color="var(--color-text-muted)" fontSize={{ base: 'sm', md: 'lg' }} lineHeight="1.8">
                 The best shops are often the ones around the corner, but they’re hard to find online. BusinessSahayata bridges
                 that gap: shoppers discover trusted stores nearby, and vendors get the digital visibility and tools to grow.
               </Text>
@@ -1123,16 +1123,16 @@ export default function AboutPage() {
                     p={3}
                     borderRadius="2xl"
                     transition="all 0.25s"
-                    _hover={{ bg: 'purple.50', transform: 'translateX(4px)' }}
+                    _hover={{ bg: 'var(--color-surface-hover)', transform: 'translateX(4px)' }}
                   >
-                    <Circle size="42px" bg="purple.50" color="purple.600" flexShrink={0}>
+                    <Circle size="42px" bg="var(--color-surface-hover)" color="var(--color-primary)" flexShrink={0}>
                       <Icon as={v.icon} boxSize={5} />
                     </Circle>
                     <Box>
-                      <Text fontWeight="700" color="gray.800" fontSize="sm">
+                      <Text fontWeight="700" color="var(--color-text)" fontSize="sm">
                         {v.title}
                       </Text>
-                      <Text color="gray.600" fontSize="sm">
+                      <Text color="var(--color-text-muted)" fontSize="sm">
                         {v.desc}
                       </Text>
                     </Box>
@@ -1177,7 +1177,7 @@ export default function AboutPage() {
                 animation={anim(`${orbFloat} 12s ease-in-out infinite reverse`)}
               />
               <Box position="relative">
-                <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="purple.200" mb={1}>
+                <Text fontSize="11px" fontWeight="800" letterSpacing="0.14em" textTransform="uppercase" color="var(--color-secondary)" mb={1}>
                   Our impact
                 </Text>
                 <Heading fontSize={{ base: 'xl', md: '2xl' }} fontWeight="800" mb={6}>
@@ -1216,7 +1216,7 @@ export default function AboutPage() {
       </Container>
 
       {/* ================= TESTIMONIALS ================= */}
-      <Box bg="gray.50" borderY="1px solid" borderColor="gray.100" py={{ base: 12, md: 20 }}>
+      <Box bg="var(--color-surface)" borderY="1px solid" borderColor="var(--color-border)" py={{ base: 12, md: 20 }}>
         <Container maxW="1200px" px={pagePx}>
           <Reveal>
             <SectionHeading
@@ -1255,7 +1255,7 @@ export default function AboutPage() {
                 sx={{ scrollSnapAlign: 'start' }}
               >
                 <Box {...cardStyle} h="full" p={{ base: 5, md: 6 }} display="flex" flexDirection="column">
-                  <Text fontSize="5xl" lineHeight="0.6" fontWeight="900" color="purple.200" mb={2}>
+                  <Text fontSize="5xl" lineHeight="0.6" fontWeight="900" color="var(--color-secondary)" mb={2}>
                     “
                   </Text>
                   <HStack spacing={0.5} mb={3}>
@@ -1263,10 +1263,10 @@ export default function AboutPage() {
                       <Icon key={k} as={FaStar} color="yellow.400" boxSize={3.5} />
                     ))}
                   </HStack>
-                  <Text color="gray.700" fontSize="sm" lineHeight="1.75" flex={1}>
+                  <Text color="var(--color-text)" fontSize="sm" lineHeight="1.75" flex={1}>
                     {r.text}
                   </Text>
-                  <HStack spacing={3} mt={5} pt={4} borderTop="1px solid" borderColor="gray.100">
+                  <HStack spacing={3} mt={5} pt={4} borderTop="1px solid" borderColor="var(--color-border)">
                     <Circle size="40px" bgGradient={r.grad} color="white" fontWeight="800" fontSize="sm">
                       {r.name
                         .split(' ')
@@ -1274,10 +1274,10 @@ export default function AboutPage() {
                         .join('')}
                     </Circle>
                     <Box>
-                      <Text fontWeight="700" fontSize="sm" color="gray.800">
+                      <Text fontWeight="700" fontSize="sm" color="var(--color-text)">
                         {r.name}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color="var(--color-text-muted)">
                         {r.role}
                       </Text>
                     </Box>
@@ -1300,21 +1300,21 @@ export default function AboutPage() {
               <AccordionItem
                 key={f.q}
                 border="1px solid"
-                borderColor="gray.100"
+                borderColor="var(--color-border)"
                 _last={{ borderBottomWidth: '1px' }}
                 borderRadius="2xl"
-                bg="white"
+                bg="var(--color-surface)"
                 mb={3}
                 overflow="hidden"
                 boxShadow="0 2px 10px rgba(79, 70, 229, 0.05)"
               >
-                <AccordionButton py={4} px={5} _hover={{ bg: 'purple.50' }} _expanded={{ bg: 'purple.50', color: 'purple.700' }}>
+                <AccordionButton py={4} px={5} _hover={{ bg: 'var(--color-surface-hover)' }} _expanded={{ bg: 'var(--color-surface-hover)', color: 'var(--color-primary)' }}>
                   <Box flex="1" textAlign="left" fontWeight="700" fontSize={{ base: 'sm', md: 'md' }}>
                     {f.q}
                   </Box>
                   <AccordionIcon />
                 </AccordionButton>
-                <AccordionPanel pb={5} px={5} color="gray.600" fontSize="sm" lineHeight="1.75">
+                <AccordionPanel pb={5} px={5} color="var(--color-text-muted)" fontSize="sm" lineHeight="1.75">
                   {f.a}
                 </AccordionPanel>
               </AccordionItem>
@@ -1334,8 +1334,8 @@ export default function AboutPage() {
             py={{ base: 10, md: 16 }}
             textAlign="center"
             color="white"
-            bgGradient="linear(to-br, #7C3AED, #4F46E5, #2563EB)"
-            boxShadow="0 24px 50px rgba(79, 70, 229, 0.35)"
+            bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
+            boxShadow="0 24px 50px rgba(6, 95, 104, 0.35)"
           >
             <Box
               position="absolute"
@@ -1364,7 +1364,7 @@ export default function AboutPage() {
             <VStack position="relative" spacing={{ base: 4, md: 5 }}>
               <Box position="relative">
                 <Circle position="absolute" inset={0} bg="whiteAlpha.500" animation={anim(`${pulseRing} 2.2s ease-out infinite`)} />
-                <Circle size="56px" position="relative" bg="white" color="purple.600" boxShadow="xl">
+                <Circle size="56px" position="relative" bg="var(--color-surface)" color="var(--color-primary)" boxShadow="xl">
                   <Icon as={FiShoppingBag} boxSize={6} />
                 </Circle>
               </Box>
@@ -1379,8 +1379,8 @@ export default function AboutPage() {
                   h="52px"
                   px={9}
                   borderRadius="full"
-                  bg="white"
-                  color="purple.700"
+                  bg="var(--color-surface)"
+                  color="var(--color-primary)"
                   fontWeight="700"
                   rightIcon={<FiArrowRight />}
                   transition="all 0.25s"

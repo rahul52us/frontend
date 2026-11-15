@@ -25,7 +25,7 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
     <form onSubmit={onSubmit} id="address-form">
       <VStack spacing={4} align="stretch">
         <FormControl isRequired>
-          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+          <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
             Address Label / Name
           </FormLabel>
           <Input
@@ -34,11 +34,15 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
             defaultValue={currentAddress?.name || ""}
             rounded="lg"
             fontSize="sm"
+            bg="var(--color-surface)"
+            borderColor="var(--color-border)"
+            color="var(--color-text)"
+            _placeholder={{ color: "var(--color-text-muted)" }}
           />
         </FormControl>
 
         <FormControl isRequired>
-          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+          <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
             Phone Number
           </FormLabel>
           <Input
@@ -48,11 +52,15 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
             defaultValue={currentAddress?.phone || ""}
             rounded="lg"
             fontSize="sm"
+            bg="var(--color-surface)"
+            borderColor="var(--color-border)"
+            color="var(--color-text)"
+            _placeholder={{ color: "var(--color-text-muted)" }}
           />
         </FormControl>
 
         <FormControl isRequired>
-          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+          <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
             Address Line 1 (House/Flat No., Building)
           </FormLabel>
           <Input
@@ -61,11 +69,15 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
             defaultValue={currentAddress?.line1 || currentAddress?.addressLine1 || ""}
             rounded="lg"
             fontSize="sm"
+            bg="var(--color-surface)"
+            borderColor="var(--color-border)"
+            color="var(--color-text)"
+            _placeholder={{ color: "var(--color-text-muted)" }}
           />
         </FormControl>
 
         <FormControl>
-          <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+          <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
             Address Line 2 (Area, Landmark) (Optional)
           </FormLabel>
           <Input
@@ -74,12 +86,16 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
             defaultValue={currentAddress?.line2 || currentAddress?.addressLine2 || ""}
             rounded="lg"
             fontSize="sm"
+            bg="var(--color-surface)"
+            borderColor="var(--color-border)"
+            color="var(--color-text)"
+            _placeholder={{ color: "var(--color-text-muted)" }}
           />
         </FormControl>
 
         <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={3}>
           <FormControl isRequired>
-            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
               City
             </FormLabel>
             <Input
@@ -88,11 +104,15 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
               defaultValue={currentAddress?.city || ""}
               rounded="lg"
               fontSize="sm"
+              bg="var(--color-surface)"
+              borderColor="var(--color-border)"
+              color="var(--color-text)"
+              _placeholder={{ color: "var(--color-text-muted)" }}
             />
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
               State
             </FormLabel>
             <Input
@@ -101,13 +121,17 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
               defaultValue={currentAddress?.state || ""}
               rounded="lg"
               fontSize="sm"
+              bg="var(--color-surface)"
+              borderColor="var(--color-border)"
+              color="var(--color-text)"
+              _placeholder={{ color: "var(--color-text-muted)" }}
             />
           </FormControl>
         </Grid>
 
         <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={3}>
           <FormControl isRequired>
-            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
               PIN / Postal Code
             </FormLabel>
             <Input
@@ -116,11 +140,15 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
               defaultValue={currentAddress?.postalCode || ""}
               rounded="lg"
               fontSize="sm"
+              bg="var(--color-surface)"
+              borderColor="var(--color-border)"
+              color="var(--color-text)"
+              _placeholder={{ color: "var(--color-text-muted)" }}
             />
           </FormControl>
 
           <FormControl>
-            <FormLabel fontWeight="600" fontSize="xs" color="gray.700">
+            <FormLabel fontWeight="600" fontSize="xs" color="var(--color-text)">
               Country
             </FormLabel>
             <Input
@@ -129,6 +157,10 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
               defaultValue={currentAddress?.country || "India"}
               rounded="lg"
               fontSize="sm"
+              bg="var(--color-surface)"
+              borderColor="var(--color-border)"
+              color="var(--color-text)"
+              _placeholder={{ color: "var(--color-text-muted)" }}
             />
           </FormControl>
         </Grid>
@@ -137,7 +169,8 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
           <Checkbox
             name="isDefault"
             defaultChecked={currentAddress?.isDefault || false}
-            colorScheme="purple"
+            colorScheme="brand"
+            color="var(--color-text)"
             fontSize="sm"
           >
             Set as default delivery address
@@ -174,7 +207,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
     <Button
       type="submit"
       form="address-form"
-      colorScheme="purple"
+      colorScheme="brand"
       width="full"
       h="44px"
       rounded="xl"

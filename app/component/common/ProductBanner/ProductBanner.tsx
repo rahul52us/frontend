@@ -441,7 +441,7 @@ const ProductBanner = observer(() => {
                   <HStack justify="space-between" mb={2}>
                     <Text fontSize="xs" fontWeight="700" color={titleColor}>
                       Price Range:{' '}
-                      <Text as="span" color="blue.600">
+                      <Text as="span" color="var(--color-primary)">
                         {formatPrice(priceRange[0])} – {formatPrice(priceRange[1])}
                       </Text>
                     </Text>
@@ -449,7 +449,7 @@ const ProductBanner = observer(() => {
                       <Button
                         size="xs"
                         variant="link"
-                        colorScheme="blue"
+                        colorScheme="brand"
                         onClick={() =>
                           setPriceRange([minProductPrice, maxProductPrice])
                         }
@@ -473,7 +473,7 @@ const ProductBanner = observer(() => {
                         onChange={(val) =>
                           setPriceRange(val as [number, number])
                         }
-                        colorScheme="blue"
+                        colorScheme="brand"
                       >
                         <RangeSliderTrack h="5px" rounded="full">
                           <RangeSliderFilledTrack />
@@ -482,13 +482,13 @@ const ProductBanner = observer(() => {
                           index={0}
                           boxSize={4}
                           border="2px solid"
-                          borderColor="blue.600"
+                          borderColor="var(--color-primary)"
                         />
                         <RangeSliderThumb
                           index={1}
                           boxSize={4}
                           border="2px solid"
-                          borderColor="blue.600"
+                          borderColor="var(--color-primary)"
                         />
                       </RangeSlider>
                     </Box>
@@ -585,8 +585,8 @@ const ProductBanner = observer(() => {
               w="44px"
               h="44px"
               rounded="full"
-              bg="blue.50"
-              color="blue.600"
+              bg="var(--color-surface-hover)"
+              color="var(--color-primary)"
               align="center"
               justify="center"
             >
@@ -604,7 +604,7 @@ const ProductBanner = observer(() => {
               h="32px"
               px={4}
               mt={1}
-              colorScheme="blue"
+              colorScheme="brand"
               rounded="full"
               onClick={clearFilters}
             >

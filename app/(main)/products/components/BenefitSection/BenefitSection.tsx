@@ -134,7 +134,7 @@ const BenefitSection = () => {
                   onClick={handlePrev}
                   variant="ghost"
                   size="sm"
-                  colorScheme="purple"
+                  colorScheme="brand"
                   leftIcon={<FiChevronLeft />}
                 >
                   Prev
@@ -157,7 +157,7 @@ const BenefitSection = () => {
                   onClick={handleNext}
                   variant="ghost"
                   size="sm"
-                  colorScheme="purple"
+                  colorScheme="brand"
                   rightIcon={<FiChevronRight />}
                 >
                   Next

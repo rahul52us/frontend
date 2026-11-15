@@ -11,7 +11,7 @@ const SpinnerLoader = observer(({ size = "xl" }: SpinnerLoaderI) => {
       thickness="4px"
       speed="0.65s"
       emptyColor="gray.200"
-      color="blue.500"
+      color="var(--color-primary)"
       size={size ? size : "2xl"}
     />
   );

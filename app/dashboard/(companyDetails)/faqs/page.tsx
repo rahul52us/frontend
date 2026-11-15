@@ -26,7 +26,7 @@ const Page = () => {
 
   return (
     <Box p={4} maxWidth="1200px" mx="auto">
-      <Tabs variant="line" colorScheme="teal" isLazy size={tabSize}>
+      <Tabs variant="line" colorScheme="brand" isLazy size={tabSize}>
         <TabList
           justifyContent="center"
           mb={4}

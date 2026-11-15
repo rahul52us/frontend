@@ -54,7 +54,7 @@ const CategoryProductsView = observer(({ slug }: { slug: string }) => {
     if (loading) {
         return (
             <Flex justify="center" align="center" h="50vh">
-                <Spinner size="xl" color="purple.500" />
+                <Spinner size="xl" color="var(--color-primary)" />
             </Flex>
         )
     }
@@ -62,7 +62,7 @@ const CategoryProductsView = observer(({ slug }: { slug: string }) => {
     const displayTitle = categoryName.charAt(0).toUpperCase() + categoryName.slice(1).replace(/-/g, " ");
 
     return (
-        <Box py={8} minH="80vh" bg="gray.50">
+        <Box py={8} minH="80vh" bg="var(--color-bg)">
             <Container maxW="container.xl">
                 {/* Breadcrumb */}
                 <Breadcrumb spacing="8px" separator={<ChevronRightIcon color="gray.500" />} mb={8} fontSize="sm">
@@ -73,7 +73,7 @@ const CategoryProductsView = observer(({ slug }: { slug: string }) => {
                         <BreadcrumbLink href="/categories">Categories</BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbItem isCurrentPage>
-                        <BreadcrumbLink color="purple.600" fontWeight="medium">{displayTitle}</BreadcrumbLink>
+                        <BreadcrumbLink color="var(--color-primary)" fontWeight="medium">{displayTitle}</BreadcrumbLink>
                     </BreadcrumbItem>
                 </Breadcrumb>
 
@@ -125,7 +125,7 @@ const AllCategoriesView = observer(() => {
     if (loading && categories.length === 0) {
         return (
             <Flex justify="center" align="center" h="50vh">
-                <Spinner size="xl" color="purple.500" />
+                <Spinner size="xl" color="var(--color-primary)" />
             </Flex>
         );
     }
@@ -135,7 +135,7 @@ const AllCategoriesView = observer(() => {
     };
 
     return (
-        <Box py={8} minH="80vh" bg="gray.50">
+        <Box py={8} minH="80vh" bg="var(--color-bg)">
             <Container maxW="container.xl">
                 {/* Breadcrumb */}
                 <Breadcrumb spacing="8px" separator={<ChevronRightIcon color="gray.500" />} mb={8} fontSize="sm">
@@ -143,16 +143,16 @@ const AllCategoriesView = observer(() => {
                         <BreadcrumbLink href="/">Home</BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbItem isCurrentPage>
-                        <BreadcrumbLink color="purple.600" fontWeight="medium">Categories</BreadcrumbLink>
+                        <BreadcrumbLink color="var(--color-primary)" fontWeight="medium">Categories</BreadcrumbLink>
                     </BreadcrumbItem>
                 </Breadcrumb>
 
                 {/* Header */}
                 <Box mb={8}>
-                    <Heading as="h1" size="xl" mb={2} color="gray.800">
+                    <Heading as="h1" size="xl" mb={2} color="var(--color-text-primary)">
                         All Categories
                     </Heading>
-                    <Text color="gray.600">Browse through our wide range of categories</Text>
+                    <Text color="var(--color-text-muted)">Browse through our wide range of categories</Text>
                 </Box>
 
                 {/* Categories Grid */}
@@ -162,7 +162,9 @@ const AllCategoriesView = observer(() => {
                             <Box
                                 key={category._id}
                                 cursor="pointer"
-                                bg="white"
+                                bg="var(--color-surface)"
+                                borderWidth="1px"
+                                borderColor="var(--color-border)"
                                 borderRadius="2xl"
                                 overflow="hidden"
                                 boxShadow="sm"
@@ -170,13 +172,14 @@ const AllCategoriesView = observer(() => {
                                 _hover={{
                                     transform: "translateY(-6px)",
                                     boxShadow: "lg",
+                                    borderColor: "var(--color-primary)",
                                 }}
                                 onClick={() => handleCategoryClick(category)}
                                 role="group"
                             >
                                 <Box
                                     h={{ base: "140px", md: "180px" }}
-                                    bg="gray.100"
+                                    bg="var(--color-surface-hover)"
                                     overflow="hidden"
                                 >
                                     <Image
@@ -193,8 +196,8 @@ const AllCategoriesView = observer(() => {
                                     <Text
                                         fontWeight="bold"
                                         fontSize={{ base: "sm", md: "md" }}
-                                        color="gray.800"
-                                        _groupHover={{ color: "purple.600" }}
+                                        color="var(--color-text)"
+                                        _groupHover={{ color: "var(--color-primary)" }}
                                         noOfLines={1}
                                     >
                                         {category.name}
@@ -208,13 +211,13 @@ const AllCategoriesView = observer(() => {
                         direction="column"
                         align="center"
                         justify="center"
-                        bg="white"
+                        bg="var(--color-surface)"
                         p={12}
                         borderRadius="xl"
                         border="1px dashed"
-                        borderColor="gray.200"
+                        borderColor="var(--color-border)"
                     >
-                        <Text fontSize="lg" fontWeight="medium" color="gray.500">
+                        <Text fontSize="lg" fontWeight="medium" color="var(--color-text-muted)">
                             No categories found.
                         </Text>
                     </Flex>
@@ -240,7 +243,7 @@ export default function CategoryPage() {
     return (
         <Suspense fallback={
             <Flex justify="center" align="center" h="50vh">
-                <Spinner size="xl" color="purple.500" />
+                <Spinner size="xl" color="var(--color-primary)" />
             </Flex>
         }>
             <CategoryContent />

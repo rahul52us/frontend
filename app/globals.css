@@ -4,6 +4,146 @@
   --safe-area-left: env(safe-area-inset-left, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --mobile-bottom-nav-height: 84px;
+
+  /* Centralized Brand Colors (Default Light) */
+  --color-primary: #065F68;
+  --color-primary-hover: #055159;
+  --color-primary-active: #044249;
+  --color-primary-light: #e6f4f5;
+  --color-primary-soft: rgba(6, 95, 104, 0.12);
+  --color-primary-glow: rgba(6, 95, 104, 0.22);
+  --color-primary-border: rgba(6, 95, 104, 0.28);
+  --color-primary-text: #065F68;
+
+  --color-secondary: #2A8A94;
+  --color-secondary-hover: #23747d;
+  --color-secondary-active: #1d5f66;
+  --color-secondary-light: #eaf5f6;
+  --color-secondary-soft: rgba(42, 138, 148, 0.12);
+  --color-secondary-border: rgba(42, 138, 148, 0.28);
+
+  --color-accent: #DF837C;
+  --color-accent-hover: #cf6f68;
+  --color-accent-active: #bf5b54;
+  --color-accent-light: #fcf1f0;
+  --color-accent-soft: rgba(223, 131, 124, 0.14);
+  --color-accent-border: rgba(223, 131, 124, 0.28);
+
+  /* Semantic Light Colors */
+  --color-bg: #F8FAFC;
+  --color-background: #F8FAFC;
+  --color-bg-subtle: #F1F5F9;
+  --color-shell: #FFFFFF;
+  --color-shell-elevated: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F8FAFC;
+  --color-surface-soft: #EDF2F7;
+  --color-surface-elevated: #FFFFFF;
+
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-text-subtle: #94A3B8;
+
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-border-accent: rgba(6, 95, 104, 0.28);
+
+  --color-input-bg: #FFFFFF;
+  --color-input-border: #CBD5E1;
+  --color-input-placeholder: #94A3B8;
+  --color-input-focus-border: #065F68;
+
+  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-active: rgba(0, 0, 0, 0.08);
+  --color-disabled: #94A3B8;
+  --color-disabled-bg: #F1F5F9;
+
+  --color-success: #10B981;
+  --color-success-soft: rgba(16, 185, 129, 0.12);
+  --color-success-border: rgba(16, 185, 129, 0.28);
+
+  --color-warning: #F59E0B;
+  --color-warning-soft: rgba(245, 158, 11, 0.12);
+  --color-warning-border: rgba(245, 158, 11, 0.28);
+
+  --color-error: #EF4444;
+  --color-error-soft: rgba(239, 68, 68, 0.12);
+  --color-error-border: rgba(239, 68, 68, 0.28);
+
+  --color-info: #3B82F6;
+  --color-info-soft: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.28);
+}
+
+[data-theme="dark"],
+.chakra-ui-dark,
+html[data-theme="dark"],
+body.chakra-ui-dark {
+  /* Brand colors in dark mode (slightly lightened for accessibility/contrast) */
+  --color-primary-hover: #12828e;
+  --color-primary-active: #1997a4;
+  --color-primary-light: rgba(6, 95, 104, 0.24);
+  --color-primary-soft: rgba(6, 95, 104, 0.20);
+  --color-primary-glow: rgba(6, 95, 104, 0.35);
+  --color-primary-border: rgba(6, 95, 104, 0.35);
+  --color-primary-text: #38b2ac;
+
+  --color-secondary-hover: #37adb9;
+  --color-secondary-active: #47bfcb;
+  --color-secondary-soft: rgba(42, 138, 148, 0.20);
+  --color-secondary-border: rgba(42, 138, 148, 0.35);
+
+  --color-accent-hover: #e89993;
+  --color-accent-active: #efa9a4;
+  --color-accent-soft: rgba(223, 131, 124, 0.22);
+  --color-accent-border: rgba(223, 131, 124, 0.35);
+
+  /* Semantic Dark Colors */
+  --color-bg: #070B14;
+  --color-background: #070B14;
+  --color-bg-subtle: #0B1120;
+  --color-shell: #0B1120;
+  --color-shell-elevated: #0F1929;
+  --color-surface: #111C30;
+  --color-surface-alt: #15223A;
+  --color-surface-soft: #1B2A47;
+  --color-surface-elevated: #182642;
+
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #8AAAC8;
+  --color-text-subtle: #5A7FA8;
+
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-strong: #253A5E;
+  --color-border-accent: rgba(6, 95, 104, 0.35);
+
+  --color-input-bg: #0B1120;
+  --color-input-border: #253A5E;
+  --color-input-placeholder: #5A7FA8;
+  --color-input-focus-border: #065F68;
+
+  --color-hover: rgba(255, 255, 255, 0.05);
+  --color-active: rgba(255, 255, 255, 0.09);
+  --color-disabled: #475569;
+  --color-disabled-bg: #0E172A;
+
+  --color-success: #34D399;
+  --color-success-soft: rgba(52, 211, 153, 0.14);
+  --color-success-border: rgba(52, 211, 153, 0.28);
+
+  --color-warning: #FBBF24;
+  --color-warning-soft: rgba(251, 191, 36, 0.14);
+  --color-warning-border: rgba(251, 191, 36, 0.28);
+
+  --color-error: #F87171;
+  --color-error-soft: rgba(248, 113, 113, 0.14);
+  --color-error-border: rgba(248, 113, 113, 0.28);
+
+  --color-info: #60A5FA;
+  --color-info-soft: rgba(96, 165, 250, 0.14);
+  --color-info-border: rgba(96, 165, 250, 0.28);
 }
 
 html,
@@ -13,6 +153,9 @@ body {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body,
@@ -44,6 +187,90 @@ input,
 textarea,
 select {
   font-family: inherit;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Third-Party Components Dark Mode Support
+───────────────────────────────────────────────────────────────*/
+
+/* React Date Range Dark Mode */
+[data-theme="dark"] .rdrCalendarWrapper,
+.chakra-ui-dark .rdrCalendarWrapper {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .rdrDateDisplayWrapper,
+.chakra-ui-dark .rdrDateDisplayWrapper {
+  background-color: var(--color-surface-alt) !important;
+}
+
+[data-theme="dark"] .rdrDateInput,
+.chakra-ui-dark .rdrDateInput {
+  background-color: var(--color-input-bg) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .rdrDateInput input,
+.chakra-ui-dark .rdrDateInput input {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .rdrMonthAndYearPickers select,
+.chakra-ui-dark .rdrMonthAndYearPickers select {
+  color: var(--color-text-primary) !important;
+  background: var(--color-surface-alt) !important;
+}
+
+[data-theme="dark"] .rdrDayNumber span,
+.chakra-ui-dark .rdrDayNumber span {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .rdrDayPassive .rdrDayNumber span,
+.chakra-ui-dark .rdrDayPassive .rdrDayNumber span {
+  color: var(--color-text-muted) !important;
+  opacity: 0.4;
+}
+
+[data-theme="dark"] .rdrSelected,
+.chakra-ui-dark .rdrSelected,
+[data-theme="dark"] .rdrInRange,
+.chakra-ui-dark .rdrInRange,
+[data-theme="dark"] .rdrStartEdge,
+.chakra-ui-dark .rdrStartEdge,
+[data-theme="dark"] .rdrEndEdge,
+.chakra-ui-dark .rdrEndEdge {
+  background: var(--color-primary) !important;
+}
+
+[data-theme="dark"] .rdrDayHovered,
+.chakra-ui-dark .rdrDayHovered {
+  border-color: var(--color-primary) !important;
+}
+
+[data-theme="dark"] .rdrDefinedRangesWrapper,
+.chakra-ui-dark .rdrDefinedRangesWrapper {
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .rdrStaticRange,
+.chakra-ui-dark .rdrStaticRange {
+  background: transparent !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] .rdrStaticRangeLabel,
+.chakra-ui-dark .rdrStaticRangeLabel {
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="dark"] .rdrStaticRange:hover .rdrStaticRangeLabel,
+.chakra-ui-dark .rdrStaticRange:hover .rdrStaticRangeLabel {
+  background: var(--color-surface-soft) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* Google Maps InfoWindow */

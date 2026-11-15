@@ -33,6 +33,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       overflowX="hidden"
       pl="env(safe-area-inset-left, 0px)"
       pr="env(safe-area-inset-right, 0px)"
+      bg="var(--color-bg)"
+      color="var(--color-text-primary)"
+      transition="background-color 0.2s ease, color 0.2s ease"
     >
       <Header />
       <Box as="main" flex="1" w="full">

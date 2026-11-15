@@ -20,9 +20,11 @@ import {
   Image,
   Text,
   Tooltip,
+  useColorModeValue,
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+import { ThemeModeMenu, ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
@@ -80,33 +82,39 @@ const QuickAction = ({
   onClick,
   badge,
   color = "gray.600",
-}: QuickActionProps) => (
-  <Flex
-    as="button"
-    w="full"
-    align="center"
-    gap={3}
-    py={2.5}
-    px={3}
-    borderRadius="lg"
-    bg="transparent"
-    _hover={{ bg: "gray.50", color: "blue.600" }}
-    _active={{ bg: "gray.100" }}
-    transition="all 0.15s ease"
-    onClick={onClick}
-    textAlign="left"
-  >
-    <Icon as={icon} color={color} boxSize={4} flexShrink={0} />
-    <Text fontWeight="500" fontSize="sm" color="gray.700" flex="1" noOfLines={1}>
-      {label}
-    </Text>
-    {badge ? (
-      <Badge colorScheme="blue" borderRadius="full" px={2} py={0.5} fontSize="2xs">
-        {badge}
-      </Badge>
-    ) : null}
-  </Flex>
-);
+}: QuickActionProps) => {
+  const hoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
+  const activeBg = useColorModeValue("gray.200", "whiteAlpha.200");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+
+  return (
+    <Flex
+      as="button"
+      w="full"
+      align="center"
+      gap={3}
+      py={2.5}
+      px={3}
+      borderRadius="lg"
+      bg="transparent"
+      _hover={{ bg: hoverBg, color: "var(--color-primary)" }}
+      _active={{ bg: activeBg }}
+      transition="all 0.15s ease"
+      onClick={onClick}
+      textAlign="left"
+    >
+      <Icon as={icon} color={color} boxSize={4} flexShrink={0} />
+      <Text fontWeight="500" fontSize="sm" color={textColor} flex="1" noOfLines={1}>
+        {label}
+      </Text>
+      {badge ? (
+        <Badge colorScheme="brand" borderRadius="full" px={2} py={0.5} fontSize="2xs">
+          {badge}
+        </Badge>
+      ) : null}
+    </Flex>
+  );
+};
 
 const Header = observer(() => {
   const router = useRouter();
@@ -184,6 +192,24 @@ const Header = observer(() => {
 
   const CurrentPromoIcon = promoMessages[currentPromoIndex].icon;
 
+  // Theme-aware tokens
+  const headerBg = useColorModeValue(
+    isScrolled ? "rgba(255, 255, 255, 0.95)" : "white",
+    isScrolled ? "rgba(11, 17, 32, 0.95)" : "var(--color-bg)"
+  );
+  const headerBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const subNavBg = useColorModeValue("gray.50", "var(--color-surface-alt)");
+  const subNavBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const subNavDivider = useColorModeValue("gray.300", "var(--color-border-strong)");
+  const subNavText = useColorModeValue("gray.600", "var(--color-text-secondary)");
+  const iconColor = useColorModeValue("gray.700", "var(--color-text-primary)");
+  const drawerBg = useColorModeValue("white", "var(--color-surface)");
+  const drawerHeaderBg = useColorModeValue("gray.50", "var(--color-surface-alt)");
+  const drawerFooterBg = useColorModeValue("gray.50", "var(--color-surface-alt)");
+  const drawerBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const drawerTextColor = useColorModeValue("gray.800", "var(--color-text-primary)");
+  const drawerMutedColor = useColorModeValue("gray.500", "var(--color-text-muted)");
+
   return (
     <Box
       as="header"
@@ -191,11 +217,11 @@ const Header = observer(() => {
       top="0"
       zIndex="1000"
       pt="env(safe-area-inset-top, 0px)"
-      bg={isScrolled ? "rgba(255, 255, 255, 0.95)" : "white"}
+      bg={headerBg}
       backdropFilter={isScrolled ? "blur(10px)" : "none"}
       boxShadow={isScrolled ? "sm" : "none"}
       borderBottom="1px solid"
-      borderColor="gray.100"
+      borderColor={headerBorder}
       transition="all 0.2s ease"
     >
       {/* Slim Top Announcement Bar - Collapses smoothly on scroll for compact height */}
@@ -272,7 +298,7 @@ const Header = observer(() => {
               icon={<HamburgerIcon boxSize={5} />}
               aria-label="Open menu"
               variant="ghost"
-              color="gray.700"
+              color={iconColor}
               size="sm"
               onClick={onOpen}
               borderRadius="lg"
@@ -298,7 +324,7 @@ const Header = observer(() => {
                 <Text
                   fontWeight="800"
                   fontSize={{ base: "sm", md: "md" }}
-                  bgGradient="linear(to-r, blue.600, purple.600)"
+                  bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                   bgClip="text"
                   letterSpacing="tight"
                   lineHeight="1.1"
@@ -328,14 +354,18 @@ const Header = observer(() => {
             </Suspense>
           </Box>
 
-          {/* Right: Quick Actions (Wishlist, Cart, Profile) */}
+          {/* Right: Quick Actions (Theme Switcher, Wishlist, Cart, Profile) */}
           <HStack spacing={{ base: 1, md: 2 }} flexShrink={0}>
+            <Box display={{ base: "none", md: "block" }}>
+              <ThemeModeMenu size="sm" />
+            </Box>
+
             <Tooltip label="Wishlist" hasArrow openDelay={300}>
               <IconButton
                 icon={<FiHeart size={18} />}
                 aria-label="Wishlist"
                 variant="ghost"
-                color="gray.700"
+                color={iconColor}
                 size="sm"
                 borderRadius="full"
                 onClick={onWishlistOpen}
@@ -353,19 +383,19 @@ const Header = observer(() => {
                     icon={<FiShoppingCart size={18} />}
                     aria-label="Shopping Cart"
                     variant="ghost"
-                    color="gray.700"
+                    color={iconColor}
                     size="sm"
                     borderRadius="full"
                     onClick={onCartOpen}
-                    _hover={{ bg: "blue.50", color: "blue.600" }}
+                    _hover={{ bg: "var(--color-primary-soft)", color: "var(--color-primary)" }}
                   />
                 </motion.div>
-                {cartStore.totalItems > 0 && (
+                {isMounted && cartStore.totalItems > 0 && (
                   <Badge
                     position="absolute"
                     top="-2px"
                     right="-2px"
-                    bg="blue.600"
+                    bg="var(--color-primary)"
                     color="white"
                     borderRadius="full"
                     fontSize="10px"
@@ -428,9 +458,9 @@ const Header = observer(() => {
       {/* Desktop Slim Secondary Navigation Bar */}
       <Box
         display={{ base: "none", md: "block" }}
-        bg="gray.50"
+        bg={subNavBg}
         borderTop="1px solid"
-        borderColor="gray.100"
+        borderColor={subNavBorder}
         px={8}
         py={1}
       >
@@ -445,34 +475,34 @@ const Header = observer(() => {
             <Button
               size="xs"
               variant="ghost"
-              color="gray.700"
+              color={iconColor}
               fontWeight="600"
               leftIcon={<FiGrid />}
               onClick={() => router.push("/categories")}
-              _hover={{ bg: "white", color: "blue.600" }}
+              _hover={{ bg: drawerBg, color: "var(--color-primary)" }}
               borderRadius="md"
               px={2.5}
             >
               All Categories
             </Button>
 
-            <Divider orientation="vertical" h="14px" borderColor="gray.300" />
+            <Divider orientation="vertical" h="14px" borderColor={subNavDivider} />
 
             <Box flexShrink={0}>
               <NavItemsLayout />
             </Box>
 
-            <Divider orientation="vertical" h="14px" borderColor="gray.300" />
+            <Divider orientation="vertical" h="14px" borderColor={subNavDivider} />
 
             {QuickLinks.map((item) => (
               <Button
                 key={item.label}
                 size="xs"
                 variant="ghost"
-                color="gray.600"
+                color={subNavText}
                 fontWeight="500"
                 onClick={() => router.push(item.path)}
-                _hover={{ bg: "white", color: "blue.600" }}
+                _hover={{ bg: drawerBg, color: "var(--color-primary)" }}
                 borderRadius="md"
                 px={2.5}
               >
@@ -499,14 +529,14 @@ const Header = observer(() => {
       {/* Clean Mobile Navigation Drawer */}
       <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
         <DrawerOverlay backdropFilter="blur(3px)" bg="blackAlpha.400" />
-        <DrawerContent borderRightRadius="2xl" overflow="hidden">
+        <DrawerContent borderRightRadius="2xl" overflow="hidden" bg={drawerBg} color={drawerTextColor}>
           <DrawerCloseButton top={4} right={4} borderRadius="full" size="sm" />
 
           {/* Drawer Header Profile Section */}
           <DrawerHeader
-            bg="gray.50"
+            bg={drawerHeaderBg}
             borderBottom="1px solid"
-            borderColor="gray.100"
+            borderColor={drawerBorder}
             pt={5}
             pb={4}
             px={5}
@@ -520,10 +550,10 @@ const Header = observer(() => {
                 icon={!isAuthenticated ? <FiUser color="white" /> : undefined}
               />
               <Box overflow="hidden">
-                <Text fontSize="md" fontWeight="bold" color="gray.800" noOfLines={1}>
+                <Text fontSize="md" fontWeight="bold" color={drawerTextColor} noOfLines={1}>
                   {isAuthenticated ? `Hi, ${greetingName}` : "Welcome"}
                 </Text>
-                <Text fontSize="xs" color="gray.500" fontWeight="normal">
+                <Text fontSize="xs" color={drawerMutedColor} fontWeight="normal">
                   {isAuthenticated
                     ? user?.email || "Explore local treasures"
                     : "Sign in for the best experience"}
@@ -558,7 +588,7 @@ const Header = observer(() => {
                   <QuickAction
                     icon={FiGrid}
                     label="All Categories"
-                    color="blue.500"
+                    color="var(--color-primary)"
                     onClick={() => {
                       onClose();
                       router.push("/categories");
@@ -599,8 +629,8 @@ const Header = observer(() => {
                   <QuickAction
                     icon={FiShoppingCart}
                     label="Shopping Cart"
-                    badge={cartStore.totalItems > 0 ? cartStore.totalItems : null}
-                    color="blue.500"
+                    badge={isMounted && cartStore.totalItems > 0 ? cartStore.totalItems : null}
+                    color="var(--color-primary)"
                     onClick={() => {
                       onClose();
                       onCartOpen();
@@ -621,7 +651,7 @@ const Header = observer(() => {
                       <QuickAction
                         icon={FiShoppingBag}
                         label="My Orders"
-                        color="purple.500"
+                        color="var(--color-primary)"
                         onClick={() => {
                           onClose();
                           router.push("/account?tab=orders");
@@ -639,7 +669,7 @@ const Header = observer(() => {
                       <QuickAction
                         icon={FiCreditCard}
                         label="Payment Methods"
-                        color="teal.500"
+                        color="var(--color-primary)"
                         onClick={() => {
                           onClose();
                           router.push("/dashboard/payments");
@@ -649,7 +679,7 @@ const Header = observer(() => {
                         <QuickAction
                           icon={FiGrid}
                           label="User Dashboard"
-                          color="blue.600"
+                          color="var(--color-primary)"
                           onClick={() => {
                             onClose();
                             router.push("/dashboard");
@@ -681,14 +711,32 @@ const Header = observer(() => {
                   />
                 </VStack>
               </Box>
+
+              <Divider borderColor={drawerBorder} />
+
+              {/* Theme Settings */}
+              <Box px={1}>
+                <Text
+                  px={2}
+                  mb={2}
+                  fontSize="11px"
+                  fontWeight="700"
+                  color={drawerMutedColor}
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                >
+                  Appearance
+                </Text>
+                <ThemeModeSwitcher size="sm" />
+              </Box>
             </VStack>
           </DrawerBody>
 
           {/* Drawer Footer */}
           <DrawerFooter
             borderTop="1px solid"
-            borderColor="gray.100"
-            bg="gray.50"
+            borderColor={drawerBorder}
+            bg={drawerFooterBg}
             px={4}
             py={3}
             justifyContent="space-between"

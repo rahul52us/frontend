@@ -8,7 +8,7 @@ const SpecificCategorySection = () => {
       my={{ base: 8, md: 12 }}
       mx="auto"
       p={{ base: 4, md: 8 }}
-      bgGradient="linear(to-br, blue.200, purple.300)" // Richer, more vibrant gradient
+      bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
       rounded="3xl" // Softer, larger radius
       boxShadow="lg" // Bolder shadow for depth
       overflow="hidden"
@@ -53,7 +53,7 @@ const SpecificCategorySection = () => {
               fontWeight="black" // Maximum boldness
               mb={3}
               lineHeight="tight"
-              bgGradient="linear(to-r, blue.600, purple.600)" // Gradient text
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))" // Gradient text
               bgClip="text"
             >
               Trending Categories
@@ -69,7 +69,7 @@ const SpecificCategorySection = () => {
             </Text>
             <Button
               variant="solid"
-              colorScheme="purple"
+              colorScheme="brand"
               bg="purple.600"
               _hover={{ bg: "purple.700", transform: "scale(1.08)", boxShadow: "md" }} // Enhanced hover
               _active={{ bg: "purple.800" }}
@@ -117,9 +117,9 @@ const SpecificCategorySection = () => {
                     transition="all 0.3s ease"
                     _groupHover={{
                       boxShadow: "xl",
-                      bg: "purple.100", // Richer hover background
+                      bg: "var(--color-surface-hover)",
                       border: "1px solid",
-                      borderColor: "purple.300", // Subtle border accent
+                      borderColor: "var(--color-primary)",
                     }}
                   >
                     <Image
@@ -135,9 +135,9 @@ const SpecificCategorySection = () => {
                 <Text
                   mt={2}
                   fontSize={{ base: "xs", sm: "sm", md: "md" }}
-                  fontWeight="bold" // Bolder for emphasis
-                  color="gray.800" // Darker for contrast
-                  _groupHover={{ color: "purple.700" }} // Richer hover color
+                  fontWeight="bold"
+                  color="var(--color-text)"
+                  _groupHover={{ color: "var(--color-primary)" }}
                   noOfLines={1}
                 >
                   {item.title}

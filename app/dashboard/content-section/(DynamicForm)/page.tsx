@@ -268,7 +268,7 @@ const MultiFormCreator = observer(() => {
               <Tooltip label="Add a new form to the list" placement="top">
                 <Button
                   onClick={() => handleAddForm()}
-                  colorScheme="teal"
+                  colorScheme="brand"
                   size="lg"
                   px={8}
                   leftIcon={<AddIcon />}
@@ -345,7 +345,7 @@ const MultiFormCreator = observer(() => {
                           icon={<EditIcon />}
                           size="sm"
                           variant="ghost"
-                          colorScheme="teal"
+                          colorScheme="brand"
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditMode((prev) => ({ ...prev, [form.id]: true }));
@@ -362,7 +362,7 @@ const MultiFormCreator = observer(() => {
                       icon={<ArrowUpIcon />}
                       size="sm"
                       variant="outline"
-                      colorScheme="teal"
+                      colorScheme="brand"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddForm("before", form.id);
@@ -375,7 +375,7 @@ const MultiFormCreator = observer(() => {
                       icon={<ArrowDownIcon />}
                       size="sm"
                       variant="outline"
-                      colorScheme="teal"
+                      colorScheme="brand"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddForm("after", form.id);
@@ -385,7 +385,7 @@ const MultiFormCreator = observer(() => {
                   <Tooltip label="Edit fields" placement="top">
                     <Button
                       size="sm"
-                      colorScheme="teal"
+                      colorScheme="brand"
                       variant="outline"
                       onClick={() => handleOpenForm(form)}
                     >
@@ -532,7 +532,7 @@ const MultiFormCreator = observer(() => {
                     </FormControl>
                     <Button
                       onClick={() => handleAddField(selectedForm.id)}
-                      colorScheme="teal"
+                      colorScheme="brand"
                       size="md"
                       leftIcon={<AddIcon />}
                       bg={accentColor}
@@ -581,7 +581,7 @@ const MultiFormCreator = observer(() => {
             <Button
               onClick={handleSave}
               isLoading={isLoading}
-              colorScheme="blue"
+              colorScheme="brand"
               size="lg"
               px={12}
               fontSize="lg"

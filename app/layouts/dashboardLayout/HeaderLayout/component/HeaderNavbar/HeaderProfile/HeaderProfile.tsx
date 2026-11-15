@@ -32,6 +32,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { WEBSITE_TITLE } from "../../../../../../config/utils/variables";
 import ChangePasswordModal from "./component/ChangePasswordModal";
 import { dashboardPalette } from "../../../../dashboardPalette";
+import { ThemeModeSwitcher } from "../../../../../../theme/ThemeModeSwitcher";
 
 const HeaderProfile = observer(() => {
   const { auth: { doLogout } } = stores;
@@ -121,6 +122,12 @@ const HeaderProfile = observer(() => {
               <MenuItem onClick={setOpenThemeDrawer} bg="transparent" borderRadius="xl" _hover={{ bg: cSurfaceSoft }}>
                 <FaPalette style={{ marginRight: "8px" }} /> Customize Theme
               </MenuItem>
+              <Box px={2} py={2} w="full">
+                <Text fontSize="10px" fontWeight="700" color={cTextMuted} mb={1.5} textTransform="uppercase" letterSpacing="wider">
+                  Theme Mode
+                </Text>
+                <ThemeModeSwitcher size="sm" />
+              </Box>
               <Divider borderColor={cBorderStrong} />
               <MenuItem
                 onClick={() => {

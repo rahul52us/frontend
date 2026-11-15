@@ -12,6 +12,7 @@ import {
   Portal,
   Text,
   useBreakpointValue,
+  useColorModeValue,
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
@@ -40,6 +41,19 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
     pathname === item.link ||
     item.children?.some((child) => pathname === child.link);
 
+  // Theme-aware styles for active & hover states
+  const activeBg = useColorModeValue("white", "rgba(6, 95, 104, 0.18)");
+  const activeColor = useColorModeValue("var(--color-primary)", "brand.200");
+  const inactiveColor = useColorModeValue("gray.600", "var(--color-text-secondary)");
+  const activeGlow = useColorModeValue(
+    "0 1px 3px rgba(0, 0, 0, 0.08)",
+    "0 0 14px rgba(42, 138, 148, 0.4), inset 0 0 0 1px rgba(42, 138, 148, 0.35)"
+  );
+  const hoverBg = useColorModeValue("white", "rgba(255, 255, 255, 0.06)");
+  const popoverBg = useColorModeValue("white", "var(--color-surface)");
+  const popoverBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const itemActiveBg = useColorModeValue("blue.50", "rgba(6, 95, 104, 0.2)");
+
   const handleNavigate = (link: string) => {
     router.push(link);
     onClose();
@@ -57,10 +71,11 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
           py={2}
           px={3}
           borderRadius="lg"
-          bg={isActive ? "blue.50" : "transparent"}
-          color={isActive ? "blue.600" : "gray.700"}
-          _hover={{ bg: "gray.50", color: "blue.600" }}
-          _active={{ bg: "gray.100" }}
+          bg={isActive ? itemActiveBg : "transparent"}
+          color={isActive ? activeColor : inactiveColor}
+          boxShadow={isActive ? activeGlow : "none"}
+          _hover={{ bg: hoverBg, color: activeColor }}
+          _active={{ bg: hoverBg }}
           transition="all 0.15s ease"
           onClick={() => {
             if (hasChildren) {
@@ -81,7 +96,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
           {hasChildren && (
             <ChevronDownIcon
               boxSize={4}
-              color={isActive ? "blue.600" : "gray.400"}
+              color={isActive ? activeColor : "gray.400"}
               transform={isOpen ? "rotate(180deg)" : "rotate(0deg)"}
               transition="transform 0.2s ease"
             />
@@ -98,7 +113,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
               mt={0.5}
               mb={1}
               borderLeft="1.5px solid"
-              borderColor="gray.200"
+              borderColor={popoverBorder}
             >
               {item.children!.map((child) => {
                 const isChildActive = pathname === child.link;
@@ -112,9 +127,10 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
                     borderRadius="md"
                     fontSize="xs"
                     fontWeight={isChildActive ? "600" : "500"}
-                    color={isChildActive ? "blue.600" : "gray.600"}
-                    bg={isChildActive ? "blue.50" : "transparent"}
-                    _hover={{ bg: "gray.50", color: "blue.600" }}
+                    color={isChildActive ? activeColor : inactiveColor}
+                    bg={isChildActive ? itemActiveBg : "transparent"}
+                    boxShadow={isChildActive ? activeGlow : "none"}
+                    _hover={{ bg: hoverBg, color: activeColor }}
                     textAlign="left"
                     transition="all 0.15s ease"
                     onClick={() => handleNavigate(child.link)}
@@ -144,10 +160,16 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
           position="relative"
           role="group"
           borderRadius="md"
-          bg={isActive ? "white" : "transparent"}
-          color={isActive ? "blue.600" : "gray.600"}
-          boxShadow={isActive ? "xs" : "none"}
-          _hover={{ bg: "white", color: "blue.600" }}
+          bg={isActive ? activeBg : "transparent"}
+          color={isActive ? activeColor : inactiveColor}
+          boxShadow={isActive ? activeGlow : "none"}
+          _hover={{
+            bg: hoverBg,
+            color: activeColor,
+            boxShadow: isActive
+              ? activeGlow
+              : "0 0 10px rgba(42, 138, 148, 0.25)",
+          }}
           transition="all 0.15s ease"
           whiteSpace="nowrap"
           onClick={() => {
@@ -163,11 +185,11 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
           {hasChildren && (
             <ChevronDownIcon
               boxSize={3.5}
-              color="gray.400"
+              color={isActive ? activeColor : "gray.400"}
               transition="transform 0.2s ease, color 0.2s ease"
               _groupHover={{
                 transform: "rotate(180deg)",
-                color: "blue.600",
+                color: activeColor,
               }}
             />
           )}
@@ -178,11 +200,11 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
         <Portal>
           <PopoverContent
             w="200px"
-            bg="white"
+            bg={popoverBg}
             borderRadius="xl"
             boxShadow="lg"
             border="1px solid"
-            borderColor="gray.100"
+            borderColor={popoverBorder}
             overflow="hidden"
             _focus={{ outline: "none", boxShadow: "lg" }}
             zIndex="1500"
@@ -203,13 +225,14 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
                       fontWeight={isChildActive ? "600" : "500"}
                       cursor="pointer"
                       borderRadius="lg"
-                      color={isChildActive ? "blue.600" : "gray.700"}
-                      bg={isChildActive ? "blue.50" : "transparent"}
+                      color={isChildActive ? activeColor : inactiveColor}
+                      bg={isChildActive ? itemActiveBg : "transparent"}
+                      boxShadow={isChildActive ? activeGlow : "none"}
                       role="group"
                       transition="all 0.15s ease"
                       _hover={{
-                        bg: "blue.50",
-                        color: "blue.600",
+                        bg: hoverBg,
+                        color: activeColor,
                       }}
                       textAlign="left"
                       onClick={() => handleNavigate(child.link)}
@@ -220,7 +243,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, onClose }) => {
                         opacity={0}
                         transform="translateX(-4px)"
                         transition="all 0.15s ease"
-                        color="blue.500"
+                        color="var(--color-primary)"
                         _groupHover={{
                           opacity: 1,
                           transform: "translateX(0)",

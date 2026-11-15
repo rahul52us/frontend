@@ -317,7 +317,7 @@ const ShopPage = observer(({ shopData }: any) => {
                   </Text>
                   <Button
                     size="sm"
-                    colorScheme="blue"
+                    colorScheme="brand"
                     borderRadius="full"
                     px={6}
                     onClick={() => fetchProducts(currentPage)}
@@ -540,7 +540,7 @@ const ShopPage = observer(({ shopData }: any) => {
             size="md"
             h="44px"
             borderRadius="xl"
-            bgGradient="linear(to-r, blue.600, indigo.600)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
             color="white"
             fontWeight="bold"
             fontSize="sm"

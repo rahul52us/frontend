@@ -42,8 +42,8 @@ function ProductNotFoundState() {
             w="52px"
             h="52px"
             rounded="full"
-            bg="blue.50"
-            color="blue.600"
+            bg="var(--color-surface-hover)"
+            color="var(--color-primary)"
             align="center"
             justify="center"
           >
@@ -60,7 +60,7 @@ function ProductNotFoundState() {
             h="38px"
             px={6}
             rounded="full"
-            colorScheme="blue"
+            colorScheme="brand"
             onClick={() => router.push('/products')}
           >
             Browse Products

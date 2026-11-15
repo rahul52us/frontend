@@ -160,7 +160,7 @@ const VideoStories = () => {
                             onClick={(e) => { e.stopPropagation(); onClose(); }}
                             variant="solid"
                             bg="white"
-                            color="purple.600"
+                            color="var(--color-primary)"
                             borderRadius="full"
                             size="md"
                             boxShadow="2xl"

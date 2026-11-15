@@ -289,7 +289,7 @@ const ShopsPage = () => {
           w={vertical ? 'full' : 'auto'}
           px={5}
           borderRadius="full"
-          colorScheme="purple"
+          colorScheme="brand"
           variant={geoActive ? 'solid' : 'outline'}
           fontWeight="700"
           transition="all 0.2s"
@@ -319,7 +319,7 @@ const ShopsPage = () => {
             Explore shops
           </Heading>
           <HStack spacing={1} color={subTextColor}>
-            <Icon as={FiMapPin} boxSize={3} color="purple.500" />
+            <Icon as={FiMapPin} boxSize={3} color="var(--color-primary)" />
             <Text fontSize="xs" fontWeight="500">
               {geoActive ? `Within ${radiusKm} km` : 'All areas'}
             </Text>
@@ -372,7 +372,7 @@ const ShopsPage = () => {
               Discover{' '}
               <Box
                 as="span"
-                bgGradient="linear(to-r, #7C3AED, #2563EB, #7C3AED)"
+                bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
                 bgClip="text"
                 backgroundSize="200% auto"
                 animation={anim(`${shimmer} 6s linear infinite`)}
@@ -556,7 +556,7 @@ const ShopsPage = () => {
                 key={tag.key}
                 size="md"
                 borderRadius="full"
-                colorScheme="purple"
+                colorScheme="brand"
                 variant="subtle"
                 animation={anim(`${fadeSlideUp} 0.25s ease-out both`)}
               >
@@ -564,7 +564,7 @@ const ShopsPage = () => {
                 <TagCloseButton onClick={tag.onRemove} />
               </Tag>
             ))}
-            <Button size="xs" variant="link" colorScheme="purple" onClick={clearAll}>
+            <Button size="xs" variant="link" colorScheme="brand" onClick={clearAll}>
               Clear all
             </Button>
           </HStack>
@@ -629,7 +629,7 @@ const ShopsPage = () => {
             gap={{ base: 3, md: 8 }}
           >
             <Box>
-              <Text fontSize="xs" fontWeight="800" letterSpacing="widest" textTransform="uppercase" color="purple.500" mb={1}>
+              <Text fontSize="xs" fontWeight="800" letterSpacing="widest" textTransform="uppercase" color="var(--color-primary)" mb={1}>
                 For sellers
               </Text>
               <Heading fontSize={{ base: 'md', md: '2xl' }} fontWeight="800" color={textColor}>
@@ -648,7 +648,7 @@ const ShopsPage = () => {
               borderRadius="full"
               color="white"
               fontWeight="700"
-              bgGradient="linear(to-r, #7C3AED, #6366F1, #7C3AED)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
               backgroundSize="200% auto"
               boxShadow="0 8px 20px rgba(124, 58, 237, 0.3)"
               transition="all 0.25s"
@@ -679,7 +679,7 @@ const ShopsPage = () => {
             <Button flex={1} variant="outline" borderRadius="full" h="46px" onClick={clearAll}>
               Reset
             </Button>
-            <Button flex={2} colorScheme="purple" borderRadius="full" h="46px" onClick={onClose}>
+            <Button flex={2} colorScheme="brand" borderRadius="full" h="46px" onClick={onClose}>
               Show shops
             </Button>
           </DrawerFooter>
@@ -694,7 +694,7 @@ const ShopsPage = () => {
           position="fixed"
           bottom={{ base: 4, md: 10 }}
           right={{ base: 3, md: 10 }}
-          bgGradient="linear(to-br, #7C3AED, #6366F1)"
+          bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
           color="white"
           _hover={{ transform: 'translateY(-3px)' }}
           _active={{ transform: 'scale(0.94)' }}

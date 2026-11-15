@@ -48,13 +48,13 @@ const FaqHome = observer(() => {
     <Box p={4}>
       {/* Heading */}
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Heading size="lg" color="teal.600">
+        <Heading size="lg" color="var(--color-primary)">
           Manage Home FAQs
         </Heading>
 
         {/* Add FAQ Button */}
         <Button
-          colorScheme="teal"
+          colorScheme="brand"
           onClick={handleOpen}
           size="md"
           variant="solid"
@@ -67,7 +67,7 @@ const FaqHome = observer(() => {
       {/* Loading State */}
       {isLoading && (
         <Flex justifyContent="center" alignItems="center" my={6}>
-          <Spinner size="lg" color="teal.500" />
+          <Spinner size="lg" color="var(--color-primary)" />
         </Flex>
       )}
 

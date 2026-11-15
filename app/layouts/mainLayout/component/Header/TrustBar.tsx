@@ -30,7 +30,7 @@ const TrustBar = () => {
             >
                 {benefits.map((b, i) => (
                     <HStack key={i} flexShrink={0} mr={8} spacing={3} align="center">
-                        <Icon as={b.icon} color="blue.600" boxSize={4} />
+                        <Icon as={b.icon} color="var(--color-primary)" boxSize={4} />
                         <Box>
                             <Text fontSize="2xs" fontWeight="black" color="gray.800" whiteSpace="nowrap">{b.title}</Text>
                             <Text fontSize="3xs" color="gray.500" whiteSpace="nowrap">{b.sub}</Text>

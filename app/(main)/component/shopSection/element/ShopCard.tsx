@@ -91,13 +91,14 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
   const router = useRouter();
 
   // Theme-aware tokens hoisted to top
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.100", "gray.700");
-  const titleColor = useColorModeValue("gray.900", "white");
-  const mutedText = useColorModeValue("gray.500", "gray.400");
-  const dockBg = useColorModeValue("#F8FAFC", "gray.900");
-  const chipBg = useColorModeValue("gray.100", "whiteAlpha.100");
-  const chipColor = useColorModeValue("gray.700", "gray.200");
+  const cardBg = useColorModeValue("white", "var(--color-surface)");
+  const borderColor = useColorModeValue("var(--color-border)", "var(--color-border)");
+  const titleColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const mutedText = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
+  const dockBg = useColorModeValue("var(--color-surface-hover)", "var(--color-surface-hover)");
+  const chipBg = useColorModeValue("var(--color-surface-hover)", "var(--color-surface-hover)");
+  const chipColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const hoverTitleColor = useColorModeValue("brand.600", "brand.300");
 
   const shopSlug = shop?.name?.replace(/\s+/g, "-").toLowerCase() || "shop";
 
@@ -286,12 +287,14 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 color={titleColor}
                 noOfLines={1}
                 lineHeight="1.2"
+                _active={{ color: hoverTitleColor }}
+                transition="color 0.15s ease"
               >
                 {shop?.name}
               </Text>
               <Icon
                 as={FiCheckCircle}
-                color="blue.500"
+                color="var(--color-primary)"
                 boxSize={3.5}
                 flexShrink={0}
               />
@@ -382,8 +385,8 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                   h="26px"
                   minW="26px"
                   rounded="full"
-                  bg="blue.50"
-                  color="blue.600"
+                  bg="var(--color-primary-soft)"
+                  color="var(--color-primary)"
                   onClick={handleOpenDirections}
                 />
                 <Flex
@@ -502,7 +505,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 color="white"
                 backdropFilter="blur(8px)"
               >
-                <Icon as={FiNavigation} boxSize={2.5} color="blue.300" />
+                <Icon as={FiNavigation} boxSize={2.5} color="var(--color-secondary)" />
                 <Text fontSize="10px" fontWeight="700">
                   {distanceKm} km
                 </Text>
@@ -584,21 +587,21 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 color={titleColor}
                 noOfLines={1}
                 letterSpacing="-0.01em"
-                _groupHover={{ color: "blue.600" }}
+                _groupHover={{ color: hoverTitleColor }}
                 transition="color 0.15s ease"
               >
                 {shop?.name}
               </Text>
               <Icon
                 as={FiCheckCircle}
-                color="blue.500"
+                color="var(--color-primary)"
                 boxSize={3.5}
                 flexShrink={0}
               />
             </HStack>
 
             <HStack spacing={1} mt={0.5} color={mutedText}>
-              <Icon as={FiMapPin} boxSize={3} color="blue.500" flexShrink={0} />
+              <Icon as={FiMapPin} boxSize={3} color="var(--color-primary)" flexShrink={0} />
               <Text fontSize="xs" fontWeight="400" noOfLines={1}>
                 {locationLabel}
               </Text>
@@ -636,8 +639,8 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 ))}
               {shop?.categories?.length > 2 && (
                 <Badge
-                  bg="blue.50"
-                  color="blue.600"
+                  bg="var(--color-surface-hover)"
+                  color="var(--color-primary)"
                   fontSize="10px"
                   fontWeight="700"
                   px={2}
@@ -697,14 +700,14 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                 minW="32px"
                 borderRadius="lg"
                 bg="white"
-                color="blue.600"
+                color="var(--color-primary)"
                 border="1px solid"
                 borderColor="gray.200"
                 boxShadow="2xs"
                 _hover={{
-                  bg: "blue.600",
+                  bg: "var(--color-primary)",
                   color: "white",
-                  borderColor: "blue.600",
+                  borderColor: "var(--color-primary)",
                 }}
                 onClick={handleOpenDirections}
               />
@@ -718,13 +721,13 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
             flex="1"
             maxW="150px"
             borderRadius="lg"
-            bgGradient="linear(to-r, blue.600, purple.600)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
             color="white"
             fontSize="xs"
             fontWeight="700"
             rightIcon={<FiArrowUpRight size={14} />}
             _hover={{
-              bgGradient: "linear(to-r, blue.700, purple.700)",
+              opacity: 0.9,
             }}
             onClick={(e) => {
               e.stopPropagation();

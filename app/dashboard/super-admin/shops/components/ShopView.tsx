@@ -85,7 +85,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                     {shop.name}
                                 </Text>
                                     <HStack spacing={3} mt={1}>
-                                        <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" colorScheme="blue" variant="solid">
+                                        <Badge px={2} py={1} fontSize="0.8em" borderRadius="md" colorScheme="brand" variant="solid">
                                             {shop.companyCode || "N/A"}
                                         </Badge>
                                         <Badge
@@ -118,7 +118,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                     </Box>
 
                     <Box mt={8}>
-                        <Tabs colorScheme="blue" variant="line" isLazy>
+                        <Tabs colorScheme="brand" variant="line" isLazy>
                             <TabList mb={4} borderBottom="2px solid" borderColor="gray.200">
                                 <Tab fontWeight="bold" _selected={{ color: 'blue.600', borderColor: 'blue.600', borderBottomWidth: '4px', mb: '-2px' }}>Overview</Tab>
                                 <Tab fontWeight="bold" _selected={{ color: 'blue.600', borderColor: 'blue.600', borderBottomWidth: '4px', mb: '-2px' }}>Location</Tab>
@@ -143,7 +143,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                                 <Text fontSize="md" fontWeight="bold" mb={3} color="gray.700">Categories</Text>
                                                 <HStack wrap="wrap" spacing={2}>
                                                     {shop.categories?.map((cat: string, i: number) => (
-                                                        <Badge key={i} px={3} py={1} borderRadius="full" colorScheme="purple" variant="subtle">
+                                                        <Badge key={i} px={3} py={1} borderRadius="full" colorScheme="brand" variant="subtle">
                                                             {cat}
                                                         </Badge>
                                                     ))}
@@ -168,7 +168,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                             <VStack align="start" spacing={4}>
                                                 {primaryPhone && (
                                                     <HStack p={2} w="100%" _hover={{ bg: "gray.50", borderRadius: "md" }}>
-                                                        <Icon as={FaPhone} color="blue.500" boxSize={5} />
+                                                        <Icon as={FaPhone} color="var(--color-primary)" boxSize={5} />
                                                         <Text fontWeight="medium">{primaryPhone}</Text>
                                                     </HStack>
                                                 )}
@@ -183,7 +183,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                                 {shop.contactInfo?.website && (
                                                     <HStack p={2} w="100%" _hover={{ bg: "gray.50", borderRadius: "md" }}>
                                                         <Icon as={FaGlobe} color="green.500" boxSize={5} />
-                                                        <Link href={shop.contactInfo.website} isExternal color="blue.500" fontWeight="bold">
+                                                        <Link href={shop.contactInfo.website} isExternal color="var(--color-primary)" fontWeight="bold">
                                                             Visit Website
                                                         </Link>
                                                     </HStack>
@@ -244,9 +244,9 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                             <Stepper index={shop.statusHistory.length} orientation="vertical" height="auto" gap="0">
                                                 {[...shop.statusHistory].reverse().map((step: any, index: number) => (
                                                     <Step key={index} style={{ width: '100%' }}>
-                                                        <StepIndicator bg="white" borderColor="blue.500">
+                                                        <StepIndicator bg="white" borderColor="var(--color-primary)">
                                                             <StepStatus
-                                                                complete={<StepIcon color="blue.500" />}
+                                                                complete={<StepIcon color="var(--color-primary)" />}
                                                                 incomplete={<StepIcon />}
                                                                 active={<Box w={2} h={2} bg="blue.500" borderRadius="full" />}
                                                             />

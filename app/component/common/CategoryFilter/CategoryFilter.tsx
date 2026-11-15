@@ -136,13 +136,13 @@ const CategorySection = observer(() => {
         >
           <Box>
             <HStack spacing={1.5} mb={1}>
-              <Icon as={FiGrid} color="blue.600" boxSize={3.5} />
+              <Icon as={FiGrid} color="var(--color-primary)" boxSize={3.5} />
               <Text
                 fontSize="11px"
                 fontWeight="700"
                 textTransform="uppercase"
                 letterSpacing="wider"
-                color="blue.600"
+                color="var(--color-primary)"
               >
                 Categories
               </Text>
@@ -167,7 +167,7 @@ const CategorySection = observer(() => {
               px={3.5}
               rounded="full"
               variant="ghost"
-              colorScheme="blue"
+              colorScheme="brand"
               fontWeight="600"
               rightIcon={<FiArrowRight />}
               onClick={() => router.push('/categories')}
@@ -306,7 +306,7 @@ const CategorySection = observer(() => {
                         color={titleColor}
                         noOfLines={1}
                         lineHeight="1.2"
-                        _groupHover={{ color: 'blue.600' }}
+                        _groupHover={{ color: 'var(--color-primary)' }}
                         transition="color 0.15s ease"
                       >
                         {category.name}
@@ -336,7 +336,7 @@ const CategorySection = observer(() => {
                       boxShadow="2xs"
                       transition="all 0.2s ease"
                       _groupHover={{
-                        bg: 'blue.600',
+                        bg: 'var(--color-primary)',
                         color: 'white',
                         transform: 'translate(1px, -1px)',
                       }}
@@ -356,7 +356,7 @@ const CategorySection = observer(() => {
               flexShrink={0}
               bgGradient="linear(to-br, blue.50, purple.50)"
               border="1px dashed"
-              borderColor="blue.200"
+              borderColor="var(--color-border)"
               rounded={{ base: 'xl', md: '2xl' }}
               p={3}
               direction="column"
@@ -375,7 +375,7 @@ const CategorySection = observer(() => {
                 h={{ base: '36px', md: '44px' }}
                 rounded="full"
                 bg="white"
-                color="blue.600"
+                color="var(--color-primary)"
                 align="center"
                 justify="center"
                 boxShadow="xs"
@@ -385,10 +385,10 @@ const CategorySection = observer(() => {
                 <Icon as={FiArrowRight} boxSize={{ base: 4, md: 5 }} />
               </Flex>
               <VStack spacing={0}>
-                <Text fontSize="xs" fontWeight="700" color="blue.800">
+                <Text fontSize="xs" fontWeight="700" color="var(--color-primary)">
                   See All
                 </Text>
-                <Text fontSize="10px" color="blue.600" fontWeight="500">
+                <Text fontSize="10px" color="var(--color-primary)" fontWeight="500">
                   {categories.length}+ Categories
                 </Text>
               </VStack>

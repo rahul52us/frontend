@@ -17,6 +17,7 @@ import {
     RadioGroup,
     Spinner,
     Text,
+    useColorModeValue,
     useDisclosure,
     useToast,
     VStack,
@@ -25,6 +26,7 @@ import { observer } from "mobx-react-lite";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { themeConfig } from "../../theme/themeConfig";
 import {
     FaCreditCard,
     FaHouse,
@@ -91,7 +93,7 @@ const HouseIllustration = () => (
       />
       <path d="M17 27L38 12L59 27H17Z" fill="#EF4444" />
       <rect x="48" y="16" width="4.5" height="8" fill="#B91C1C" rx="1" />
-      <rect x="34" y="37" width="8" height="12" rx="1" fill="#087F8C" />
+      <rect x="34" y="37" width="8" height="12" rx="1" fill="var(--color-primary)" />
       <rect x="25" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
       <rect x="45" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
     </svg>
@@ -106,6 +108,21 @@ const CheckoutClient = observer(() => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
+
+  const cBg = useColorModeValue("#F8FAFC", "var(--color-bg)");
+  const cSurface = useColorModeValue("#FFFFFF", "var(--color-surface)");
+  const cSurfaceElevated = useColorModeValue("#FAFBFD", "var(--color-surface-elevated)");
+  const cBorder = useColorModeValue("#E2E8F0", "var(--color-border)");
+  const cBorderSubtle = useColorModeValue("#E5EAF0", "var(--color-border)");
+  const cText = useColorModeValue("#172033", "var(--color-text-primary)");
+  const cTextMuted = useColorModeValue("#64748B", "var(--color-text-muted)");
+  const cTextSubtle = useColorModeValue("#475569", "var(--color-text-secondary)");
+  const cPrimary = "var(--color-primary)";
+  const cPrimaryHover = "var(--color-primary-hover)";
+  const cPrimarySoft = useColorModeValue("#E6F7F3", "rgba(6, 95, 104, 0.2)");
+  const cBannerBg = useColorModeValue("#FFF0F0", "rgba(239, 68, 68, 0.12)");
+  const cBannerBorder = useColorModeValue("#FFD5D5", "rgba(239, 68, 68, 0.25)");
+  const cActiveBg = useColorModeValue("#F0FDFB", "rgba(6, 95, 104, 0.15)");
 
   const buyNowId = searchParams.get("productId");
   const isBuyNow = searchParams.get("buyNow") === "true";
@@ -482,7 +499,7 @@ const CheckoutClient = observer(() => {
             contact: auth.user?.phone || "",
           },
           theme: {
-            color: "#087F8C",
+            color: themeConfig.colors.primary,
           },
         };
 
@@ -693,22 +710,23 @@ const CheckoutClient = observer(() => {
   /* -------------------------------------------------------------------------- */
   if (!auth.token) {
     return (
-      <Box bg="#F8FAFC" minH="80vh" py={{ base: 8, md: 16 }} px={4}>
+      <Box bg={cBg} minH="80vh" py={{ base: 8, md: 16 }} px={4}>
         <Container maxW="md">
           <Box
-            bg="#FFFFFF"
+            bg={cSurface}
             borderRadius="24px"
             p={{ base: 6, sm: 8 }}
             textAlign="center"
-            border="1px solid #E2E8F0"
+            border="1px solid"
+            borderColor={cBorder}
             boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.05)"
           >
             <Flex
               w="64px"
               h="64px"
               borderRadius="full"
-              bg="#E6F7F3"
-              color="#087F8C"
+              bg={cPrimarySoft}
+              color={cPrimary}
               align="center"
               justify="center"
               mx="auto"
@@ -716,10 +734,10 @@ const CheckoutClient = observer(() => {
             >
               <Icon as={FaLock} boxSize={6} />
             </Flex>
-            <Heading fontSize="xl" fontWeight="800" color="#172033" mb={2}>
+            <Heading fontSize="xl" fontWeight="800" color={cText} mb={2}>
               Sign In to Complete Checkout
             </Heading>
-            <Text fontSize="sm" color="#64748B" mb={6} lineHeight="tall">
+            <Text fontSize="sm" color={cTextMuted} mb={6} lineHeight="tall">
               Please sign in or create an account to save your delivery address,
               track orders, and complete your purchase securely.
             </Text>
@@ -729,11 +747,11 @@ const CheckoutClient = observer(() => {
                 href="/login?redirect=/checkout"
                 w="full"
                 h="46px"
-                bg="#087F8C"
+                bg={cPrimary}
                 color="#FFFFFF"
                 fontWeight="700"
                 borderRadius="14px"
-                _hover={{ bg: "#075B6B" }}
+                _hover={{ bg: cPrimaryHover }}
               >
                 Sign In / Register
               </Button>
@@ -743,11 +761,11 @@ const CheckoutClient = observer(() => {
                 w="full"
                 h="46px"
                 variant="outline"
-                borderColor="#E2E8F0"
-                color="#64748B"
+                borderColor={cBorder}
+                color={cTextMuted}
                 fontWeight="600"
                 borderRadius="14px"
-                _hover={{ bg: "#F8FAFC" }}
+                _hover={{ bg: cBg }}
               >
                 Continue Browsing
               </Button>
@@ -763,12 +781,12 @@ const CheckoutClient = observer(() => {
   /* -------------------------------------------------------------------------- */
   if (isInitializing && displayItems.length === 0) {
     return (
-      <Box bg="#F8FAFC" minH="80vh" py={20} px={4} textAlign="center">
-        <Spinner size="xl" color="#087F8C" thickness="4px" speed="0.75s" />
-        <Heading fontSize="lg" fontWeight="700" color="#172033" mt={6} mb={1}>
+      <Box bg={cBg} minH="80vh" py={20} px={4} textAlign="center">
+        <Spinner size="xl" color={cPrimary} thickness="4px" speed="0.75s" />
+        <Heading fontSize="lg" fontWeight="700" color={cText} mt={6} mb={1}>
           Preparing Your Order...
         </Heading>
-        <Text fontSize="sm" color="#64748B">
+        <Text fontSize="sm" color={cTextMuted}>
           Validating pricing, inventory, and delivery options
         </Text>
       </Box>
@@ -780,21 +798,22 @@ const CheckoutClient = observer(() => {
   /* -------------------------------------------------------------------------- */
   if (!isBuyNow && displayItems.length === 0) {
     return (
-      <Box bg="#F8FAFC" minH="80vh" py={{ base: 12, md: 20 }} px={4}>
+      <Box bg={cBg} minH="80vh" py={{ base: 12, md: 20 }} px={4}>
         <Container maxW="md">
           <Box
-            bg="#FFFFFF"
+            bg={cSurface}
             borderRadius="24px"
             p={{ base: 6, sm: 8 }}
             textAlign="center"
-            border="1px solid #E2E8F0"
+            border="1px solid"
+            borderColor={cBorder}
             boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.05)"
           >
             <Flex
               w="64px"
               h="64px"
               borderRadius="full"
-              bg="#FFF0F0"
+              bg={cBannerBg}
               color="#EF4444"
               align="center"
               justify="center"
@@ -803,10 +822,10 @@ const CheckoutClient = observer(() => {
             >
               <Icon as={FiShoppingBag} boxSize={7} />
             </Flex>
-            <Heading fontSize="xl" fontWeight="800" color="#172033" mb={2}>
+            <Heading fontSize="xl" fontWeight="800" color={cText} mb={2}>
               Your Cart is Empty
             </Heading>
-            <Text fontSize="sm" color="#64748B" mb={6}>
+            <Text fontSize="sm" color={cTextMuted} mb={6}>
               You do not have any items ready for checkout. Add some items to your
               cart and proceed here.
             </Text>
@@ -815,11 +834,11 @@ const CheckoutClient = observer(() => {
               href="/products"
               w="full"
               h="46px"
-              bg="#087F8C"
+              bg={cPrimary}
               color="#FFFFFF"
               fontWeight="700"
               borderRadius="14px"
-              _hover={{ bg: "#075B6B" }}
+              _hover={{ bg: cPrimaryHover }}
             >
               Explore Products
             </Button>
@@ -833,7 +852,7 @@ const CheckoutClient = observer(() => {
   /*  MAIN CHECKOUT INTERFACE                                                   */
   /* -------------------------------------------------------------------------- */
   return (
-    <Box bg="#F8FAFC" minH="100vh" py={{ base: 4, md: 8 }} px={{ base: 2, sm: 4, lg: 6 }}>
+    <Box bg={cBg} minH="100vh" py={{ base: 4, md: 8 }} px={{ base: 2, sm: 4, lg: 6 }}>
       <Container maxW="container.xl" px={{ base: 2, sm: 4 }}>
         {/* Navigation Breadcrumb / Header */}
         <Flex
@@ -849,8 +868,8 @@ const CheckoutClient = observer(() => {
               size="sm"
               leftIcon={<Icon as={FiArrowLeft} />}
               onClick={() => router.back()}
-              color="#64748B"
-              _hover={{ color: "#087F8C", bg: "#E6F7F3" }}
+              color={cTextMuted}
+              _hover={{ color: cPrimary, bg: cPrimarySoft }}
               borderRadius="10px"
               px={3}
             >
@@ -859,7 +878,7 @@ const CheckoutClient = observer(() => {
             <Heading
               fontSize={{ base: "xl", sm: "24px" }}
               fontWeight="800"
-              color="#172033"
+              color={cText}
               letterSpacing="-0.02em"
             >
               Secure Checkout
@@ -868,11 +887,11 @@ const CheckoutClient = observer(() => {
 
           <HStack
             spacing={2}
-            bg="#E6F7F3"
+            bg={cPrimarySoft}
             px={3}
             py={1.5}
             borderRadius="full"
-            color="#087F8C"
+            color={cPrimary}
             fontSize="xs"
             fontWeight="700"
           >
@@ -925,9 +944,10 @@ const CheckoutClient = observer(() => {
             <VStack spacing={{ base: 4, md: 5 }} align="stretch">
               {/* 1. DELIVERY ADDRESS SECTION */}
               <Box
-                bg="#FFFFFF"
+                bg={cSurface}
                 borderRadius="20px"
-                border="1px solid #E5EAF0"
+                border="1px solid"
+                borderColor={cBorderSubtle}
                 p={{ base: 4, sm: 5 }}
                 boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
               >
@@ -937,18 +957,18 @@ const CheckoutClient = observer(() => {
                       w="32px"
                       h="32px"
                       borderRadius="full"
-                      bg="#E6F7F3"
-                      color="#087F8C"
+                      bg={cPrimarySoft}
+                      color={cPrimary}
                       align="center"
                       justify="center"
                     >
                       <Icon as={FaLocationDot} boxSize={3.5} />
                     </Flex>
                     <Box>
-                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                      <Text fontWeight="800" fontSize="16px" color={cText}>
                         Delivery Address
                       </Text>
-                      <Text fontSize="xs" color="#64748B">
+                      <Text fontSize="xs" color={cTextMuted}>
                         Where should we deliver your order?
                       </Text>
                     </Box>
@@ -957,12 +977,12 @@ const CheckoutClient = observer(() => {
                   {currentAddress && (
                     <Button
                       variant="unstyled"
-                      color="#087F8C"
+                      color={cPrimary}
                       fontWeight="700"
                       fontSize="13px"
                       h="auto"
                       p={0}
-                      _hover={{ textDecoration: "underline", color: "#075B6B" }}
+                      _hover={{ textDecoration: "underline", color: cPrimaryHover }}
                       onClick={onAddressModalOpen}
                     >
                       Change
@@ -973,8 +993,9 @@ const CheckoutClient = observer(() => {
                 {currentAddress &&
                 (currentAddress.addressLine1 || currentAddress.line1) ? (
                   <Box
-                    bg="#FFF0F0"
-                    border="1px solid #FFD5D5"
+                    bg={cBannerBg}
+                    border="1px solid"
+                    borderColor={cBannerBorder}
                     borderRadius="16px"
                     p={{ base: "14px", sm: "16px" }}
                     position="relative"
@@ -985,7 +1006,7 @@ const CheckoutClient = observer(() => {
                     <Box position="relative" zIndex={1} pr={{ base: "48px", sm: "64px" }}>
                       <HStack spacing={2} align="center" mb={1.5} wrap="wrap">
                         <Icon as={FaHouse} color="#E53E3E" boxSize={3.5} />
-                        <Text fontWeight="800" fontSize="14px" color="#172033">
+                        <Text fontWeight="800" fontSize="14px" color={cText}>
                           {currentAddress.name || currentAddress.fullName || "Primary Address"}
                         </Text>
                         <Badge
@@ -1004,7 +1025,7 @@ const CheckoutClient = observer(() => {
 
                       <Text
                         fontSize="13px"
-                        color="#475569"
+                        color={cTextSubtle}
                         lineHeight="1.5"
                         mb={2}
                       >
@@ -1022,12 +1043,12 @@ const CheckoutClient = observer(() => {
                       {(currentAddress.phone || auth.user?.phone) && (
                         <HStack
                           spacing={1.5}
-                          color="#475569"
+                          color={cTextSubtle}
                           fontSize="12px"
                           fontWeight="600"
                           align="center"
                         >
-                          <Icon as={FaPhone} boxSize={3} color="#64748B" />
+                          <Icon as={FaPhone} boxSize={3} color={cTextMuted} />
                           <Text>
                             Contact: {currentAddress.phone || auth.user?.phone}
                           </Text>
@@ -1037,26 +1058,27 @@ const CheckoutClient = observer(() => {
                   </Box>
                 ) : (
                   <Box
-                    border="2px dashed #B5E9DF"
-                    bg="#F0FDF4"
+                    border="2px dashed"
+                    borderColor={cBorder}
+                    bg={cActiveBg}
                     borderRadius="16px"
                     p={5}
                     textAlign="center"
                   >
-                    <Icon as={FaLocationDot} color="#087F8C" boxSize={6} mb={2} />
-                    <Text fontWeight="700" fontSize="14px" color="#172033" mb={1}>
+                    <Icon as={FaLocationDot} color={cPrimary} boxSize={6} mb={2} />
+                    <Text fontWeight="700" fontSize="14px" color={cText} mb={1}>
                       No Delivery Address Selected
                     </Text>
-                    <Text fontSize="xs" color="#64748B" mb={4}>
+                    <Text fontSize="xs" color={cTextMuted} mb={4}>
                       Please add or select a shipping destination to proceed with checkout.
                     </Text>
                     <Button
                       size="sm"
-                      bg="#087F8C"
+                      bg={cPrimary}
                       color="#FFFFFF"
                       fontWeight="700"
                       borderRadius="12px"
-                      _hover={{ bg: "#075B6B" }}
+                      _hover={{ bg: cPrimaryHover }}
                       leftIcon={<Icon as={FaPlus} />}
                       onClick={onAddressModalOpen}
                     >
@@ -1068,9 +1090,10 @@ const CheckoutClient = observer(() => {
 
               {/* 2. PAYMENT METHOD SELECTION */}
               <Box
-                bg="#FFFFFF"
+                bg={cSurface}
                 borderRadius="20px"
-                border="1px solid #E5EAF0"
+                border="1px solid"
+                borderColor={cBorderSubtle}
                 p={{ base: 4, sm: 5 }}
                 boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
               >
@@ -1080,18 +1103,18 @@ const CheckoutClient = observer(() => {
                       w="32px"
                       h="32px"
                       borderRadius="full"
-                      bg="#E6F7F3"
-                      color="#087F8C"
+                      bg={cPrimarySoft}
+                      color={cPrimary}
                       align="center"
                       justify="center"
                     >
                       <Icon as={FaCreditCard} boxSize={3.5} />
                     </Flex>
                     <Box>
-                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                      <Text fontWeight="800" fontSize="16px" color={cText}>
                         Payment Method
                       </Text>
-                      <Text fontSize="xs" color="#64748B">
+                      <Text fontSize="xs" color={cTextMuted}>
                         Choose how you would like to pay
                       </Text>
                     </Box>
@@ -1105,25 +1128,25 @@ const CheckoutClient = observer(() => {
                       p={4}
                       border="1.5px solid"
                       borderRadius="16px"
-                      borderColor={paymentMethod === "cod" ? "#087F8C" : "#E2E8F0"}
-                      bg={paymentMethod === "cod" ? "#F0FDFB" : "#FFFFFF"}
+                      borderColor={paymentMethod === "cod" ? cPrimary : cBorder}
+                      bg={paymentMethod === "cod" ? cActiveBg : cSurface}
                       cursor="pointer"
                       transition="all 0.2s ease"
                       onClick={() => setPaymentMethod("cod")}
-                      _hover={{ borderColor: "#087F8C" }}
+                      _hover={{ borderColor: cPrimary }}
                     >
                       <Flex justify="space-between" align="start">
                         <HStack spacing={3} align="flex-start">
                           <Radio
                             value="cod"
-                            colorScheme="teal"
+                            colorScheme="brand"
                             mt={1}
                             isChecked={paymentMethod === "cod"}
                           />
                           <Box>
                             <HStack spacing={2}>
                               <Icon as={FaMoneyBillWave} color="#0D9488" boxSize={4} />
-                              <Text fontWeight="800" fontSize="14px" color="#172033">
+                              <Text fontWeight="800" fontSize="14px" color={cText}>
                                 Cash on Delivery (COD)
                               </Text>
                               <Badge
@@ -1138,7 +1161,7 @@ const CheckoutClient = observer(() => {
                                 Popular
                               </Badge>
                             </HStack>
-                            <Text fontSize="xs" color="#64748B" mt={1}>
+                            <Text fontSize="xs" color={cTextMuted} mt={1}>
                               Pay conveniently with cash or UPI at your doorstep upon arrival.
                             </Text>
                           </Box>
@@ -1151,30 +1174,30 @@ const CheckoutClient = observer(() => {
                       p={4}
                       border="1.5px solid"
                       borderRadius="16px"
-                      borderColor={paymentMethod === "online" ? "#087F8C" : "#E2E8F0"}
-                      bg={paymentMethod === "online" ? "#F0FDFB" : "#FFFFFF"}
+                      borderColor={paymentMethod === "online" ? cPrimary : cBorder}
+                      bg={paymentMethod === "online" ? cActiveBg : cSurface}
                       cursor="pointer"
                       transition="all 0.2s ease"
                       onClick={() => setPaymentMethod("online")}
-                      _hover={{ borderColor: "#087F8C" }}
+                      _hover={{ borderColor: cPrimary }}
                     >
                       <Flex justify="space-between" align="start">
                         <HStack spacing={3} align="flex-start">
                           <Radio
                             value="online"
-                            colorScheme="teal"
+                            colorScheme="brand"
                             mt={1}
                             isChecked={paymentMethod === "online"}
                           />
                           <Box>
                             <HStack spacing={2} wrap="wrap">
-                              <Icon as={FaLock} color="#087F8C" boxSize={3.5} />
-                              <Text fontWeight="800" fontSize="14px" color="#172033">
+                              <Icon as={FaLock} color={cPrimary} boxSize={3.5} />
+                              <Text fontWeight="800" fontSize="14px" color={cText}>
                                 Online Payment (Razorpay)
                               </Text>
                               <Badge
-                                bg="#E6F7F3"
-                                color="#087F8C"
+                                bg={cPrimarySoft}
+                                color={cPrimary}
                                 fontSize="10px"
                                 fontWeight="800"
                                 px={2}
@@ -1184,7 +1207,7 @@ const CheckoutClient = observer(() => {
                                 Instant
                               </Badge>
                             </HStack>
-                            <Text fontSize="xs" color="#64748B" mt={1}>
+                            <Text fontSize="xs" color={cTextMuted} mt={1}>
                               Pay instantly via UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, or Net Banking.
                             </Text>
                           </Box>
@@ -1197,9 +1220,10 @@ const CheckoutClient = observer(() => {
 
               {/* 3. ORDER ITEMS REVIEW SECTION */}
               <Box
-                bg="#FFFFFF"
+                bg={cSurface}
                 borderRadius="20px"
-                border="1px solid #E5EAF0"
+                border="1px solid"
+                borderColor={cBorderSubtle}
                 p={{ base: 4, sm: 5 }}
                 boxShadow="0 2px 10px rgba(0, 0, 0, 0.02)"
               >
@@ -1209,18 +1233,18 @@ const CheckoutClient = observer(() => {
                       w="32px"
                       h="32px"
                       borderRadius="full"
-                      bg="#E6F7F3"
-                      color="#087F8C"
+                      bg={cPrimarySoft}
+                      color={cPrimary}
                       align="center"
                       justify="center"
                     >
                       <Icon as={FiPackage} boxSize={4} />
                     </Flex>
                     <Box>
-                      <Text fontWeight="800" fontSize="16px" color="#172033">
+                      <Text fontWeight="800" fontSize="16px" color={cText}>
                         Review Items ({displayItems.length})
                       </Text>
-                      <Text fontSize="xs" color="#64748B">
+                      <Text fontSize="xs" color={cTextMuted}>
                         Items included in this shipment
                       </Text>
                     </Box>
@@ -1232,9 +1256,10 @@ const CheckoutClient = observer(() => {
                     <Flex
                       key={item.id || idx}
                       p={3}
-                      border="1px solid #F1F5F9"
+                      border="1px solid"
+                      borderColor={cBorder}
                       borderRadius="14px"
-                      bg="#FAFBFD"
+                      bg={cSurfaceElevated}
                       align="center"
                       justify="space-between"
                       gap={3}
@@ -1247,14 +1272,14 @@ const CheckoutClient = observer(() => {
                           h={{ base: "52px", sm: "60px" }}
                           borderRadius="10px"
                           objectFit="cover"
-                          bg="#F1F5F9"
+                          bg={cBorder}
                           fallbackSrc={FALLBACK_IMAGE}
                         />
                         <Box minW={0} flex="1">
                           <Text
                             fontWeight="700"
                             fontSize="14px"
-                            color="#172033"
+                            color={cText}
                             noOfLines={1}
                             title={item.name}
                           >
@@ -1263,8 +1288,8 @@ const CheckoutClient = observer(() => {
 
                           <HStack spacing={2} mt={1} wrap="wrap">
                             <Badge
-                              bg="#E6F7F3"
-                              color="#087F8C"
+                              bg={cPrimarySoft}
+                              color={cPrimary}
                               fontSize="11px"
                               fontWeight="700"
                               px={2}
@@ -1274,7 +1299,7 @@ const CheckoutClient = observer(() => {
                               Qty: {item.quantity}
                             </Badge>
                             {item.variant && (
-                              <Text fontSize="11px" color="#64748B">
+                              <Text fontSize="11px" color={cTextMuted}>
                                 {typeof item.variant === "object"
                                   ? Object.entries(item.variant)
                                       .map(([k, v]) => `${k}: ${v}`)
@@ -1290,13 +1315,13 @@ const CheckoutClient = observer(() => {
                         <Text
                           fontWeight="800"
                           fontSize="15px"
-                          color="#087F8C"
+                          color={cPrimary}
                           letterSpacing="-0.01em"
                         >
                           ₹{item.total}
                         </Text>
                         {item.quantity > 1 && (
-                          <Text fontSize="11px" color="#94A3B8">
+                          <Text fontSize="11px" color={cTextMuted}>
                             (₹{item.unitPrice} each)
                           </Text>
                         )}
@@ -1313,9 +1338,10 @@ const CheckoutClient = observer(() => {
              ───────────────────────────────────────────────────────────── */}
           <GridItem>
             <Box
-              bg="#FFFFFF"
+              bg={cSurface}
               borderRadius="20px"
-              border="1px solid #E5EAF0"
+              border="1px solid"
+              borderColor={cBorderSubtle}
               p={{ base: 4, sm: 6 }}
               boxShadow="0 4px 20px -2px rgba(15, 23, 42, 0.04)"
               position={{ lg: "sticky" }}
@@ -1327,14 +1353,14 @@ const CheckoutClient = observer(() => {
                   w="32px"
                   h="32px"
                   borderRadius="full"
-                  bg="#E6F7F3"
-                  color="#087F8C"
+                  bg={cPrimarySoft}
+                  color={cPrimary}
                   align="center"
                   justify="center"
                 >
                   <Icon as={IoReceiptOutline} boxSize={4} />
                 </Flex>
-                <Heading fontSize="17px" fontWeight="800" color="#172033">
+                <Heading fontSize="17px" fontWeight="800" color={cText}>
                   Order Summary
                 </Heading>
               </HStack>
@@ -1342,17 +1368,17 @@ const CheckoutClient = observer(() => {
               {/* Price Breakdown */}
               <VStack spacing={3} align="stretch" mb={4}>
                 <Flex justify="space-between" align="center">
-                  <Text fontSize="14px" color="#64748B">
+                  <Text fontSize="14px" color={cTextMuted}>
                     Items Subtotal
                   </Text>
-                  <Text fontSize="15px" fontWeight="700" color="#172033">
+                  <Text fontSize="15px" fontWeight="700" color={cText}>
                     ₹{pricing.subtotal}
                   </Text>
                 </Flex>
 
                 <Flex justify="space-between" align="center">
                   <HStack spacing={1.5} align="center">
-                    <Text fontSize="14px" color="#64748B">
+                    <Text fontSize="14px" color={cTextMuted}>
                       Delivery Fee
                     </Text>
                     {pricing.isFreeDelivery && (
@@ -1362,7 +1388,7 @@ const CheckoutClient = observer(() => {
                   <Text
                     fontSize="14px"
                     fontWeight="800"
-                    color={pricing.isFreeDelivery ? "#15803D" : "#172033"}
+                    color={pricing.isFreeDelivery ? "#15803D" : cText}
                   >
                     {pricing.isFreeDelivery ? "FREE" : `₹${pricing.deliveryFee}`}
                   </Text>
@@ -1370,10 +1396,10 @@ const CheckoutClient = observer(() => {
 
                 {pricing.tax > 0 && (
                   <Flex justify="space-between" align="center">
-                    <Text fontSize="14px" color="#64748B">
+                    <Text fontSize="14px" color={cTextMuted}>
                       Estimated Tax
                     </Text>
-                    <Text fontSize="14px" fontWeight="700" color="#172033">
+                    <Text fontSize="14px" fontWeight="700" color={cText}>
                       ₹{pricing.tax.toFixed(0)}
                     </Text>
                   </Flex>
@@ -1382,25 +1408,26 @@ const CheckoutClient = observer(() => {
 
               {/* Total Box */}
               <Box
-                bg="#E6F7F3"
+                bg={cPrimarySoft}
                 borderRadius="14px"
                 p="14px 18px"
                 mb={5}
-                border="1px solid #B5E9DF"
+                border="1px solid"
+                borderColor={cBorder}
               >
                 <Flex justify="space-between" align="center">
                   <Box>
-                    <Text fontSize="13px" fontWeight="700" color="#087F8C">
+                    <Text fontSize="13px" fontWeight="700" color={cPrimary}>
                       Total Payable
                     </Text>
-                    <Text fontSize="11px" color="#0D9488">
+                    <Text fontSize="11px" color={cTextSubtle}>
                       Inclusive of all taxes
                     </Text>
                   </Box>
                   <Text
                     fontSize="22px"
                     fontWeight="900"
-                    color="#087F8C"
+                    color={cPrimary}
                     letterSpacing="-0.02em"
                   >
                     ₹{pricing.total}
@@ -1412,15 +1439,15 @@ const CheckoutClient = observer(() => {
               <Button
                 w="full"
                 h="52px"
-                bg="#087F8C"
+                bg={cPrimary}
                 color="#FFFFFF"
                 fontWeight="800"
                 fontSize="15px"
                 borderRadius="16px"
-                boxShadow="0 4px 14px 0 rgba(8, 127, 140, 0.35)"
+                boxShadow="0 4px 14px 0 rgba(6, 95, 104, 0.35)"
                 _hover={{
-                  bg: "#075B6B",
-                  boxShadow: "0 6px 18px 0 rgba(8, 127, 140, 0.45)",
+                  bg: cPrimaryHover,
+                  boxShadow: "0 6px 18px 0 rgba(6, 95, 104, 0.45)",
                   transform: "translateY(-1px)",
                 }}
                 _active={{
@@ -1438,7 +1465,7 @@ const CheckoutClient = observer(() => {
 
               <Text
                 fontSize="11px"
-                color="#94A3B8"
+                color={cTextMuted}
                 mt={3}
                 textAlign="center"
                 lineHeight="tall"
@@ -1446,20 +1473,20 @@ const CheckoutClient = observer(() => {
                 By placing this order, you agree to our Terms of Service & Privacy Policy.
               </Text>
 
-              <Divider my={4} borderColor="#E2E8F0" />
+              <Divider my={4} borderColor={cBorder} />
 
               {/* Trust Badges */}
               <VStack spacing={2.5} align="stretch">
-                <HStack spacing={2.5} color="#475569" fontSize="12px">
-                  <Icon as={FiShield} color="#087F8C" boxSize={4} />
+                <HStack spacing={2.5} color={cTextSubtle} fontSize="12px">
+                  <Icon as={FiShield} color={cPrimary} boxSize={4} />
                   <Text fontWeight="600">100% Safe & Secure Checkout</Text>
                 </HStack>
-                <HStack spacing={2.5} color="#475569" fontSize="12px">
-                  <Icon as={FiRotateCcw} color="#087F8C" boxSize={4} />
+                <HStack spacing={2.5} color={cTextSubtle} fontSize="12px">
+                  <Icon as={FiRotateCcw} color={cPrimary} boxSize={4} />
                   <Text fontWeight="600">7-Day Easy Returns & Replacements</Text>
                 </HStack>
-                <HStack spacing={2.5} color="#475569" fontSize="12px">
-                  <Icon as={FiHeadphones} color="#087F8C" boxSize={4} />
+                <HStack spacing={2.5} color={cTextSubtle} fontSize="12px">
+                  <Icon as={FiHeadphones} color={cPrimary} boxSize={4} />
                   <Text fontWeight="600">24/7 Dedicated Customer Support</Text>
                 </HStack>
               </VStack>

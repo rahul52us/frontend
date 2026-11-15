@@ -83,9 +83,9 @@ const ContentContainer = styled.div<{
 
 const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
   const router = useRouter();
-  const navBg = useColorModeValue('rgba(255, 255, 255, 0.96)', 'rgba(11, 17, 32, 0.92)');
+  const navBg = useColorModeValue('rgba(255, 255, 255, 0.96)', 'rgba(11, 17, 32, 0.94)');
   const navBorder = useColorModeValue('rgba(226, 232, 240, 0.95)', dashboardPalette.border);
-  const activeColor = useColorModeValue('#4568FF', dashboardPalette.accentStrong);
+  const activeColor = 'var(--color-primary)';
   const mutedColor = useColorModeValue('#64748B', dashboardPalette.textMuted);
 
   const items = [
@@ -170,7 +170,7 @@ const MobileSellerBottomNav = observer(({ pathname }: { pathname: string }) => {
                 w="50px"
                 h="50px"
                 borderRadius="20px"
-                bgGradient="linear(135deg, #5B6CFF 0%, #C44AE8 100%)"
+                bgGradient="linear(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)"
                 color="white"
                 display="flex"
                 alignItems="center"

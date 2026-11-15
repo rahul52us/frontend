@@ -64,7 +64,7 @@ const Page = observer(() => {
             {error || "This shop is currently not available."}
           </Text>
           <Flex gap={3} wrap="wrap" justify="center">
-            <Button onClick={() => router.push("/shops")} colorScheme="blue">
+            <Button onClick={() => router.push("/shops")} colorScheme="brand">
               Explore shops
             </Button>
             <Button onClick={() => router.push(authentication.register)} variant="outline">

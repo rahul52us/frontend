@@ -33,6 +33,7 @@ import {
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import stores from "../../../store/stores";
+import { ThemeModeSwitcher } from "../../../theme/ThemeModeSwitcher";
 import { AddressesSection } from "./AddressSection/AddressSection";
 import CartSection from "./CartSection/CartSection";
 import OrdersSection from "./OrderSection/OrderSection";
@@ -72,6 +73,12 @@ const AccountPage = observer(() => {
       : null
   );
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Keep state synchronized with URL searchParams (including browser back/forward)
   useEffect(() => {
     const tab = searchParams?.get("tab");
@@ -90,14 +97,14 @@ const AccountPage = observer(() => {
   }, [router, searchParams]);
 
   // Hoisted theme tokens
-  const pageBg = useColorModeValue("gray.50", "gray.900");
-  const cardBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("rgba(255, 255, 255, 0.95)", "rgba(26, 32, 44, 0.95)");
-  const borderColor = useColorModeValue("gray.100", "gray.700");
-  const textColor = useColorModeValue("gray.900", "white");
-  const mutedText = useColorModeValue("gray.500", "gray.400");
-  const accentColor = useColorModeValue("purple.500", "purple.200");
-  const activeBorder = `2px solid ${useColorModeValue("purple.500", "purple.200")}`;
+  const pageBg = useColorModeValue("var(--color-bg)", "var(--color-bg)");
+  const cardBg = useColorModeValue("white", "var(--color-surface)");
+  const headerBg = useColorModeValue("rgba(255, 255, 255, 0.95)", "rgba(18, 26, 33, 0.95)");
+  const borderColor = useColorModeValue("gray.100", "var(--color-border)");
+  const textColor = useColorModeValue("gray.900", "var(--color-text-primary)");
+  const mutedText = useColorModeValue("gray.500", "var(--color-text-muted)");
+  const accentColor = "var(--color-primary)";
+  const activeBorder = "2px solid var(--color-primary)";
 
   const {
     isOpen: isLogoutOpen,
@@ -157,16 +164,16 @@ const AccountPage = observer(() => {
       tab: "cart",
       label: "Cart",
       subtitle:
-        cartStore.totalItems > 0
+        isMounted && cartStore.totalItems > 0
           ? `${cartStore.totalItems} items in your cart`
           : "View items & checkout",
       icon: FaShoppingCart,
       iconColor: "blue.600",
       iconBg: useColorModeValue("blue.50", "whiteAlpha.100"),
       badge:
-        cartStore.totalItems > 0 ? (
+        isMounted && cartStore.totalItems > 0 ? (
           <Badge
-            colorScheme="purple"
+            colorScheme="brand"
             variant="solid"
             fontSize="2xs"
             rounded="full"
@@ -282,6 +289,14 @@ const AccountPage = observer(() => {
                 </Button>
               </VStack>
             </Card>
+
+            {/* Appearance Card */}
+            <Card borderRadius="2xl" boxShadow="sm" p={4} bg={cardBg} border="1px solid" borderColor={borderColor}>
+              <Text fontSize="xs" fontWeight="700" color={mutedText} textTransform="uppercase" letterSpacing="wider" mb={2.5}>
+                Appearance
+              </Text>
+              <ThemeModeSwitcher size="sm" />
+            </Card>
           </VStack>
 
           {/* Desktop Main Content Card */}
@@ -346,7 +361,7 @@ const AccountPage = observer(() => {
                         {user.name}
                       </Text>
                       <Badge
-                        colorScheme="purple"
+                        colorScheme="brand"
                         variant="subtle"
                         fontSize="3xs"
                         rounded="md"
@@ -455,6 +470,29 @@ const AccountPage = observer(() => {
               </VStack>
             </Card>
 
+            {/* Theme Appearance Option */}
+            <Card
+              borderRadius="2xl"
+              boxShadow="sm"
+              border="1px solid"
+              borderColor={borderColor}
+              bg={cardBg}
+              p={3.5}
+              mb={3.5}
+            >
+              <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
+                <Box>
+                  <Text fontWeight="600" fontSize="sm" color={textColor}>
+                    Theme Mode
+                  </Text>
+                  <Text fontSize="2xs" color={mutedText}>
+                    Light, dark or system preference
+                  </Text>
+                </Box>
+                <ThemeModeSwitcher size="sm" />
+              </Flex>
+            </Card>
+
             {/* Logout Option */}
             <Card
               borderRadius="2xl"
@@ -535,9 +573,9 @@ const AccountPage = observer(() => {
                 </Text>
               </HStack>
 
-              {mobileSelectedTab === "cart" && cartStore.totalItems > 0 && (
+              {mobileSelectedTab === "cart" && isMounted && cartStore.totalItems > 0 && (
                 <Badge
-                  colorScheme="purple"
+                  colorScheme="brand"
                   variant="subtle"
                   rounded="full"
                   px={2.5}

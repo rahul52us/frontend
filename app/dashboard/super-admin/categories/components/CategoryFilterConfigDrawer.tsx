@@ -130,7 +130,7 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
                                                     {(props.values.filterConfig || []).length} configured for {category.name}
                                                 </Text>
                                             </Box>
-                                            <Button size="sm" leftIcon={<FiPlus />} colorScheme="blue" variant="outline" onClick={() => push(createFilterConfigItem())}>
+                                            <Button size="sm" leftIcon={<FiPlus />} colorScheme="brand" variant="outline" onClick={() => push(createFilterConfigItem())}>
                                                 Add Filter
                                             </Button>
                                         </HStack>
@@ -152,7 +152,7 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
                                                     <Box key={index} border="1px solid" borderColor="gray.200" borderRadius="lg" p={4} bg="white">
                                                         <HStack justify="space-between" align="center" mb={4}>
                                                             <HStack spacing={2}>
-                                                                <Badge colorScheme="blue" borderRadius="full" px={3} py={1}>
+                                                                <Badge colorScheme="brand" borderRadius="full" px={3} py={1}>
                                                                     Filter {index + 1}
                                                                 </Badge>
                                                                 <Text fontWeight="800" noOfLines={1}>
@@ -165,7 +165,7 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
                                                                     {({ field }: any) => (
                                                                         <HStack spacing={2}>
                                                                             <Text fontSize="sm" color="gray.600">Active</Text>
-                                                                            <Switch {...field} isChecked={field.value} colorScheme="blue" />
+                                                                            <Switch {...field} isChecked={field.value} colorScheme="brand" />
                                                                         </HStack>
                                                                     )}
                                                                 </Field>
@@ -272,7 +272,7 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
                                 )}
                             </FieldArray>
 
-                            <Button type="submit" colorScheme="blue" isLoading={props.isSubmitting || categoryStore.loading}>
+                            <Button type="submit" colorScheme="brand" isLoading={props.isSubmitting || categoryStore.loading}>
                                 Save Product Filters
                             </Button>
                         </VStack>

@@ -131,7 +131,7 @@ const WishlistDrawer = observer(
 
                                     <Button
                                         variant="outline"
-                                        colorScheme="purple"
+                                        colorScheme="brand"
                                         size="sm"
                                         mt={2}
                                         onClick={onClose}
@@ -173,14 +173,14 @@ const WishlistDrawer = observer(
                                                             onClick={() => handleRemoveFromWishlist(product._id)}
                                                         />
                                                     </Flex>
-                                                    <Text fontWeight="bold" color="purple.600" mt={1}>
+                                                    <Text fontWeight="bold" color="var(--color-primary)" mt={1}>
                                                         ₹{product.price}
                                                     </Text>
                                                     <Button
                                                         size="sm"
                                                         w="full"
                                                         mt={2}
-                                                        colorScheme="purple"
+                                                        colorScheme="brand"
                                                         variant="outline"
                                                         leftIcon={<FiShoppingCart />}
                                                         onClick={() => handleAddToCart(product)}

@@ -57,17 +57,18 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
     <Box
       position="relative"
       overflow="hidden"
-      bgGradient="linear(to-br, #EFF6FF, #EEF2FF, #F5F3FF)"
+      bg="var(--color-surface)"
       border="1px solid"
-      borderColor="blue.100"
+      borderColor="var(--color-border)"
       borderRadius="2xl"
       px={{ base: 4, sm: 6, md: 8 }}
       py={{ base: 5, md: 6 }}
       mb={{ base: 6, md: 8 }}
-      boxShadow="0 4px 20px rgba(79, 70, 229, 0.06)"
+      boxShadow="sm"
       transition="all 0.3s ease"
       _hover={{
-        boxShadow: "0 10px 30px rgba(79, 70, 229, 0.12)",
+        boxShadow: "md",
+        borderColor: "var(--color-primary)",
         transform: "translateY(-2px)",
       }}
       animation={anim(`${fadeSlideUp} 0.6s ease-out both`)}
@@ -126,11 +127,11 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
                 align="center"
                 justify="center"
                 borderRadius="full"
-                bg="white"
+                bg="var(--color-surface-hover)"
                 boxShadow="sm"
                 _groupHover={{ animation: anim(`${wiggle} 0.5s ease`) }}
               >
-                <Icon as={FiMail} color="blue.600" boxSize={3.5} />
+                <Icon as={FiMail} color="var(--color-primary)" boxSize={3.5} />
               </Flex>
             </Box>
             <Text
@@ -138,7 +139,7 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
               fontWeight="800"
               textTransform="uppercase"
               letterSpacing="widest"
-              color="blue.600"
+              color="var(--color-primary)"
             >
               Stay Updated
             </Text>
@@ -149,12 +150,12 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
             fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
             fontWeight="800"
             lineHeight="1.25"
-            color="gray.800"
+            color="var(--color-text)"
           >
             Get Exclusive Local Deals &{" "}
             <Box
               as="span"
-              bgGradient="linear(to-r, #2563EB, #7C3AED, #2563EB)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
               bgClip="text"
               backgroundSize="200% auto"
               animation={anim(`${shimmer} 6s linear infinite`)}
@@ -163,7 +164,7 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
             </Box>
           </Heading>
 
-          <Text fontSize="sm" color="gray.600" mt={1.5}>
+          <Text fontSize="sm" color="var(--color-text-muted)" mt={1.5}>
             Subscribe for flash sale alerts and neighborhood store offers.
           </Text>
 
@@ -175,18 +176,18 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
                 spacing={1.5}
                 px={2.5}
                 py={1}
-                bg="whiteAlpha.800"
+                bg="var(--color-surface-hover)"
                 border="1px solid"
-                borderColor="blue.100"
+                borderColor="var(--color-border)"
                 borderRadius="full"
                 fontSize="11px"
                 fontWeight="600"
-                color="gray.700"
+                color="var(--color-text)"
                 transition="all 0.2s"
-                _hover={{ transform: "translateY(-2px)", borderColor: "blue.300", bg: "white" }}
+                _hover={{ transform: "translateY(-2px)", borderColor: "var(--color-primary)", bg: "var(--color-surface)" }}
                 animation={anim(`${fadeSlideUp} 0.5s ease-out ${0.25 + i * 0.1}s both`)}
               >
-                <Icon as={perk.icon} color="blue.500" boxSize={3} />
+                <Icon as={perk.icon} color="var(--color-primary)" boxSize={3} />
                 <Text>{perk.label}</Text>
               </HStack>
             ))}
@@ -208,20 +209,20 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
               placeholder="Enter your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              bg="white"
+              bg="var(--color-surface-hover)"
               border="1px solid"
-              borderColor="blue.100"
-              color="gray.800"
+              borderColor="var(--color-border)"
+              color="var(--color-text)"
               fontSize="sm"
               borderRadius="full"
               h="46px"
               px={5}
               boxShadow="sm"
-              _placeholder={{ color: "gray.400" }}
-              _hover={{ borderColor: "blue.300" }}
+              _placeholder={{ color: "var(--color-text-muted)" }}
+              _hover={{ borderColor: "var(--color-primary)" }}
               _focus={{
-                borderColor: "blue.500",
-                boxShadow: "0 0 0 4px rgba(59, 130, 246, 0.15)",
+                borderColor: "var(--color-primary)",
+                boxShadow: "0 0 0 3px rgba(6, 95, 104, 0.25)",
               }}
               transition="all 0.2s"
             />
@@ -235,16 +236,16 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
               fontWeight="700"
               fontSize="sm"
               borderRadius="full"
-              bgGradient="linear(to-r, #2563EB, #4F46E5, #2563EB)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary), var(--color-primary))"
               backgroundSize="200% auto"
-              boxShadow="0 6px 16px rgba(37, 99, 235, 0.3)"
+              boxShadow="0 6px 16px rgba(6, 95, 104, 0.3)"
               isLoading={isSubscribing}
               loadingText="Subscribing"
               transition="all 0.25s ease"
               _hover={{
                 animation: anim(`${shimmer} 2s linear infinite`),
                 transform: "translateY(-2px)",
-                boxShadow: "0 10px 22px rgba(37, 99, 235, 0.4)",
+                boxShadow: "0 10px 22px rgba(6, 95, 104, 0.4)",
               }}
               _active={{ transform: "translateY(0) scale(0.97)" }}
             >
@@ -252,7 +253,7 @@ const NewsletterBanner = ({ email, setEmail, handleSubscribe, isSubscribing }) =
             </Button>
           </Stack>
 
-          <Text fontSize="11px" color="gray.500" mt={2} textAlign={{ base: "center", lg: "left" }}>
+          <Text fontSize="11px" color="var(--color-text-muted)" mt={2} textAlign={{ base: "center", lg: "left" }}>
             No spam. Unsubscribe anytime.
           </Text>
         </Box>

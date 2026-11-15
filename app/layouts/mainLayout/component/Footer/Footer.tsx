@@ -69,7 +69,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.600", "gray.400");
   const headingColor = useColorModeValue("gray.900", "white");
-  const accentColor = useColorModeValue("blue.600", "blue.400");
+  const accentColor = "var(--color-primary)";
   const borderColor = useColorModeValue("gray.100", "gray.800");
   const mutedText = useColorModeValue("gray.500", "gray.400");
 
@@ -182,7 +182,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
                     as="h3"
                     fontSize={{ base: "lg", md: "xl" }}
                     fontWeight="800"
-                    bgGradient="linear(to-r, blue.600, purple.600)"
+                    bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                     bgClip="text"
                     lineHeight="1.2"
                   >

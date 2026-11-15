@@ -176,7 +176,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
           type={fieldType === "number" ? "number" : "text"}
           placeholder={`Enter ${fieldKey}`}
           size="md"
-          borderColor="teal.500"
+          borderColor="var(--color-primary)"
           _focus={{ borderColor: "teal.600", boxShadow: "0 0 0 1px teal.600" }}
         />
       </Box>
@@ -189,14 +189,14 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
       <Accordion allowToggle mb={4}>
         <AccordionItem border="none">
           <AccordionButton
-            bg="teal.50"
+            bg="var(--color-surface-hover)"
             _expanded={{ bg: "teal.100" }}
             borderRadius="md"
             p={3}
             _hover={{ bg: "teal.100" }}
           >
             <HStack flex="1" justify="space-between">
-              <Text fontSize="md" fontWeight="semibold" color="teal.700">
+              <Text fontSize="md" fontWeight="semibold" color="var(--color-primary)">
                 {fieldKey} (Group)
               </Text>
               {onDelete && (
@@ -218,7 +218,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       <Button
                         size="xs"
                         variant="outline"
-                        colorScheme="teal"
+                        colorScheme="brand"
                         onClick={() => toggleInsertForm(prop, "before")}
                       >
                         <ArrowUpIcon />
@@ -228,7 +228,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       <Button
                         size="xs"
                         variant="outline"
-                        colorScheme="teal"
+                        colorScheme="brand"
                         onClick={() => toggleInsertForm(prop, "after")}
                       >
                         <ArrowDownIcon />
@@ -262,7 +262,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                         </FormControl>
                         <Button
                           size="sm"
-                          colorScheme="teal"
+                          colorScheme="brand"
                           onClick={() => handleAddObjectProperty(prop, insertState.position, newPropKey, insertState.type)}
                         >
                           Add
@@ -291,7 +291,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       onChange={(e) => setNewPropKey(e.target.value)}
                       placeholder="e.g., Street"
                       size="sm"
-                      borderColor="teal.500"
+                      borderColor="var(--color-primary)"
                     />
                     <FormHelperText fontSize="xs" color="gray.500" mt={1}>
                       New property name
@@ -303,7 +303,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       value={newPropType}
                       onChange={(e) => setNewPropType(e.target.value)}
                       size="sm"
-                      borderColor="teal.500"
+                      borderColor="var(--color-primary)"
                     >
                       <option value="string">Text</option>
                       <option value="number">Number</option>
@@ -318,7 +318,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                     <Button
                       onClick={() => handleAddObjectProperty()}
                       size="sm"
-                      colorScheme="teal"
+                      colorScheme="brand"
                       leftIcon={<AddIcon />}
                     >
                       Add
@@ -339,14 +339,14 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
       <Accordion allowToggle mb={4}>
         <AccordionItem border="none">
           <AccordionButton
-            bg="teal.50"
+            bg="var(--color-surface-hover)"
             _expanded={{ bg: "teal.100" }}
             borderRadius="md"
             p={3}
             _hover={{ bg: "teal.100" }}
           >
             <HStack flex="1" justify="space-between">
-              <Text fontSize="md" fontWeight="semibold" color="teal.700">
+              <Text fontSize="md" fontWeight="semibold" color="var(--color-primary)">
                 {fieldKey} (List)
               </Text>
               {onDelete && (
@@ -368,7 +368,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       <Button
                         size="xs"
                         variant="outline"
-                        colorScheme="teal"
+                        colorScheme="brand"
                         onClick={() => toggleInsertForm(index, "before")}
                       >
                         <ArrowUpIcon />
@@ -378,7 +378,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       <Button
                         size="xs"
                         variant="outline"
-                        colorScheme="teal"
+                        colorScheme="brand"
                         onClick={() => toggleInsertForm(index, "after")}
                       >
                         <ArrowDownIcon />
@@ -403,7 +403,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                         </FormControl>
                         <Button
                           size="sm"
-                          colorScheme="teal"
+                          colorScheme="brand"
                           onClick={() => handleInsertArrayItem(index, insertState.position!, insertState.type)}
                         >
                           Add
@@ -448,7 +448,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                       value={newPropType}
                       onChange={(e) => setNewPropType(e.target.value)}
                       size="sm"
-                      borderColor="teal.500"
+                      borderColor="var(--color-primary)"
                     >
                       <option value="string">Text</option>
                       <option value="number">Number</option>
@@ -463,7 +463,7 @@ function FieldEditor({ fieldKey, value, onChange, fieldType, onDelete }: FieldEd
                     <Button
                       onClick={() => handleInsertArrayItem(localValue.length, "before", newPropType)}
                       size="sm"
-                      colorScheme="teal"
+                      colorScheme="brand"
                       leftIcon={<AddIcon />}
                     >
                       Add

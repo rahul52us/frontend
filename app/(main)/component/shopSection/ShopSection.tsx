@@ -258,8 +258,8 @@ const ShopSection = observer(
               w="44px"
               h="44px"
               rounded="full"
-              bg="blue.50"
-              color="blue.600"
+              bg="var(--color-surface-hover)"
+              color="var(--color-primary)"
               align="center"
               justify="center"
             >
@@ -280,7 +280,7 @@ const ShopSection = observer(
 
         {shop.loading && currentPage > 1 && (
           <Flex py={6} justify="center" align="center" gap={2}>
-            <Spinner size="sm" color="blue.600" thickness="2px" />
+            <Spinner size="sm" color="var(--color-primary)" thickness="2px" />
             <Text fontSize="xs" fontWeight="600" color={mutedText}>
               Loading more shops...
             </Text>

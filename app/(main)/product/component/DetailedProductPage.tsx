@@ -194,8 +194,8 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               w="52px"
               h="52px"
               rounded="full"
-              bg="blue.50"
-              color="blue.600"
+              bg="var(--color-primary-soft)"
+              color="var(--color-primary)"
               align="center"
               justify="center"
             >
@@ -212,7 +212,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               h="38px"
               px={6}
               rounded="full"
-              colorScheme="blue"
+              colorScheme="brand"
               onClick={() => router.push("/products")}
             >
               Browse Available Products
@@ -458,13 +458,13 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
             <Flex justify="space-between" align="flex-end" mb={{ base: 3.5, md: 5 }}>
               <Box>
                 <HStack spacing={1.5} mb={0.5}>
-                  <Icon as={FiShoppingBag} color="blue.600" boxSize={3.5} />
+                  <Icon as={FiShoppingBag} color="var(--color-primary)" boxSize={3.5} />
                   <Text
                     fontSize="11px"
                     fontWeight="700"
                     textTransform="uppercase"
                     letterSpacing="wider"
-                    color="blue.600"
+                    color="var(--color-primary)"
                   >
                     Similar Items
                   </Text>
@@ -486,7 +486,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                 px={3}
                 rounded="full"
                 variant="ghost"
-                colorScheme="blue"
+                colorScheme="brand"
                 rightIcon={<FiArrowRight />}
                 onClick={() => router.push("/products")}
               >
@@ -597,15 +597,15 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               flex="1"
               h="42px"
               rounded="xl"
-              bgGradient="linear(to-r, blue.600, purple.600)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
               color="white"
               fontWeight="700"
               fontSize="xs"
               leftIcon={<FiZap size={14} />}
               isLoading={isBuyingNow}
               onClick={handleMobileBuyNow}
-              boxShadow="0 6px 16px -4px rgba(37, 99, 235, 0.45)"
-              _hover={{ bgGradient: "linear(to-r, blue.700, purple.700)" }}
+              boxShadow="0 6px 16px -4px var(--color-primary-soft)"
+              _hover={{ opacity: 0.9 }}
               _active={{ transform: "scale(0.97)" }}
             >
               Buy Now

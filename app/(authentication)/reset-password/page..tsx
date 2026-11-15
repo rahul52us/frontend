@@ -48,7 +48,7 @@ const ResetPassword = () => {
 
   return (
     <>
-      <Heading mb={4} size="lg" color="teal.600">
+      <Heading mb={4} size="lg" color="var(--color-primary)">
         Reset Password
       </Heading>
       <Text mb={8} color="gray.500">
@@ -81,7 +81,7 @@ const ResetPassword = () => {
         </FormControl>
         <Button
           type="submit"
-          colorScheme="teal"
+          colorScheme="brand"
           size="lg"
           w="full"
           isDisabled={!formData.newPassword || !formData.confirmPassword}

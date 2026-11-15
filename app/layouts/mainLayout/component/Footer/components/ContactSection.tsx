@@ -18,15 +18,15 @@ const ContactSection: React.FC<{ contactInfo: ContactInfo }> = ({ contactInfo })
       </Text>
       <VStack align="start" spacing={3} fontSize={'15px'}>
         <HStack>
-          <PhoneIcon color={'#DF837C'} />
+          <PhoneIcon color={'var(--color-accent)'} />
           <Text>{contactInfo.phone}</Text>
         </HStack>
         <HStack>
-          <Icon as={MdEmail} mt={1} color={'#DF837C'} />
+          <Icon as={MdEmail} mt={1} color={'var(--color-accent)'} />
           <Text>{contactInfo.email}</Text>
         </HStack>
         <HStack align="flex-start">
-          <Icon as={FaLocationDot} mt={1} color={'#DF837C'} />
+          <Icon as={FaLocationDot} mt={1} color={'var(--color-accent)'} />
           <Text w={'90%'}>{contactInfo.address}</Text>
         </HStack>
       </VStack>

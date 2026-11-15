@@ -124,7 +124,7 @@ const NotificationPopover = observer(({ children }: { children: React.ReactNode 
             <Button
               size="xs"
               variant={status === "all" ? "solid" : "outline"}
-              colorScheme="blue"
+              colorScheme="brand"
               onClick={() => setFilter("all")}
             >
               All
@@ -132,7 +132,7 @@ const NotificationPopover = observer(({ children }: { children: React.ReactNode 
             <Button
               size="xs"
               variant={status === "unread" ? "solid" : "outline"}
-              colorScheme="blue"
+              colorScheme="brand"
               onClick={() => setFilter("unread")}
             >
               Unread
@@ -146,7 +146,7 @@ const NotificationPopover = observer(({ children }: { children: React.ReactNode 
         <PopoverBody p={0} maxH="420px" overflowY="auto">
           {loading ? (
             <Flex py={8} justify="center">
-              <Spinner size="sm" color="blue.500" />
+              <Spinner size="sm" color="var(--color-primary)" />
             </Flex>
           ) : items.length === 0 ? (
             <Box py={10} textAlign="center">

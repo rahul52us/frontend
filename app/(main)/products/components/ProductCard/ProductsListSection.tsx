@@ -185,7 +185,7 @@ const PriceRangeControl = ({
           top={0}
           h="5px"
           borderRadius="full"
-          bgGradient="linear(to-r, blue.500, purple.500)"
+          bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
         />
         {[
           {
@@ -217,7 +217,7 @@ const PriceRangeControl = ({
             borderRadius="full"
             bg="white"
             border="2.5px solid"
-            borderColor="blue.600"
+            borderColor="var(--color-primary)"
             boxShadow="0 2px 6px rgba(37, 99, 235, 0.3)"
             cursor="grab"
             zIndex={handle.key === "min" ? 2 : 3}
@@ -367,13 +367,13 @@ const AdvancedFilterPanel = ({
           borderColor={borderColor}
         >
           <HStack spacing={2}>
-            <Icon as={FiFilter} color="blue.600" boxSize={3.5} />
+            <Icon as={FiFilter} color="var(--color-primary)" boxSize={3.5} />
             <Text fontWeight="700" fontSize="sm">
               Filters
             </Text>
             {activeCount > 0 && (
               <Badge
-                colorScheme="blue"
+                colorScheme="brand"
                 borderRadius="full"
                 px={2}
                 fontSize="10px"
@@ -588,7 +588,7 @@ const AdvancedFilterPanel = ({
                       <Checkbox
                         isChecked={isSelected}
                         onChange={() => onToggle(facet.key, option.value)}
-                        colorScheme="blue"
+                        colorScheme="brand"
                         size="sm"
                         pointerEvents="none"
                       >
@@ -954,7 +954,7 @@ const ProductsListSection = observer(() => {
                     display={{ base: "inline-flex", lg: "none" }}
                     leftIcon={<FiSliders size={14} />}
                     onClick={filterDrawer.onOpen}
-                    colorScheme="blue"
+                    colorScheme="brand"
                     variant="solid"
                     borderRadius="full"
                     size="xs"
@@ -995,7 +995,7 @@ const ProductsListSection = observer(() => {
                       size="sm"
                       borderRadius="full"
                       variant="subtle"
-                      colorScheme="blue"
+                      colorScheme="brand"
                       px={2.5}
                       py={1}
                     >
@@ -1122,7 +1122,7 @@ const ProductsListSection = observer(() => {
                       h="34px"
                       px={4}
                       mt={1}
-                      colorScheme="blue"
+                      colorScheme="brand"
                       borderRadius="full"
                       onClick={resetFilters}
                     >
@@ -1155,11 +1155,11 @@ const ProductsListSection = observer(() => {
                   fontWeight="800"
                 >
                   <HStack spacing={2}>
-                    <Icon as={FiSliders} color="blue.600" boxSize={4} />
+                    <Icon as={FiSliders} color="var(--color-primary)" boxSize={4} />
                     <Text>Filter Products</Text>
                     {advancedFilterCount > 0 && (
                       <Badge
-                        colorScheme="blue"
+                        colorScheme="brand"
                         borderRadius="full"
                         px={2}
                         fontSize="10px"
@@ -1206,7 +1206,7 @@ const ProductsListSection = observer(() => {
                     flex="2"
                     size="sm"
                     h="40px"
-                    colorScheme="blue"
+                    colorScheme="brand"
                     borderRadius="xl"
                     leftIcon={<FiCheck />}
                     onClick={filterDrawer.onClose}
@@ -1229,13 +1229,13 @@ const ProductsListSection = observer(() => {
           >
             <Box>
               <HStack spacing={1.5} mb={1}>
-                <Icon as={FiTrendingUp} color="blue.600" boxSize={3.5} />
+                <Icon as={FiTrendingUp} color="var(--color-primary)" boxSize={3.5} />
                 <Text
                   fontSize="11px"
                   fontWeight="700"
                   textTransform="uppercase"
                   letterSpacing="wider"
-                  color="blue.600"
+                  color="var(--color-primary)"
                 >
                   Curated For You
                 </Text>

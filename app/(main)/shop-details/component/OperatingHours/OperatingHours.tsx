@@ -92,8 +92,8 @@ const OperatingHours = ({ shopData }: any) => {
           <Box
             p={2.5}
             borderRadius="xl"
-            bg="blue.50"
-            color="blue.600"
+            bg="var(--color-surface-hover)"
+            color="var(--color-primary)"
             flexShrink={0}
           >
             <Icon as={FiClock} boxSize={5} />
@@ -152,7 +152,7 @@ const OperatingHours = ({ shopData }: any) => {
                     <Text>{day}</Text>
                     {isToday && (
                       <Badge
-                        colorScheme="blue"
+                        colorScheme="brand"
                         fontSize="2xs"
                         borderRadius="full"
                         px={1.5}

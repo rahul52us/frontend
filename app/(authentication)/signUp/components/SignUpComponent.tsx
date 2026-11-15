@@ -24,6 +24,7 @@ import {
   Spinner,
   Stack,
   Text,
+  useColorModeValue,
   useDisclosure,
   useToast,
   VStack
@@ -70,8 +71,8 @@ const GOOGLE_MAPS_LIBRARIES: any = ["places"];
 const FALLBACK_CENTER = { lat: 28.6139, lng: 77.209 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const phoneRegex = /^\d{10}$/;
-const PRIMARY_COLOR = "#3B82F6";
-const SOFT_PRIMARY_COLOR = "#DBEAFE";
+const PRIMARY_COLOR = "var(--color-primary)";
+const SOFT_PRIMARY_COLOR = "var(--color-primary-soft)";
 const STORE_NAME_DUPLICATE_ERROR = "This shop name already exists. Please use another shop name.";
 const STORE_NAME_CHECK_MIN_LENGTH = 2;
 
@@ -379,7 +380,7 @@ const UploadCard = ({
         />
 
         <Stack direction="row" spacing={2}>
-          <Button size="xs" colorScheme="blue" variant={hasFiles ? "outline" : "solid"} borderRadius="full" onClick={openPicker} flex={1} h="32px">
+          <Button size="xs" colorScheme="brand" variant={hasFiles ? "outline" : "solid"} borderRadius="full" onClick={openPicker} flex={1} h="32px">
             {hasFiles ? "Replace" : "Choose"}
           </Button>
           {hasFiles ? (
@@ -417,6 +418,13 @@ const SignUpForm = observer(() => {
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
+
+  // Theme-aware tokens
+  const panelBg = useColorModeValue("white", "var(--color-surface)");
+  const headerBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const headerText = useColorModeValue("gray.900", "var(--color-text-primary)");
+  const headerSub = useColorModeValue("gray.500", "var(--color-text-secondary)");
+  const backBtnBg = useColorModeValue("gray.50", "var(--color-surface-soft)");
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [isSellerAccountVerified, setIsSellerAccountVerified] = useState(false);
   const [duplicateShopName, setDuplicateShopName] = useState("");
@@ -1450,7 +1458,7 @@ const roleOptions :any= [
     //   {sellerData.categories.length ? (
     //     <HStack spacing={2} flexWrap="wrap">
     //       {sellerData.categories.map((categoryName) => (
-    //         <Badge key={categoryName} colorScheme="blue" borderRadius="full" px={3} py={1}>
+    //         <Badge key={categoryName} colorScheme="brand" borderRadius="full" px={3} py={1}>
     //           {categoryName}
     //         </Badge>
     //       ))}
@@ -1481,7 +1489,7 @@ const roleOptions :any= [
         {/* Map Container */}
         <Box
           h={{ base: "280px", md: "380px" }}
-          bg="blue.50"
+          bg="var(--color-surface-hover)"
           position="relative"
           borderTopWidth="1px"
           borderColor="gray.200"
@@ -1500,7 +1508,7 @@ const roleOptions :any= [
             </CenteredBox>
           ) : !isLoaded ? (
             <CenteredBox h="100%">
-              <Spinner size="sm" color="blue.400" />
+              <Spinner size="sm" color="var(--color-secondary)" />
             </CenteredBox>
           ) : (
             <>
@@ -1540,7 +1548,7 @@ const roleOptions :any= [
                   onClick={() => detectCurrentLocation()}
                   isLoading={detectingLocation || geocoding}
                   bg="white"
-                  color="blue.600"
+                  color="var(--color-primary)"
                   borderRadius="xl"
                   boxShadow="0 2px 8px rgba(0,0,0,0.15)"
                   h="44px"
@@ -1704,7 +1712,7 @@ const roleOptions :any= [
             value={(completedMediaCount / 3) * 100}
             size="xs"
             mt={3}
-            colorScheme="blue"
+            colorScheme="brand"
             borderRadius="full"
           />
         </Box>
@@ -1929,7 +1937,7 @@ const roleOptions :any= [
               <Box
                 position="absolute"
                 inset={0}
-                bgGradient="linear(to-br, #3B82F6, #1D4ED8)"
+                bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
                 opacity={0.1}
               />
               <Icon as={FiShoppingBag} color="#2563EB" boxSize={6} zIndex={1} />
@@ -1938,7 +1946,7 @@ const roleOptions :any= [
               <Text fontWeight="800" fontSize="xl" color="white" letterSpacing="-0.02em" lineHeight="1.2">
                 Business Sahayta
               </Text>
-              <Text fontSize="xs" color="blue.200" fontWeight="600" mt={0.5}>
+              <Text fontSize="xs" color="var(--color-secondary)" fontWeight="600" mt={0.5}>
                 Your business companion
               </Text>
             </Box>
@@ -2036,17 +2044,17 @@ const roleOptions :any= [
           h={{ base: "auto", md: "100vh" }}
           display="flex"
           flexDirection="column"
-          bg="white"
+          bg={panelBg}
           position="relative"
         >
           {/* Sticky Header */}
           <Box
             position="sticky"
             top={0}
-            bg="white"
+            bg={panelBg}
             zIndex={20}
             borderBottom="1px solid"
-            borderColor="gray.100"
+            borderColor={headerBorder}
             px={{ base: 4, md: 8 }}
             py={{ base: 3, md: 4 }}
             pt={{ base: "calc(env(safe-area-inset-top, 0px) + 12px)", md: 4 }}
@@ -2061,17 +2069,17 @@ const roleOptions :any= [
                     size="sm"
                     borderRadius="full"
                     onClick={handleBack}
-                    bg="gray.50"
-                    _hover={{ bg: "gray.100" }}
+                    bg={backBtnBg}
+                    _hover={{ bg: "var(--color-surface-alt)" }}
                   />
                 ) : (
                   <Box w="32px" h="32px" />
                 )}
                 <Box>
-                  <Heading fontSize={{ base: "md", md: "xl" }} color="gray.900" fontWeight="800" letterSpacing="-0.02em">
+                  <Heading fontSize={{ base: "md", md: "xl" }} color={headerText} fontWeight="800" letterSpacing="-0.02em">
                     {activeStep.title}
                   </Heading>
-                  <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} fontWeight="500" mt={0.5}>
+                  <Text color={headerSub} fontSize={{ base: "xs", md: "sm" }} fontWeight="500" mt={0.5}>
                     {activeStep.subtitle}
                   </Text>
                 </Box>

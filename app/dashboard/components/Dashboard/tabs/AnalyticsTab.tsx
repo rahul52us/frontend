@@ -25,9 +25,12 @@ import {
   IconButton,
   Center,
   useToast,
+  useColorModeValue,
   Tag,
   TagLabel,
 } from "@chakra-ui/react";
+import { useAppTheme } from "../../../../theme/ThemeContext";
+import { hexToRgb } from "../../../../theme/colorUtils";
 import { Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -94,26 +97,58 @@ const TIER_OPTIONS = [
 const AnalyticsTab: React.FC = () => {
   const toast = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const { resolvedTheme, colors } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
+
+  // Reactive theme tokens
+  const cardBg = useColorModeValue("white", "var(--color-surface)");
+  const cardBorder = useColorModeValue("gray.100", "var(--color-border)");
+  const surfaceAlt = useColorModeValue("gray.50", "var(--color-surface-alt)");
+  const textMain = useColorModeValue("gray.800", "var(--color-text-primary)");
+  const textMuted = useColorModeValue("gray.500", "var(--color-text-secondary)");
+  const subtleBorder = useColorModeValue("gray.100", "var(--color-border)");
 
   const selectStyles = {
     control: (base: any) => ({
       ...base,
       borderRadius: "14px",
-      border: "1px solid #E2E8F0",
+      border: `1px solid ${isDark ? "var(--color-border)" : "#E2E8F0"}`,
       minHeight: "44px",
-      backgroundColor: "#f8fafc",
+      backgroundColor: isDark ? "var(--color-input-bg)" : "#f8fafc",
+      color: isDark ? "#F8FAFC" : "#0F172A",
       boxShadow: "none",
       fontSize: "14px",
-      "&:hover": { borderColor: "#cbd5e0" },
+      "&:hover": { borderColor: "var(--color-primary)" },
     }),
     menu: (base: any) => ({
       ...base,
+      backgroundColor: isDark ? "var(--color-surface)" : "#FFFFFF",
+      borderColor: isDark ? "var(--color-border)" : "#E2E8F0",
       zIndex: 9999,
+    }),
+    option: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? "var(--color-primary)"
+        : state.isFocused
+        ? isDark
+          ? "rgba(255, 255, 255, 0.08)"
+          : "#F1F5F9"
+        : "transparent",
+      color: state.isSelected ? "white" : isDark ? "#F8FAFC" : "#0F172A",
+    }),
+    singleValue: (base: any) => ({
+      ...base,
+      color: isDark ? "#F8FAFC" : "#0F172A",
     }),
     multiValue: (base: any) => ({
       ...base,
-      backgroundColor: "#EBF8FF",
+      backgroundColor: isDark ? "rgba(6, 95, 104, 0.25)" : "#EBF8FF",
       borderRadius: "8px",
+    }),
+    multiValueLabel: (base: any) => ({
+      ...base,
+      color: isDark ? "#F8FAFC" : "#1A202C",
     }),
   };
 
@@ -162,7 +197,7 @@ const AnalyticsTab: React.FC = () => {
               <Heading size={{ base: "md", md: "lg" }} fontWeight="900" color="gray.800">
                 Intelligence Hub
               </Heading>
-              <Badge colorScheme="blue" borderRadius="full" px={3} fontSize="sm">
+              <Badge colorScheme="brand" borderRadius="full" px={3} fontSize="sm">
                 v2.0 LIVE
               </Badge>
             </HStack>
@@ -177,7 +212,7 @@ const AnalyticsTab: React.FC = () => {
           >
             <Button
               leftIcon={<FaDownload />}
-              colorScheme="blue"
+              colorScheme="brand"
               borderRadius="xl"
               shadow="md"
               size={{ base: "md", md: "md" }}
@@ -201,12 +236,12 @@ const AnalyticsTab: React.FC = () => {
         <MotionBox
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          bg="white"
+          bg={cardBg}
           p={{ base: 4, md: 6 }}
           borderRadius="3xl"
           shadow="sm"
           border="1px solid"
-          borderColor="gray.100"
+          borderColor={cardBorder}
         >
           <VStack spacing={5} align="stretch">
             <Flex
@@ -216,14 +251,16 @@ const AnalyticsTab: React.FC = () => {
             >
               <InputGroup flex={1} minW="0">
                 <InputLeftElement h="full" pointerEvents="none">
-                  <FaSearch color="gray.300" />
+                  <FaSearch color={isDark ? "gray.500" : "gray.300"} />
                 </InputLeftElement>
                 <Input
                   placeholder="Search transactions, users..."
                   h="44px"
                   borderRadius="14px"
-                  bg="gray.50"
-                  border="none"
+                  bg={surfaceAlt}
+                  color={textMain}
+                  border="1px solid"
+                  borderColor={cardBorder}
                 />
               </InputGroup>
 
@@ -271,24 +308,25 @@ const AnalyticsTab: React.FC = () => {
                 maxW={{ sm: "320px", md: "380px" }}
               >
                 <HStack
-                  bg="gray.50"
+                  bg={surfaceAlt}
                   px={4}
                   py={2}
                   borderRadius="14px"
                   flex={1}
                   border="1px solid"
-                  borderColor="gray.100"
+                  borderColor={cardBorder}
                   minW="0"
                 >
-                  <Icon as={FaCalendarAlt} color="blue.400" />
+                  <Icon as={FaCalendarAlt} color="var(--color-primary)" />
                   <Input
                     type="date"
                     variant="unstyled"
                     fontSize="sm"
                     fontWeight="bold"
                     minW="100px"
+                    color={textMain}
                   />
-                  <Text fontSize="xs" color="gray.400" whiteSpace="nowrap">
+                  <Text fontSize="xs" color={textMuted} whiteSpace="nowrap">
                     TO
                   </Text>
                   <Input
@@ -297,6 +335,7 @@ const AnalyticsTab: React.FC = () => {
                     fontSize="sm"
                     fontWeight="bold"
                     minW="100px"
+                    color={textMain}
                   />
                 </HStack>
               </HStack>
@@ -312,7 +351,7 @@ const AnalyticsTab: React.FC = () => {
                   Clear All
                 </Button>
                 <Button
-                  colorScheme="blue"
+                  colorScheme="brand"
                   size="sm"
                   px={8}
                   borderRadius="full"
@@ -378,11 +417,11 @@ const AnalyticsTab: React.FC = () => {
 >
   {/* Left Chart - Growth Velocity */}
   <GridItem
-    bg="white"
+    bg={cardBg}
     p={{ base: 5, md: 6, lg: 8 }}
     borderRadius="2xl"
     border="1px solid"
-    borderColor="gray.200"
+    borderColor={cardBorder}
     shadow="sm"
     w="100%"
     overflow="hidden"
@@ -396,13 +435,13 @@ const AnalyticsTab: React.FC = () => {
       flexWrap="wrap"
     >
       <Box>
-        <Heading size={{ base: "md", md: "lg" }}>Growth Velocity</Heading>
-        <Text fontSize="sm" color="gray.500">
+        <Heading size={{ base: "md", md: "lg" }} color={textMain}>Growth Velocity</Heading>
+        <Text fontSize="sm" color={textMuted}>
           Monthly scale vs projection
         </Text>
       </Box>
       <HStack
-        bg="gray.50"
+        bg={surfaceAlt}
         p={1}
         borderRadius="md"
         alignSelf={{ base: "flex-start", sm: "center" }}
@@ -411,7 +450,7 @@ const AnalyticsTab: React.FC = () => {
         <Button size="xs" variant="ghost">
           Income
         </Button>
-        <Button size="xs" colorScheme="blue" shadow="sm">
+        <Button size="xs" colorScheme="brand" shadow="sm">
           Volume
         </Button>
       </HStack>
@@ -432,12 +471,13 @@ const AnalyticsTab: React.FC = () => {
             {
               label: "Current",
               data: [4000, 7000, 5500, 9000, 12000, 15000],
-              borderColor: "#3182ce",
+              borderColor: colors.primary,
               backgroundColor: (context) => {
                 const ctx = context.chart.ctx;
                 const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, "rgba(49, 130, 206, 0.2)");
-                gradient.addColorStop(1, "rgba(49, 130, 206, 0)");
+                const rgb = hexToRgb(colors.primary);
+                gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`);
+                gradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
                 return gradient;
               },
               fill: true,
@@ -449,10 +489,26 @@ const AnalyticsTab: React.FC = () => {
         options={{
           maintainAspectRatio: false,
           responsive: true,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? "#111C30" : "#FFFFFF",
+              titleColor: isDark ? "#F8FAFC" : "#0F172A",
+              bodyColor: isDark ? "#CBD5E1" : "#475569",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "#E2E8F0",
+              borderWidth: 1,
+            },
+          },
           scales: {
-            x: { ticks: { maxTicksLimit: 6 } },
-            y: { beginAtZero: true },
+            x: {
+              ticks: { color: isDark ? "#94A3B8" : "#64748B", maxTicksLimit: 6 },
+              grid: { color: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: isDark ? "#94A3B8" : "#64748B" },
+              grid: { color: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)" },
+            },
           },
         }}
       />
@@ -461,19 +517,19 @@ const AnalyticsTab: React.FC = () => {
 
   {/* Right Chart - Acquisition */}
   <GridItem
-    bg="white"
+    bg={cardBg}
     p={{ base: 5, md: 6, lg: 8 }}
     borderRadius="2xl"
     border="1px solid"
-    borderColor="gray.200"
+    borderColor={cardBorder}
     shadow="sm"
     w="100%"
     overflow="hidden"
   >
-    <Heading size={{ base: "md", md: "lg" }} mb={2}>
+    <Heading size={{ base: "md", md: "lg" }} color={textMain} mb={2}>
       Acquisition
     </Heading>
-    <Text fontSize="sm" color="gray.500" mb={6}>
+    <Text fontSize="sm" color={textMuted} mb={6}>
       Channels driving growth
     </Text>
 
@@ -491,7 +547,7 @@ const AnalyticsTab: React.FC = () => {
           datasets: [
             {
               data: [55, 25, 20],
-              backgroundColor: ["#3182ce", "#805ad5", "#E2E8F0"],
+              backgroundColor: [colors.primary, colors.secondary, isDark ? "#253A5E" : "#E2E8F0"],
               borderWidth: 0,
               hoverOffset: 10,
             },
@@ -501,7 +557,16 @@ const AnalyticsTab: React.FC = () => {
           responsive: true,
           maintainAspectRatio: false,
           cutout: "70%",
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? "#111C30" : "#FFFFFF",
+              titleColor: isDark ? "#F8FAFC" : "#0F172A",
+              bodyColor: isDark ? "#CBD5E1" : "#475569",
+              borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "#E2E8F0",
+              borderWidth: 1,
+            },
+          },
         }}
       />
 
@@ -546,10 +611,10 @@ const AnalyticsTab: React.FC = () => {
 </Grid>
         {/* Transactions Table */}
         <Box
-          bg="white"
+          bg={cardBg}
           borderRadius="3xl"
           border="1px solid"
-          borderColor="gray.100"
+          borderColor={cardBorder}
           shadow="sm"
           overflow="hidden"
         >
@@ -561,8 +626,8 @@ const AnalyticsTab: React.FC = () => {
             gap={4}
           >
             <VStack align="start" spacing={0}>
-              <Heading size="sm">High-Value Stream</Heading>
-              <Text fontSize="xs" color="gray.400">
+              <Heading size="sm" color={textMain}>High-Value Stream</Heading>
+              <Text fontSize="xs" color={textMuted}>
                 Real-time settlement tracking
               </Text>
             </VStack>
@@ -572,7 +637,7 @@ const AnalyticsTab: React.FC = () => {
           </Flex>
           <Box overflowX="auto">
             <Table variant="simple" size={{ base: "sm", md: "md" }} minW="800px">
-              <Thead bg="gray.50">
+              <Thead bg={surfaceAlt}>
                 <Tr>
                   <Th color="gray.400" border="none" pl={6}>Entity</Th>
                   <Th color="gray.400" border="none">Category</Th>
@@ -608,8 +673,8 @@ const AnalyticsTab: React.FC = () => {
                     color: "green",
                   },
                 ].map((row, i) => (
-                  <Tr key={i} _hover={{ bg: "gray.50" }} transition="0.2s">
-                    <Td borderBottom="1px solid" borderColor="gray.100" pl={6}>
+                  <Tr key={i} _hover={{ bg: surfaceAlt }} transition="0.2s">
+                    <Td borderBottom="1px solid" borderColor={subtleBorder} pl={6}>
                       <HStack spacing={3}>
                         <Avatar
                           size={{ base: "xs", md: "sm" }}
@@ -618,20 +683,20 @@ const AnalyticsTab: React.FC = () => {
                           shadow="sm"
                         />
                         <VStack align="start" spacing={0}>
-                          <Text fontWeight="700" fontSize={{ base: "sm", md: "md" }}>
+                          <Text fontWeight="700" fontSize={{ base: "sm", md: "md" }} color={textMain}>
                             {row.name}
                           </Text>
-                          <Text fontSize="xs" color="gray.400">
+                          <Text fontSize="xs" color={textMuted}>
                             Verified Client
                           </Text>
                         </VStack>
                       </HStack>
                     </Td>
-                    <Td borderBottom="1px solid" borderColor="gray.100">
+                    <Td borderBottom="1px solid" borderColor={subtleBorder}>
                       <Tag
                         size="sm"
                         variant="subtle"
-                        colorScheme="blue"
+                        colorScheme="brand"
                         borderRadius="full"
                       >
                         <TagLabel fontWeight="bold">{row.cat}</TagLabel>
@@ -639,22 +704,22 @@ const AnalyticsTab: React.FC = () => {
                     </Td>
                     <Td
                       borderBottom="1px solid"
-                      borderColor="gray.100"
+                      borderColor={subtleBorder}
                       fontSize="xs"
                       fontFamily="mono"
-                      color="gray.500"
+                      color={textMuted}
                     >
                       {row.id}
                     </Td>
                     <Td
                       borderBottom="1px solid"
-                      borderColor="gray.100"
+                      borderColor={subtleBorder}
                       fontWeight="900"
-                      color="gray.700"
+                      color={textMain}
                     >
                       {row.amt}
                     </Td>
-                    <Td borderBottom="1px solid" borderColor="gray.100">
+                    <Td borderBottom="1px solid" borderColor={subtleBorder}>
                       <Badge
                         colorScheme={row.color}
                         variant="solid"

@@ -95,7 +95,7 @@ const ContactSection = ({ shopData }: any) => {
             _hover={{ textDecoration: "none", bg: rowHoverBg }}
           >
             <HStack spacing={3}>
-              <Circle size="34px" bg="blue.50" color="blue.600">
+              <Circle size="34px" bg="var(--color-surface-hover)" color="var(--color-primary)">
                 <Icon as={FiPhone} boxSize={4} />
               </Circle>
               <Box minW={0} flex={1}>
@@ -125,7 +125,7 @@ const ContactSection = ({ shopData }: any) => {
             _hover={{ textDecoration: "none", bg: rowHoverBg }}
           >
             <HStack spacing={3}>
-              <Circle size="34px" bg="purple.50" color="purple.600">
+              <Circle size="34px" bg="var(--color-surface-hover)" color="var(--color-primary)">
                 <Icon as={FiMail} boxSize={4} />
               </Circle>
               <Box minW={0} flex={1}>
@@ -157,7 +157,7 @@ const ContactSection = ({ shopData }: any) => {
             _hover={{ textDecoration: "none", bg: rowHoverBg }}
           >
             <HStack spacing={3}>
-              <Circle size="34px" bg="teal.50" color="teal.600">
+              <Circle size="34px" bg="var(--color-surface-hover)" color="var(--color-primary)">
                 <Icon as={FiGlobe} boxSize={4} />
               </Circle>
               <Box minW={0} flex={1}>

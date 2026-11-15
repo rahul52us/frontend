@@ -61,8 +61,8 @@ const LocationSection = ({ shopData }: any) => {
           <Box
             p={2.5}
             borderRadius="xl"
-            bg="blue.50"
-            color="blue.600"
+            bg="var(--color-surface-hover)"
+            color="var(--color-primary)"
             flexShrink={0}
             mt={0.5}
           >

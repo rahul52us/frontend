@@ -130,7 +130,7 @@ const InventoryTab: React.FC = () => {
       <VStack spacing={{ base: 6, lg: 8 }} align="stretch" maxW="1400px" mx="auto">
         {/* Summary Cards */}
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={{ base: 4, md: 6 }}>
-          <SummaryCard icon={FaWarehouse} title="Warehouse" value="78%" detail="Storage Used" color="blue.500" />
+          <SummaryCard icon={FaWarehouse} title="Warehouse" value="78%" detail="Storage Used" color="var(--color-primary)" />
           <SummaryCard
             icon={WarningIcon}
             title="Urgent Alerts"
@@ -144,7 +144,7 @@ const InventoryTab: React.FC = () => {
             title="Total Assets"
             value={`$${(CATEGORIES.reduce((a, b) => a + b.value, 0) / 1000).toFixed(1)}k`}
             detail="Current Value"
-            color="purple.500"
+            color="var(--color-primary)"
           />
         </SimpleGrid>
 
@@ -223,13 +223,13 @@ const InventoryTab: React.FC = () => {
                     LOW STOCK ONLY
                   </FormLabel>
                 </FormControl>
-                <Badge colorScheme="blue" variant="subtle" borderRadius="full" px={3}>
+                <Badge colorScheme="brand" variant="subtle" borderRadius="full" px={3}>
                   {filteredData.length} Results
                 </Badge>
               </HStack>
 
               <HStack spacing={3} justify={{ base: "space-between", sm: "flex-end" }} w={{ base: "full", sm: "auto" }}>
-                <Button leftIcon={<FaChartPie />} size="sm" variant="ghost" colorScheme="blue">
+                <Button leftIcon={<FaChartPie />} size="sm" variant="ghost" colorScheme="brand">
                   Analytics
                 </Button>
                 <Button

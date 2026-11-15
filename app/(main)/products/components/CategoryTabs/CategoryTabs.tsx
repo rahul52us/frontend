@@ -357,7 +357,7 @@ const CreativeTabs = observer(() => {
     };
   });
 
-  const primaryBlueGradient = "linear(135deg, #1e3a8a 0%, #3b82f6 100%)";
+  const primaryBrandGradient = "linear(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)";
 
   if (categories.length === 0 && !categoryStore.loading) {
     return (
@@ -369,19 +369,19 @@ const CreativeTabs = observer(() => {
 
   return (
     <Box position="relative" py={{ base: 8, md: 12, lg: 16 }} px={{ base: 4, md: 6, lg: 8 }} bg={bgColor} minH="100vh">
-      <Box position="absolute" top="-10%" right="-5%" w={{ base: "200px", md: "400px" }} h={{ base: "200px", md: "400px" }} bg="blue.200" borderRadius="full" filter="blur(80px)" opacity={0.3} _dark={{ opacity: 0.1 }} pointerEvents="none" />
-      <Box position="absolute" bottom="-10%" left="-5%" w={{ base: "200px", md: "300px" }} h={{ base: "200px", md: "300px" }} bg="blue.100" borderRadius="full" filter="blur(80px)" opacity={0.3} _dark={{ opacity: 0.1 }} pointerEvents="none" />
+      <Box position="absolute" top="-10%" right="-5%" w={{ base: "200px", md: "400px" }} h={{ base: "200px", md: "400px" }} bg="var(--color-primary-soft)" borderRadius="full" filter="blur(80px)" opacity={0.3} _dark={{ opacity: 0.1 }} pointerEvents="none" />
+      <Box position="absolute" bottom="-10%" left="-5%" w={{ base: "200px", md: "300px" }} h={{ base: "200px", md: "300px" }} bg="var(--color-secondary-soft)" borderRadius="full" filter="blur(80px)" opacity={0.3} _dark={{ opacity: 0.1 }} pointerEvents="none" />
 
       <VStack spacing={4} mb={{ base: 8, md: 12 }}>
         <HStack spacing={2}>
-          <Circle size="40px" bg="blue.100" _dark={{ bg: "blue.900" }}>
-            <Icon as={FiTrendingUp} color="blue.600" boxSize={5} />
+          <Circle size="40px" bg="var(--color-primary-soft)">
+            <Icon as={FiTrendingUp} color="var(--color-primary)" boxSize={5} />
           </Circle>
-          <Text fontSize="xs" fontWeight="800" letterSpacing="widest" textTransform="uppercase" bgGradient={primaryBlueGradient} bgClip="text">Shop by Category</Text>
+          <Text fontSize="xs" fontWeight="800" letterSpacing="widest" textTransform="uppercase" bgGradient={primaryBrandGradient} bgClip="text">Shop by Category</Text>
         </HStack>
         <Text fontSize={{ base: "2xl", sm: "3xl", md: "4xl", lg: "5xl" }} fontWeight="900" textAlign="center" letterSpacing="-0.02em" lineHeight="1.2">
           Discover Your
-          <Text as="span" bgGradient={primaryBlueGradient} bgClip="text"> Favorite </Text>
+          <Text as="span" bgGradient={primaryBrandGradient} bgClip="text"> Favorite </Text>
           Categories
         </Text>
         <Text fontSize={{ base: "sm", md: "md" }} color="gray.600" _dark={{ color: "gray.400" }} textAlign="center" maxW="2xl">
@@ -446,11 +446,11 @@ const CreativeTabs = observer(() => {
               {loading ? (
                 <Flex direction="column" align="center" justify="center" minH="400px" gap={6}>
                   <Box position="relative" boxSize="80px">
-                    <Icon as={FaGift} boxSize="80px" color="blue.400" transition="all 0.2s" animation="pulse 0.8s infinite" sx={{ '@keyframes pulse': { '0%': { transform: 'scale(1)', opacity: 1 }, '50%': { transform: 'scale(1.1)', opacity: 0.8 }, '100%': { transform: 'scale(1)', opacity: 1 } } }} />
+                    <Icon as={FaGift} boxSize="80px" color="var(--color-primary)" transition="all 0.2s" animation="pulse 0.8s infinite" sx={{ '@keyframes pulse': { '0%': { transform: 'scale(1)', opacity: 1 }, '50%': { transform: 'scale(1.1)', opacity: 0.8 }, '100%': { transform: 'scale(1)', opacity: 1 } } }} />
                     <Icon as={FiHeart} position="absolute" top="-10px" right="-10px" boxSize="24px" color="red.500" transition="all 0.2s" animation="bounce 0.6s infinite" sx={{ '@keyframes bounce': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-5px)' } } }} />
                   </Box>
-                  <Text fontWeight="800" fontSize="lg" color="blue.600">{loaderMessage}</Text>
-                  <Progress value={loaderProgress} size="sm" width="250px" colorScheme="blue" borderRadius="full" hasStripe isAnimated />
+                  <Text fontWeight="800" fontSize="lg" color="var(--color-primary)">{loaderMessage}</Text>
+                  <Progress value={loaderProgress} size="sm" width="250px" colorScheme="brand" borderRadius="full" hasStripe isAnimated />
                   <Text fontSize="sm" color="gray.500">Just a moment, loading your {category.name.toLowerCase()}...</Text>
                 </Flex>
               ) : (
@@ -473,9 +473,9 @@ const CreativeTabs = observer(() => {
 
               <Flex justify="space-between" align="center" mt={8} pt={6} borderTop="2px solid" borderColor="gray.100" _dark={{ borderColor: "gray.700" }} direction={{ base: "column", sm: "row" }} gap={4} flexWrap="wrap">
                 <HStack spacing={6} flexWrap="wrap" justify="center">
-                  <HStack spacing={2}><Icon as={FiAward} boxSize={5} color="blue.500" /><Text fontSize="sm" fontWeight="500">Top Rated Products</Text></HStack>
-                  <HStack spacing={2}><Icon as={FaHandsHelping} boxSize={5} color="blue.600" /><Text fontSize="sm" fontWeight="500">100% Verified Sellers</Text></HStack>
-                  <HStack spacing={2}><Icon as={FiClock} boxSize={5} color="blue.400" /><Text fontSize="sm" fontWeight="500">Free & Fast Delivery</Text></HStack>
+                  <HStack spacing={2}><Icon as={FiAward} boxSize={5} color="var(--color-primary)" /><Text fontSize="sm" fontWeight="500">Top Rated Products</Text></HStack>
+                  <HStack spacing={2}><Icon as={FaHandsHelping} boxSize={5} color="var(--color-secondary)" /><Text fontSize="sm" fontWeight="500">100% Verified Sellers</Text></HStack>
+                  <HStack spacing={2}><Icon as={FiClock} boxSize={5} color="var(--color-accent)" /><Text fontSize="sm" fontWeight="500">Free & Fast Delivery</Text></HStack>
                 </HStack>
                 <Badge colorScheme={category.color} fontSize="sm" p={2} px={3} borderRadius="full">
                   {visibleProducts?.length || 0}+ Products Available

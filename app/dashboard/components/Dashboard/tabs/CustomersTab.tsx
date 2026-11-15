@@ -3433,7 +3433,7 @@ const CustomersTab: React.FC = observer(() => {
                   {summary.isPosted ? "Ledger Linked" : "Not Posted"}
                 </Badge>
                 {saleRecord.source ? (
-                  <Badge colorScheme="purple" textTransform="capitalize">
+                  <Badge colorScheme="brand" textTransform="capitalize">
                     {saleRecord.source}
                   </Badge>
                 ) : null}
@@ -3444,7 +3444,7 @@ const CustomersTab: React.FC = observer(() => {
                 <Button
                   size="sm"
                   leftIcon={<DownloadIcon />}
-                  colorScheme="teal"
+                  colorScheme="brand"
                   variant="solid"
                   borderRadius="full"
                   isLoading={invoiceDownloadingSaleId === saleRecord._id}
@@ -3673,7 +3673,7 @@ const CustomersTab: React.FC = observer(() => {
                             {entry.status}
                           </Badge>
                         ) : null}
-                        {entry.relationType === "reversal" ? <Badge colorScheme="purple">Linked Reversal</Badge> : null}
+                        {entry.relationType === "reversal" ? <Badge colorScheme="brand">Linked Reversal</Badge> : null}
                       </HStack>
                       <Text fontSize="sm" color="gray.500" mt={1}>
                         {formatDateTime(entry.entryDate || entry.createdAt)}
@@ -3920,7 +3920,7 @@ const CustomersTab: React.FC = observer(() => {
                   >
                     {saleItemSuggestionsLoading ? (
                       <Flex align="center" justify="center" py={4} gap={2}>
-                        <Spinner size="sm" color="teal.500" />
+                        <Spinner size="sm" color="var(--color-primary)" />
                         <Text fontSize="sm" color="gray.600">
                           Searching your inventory...
                         </Text>
@@ -3966,7 +3966,7 @@ const CustomersTab: React.FC = observer(() => {
                                 </Text>
                               </Box>
                               <Box textAlign="right" flexShrink={0}>
-                                <Text fontSize="sm" fontWeight="semibold" color="teal.600">
+                                <Text fontSize="sm" fontWeight="semibold" color="var(--color-primary)">
                                   {formatCurrency(Number(product.price || 0))}
                                 </Text>
                                 {typeof product.stock === "number" && Number.isFinite(product.stock) ? (
@@ -3989,7 +3989,7 @@ const CustomersTab: React.FC = observer(() => {
                   </Box>
                 ) : null}
                 {item.productId ? (
-                  <Text mt={2} fontSize="xs" color="teal.600" fontWeight="medium">
+                  <Text mt={2} fontSize="xs" color="var(--color-primary)" fontWeight="medium">
                     Price auto-filled from your inventory. You can still edit this row.
                   </Text>
                 ) : null}
@@ -5665,7 +5665,7 @@ const CustomersTab: React.FC = observer(() => {
               w={{ base: "full", sm: "auto" }}
               minH="44px"
               borderRadius="16px"
-              bgGradient="linear(135deg, #2563EB 0%, #14B8A6 100%)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
               color="white"
               boxShadow="0 14px 28px rgba(37, 99, 235, 0.24)"
               _hover={{ bgGradient: "linear(135deg, #1D4ED8 0%, #0F766E 100%)" }}
@@ -5703,7 +5703,7 @@ const CustomersTab: React.FC = observer(() => {
                 <>
                   <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
                     <Button
-                      colorScheme="blue"
+                      colorScheme="brand"
                       variant="solid"
                       onClick={handlePickSingleContact}
                       isLoading={isImportingContacts}
@@ -5723,7 +5723,7 @@ const CustomersTab: React.FC = observer(() => {
                       Pick Contact
                     </Button>
                     <Button
-                      colorScheme="blue"
+                      colorScheme="brand"
                       variant="outline"
                       onClick={handleImportFromDevice}
                       isLoading={isImportingContacts}
@@ -5788,7 +5788,7 @@ const CustomersTab: React.FC = observer(() => {
             <Button
               w="full"
               h="58px"
-              colorScheme="blue"
+              colorScheme="brand"
               borderRadius="16px"
               fontSize="lg"
               onClick={handleCreateBuyer}
@@ -5830,7 +5830,7 @@ const CustomersTab: React.FC = observer(() => {
           <ModalBody px={6} py={5}>
             <VStack spacing={3} align="stretch">
               <Button
-                colorScheme="blue"
+                colorScheme="brand"
                 h="52px"
                 borderRadius="16px"
                 onClick={async () => {
@@ -5943,7 +5943,7 @@ const CustomersTab: React.FC = observer(() => {
                 <Button variant="ghost" onClick={closeLedgerEntryModal}>
                   Cancel
                 </Button>
-                <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting} flex="1" h="52px">
+                <Button colorScheme="brand" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting} flex="1" h="52px">
                   Save Payment
                 </Button>
               </>
@@ -5963,7 +5963,7 @@ const CustomersTab: React.FC = observer(() => {
                 <Button variant="ghost" onClick={closeSaleRecordModal}>
                   Cancel
                 </Button>
-                <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting} flex="1" h="52px">
+                <Button colorScheme="brand" onClick={handleCreateSaleRecord} isLoading={saleSubmitting} flex="1" h="52px">
                   Save {selectedTransactionSingularLabel} Record
                 </Button>
               </>
@@ -5984,7 +5984,7 @@ const CustomersTab: React.FC = observer(() => {
                 <Button variant="ghost" mr={3} onClick={closeLedgerEntryModal}>
                   Cancel
                 </Button>
-                <Button colorScheme="blue" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
+                <Button colorScheme="brand" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
                   Save Payment
                 </Button>
               </ModalFooter>
@@ -6001,7 +6001,7 @@ const CustomersTab: React.FC = observer(() => {
                 <Button variant="ghost" mr={3} onClick={closeSaleRecordModal}>
                   Cancel
                 </Button>
-                <Button colorScheme="teal" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
+                <Button colorScheme="brand" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
                   Save {selectedTransactionSingularLabel} Record
                 </Button>
               </ModalFooter>

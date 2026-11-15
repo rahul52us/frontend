@@ -172,7 +172,7 @@ export const AddressesSection = observer(() => {
         {sortedAddresses.length > 0 && (
           <Button
             leftIcon={<FaPlus size="12px" />}
-            colorScheme="purple"
+            colorScheme="brand"
             size="sm"
             h={10}
             px={4}
@@ -226,7 +226,7 @@ export const AddressesSection = observer(() => {
           </Box>
           <Button
             leftIcon={<FaPlus size="12px" />}
-            colorScheme="purple"
+            colorScheme="brand"
             h={12}
             px={6}
             rounded="xl"

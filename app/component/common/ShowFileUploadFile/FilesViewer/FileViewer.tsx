@@ -22,7 +22,7 @@ const FileViewer = ({url} : any) => {
           alignItems="center"
           bgColor="rgba(255, 255, 255, 0.8)"
         >
-          <Spinner size="xl" color="blue.500" />
+          <Spinner size="xl" color="var(--color-primary)" />
         </Box>
       )}
       <embed

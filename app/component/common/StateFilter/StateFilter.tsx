@@ -226,13 +226,13 @@ const StateFilter = observer(() => {
         >
           <Box>
             <HStack spacing={1.5} mb={1}>
-              <Icon as={FiCompass} color="blue.600" boxSize={3.5} />
+              <Icon as={FiCompass} color="var(--color-primary)" boxSize={3.5} />
               <Text
                 fontSize="11px"
                 fontWeight="700"
                 textTransform="uppercase"
                 letterSpacing="wider"
-                color="blue.600"
+                color="var(--color-primary)"
               >
                 Regional Specialties
               </Text>
@@ -345,14 +345,14 @@ const StateFilter = observer(() => {
                           <Text
                             fontSize="xs"
                             fontWeight={isSelected ? '700' : '500'}
-                            color={isSelected ? 'blue.600' : titleColor}
+                            color={isSelected ? 'var(--color-primary)' : titleColor}
                             flex="1"
                             noOfLines={1}
                           >
                             {state.name}
                           </Text>
                           {isSelected && (
-                            <Icon as={FiCheck} color="blue.600" boxSize={3.5} />
+                            <Icon as={FiCheck} color="var(--color-primary)" boxSize={3.5} />
                           )}
                         </HStack>
                       </MenuItem>
@@ -402,10 +402,10 @@ const StateFilter = observer(() => {
                 py={1.5}
                 h={{ base: '38px', md: '42px' }}
                 rounded="full"
-                bg={isSelected ? 'blue.600' : subtleBg}
+                bg={isSelected ? 'var(--color-primary)' : subtleBg}
                 color={isSelected ? 'white' : titleColor}
                 border="1px solid"
-                borderColor={isSelected ? 'blue.600' : borderColor}
+                borderColor={isSelected ? 'var(--color-primary)' : borderColor}
                 boxShadow={
                   isSelected
                     ? '0 6px 16px -4px rgba(37, 99, 235, 0.4)'
@@ -414,7 +414,7 @@ const StateFilter = observer(() => {
                 flexShrink={0}
                 transition="all 0.2s ease"
                 _hover={{
-                  borderColor: isSelected ? 'blue.600' : 'blue.300',
+                  borderColor: isSelected ? 'var(--color-primary)' : 'blue.300',
                   transform: 'translateY(-1px)',
                 }}
                 _active={{ transform: 'scale(0.97)' }}
@@ -454,7 +454,7 @@ const StateFilter = observer(() => {
             gap={2}
           >
             <HStack spacing={2} minW={0}>
-              <Icon as={FiMapPin} color="blue.600" boxSize={3.5} flexShrink={0} />
+              <Icon as={FiMapPin} color="var(--color-primary)" boxSize={3.5} flexShrink={0} />
               <Text fontSize="xs" fontWeight="700" color={titleColor} noOfLines={1}>
                 Showing specialties from {selectedState.name}
               </Text>
@@ -472,7 +472,7 @@ const StateFilter = observer(() => {
 
             {!loading && (
               <Badge
-                colorScheme="blue"
+                colorScheme="brand"
                 variant="subtle"
                 rounded="full"
                 px={2.5}
@@ -546,8 +546,8 @@ const StateFilter = observer(() => {
               w="44px"
               h="44px"
               rounded="full"
-              bg="blue.50"
-              color="blue.600"
+              bg="var(--color-surface-hover)"
+              color="var(--color-primary)"
               align="center"
               justify="center"
             >
@@ -566,7 +566,7 @@ const StateFilter = observer(() => {
                 size="xs"
                 h="34px"
                 px={4}
-                colorScheme="blue"
+                colorScheme="brand"
                 rounded="full"
                 onClick={() => {
                   const nextState =

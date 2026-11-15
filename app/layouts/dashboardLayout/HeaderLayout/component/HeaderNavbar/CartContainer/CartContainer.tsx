@@ -5,14 +5,19 @@ import {
   Badge,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaShoppingCart } from "react-icons/fa";
 import CartDrawer from "../../../../../../component/Cart/component/CartDrawer/CartDrawer";
 import stores from "../../../../../../store/stores";
 
 const CartContainer = observer(() => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { cartStore } = stores;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
@@ -38,7 +43,7 @@ const CartContainer = observer(() => {
           _focus={{ boxShadow: "outline" }}
           onClick={onOpen}
         />
-        {cartStore.totalItems > 0 && (
+        {isMounted && cartStore.totalItems > 0 && (
           <Badge
             colorScheme="red"
             borderRadius="full"

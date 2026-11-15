@@ -22,7 +22,7 @@ const CustomButton: FC<CustomButtonProps> = ({
   height = "50px",
   width,
   rounded,
-  bgGradient = "linear(to-r, #065F68, #065F68, #2A8A94)", // Default gradient
+  bgGradient = "linear(to-r, var(--color-primary), var(--color-primary), var(--color-secondary))", // Default gradient
   color = "#FFFFFF", // Default text color
   ...props
 }) => {

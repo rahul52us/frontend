@@ -184,7 +184,7 @@ const BuyerDashboard = () => {
       <Box
         position="relative"
         overflow="hidden"
-        bgGradient="linear(160deg, #0f1f5c 0%, #1d4fbf 100%)"
+        bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
         color="white"
         px={{ base: 4, md: 6 }}
         pt={{ base: 3, md: 5 }}
@@ -299,7 +299,7 @@ const BuyerDashboard = () => {
             borderWidth="1px"
             borderColor="gray.200"
           >
-            <Spinner color="blue.500" thickness="3px" size="lg" />
+            <Spinner color="var(--color-primary)" thickness="3px" size="lg" />
             <Text fontSize="sm" color="gray.500">
               Loading purchase items...
             </Text>
@@ -335,7 +335,7 @@ const BuyerDashboard = () => {
             borderColor="gray.200"
             p={6}
           >
-            <Icon as={FiShoppingBag} color="blue.300" boxSize={8} />
+            <Icon as={FiShoppingBag} color="var(--color-secondary)" boxSize={8} />
             <Text fontWeight="700" color="gray.700">
               No posted purchases yet
             </Text>
@@ -346,11 +346,11 @@ const BuyerDashboard = () => {
         ) : (
           <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3}>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="blue.100" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="blue.700" textTransform="uppercase" letterSpacing="0.08em">
+              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+                <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
                   Posted Bills
                 </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="blue.800" mt={1.5} lineHeight="1.05">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-primary)" mt={1.5} lineHeight="1.05">
                   {purchaseDetails.summary.totalRecords}
                 </Text>
               </Box>
@@ -362,11 +362,11 @@ const BuyerDashboard = () => {
                   {formatCurrency(purchaseDetails.summary.totalSpent)}
                 </Text>
               </Box>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="purple.100" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="purple.700" textTransform="uppercase" letterSpacing="0.08em">
+              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+                <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
                   Item Lines
                 </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="purple.800" mt={1.5} lineHeight="1.05">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-primary)" mt={1.5} lineHeight="1.05">
                   {purchaseDetails.summary.totalLineItems}
                 </Text>
               </Box>
@@ -425,13 +425,13 @@ const BuyerDashboard = () => {
                   >
                     <Box>
                       <HStack spacing={2} flexWrap="wrap">
-                        <Badge colorScheme="blue" borderRadius="full" px={2.5} py={0.5}>
+                        <Badge colorScheme="brand" borderRadius="full" px={2.5} py={0.5}>
                           Bill #{formatShortId(record._id)}
                         </Badge>
                         <Badge colorScheme="green" borderRadius="full" px={2.5} py={0.5}>
                           {record.itemCount} items
                         </Badge>
-                        <Badge colorScheme="purple" borderRadius="full" px={2.5} py={0.5}>
+                        <Badge colorScheme="brand" borderRadius="full" px={2.5} py={0.5}>
                           Qty {record.totalQuantity}
                         </Badge>
                       </HStack>
@@ -478,7 +478,7 @@ const BuyerDashboard = () => {
                             {item.itemName}
                           </Text>
                           <HStack mt={2} spacing={2} flexWrap="wrap">
-                            <Badge borderRadius="full" px={2.5} py={1} bg="blue.50" color="blue.700">
+                            <Badge borderRadius="full" px={2.5} py={1} bg="var(--color-surface-hover)" color="var(--color-primary)">
                               Qty {item.quantity}
                             </Badge>
                             <Text fontSize="xs" color="gray.500" fontWeight="600">
@@ -508,8 +508,8 @@ const BuyerDashboard = () => {
                   </VStack>
 
                   {record.notes ? (
-                    <Box mt={3} bg="blue.50" borderRadius="xl" px={3.5} py={3} borderWidth="1px" borderColor="blue.100">
-                      <Text fontSize="xs" color="blue.700" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
+                    <Box mt={3} bg="var(--color-surface-hover)" borderRadius="xl" px={3.5} py={3} borderWidth="1px" borderColor="var(--color-border)">
+                      <Text fontSize="xs" color="var(--color-primary)" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
                         Note
                       </Text>
                       <Text mt={1} fontSize="sm" color="gray.700">
@@ -529,7 +529,7 @@ const BuyerDashboard = () => {
   if (loading) {
     return (
       <Flex minH="300px" align="center" justify="center" direction="column" gap={3}>
-        <Spinner color="blue.500" thickness="3px" size="lg" />
+        <Spinner color="var(--color-primary)" thickness="3px" size="lg" />
         <Text fontSize="sm" color="gray.500">Loading your dashboard...</Text>
       </Flex>
     );
@@ -561,12 +561,12 @@ const BuyerDashboard = () => {
           borderRadius="xl"
           p={5}
           borderWidth="1px"
-          borderColor="blue.100"
+          borderColor="var(--color-border)"
         >
-          <Text fontSize="xs" fontWeight="800" color="blue.700" textTransform="uppercase" letterSpacing="0.08em">
+          <Text fontSize="xs" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
             Connected Sellers
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="blue.600" mt={1}>
+          <Text fontSize="2xl" fontWeight="900" color="var(--color-primary)" mt={1}>
             {summary.totalSellers}
           </Text>
         </Box>
@@ -610,7 +610,7 @@ const BuyerDashboard = () => {
           borderColor="gray.200"
           textAlign="center"
         >
-          <Icon as={FiShoppingBag} boxSize={10} color="blue.300" mb={3} />
+          <Icon as={FiShoppingBag} boxSize={10} color="var(--color-secondary)" mb={3} />
           <Text fontWeight="700" color="gray.700" fontSize="md">
             No seller connections yet
           </Text>
@@ -676,8 +676,8 @@ const BuyerDashboard = () => {
                       w="52px"
                       h="52px"
                       borderRadius="xl"
-                      bg="blue.50"
-                      color="blue.600"
+                      bg="var(--color-surface-hover)"
+                      color="var(--color-primary)"
                       align="center"
                       justify="center"
                       fontWeight="900"
@@ -750,7 +750,7 @@ const BuyerDashboard = () => {
                       </HStack>
                     )}
 
-                    <Text mt={3} fontSize="xs" fontWeight="700" color="blue.600">
+                    <Text mt={3} fontSize="xs" fontWeight="700" color="var(--color-primary)">
                       Click to view purchased items
                     </Text>
                   </Box>

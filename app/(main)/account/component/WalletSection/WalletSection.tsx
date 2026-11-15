@@ -70,10 +70,10 @@ export const WalletSection = observer(() => {
                 borderRadius="full"
               />
               <CardHeader pb={3}>
-                <Heading as="h3" size="md" fontWeight="bold" color="purple.600">
+                <Heading as="h3" size="md" fontWeight="bold" color="var(--color-primary)">
                   Wallet Balance
                 </Heading>
-                <Text color="purple.500" fontSize="sm">Available for purchases & withdrawals</Text>
+                <Text color="var(--color-primary)" fontSize="sm">Available for purchases & withdrawals</Text>
               </CardHeader>
               <CardBody>
                 <VStack align="stretch" justify="center" py={6}>
@@ -82,7 +82,7 @@ export const WalletSection = observer(() => {
                       p={3} 
                       borderRadius="full" 
                       bg="purple.100" 
-                      color="purple.600"
+                      color="var(--color-primary)"
                     >
                       <FaWallet size={24} />
                     </Box>
@@ -92,7 +92,7 @@ export const WalletSection = observer(() => {
                   </Flex>
                   <HStack mt={6} spacing={3}>
                     <Button 
-                      colorScheme="purple" 
+                      colorScheme="brand" 
                       leftIcon={<FaPlus />}
                       flex={1}
                       borderRadius="lg"
@@ -101,7 +101,7 @@ export const WalletSection = observer(() => {
                     </Button>
                     <Button 
                       variant="outline" 
-                      colorScheme="purple" 
+                      colorScheme="brand" 
                       flex={1}
                       borderRadius="lg"
                     >
@@ -157,7 +157,7 @@ export const WalletSection = observer(() => {
                               : `•••• ${method.last4}`}
                             {method.isDefault && (
                               <Badge 
-                                colorScheme="purple" 
+                                colorScheme="brand" 
                                 variant="subtle" 
                                 ml={2}
                                 borderRadius="md"
@@ -181,7 +181,7 @@ export const WalletSection = observer(() => {
                   ))}
                   <Button 
                     variant="ghost" 
-                    colorScheme="purple" 
+                    colorScheme="brand" 
                     w="full" 
                     leftIcon={<FaPlus />}
                     mt={2}
@@ -202,7 +202,7 @@ export const WalletSection = observer(() => {
               <Text color="gray.500" fontSize="sm">Last 30 days activity</Text>
             </CardHeader>
             <CardBody>
-              <Tabs variant="soft-rounded" colorScheme="purple">
+              <Tabs variant="soft-rounded" colorScheme="brand">
                 <TabList gap={2}>
                   <Tab _selected={{ bg: "purple.100", color: "purple.600" }}>
                     All

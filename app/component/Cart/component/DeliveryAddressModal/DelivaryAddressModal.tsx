@@ -164,11 +164,11 @@ const AddressModal: React.FC<AddressModalProps> = ({
       <Box py={2}>
         {addresses.length === 0 ? (
           <Box textAlign="center" py={8}>
-            <Icon as={FaLocationDot} boxSize={8} color="gray.300" mb={3} />
-            <Text fontWeight="600" color="gray.700" fontSize="md">
+            <Icon as={FaLocationDot} boxSize={8} color="var(--color-primary)" mb={3} />
+            <Text fontWeight="600" color="var(--color-text)" fontSize="md">
               No addresses saved yet
             </Text>
-            <Text fontSize="xs" color="gray.500" mt={1} mb={4}>
+            <Text fontSize="xs" color="var(--color-text-muted)" mt={1} mb={4}>
               Add your delivery address to proceed with checkout.
             </Text>
           </Box>
@@ -190,28 +190,28 @@ const AddressModal: React.FC<AddressModalProps> = ({
                     p={3.5}
                     cursor="pointer"
                     transition="all 0.15s ease"
-                    borderColor={isChecked ? "purple.500" : "gray.200"}
-                    bg={isChecked ? "purple.50" : "white"}
-                    boxShadow={isChecked ? "0 2px 8px rgba(107, 70, 193, 0.12)" : "none"}
+                    borderColor={isChecked ? "var(--color-primary)" : "var(--color-border)"}
+                    bg={isChecked ? "var(--color-primary-soft)" : "var(--color-surface)"}
+                    boxShadow={isChecked ? "0 2px 8px rgba(6, 95, 104, 0.15)" : "none"}
                     onClick={() => setTempSelectedAddress(addrId)}
                     position="relative"
                   >
                     <Flex align="flex-start" gap={3}>
                       <Radio
                         value={addrId}
-                        colorScheme="purple"
+                        colorScheme="brand"
                         mt={1}
                         size="md"
                       />
 
                       <Box flex="1" minW={0} pr={14}>
                         <HStack spacing={2} align="center">
-                          <Text fontWeight="700" fontSize="sm" color="gray.900">
+                          <Text fontWeight="700" fontSize="sm" color="var(--color-text)">
                             {address.name || "Delivery Address"}
                           </Text>
                           {address.isDefault && (
                             <Badge
-                              colorScheme="purple"
+                              colorScheme="brand"
                               variant="subtle"
                               fontSize="2xs"
                               px={1.5}
@@ -222,7 +222,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
                           )}
                         </HStack>
 
-                        <Text fontSize="xs" color="gray.600" mt={1} lineHeight="1.4">
+                        <Text fontSize="xs" color="var(--color-text-muted)" mt={1} lineHeight="1.4">
                           {[
                             address.addressLine1 || address.line1,
                             address.addressLine2 || address.line2,
@@ -235,7 +235,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
                         </Text>
 
                         {address.phone && (
-                          <Text fontSize="2xs" color="gray.500" mt={1}>
+                          <Text fontSize="2xs" color="var(--color-text-muted)" mt={1}>
                             Phone: {address.phone}
                           </Text>
                         )}
@@ -254,7 +254,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
                         icon={<FaPen size={11} />}
                         size="xs"
                         variant="ghost"
-                        colorScheme="purple"
+                        colorScheme="brand"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditClick(address);
@@ -285,7 +285,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
         <Button
           leftIcon={<FaPlus size={12} />}
           variant="outline"
-          colorScheme="purple"
+          colorScheme="brand"
           w="full"
           h="44px"
           rounded="xl"
@@ -311,7 +311,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
         <Button
           type="submit"
           form="address-form"
-          colorScheme="purple"
+          colorScheme="brand"
           w="full"
           h="46px"
           rounded="xl"
@@ -325,7 +325,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
 
     return (
       <Button
-        colorScheme="purple"
+        colorScheme="brand"
         w="full"
         h="46px"
         rounded="xl"
@@ -378,7 +378,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
         <Modal isOpen={isOpen} onClose={handleClose} size="lg" isCentered>
           <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
           <ModalContent borderRadius="2xl" overflow="hidden">
-            <ModalHeader borderBottomWidth="1px" borderColor="gray.100" py={4}>
+            <ModalHeader borderBottomWidth="1px" borderColor="var(--color-border)" py={4}>
               <Flex align="center" justify="space-between">
                 <Flex align="center" gap={2}>
                   {isFormMode && (
@@ -402,7 +402,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
               {renderBodyContent()}
             </ModalBody>
 
-            <ModalFooter borderTopWidth="1px" borderColor="gray.100" py={3}>
+            <ModalFooter borderTopWidth="1px" borderColor="var(--color-border)" py={3}>
               {renderFooterContent()}
             </ModalFooter>
           </ModalContent>

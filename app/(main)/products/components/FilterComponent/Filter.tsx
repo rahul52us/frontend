@@ -131,7 +131,7 @@ const CompactFilters = () => {
                     key={category}
                     value={category}
                     size="sm"
-                    colorScheme="purple"
+                    colorScheme="brand"
                     _hover={{ transform: "translateX(2px)" }}
                     transition="transform 0.2s"
                   >
@@ -167,7 +167,7 @@ const CompactFilters = () => {
                     key={vendor}
                     value={vendor}
                     size="sm"
-                    colorScheme="purple"
+                    colorScheme="brand"
                     _hover={{ transform: "translateX(2px)" }}
                     transition="transform 0.2s"
                   >
@@ -219,7 +219,7 @@ const CompactFilters = () => {
                 key={category}
                 borderRadius="full"
                 variant="subtle"
-                colorScheme="purple"
+                colorScheme="brand"
                 _hover={{ transform: "scale(1.05)" }}
                 transition="transform 0.2s"
               >
@@ -233,7 +233,7 @@ const CompactFilters = () => {
                 key={vendor}
                 borderRadius="full"
                 variant="subtle"
-                colorScheme="purple"
+                colorScheme="brand"
                 _hover={{ transform: "scale(1.05)" }}
                 transition="transform 0.2s"
               >

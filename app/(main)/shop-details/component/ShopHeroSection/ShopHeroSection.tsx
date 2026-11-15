@@ -324,7 +324,7 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
                 </Heading>
                 {(shopData?.verified || shopData?.isVerified) && (
                   <Tooltip label="Verified Shop" placement="top">
-                    <Box as="span" display="inline-flex" color="blue.500">
+                    <Box as="span" display="inline-flex" color="var(--color-primary)">
                       <MdVerified size={24} />
                     </Box>
                   </Tooltip>
@@ -411,7 +411,7 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
                 borderRadius="full"
                 fontSize="xs"
               >
-                <Icon as={FiMapPin} boxSize={3.5} color="blue.500" />
+                <Icon as={FiMapPin} boxSize={3.5} color="var(--color-primary)" />
                 <Text>{loc.city}</Text>
               </HStack>
             )}
@@ -474,7 +474,7 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
               h="46px"
               px={6}
               borderRadius="2xl"
-              bgGradient="linear(to-r, blue.600, indigo.600)"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
               color="white"
               fontWeight="bold"
               boxShadow="0 4px 15px rgba(37, 99, 235, 0.35)"

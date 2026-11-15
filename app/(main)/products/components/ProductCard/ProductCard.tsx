@@ -47,12 +47,13 @@ const ProductCard = ({ product, i }: { product: any; i?: number }) => {
   const [justAdded, setJustAdded] = useState(false);
 
   // Theme color tokens
-  const cardBg = useColorModeValue("white", "gray.850");
-  const borderColor = useColorModeValue("gray.100", "gray.750");
-  const imageBg = useColorModeValue("gray.50", "gray.900");
-  const textPrimary = useColorModeValue("gray.500", "white");
-  const textMuted = useColorModeValue("gray.500", "gray.400");
-  const priceColor = useColorModeValue("gray.900", "white");
+  const cardBg = useColorModeValue("white", "var(--color-surface)");
+  const borderColor = useColorModeValue("var(--color-border)", "var(--color-border)");
+  const imageBg = useColorModeValue("gray.50", "var(--color-surface-hover)");
+  const textPrimary = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const textMuted = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
+  const priceColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const hoverColor = useColorModeValue("brand.600", "brand.300");
   const addBtnBg = useColorModeValue("blue.50", "whiteAlpha.150");
   const addBtnColor = useColorModeValue("blue.600", "blue.300");
   const addBtnBorder = useColorModeValue("blue.100", "whiteAlpha.200");
@@ -113,14 +114,10 @@ const ProductCard = ({ product, i }: { product: any; i?: number }) => {
       borderRadius="2xl"
       overflow="hidden"
       bg={cardBg}
-      border="1px solid"
-      borderColor={borderColor}
       boxShadow="0 2px 8px rgba(0, 0, 0, 0.04)"
       transition="all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
       _hover={{
         transform: "translateY(-4px)",
-        boxShadow: "0 12px 24px -6px rgba(0, 0, 0, 0.08)",
-        borderColor: "blue.200",
       }}
       _active={{ transform: "scale(0.98)" }}
       h="full"
@@ -155,7 +152,7 @@ const ProductCard = ({ product, i }: { product: any; i?: number }) => {
             left={2}
             zIndex={2}
             borderRadius="full"
-            bgGradient="linear(to-r, blue.600, indigo.600)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
             color="white"
             px={2.5}
             py={0.5}
@@ -210,7 +207,7 @@ const ProductCard = ({ product, i }: { product: any; i?: number }) => {
           noOfLines={1}
           lineHeight="shorter"
           title={productTitle}
-          _groupHover={{ color: "blue.600" }}
+          _groupHover={{ color: hoverColor }}
           transition="color 0.2s ease"
         >
           {productTitle}

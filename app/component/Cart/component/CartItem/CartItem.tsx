@@ -131,7 +131,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, updateQuantity, onRemove }) =
         >
           {/* Unit Price */}
           <HStack spacing={1.5} align="baseline">
-            <Text fontWeight="700" fontSize="sm" color="purple.600">
+            <Text fontWeight="700" fontSize="sm" color="var(--color-primary)">
               ₹{priceNum}
             </Text>
             {originalPriceNum > priceNum && (
@@ -168,7 +168,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, updateQuantity, onRemove }) =
                 item.quantity <= 1 ? (
                   <Icon as={FiTrash2} boxSize={3} color="red.500" />
                 ) : (
-                  <Icon as={FiMinus} boxSize={3} color="purple.600" />
+                  <Icon as={FiMinus} boxSize={3} color="var(--color-primary)" />
                 )
               }
               onClick={handleDecrease}
@@ -191,7 +191,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, updateQuantity, onRemove }) =
             <IconButton
               size="xs"
               variant="ghost"
-              icon={<Icon as={FiPlus} boxSize={3} color="purple.600" />}
+              icon={<Icon as={FiPlus} boxSize={3} color="var(--color-primary)" />}
               onClick={handleIncrease}
               aria-label="Increase quantity"
               rounded="none"

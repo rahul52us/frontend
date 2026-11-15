@@ -104,7 +104,7 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
           <Button
             leftIcon={<FiShoppingCart size={15} />}
             variant="outline"
-            colorScheme="blue"
+            colorScheme="brand"
             size="md"
             flex={1}
             h="46px"
@@ -122,10 +122,10 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
 
           <Button
             leftIcon={<FiCreditCard size={15} />}
-            bgGradient="linear(to-r, blue.600, purple.600)"
+            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
             color="white"
             _hover={{
-              bgGradient: "linear(to-r, blue.700, purple.700)",
+              opacity: 0.9,
             }}
             size="md"
             flex={1}
@@ -135,7 +135,7 @@ const ProductBuyBox = observer(({ product }: { product: any }) => {
             rounded="xl"
             fontWeight="700"
             fontSize="xs"
-            boxShadow="0 4px 12px rgba(37, 99, 235, 0.25)"
+            boxShadow="0 4px 12px var(--color-primary-soft)"
           >
             Buy Now
           </Button>

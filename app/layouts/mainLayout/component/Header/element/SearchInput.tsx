@@ -172,7 +172,7 @@ const SearchInput = observer(() => {
           >
             <SearchIcon
               boxSize={3.5}
-              color={query ? "blue.600" : "gray.400"}
+              color={query ? "var(--color-primary)" : "var(--color-text-muted)"}
               transition="color 0.2s ease"
             />
           </InputLeftElement>
@@ -188,22 +188,22 @@ const SearchInput = observer(() => {
             pr={query ? "36px" : "14px"}
             fontSize={{ base: "xs", md: "sm" }}
             fontWeight="normal"
-            color="gray.800"
-            bg={query ? "white" : "gray.50"}
+            color="var(--color-text)"
+            bg={query ? "var(--color-surface)" : "var(--color-surface-hover)"}
             borderRadius="full"
             borderWidth="1px"
-            borderColor={query ? "blue.500" : "gray.200"}
+            borderColor={query ? "var(--color-primary)" : "var(--color-border)"}
             _hover={{
-              borderColor: query ? "blue.500" : "gray.300",
-              bg: "white",
+              borderColor: "var(--color-primary)",
+              bg: "var(--color-surface)",
             }}
             _focus={{
-              bg: "white",
-              borderColor: "blue.500",
-              boxShadow: "0 0 0 3px rgba(37, 99, 235, 0.12)",
+              bg: "var(--color-surface)",
+              borderColor: "var(--color-primary)",
+              boxShadow: "0 0 0 3px rgba(6, 95, 104, 0.2)",
             }}
             _placeholder={{
-              color: "gray.400",
+              color: "var(--color-text-muted)",
               fontWeight: "normal",
             }}
             transition="all 0.15s ease"
@@ -220,8 +220,8 @@ const SearchInput = observer(() => {
                 size="xs"
                 variant="ghost"
                 borderRadius="full"
-                color="gray.400"
-                _hover={{ color: "gray.700", bg: "gray.100" }}
+                color="var(--color-text-muted)"
+                _hover={{ color: "var(--color-text)", bg: "var(--color-surface-hover)" }}
                 onClick={clearSearch}
               />
             </InputRightElement>

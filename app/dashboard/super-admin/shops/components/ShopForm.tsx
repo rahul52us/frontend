@@ -404,7 +404,7 @@ const ShopForm: React.FC<ShopFormProps> = ({
                             <Box pt={4}>
                                 <Button
                                     type="submit"
-                                    colorScheme="blue"
+                                    colorScheme="brand"
                                     width="full"
                                     isLoading={props.isSubmitting} // Changed to props.isSubmitting
                                 >

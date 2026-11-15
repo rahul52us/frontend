@@ -14,7 +14,7 @@ const CustomSmallTitle = ({
   children,
   textAlign = { base: "center", lg: "center" },
   fontSize = { base: "16px", md: "18px" },
-  color = "#DF837C",
+  color = "var(--color-accent)",
   fontWeight = 500,
   ...props
 }: Props) => {

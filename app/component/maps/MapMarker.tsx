@@ -450,13 +450,13 @@ const MapComponent = () => {
         >
           <Box>
             <HStack spacing={1.5} mb={1}>
-              <Icon as={FiCompass} color="blue.600" boxSize={3.5} />
+              <Icon as={FiCompass} color="var(--color-primary)" boxSize={3.5} />
               <Text
                 fontSize="11px"
                 fontWeight="700"
                 textTransform="uppercase"
                 letterSpacing="wider"
-                color="blue.600"
+                color="var(--color-primary)"
               >
                 Live Store Radar
               </Text>
@@ -516,9 +516,9 @@ const MapComponent = () => {
                     rounded="full"
                     fontSize="11px"
                     fontWeight="700"
-                    bg={isActive ? 'blue.600' : 'transparent'}
+                    bg={isActive ? 'var(--color-primary)' : 'transparent'}
                     color={isActive ? 'white' : mutedText}
-                    _hover={{ bg: isActive ? 'blue.700' : subtleBg }}
+                    _hover={{ bg: isActive ? 'var(--color-primary)' : subtleBg }}
                     onClick={() => setRadiusKm(r)}
                   >
                     {r} km
@@ -532,7 +532,7 @@ const MapComponent = () => {
               h="34px"
               px={3.5}
               rounded="full"
-              colorScheme="blue"
+              colorScheme="brand"
               leftIcon={<FaCrosshairs />}
               isLoading={geoLoading}
               onClick={requestCurrentLocation}
@@ -576,7 +576,7 @@ const MapComponent = () => {
               fontSize="xs"
               _focus={{
                 bg: cardBg,
-                borderColor: 'blue.500',
+                borderColor: 'var(--color-primary)',
                 boxShadow: '0 0 0 2px rgba(37,99,235,0.12)',
               }}
             />
@@ -609,8 +609,8 @@ const MapComponent = () => {
               px={2.5}
               py={1}
               rounded="full"
-              bg="blue.50"
-              color="blue.700"
+              bg="var(--color-surface-hover)"
+              color="var(--color-primary)"
               fontSize="11px"
               fontWeight="700"
             >
@@ -675,7 +675,7 @@ const MapComponent = () => {
                 px={2.5}
                 rounded="full"
                 leftIcon={<FiMap size={11} />}
-                bg={mobileViewMode === 'map' ? 'blue.600' : 'transparent'}
+                bg={mobileViewMode === 'map' ? 'var(--color-primary)' : 'transparent'}
                 color={mobileViewMode === 'map' ? 'white' : mutedText}
                 onClick={() => setMobileViewMode('map')}
                 fontSize="10px"
@@ -688,7 +688,7 @@ const MapComponent = () => {
                 px={2.5}
                 rounded="full"
                 leftIcon={<FiList size={11} />}
-                bg={mobileViewMode === 'list' ? 'blue.600' : 'transparent'}
+                bg={mobileViewMode === 'list' ? 'var(--color-primary)' : 'transparent'}
                 color={mobileViewMode === 'list' ? 'white' : mutedText}
                 onClick={() => setMobileViewMode('list')}
                 fontSize="10px"
@@ -767,7 +767,7 @@ const MapComponent = () => {
                 </VStack>
               ) : filteredShops.length === 0 ? (
                 <VStack py={12} px={4} spacing={2} textAlign="center">
-                  <Circle size="44px" bg="blue.50" color="blue.500">
+                  <Circle size="44px" bg="var(--color-surface-hover)" color="var(--color-primary)">
                     <Icon as={FaStore} boxSize={5} />
                   </Circle>
                   <Text fontSize="sm" fontWeight="700" color={textColor}>
@@ -791,11 +791,11 @@ const MapComponent = () => {
                         bg={isSelected ? 'blue.50' : cardBg}
                         _dark={{ bg: isSelected ? 'whiteAlpha.100' : cardBg }}
                         border="1px solid"
-                        borderColor={isSelected ? 'blue.400' : borderColor}
+                        borderColor={isSelected ? 'var(--color-primary)' : borderColor}
                         cursor="pointer"
                         transition="all 0.15s ease"
                         _hover={{
-                          borderColor: 'blue.300',
+                          borderColor: 'var(--color-primary)',
                           bg: isSelected ? 'blue.50' : subtleBg,
                         }}
                         onClick={() => {
@@ -818,7 +818,7 @@ const MapComponent = () => {
                               {shop.isVerified && (
                                 <Icon
                                   as={FaCheckCircle}
-                                  color="blue.500"
+                                  color="var(--color-primary)"
                                   boxSize={3}
                                   flexShrink={0}
                                 />
@@ -843,7 +843,7 @@ const MapComponent = () => {
 
                               {typeof shop.distanceKm === 'number' && (
                                 <Badge
-                                  colorScheme="blue"
+                                  colorScheme="brand"
                                   variant="subtle"
                                   fontSize="10px"
                                   rounded="md"
@@ -903,7 +903,7 @@ const MapComponent = () => {
                               h="26px"
                               minW="26px"
                               rounded="full"
-                              colorScheme="blue"
+                              colorScheme="brand"
                               variant={isSelected ? 'solid' : 'subtle'}
                               onClick={(e) => handleVisitStore(shop, e)}
                             />
@@ -970,7 +970,7 @@ const MapComponent = () => {
                   bg="white"
                   color="gray.700"
                   boxShadow="md"
-                  _hover={{ bg: 'blue.50', color: 'blue.600' }}
+                  _hover={{ bg: 'blue.50', color: 'var(--color-primary)' }}
                   isLoading={geoLoading}
                   onClick={requestCurrentLocation}
                 />
@@ -987,7 +987,7 @@ const MapComponent = () => {
                   bg="white"
                   color="gray.700"
                   boxShadow="md"
-                  _hover={{ bg: 'blue.50', color: 'blue.600' }}
+                  _hover={{ bg: 'blue.50', color: 'var(--color-primary)' }}
                   onClick={handleFitBounds}
                 />
               </Tooltip>
@@ -995,7 +995,7 @@ const MapComponent = () => {
 
             {!isLoaded || shopLoading ? (
               <Flex h="100%" align="center" justify="center" direction="column" gap={3}>
-                <Spinner size="lg" color="blue.500" thickness="3px" />
+                <Spinner size="lg" color="var(--color-primary)" thickness="3px" />
                 <Text fontSize="xs" color={mutedText} fontWeight="600">
                   Finding stores near you...
                 </Text>
@@ -1097,7 +1097,7 @@ const MapComponent = () => {
           {selectedShop.isVerified && (
             <Icon
               as={FaCheckCircle}
-              color="blue.500"
+              color="var(--color-primary)"
               boxSize={3.5}
               flexShrink={0}
             />
@@ -1140,7 +1140,7 @@ const MapComponent = () => {
         </Text>
 
         {typeof selectedShop.distanceKm === "number" && (
-          <Text fontSize="10px" color="blue.600" fontWeight="600">
+          <Text fontSize="10px" color="var(--color-primary)" fontWeight="600">
             {selectedShop.distanceKm.toFixed(1)} km
           </Text>
         )}
@@ -1171,7 +1171,7 @@ const MapComponent = () => {
           h="29px"
           fontSize="11px"
           fontWeight="700"
-          colorScheme="blue"
+          colorScheme="brand"
           rounded="md"
           rightIcon={<FiArrowUpRight size={13} />}
           onClick={(e) => handleVisitStore(selectedShop, e)}
@@ -1188,7 +1188,7 @@ const MapComponent = () => {
           minW="29px"
           rounded="md"
           variant="outline"
-          colorScheme="blue"
+          colorScheme="brand"
           onClick={(e) => handleGetDirections(selectedShop, e)}
         />
 
@@ -1262,7 +1262,7 @@ const MapComponent = () => {
                                 {shop.name}
                               </Text>
                               {shop.isVerified && (
-                                <Icon as={FaCheckCircle} color="blue.500" boxSize={3} />
+                                <Icon as={FaCheckCircle} color="var(--color-primary)" boxSize={3} />
                               )}
                             </HStack>
                             <HStack spacing={1.5} mt={1}>
@@ -1270,7 +1270,7 @@ const MapComponent = () => {
                                 ★ {shop.rating}
                               </Badge>
                               {typeof shop.distanceKm === 'number' && (
-                                <Text fontSize="10px" fontWeight="700" color="blue.600">
+                                <Text fontSize="10px" fontWeight="700" color="var(--color-primary)">
                                   {shop.distanceKm.toFixed(1)} km
                                 </Text>
                               )}
@@ -1301,7 +1301,7 @@ const MapComponent = () => {
                               h="26px"
                               minW="26px"
                               rounded="lg"
-                              colorScheme="blue"
+                              colorScheme="brand"
                               onClick={(e) => handleVisitStore(shop, e)}
                             />
                           </HStack>

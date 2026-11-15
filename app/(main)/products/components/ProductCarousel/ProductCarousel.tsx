@@ -14,19 +14,19 @@ import {
   Image,
   Skeleton,
   Text,
-  VStack,
   useColorModeValue,
   useToast,
+  VStack,
 } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCartPlus, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
-import { FiArrowRight, FiAward, FiPlus, FiShoppingCart } from 'react-icons/fi';
+import { FiArrowRight, FiAward, FiShoppingCart } from 'react-icons/fi';
+import { useCartToast } from '../../../../hooks/useCartToast';
 import { shopStore } from '../../../../store/shopStore/shopStore';
 import stores from '../../../../store/stores';
-import { useCartToast } from '../../../../hooks/useCartToast';
 
 const MotionBox = motion(Box);
 
@@ -160,6 +160,7 @@ const ProductCard = ({
   const borderColor = useColorModeValue('gray.100', 'gray.700');
   const titleColor = useColorModeValue('gray.800', 'gray.100');
   const mutedColor = useColorModeValue('gray.500', 'gray.400');
+   const hoverColor = useColorModeValue("brand.600", "brand.300");
 
   const discount =
     product.originalPrice > product.price
@@ -187,7 +188,7 @@ const ProductCard = ({
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
       _hover={{
-        borderColor: 'blue.200',
+        // borderColor: 'blue.200',
         boxShadow: '0 12px 28px -8px rgba(37, 99, 235, 0.12)',
       }}
     >
@@ -333,7 +334,7 @@ const ProductCard = ({
             lineHeight="1.3"
             mt={0.5}
             minH={{ base: '31px', md: '36px' }}
-            _groupHover={{ color: 'blue.600' }}
+            _groupHover={{ color: hoverColor }}
             transition="color 0.15s ease"
           >
             {product.name}
@@ -377,10 +378,10 @@ const ProductCard = ({
             h={{ base: '28px', md: '32px' }}
             px={{ base: 2.5, md: 3 }}
             rounded="lg"
-            colorScheme="blue"
+            colorScheme="brand"
             variant="subtle"
-            bg="blue.50"
-            color="blue.600"
+            bg="var(--color-surface-hover)"
+            color="var(--color-primary)"
             fontWeight="700"
             fontSize="xs"
             icon={<FaCartPlus size={12} />}
@@ -511,13 +512,13 @@ const ProductCarousel = observer(() => {
         >
           <Box>
             <HStack spacing={1.5} mb={1}>
-              <Icon as={FiAward} color="blue.600" boxSize={3.5} />
+              <Icon as={FiAward} color="var(--color-primary)" boxSize={3.5} />
               <Text
                 fontSize="11px"
                 fontWeight="700"
                 textTransform="uppercase"
                 letterSpacing="wider"
-                color="blue.600"
+                color="var(--color-primary)"
               >
                 Customer Favorites
               </Text>
@@ -550,7 +551,7 @@ const ProductCarousel = observer(() => {
               px={3.5}
               rounded="full"
               variant="ghost"
-              colorScheme="blue"
+              colorScheme="brand"
               fontWeight="600"
               rightIcon={<FiArrowRight />}
               onClick={() => router.push('/products')}
@@ -627,7 +628,7 @@ const ProductCarousel = observer(() => {
             flexShrink={0}
             bg="white"
             border="1px dashed"
-            borderColor="blue.200"
+            borderColor="var(--color-border)"
             rounded="2xl"
             p={4}
             direction="column"
@@ -645,8 +646,8 @@ const ProductCarousel = observer(() => {
               w="42px"
               h="42px"
               rounded="full"
-              bg="blue.50"
-              color="blue.600"
+              bg="var(--color-surface-hover)"
+              color="var(--color-primary)"
               align="center"
               justify="center"
               transition="transform 0.2s ease"
@@ -662,7 +663,7 @@ const ProductCarousel = observer(() => {
               <Text fontSize="xs" fontWeight="700" color="gray.800">
                 View All Products
               </Text>
-              <Text fontSize="10px" color="blue.600" fontWeight="600">
+              <Text fontSize="10px" color="var(--color-primary)" fontWeight="600">
                 Explore {products.length}+ items →
               </Text>
             </VStack>

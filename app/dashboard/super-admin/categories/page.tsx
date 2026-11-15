@@ -491,7 +491,7 @@ const CategoryPage = () => {
       </SimpleGrid>
 
       {/* ---------------------------- Simple underline tabs ---------------------------- */}
-      <Tabs variant="line" colorScheme="blue">
+      <Tabs variant="line" colorScheme="brand">
         <TabList
           borderBottom="1px solid"
           borderColor="var(--merchant-border-strong)"

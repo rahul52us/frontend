@@ -121,9 +121,9 @@ function Group({
   children: React.ReactNode;
   divided?: boolean;
 }) {
-  const titleColor = useColorModeValue("gray.600", "gray.300");
-  const bg = useColorModeValue("gray.50", "whiteAlpha.50");
-  const border = useColorModeValue("gray.100", "whiteAlpha.200");
+  const titleColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const bg = useColorModeValue("gray.50", "var(--color-surface)");
+  const border = useColorModeValue("var(--color-border)", "var(--color-border)");
 
   return (
     <Box>
@@ -161,12 +161,12 @@ function InfoRow({
   iconColor?: string;
   display?: string;
 }) {
-  const labelColor = useColorModeValue("gray.500", "gray.400");
-  const valueColor = useColorModeValue("gray.800", "gray.100");
+  const labelColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
+  const valueColor = useColorModeValue("var(--color-text)", "var(--color-text)");
   const emptyColor = useColorModeValue("gray.400", "gray.500");
-  const tileBg = useColorModeValue("white", "whiteAlpha.100");
-  const tileBorder = useColorModeValue("gray.100", "whiteAlpha.200");
-  const defaultIconColor = useColorModeValue("purple.500", "purple.200");
+  const tileBg = useColorModeValue("white", "var(--color-surface-hover)");
+  const tileBorder = useColorModeValue("var(--color-border)", "var(--color-border)");
+  const defaultIconColor = useColorModeValue("var(--color-primary)", "brand.300");
 
   return (
     <Flex align="center" gap={3} px={{ base: 3, md: 4 }} py={3}>
@@ -197,7 +197,7 @@ function InfoRow({
               fontWeight="semibold"
               color={valueColor}
               noOfLines={1}
-              _hover={{ textDecoration: "none", color: "purple.500" }}
+              _hover={{ textDecoration: "none", color: "var(--color-primary)" }}
             >
               {display || value}
             </Link>
@@ -229,10 +229,11 @@ function Field({
   error?: string;
   helper?: string;
 } & InputProps) {
-  const labelColor = useColorModeValue("gray.700", "gray.200");
-  const inputBg = useColorModeValue("white", "whiteAlpha.100");
-  const iconColor = useColorModeValue("gray.400", "gray.500");
-  const helperColor = useColorModeValue("gray.500", "gray.400");
+  const labelColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const inputBg = useColorModeValue("white", "var(--color-surface-hover)");
+  const inputBorder = useColorModeValue("var(--color-border)", "var(--color-border)");
+  const iconColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
+  const helperColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
 
   return (
     <FormControl isInvalid={!!error}>
@@ -245,9 +246,12 @@ function Field({
         </InputLeftElement>
         <Input
           bg={inputBg}
+          borderColor={inputBorder}
+          color="var(--color-text)"
           rounded="xl"
           fontSize="md"
-          focusBorderColor="purple.400"
+          focusBorderColor="brand.400"
+          _placeholder={{ color: "var(--color-text-muted)" }}
           {...inputProps}
         />
       </InputGroup>
@@ -276,11 +280,11 @@ export function ProfileSection({ user }: { user: any }) {
   const [formData, setFormData] = useState<FormState>(() => buildForm(user));
   const [errors, setErrors] = useState<FormErrors>(EMPTY_ERRORS);
 
-  const headingColor = useColorModeValue("gray.800", "white");
-  const mutedColor = useColorModeValue("gray.500", "gray.400");
-  const barBg = useColorModeValue("whiteAlpha.950", "gray.800");
-  const barBorder = useColorModeValue("gray.200", "whiteAlpha.300");
-  const noteColor = useColorModeValue("gray.500", "gray.400");
+  const headingColor = useColorModeValue("var(--color-text)", "var(--color-text)");
+  const mutedColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
+  const barBg = useColorModeValue("whiteAlpha.950", "var(--color-surface)");
+  const barBorder = useColorModeValue("var(--color-border)", "var(--color-border)");
+  const noteColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
 
   const startEdit = () => {
     // Always start from the latest saved values
@@ -421,7 +425,7 @@ export function ProfileSection({ user }: { user: any }) {
             px={4}
             rounded="full"
             variant="outline"
-            colorScheme="purple"
+            colorScheme="brand"
             flexShrink={0}
             onClick={startEdit}
           >
@@ -615,7 +619,7 @@ export function ProfileSection({ user }: { user: any }) {
               </Button>
               <Button
                 type="submit"
-                colorScheme="purple"
+                colorScheme="brand"
                 h={12}
                 px={8}
                 rounded="xl"
