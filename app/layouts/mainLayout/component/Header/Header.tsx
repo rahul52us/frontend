@@ -1,5 +1,4 @@
 "use client";
-import { HamburgerIcon } from "@chakra-ui/icons";
 import {
   Avatar,
   Badge,
@@ -24,8 +23,6 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import { ThemeModeMenu, ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
-import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
@@ -49,7 +46,9 @@ import {
 import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
 import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
+import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 import stores from "../../../../store/stores";
+import { ThemeModeMenu, ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
 import HeroNavButton from "./component/HeroNavButton";
 import NavItemsLayout from "./component/NavItemsLayout";
 import UserMenu from "./component/UserMenu";

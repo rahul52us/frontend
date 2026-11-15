@@ -44,8 +44,8 @@ const HeaderContainer = styled.div<{
   $borderColor: string;
 }>`
   z-index: 99;
-  height: calc(${headerHeight} + max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
-  padding-top: max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px)));
+  height: calc(${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} + var(--safe-area-top, env(safe-area-inset-top, 0px)));
+  padding-top: var(--safe-area-top, env(safe-area-inset-top, 0px));
   box-sizing: border-box;
   position: fixed;
   top: 0;
@@ -68,19 +68,19 @@ const ContentContainer = styled.div<{
   $hasMobileBottomNav: boolean;
 }>`
   padding: ${({ $isMobile }) =>
-    $isMobile ? `${contentSmallBodyPadding}` : `${contentLargeBodyPadding}`};
+    $isMobile ? '4px 6px' : `${contentLargeBodyPadding}`};
   padding-bottom: ${({ $isMobile, $hasMobileBottomNav }) =>
     $isMobile && $hasMobileBottomNav
       ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
       : $isMobile
-      ? `${contentSmallBodyPadding}`
+      ? '8px'
       : `${contentLargeBodyPadding}`};
   width: ${({ $isMobile }) =>
     $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
   overflow-x: hidden;
-  height: calc(100vh - ${headerHeight} - max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
+  min-height: calc(100vh - ${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} - var(--safe-area-top, env(safe-area-inset-top, 0px)));
   transition: all 0.3s ease-in-out;
-  margin-top: calc(${headerHeight} + max(${({ $runtimeTopInset }) => `${$runtimeTopInset}px`}, var(--safe-area-top, env(safe-area-inset-top, 0px))));
+  margin-top: calc(${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} + var(--safe-area-top, env(safe-area-inset-top, 0px)));
   color: ${(props) => props.$textColor};
   background: ${(props) => props.$bgContent};
 
@@ -175,18 +175,6 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const platform = (window as any)?.Capacitor?.getPlatform?.();
-    if (platform === 'android') {
-      setRuntimeTopInset(28);
-      return;
-    }
-
-    if (platform === 'ios') {
-      setRuntimeTopInset(0);
-      return;
-    }
-
     setRuntimeTopInset(0);
   }, []);
 

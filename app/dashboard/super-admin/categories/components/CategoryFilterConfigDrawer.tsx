@@ -294,9 +294,7 @@ const CategoryFilterConfigDrawer: React.FC<CategoryFilterConfigDrawerProps> = ({
                 isOpen={isOpen}
                 onClose={onClose}
                 title={drawerTitle}
-                contentProps={{
-                    maxH: "90dvh",
-                }}
+                size="full"
                 bodyProps={{
                     overflowY: "auto",
                     px: 4,

@@ -21,13 +21,12 @@ import {
 import { motion } from 'framer-motion';
 import { observer } from 'mobx-react-lite';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FiBox,
   FiClipboard,
   FiExternalLink,
   FiGift,
-  FiGrid,
   FiHome,
   FiLayers,
   FiLogOut,
@@ -38,7 +37,7 @@ import {
   FiSettings,
   FiShoppingBag,
   FiSun,
-  FiUsers,
+  FiUsers
 } from 'react-icons/fi';
 import stores from '../../../store/stores';
 import { dashboardPalette } from '../dashboardPalette';
@@ -79,12 +78,15 @@ const DashboardMobileBottomNav = observer(() => {
     'rgba(226, 232, 240, 0.95)',
     dashboardPalette.border || 'rgba(59, 130, 246, 0.18)'
   );
-  const activeColor = 'var(--color-primary, #5B6CFF)';
+  const activeColor = 'var(--color-primary, #065F68)';
   const inactiveColor = useColorModeValue('#64748B', dashboardPalette.textMuted || '#94A3B8');
-  const activePillBg = useColorModeValue('rgba(91, 108, 255, 0.08)', 'rgba(91, 108, 255, 0.15)');
-  const centerRingBg = useColorModeValue('white', '#0B1120');
+  const activePillBg = useColorModeValue(
+    'var(--color-primary-soft, rgba(6, 95, 104, 0.08))',
+    'var(--color-primary-soft, rgba(6, 95, 104, 0.20))'
+  );
+  const centerRingBg = useColorModeValue('#FFFFFF', '#0B1120');
   const drawerBg = useColorModeValue('#FFFFFF', '#0B1120');
-  const drawerBorder = useColorModeValue('#E2E8F0', dashboardPalette.border || 'rgba(59, 130, 246, 0.18)');
+  const drawerBorder = useColorModeValue('#E2E8F0', dashboardPalette.border || 'rgba(6, 95, 104, 0.22)');
   const drawerItemHoverBg = useColorModeValue('gray.50', 'rgba(255, 255, 255, 0.05)');
 
   // Identify role
@@ -98,14 +100,14 @@ const DashboardMobileBottomNav = observer(() => {
     normalizedRoles.includes('superAdmin') ||
     pathname.startsWith('/dashboard/super-admin');
 
-  // SuperAdmin Navigation Items
+  // SuperAdmin Navigation Items - Center Tab is Dashboard
   const superAdminNavItems: NavItem[] = [
     {
-      id: 'admin-dashboard',
-      label: 'Dashboard',
-      icon: FiPieChart,
-      path: '/dashboard/super-admin/index',
-      sidebarId: 101,
+      id: 'admin-shops',
+      label: 'Shops',
+      icon: FiShoppingBag,
+      path: '/dashboard/super-admin/shops',
+      sidebarId: 103,
     },
     {
       id: 'admin-categories',
@@ -115,11 +117,11 @@ const DashboardMobileBottomNav = observer(() => {
       sidebarId: 102,
     },
     {
-      id: 'admin-shops',
-      label: 'Shops',
-      icon: FiShoppingBag,
-      path: '/dashboard/super-admin/shops',
-      sidebarId: 103,
+      id: 'admin-dashboard',
+      label: 'Dashboard',
+      icon: FiPieChart,
+      path: '/dashboard/super-admin/index',
+      sidebarId: 101,
       isCenter: true,
     },
     {
@@ -138,14 +140,29 @@ const DashboardMobileBottomNav = observer(() => {
     },
   ];
 
-  // Seller Navigation Items
+  // Seller Navigation Items - Center Tab is Dashboard
   const sellerNavItems: NavItem[] = [
     {
+      id: 'seller-shop',
+      label: 'Shop',
+      icon: FiShoppingBag,
+      path: '/dashboard/shop',
+      sidebarId: 2,
+    },
+    {
+      id: 'seller-products',
+      label: 'Products',
+      icon: FiPackage,
+      path: '/dashboard/products',
+      sidebarId: 6,
+    },
+    {
       id: 'seller-home',
-      label: 'Home',
+      label: 'Dashboard',
       icon: FiHome,
       path: '/dashboard',
       sidebarId: 1,
+      isCenter: true,
     },
     {
       id: 'seller-orders',
@@ -155,26 +172,11 @@ const DashboardMobileBottomNav = observer(() => {
       sidebarId: 7,
     },
     {
-      id: 'seller-products',
-      label: 'Products',
-      icon: FiPackage,
-      path: '/dashboard/products',
-      sidebarId: 6,
-      isCenter: true,
-    },
-    {
       id: 'seller-customers',
       label: 'Customers',
       icon: FiUsers,
       path: '/dashboard/customers',
       sidebarId: 8,
-    },
-    {
-      id: 'seller-shop',
-      label: 'Shop',
-      icon: FiShoppingBag,
-      path: '/dashboard/shop',
-      sidebarId: 2,
     },
   ];
 
@@ -285,16 +287,16 @@ const DashboardMobileBottomNav = observer(() => {
                 >
                   {/* Floating Action Button */}
                   <MotionFlex
-                    mt="-22px"
-                    w="50px"
-                    h="50px"
+                    mt="-24px"
+                    w="52px"
+                    h="52px"
                     borderRadius="full"
                     bg={centerRingBg}
                     p="3px"
                     boxShadow={
                       isActive
-                        ? '0 12px 28px rgba(91, 108, 255, 0.38)'
-                        : '0 8px 20px rgba(0, 0, 0, 0.18)'
+                        ? '0 10px 24px var(--color-primary-glow, rgba(6, 95, 104, 0.45))'
+                        : '0 6px 18px rgba(0, 0, 0, 0.18)'
                     }
                     align="center"
                     justify="center"
@@ -312,17 +314,13 @@ const DashboardMobileBottomNav = observer(() => {
                       w="full"
                       h="full"
                       borderRadius="full"
-                      bgGradient={
-                        isActive
-                          ? 'linear(135deg, var(--color-primary, #5B6CFF) 0%, var(--color-secondary, #C44AE8) 100%)'
-                          : 'linear(135deg, #4F46E5 0%, #7C3AED 100%)'
-                      }
+                      bgGradient="linear(135deg, var(--color-primary, #065F68) 0%, var(--color-secondary, #2A8A94) 100%)"
                       color="white"
                       align="center"
                       justify="center"
-                      boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.2)"
+                      boxShadow="inset 0 1px 2px rgba(255, 255, 255, 0.25)"
                     >
-                      <Icon as={item.icon} boxSize="20px" strokeWidth={2.3} />
+                      <Icon as={item.icon} boxSize="22px" strokeWidth={2.3} />
                     </Flex>
                   </MotionFlex>
 
@@ -330,7 +328,7 @@ const DashboardMobileBottomNav = observer(() => {
                     fontSize="10px"
                     fontWeight={isActive ? '800' : '600'}
                     color={isActive ? activeColor : inactiveColor}
-                    mt={0.5}
+                    mt={1}
                     lineHeight="1"
                     letterSpacing="-0.01em"
                   >
@@ -345,7 +343,7 @@ const DashboardMobileBottomNav = observer(() => {
               <MotionFlex
                 key={item.id}
                 flex="1"
-                h="48px"
+                h="50px"
                 direction="column"
                 align="center"
                 justify="center"
@@ -362,7 +360,7 @@ const DashboardMobileBottomNav = observer(() => {
                   <MotionBox
                     layoutId="dashboardMobileNavPill"
                     position="absolute"
-                    inset={0}
+                    inset="3px 4px"
                     bg={activePillBg}
                     borderRadius="xl"
                     zIndex={0}
@@ -374,16 +372,17 @@ const DashboardMobileBottomNav = observer(() => {
                   />
                 )}
 
-                {/* Top Active Line */}
+                {/* Top Active Line - breathing space above icon */}
                 {isActive && (
                   <MotionBox
                     layoutId="dashboardMobileActiveDot"
                     position="absolute"
-                    top="1px"
-                    w="16px"
-                    h="2.5px"
+                    top="-1px"
+                    w="20px"
+                    h="3px"
                     borderRadius="full"
-                    bgGradient="linear(to-r, var(--color-primary, #5B6CFF), var(--color-secondary, #C44AE8))"
+                    bgGradient="linear(to-r, var(--color-primary, #065F68), var(--color-secondary, #2A8A94))"
+                    boxShadow="0 2px 6px var(--color-primary-glow, rgba(6, 95, 104, 0.35))"
                     transition={{
                       type: 'spring',
                       stiffness: 400,
@@ -396,6 +395,7 @@ const DashboardMobileBottomNav = observer(() => {
                 <MotionBox
                   position="relative"
                   zIndex={1}
+                  mt="5px"
                   animate={{
                     y: isActive ? -1 : 0,
                     scale: isActive ? 1.08 : 1,
@@ -527,7 +527,7 @@ const DashboardMobileBottomNav = observer(() => {
                       h="40px"
                       borderRadius="12px"
                       bg="rgba(59, 130, 246, 0.12)"
-                      color="blue.400"
+                      color="brand.400"
                       align="center"
                       justify="center"
                     >

@@ -107,7 +107,7 @@ const MobileBottomNav = observer(() => {
       borderTop="1px solid"
       borderColor={dockBorder}
       boxShadow="0 -4px 20px rgba(0, 0, 0, 0.05)"
-      pb={2}
+      pb="max(env(safe-area-inset-bottom, 0px), 8px)"
       pt={0}
       transition="background-color 0.2s ease, border-color 0.2s ease"
     >

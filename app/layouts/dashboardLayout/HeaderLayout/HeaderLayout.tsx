@@ -44,29 +44,25 @@ const HeaderLayout = observer(() => {
 
   if (isMobile) {
     return (
-      <Flex align="center" justify="space-between" h={headerHeight} px={4}>
-        <HStack spacing={3}>
+      <Flex align="center" justify="space-between" h="52px" px={3}>
+        <HStack spacing={2.5}>
           <Flex
-            w="40px"
-            h="40px"
-            borderRadius="18px"
-            bgGradient={
-              isSuperAdmin
-                ? "linear(135deg, #7C3AED 0%, #C026D3 100%)"
-                : "linear(135deg, #5B6CFF 0%, #C44AE8 100%)"
-            }
+            w="36px"
+            h="36px"
+            borderRadius="14px"
+            bgGradient="linear(135deg, var(--color-primary, #065F68) 0%, var(--color-secondary, #2A8A94) 100%)"
             align="center"
             justify="center"
-            boxShadow="0 12px 28px rgba(91, 108, 255, 0.22)"
+            boxShadow="0 6px 16px var(--color-primary-glow, rgba(6, 95, 104, 0.22))"
             color="white"
           >
-            {isSuperAdmin ? <FaShieldAlt size={16} /> : <FaStore size={16} />}
+            {isSuperAdmin ? <FaShieldAlt size={15} /> : <FaStore size={15} />}
           </Flex>
           <Box maxW="180px">
-            <Text fontSize="11px" color={textMuted} fontWeight="600" lineHeight="1">
+            <Text fontSize="10px" color={textMuted} fontWeight="600" lineHeight="1">
               {isSuperAdmin ? "Control Center" : "Welcome back"}
             </Text>
-            <Text mt={1} fontSize="sm" color={textPrimary} fontWeight="800" lineHeight="1" noOfLines={1}>
+            <Text mt={0.5} fontSize="sm" color={textPrimary} fontWeight="800" lineHeight="1" noOfLines={1}>
               {displayName}
             </Text>
           </Box>
@@ -75,14 +71,14 @@ const HeaderLayout = observer(() => {
         <HStack spacing={2} align="center">
           <IconButton
             aria-label="Search dashboard"
-            icon={<FaSearch size={15} />}
+            icon={<FaSearch size={14} />}
             bg={iconBg}
             color={textPrimary}
             border="1px solid"
             borderColor={iconBorder}
-            borderRadius="14px"
-            boxSize="40px"
-            minW="40px"
+            borderRadius="12px"
+            boxSize="36px"
+            minW="36px"
             _hover={{ bg: iconHoverBg }}
             _active={{ bg: iconHoverBg }}
           />

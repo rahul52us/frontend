@@ -776,9 +776,9 @@ const SellerOverview = observer(() => {
           variants={stagger}
           initial="hidden"
           animate="show"
-          spacing={{ base: 4, xl: 6 }}
+          spacing={{ base: 3, xl: 6 }}
           px={{ base: 0, md: 6, xl: 4 }}
-          py={{ base: 2, md: 0 }}
+          py={{ base: 1, md: 0 }}
         >
           {loading ? (
             <OverviewSkeleton />

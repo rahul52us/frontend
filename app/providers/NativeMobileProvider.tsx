@@ -43,9 +43,15 @@ export const NativeMobileProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [pathname]);
 
-  // Synchronize Status Bar styling with current theme
+  // Synchronize Status Bar & Window background styling with current theme
   useEffect(() => {
     const isDark = colorMode === 'dark';
+    const themeBg = isDark ? '#070B14' : '#FFFFFF';
+
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.backgroundColor = themeBg;
+      document.body.style.backgroundColor = themeBg;
+    }
 
     const syncStatusBar = async () => {
       try {

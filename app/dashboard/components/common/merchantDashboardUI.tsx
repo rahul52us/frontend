@@ -175,7 +175,7 @@ export const MerchantPageShell = ({
       <Container
         maxW={maxW}
         px={{ base: 2, sm: 4, md: 6 }}
-        py={{ base: 2, md: 6 }}
+        py={{ base: 1, md: 6 }}
         sx={{
           ...(formSx as any),
           "@media (prefers-reduced-motion: reduce)": {
@@ -200,7 +200,7 @@ export const MerchantPageHeader = ({
   badges,
   actions,
   mobileActions,
-  mb = { base: 3, md: 6 },
+  mb = { base: 2, md: 6 },
 }: {
   icon?: any;
   title: React.ReactNode;
