@@ -42,6 +42,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         as="main"
         flex="1"
         w="full"
+        key={pathname}
+        className="page-enter-animation"
         pb={{
           base: hideBottomNav ? "0px" : "60px",
           md: 0,

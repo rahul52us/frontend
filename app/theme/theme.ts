@@ -305,6 +305,17 @@ export function createAppTheme(config: ThemeConfig = themeConfig) {
         py: 1,
       }),
     },
+    Skeleton: {
+      baseStyle: (props: StyleFunctionProps) => ({
+        $$startColor: mode("var(--color-surface-soft, #EDF2F7)", "var(--color-surface-soft, #1B2A47)")(props),
+        $$endColor: mode("var(--color-border-strong, #CBD5E1)", "var(--color-surface-alt, #253A5E)")(props),
+        borderRadius: "md",
+      }),
+      defaultProps: {
+        startColor: undefined,
+        endColor: undefined,
+      },
+    },
     Tabs: {
       variants: {
         line: (props: StyleFunctionProps) => ({

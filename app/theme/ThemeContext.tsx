@@ -46,8 +46,35 @@ export function ThemeProvider({
     // ChakraProvider context not available
   }
 
-  const [mode, setModeState] = useState<ThemeMode>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  // Get initial state immediately to prevent any flash before mount
+  const [mode, setModeState] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return "system";
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        return stored;
+      }
+      const chakraStored = localStorage.getItem(CHAKRA_STORAGE_KEY) as ThemeMode | null;
+      if (chakraStored === "light" || chakraStored === "dark") {
+        return chakraStored;
+      }
+    } catch {}
+    return "system";
+  });
+
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    if (typeof window === "undefined") return "light";
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "dark") return "dark";
+      if (stored === "light") return "light";
+      const chakraStored = localStorage.getItem(CHAKRA_STORAGE_KEY);
+      if (chakraStored === "dark" || chakraStored === "light") return chakraStored;
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    } catch {}
+    return "light";
+  });
+
   const [mounted, setMounted] = useState(false);
 
   const tokens = useMemo(() => getSemanticTokens(config.colors), [config.colors]);

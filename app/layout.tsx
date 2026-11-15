@@ -14,6 +14,8 @@ import { headingFont, bodyFont } from "../lib/fonts";
 import { theme } from "./theme/theme";
 import { ThemeProvider } from "./theme/ThemeContext";
 import NativeMobileProvider from "./providers/NativeMobileProvider";
+import RouteTracker from "./providers/RouteTracker";
+import { Suspense } from "react";
 import "./globals.css";
 
 export default function RootLayout({
@@ -57,20 +59,26 @@ export default function RootLayout({
                   if (mode === 'system') {
                     resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                   }
+                  // Keep chakra-ui-color-mode aligned immediately before hydration
+                  localStorage.setItem('chakra-ui-color-mode', resolved);
                   document.documentElement.setAttribute('data-theme', resolved);
                   if (resolved === 'dark') {
                     document.documentElement.classList.add('chakra-ui-dark');
                     document.documentElement.classList.remove('chakra-ui-light');
+                    document.documentElement.style.colorScheme = 'dark';
+                    document.documentElement.style.backgroundColor = '#070B14';
                   } else {
                     document.documentElement.classList.add('chakra-ui-light');
                     document.documentElement.classList.remove('chakra-ui-dark');
+                    document.documentElement.style.colorScheme = 'light';
+                    document.documentElement.style.backgroundColor = '#F8FAFC';
                   }
                 } catch (e) {}
               })();
             `,
           }}
         />
-        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+        <ColorModeScript type="localStorage" initialColorMode={theme.config.initialColorMode} />
       </head>
 
       <body
@@ -93,6 +101,9 @@ export default function RootLayout({
         <ChakraProvider theme={theme}>
           <ThemeProvider>
             <NativeMobileProvider>
+              <Suspense fallback={null}>
+                <RouteTracker />
+              </Suspense>
               <Notification />
               <LayoutComponent>{children}</LayoutComponent>
               <WhatsAppButton />

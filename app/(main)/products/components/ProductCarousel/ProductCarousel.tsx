@@ -385,7 +385,7 @@ const ProductCard = ({
             fontWeight="700"
             fontSize="xs"
             icon={<FaCartPlus size={12} />}
-            _hover={{ bg: 'blue.600', color: 'white' }}
+            _hover={{ bg: 'brand.600', color: 'white' }}
             _active={{ transform: 'scale(0.95)' }}
             flexShrink={0}
             onClick={(e) => {
@@ -638,8 +638,8 @@ const ProductCarousel = observer(() => {
             role="group"
             transition="all 0.2s ease"
             _hover={{
-              borderColor: 'blue.400',
-              bg: 'blue.50',
+              borderColor: 'brand.400',
+              bg: 'brand.50',
             }}
           >
             <Flex
@@ -652,7 +652,7 @@ const ProductCarousel = observer(() => {
               justify="center"
               transition="transform 0.2s ease"
               _groupHover={{
-                bg: 'blue.600',
+                bg: 'brand.600',
                 color: 'white',
                 transform: 'scale(1.08)',
               }}

@@ -22,10 +22,10 @@ const ShopLayoutSkeletan = () => {
         top="0"
         zIndex="50"
         w="full"
-        bg="white"
+        bg="var(--color-surface, white)"
         boxShadow="sm"
         borderBottom="1px"
-        borderColor="gray.200"
+        borderColor="var(--color-border, gray.200)"
         display={{ base: "block", md: "none" }}
       >
         <Flex h="14" alignItems="center" px="4">

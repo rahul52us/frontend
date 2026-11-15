@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { overlayManager } from '../services/overlayManager';
+import { navigationHistory } from './RouteTracker';
 import stores from '../store/stores';
 
 /**
@@ -105,28 +106,37 @@ export const NativeMobileProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // 2. Priority 2: Nested page navigation
+      // Determine current full path and URL
       const currentPath =
         (typeof window !== 'undefined' ? window.location.pathname : '') ||
-        currentPathRef.current ||
+        pathname ||
         '/';
-      const isRoot = currentPath === '/' || currentPath === '/home';
+      const currentSearch =
+        typeof window !== 'undefined' ? window.location.search : '';
+      const currentFullUrl = currentSearch ? `${currentPath}${currentSearch}` : currentPath;
+
+      const isRoot = (currentPath === '/' || currentPath === '/home') && !currentSearch;
 
       if (!isRoot) {
-        const stack = historyStackRef.current;
-        if (stack.length > 1) {
-          stack.pop();
+        // Check our comprehensive navigationHistory tracker
+        const prevUrl = navigationHistory.previous;
+        const hasHistory = navigationHistory.length > 1;
+
+        if (prevUrl && hasHistory) {
+          // Pop current and navigate to recorded previous route
+          navigationHistory.pop();
+          router.push(prevUrl);
+          return;
         }
 
-        const canGoBack =
-          eventCanGoBack ||
-          (typeof window !== 'undefined' && window.history.length > 1) ||
-          stack.length > 0;
-
-        if (canGoBack) {
-          router.back();
-        } else {
-          router.push('/');
+        // Fallback to browser history if available
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+          window.history.back();
+          return;
         }
+
+        // Default fallback to home
+        router.push('/');
         return;
       }
 

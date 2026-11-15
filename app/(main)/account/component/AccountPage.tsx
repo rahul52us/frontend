@@ -34,6 +34,7 @@ import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import stores from "../../../store/stores";
 import { ThemeModeSwitcher } from "../../../theme/ThemeModeSwitcher";
+import useRegisterOverlay from "../../../hooks/useRegisterOverlay";
 import { AddressesSection } from "./AddressSection/AddressSection";
 import CartSection from "./CartSection/CartSection";
 import OrdersSection from "./OrderSection/OrderSection";
@@ -149,6 +150,14 @@ const AccountPage = observer(() => {
     setMobileSelectedTab(null);
     router.push("/account");
   };
+
+  // Register mobile section subview with overlayManager so native back closes it first
+  useRegisterOverlay(
+    Boolean(mobileSelectedTab),
+    handleMobileBack,
+    'account_mobile_section',
+    2
+  );
 
   // Menu items list (shared configuration)
   const menuItems = [

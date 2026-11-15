@@ -18,7 +18,7 @@ const ShopHeaderSkeleton = () => {
 
         <Container maxW="container.xl" position="relative" mt={{ base: "-240px", md: "-36" }} zIndex="10" px={{ base: 3, md: 4 }} pb={{ base: 4, md: 8 }}>
           <Flex flexDir={{ base: "column", md: "row" }} alignItems={{ base: "center", md: "flex-end" }} gap={{ base: 3, md: 6 }} justifyContent="space-between" flexWrap={{ base: "wrap", md: "nowrap" }}>
-            <Box position="relative" w={{ base: "80px", md: "100px" }} h={{ base: "80px", md: "100px" }} borderRadius="xl" border="3px" borderColor="white" overflow="hidden" bg="white" mb={{ base: 2, md: 0 }}>
+            <Box position="relative" w={{ base: "80px", md: "100px" }} h={{ base: "80px", md: "100px" }} borderRadius="xl" border="3px solid" borderColor="var(--color-border, white)" overflow="hidden" bg="var(--color-surface, white)" mb={{ base: 2, md: 0 }}>
               <SkeletonCircle size="full" h="full" w="full" />
             </Box>
 

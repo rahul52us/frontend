@@ -1,4 +1,5 @@
 import { Box, Flex, Grid, HStack, Skeleton, SkeletonCircle } from "@chakra-ui/react";
+import { startColor, endColor } from "../../../../component/common/utils/skeletonColors";
 
 const ContactSectionSkeleton = () => {
   return (
@@ -13,14 +14,16 @@ const ContactSectionSkeleton = () => {
               direction="column"
               align="center"
               p={8}
-              bg="white"
+              bg="var(--color-surface, white)"
+              border="1px solid"
+              borderColor="var(--color-border, gray.100)"
               borderRadius="2xl"
               boxShadow="xl"
               textAlign="center"
             >
-              <SkeletonCircle startColor={"purple.200"} endColor={"purple.50"} size="12" mb={3} />
-              <Skeleton startColor={"purple.200"} endColor={"purple.50"} height="24px" width="120px" mb={2} />
-              <Skeleton startColor={"purple.200"} endColor={"purple.50"} height="16px" width="180px" />
+              <SkeletonCircle startColor={startColor} endColor={endColor} size="12" mb={3} />
+              <Skeleton startColor={startColor} endColor={endColor} height="24px" width="120px" mb={2} />
+              <Skeleton startColor={startColor} endColor={endColor} height="16px" width="180px" />
             </Flex>
           ))}
       </Grid>
@@ -31,7 +34,7 @@ const ContactSectionSkeleton = () => {
           {Array(3)
             .fill("")
             .map((_, index) => (
-              <SkeletonCircle startColor={"purple.200"} endColor={"purple.50"} key={index} size="12" />
+              <SkeletonCircle startColor={startColor} endColor={endColor} key={index} size="12" />
             ))}
         </HStack>
       </Box>
