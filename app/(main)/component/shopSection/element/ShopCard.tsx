@@ -393,10 +393,12 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                   w="26px"
                   h="26px"
                   rounded="full"
-                  bg="gray.900"
+                  bg="var(--color-primary)"
                   color="white"
                   align="center"
                   justify="center"
+                  transition="all 0.15s ease"
+                  _groupHover={{ transform: "scale(1.05)" }}
                 >
                   <Icon as={FiChevronRight} boxSize={3.5} />
                 </Flex>

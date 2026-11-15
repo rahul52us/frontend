@@ -59,12 +59,12 @@ const BottomSheetDrawer = ({
             w="44px"
             h="5px"
             borderRadius="full"
-            bg="gray.200"
+            bg="var(--color-border)"
           />
         ) : null}
 
         {title ? (
-          <DrawerHeader borderBottomWidth="1px" borderBottomColor="gray.100" fontWeight="800" {...headerProps}>
+          <DrawerHeader borderBottomWidth="1px" borderBottomColor="var(--color-border)" fontWeight="800" {...headerProps}>
             {title}
           </DrawerHeader>
         ) : null}
@@ -78,7 +78,7 @@ const BottomSheetDrawer = ({
         {footer ? (
           <DrawerFooter
             borderTopWidth="1px"
-            borderTopColor="gray.100"
+            borderTopColor="var(--color-border)"
             gap={3}
             pb="calc(14px + env(safe-area-inset-bottom, 0px))"
             {...footerProps}
