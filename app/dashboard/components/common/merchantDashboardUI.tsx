@@ -70,9 +70,9 @@ export const MerchantBadge = ({
 }) => {
   const toneMap: Record<MerchantBadgeTone, { bg: string; color: string; borderColor: string }> = {
     accent: {
-      bg: useColorModeValue("blue.50", dashboardPalette.accentSoft),
-      color: useColorModeValue("blue.700", dashboardPalette.accentStrong),
-      borderColor: useColorModeValue("blue.200", dashboardPalette.borderAccent),
+      bg: useColorModeValue("brand.50", dashboardPalette.accentSoft),
+      color: useColorModeValue("brand.700", dashboardPalette.accentStrong),
+      borderColor: useColorModeValue("brand.200", dashboardPalette.borderAccent),
     },
     success: {
       bg: useColorModeValue("green.50", dashboardPalette.successSoft),
@@ -159,14 +159,14 @@ export const MerchantPageShell = ({
   // CSS variables shared by every child component
   const themeVars = {
     "--merchant-border": useColorModeValue("var(--chakra-colors-gray-200)", dashboardPalette.border),
-    "--merchant-border-strong": useColorModeValue("var(--chakra-colors-blue-100)", dashboardPalette.borderStrong),
+    "--merchant-border-strong": useColorModeValue("var(--chakra-colors-brand-100)", dashboardPalette.borderStrong),
     "--merchant-surface": useColorModeValue("var(--chakra-colors-white)", dashboardPalette.surface),
     "--merchant-surface-alt": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.surfaceAlt),
     "--merchant-surface-soft": useColorModeValue("var(--chakra-colors-gray-100)", dashboardPalette.surfaceSoft),
     "--merchant-text-muted": useColorModeValue("var(--chakra-colors-gray-500)", dashboardPalette.textMuted),
     "--merchant-text": useColorModeValue("var(--chakra-colors-gray-800)", dashboardPalette.text),
-    "--merchant-accent": useColorModeValue("var(--chakra-colors-blue-600)", dashboardPalette.accent),
-    "--merchant-accent-strong": useColorModeValue("var(--chakra-colors-blue-700)", dashboardPalette.accentStrong),
+    "--merchant-accent": useColorModeValue("var(--chakra-colors-brand-600)", dashboardPalette.accent),
+    "--merchant-accent-strong": useColorModeValue("var(--chakra-colors-brand-700)", dashboardPalette.accentStrong),
     "--merchant-page-bg": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.page),
   };
 
@@ -213,8 +213,8 @@ export const MerchantPageHeader = ({
   mobileActions?: React.ReactNode;
   mb?: any;
 }) => {
-  const iconBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const iconColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
+  const iconBg = useColorModeValue("brand.50", dashboardPalette.accentSoft);
+  const iconColor = useColorModeValue("brand.600", dashboardPalette.accentStrong);
 
   return (
     <Flex justify="space-between" align="center" gap={3} mb={mb} animation={merchantFadeUp(0)}>
@@ -465,10 +465,10 @@ export const MerchantStatCard = ({
 }) => {
   const defaultText = useColorModeValue("gray.800", dashboardPalette.text);
   const defaultTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
-  const defaultIconColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
-  const defaultIconBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const defaultIconColor = useColorModeValue("brand.600", dashboardPalette.accentStrong);
+  const defaultIconBg = useColorModeValue("brand.50", dashboardPalette.accentSoft);
   const defaultBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const hoverBorder = useColorModeValue("blue.300", dashboardPalette.borderAccent);
+  const hoverBorder = useColorModeValue("brand.300", dashboardPalette.borderAccent);
   const panelBg = useColorModeValue("white", dashboardPalette.surface);
   const heroBg = useColorModeValue("whiteAlpha.50", "rgba(59, 130, 246, 0.04)");
   const panelShadow = useColorModeValue("0 1px 2px rgba(15, 23, 42, 0.04)", "0 18px 40px rgba(0, 0, 0, 0.28)");
@@ -628,11 +628,11 @@ export const MerchantActionTile = ({
   bg?: string;
 }) => {
   const border = useColorModeValue("gray.200", dashboardPalette.border);
-  const hoverBorder = useColorModeValue("blue.300", dashboardPalette.borderAccent);
+  const hoverBorder = useColorModeValue("brand.300", dashboardPalette.borderAccent);
   const tileBg = useColorModeValue("white", dashboardPalette.surface);
-  const hoverBg = useColorModeValue("blue.50", dashboardPalette.surfaceAlt);
-  const defaultColor = useColorModeValue("blue.600", dashboardPalette.accentStrong);
-  const defaultBg = useColorModeValue("blue.50", dashboardPalette.accentSoft);
+  const hoverBg = useColorModeValue("brand.50", dashboardPalette.surfaceAlt);
+  const defaultColor = useColorModeValue("brand.600", dashboardPalette.accentStrong);
+  const defaultBg = useColorModeValue("brand.50", dashboardPalette.accentSoft);
 
   return (
     <Flex
@@ -682,7 +682,7 @@ export const getMerchantTableProps = (height = "62vh") => ({
           tr: {
             td: {
               borderBottom: "1px solid",
-              borderColor: "var(--chakra-colors-blue-100)",
+              borderColor: "var(--chakra-colors-brand-100)",
             },
           },
           "tr:last-of-type td": {

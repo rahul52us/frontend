@@ -35,7 +35,6 @@ import {
     FiShield,
     FiShoppingBag,
 } from "react-icons/fi";
-import ShopCard from "../../../(main)/component/shopSection/element/ShopCard";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";

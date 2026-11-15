@@ -21,26 +21,28 @@ import {
     Tabs,
     Text,
     VStack,
-    // keyframes,
     useBreakpointValue,
     useColorModeValue,
 } from "@chakra-ui/react";
-import React from "react";
+import { keyframes } from "@emotion/react";
+import React, { useMemo, useState } from "react";
 import {
     FiClock,
     FiExternalLink,
     FiGlobe,
+    FiHash,
     FiImage,
     FiInfo,
     FiMail,
     FiMapPin,
+    FiMessageSquare,
     FiNavigation,
     FiPhone,
     FiTag,
+    FiUser,
 } from "react-icons/fi";
 import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
-import { keyframes } from "@emotion/react";
 
 interface ShopViewProps {
     isOpen: boolean;
@@ -74,6 +76,15 @@ const formatDate = (value?: string) => {
     return d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 };
 
+const resolveMediaUrl = (item: any): string | null => {
+    if (!item) return null;
+    if (typeof item === "string") return item.trim() || null;
+    if (item?.file?.url && typeof item.file.url === "string") return item.file.url;
+    if (item?.url && typeof item.url === "string") return item.url;
+    if (item?.file && typeof item.file === "string") return item.file;
+    return null;
+};
+
 const useShopTheme = () => ({
     pageBg: useColorModeValue("gray.50", "gray.900"),
     cardBg: useColorModeValue("white", "gray.800"),
@@ -81,8 +92,8 @@ const useShopTheme = () => ({
     text: useColorModeValue("gray.800", "gray.100"),
     muted: useColorModeValue("gray.500", "gray.400"),
     soft: useColorModeValue("gray.50", "whiteAlpha.100"),
-    accent: useColorModeValue("blue.600", "blue.300"),
-    accentBg: useColorModeValue("blue.50", "whiteAlpha.200"),
+    accent: useColorModeValue("brand.600", "brand.300"),
+    accentBg: useColorModeValue("brand.50", "whiteAlpha.200"),
 });
 
 /* ------------------------------------------------------------------ */
@@ -94,12 +105,14 @@ const SectionCard = ({
     icon,
     children,
     delay = 0,
+    right,
     ...props
 }: {
     title?: string;
     icon?: any;
     children: React.ReactNode;
     delay?: number;
+    right?: React.ReactNode;
     [key: string]: any;
 }) => {
     const t = useShopTheme();
@@ -108,25 +121,29 @@ const SectionCard = ({
             bg={t.cardBg}
             border="1px solid"
             borderColor={t.border}
-            borderRadius="20px"
-            p={{ base: 4, md: 6 }}
+            borderRadius="18px"
+            p={{ base: 4, md: 5 }}
             boxShadow="0 1px 2px rgba(15, 23, 42, 0.04)"
             animation={enter(delay)}
             {...props}
         >
             {title ? (
-                <HStack spacing={2} mb={3}>
-                    {icon ? <Icon as={icon} boxSize={4} color={t.accent} /> : null}
-                    <Text fontSize="xs" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" color={t.muted}>
-                        {title}
-                    </Text>
-                </HStack>
+                <Flex justify="space-between" align="center" mb={3}>
+                    <HStack spacing={2}>
+                        {icon ? <Icon as={icon} boxSize={3.5} color={t.accent} /> : null}
+                        <Text fontSize="xs" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" color={t.muted}>
+                            {title}
+                        </Text>
+                    </HStack>
+                    {right}
+                </Flex>
             ) : null}
             {children}
         </Box>
     );
 };
 
+/** Compact pill action: icon + label, ~32px tall */
 const QuickAction = ({
     label,
     icon,
@@ -143,38 +160,37 @@ const QuickAction = ({
     const t = useShopTheme();
     const tint = useColorModeValue(`${scheme}.50`, `${scheme}.900`);
     const tintColor = useColorModeValue(`${scheme}.600`, `${scheme}.200`);
+    const hoverBorder = useColorModeValue(`${scheme}.200`, `${scheme}.700`);
 
     return (
         <Link
             href={href}
             isExternal={external}
-            flex="1"
-            minW={0}
+            flexShrink={0}
             _hover={{ textDecoration: "none" }}
             _focusVisible={{ outline: "2px solid", outlineColor: t.accent, outlineOffset: "2px" }}
-            borderRadius="16px"
+            borderRadius="full"
         >
-            <Flex
-                direction="column"
-                align="center"
-                justify="center"
-                gap={1.5}
-                py={3}
+            <HStack
+                spacing={1.5}
+                h="32px"
+                pl={1.5}
+                pr={3}
                 bg={t.cardBg}
                 border="1px solid"
                 borderColor={t.border}
-                borderRadius="16px"
+                borderRadius="full"
                 transition="all 0.2s ease"
-                _hover={{ transform: "translateY(-2px)", borderColor: tintColor }}
+                _hover={{ borderColor: hoverBorder, bg: tint }}
                 _active={{ transform: "scale(0.96)" }}
             >
-                <Circle size="9" bg={tint}>
-                    <Icon as={icon} boxSize={4} color={tintColor} />
+                <Circle size="22px" bg={tint}>
+                    <Icon as={icon} boxSize="12px" color={tintColor} />
                 </Circle>
-                <Text fontSize="xs" fontWeight="600" color={t.text}>
+                <Text fontSize="xs" fontWeight="600" color={t.text} whiteSpace="nowrap">
                     {label}
                 </Text>
-            </Flex>
+            </HStack>
         </Link>
     );
 };
@@ -202,16 +218,16 @@ const InfoRow = ({
         <Flex
             align="center"
             gap={3}
-            p={2.5}
-            borderRadius="14px"
+            p={2}
+            borderRadius="12px"
             transition="background 0.2s ease"
             _hover={href ? { bg: t.soft } : undefined}
         >
-            <Circle size="9" bg={tint} flexShrink={0}>
-                <Icon as={icon} boxSize={4} color={tintColor} />
+            <Circle size="8" bg={tint} flexShrink={0}>
+                <Icon as={icon} boxSize={3.5} color={tintColor} />
             </Circle>
             <Box minW={0} flex="1">
-                <Text fontSize="xs" color={t.muted}>
+                <Text fontSize="xs" color={t.muted} lineHeight="1.2">
                     {label}
                 </Text>
                 <Text fontSize="sm" fontWeight="600" color={t.text} noOfLines={1}>
@@ -231,10 +247,10 @@ const InfoRow = ({
     );
 };
 
-const Chip = ({ children, tone = "blue" }: { children: React.ReactNode; tone?: string }) => (
+const Chip = ({ children, tone = "brand" }: { children: React.ReactNode; tone?: string }) => (
     <Badge
-        px={3}
-        py={1}
+        px={2.5}
+        py={0.5}
         borderRadius="full"
         colorScheme={tone}
         variant="subtle"
@@ -249,7 +265,7 @@ const Chip = ({ children, tone = "blue" }: { children: React.ReactNode; tone?: s
 const EmptyNote = ({ icon, text }: { icon: any; text: string }) => {
     const t = useShopTheme();
     return (
-        <Flex direction="column" align="center" gap={3} py={10}>
+        <Flex direction="column" align="center" gap={3} py={8}>
             <Circle size="12" bg={t.soft}>
                 <Icon as={icon} boxSize={5} color={t.muted} />
             </Circle>
@@ -261,118 +277,192 @@ const EmptyNote = ({ icon, text }: { icon: any; text: string }) => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Main                                                                */
+/* Main Component                                                      */
 /* ------------------------------------------------------------------ */
 
 const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
-    // All hooks stay above the early return
+    // All hooks stay above early returns
     const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
     const t = useShopTheme();
-    const [preview, setPreview] = React.useState<{ url: string; title?: string } | null>(null);
+    const [preview, setPreview] = useState<{ url: string; title?: string } | null>(null);
+
+    // Collect all media comprehensively (Logo, Cover, and Gallery photos)
+    const allMedia = useMemo(() => {
+        if (!shop) return [];
+        const list: { url: string; label: string; type: "logo" | "cover" | "gallery" }[] = [];
+
+        const logoUrl = resolveMediaUrl(shop.logo) || resolveMediaUrl(shop.logoUrl);
+        if (logoUrl) {
+            list.push({ url: logoUrl, label: "Logo", type: "logo" });
+        }
+
+        const coverUrl =
+            resolveMediaUrl(shop.coverImage) ||
+            resolveMediaUrl(shop.coverImageUrl) ||
+            resolveMediaUrl(shop.banner);
+        if (coverUrl) {
+            list.push({ url: coverUrl, label: "Cover Photo", type: "cover" });
+        }
+
+        if (Array.isArray(shop.gallery)) {
+            shop.gallery.forEach((item: any, i: number) => {
+                const url = resolveMediaUrl(item);
+                if (url) {
+                    const label = item?.title || item?.caption || item?.label || `Gallery ${i + 1}`;
+                    list.push({ url, label, type: "gallery" });
+                }
+            });
+        }
+
+        return list;
+    }, [shop]);
 
     if (!shop) return null;
 
-    const primaryPhone = shop.ownerContact?.phone || shop.contactInfo?.phone;
-    const primaryEmail = shop.contactInfo?.email || shop.ownerContact?.email;
-    const website = shop.contactInfo?.website;
+    const logoUrl = resolveMediaUrl(shop.logo) || resolveMediaUrl(shop.logoUrl);
+    const coverUrl =
+        resolveMediaUrl(shop.coverImage) ||
+        resolveMediaUrl(shop.coverImageUrl) ||
+        resolveMediaUrl(shop.banner);
+
+    const primaryPhone = shop.ownerContact?.phone || shop.contactInfo?.phone || shop.phone;
+    const primaryEmail = shop.contactInfo?.email || shop.ownerContact?.email || shop.email;
+    const website = shop.contactInfo?.website || shop.website;
+    const ownerName =
+        shop.ownerContact?.name ||
+        shop.ownerName ||
+        shop.owner?.name ||
+        shop.seller?.name ||
+        shop.userId?.name;
+
     const loc = shop.location || {};
     const fullAddress = [loc.address, loc.city, loc.state, loc.postalCode, loc.country].filter(Boolean).join(", ");
-    const mapsUrl = fullAddress
+    const hasCoords = Array.isArray(loc.coordinates) && loc.coordinates.length >= 2;
+    const mapsUrl = hasCoords
+        ? `https://www.google.com/maps/search/?api=1&query=${loc.coordinates[1]},${loc.coordinates[0]}`
+        : fullAddress
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`
         : "";
 
     const quickActions = [
         primaryPhone && { label: "Call", icon: FiPhone, href: `tel:${primaryPhone}`, scheme: "green", external: false },
         primaryEmail && { label: "Email", icon: FiMail, href: `mailto:${primaryEmail}`, scheme: "orange", external: false },
-        website && { label: "Website", icon: FiGlobe, href: website, scheme: "blue", external: true },
+        website && { label: "Website", icon: FiGlobe, href: website, scheme: "brand", external: true },
         mapsUrl && { label: "Directions", icon: FiNavigation, href: mapsUrl, scheme: "red", external: true },
     ].filter(Boolean) as any[];
 
-    const hasContact = Boolean(primaryPhone || primaryEmail || website);
     const hasCategories = Array.isArray(shop.categories) && shop.categories.length > 0;
     const hasTags = Array.isArray(shop.tags) && shop.tags.length > 0;
-    const gallery: any[] = Array.isArray(shop.gallery) ? shop.gallery : [];
     const history: any[] = Array.isArray(shop.statusHistory) ? [...shop.statusHistory].reverse() : [];
+    const reviewRemarks = shop.reviewRemarks || shop.remarks;
+    const hasRatings = Boolean(shop.ratings?.averageRating || shop.ratings?.totalRatings);
 
     const tabStyles = {
         flex: { base: 1, md: "none" },
-        px: { base: 2, md: 5 },
-        py: 2,
+        px: { base: 2, md: 4 },
+        py: 1.5,
         fontSize: "sm",
         fontWeight: "600",
         color: t.muted,
         borderRadius: "full",
         whiteSpace: "nowrap" as const,
         transition: "all 0.2s ease",
-        _selected: { bg: "blue.600", color: "white", boxShadow: "0 6px 16px rgba(37, 99, 235, 0.28)" },
+        _selected: { bg: "brand.600", color: "white", boxShadow: "0 4px 12px rgba(37, 99, 235, 0.26)" },
         _hover: { color: t.text },
         _focusVisible: { boxShadow: "outline" },
     };
 
     const drawerBody = (
-        <Box bg={t.pageBg} minH="100%" pb="calc(24px + env(safe-area-inset-bottom))">
-            {/* Cover */}
-            <Box h={{ base: "132px", md: "200px" }} position="relative" overflow="hidden" bgGradient="linear(to-br, blue.500, purple.500)">
-                {shop.coverImage?.url ? (
+        <Box bg={t.pageBg} minH="100%" pb="calc(20px + env(safe-area-inset-bottom))">
+            {/* Cover Banner */}
+            <Box h={{ base: "110px", md: "175px" }} position="relative" overflow="hidden" bgGradient="linear(to-br, brand.500, purple.500)">
+                {coverUrl ? (
                     <>
-                        <Image src={shop.coverImage.url} alt="Cover" w="100%" h="100%" objectFit="cover" />
-                        <Box position="absolute" inset={0} bgGradient="linear(to-t, blackAlpha.500, transparent 60%)" />
+                        <Image src={coverUrl} alt="Shop Cover" w="100%" h="100%" objectFit="cover" />
+                        <Box position="absolute" inset={0} bgGradient="linear(to-t, blackAlpha.600, transparent 65%)" />
                     </>
                 ) : (
                     <Box position="absolute" inset={0} opacity={0.25} bgGradient="radial(circle at 80% 20%, whiteAlpha.700, transparent 55%)" />
                 )}
             </Box>
 
-            <Box px={{ base: 3, md: 8 }} maxW="5xl" mx="auto">
-                {/* Identity */}
+            <Box px={{ base: 3, md: 6 }} maxW="5xl" mx="auto">
+                {/* Identity: avatar + name */}
                 <Flex
-                    direction={{ base: "column", md: "row" }}
-                    align={{ base: "flex-start", md: "flex-end" }}
-                    gap={{ base: 3, md: 5 }}
-                    mt={{ base: "-40px", md: "-56px" }}
+                    align="flex-end"
+                    gap={{ base: 3, md: 4 }}
+                    mt={{ base: "-32px", md: "-46px" }}
                     position="relative"
                     zIndex={2}
                     animation={enter(0)}
                 >
                     <Avatar
                         name={shop.name}
-                        src={shop.logo?.url}
-                        w={{ base: "80px", md: "112px" }}
-                        h={{ base: "80px", md: "112px" }}
-                        fontSize={{ base: "2xl", md: "4xl" }}
-                        border="4px solid"
+                        src={logoUrl || coverUrl || undefined}
+                        w={{ base: "64px", md: "88px" }}
+                        h={{ base: "64px", md: "88px" }}
+                        fontSize={{ base: "xl", md: "3xl" }}
+                        border="3px solid"
                         borderColor={t.pageBg}
-                        boxShadow="0 8px 24px rgba(15, 23, 42, 0.16)"
-                        bg="blue.500"
+                        boxShadow="0 6px 18px rgba(15, 23, 42, 0.16)"
+                        bg="brand.500"
                         color="white"
+                        flexShrink={0}
                     />
-                    <Box minW={0} pb={{ md: 1 }}>
+                    <Box minW={0} flex="1" pb={0.5}>
                         <Text
-                            fontSize={{ base: "xl", md: "3xl" }}
+                            fontSize={{ base: "lg", md: "2xl" }}
                             fontWeight="800"
                             letterSpacing="-0.02em"
                             lineHeight="1.2"
                             color={t.text}
+                            noOfLines={2}
                         >
                             {shop.name}
                         </Text>
-                        <HStack spacing={2} mt={2} flexWrap="wrap" rowGap={2}>
-                            <Badge px={2.5} py={1} borderRadius="full" colorScheme="gray" variant="subtle" fontSize="xs">
-                                {shop.companyCode || "N/A"}
-                            </Badge>
-                            <Badge px={2.5} py={1} borderRadius="full" colorScheme={reviewScheme(shop.reviewStatus)} variant="subtle" fontSize="xs">
-                                {toLabel(shop.reviewStatus)}
-                            </Badge>
-                            <Badge px={2.5} py={1} borderRadius="full" colorScheme={shopScheme(shop.shopStatus)} variant="subtle" fontSize="xs">
-                                {toLabel(shop.shopStatus)}
-                            </Badge>
+                        <HStack spacing={1.5} mt={1} color={t.muted}>
+                            <Icon as={FiClock} boxSize={3} />
+                            <Text fontSize="xs">
+                                Submitted {shop.createdAt ? formatDate(shop.createdAt) : "recently"}
+                            </Text>
                         </HStack>
                     </Box>
                 </Flex>
 
-                {/* Quick actions */}
+                {/* Status Badges */}
+                <HStack spacing={1.5} mt={2.5} flexWrap="wrap" rowGap={1.5} animation={enter(40)}>
+                    <Badge px={2} py={0.5} borderRadius="full" colorScheme="gray" variant="subtle" fontSize="10px">
+                        {shop.companyCode || "No code"}
+                    </Badge>
+                    <Badge px={2} py={0.5} borderRadius="full" colorScheme={reviewScheme(shop.reviewStatus)} variant="subtle" fontSize="10px">
+                        {toLabel(shop.reviewStatus)}
+                    </Badge>
+                    <Badge px={2} py={0.5} borderRadius="full" colorScheme={shopScheme(shop.shopStatus)} variant="subtle" fontSize="10px">
+                        {toLabel(shop.shopStatus)}
+                    </Badge>
+                    {shop.gstNumber && (
+                        <Badge px={2} py={0.5} borderRadius="full" colorScheme="purple" variant="subtle" fontSize="10px">
+                            GST: {shop.gstNumber}
+                        </Badge>
+                    )}
+                    {hasRatings && (
+                        <Badge px={2} py={0.5} borderRadius="full" colorScheme="yellow" variant="subtle" fontSize="10px">
+                            ★ {shop.ratings?.averageRating ? shop.ratings.averageRating.toFixed(1) : "0.0"} ({shop.ratings?.totalRatings || 0})
+                        </Badge>
+                    )}
+                </HStack>
+
+                {/* Quick actions: slim, scrollable pill row */}
                 {quickActions.length > 0 ? (
-                    <Flex gap={2.5} mt={5} animation={enter(80)}>
+                    <Flex
+                        gap={2}
+                        mt={3}
+                        mx={{ base: -3, md: 0 }}
+                        px={{ base: 3, md: 0 }}
+                        overflowX="auto"
+                        animation={enter(80)}
+                        sx={{ scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
+                    >
                         {quickActions.map((action) => (
                             <QuickAction key={action.label} {...action} />
                         ))}
@@ -380,78 +470,154 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                 ) : null}
 
                 {/* Tabs */}
-                <Tabs variant="unstyled" isLazy mt={4}>
+                <Tabs variant="unstyled" isLazy mt={3.5}>
                     <TabList
-                        gap={1.5}
-                        p={1.5}
+                        gap={1}
+                        p={1}
                         bg={t.cardBg}
                         border="1px solid"
                         borderColor={t.border}
                         borderRadius="full"
                         position="sticky"
-                        top={2}
+                        top={1.5}
                         zIndex={5}
-                        boxShadow="0 4px 16px rgba(15, 23, 42, 0.06)"
+                        boxShadow="0 4px 14px rgba(15, 23, 42, 0.06)"
                         overflowX="auto"
                         sx={{ scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
                     >
                         <Tab {...tabStyles}>Overview</Tab>
                         <Tab {...tabStyles}>Location</Tab>
-                        <Tab {...tabStyles}>Media{gallery.length ? ` (${gallery.length})` : ""}</Tab>
+                        <Tab {...tabStyles}>Media{allMedia.length ? ` (${allMedia.length})` : ""}</Tab>
                         <Tab {...tabStyles}>History</Tab>
                     </TabList>
 
                     <TabPanels>
-                        {/* Overview */}
-                        <TabPanel px={0} pt={4} pb={0}>
-                            <Box
-                                display="grid"
-                                gap={{ base: 3, md: 5 }}
-                                gridTemplateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 2fr) minmax(0, 1fr)" }}
-                                gridTemplateAreas={{
-                                    base: `"about" "contact" "tags"`,
-                                    lg: `"about contact" "tags contact"`,
-                                }}
-                            >
-                                <SectionCard title="About" icon={FiInfo} gridArea="about">
-                                    <Text fontSize="sm" color={t.text} lineHeight="1.8" whiteSpace="pre-line">
+                        {/* Overview Tab */}
+                        <TabPanel px={0} pt={3} pb={0}>
+                            <VStack align="stretch" spacing={{ base: 3, md: 4 }}>
+                                {/* About Section */}
+                                <SectionCard title="About Shop" icon={FiInfo}>
+                                    <Text fontSize="sm" color={t.text} lineHeight="1.75" whiteSpace="pre-line">
                                         {shop.description || "No description provided."}
                                     </Text>
                                 </SectionCard>
 
-                                <SectionCard title="Contact" icon={FiPhone} gridArea="contact" delay={60} h="fit-content">
-                                    {hasContact ? (
-                                        <VStack align="stretch" spacing={0.5} mx={-1}>
-                                            {primaryPhone && (
-                                                <InfoRow icon={FiPhone} label="Phone" value={primaryPhone} href={`tel:${primaryPhone}`} scheme="green" />
-                                            )}
-                                            {primaryEmail && (
-                                                <InfoRow icon={FiMail} label="Email" value={primaryEmail} href={`mailto:${primaryEmail}`} scheme="orange" />
-                                            )}
-                                            {website && (
-                                                <InfoRow icon={FiGlobe} label="Website" value="Visit website" href={website} scheme="blue" external />
-                                            )}
-                                        </VStack>
+                                {/* Review Remarks / Admin Feedback if present */}
+                                {reviewRemarks && (
+                                    <SectionCard title="Review Remarks" icon={FiMessageSquare} delay={40}>
+                                        <Box bg={t.soft} p={3} borderRadius="12px" borderLeft="3px solid" borderColor="brand.400">
+                                            <Text fontSize="xs" fontWeight="700" color={t.muted} textTransform="uppercase" letterSpacing="0.06em">
+                                                Latest Review Feedback
+                                            </Text>
+                                            <Text fontSize="sm" color={t.text} mt={1} lineHeight="1.6" whiteSpace="pre-line">
+                                                {reviewRemarks}
+                                            </Text>
+                                        </Box>
+                                    </SectionCard>
+                                )}
+
+                                {/* Contact & Business Details */}
+                                <SectionCard title="Contact & Business Details" icon={FiPhone} delay={60}>
+                                    <VStack align="stretch" spacing={0.5} mx={-1}>
+                                        {ownerName && (
+                                            <InfoRow icon={FiUser} label="Owner / Merchant" value={ownerName} scheme="purple" />
+                                        )}
+                                        <InfoRow
+                                            icon={FiHash}
+                                            label="GST Number"
+                                            value={shop.gstNumber || "Not provided"}
+                                            scheme={shop.gstNumber ? "purple" : "gray"}
+                                        />
+                                        {primaryPhone && (
+                                            <InfoRow icon={FiPhone} label="Phone" value={primaryPhone} href={`tel:${primaryPhone}`} scheme="green" />
+                                        )}
+                                        {primaryEmail && (
+                                            <InfoRow icon={FiMail} label="Email" value={primaryEmail} href={`mailto:${primaryEmail}`} scheme="orange" />
+                                        )}
+                                        {website && (
+                                            <InfoRow icon={FiGlobe} label="Website" value="Visit website" href={website} scheme="brand" external />
+                                        )}
+                                    </VStack>
+                                </SectionCard>
+
+                                {/* Media Preview in Overview */}
+                                <SectionCard
+                                    title="Media Preview"
+                                    icon={FiImage}
+                                    delay={100}
+                                    right={allMedia.length ? <Text fontSize="xs" color={t.muted}>{allMedia.length} files</Text> : undefined}
+                                >
+                                    {allMedia.length > 0 ? (
+                                        <Flex
+                                            gap={2.5}
+                                            overflowX="auto"
+                                            mx={-1}
+                                            px={1}
+                                            pb={1}
+                                            sx={{ scrollSnapType: "x proximity", scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
+                                        >
+                                            {allMedia.map((item, index) => (
+                                                <Box
+                                                    key={`${item.url}-${index}`}
+                                                    as="button"
+                                                    type="button"
+                                                    onClick={() => setPreview({ url: item.url, title: item.label })}
+                                                    position="relative"
+                                                    flexShrink={0}
+                                                    w={{ base: "104px", md: "132px" }}
+                                                    h={{ base: "104px", md: "132px" }}
+                                                    borderRadius="14px"
+                                                    overflow="hidden"
+                                                    bg={t.soft}
+                                                    role="group"
+                                                    sx={{ scrollSnapAlign: "start" }}
+                                                    transition="transform 0.2s ease"
+                                                    _active={{ transform: "scale(0.97)" }}
+                                                >
+                                                    <Image
+                                                        src={item.url}
+                                                        alt={`${shop.name} ${item.label}`}
+                                                        w="100%"
+                                                        h="100%"
+                                                        objectFit="cover"
+                                                        transition="transform 0.4s ease"
+                                                        _groupHover={{ transform: "scale(1.06)" }}
+                                                    />
+                                                    <Box
+                                                        position="absolute"
+                                                        left={0}
+                                                        right={0}
+                                                        bottom={0}
+                                                        px={2}
+                                                        py={1}
+                                                        bgGradient="linear(to-t, blackAlpha.700, transparent)"
+                                                    >
+                                                        <Text color="white" fontSize="10px" fontWeight="700" textAlign="left" noOfLines={1}>
+                                                            {item.label}
+                                                        </Text>
+                                                    </Box>
+                                                </Box>
+                                            ))}
+                                        </Flex>
                                     ) : (
-                                        <Text fontSize="sm" color={t.muted}>
-                                            No contact details added.
-                                        </Text>
+                                        <EmptyNote icon={FiImage} text="No media uploaded yet." />
                                     )}
                                 </SectionCard>
 
+                                {/* Categories & Tags */}
                                 {hasCategories || hasTags ? (
-                                    <SectionCard title="Categories & Tags" icon={FiTag} gridArea="tags" delay={120}>
+                                    <SectionCard title="Categories & Tags" icon={FiTag} delay={120}>
                                         {hasCategories && (
-                                            <HStack wrap="wrap" spacing={0} gap={2} mb={hasTags ? 3 : 0}>
+                                            <HStack wrap="wrap" spacing={0} gap={1.5} mb={hasTags ? 3 : 0}>
                                                 {shop.categories.map((cat: string, i: number) => (
-                                                    <Chip key={`cat-${i}`} tone="blue">
+                                                    <Chip key={`cat-${i}`} tone="brand">
                                                         {cat}
                                                     </Chip>
                                                 ))}
                                             </HStack>
                                         )}
                                         {hasTags && (
-                                            <HStack wrap="wrap" spacing={0} gap={2}>
+                                            <HStack wrap="wrap" spacing={0} gap={1.5}>
                                                 {shop.tags.map((tag: string, i: number) => (
                                                     <Chip key={`tag-${i}`} tone="gray">
                                                         #{tag}
@@ -461,109 +627,149 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                         )}
                                     </SectionCard>
                                 ) : null}
-                            </Box>
+                            </VStack>
                         </TabPanel>
 
-                        {/* Location */}
-                        <TabPanel px={0} pt={4} pb={0}>
-                            <SectionCard title="Main Address" icon={FiMapPin}>
-                                {fullAddress ? (
-                                    <>
-                                        <Flex align="flex-start" gap={3} bg={t.soft} p={4} borderRadius="16px">
-                                            <Circle size="10" bg="red.50" flexShrink={0}>
-                                                <Icon as={FiMapPin} boxSize={5} color="red.500" />
+                        {/* Location Tab */}
+                        <TabPanel px={0} pt={3} pb={0}>
+                            <SectionCard title="Shop Location" icon={FiMapPin}>
+                                {fullAddress || hasCoords ? (
+                                    <VStack align="stretch" spacing={3}>
+                                        <Flex align="flex-start" gap={3} bg={t.soft} p={3.5} borderRadius="14px">
+                                            <Circle size="9" bg="red.50" flexShrink={0}>
+                                                <Icon as={FiMapPin} boxSize={4} color="red.500" />
                                             </Circle>
-                                            <Box minW={0}>
-                                                <Text fontWeight="700" color={t.text}>
-                                                    {loc.address || "Address not provided"}
+                                            <Box minW={0} flex="1">
+                                                <Text fontWeight="700" fontSize="sm" color={t.text}>
+                                                    {loc.address || "Address not specified"}
                                                 </Text>
                                                 <Text fontSize="sm" color={t.muted} mt={0.5}>
                                                     {[loc.city, loc.state].filter(Boolean).join(", ")} {loc.postalCode}
                                                 </Text>
                                                 {loc.country ? (
-                                                    <Text fontSize="sm" fontWeight="600" color={t.muted} mt={0.5}>
+                                                    <Text fontSize="xs" fontWeight="600" color={t.muted} mt={0.5}>
                                                         {loc.country}
                                                     </Text>
                                                 ) : null}
                                             </Box>
                                         </Flex>
-                                        <Button
-                                            as="a"
-                                            href={mapsUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            leftIcon={<FiNavigation />}
-                                            colorScheme="blue"
-                                            borderRadius="14px"
-                                            w="full"
-                                            mt={4}
-                                            h="46px"
-                                        >
-                                            Get directions
-                                        </Button>
-                                    </>
+
+                                        {hasCoords && (
+                                            <InfoRow
+                                                icon={FiMapPin}
+                                                label="GPS Coordinates"
+                                                value={`${loc.coordinates[1]}, ${loc.coordinates[0]}`}
+                                                href={`https://www.google.com/maps/search/?api=1&query=${loc.coordinates[1]},${loc.coordinates[0]}`}
+                                                external
+                                                scheme="red"
+                                            />
+                                        )}
+
+                                        {mapsUrl && (
+                                            <Button
+                                                as="a"
+                                                href={mapsUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                leftIcon={<FiNavigation />}
+                                                colorScheme="brand"
+                                                variant="outline"
+                                                size="sm"
+                                                borderRadius="full"
+                                                alignSelf="flex-start"
+                                                mt={1}
+                                            >
+                                                Open in Google Maps
+                                            </Button>
+                                        )}
+                                    </VStack>
                                 ) : (
-                                    <EmptyNote icon={FiMapPin} text="No address available." />
+                                    <EmptyNote icon={FiMapPin} text="No address or location details available." />
                                 )}
                             </SectionCard>
                         </TabPanel>
 
-                        {/* Media */}
-                        <TabPanel px={0} pt={4} pb={0}>
-                            <SectionCard p={{ base: 3, md: 5 }}>
-                                {gallery.length > 0 ? (
-                                    <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={{ base: 2, md: 3 }}>
-                                        {gallery.map((item: any, idx: number) => (
+                        {/* Media Tab */}
+                        <TabPanel px={0} pt={3} pb={0}>
+                            <SectionCard
+                                p={{ base: 3, md: 4 }}
+                                title="All Media & Photos"
+                                icon={FiImage}
+                                right={allMedia.length ? <Text fontSize="xs" color={t.muted}>{allMedia.length} files</Text> : undefined}
+                            >
+                                {allMedia.length > 0 ? (
+                                    <SimpleGrid columns={{ base: 2, md: 3, lg: 4 }} spacing={{ base: 2.5, md: 3.5 }} mt={2}>
+                                        {allMedia.map((item, idx) => (
                                             <Box
-                                                key={idx}
+                                                key={`${item.url}-${idx}`}
                                                 as="button"
                                                 type="button"
-                                                onClick={() => item.file?.url && setPreview({ url: item.file.url, title: item.title })}
+                                                onClick={() => setPreview({ url: item.url, title: item.label })}
                                                 position="relative"
                                                 overflow="hidden"
-                                                borderRadius="16px"
+                                                borderRadius="14px"
                                                 sx={{ aspectRatio: "1 / 1" }}
                                                 bg={t.soft}
                                                 role="group"
                                                 _active={{ transform: "scale(0.97)" }}
                                                 transition="transform 0.2s ease"
-                                                animation={enter(idx * 40)}
+                                                animation={enter(idx * 35)}
+                                                border="1px solid"
+                                                borderColor={t.border}
                                             >
                                                 <Image
-                                                    src={item.file?.url}
-                                                    alt={item.title || "Gallery image"}
+                                                    src={item.url}
+                                                    alt={item.label || "Shop photo"}
                                                     w="100%"
                                                     h="100%"
                                                     objectFit="cover"
                                                     transition="transform 0.4s ease"
                                                     _groupHover={{ transform: "scale(1.06)" }}
                                                 />
-                                                {item.title ? (
-                                                    <Box
-                                                        position="absolute"
-                                                        left={0}
-                                                        right={0}
-                                                        bottom={0}
-                                                        px={2}
-                                                        py={1.5}
-                                                        bgGradient="linear(to-t, blackAlpha.700, transparent)"
-                                                    >
-                                                        <Text color="white" fontSize="xs" fontWeight="600" noOfLines={1} textAlign="left">
-                                                            {item.title}
-                                                        </Text>
-                                                    </Box>
-                                                ) : null}
+                                                <Badge
+                                                    position="absolute"
+                                                    top={2}
+                                                    left={2}
+                                                    fontSize="9px"
+                                                    fontWeight="700"
+                                                    borderRadius="full"
+                                                    px={2}
+                                                    py={0.5}
+                                                    colorScheme={
+                                                        item.type === "logo"
+                                                            ? "purple"
+                                                            : item.type === "cover"
+                                                            ? "blue"
+                                                            : "gray"
+                                                    }
+                                                    variant="solid"
+                                                >
+                                                    {item.label}
+                                                </Badge>
+                                                <Box
+                                                    position="absolute"
+                                                    left={0}
+                                                    right={0}
+                                                    bottom={0}
+                                                    px={2}
+                                                    py={1.5}
+                                                    bgGradient="linear(to-t, blackAlpha.800, transparent)"
+                                                >
+                                                    <Text color="white" fontSize="xs" fontWeight="600" noOfLines={1} textAlign="left">
+                                                        {item.label}
+                                                    </Text>
+                                                </Box>
                                             </Box>
                                         ))}
                                     </SimpleGrid>
                                 ) : (
-                                    <EmptyNote icon={FiImage} text="No images available in the gallery." />
+                                    <EmptyNote icon={FiImage} text="No photos or media uploaded yet." />
                                 )}
                             </SectionCard>
                         </TabPanel>
 
-                        {/* History */}
-                        <TabPanel px={0} pt={4} pb={0}>
+                        {/* History Tab */}
+                        <TabPanel px={0} pt={3} pb={0}>
                             <SectionCard title="Status Timeline" icon={FiClock}>
                                 {history.length > 0 ? (
                                     <Box>
@@ -581,28 +787,28 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                                                         />
                                                         {!isLast && <Box w="2px" flex="1" bg={t.border} my={1} borderRadius="full" />}
                                                     </Flex>
-                                                    <Box flex="1" minW={0} pb={isLast ? 0 : 5}>
+                                                    <Box flex="1" minW={0} pb={isLast ? 0 : 4}>
                                                         <HStack spacing={1.5} flexWrap="wrap" rowGap={1.5}>
-                                                            <Badge colorScheme={shopScheme(step.status)} variant="subtle" borderRadius="full" px={2.5} py={0.5} fontSize="xs">
+                                                            <Badge colorScheme={shopScheme(step.status)} variant="subtle" borderRadius="full" px={2} py={0.5} fontSize="10px">
                                                                 {toLabel(step.status)}
                                                             </Badge>
                                                             {step.reviewStatus ? (
-                                                                <Badge colorScheme={reviewScheme(step.reviewStatus)} variant="subtle" borderRadius="full" px={2.5} py={0.5} fontSize="xs">
+                                                                <Badge colorScheme={reviewScheme(step.reviewStatus)} variant="subtle" borderRadius="full" px={2} py={0.5} fontSize="10px">
                                                                     {toLabel(step.reviewStatus)}
                                                                 </Badge>
                                                             ) : null}
                                                         </HStack>
-                                                        <Text fontSize="xs" color={t.muted} mt={1.5}>
+                                                        <Text fontSize="xs" color={t.muted} mt={1}>
                                                             {formatDate(step.updatedAt)}
                                                         </Text>
                                                         {step.remarks ? (
                                                             <Box
                                                                 mt={2}
                                                                 bg={t.soft}
-                                                                p={3}
-                                                                borderRadius="12px"
+                                                                p={2.5}
+                                                                borderRadius="10px"
                                                                 borderLeft="3px solid"
-                                                                borderColor="blue.300"
+                                                                borderColor="brand.300"
                                                             >
                                                                 <Text fontSize="sm" color={t.text} fontStyle="italic" lineHeight="1.6">
                                                                     &quot;{step.remarks}&quot;
@@ -623,7 +829,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
                 </Tabs>
             </Box>
 
-            {/* Image preview */}
+            {/* Image preview Lightbox Modal */}
             <Modal isOpen={Boolean(preview)} onClose={() => setPreview(null)} isCentered size={{ base: "full", md: "4xl" }}>
                 <ModalOverlay bg="blackAlpha.800" backdropFilter="blur(6px)" />
                 <ModalContent bg="transparent" boxShadow="none" m={0}>
@@ -659,7 +865,7 @@ const ShopView: React.FC<ShopViewProps> = ({ isOpen, onClose, shop }) => {
     }
 
     return (
-        <CustomDrawer title="Shop Details" open={isOpen} close={onClose} size="xl">
+        <CustomDrawer title="Shop Details" open={isOpen} close={onClose} size="3xl">
             {drawerBody}
         </CustomDrawer>
     );

@@ -1,52 +1,53 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import {
+  Box,
   Button,
   Flex,
-  useDisclosure,
-  useToast,
-  Text,
-  Box,
   HStack,
-  SimpleGrid,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  VStack,
   Icon,
   IconButton,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
+  SimpleGrid,
   Spinner,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+  useDisclosure,
+  useToast,
+  VStack,
 } from "@chakra-ui/react";
+import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
+import type { IconType } from "react-icons";
 import {
+  FiCheckCircle,
+  FiEdit2,
+  FiFolder,
   FiFolderPlus,
   FiLayers,
   FiSliders,
-  FiCheckCircle,
-  FiFolder,
-  FiEdit2,
   FiTrash2,
 } from "react-icons/fi";
 import { HiDotsVertical } from "react-icons/hi";
-import type { IconType } from "react-icons";
-import { observer } from "mobx-react-lite";
-import stores from "../../../store/stores";
-import CategoryForm from "./components/CategoryForm";
-import CategoryFilterConfigDrawer from "./components/CategoryFilterConfigDrawer";
-import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import stores from "../../../store/stores";
 import {
   getMerchantTableProps,
   MerchantBadge,
-  merchantPrimaryButtonProps,
   MerchantPageShell,
+  merchantPrimaryButtonProps,
+  MerchantStatCard,
 } from "../../components/common/merchantDashboardUI";
+import CategoryFilterConfigDrawer from "./components/CategoryFilterConfigDrawer";
+import CategoryForm from "./components/CategoryForm";
 
 /* -------------------------------------------------------------------------- */
 /*  Stat card (compact on mobile)                                             */
@@ -461,32 +462,36 @@ const CategoryPage = () => {
         spacing={{ base: 3, md: 4 }}
         mb={{ base: 5, md: 6 }}
       >
-        <StatCard
+        <MerchantStatCard
           label="Total Categories"
+          variant="panel"
           value={totalCategories}
           icon={FiLayers}
-          color="#5B9BFF"
-        />
+          // color="#5B9BFF"
+          />
 
-        <StatCard
+        <MerchantStatCard
           label="Active"
+          variant="panel"
           value={activeCategories}
           icon={FiCheckCircle}
-          color="#16C98D"
-        />
+          // color="#16C98D"
+          />
 
-        <StatCard
+        <MerchantStatCard
           label="Root Categories"
+          variant="panel"
           value={rootCategories}
           icon={FiFolder}
-          color="#A855F7"
+          // color="#A855F7"
         />
 
-        <StatCard
+        <MerchantStatCard
           label="Filter Ready"
           value={categoriesWithFilters}
+          variant="panel"
           icon={FiSliders}
-          color="#F59E0B"
+          // color="#F59E0B"
         />
       </SimpleGrid>
 
@@ -502,7 +507,7 @@ const CategoryPage = () => {
             fontSize={{ base: "sm", md: "md" }}
             fontWeight="600"
             color="var(--merchant-text-muted)"
-            _selected={{ color: "blue.500", borderColor: "blue.500" }}
+            _selected={{ color: "brand.500", borderColor: "brand.500" }}
           >
             <Icon as={FiLayers} mr={2} />
             Categories
@@ -513,7 +518,7 @@ const CategoryPage = () => {
             fontSize={{ base: "sm", md: "md" }}
             fontWeight="600"
             color="var(--merchant-text-muted)"
-            _selected={{ color: "blue.500", borderColor: "blue.500" }}
+            _selected={{ color: "brand.500", borderColor: "brand.500" }}
           >
             <Icon as={FiSliders} mr={2} />
             Product Filters
