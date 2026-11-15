@@ -36,7 +36,6 @@ import {
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../store/stores";
 import {
-    MerchantActionTile,
     MerchantBadge,
     merchantFadeUp,
     merchantGhostButtonProps,
@@ -46,7 +45,7 @@ import {
     merchantPulse,
     MerchantSectionHeader,
     merchantSpin,
-    MerchantStatCard,
+    MerchantStatCard
 } from "../../components/common/merchantDashboardUI";
 import { DashboardState, defaultAlerts, defaultMetrics } from "./constant";
 
@@ -773,7 +772,7 @@ const SuperAdminDashboard = observer(() => {
                         </Flex>
                     </MerchantPanel>
 
-                    <MerchantPanel animation={merchantFadeUp(640)}>
+                    {/* <MerchantPanel animation={merchantFadeUp(640)}>
                         <MerchantSectionHeader title="Quick Actions" mb={3} />
                         <SimpleGrid columns={3} spacing={{ base: 2, md: 3 }}>
                             {quickActions.map((action) => (
@@ -785,7 +784,7 @@ const SuperAdminDashboard = observer(() => {
                                 />
                             ))}
                         </SimpleGrid>
-                    </MerchantPanel>
+                    </MerchantPanel> */}
                 </Stack>
             </Box>
 

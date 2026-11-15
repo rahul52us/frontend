@@ -24,6 +24,8 @@ import {
   FiCheckCircle,
   FiChevronRight,
   FiClock,
+  FiEdit3,
+  FiEye,
   FiMapPin,
   FiNavigation,
   FiPhoneCall,
@@ -39,55 +41,68 @@ interface ShopCardProps {
   shop: {
     _id?: string;
     name: string;
-    description: string;
+    description?: string;
     rating?: number;
-    location: {
-      address: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      country: string;
+    location?: {
+      address?: string;
+      city?: string;
+      state?: string;
+      postalCode?: string;
+      country?: string;
     };
-    contactInfo: {
-      phone: string;
-      email: string;
-      website: string;
-      socialMedia: {
-        facebook: string;
-        instagram: string;
-        twitter: string;
-        linkedin: string;
-        youtube: string;
+    contactInfo?: {
+      phone?: string;
+      email?: string;
+      website?: string;
+      socialMedia?: {
+        facebook?: string;
+        instagram?: string;
+        twitter?: string;
+        linkedin?: string;
+        youtube?: string;
       };
     };
-    logo: {
-      url: string;
-      name: string;
+    logo?: {
+      url?: string;
+      name?: string;
     };
-    coverImage: {
-      url: string;
-      name: string;
+    coverImage?: {
+      url?: string;
+      name?: string;
     };
-    operatingHours: {
-      monday: string;
-      tuesday: string;
-      wednesday: string;
-      thursday: string;
-      friday: string;
-      saturday: string;
-      sunday: string;
+    operatingHours?: {
+      monday?: string;
+      tuesday?: string;
+      wednesday?: string;
+      thursday?: string;
+      friday?: string;
+      saturday?: string;
+      sunday?: string;
     };
-    isActive: boolean;
-    shopStatus: string;
-    categories: string[];
+    isActive?: boolean;
+    shopStatus?: string;
+    reviewStatus?: string;
+    reviewRemarks?: string;
+    categories?: string[];
     distanceMeters?: number;
     distanceKm?: number;
+    [key: string]: any;
   };
+  onClick?: (shop?: any) => void;
+  onView?: (shop?: any) => void;
+  onEdit?: (shop?: any) => void;
+  showAdminActions?: boolean;
 }
 
 const MotionBox = motion(Box);
 
-const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
+const ShopCard: React.FC<ShopCardProps> = ({
+  shop,
+  onClick,
+  onView,
+  onEdit,
+  showAdminActions = false,
+}) => {
   const router = useRouter();
 
   // Theme-aware tokens hoisted to top
@@ -164,6 +179,34 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
     );
   };
 
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(shop);
+      return;
+    }
+    if (showAdminActions && onView) {
+      onView(shop);
+      return;
+    }
+    handleNavigate();
+  };
+
+  const getAdminReviewBadge = () => {
+    switch (shop?.reviewStatus) {
+      case "approved":
+        return { label: "Approved", color: "green" };
+      case "changes_requested":
+        return { label: "Changes Requested", color: "orange" };
+      case "rejected":
+        return { label: "Rejected", color: "red" };
+      case "pending":
+      default:
+        return { label: "Pending", color: "purple" };
+    }
+  };
+
+  const adminReviewBadge = getAdminReviewBadge();
+
   return (
     <>
       {/* ===================================================================
@@ -180,7 +223,7 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
         p={2.5}
         boxShadow="0 2px 10px rgba(0, 0, 0, 0.03)"
         cursor="pointer"
-        onClick={handleNavigate}
+        onClick={handleCardClick}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.15 }}
         position="relative"
@@ -279,25 +322,41 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
           {/* Center: Store Info (App-Style Hierarchy) */}
           <VStack align="flex-start" spacing={1} flex="1" minW={0}>
             {/* Title + Verified */}
-            <HStack spacing={1} w="full" align="center">
-              <Text
-                fontSize="sm"
-                textTransform={'capitalize'}
-                fontWeight="700"
-                color={titleColor}
-                noOfLines={1}
-                lineHeight="1.2"
-                _active={{ color: hoverTitleColor }}
-                transition="color 0.15s ease"
-              >
-                {shop?.name}
-              </Text>
-              <Icon
-                as={FiCheckCircle}
-                color="var(--color-primary)"
-                boxSize={3.5}
-                flexShrink={0}
-              />
+            <HStack spacing={1} w="full" align="center" justify="space-between">
+              <HStack spacing={1} minW={0} flex="1">
+                <Text
+                  fontSize="sm"
+                  textTransform={'capitalize'}
+                  fontWeight="700"
+                  color={titleColor}
+                  noOfLines={1}
+                  lineHeight="1.2"
+                  _active={{ color: hoverTitleColor }}
+                  transition="color 0.15s ease"
+                >
+                  {shop?.name}
+                </Text>
+                <Icon
+                  as={FiCheckCircle}
+                  color="var(--color-primary)"
+                  boxSize={3.5}
+                  flexShrink={0}
+                />
+              </HStack>
+              {showAdminActions && (
+                <Badge
+                  colorScheme={adminReviewBadge.color}
+                  fontSize="9px"
+                  fontWeight="700"
+                  px={1.5}
+                  py={0.5}
+                  borderRadius="full"
+                  flexShrink={0}
+                  textTransform="capitalize"
+                >
+                  {adminReviewBadge.label}
+                </Badge>
+              )}
             </HStack>
 
             {/* Rating Pill + City/Location */}
@@ -361,48 +420,96 @@ const ShopCard: React.FC<ShopCardProps> = ({ shop }) => {
                   ))}
               </HStack>
 
-              {/* Native App Quick-Tap Icons (Call, Map, Enter) */}
-              <HStack spacing={1.5} flexShrink={0}>
-                {shop?.contactInfo?.phone && (
+              {/* Action Buttons: Admin Mode vs Buyer Mode */}
+              {showAdminActions ? (
+                <HStack spacing={1.5} flexShrink={0}>
+                  {onView && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      leftIcon={<FiEye size={11} />}
+                      px={2}
+                      h="26px"
+                      borderRadius="lg"
+                      fontSize="10px"
+                      fontWeight="700"
+                      borderColor={borderColor}
+                      _hover={{ bg: chipBg }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(shop);
+                      }}
+                    >
+                      View
+                    </Button>
+                  )}
+                  {onEdit && (
+                    <Button
+                      size="xs"
+                      bgGradient="linear(135deg, var(--color-primary, #5B6CFF) 0%, var(--color-secondary, #C44AE8) 100%)"
+                      color="white"
+                      leftIcon={<FiEdit3 size={11} />}
+                      px={2}
+                      h="26px"
+                      borderRadius="lg"
+                      fontSize="10px"
+                      fontWeight="700"
+                      boxShadow="0 4px 10px rgba(91, 108, 255, 0.22)"
+                      _hover={{ opacity: 0.9 }}
+                      _active={{ transform: "scale(0.96)" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(shop);
+                      }}
+                    >
+                      Review
+                    </Button>
+                  )}
+                </HStack>
+              ) : (
+                /* Native App Quick-Tap Icons (Call, Map, Enter) */
+                <HStack spacing={1.5} flexShrink={0}>
+                  {shop?.contactInfo?.phone && (
+                    <IconButton
+                      aria-label="Call store"
+                      icon={<FiPhoneCall size={12} />}
+                      size="xs"
+                      w="26px"
+                      h="26px"
+                      minW="26px"
+                      rounded="full"
+                      bg="green.50"
+                      color="green.600"
+                      onClick={handleCallShop}
+                    />
+                  )}
                   <IconButton
-                    aria-label="Call store"
-                    icon={<FiPhoneCall size={12} />}
+                    aria-label="Directions"
+                    icon={<FiNavigation size={12} />}
                     size="xs"
                     w="26px"
                     h="26px"
                     minW="26px"
                     rounded="full"
-                    bg="green.50"
-                    color="green.600"
-                    onClick={handleCallShop}
+                    bg="var(--color-primary-soft)"
+                    color="var(--color-primary)"
+                    onClick={handleOpenDirections}
                   />
-                )}
-                <IconButton
-                  aria-label="Directions"
-                  icon={<FiNavigation size={12} />}
-                  size="xs"
-                  w="26px"
-                  h="26px"
-                  minW="26px"
-                  rounded="full"
-                  bg="var(--color-primary-soft)"
-                  color="var(--color-primary)"
-                  onClick={handleOpenDirections}
-                />
-                <Flex
-                  w="26px"
-                  h="26px"
-                  rounded="full"
-                  bg="var(--color-primary)"
-                  color="white"
-                  align="center"
-                  justify="center"
-                  transition="all 0.15s ease"
-                  _groupHover={{ transform: "scale(1.05)" }}
-                >
-                  <Icon as={FiChevronRight} boxSize={3.5} />
-                </Flex>
-              </HStack>
+                  <Flex
+                    w="26px"
+                    h="26px"
+                    rounded="full"
+                    bg="var(--color-primary)"
+                    color="white"
+                    align="center"
+                    justify="center"
+                    transition="all 0.15s ease"
+                    _groupHover={{ transform: "scale(1.05)" }}
+                  >
+                    <Icon as={FiChevronRight} boxSize={3.5} />
+                  </Flex>
+                </HStack>
+              )}
             </Flex>
           </VStack>
         </Flex>

@@ -1,27 +1,60 @@
 "use client";
 
-import React from "react";
-import { Badge, Box, HStack, SimpleGrid, Tab, TabList, Tabs, Text } from "@chakra-ui/react";
-import { FiCheckCircle, FiClock, FiShield, FiShoppingBag } from "react-icons/fi";
+import {
+    Avatar,
+    Badge,
+    Box,
+    Button,
+    Flex,
+    HStack,
+    Icon,
+    IconButton,
+    Select,
+    SimpleGrid,
+    Skeleton,
+    Tab,
+    TabList,
+    Tabs,
+    Text,
+    useDisclosure,
+    useToast,
+    VStack,
+} from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
+import React from "react";
+import {
+    FiCheckCircle,
+    FiChevronLeft,
+    FiChevronRight,
+    FiClock,
+    FiEdit3,
+    FiEye,
+    FiFilter,
+    FiMapPin,
+    FiRefreshCw,
+    FiShield,
+    FiShoppingBag,
+} from "react-icons/fi";
+import ShopCard from "../../../(main)/component/shopSection/element/ShopCard";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
-import { useShopList } from "./hooks/useShopList";
-import { useShopDelete } from "./hooks/useShopDelete";
-import { ShopColumns } from "./components/ShopColumns";
-import ShopView from "./components/ShopView";
-import ReviewShopDrawer from "./components/ReviewShopDrawer";
-import stores from "../../../store/stores";
-import { useDisclosure, useToast } from "@chakra-ui/react";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
+import stores from "../../../store/stores";
 import {
     getMerchantTableProps,
     MerchantBadge,
-    MerchantHeroSection,
+    merchantGhostButtonProps,
+    MerchantPageHeader,
     MerchantPageShell,
     MerchantPanel,
+    merchantSpin,
     MerchantStatCard,
 } from "../../components/common/merchantDashboardUI";
+import ReviewShopDrawer from "./components/ReviewShopDrawer";
+import { ShopColumns } from "./components/ShopColumns";
+import ShopView from "./components/ShopView";
+import { useShopDelete } from "./hooks/useShopDelete";
+import { useShopList } from "./hooks/useShopList";
 
 const reviewTabs = [
     { label: "Pending Review", value: "pending" },
@@ -30,6 +63,59 @@ const reviewTabs = [
     { label: "Rejected", value: "rejected" },
     { label: "All", value: "all" },
 ];
+
+const AttentionChip = ({
+    icon,
+    label,
+    count,
+    color,
+    bg,
+    loading,
+    onClick,
+}: {
+    icon: any;
+    label: string;
+    count: number;
+    color: string;
+    bg: string;
+    loading: boolean;
+    onClick: () => void;
+}) => (
+    <Flex
+        as="button"
+        type="button"
+        onClick={onClick}
+        align="center"
+        gap={2}
+        px={3}
+        py={1.5}
+        bg="var(--merchant-surface)"
+        border="1px solid"
+        borderColor="var(--merchant-border)"
+        borderRadius="full"
+        transition="all 0.2s ease"
+        _hover={{ borderColor: color, transform: "translateY(-1px)" }}
+        _active={{ transform: "scale(0.97)" }}
+    >
+        <Flex align="center" justify="center" w="22px" h="22px" borderRadius="full" bg={bg}>
+            <Icon as={icon} color={color} boxSize={3} />
+        </Flex>
+        <Text fontSize="xs" fontWeight="600" color="var(--merchant-text-muted)">
+            {label}
+        </Text>
+        <Badge
+            bg={bg}
+            color={color}
+            borderRadius="full"
+            px={1.5}
+            py={0.2}
+            fontSize="10px"
+            fontWeight="700"
+        >
+            {loading ? "…" : count}
+        </Badge>
+    </Flex>
+);
 
 const ShopsPage = observer(() => {
     const {
@@ -41,7 +127,7 @@ const ShopsPage = observer(() => {
         reviewStatus,
         setReviewStatus,
         setCurrentPage,
-        fetchShops
+        fetchShops,
     } = useShopList();
 
     const {
@@ -50,19 +136,19 @@ const ShopsPage = observer(() => {
         selectedShop,
         isDeleting,
         handleDeleteClick,
-        confirmDelete
+        confirmDelete,
     } = useShopDelete(() => fetchShops(currentPage));
 
     const {
         isOpen: isReviewOpen,
         onOpen: onReviewOpen,
-        onClose: onReviewClose
+        onClose: onReviewClose,
     } = useDisclosure();
 
     const {
         isOpen: isViewOpen,
         onOpen: onViewOpen,
-        onClose: onViewClose
+        onClose: onViewClose,
     } = useDisclosure();
 
     const [reviewingShop, setReviewingShop] = React.useState<any>(null);
@@ -70,9 +156,11 @@ const ShopsPage = observer(() => {
     const [isReviewing, setIsReviewing] = React.useState(false);
     const toast = useToast();
     const { companyStore } = stores;
+
     const currentTabLabel = reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops";
     const pendingCount = shops.filter((shop: any) => shop.reviewStatus === "pending").length;
     const approvedCount = shops.filter((shop: any) => shop.reviewStatus === "approved").length;
+    const changesRequestedCount = shops.filter((shop: any) => shop.reviewStatus === "changes_requested").length;
 
     const handleReviewClick = (shop: any) => {
         setReviewingShop(shop);
@@ -152,108 +240,527 @@ const ShopsPage = observer(() => {
                 showViewButton: true,
                 function: (row: any) => {
                     handleViewClick(row);
-                }
+                },
             },
             editKey: {
                 showEditButton: true,
                 function: (row: any) => {
                     handleReviewClick(row);
-                }
+                },
             },
             deleteKey: {
                 showDeleteButton: true,
                 function: (row: any) => {
                     handleDeleteClick(row);
-                }
-            }
+                },
+            },
         },
         pagination: {
             show: true,
             currentPage: currentPage,
             totalPages: totalPages,
-            onClick: (page: number) => setCurrentPage(page)
+            onClick: (page: number) => setCurrentPage(page),
         },
         search: {
-            show: false // Can enable later
-        }
-    }
+            show: false,
+        },
+    };
 
     return (
         <MerchantPageShell>
-            <MerchantHeroSection
-                icon={FiShield}
-                primaryBadge="Review Workflow"
+            {/* Header: matched to superadmin dashboard style */}
+            <MerchantPageHeader
+                icon={FiShoppingBag}
                 title="Shop Oversight"
-                description="Review storefront submissions, track moderation state, and manage visibility decisions without leaving the super-admin workspace."
-                rightContent={
-                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3} minW={{ xl: "320px" }}>
-                        <MerchantStatCard label="Current Results" value={totalShops} icon={FiShoppingBag} />
-                        <MerchantStatCard label="Pending In View" value={pendingCount} valueColor={dashboardPalette.warning} icon={FiClock} iconColor={dashboardPalette.warning} />
-                    </SimpleGrid>
+                description="Review storefront submissions, track moderation state, and manage visibility decisions across the platform"
+                mobileActions={
+                    <IconButton
+                        aria-label="Refresh shops"
+                        icon={
+                            <Icon
+                                as={FiRefreshCw}
+                                animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
+                            />
+                        }
+                        size="sm"
+                        w="36px"
+                        h="36px"
+                        onClick={() => fetchShops(currentPage, reviewStatus)}
+                        isDisabled={loading}
+                        {...merchantGhostButtonProps}
+                    />
+                }
+                badges={
+                    <>
+                        <AttentionChip
+                            icon={FiClock}
+                            label="Pending Review"
+                            count={pendingCount}
+                            color={dashboardPalette.warning}
+                            bg="rgba(224, 179, 91, 0.14)"
+                            loading={loading}
+                            onClick={() => setReviewStatus("pending")}
+                        />
+                        <AttentionChip
+                            icon={FiCheckCircle}
+                            label="Approved"
+                            count={approvedCount}
+                            color={dashboardPalette.success}
+                            bg="rgba(70, 201, 139, 0.14)"
+                            loading={loading}
+                            onClick={() => setReviewStatus("approved")}
+                        />
+                    </>
+                }
+                actions={
+                    <Button
+                        size="sm"
+                        onClick={() => fetchShops(currentPage, reviewStatus)}
+                        isDisabled={loading}
+                        leftIcon={
+                            <Icon
+                                as={FiRefreshCw}
+                                animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
+                            />
+                        }
+                        {...merchantGhostButtonProps}
+                    >
+                        Refresh
+                    </Button>
                 }
             />
 
-            <MerchantPanel p={{ base: 4, md: 6 }}>
-                <HStack spacing={2} mb={5} flexWrap="wrap">
-                    <MerchantBadge tone="accent">{currentTabLabel}</MerchantBadge>
-                    <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
-                        {approvedCount} Approved In View
-                    </MerchantBadge>
+            {/* Top Stats Grid */}
+            <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={{ base: 3, md: 4 }} mb={{ base: 4, md: 6 }}>
+                <MerchantStatCard
+                    label="Total Shops"
+                    value={totalShops}
+                    variant="panel"
+                    icon={FiShoppingBag}
+                    iconColor={dashboardPalette.accentStrong}
+                    iconBg="rgba(59, 130, 246, 0.12)"
+                />
+                <MerchantStatCard
+                    label="Pending In View"
+                    value={pendingCount}
+                    icon={FiClock}
+                    variant="panel"
+                    iconColor={dashboardPalette.warning}
+                    iconBg="rgba(224, 179, 91, 0.14)"
+                    valueColor={dashboardPalette.warning}
+                />
+                <MerchantStatCard
+                    label="Approved In View"
+                    value={approvedCount}
+                    variant="panel"
+                    icon={FiCheckCircle}
+                    iconColor={dashboardPalette.success}
+                    iconBg="rgba(70, 201, 139, 0.14)"
+                />
+                <MerchantStatCard
+                    label="Changes Requested"
+                    value={changesRequestedCount}
+                    icon={FiShield}
+                    variant="panel"
+                    iconColor={dashboardPalette.info}
+                    iconBg="rgba(139, 92, 246, 0.14)"
+                />
+            </SimpleGrid>
+
+            <MerchantPanel p={{ base: 3, md: 6 }}>
+                <HStack spacing={2} mb={4} flexWrap="wrap" justify="space-between">
+                    <HStack spacing={2} flexWrap="wrap">
+                        <MerchantBadge tone="accent">{currentTabLabel}</MerchantBadge>
+                        <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
+                            {approvedCount} Approved In View
+                        </MerchantBadge>
+                    </HStack>
+                    <Text fontSize="xs" color={dashboardPalette.textMuted} fontWeight="600">
+                        {totalShops} total shops recorded
+                    </Text>
                 </HStack>
 
-            <Tabs
-                variant="unstyled"
-                index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
-                onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
-                mb={6}
-            >
-                <TabList
-                    gap={2}
-                    flexWrap="wrap"
-                    bg={dashboardPalette.surfaceAlt}
-                    borderWidth="1px"
-                    borderColor={dashboardPalette.border}
-                    borderRadius="20px"
-                    p={1}
-                >
-                    {reviewTabs.map((tab) => (
-                        <Tab
-                            key={tab.value}
-                            borderRadius="16px"
-                            color={dashboardPalette.textMuted}
-                            fontWeight="700"
-                            _selected={{
-                                bg: dashboardPalette.accentSoft,
-                                color: dashboardPalette.accentStrong,
-                                borderWidth: "1px",
-                                borderColor: dashboardPalette.border,
-                            }}
-                            _hover={{ color: dashboardPalette.text }}
+                {/* Desktop Tabs */}
+                <Box display={{ base: "none", md: "block" }} mb={5}>
+                    <Tabs
+                        variant="unstyled"
+                        index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
+                        onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
+                    >
+                        <TabList
+                            gap={1.5}
+                            flexWrap="wrap"
+                            bg={dashboardPalette.surfaceAlt}
+                            borderWidth="1px"
+                            borderColor={dashboardPalette.border}
+                            borderRadius="20px"
+                            p={1}
                         >
-                            <HStack spacing={2}>
-                                <Text>{tab.label}</Text>
-                                {reviewStatus === tab.value ? (
-                                    <Badge bg={dashboardPalette.surface} color={dashboardPalette.textMuted} borderRadius="full">
-                                        {totalShops}
-                                    </Badge>
-                                ) : null}
-                            </HStack>
-                        </Tab>
-                    ))}
-                </TabList>
-            </Tabs>
+                            {reviewTabs.map((tab) => {
+                                const isSelected = reviewStatus === tab.value;
+                                return (
+                                    <Tab
+                                        key={tab.value}
+                                        borderRadius="16px"
+                                        color={dashboardPalette.textMuted}
+                                        fontSize="sm"
+                                        fontWeight="700"
+                                        px={4}
+                                        py={1.5}
+                                        _selected={{
+                                            bg: dashboardPalette.accentSoft,
+                                            color: dashboardPalette.accentStrong,
+                                            borderWidth: "1px",
+                                            borderColor: dashboardPalette.border,
+                                        }}
+                                        _hover={{ color: dashboardPalette.text }}
+                                    >
+                                        <HStack spacing={1.5}>
+                                            <Text>{tab.label}</Text>
+                                            {isSelected ? (
+                                                <Badge
+                                                    bg={dashboardPalette.surface}
+                                                    color={dashboardPalette.textMuted}
+                                                    borderRadius="full"
+                                                    px={1.5}
+                                                    fontSize="10px"
+                                                >
+                                                    {totalShops}
+                                                </Badge>
+                                            ) : null}
+                                        </HStack>
+                                    </Tab>
+                                );
+                            })}
+                        </TabList>
+                    </Tabs>
+                </Box>
 
-            <CustomTable
-                title={`${currentTabLabel} (${totalShops})`}
-                columns={ShopColumns}
-                data={shops}
-                loading={loading}
-                actions={tableActions}
-                serial={{ show: true, text: "S.No." }}
-                {...getMerchantTableProps("62vh")}
-            />
+                {/* Mobile Filter: Segmented Dropdown + Horizontal Chips */}
+                <Box display={{ base: "block", md: "none" }} mb={4}>
+                    <Flex
+                        align="center"
+                        gap={2}
+                        p={1.5}
+                        bg={dashboardPalette.surfaceAlt}
+                        border="1px solid"
+                        borderColor={dashboardPalette.border}
+                        borderRadius="18px"
+                    >
+                        <Flex
+                            align="center"
+                            justify="center"
+                            w="32px"
+                            h="32px"
+                            borderRadius="12px"
+                            bg={dashboardPalette.accentSoft}
+                            color={dashboardPalette.accentStrong}
+                            flexShrink={0}
+                            ml={1}
+                        >
+                            <Icon as={FiFilter} boxSize={3.5} />
+                        </Flex>
+                        <Select
+                            value={reviewStatus}
+                            onChange={(e) => setReviewStatus(e.target.value)}
+                            size="sm"
+                            variant="unstyled"
+                            fontWeight="700"
+                            fontSize="sm"
+                            color={dashboardPalette.text}
+                            cursor="pointer"
+                        >
+                            {reviewTabs.map((tab) => (
+                                <option
+                                    key={tab.value}
+                                    value={tab.value}
+                                    style={{
+                                        background: "var(--color-surface, #0B1120)",
+                                        color: "var(--color-text, #F8FAFC)",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    {tab.label} ({tab.value === reviewStatus ? totalShops : "filter"})
+                                </option>
+                            ))}
+                        </Select>
+                        <Badge
+                            colorScheme="purple"
+                            borderRadius="full"
+                            px={2}
+                            py={0.5}
+                            fontSize="11px"
+                            fontWeight="800"
+                            mr={2}
+                            flexShrink={0}
+                        >
+                            {totalShops}
+                        </Badge>
+                    </Flex>
+                </Box>
+
+                {/* Desktop View: Custom Table */}
+                <Box display={{ base: "none", md: "block" }}>
+                    <CustomTable
+                        title={`${currentTabLabel} (${totalShops})`}
+                        columns={ShopColumns}
+                        data={shops}
+                        loading={loading}
+                        actions={tableActions}
+                        serial={{ show: true, text: "S.No." }}
+                        {...getMerchantTableProps("62vh")}
+                    />
+                </Box>
+
+                {/* Mobile View: Superadmin Dashboard Activity Cards */}
+                <VStack spacing={2.5} align="stretch" display={{ base: "flex", md: "none" }}>
+                    {loading ? (
+                        Array.from({ length: 4 }).map((_, i) => (
+                            <Box
+                                key={i}
+                                p={3.5}
+                                borderRadius="20px"
+                                borderWidth="1px"
+                                borderColor="var(--merchant-border)"
+                                bg="var(--merchant-surface)"
+                            >
+                                <HStack spacing={3} align="center">
+                                    <Skeleton boxSize="46px" borderRadius="14px" flexShrink={0} />
+                                    <VStack align="start" flex={1} spacing={2}>
+                                        <Skeleton h="15px" w="65%" borderRadius="md" />
+                                        <Skeleton h="12px" w="45%" borderRadius="md" />
+                                    </VStack>
+                                    <Skeleton h="24px" w="60px" borderRadius="full" />
+                                </HStack>
+                            </Box>
+                        ))
+                    ) : shops.length === 0 ? (
+                        <Box
+                            textAlign="center"
+                            py={10}
+                            px={4}
+                            bg="var(--merchant-surface-alt)"
+                            borderRadius="20px"
+                            borderWidth="1px"
+                            borderColor="var(--merchant-border)"
+                        >
+                            <Flex
+                                align="center"
+                                justify="center"
+                                w="48px"
+                                h="48px"
+                                borderRadius="full"
+                                bg="var(--merchant-surface)"
+                                mx="auto"
+                                mb={3}
+                            >
+                                <Icon as={FiShoppingBag} boxSize={5} color="var(--merchant-text-muted)" />
+                            </Flex>
+                            <Text fontWeight="700" fontSize="sm" color="var(--merchant-text)">
+                                No shops found
+                            </Text>
+                            <Text fontSize="xs" color="var(--merchant-text-muted)" mt={1}>
+                                No shops currently match the &quot;{currentTabLabel}&quot; filter.
+                            </Text>
+                        </Box>
+                    ) : (
+                        shops.map((shop: any) => {
+                            const reviewTone =
+                                shop.reviewStatus === "approved"
+                                    ? "success"
+                                    : shop.reviewStatus === "rejected"
+                                    ? "danger"
+                                    : shop.reviewStatus === "changes_requested"
+                                    ? "warning"
+                                    : "accent";
+
+                            const reviewLabel =
+                                shop.reviewStatus === "changes_requested"
+                                    ? "Changes Req."
+                                    : shop.reviewStatus || "Pending";
+
+                            const statusColor =
+                                shop.shopStatus === "active"
+                                    ? "green.500"
+                                    : shop.shopStatus === "suspended"
+                                    ? "red.500"
+                                    : "gray.500";
+
+                            const locationText =
+                                [shop.location?.city, shop.location?.state].filter(Boolean).join(", ") ||
+                                shop.location?.address ||
+                                "No location specified";
+
+                            return (
+                                <Box
+                                    key={shop._id}
+                                    p={3.5}
+                                    border="1px solid"
+                                    borderColor="var(--merchant-border)"
+                                    borderRadius="20px"
+                                    bg="var(--merchant-surface)"
+                                    transition="all 0.2s ease"
+                                    _hover={{ bg: "var(--merchant-surface-alt)" }}
+                                    _active={{ transform: "scale(0.99)" }}
+                                    cursor="pointer"
+                                    onClick={() => handleViewClick(shop)}
+                                >
+                                    {/* Top Row: Shop Avatar + Name + Subtitle + Review Badge */}
+                                    <Flex align="start" gap={3} w="full">
+                                        <Avatar
+                                            name={shop.name}
+                                            src={shop.logo?.url}
+                                            boxSize="46px"
+                                            borderRadius="14px"
+                                            border="1.5px solid var(--merchant-border)"
+                                            bg="var(--merchant-surface-alt)"
+                                            flexShrink={0}
+                                        />
+
+                                        <Box flex="1" minW={0}>
+                                            <Flex align="center" justify="space-between" gap={2}>
+                                                <Text
+                                                    fontSize="sm"
+                                                    fontWeight="700"
+                                                    color="var(--merchant-text)"
+                                                    noOfLines={1}
+                                                    lineHeight="1.2"
+                                                >
+                                                    {shop.name}
+                                                </Text>
+                                                <MerchantBadge
+                                                    tone={reviewTone}
+                                                    fontSize="10px"
+                                                    px={2.5}
+                                                    py={0.5}
+                                                    flexShrink={0}
+                                                    textTransform="capitalize"
+                                                >
+                                                    {reviewLabel}
+                                                </MerchantBadge>
+                                            </Flex>
+
+                                            <HStack spacing={1.5} mt={1} color="var(--merchant-text-muted)" fontSize="xs" minW={0}>
+                                                <Box w="6px" h="6px" borderRadius="full" bg={statusColor} flexShrink={0} />
+                                                <Text textTransform="capitalize" fontWeight="600" flexShrink={0}>
+                                                    {shop.shopStatus || "pending"}
+                                                </Text>
+                                                <Text opacity={0.6}>•</Text>
+                                                <Icon as={FiMapPin} boxSize={3} flexShrink={0} />
+                                                <Text noOfLines={1} fontSize="xs">
+                                                    {locationText}
+                                                </Text>
+                                            </HStack>
+                                        </Box>
+                                    </Flex>
+
+                                    {/* Remarks if any */}
+                                    {shop.reviewRemarks ? (
+                                        <Box
+                                            mt={2.5}
+                                            px={3}
+                                            py={1.5}
+                                            bg="var(--merchant-surface-alt)"
+                                            borderRadius="12px"
+                                            border="1px dashed var(--merchant-border)"
+                                        >
+                                            <Text fontSize="11px" color="var(--merchant-text-muted)" noOfLines={2}>
+                                                <Text as="span" fontWeight="700" color="var(--merchant-text)">
+                                                    Note:{" "}
+                                                </Text>
+                                                {shop.reviewRemarks}
+                                            </Text>
+                                        </Box>
+                                    ) : null}
+
+                                    {/* Bottom Action Row: View & Review Buttons */}
+                                    <Flex align="center" justify="space-between" mt={3} pt={2.5} borderTop="1px solid var(--merchant-border)">
+                                        <Text fontSize="11px" color="var(--merchant-text-muted)" fontWeight="600">
+                                            {shop.createdAt ? new Date(shop.createdAt).toLocaleDateString() : ""}
+                                        </Text>
+
+                                        <HStack spacing={2}>
+                                            <Button
+                                                size="xs"
+                                                variant="outline"
+                                                leftIcon={<FiEye size={12} />}
+                                                borderRadius="10px"
+                                                px={2.5}
+                                                h="28px"
+                                                fontSize="11px"
+                                                fontWeight="700"
+                                                borderColor="var(--merchant-border)"
+                                                color="var(--merchant-text)"
+                                                _hover={{ bg: "var(--merchant-surface-alt)" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleViewClick(shop);
+                                                }}
+                                            >
+                                                View
+                                            </Button>
+
+                                            <Button
+                                                size="xs"
+                                                bgGradient="linear(135deg, var(--color-primary, #5B6CFF) 0%, var(--color-secondary, #C44AE8) 100%)"
+                                                color="white"
+                                                leftIcon={<FiEdit3 size={12} />}
+                                                borderRadius="10px"
+                                                px={3}
+                                                h="28px"
+                                                fontSize="11px"
+                                                fontWeight="700"
+                                                boxShadow="0 4px 10px rgba(91, 108, 255, 0.24)"
+                                                _hover={{ opacity: 0.9 }}
+                                                _active={{ transform: "scale(0.96)" }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleReviewClick(shop);
+                                                }}
+                                            >
+                                                Review
+                                            </Button>
+                                        </HStack>
+                                    </Flex>
+                                </Box>
+                            );
+                        })
+                    )}
+
+                    {/* Mobile Pagination */}
+                    {totalPages > 1 && (
+                        <HStack justify="space-between" align="center" pt={3} pb={1} px={1}>
+                            <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                                isDisabled={currentPage <= 1 || loading}
+                                leftIcon={<FiChevronLeft />}
+                                borderRadius="lg"
+                                fontWeight="700"
+                            >
+                                Previous
+                            </Button>
+                            <Text fontSize="xs" fontWeight="700" color={dashboardPalette.textMuted}>
+                                Page {currentPage} of {totalPages}
+                            </Text>
+                            <Button
+                                size="xs"
+                                variant="outline"
+                                onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                                isDisabled={currentPage >= totalPages || loading}
+                                rightIcon={<FiChevronRight />}
+                                borderRadius="lg"
+                                fontWeight="700"
+                            >
+                                Next
+                            </Button>
+                        </HStack>
+                    )}
+                </VStack>
             </MerchantPanel>
 
+            {/* Review Drawer (renders as BottomSheetDrawer on mobile, CustomDrawer on desktop) */}
             <ReviewShopDrawer
                 isOpen={isReviewOpen}
                 onClose={onReviewClose}
@@ -263,6 +770,7 @@ const ShopsPage = observer(() => {
                 isSubmitting={isReviewing}
             />
 
+            {/* Shop Details View Drawer (renders as BottomSheetDrawer on mobile, CustomDrawer on desktop) */}
             <ShopView
                 isOpen={isViewOpen}
                 onClose={onViewClose}

@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Box,
@@ -15,8 +14,11 @@ import {
   Text,
   Textarea,
   VStack,
+  useBreakpointValue,
 } from "@chakra-ui/react";
+import React, { useEffect, useMemo, useState } from "react";
 import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
+import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
 
 type ReviewAction = "approve" | "request_changes" | "reject";
 type VisibilityAction = "active" | "inactive" | "suspended";
@@ -66,6 +68,7 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
   onVisibilitySubmit,
   isSubmitting = false,
 }) => {
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
   const [remarks, setRemarks] = useState("");
   const [activeAction, setActiveAction] = useState<ReviewAction | VisibilityAction | null>(null);
 
@@ -114,9 +117,8 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
     ? "Add approval notes, change requests, or rejection reason..."
     : "Add optional notes for future inactive or suspended updates...";
 
-  return (
-    <CustomDrawer title="Review Shop Submission" open={isOpen} close={onClose} size="xl">
-      <Stack spacing={5} pb={6}>
+  const drawerContent = (
+    <Stack spacing={5} pb={6}>
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="2xl" p={5} bg="white">
           <HStack align="start" spacing={4}>
             <Image
@@ -357,6 +359,25 @@ const ReviewShopDrawer: React.FC<ReviewShopDrawerProps> = ({
           ) : null}
         </HStack>
       </Stack>
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheetDrawer
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Review Shop Submission"
+        size="full"
+        bodyProps={{ px: { base: 3, sm: 4 }, py: 3 }}
+      >
+        {drawerContent}
+      </BottomSheetDrawer>
+    );
+  }
+
+  return (
+    <CustomDrawer title="Review Shop Submission" open={isOpen} close={onClose} size="xl">
+      {drawerContent}
     </CustomDrawer>
   );
 };

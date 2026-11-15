@@ -16,10 +16,10 @@ import {
   // keyframes,
   useColorModeValue,
 } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import React from "react";
 import { dashboardHeroGradient, dashboardHeroGradientLight, dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import { useMerchantFormSx } from "../../shop/component/merchantTheme";
-import { keyframes } from "@emotion/react";
 
 type MerchantBadgeTone = "accent" | "success" | "danger" | "soft" | "info" | "warning";
 
@@ -148,7 +148,7 @@ export const merchantPrimaryButtonProps: ButtonProps = {
 
 export const MerchantPageShell = ({
   children,
-  maxW = "8xl",
+  maxW = "100%",
 }: {
   children: React.ReactNode;
   maxW?: any;
@@ -174,8 +174,8 @@ export const MerchantPageShell = ({
     <Box minH="100vh" bg={pageBg} style={themeVars as any}>
       <Container
         maxW={maxW}
-        px={{ base: 3, sm: 4, md: 6 }}
-        py={{ base: 3, md: 6 }}
+        px={{ base: 2, sm: 4, md: 6 }}
+        py={{ base: 2, md: 6 }}
         sx={{
           ...(formSx as any),
           "@media (prefers-reduced-motion: reduce)": {
@@ -418,16 +418,16 @@ export const MerchantPanel = ({
   p?: any;
   [key: string]: any;
 }) => {
-  const bg = useColorModeValue("white", dashboardPalette.shell);
-  const borderColor = useColorModeValue("gray.200", dashboardPalette.border);
+  const bg = useColorModeValue("transparent", dashboardPalette.shell);
+  const borderColor = useColorModeValue("white", dashboardPalette.border);
 
   return (
     <Box
       bg={bg}
-      borderRadius={{ base: "20px", md: "24px" }}
-      border="1px solid"
-      borderColor={borderColor}
-      boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
+      // borderRadius={{ base: "20px", md: "24px" }}
+      // border="1px solid"
+      // borderColor={borderColor}
+      // boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
       p={p}
       {...props}
     >
@@ -438,7 +438,7 @@ export const MerchantPanel = ({
 
 /* ------------------------------------------------------------------ */
 /* Stat card                                                           */
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------------6--- */
 
 export const MerchantStatCard = ({
   label,
@@ -549,14 +549,15 @@ export const MerchantStatCard = ({
     <Flex
       direction="column"
       justify="space-between"
-      gap={{ base: 3, md: 4 }}
+      gap={{ base: 2, md: 3 }}
       position="relative"
       overflow="hidden"
       bg={panelBg}
       border="1px solid"
       borderColor={defaultBorder}
       borderRadius={{ base: "18px", md: "22px" }}
-      p={{ base: 3, md: 5 }}
+      px={{ base: 3, md: 5 }}
+      py={{ base: 3, md: 4 }}
       boxShadow={panelShadow}
       transition="all 0.25s ease"
       {...(interactiveProps as any)}
