@@ -424,10 +424,10 @@ export const MerchantPanel = ({
   return (
     <Box
       bg={bg}
-      // borderRadius={{ base: "20px", md: "24px" }}
+      borderRadius={{ base: "20px", md: "24px" }}
       // border="1px solid"
       // borderColor={borderColor}
-      // boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
+      boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
       p={p}
       {...props}
     >

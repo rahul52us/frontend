@@ -288,7 +288,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                       typeof title === "string" ? (
                         <Text
                           mt={categoryTag ? 1 : 0}
-                          fontSize={{ base: "lg", md: "2xl" }}
+                          fontSize={{ base: "lg", md: "xl" }}
                           fontWeight="700"
                           color={text}
                           lineHeight="1.2"

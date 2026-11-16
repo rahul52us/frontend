@@ -691,6 +691,7 @@ const SuperAdminDashboard = observer(() => {
             {/* Activity + side column */}
             <Box
                 display="grid"
+                // shadow={'md'}
                 gridTemplateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.5fr) minmax(0, 1fr)" }}
                 gap={{ base: 4, md: 6 }}
                 mb={{ base: 4, md: 6 }}
@@ -722,7 +723,7 @@ const SuperAdminDashboard = observer(() => {
                         <EmptyState icon={FiActivity} text="No recent activity found yet." />
                     ) : (
                         <Stack spacing={1} mx={{ base: -1, md: -2 }}>
-                            {activity.map((item, index) => (
+                            {activity.slice(0,5).map((item, index) => (
                                 <ActivityRow key={item.key} item={item} index={index} />
                             ))}
                         </Stack>
