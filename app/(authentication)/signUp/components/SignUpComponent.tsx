@@ -2108,7 +2108,7 @@ const roleOptions :any= [
           <Box flex={1} overflowY="auto">
             <Flex minH="100%" direction="column">
               <Box flex={1} minH={{ base: 4, md: 8 }} />
-              
+
               <Box w="full" maxW={{ base: "full", md: "600px", xl: "750px" }} mx="auto" px={{ base: 2, md: 8 }}>
                 <AnimatePresence mode="wait">
                   <MotionBox
@@ -2158,7 +2158,7 @@ const roleOptions :any= [
                   </Text>
                 </VStack>
               </Box>
-              
+
               <Box flex={1} minH={{ base: 24, md: 8 }} />
             </Flex>
           </Box>

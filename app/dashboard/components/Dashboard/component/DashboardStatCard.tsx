@@ -1,8 +1,12 @@
 import { Box, Circle, HStack, Icon, Text, useColorModeValue } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 import { dashboardPalette } from '../../../../layouts/dashboardLayout/dashboardPalette';
-import { fadeUp } from '../SellerOverview';
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
 
 const MotionBox = motion(Box);
 
