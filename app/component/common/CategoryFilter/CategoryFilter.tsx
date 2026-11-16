@@ -88,7 +88,6 @@ const CategorySection = observer(() => {
   if (isLoading) {
     return (
       <Box bg={sectionBg} py={{ base: 5, md: 8 }} borderBottom="1px solid" borderColor={borderColor}>
-        <Container maxW="8xl" px={{ base: 3, md: 8 }}>
           <Flex justify="space-between" align="center" mb={4}>
             <Box>
               <Skeleton h="14px" w="110px" mb={2} rounded="md" startColor={skeletonStart} endColor={skeletonEnd} />
@@ -110,7 +109,6 @@ const CategorySection = observer(() => {
               />
             ))}
           </Flex>
-        </Container>
       </Box>
     );
   }
@@ -125,8 +123,6 @@ const CategorySection = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* Compact Section Header */}
         <Flex
           justify="space-between"
@@ -395,7 +391,6 @@ const CategorySection = observer(() => {
             </Flex>
           </Flex>
         </Box>
-      </Container>
     </Box>
   );
 });

@@ -215,7 +215,6 @@ const StateFilter = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* 1. Compact Header + Searchable State Dropdown */}
         <Flex
           direction={{ base: 'column', sm: 'row' }}
@@ -579,7 +578,6 @@ const StateFilter = observer(() => {
             )}
           </VStack>
         )}
-      </Container>
     </Box>
   );
 });

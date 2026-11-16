@@ -1030,7 +1030,6 @@ const BentoGridSection = observer(() => {
 
   return (
     <Box bg={bg} color={C.ink} _dark={{ color: '#F2F3FF' }} position="relative" overflowX="clip" py={{ base: 3, md: 12 }}>
-      <Container maxW="container.xl" px={{ base: 3, md: 6 }}>
         {/* Header */}
         <Flex justify="space-between" align="center" mb="10px" gap={3}>
           <Box minW={0}>
@@ -1170,7 +1169,6 @@ const BentoGridSection = observer(() => {
             )}
           </Box>
         )}
-      </Container>
 
       <QuickView
         product={qv}

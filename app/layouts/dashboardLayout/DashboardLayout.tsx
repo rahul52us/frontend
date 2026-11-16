@@ -299,7 +299,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const shopBannerDescriptionColor = useColorModeValue("gray.600", "gray.400");
 
   return user ? (
-    <Box bg={pageBg}>
+    <Box>
       <MainContainer $isMobile={isMobile} $bgPattern={bgPagePattern}>
         <Box ref={sidebarRef}>
           <SidebarLayout

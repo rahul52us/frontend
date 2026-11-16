@@ -903,7 +903,6 @@ const ProductsListSection = observer(() => {
 
   return (
     <Box bg={pageBg} py={{ base: 5, md: 9 }} overflow="hidden">
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* 1. Filtered Search Results View */}
         {showSearchResults && (
           <Box id="all-products" mb={{ base: 10, md: 14 }}>
@@ -1218,7 +1217,6 @@ const ProductsListSection = observer(() => {
             </Drawer>
           </Box>
         )}
-
         {/* 2. Top Picks For You Section (Unified Compact Header) */}
         <Box>
           <Flex
@@ -1265,7 +1263,6 @@ const ProductsListSection = observer(() => {
             <ShopSection enableInfiniteLoad={false} />
           </Box>
         </Box>
-      </Container>
     </Box>
   );
 });
