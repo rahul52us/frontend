@@ -2,7 +2,15 @@ import { Box, Circle, HStack, Icon, Text, useColorModeValue } from '@chakra-ui/r
 import { motion } from 'framer-motion';
 import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 import { dashboardPalette } from '../../../../layouts/dashboardLayout/dashboardPalette';
-import { fadeUp } from '../SellerOverview';
+
+export const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 260, damping: 24 },
+  },
+};
 
 const MotionBox = motion(Box);
 
