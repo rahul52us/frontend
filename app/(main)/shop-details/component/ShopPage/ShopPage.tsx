@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Circle,
-  Container,
   Flex,
   Heading,
   HStack,
@@ -160,7 +159,6 @@ const ShopPage = observer(({ shopData }: any) => {
       />
 
       {/* Main Container */}
-      <Container maxW="6xl" px={4} mt={6}>
         {/* Sticky Segmented Pill Tabs Navigation */}
         <Box
           id="tabs"
@@ -472,7 +470,6 @@ const ShopPage = observer(({ shopData }: any) => {
             </MotionBox>
           )}
         </AnimatePresence>
-      </Container>
 
       {/* Footer Section */}
       <Box mt={16}>

@@ -179,7 +179,6 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
   if (!product) {
     return (
       <Box bg={pageBg} minH="75vh" py={16} px={4}>
-        <Container maxW="md">
           <VStack
             bg={cardBg}
             p={8}
@@ -218,7 +217,6 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               Browse Available Products
             </Button>
           </VStack>
-        </Container>
       </Box>
     );
   }
@@ -313,8 +311,8 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
         base: "70px",
         lg: 12,
       }}
+      px={{ base: 2, sm: 4, md: 6, lg: 8 }}
     >
-      <Container maxW="8xl" px={{ base: 3, md: 8 }} pt={{ base: 2.5, md: 5 }}>
         {/* 1. Top Navigation Bar: Compact Back + Share on Mobile, Breadcrumbs on Desktop */}
         <Flex
           justify="space-between"
@@ -511,7 +509,6 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
             </SimpleGrid>
           </Box>
         )}
-      </Container>
 
       {/* 5. Native App-Style Mobile Sticky Action Dock */}
       <Box
