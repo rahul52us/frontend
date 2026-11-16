@@ -298,7 +298,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const shopBannerIconBg = isErrorBanner ? shopBannerIconBgError : shopBannerIconBgWarning;
 
   return user ? (
-    <Box bg={pageBg}>
+    <Box>
       <MainContainer $isMobile={isMobile} $bgPattern={bgPagePattern}>
         <Box ref={sidebarRef}>
           <SidebarLayout

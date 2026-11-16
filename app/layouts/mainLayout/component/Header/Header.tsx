@@ -239,10 +239,9 @@ const Header = observer(() => {
         transition="all 0.25s ease"
       >
         <Flex
-          maxW="8xl"
           mx="auto"
           h="full"
-          align="center"
+          // align="center"
           justify={{ base: "center", md: "space-between" }}
           fontSize="xs"
         >
@@ -289,7 +288,7 @@ const Header = observer(() => {
       {/* Main Primary Header Row */}
       <Box px={{ base: 3, md: 8 }} py={{ base: 2, md: 2.5 }}>
         <Flex
-          maxW="8xl"
+          // maxW="8xl"
           mx="auto"
           align="center"
           justify="space-between"
@@ -469,7 +468,7 @@ const Header = observer(() => {
         py={1}
       >
         <Flex
-          maxW="8xl"
+          // maxW="8xl"
           mx="auto"
           align="center"
           justify="space-between"

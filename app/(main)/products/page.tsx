@@ -13,21 +13,16 @@ import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 
 const Page = observer(() => {
   return (
-    <Box mx="auto" py={{ base: 0, md: 2 }} px={{ base: 0, md: 0 }} overflowX="hidden">
-      
-
+    <Box px={{ base: 0, md: 0 }} overflowX="hidden">
       {/* <VideoStories /> */}
       <HeroSection />
       <CategoryFilter />
-
-      
-
       <Box>
         <ProductCarousel />
       </Box>
       <Flex
         direction={{ base: "column", md: "row" }}
-        gap={{ base: 4, md: 2 }}
+        // gap={{ base: 4, md: 2 }}
         align="stretch"
         w="full"
       >
@@ -35,7 +30,7 @@ const Page = observer(() => {
           w="full"
           overflowY={{ base: "visible", md: "auto" }}
           sx={{
-            "&::-webkit-scrollbar": { width: "6px" },
+            "&::-webkit-scrollbar": { width: "4px" },
             "&::-webkit-scrollbar-thumb": { background: "#888", borderRadius: "4px" },
           }}
         >

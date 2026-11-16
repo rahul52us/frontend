@@ -387,7 +387,6 @@ const MapComponent = () => {
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
-      <Container maxW="7xl" py={8}>
         <Box
           p={6}
           borderRadius="2xl"
@@ -404,13 +403,11 @@ const MapComponent = () => {
             Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.
           </Text>
         </Box>
-      </Container>
     );
   }
 
   if (loadError) {
     return (
-      <Container maxW="7xl" py={8}>
         <Box
           p={6}
           borderRadius="2xl"
@@ -427,7 +424,6 @@ const MapComponent = () => {
             Please check your internet connection and Google Maps API configuration.
           </Text>
         </Box>
-      </Container>
     );
   }
 
@@ -439,7 +435,6 @@ const MapComponent = () => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* 1. Compact Header + Location Action Row */}
         <Flex
           direction={{ base: 'column', md: 'row' }}
@@ -1314,7 +1309,6 @@ const MapComponent = () => {
             )}
           </Box>
         </SimpleGrid>
-      </Container>
     </Box>
   );
 };

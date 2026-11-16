@@ -393,7 +393,7 @@ const ProductCard = ({
               onAddToCart(product);
             }}
           />
-         
+
         </Flex>
       </Flex>
     </MotionBox>
@@ -502,7 +502,6 @@ const ProductCarousel = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* Compact Section Header */}
         <Flex
           justify="space-between"
@@ -669,7 +668,6 @@ const ProductCarousel = observer(() => {
             </VStack>
           </Flex>
         </Flex>
-      </Container>
     </Box>
   );
 });

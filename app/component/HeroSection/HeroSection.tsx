@@ -547,7 +547,6 @@ const HeroSection = () => {
 
   return (
     <Box bg="var(--color-bg)" borderBottom="1px solid" borderColor="var(--color-border)" pb={{ base: 3, md: 6 }}>
-      <Container maxW="8xl" px={{ base: 2, md: 8 }} pt={{ base: 2, md: 5 }}>
         {/* HERO BANNER */}
         <MotionBox
           position="relative"
@@ -742,8 +741,7 @@ const HeroSection = () => {
             ))}
           </SimpleGrid>
         </Box>
-      </Container>
-    </Box>
+      </Box>
   );
 };
 

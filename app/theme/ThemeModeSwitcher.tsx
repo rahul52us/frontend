@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, IconButton, Tooltip, useColorModeValue } from "@chakra-ui/react";
+import { Box, IconButton, IconButtonProps, Tooltip, useColorModeValue } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
@@ -16,11 +16,15 @@ const exitTransition = {
   ease: [0.5, 0, 0.75, 0],
 };
 
+export interface ThemeModeSwitcherProps {
+  size?: IconButtonProps["size"];
+}
+
 /**
  * Single-click Theme Toggle — Light ↔ Dark.
  * Smooth morph between sun and moon.
  */
-export const ThemeModeSwitcher: React.FC = () => {
+export const ThemeModeSwitcher: React.FC<ThemeModeSwitcherProps> = ({ size }) => {
   const { resolvedTheme, setMode } = useAppTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -36,6 +40,7 @@ export const ThemeModeSwitcher: React.FC = () => {
       <IconButton
         aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         onClick={toggle}
+        size={size}
         variant="ghost"
         bg={bgBtn}
         color={textBtn}

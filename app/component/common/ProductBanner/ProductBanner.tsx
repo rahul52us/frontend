@@ -224,7 +224,6 @@ const ProductBanner = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-      <Container maxW="8xl" px={{ base: 3, md: 8 }}>
         {/* 1. Compact Flash Sale Header Banner */}
         <Flex
           direction={{ base: 'column', md: 'row' }}
@@ -612,7 +611,6 @@ const ProductBanner = observer(() => {
             </Button>
           </VStack>
         )}
-      </Container>
     </Box>
   );
 });

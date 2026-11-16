@@ -9,7 +9,6 @@ import {
   Badge,
   Box,
   Button,
-  Container,
   Divider,
   Fade,
   Flex,
@@ -155,8 +154,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
       position="relative"
       overflowX="hidden"
     >
-      <Container
-        maxW="8xl"
+      <Box
         px={{ base: 3, md: 8 }}
         pt={{ base: 5, md: 8 }}
         pb={{ base: hideBottomNav ? "16px" : "calc(var(--mobile-bottom-nav-height, 56px) + 24px)", md: 6 }}
@@ -545,7 +543,7 @@ export const Footer: React.FC<FooterProps> = ({ hideBottomNav = false }) => {
             </HStack>
           </HStack>
         </Stack>
-      </Container>
+      </Box>
 
       {/* Floating Back to Top Button */}
       <Fade in={showBackToTop} unmountOnExit>

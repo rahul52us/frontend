@@ -148,7 +148,7 @@ const SidebarPopover = observer(({
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { colorMode } = useColorMode();
-  
+
   const cAccentSoft = useColorModeValue("brand.50", dashboardPalette.accentSoft);
   const cAccentStrong = useColorModeValue("brand.700", dashboardPalette.accentStrong);
   const cAccent = useColorModeValue("brand.600", dashboardPalette.accent);
@@ -316,7 +316,7 @@ const SidebarAccordion = observer(({
   expandedPath: number[];
 }) => {
   const { colorMode } = useColorMode();
-  
+
   const cAccentSoft = useColorModeValue("brand.50", dashboardPalette.accentSoft);
   const cAccentStrong = useColorModeValue("brand.700", dashboardPalette.accentStrong);
   const cAccent = useColorModeValue("brand.600", dashboardPalette.accent);
