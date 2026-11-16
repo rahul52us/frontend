@@ -197,6 +197,18 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     setDismissedBannerKey(storedKey);
   }, []);
 
+  const shopBannerBg = useColorModeValue("white", dashboardPalette.surfaceAlt || "gray.800");
+  const shopBannerShadow = useColorModeValue(
+    "0 4px 12px rgba(0, 0, 0, 0.02)",
+    "0 8px 24px rgba(0, 0, 0, 0.2)"
+  );
+  const shopBannerGlowOpacity = useColorModeValue(0.15, 0.1);
+  const shopBannerBorderError = useColorModeValue("red.100", "rgba(248, 113, 113, 0.15)");
+  const shopBannerBorderWarning = useColorModeValue("orange.200", "rgba(234, 88, 12, 0.15)");
+  const shopBannerIconBgError = useColorModeValue("red.50", "rgba(248, 113, 113, 0.1)");
+  const shopBannerIconBgWarning = useColorModeValue("orange.50", "rgba(234, 88, 12, 0.1)");
+  const shopBannerDescriptionColor = useColorModeValue("gray.600", "gray.400");
+
   if (!isMounted) {
     return (
       <PageLoader loading={true}>
@@ -282,21 +294,8 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     shouldShowLayoutShopBanner &&
     dismissedBannerKey !== shopStatusBannerKey;
   const isErrorBanner = shopStatusBanner?.status === 'error';
-  const shopBannerBg = useColorModeValue("white", dashboardPalette.surfaceAlt || "gray.800");
-  const shopBannerBorder = useColorModeValue(
-    isErrorBanner ? "red.100" : "orange.200",
-    isErrorBanner ? "rgba(248, 113, 113, 0.15)" : "rgba(234, 88, 12, 0.15)"
-  );
-  const shopBannerShadow = useColorModeValue(
-    "0 4px 12px rgba(0, 0, 0, 0.02)",
-    "0 8px 24px rgba(0, 0, 0, 0.2)"
-  );
-  const shopBannerGlowOpacity = useColorModeValue(0.15, 0.1);
-  const shopBannerIconBg = useColorModeValue(
-    isErrorBanner ? "red.50" : "orange.50",
-    isErrorBanner ? "rgba(248, 113, 113, 0.1)" : "rgba(234, 88, 12, 0.1)"
-  );
-  const shopBannerDescriptionColor = useColorModeValue("gray.600", "gray.400");
+  const shopBannerBorder = isErrorBanner ? shopBannerBorderError : shopBannerBorderWarning;
+  const shopBannerIconBg = isErrorBanner ? shopBannerIconBgError : shopBannerIconBgWarning;
 
   return user ? (
     <Box>
