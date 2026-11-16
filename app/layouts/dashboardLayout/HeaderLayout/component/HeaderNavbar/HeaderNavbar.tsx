@@ -1,10 +1,10 @@
 "use client"; // Add this for client-side component in Next.js
 
 import { Flex, IconButton, useColorModeValue, useMediaQuery } from "@chakra-ui/react";
-import { FaBars } from "react-icons/fa";
 import { observer } from "mobx-react-lite";
-import HeaderProfile from "./HeaderProfile/HeaderProfile";
+import { FaBars } from "react-icons/fa";
 import HeaderNotification from "./HeaderNotification/HeaderNotification";
+import HeaderProfile from "./HeaderProfile/HeaderProfile";
 import HeaderThemeSwitch from "./HeaderThemeSwitch/HeaderThemeSwitch";
 // import HeaderChatMessage from "./HeaderChatMessage/HeaderChatMessage";
 // import CartContainer from "./CartContainer/CartContainer";

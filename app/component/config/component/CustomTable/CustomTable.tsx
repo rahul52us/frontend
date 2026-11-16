@@ -1,4 +1,5 @@
 "use client";
+import { RepeatIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -34,7 +35,6 @@ import { MdDelete } from "react-icons/md";
 import { formatDate } from "../../utils/dateUtils";
 import Pagination from "../pagination/Pagination";
 import TableLoader from "./TableLoader";
-import { RepeatIcon } from "@chakra-ui/icons";
 
 const MultiDropdown = dynamic(() => import("../multiDropdown/MultiDropdown"), { ssr: false });
 const CustomDateRange = dynamic(() => import("../CustomDateRange/CustomDateRange"), { ssr: false });
@@ -323,7 +323,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
 }) => {
   const safeData = Array.isArray(data) ? data : [];
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const cardBg = useColorModeValue("white", "brand.900");
+  const cardBg = useColorModeValue("white", "transparent");
   const headerBg = useColorModeValue("white", "brand.800");
   const accent = useColorModeValue("brand.600", "brand.400");
   const borderColor = useColorModeValue("white", "brand.700");
@@ -341,8 +341,8 @@ const CustomTable: React.FC<CustomTableProps> = ({
       borderRadius="3xl"
       // boxShadow="0 10px 40px -15px rgba(0, 0, 0, 0.15)"
       shadow={'md'}
-      border="1px solid"
-      borderColor={borderColor}
+      // border="1px solid"
+      // borderColor={borderColor}
       overflow="hidden"
       transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
     >
@@ -350,13 +350,13 @@ const CustomTable: React.FC<CustomTableProps> = ({
       <Flex
         justify="space-between"
         align="center"
-        px={6}
-        py={3}
-        bg={headerBg}
+        pl={4}
+        pt={2}
+        // bg={headerBg}
         borderBottom="1px solid"
         borderColor={borderColor}
       >
-        <Flex direction="column" gap={0.5}>
+        <Flex direction="column" gap={0.5} >
           {title && (
             <Heading
               size="md"

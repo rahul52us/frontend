@@ -22,7 +22,7 @@ const HeaderLogo = observer(() => {
   const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
 
   return (
-    <Flex width="100%" alignItems="center" justifyContent="space-between" display="flex" ml={2}>
+    <Flex width="100%" alignItems="center"  display="flex" ml={2}>
       {isLargerThanXl && (
         <Flex alignItems="center">
           <IconButton

@@ -1,21 +1,21 @@
 "use client";
-import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Box,
-  InputGroup,
+  Flex,
+  Icon,
   Input,
+  InputGroup,
   InputLeftElement,
   List,
   ListItem,
-  Flex,
   Text,
   useColorModeValue,
-  Icon,
 } from "@chakra-ui/react";
-import { FaSearch } from "react-icons/fa";
 import debounce from "lodash.debounce";
-import Link from "next/link";
 import { observer } from "mobx-react-lite";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FaSearch } from "react-icons/fa";
 import stores from "../../../../../../store/stores";
 import { getSidebarDataByRole, sidebarFooterData } from "../../../../SidebarLayout/utils/SidebarItems";
 import { dashboardPalette } from "../../../../dashboardPalette";

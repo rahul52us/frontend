@@ -276,7 +276,7 @@ const OffersPage = () => {
 
       {/* Main Panel */}
       <MerchantPanel p={{ base: 3.5, md: 6 }}>
-        <Flex
+        {/* <Flex
           justify="space-between"
           align="center"
           gap={3}
@@ -299,7 +299,7 @@ const OffersPage = () => {
               {totalOffers} offers
             </Badge>
           </HStack>
-        </Flex>
+        </Flex> */}
 
         {/* Desktop View: Clean CustomTable */}
         <Box display={{ base: "none", md: "block" }}>

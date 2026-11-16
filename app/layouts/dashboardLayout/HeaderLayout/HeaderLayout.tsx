@@ -93,6 +93,7 @@ const HeaderLayout = observer(() => {
     <Flex
       direction="row"
       alignItems="center"
+      shadow={'sm'}
       justifyContent="space-between"
       height={headerHeight}
       padding={headerPadding}

@@ -48,7 +48,7 @@ import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton
 import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
 import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 import stores from "../../../../store/stores";
-import { ThemeModeMenu, ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
+import {  ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
 import HeroNavButton from "./component/HeroNavButton";
 import NavItemsLayout from "./component/NavItemsLayout";
 import UserMenu from "./component/UserMenu";
@@ -361,7 +361,7 @@ const Header = observer(() => {
           {/* Right: Quick Actions (Theme Switcher, Wishlist, Cart, Profile) */}
           <HStack spacing={{ base: 1, md: 2 }} flexShrink={0}>
             <Box display={{ base: "none", md: "block" }}>
-              <ThemeModeMenu size="sm" />
+              <ThemeModeSwitcher  />
             </Box>
 
             <Tooltip label="Wishlist" hasArrow openDelay={300}>
@@ -736,7 +736,7 @@ const Header = observer(() => {
                 >
                   Appearance
                 </Text>
-                <ThemeModeSwitcher size="sm" />
+                <ThemeModeSwitcher  />
               </Box>
             </VStack>
           </DrawerBody>

@@ -1,223 +1,127 @@
 "use client";
 
+import { Box, IconButton, Tooltip, useColorModeValue } from "@chakra-ui/react";
+import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
-import {
-  Box,
-  Button,
-  Flex,
-  HStack,
-  Icon,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-  Tooltip,
-  useColorModeValue,
-} from "@chakra-ui/react";
-import { FiCheck, FiMoon, FiSun, FiTv } from "react-icons/fi";
-import { ThemeMode, useAppTheme } from "./ThemeContext";
+import { FiMoon, FiSun } from "react-icons/fi";
+import { useAppTheme } from "./ThemeContext";
 
-interface ThemeModeSwitcherProps {
-  size?: "sm" | "md" | "lg";
-  variant?: "segmented" | "menu" | "compact";
-  showLabels?: boolean;
-}
+const iconTransition = {
+  duration: 0.5,
+  ease: [0.34, 1.56, 0.64, 1], // springy back-ease overshoot
+};
 
-/**
- * Modern Segmented Theme Switcher supporting Light, Dark, and System Default.
- */
-export const ThemeModeSwitcher: React.FC<ThemeModeSwitcherProps> = ({
-  size = "md",
-  variant = "segmented",
-}) => {
-  const { mode, setMode } = useAppTheme();
-
-  const options: { id: ThemeMode; label: string; icon: any }[] = [
-    { id: "light", label: "Light", icon: FiSun },
-    { id: "dark", label: "Dark", icon: FiMoon },
-    { id: "system", label: "System", icon: FiTv },
-  ];
-
-  const bgContainer = useColorModeValue("gray.100", "rgba(255, 255, 255, 0.08)");
-  const borderContainer = useColorModeValue("gray.200", "rgba(255, 255, 255, 0.12)");
-  const activeBg = useColorModeValue("white", "var(--color-primary)");
-  const activeText = useColorModeValue("var(--color-primary)", "white");
-  const inactiveText = useColorModeValue("gray.600", "gray.400");
-  const activeShadow = useColorModeValue(
-    "0 2px 6px rgba(0, 0, 0, 0.08)",
-    "0 2px 8px rgba(0, 0, 0, 0.3)"
-  );
-
-  if (variant === "menu") {
-    return <ThemeModeMenu size={size} />;
-  }
-
-  const py = size === "sm" ? 1 : size === "lg" ? 2 : 1.5;
-  const px = size === "sm" ? 2 : size === "lg" ? 4 : 3;
-  const fontSize = size === "sm" ? "xs" : size === "lg" ? "md" : "sm";
-  const iconSize = size === "sm" ? 3.5 : size === "lg" ? 4.5 : 4;
-
-  return (
-    <HStack
-      spacing={1}
-      p={1}
-      bg={bgContainer}
-      borderRadius="14px"
-      border="1px solid"
-      borderColor={borderContainer}
-      w="full"
-      justify="stretch"
-    >
-      {options.map((opt) => {
-        const isActive = mode === opt.id;
-        return (
-          <Button
-            key={opt.id}
-            flex={1}
-            size={size}
-            py={py}
-            px={px}
-            variant="unstyled"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            gap={2}
-            borderRadius="10px"
-            bg={isActive ? activeBg : "transparent"}
-            color={isActive ? activeText : inactiveText}
-            boxShadow={isActive ? activeShadow : "none"}
-            fontWeight={isActive ? "700" : "500"}
-            fontSize={fontSize}
-            onClick={() => setMode(opt.id)}
-            transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-            _hover={{
-              color: isActive ? activeText : "var(--color-primary)",
-              bg: isActive ? activeBg : "rgba(0, 0, 0, 0.03)",
-            }}
-            aria-pressed={isActive}
-            aria-label={`${opt.label} Mode`}
-          >
-            <Icon as={opt.icon} boxSize={iconSize} />
-            <Text as="span">{opt.label}</Text>
-          </Button>
-        );
-      })}
-    </HStack>
-  );
+const exitTransition = {
+  duration: 0.3,
+  ease: [0.5, 0, 0.75, 0],
 };
 
 /**
- * Dropdown menu theme switcher ideal for header bars and compact spaces.
+ * Single-click Theme Toggle — Light ↔ Dark.
+ * Smooth morph between sun and moon.
  */
-export const ThemeModeMenu: React.FC<{ size?: "sm" | "md" | "lg" }> = ({
-  size = "md",
-}) => {
-  const { mode, resolvedTheme, setMode } = useAppTheme();
+export const ThemeModeSwitcher: React.FC = () => {
+  const { resolvedTheme, setMode } = useAppTheme();
+  const isDark = resolvedTheme === "dark";
 
-  const currentIcon =
-    mode === "system" ? FiTv : resolvedTheme === "dark" ? FiMoon : FiSun;
+  const toggle = () => setMode(isDark ? "light" : "dark");
 
   const bgBtn = useColorModeValue("gray.50", "rgba(255, 255, 255, 0.06)");
   const borderBtn = useColorModeValue("gray.200", "rgba(255, 255, 255, 0.12)");
   const textBtn = useColorModeValue("gray.700", "gray.200");
-  const menuBg = useColorModeValue("white", "var(--color-surface)");
-  const menuBorder = useColorModeValue("gray.200", "var(--color-border)");
-  const menuText = useColorModeValue("gray.800", "var(--color-text-primary)");
-  const hoverBg = useColorModeValue("gray.50", "rgba(255, 255, 255, 0.08)");
-
-  const options: { id: ThemeMode; label: string; icon: any; desc: string }[] = [
-    { id: "light", label: "Light", icon: FiSun, desc: "Clean bright theme" },
-    { id: "dark", label: "Dark", icon: FiMoon, desc: "Comfortable night theme" },
-    { id: "system", label: "System Default", icon: FiTv, desc: "Follow device settings" },
-  ];
+  const hoverBg = useColorModeValue("gray.100", "rgba(255, 255, 255, 0.1)");
 
   return (
-    <Menu placement="bottom-end">
-      <Tooltip
-        label={`Theme: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`}
-        openDelay={300}
-      >
-        <MenuButton
-          as={IconButton}
-          aria-label="Switch Theme Mode"
-          icon={<Icon as={currentIcon} boxSize={size === "sm" ? 4 : 4.5} />}
-          size={size}
-          variant="ghost"
-          bg={bgBtn}
-          color={textBtn}
-          border="1px solid"
-          borderColor={borderBtn}
-          borderRadius="12px"
-          _hover={{
-            color: "var(--color-primary)",
-            bg: hoverBg,
-            borderColor: "var(--color-primary-border)",
-          }}
-          _active={{ transform: "scale(0.96)" }}
-        />
-      </Tooltip>
-
-      <MenuList
-        bg={menuBg}
+    <Tooltip label={isDark ? "Switch to Light" : "Switch to Dark"} openDelay={300}>
+      <IconButton
+        aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        onClick={toggle}
+        variant="ghost"
+        bg={bgBtn}
+        color={textBtn}
         border="1px solid"
-        borderColor={menuBorder}
-        borderRadius="16px"
-        boxShadow="0 18px 38px rgba(0, 0, 0, 0.35)"
-        p={2}
-        minW="220px"
-        zIndex={1400}
-      >
-        <Box px={3} py={1.5} mb={1}>
-          <Text fontSize="11px" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider">
-            Appearance
-          </Text>
-        </Box>
-
-        {options.map((opt) => {
-          const isSelected = mode === opt.id;
-          return (
-            <MenuItem
-              key={opt.id}
-              onClick={() => setMode(opt.id)}
-              bg="transparent"
-              borderRadius="10px"
-              py={2}
-              px={3}
-              _hover={{ bg: hoverBg }}
-              color={isSelected ? "var(--color-primary)" : menuText}
-              fontWeight={isSelected ? "700" : "500"}
-            >
-              <Flex align="center" justify="space-between" w="full">
-                <HStack spacing={3}>
-                  <Flex
-                    w="28px"
-                    h="28px"
-                    align="center"
-                    justify="center"
-                    borderRadius="8px"
-                    bg={isSelected ? "var(--color-primary-soft)" : "transparent"}
-                    color={isSelected ? "var(--color-primary)" : "inherit"}
+        borderColor={borderBtn}
+        borderRadius="12px"
+        _hover={{
+          color: "var(--color-primary)",
+          bg: hoverBg,
+          borderColor: "var(--color-primary-border)",
+        }}
+        _active={{ transform: "scale(0.92)" }}
+        icon={
+          <Box position="relative" width="18px" height="18px">
+            <AnimatePresence mode="wait" initial={false}>
+              {isDark ? (
+                /* ---------- MOON ---------- */
+                <motion.div
+                  key="moon"
+                  style={{ position: "absolute", inset: 0, display: "flex" }}
+                  initial={{ rotate: -140, scale: 0, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: 140, scale: 0, opacity: 0 }}
+                  transition={iconTransition}
+                >
+                  {/* halo glow behind the moon */}
+                  <motion.div
+                    style={{
+                      position: "absolute",
+                      inset: -4,
+                      borderRadius: "50%",
+                      background:
+                        "radial-gradient(circle, rgba(120,140,255,0.25) 0%, transparent 70%)",
+                    }}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ duration: 0.4, delay: 0.15 }}
+                  />
+                  <Box as={FiMoon} size="18px" />
+                </motion.div>
+              ) : (
+                /* ---------- SUN ---------- */
+                <motion.div
+                  key="sun"
+                  style={{ position: "absolute", inset: 0, display: "flex" }}
+                  initial={{ rotate: 140, scale: 0, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: -140, scale: 0, opacity: 0 }}
+                  transition={iconTransition}
+                >
+                  {/* slow perpetual spin once settled */}
+                  <motion.div
+                    style={{ display: "flex" }}
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 24,
+                      ease: "linear",
+                      // repeat: 2,
+                      delay: 0.5,
+                    }}
                   >
-                    <Icon as={opt.icon} boxSize={4} />
-                  </Flex>
-                  <Box>
-                    <Text fontSize="sm" lineHeight="1.2">
-                      {opt.label}
-                    </Text>
-                    <Text fontSize="10px" color="gray.400" fontWeight="normal">
-                      {opt.desc}
-                    </Text>
-                  </Box>
-                </HStack>
-                {isSelected && <Icon as={FiCheck} color="var(--color-primary)" boxSize={4} />}
-              </Flex>
-            </MenuItem>
-          );
-        })}
-      </MenuList>
-    </Menu>
+                    <Box as={FiSun} size="18px" />
+                  </motion.div>
+
+                  {/* warm pulse ring on arrival */}
+                  <motion.div
+                    style={{
+                      position: "absolute",
+                      inset: -3,
+                      borderRadius: "50%",
+                      border: "1.5px solid currentColor",
+                      opacity: 0,
+                    }}
+                    initial={{ scale: 0.5, opacity: 0.5 }}
+                    animate={{ scale: 1.6, opacity: 0 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Box>
+        }
+      />
+    </Tooltip>
   );
 };
 

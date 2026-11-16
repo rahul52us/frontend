@@ -3,7 +3,6 @@
 import { Box, Flex, Image, useColorModeValue } from '@chakra-ui/react';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { ThemeModeMenu } from '../../theme/ThemeModeSwitcher';
 
 const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -23,15 +22,6 @@ const AuthenticationLayout = ({ children }: { children: React.ReactNode }) => {
       pb={0}
       transition="background-color 0.2s ease"
     >
-      {/* Top right Theme Switcher on Auth Pages */}
-      <Box
-        position="fixed"
-        top="max(16px, calc(16px + var(--safe-area-top, env(safe-area-inset-top, 0px))))"
-        right={4}
-        zIndex={100}
-      >
-        <ThemeModeMenu size="sm" />
-      </Box>
 
       <Flex
         minHeight="100vh"

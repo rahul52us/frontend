@@ -124,14 +124,101 @@ const StatCard = ({ label, value, icon, color }: StatCardProps) => (
 /*  Mobile category card: photo on the top half, details below                */
 /* -------------------------------------------------------------------------- */
 
+const categoryColorPalette = [
+  {
+    border: "#3B82F6",
+    bgSoft: "rgba(59, 130, 246, 0.08)",
+    borderStrong: "rgba(59, 130, 246, 0.28)",
+    accent: "#3B82F6",
+    fallbackGrad: "linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.20))",
+  },
+  {
+    border: "#10B981",
+    bgSoft: "rgba(16, 185, 129, 0.08)",
+    borderStrong: "rgba(16, 185, 129, 0.28)",
+    accent: "#10B981",
+    fallbackGrad: "linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(20, 184, 166, 0.20))",
+  },
+  {
+    border: "#8B5CF6",
+    bgSoft: "rgba(139, 92, 246, 0.08)",
+    borderStrong: "rgba(139, 92, 246, 0.28)",
+    accent: "#8B5CF6",
+    fallbackGrad: "linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.20))",
+  },
+  {
+    border: "#F59E0B",
+    bgSoft: "rgba(245, 158, 11, 0.08)",
+    borderStrong: "rgba(245, 158, 11, 0.28)",
+    accent: "#F59E0B",
+    fallbackGrad: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(249, 115, 22, 0.20))",
+  },
+  {
+    border: "#EC4899",
+    bgSoft: "rgba(236, 72, 153, 0.08)",
+    borderStrong: "rgba(236, 72, 153, 0.28)",
+    accent: "#EC4899",
+    fallbackGrad: "linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(244, 63, 94, 0.20))",
+  },
+  {
+    border: "#06B6D4",
+    bgSoft: "rgba(6, 182, 212, 0.08)",
+    borderStrong: "rgba(6, 182, 212, 0.28)",
+    accent: "#06B6D4",
+    fallbackGrad: "linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.20))",
+  },
+  {
+    border: "#F97316",
+    bgSoft: "rgba(249, 115, 22, 0.08)",
+    borderStrong: "rgba(249, 115, 22, 0.28)",
+    accent: "#F97316",
+    fallbackGrad: "linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(234, 88, 12, 0.20))",
+  },
+  {
+    border: "#14B8A6",
+    bgSoft: "rgba(20, 184, 166, 0.08)",
+    borderStrong: "rgba(20, 184, 166, 0.28)",
+    accent: "#14B8A6",
+    fallbackGrad: "linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(6, 182, 212, 0.20))",
+  },
+  {
+    border: "#6366F1",
+    bgSoft: "rgba(99, 102, 241, 0.08)",
+    borderStrong: "rgba(99, 102, 241, 0.28)",
+    accent: "#6366F1",
+    fallbackGrad: "linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.20))",
+  },
+  {
+    border: "#E11D48",
+    bgSoft: "rgba(225, 29, 72, 0.08)",
+    borderStrong: "rgba(225, 29, 72, 0.28)",
+    accent: "#E11D48",
+    fallbackGrad: "linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(244, 63, 94, 0.20))",
+  },
+];
+
+const getCategoryColor = (indexOrId: number | string) => {
+  if (typeof indexOrId === "number") {
+    return categoryColorPalette[indexOrId % categoryColorPalette.length];
+  }
+  let hash = 0;
+  const str = String(indexOrId || "");
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+  }
+  return categoryColorPalette[Math.abs(hash) % categoryColorPalette.length];
+};
+
 type CategoryMobileCardProps = {
   category: any;
+  index?: number;
   onEdit: (category: any) => void;
   onDelete: (category: any) => void;
 };
 
 const CategoryMobileCard = ({
   category,
+  index = 0,
   onEdit,
   onDelete,
 }: CategoryMobileCardProps) => {
@@ -139,15 +226,27 @@ const CategoryMobileCard = ({
     (item: any) => item.isActive !== false,
   ).length;
   const parentName = category.parent?.name ?? "Root";
+  const colorTheme = getCategoryColor(index ?? category._id);
 
   return (
     <Box
       bg="var(--merchant-surface-alt)"
-      border="1px solid"
-      borderColor="var(--merchant-border-strong)"
+      border="1.5px solid"
+      borderColor={colorTheme.borderStrong}
       borderRadius="16px"
       overflow="hidden"
+      position="relative"
+      transition="all 0.2s ease"
+      boxShadow={`0 2px 10px ${colorTheme.bgSoft}`}
+      _hover={{
+        borderColor: colorTheme.border,
+        boxShadow: `0 4px 16px ${colorTheme.bgSoft}`,
+        transform: "translateY(-2px)",
+      }}
     >
+      {/* Top Color Accent Line */}
+      <Box h="3px" w="100%" bg={colorTheme.accent} />
+
       {/* Photo (top half) */}
       <Box position="relative" w="100%" aspectRatio={4 / 3}>
         {category.image?.url ? (
@@ -163,9 +262,9 @@ const CategoryMobileCard = ({
             h="100%"
             align="center"
             justify="center"
-            bg="linear-gradient(135deg, #4F7CFF33, #A855F733)"
+            bg={colorTheme.fallbackGrad}
           >
-            <Icon as={FiLayers} boxSize={8} color="#4F7CFF" />
+            <Icon as={FiLayers} boxSize={8} color={colorTheme.accent} />
           </Flex>
         )}
 
@@ -200,7 +299,7 @@ const CategoryMobileCard = ({
       </Box>
 
       {/* Details (bottom half) */}
-      <Box p={3}>
+      <Box p={3} bg={colorTheme.bgSoft}>
         <Text
           fontSize="sm"
           fontWeight="700"
@@ -467,23 +566,29 @@ const CategoryPage = () => {
           variant="panel"
           value={totalCategories}
           icon={FiLayers}
-          // color="#5B9BFF"
-          />
+          iconColor={dashboardPalette.accentStrong}
+          iconBg="rgba(59, 130, 246, 0.12)"
+          valueColor={dashboardPalette.accentStrong}
+        />
 
         <MerchantStatCard
           label="Active"
           variant="panel"
           value={activeCategories}
           icon={FiCheckCircle}
-          // color="#16C98D"
-          />
+          iconColor={dashboardPalette.success}
+          iconBg="rgba(70, 201, 139, 0.14)"
+          valueColor={dashboardPalette.success}
+        />
 
         <MerchantStatCard
           label="Root Categories"
           variant="panel"
           value={rootCategories}
           icon={FiFolder}
-          // color="#A855F7"
+          iconColor={dashboardPalette.info}
+          iconBg="rgba(139, 92, 246, 0.14)"
+          valueColor={dashboardPalette.info}
         />
 
         <MerchantStatCard
@@ -491,7 +596,9 @@ const CategoryPage = () => {
           value={categoriesWithFilters}
           variant="panel"
           icon={FiSliders}
-          // color="#F59E0B"
+          iconColor={dashboardPalette.warning}
+          iconBg="rgba(224, 179, 91, 0.14)"
+          valueColor={dashboardPalette.warning}
         />
       </SimpleGrid>
 
@@ -609,10 +716,11 @@ const CategoryPage = () => {
                 </Text>
               ) : (
                 <SimpleGrid columns={2} spacing={3}>
-                  {categoryStore.categories.map((category: any) => (
+                  {categoryStore.categories.map((category: any, idx: number) => (
                     <CategoryMobileCard
                       key={category._id}
                       category={category}
+                      index={idx}
                       onEdit={handleEditClick}
                       onDelete={handleDeleteClick}
                     />
@@ -657,25 +765,44 @@ const CategoryPage = () => {
               </Text>
             ) : (
               <SimpleGrid columns={{ base: 2, lg: 2, xl: 3 }} spacing={{ base: 3, md: 4 }}>
-                {categoryStore.categories.map((category: any) => {
+                {categoryStore.categories.map((category: any, idx: number) => {
                   const filterConfig = category.filterConfig || [];
                   const activeFilterCount = filterConfig.filter(
                     (item: any) => item.isActive !== false,
                   ).length;
                   const previewFilters = filterConfig.slice(0, 3);
+                  const colorTheme = getCategoryColor(idx);
 
                   return (
                     <Box
                       key={category._id}
-                      border="1px solid"
-                      borderColor="var(--merchant-border-strong)"
+                      border="1.5px solid"
+                      borderColor={colorTheme.borderStrong}
                       borderRadius="16px"
                       p={{ base: 3, md: 4 }}
                       bg="var(--merchant-surface-alt)"
                       display="flex"
                       flexDirection="column"
                       justifyContent="space-between"
+                      position="relative"
+                      overflow="hidden"
+                      boxShadow={`0 2px 10px ${colorTheme.bgSoft}`}
+                      transition="all 0.2s ease"
+                      _hover={{
+                        borderColor: colorTheme.border,
+                        boxShadow: `0 4px 16px ${colorTheme.bgSoft}`,
+                        transform: "translateY(-2px)",
+                      }}
                     >
+                      {/* Top Accent Strip */}
+                      <Box
+                        position="absolute"
+                        top={0}
+                        left={0}
+                        right={0}
+                        h="3px"
+                        bg={colorTheme.accent}
+                      />
                       <VStack align="stretch" spacing={3}>
                         {/* Category Name & Status Badges */}
                         <Box>
@@ -694,9 +821,9 @@ const CategoryPage = () => {
                             >
                               {category.parent
                                 ? typeof category.parent === "object"
-                                  ? category.parent.name
-                                  : "Child"
-                                : "Root"}
+                                ? category.parent.name
+                                : "Child"
+                              : "Root"}
                             </MerchantBadge>
                             <MerchantBadge
                               tone={category.isActive ? "success" : "danger"}
@@ -708,7 +835,7 @@ const CategoryPage = () => {
                         </Box>
 
                         {/* Filter Summary & Preview */}
-                        <Box>
+                        <Box p={2.5} borderRadius="12px" bg={colorTheme.bgSoft}>
                           <Text fontSize={{ base: "xs", md: "sm" }} color="var(--merchant-text-muted)" fontWeight="600" mb={1}>
                             {activeFilterCount} active filter{activeFilterCount === 1 ? "" : "s"}
                           </Text>

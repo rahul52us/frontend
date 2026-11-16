@@ -126,7 +126,7 @@ const HeaderProfile = observer(() => {
                 <Text fontSize="10px" fontWeight="700" color={cTextMuted} mb={1.5} textTransform="uppercase" letterSpacing="wider">
                   Theme Mode
                 </Text>
-                <ThemeModeSwitcher size="sm" />
+                <ThemeModeSwitcher />
               </Box>
               <Divider borderColor={cBorderStrong} />
               <MenuItem
