@@ -42,6 +42,7 @@ import {
   FiCheckCircle,
   FiChevronRight,
   FiImage,
+  FiMail,
   FiNavigation,
   FiPackage,
   FiPhone,
@@ -1261,6 +1262,7 @@ const roleOptions :any= [
         placeholder="Optional email address"
         error={errors.email}
         accentColor={PRIMARY_COLOR}
+        leftIcon={<FiMail size={15} />}
         hint="We'll send important updates here"
         autoComplete="email"
       />
