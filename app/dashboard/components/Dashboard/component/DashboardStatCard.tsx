@@ -3,9 +3,13 @@ import { motion, Variants } from 'framer-motion';
 import { FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 import { dashboardPalette } from '../../../../layouts/dashboardLayout/dashboardPalette';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+export const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 260, damping: 24 },
+  },
 };
 
 const MotionBox = motion(Box);
