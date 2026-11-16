@@ -902,6 +902,7 @@ const NotificationPage = () => {
             leftIcon={<FiSend />}
             colorScheme="brand"
             variant="outline"
+            display={{ base: "none", md: "block" }}
             borderRadius="12px"
             onClick={handleOpenCompose}
           >
