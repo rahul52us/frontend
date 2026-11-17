@@ -1,103 +1,209 @@
 "use client";
 
-import { Box, Flex, Text, Tooltip, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import NextImage from "next/image";
-import { headerHeight } from "../../../../component/config/utils/variable";
+import styled, { keyframes } from "styled-components";
+import { Avatar, useTheme } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import stores from "../../../../store/stores";
 import { dashboard } from "../../../../config/utils/routes";
-import { useRouter } from "next/navigation";
+import { headerHeight } from "../../../../component/config/utils/variable";
 import { WEBSITE_TITLE } from "../../../../config/utils/variables";
-import { dashboardPalette } from "../../dashboardPalette";
+import { themeConfig } from "../../../../theme/themeConfig";
 
-const SidebarLogo: React.FC = observer(() => {
+const fadeSlide = keyframes`
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+`;
+
+interface SidebarLogoProps {
+  showBrand?: boolean;
+}
+
+const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false }) => {
   const router = useRouter();
   const {
     layout: { isCallapse },
+    auth: { user },
   } = stores;
+  const theme = useTheme();
+  const brandScale = (theme.colors?.brand || {}) as Record<number, string>;
+  const activeCompany = (stores.companyStore as any)?.companyDetails || (stores.companyStore as any)?.getActiveCompany?.();
+  const companyName =
+    user?.companyDetails?.company_name ||
+    (typeof user?.company === "object" ? (user.company as any)?.company_name : null) ||
+    activeCompany?.company_name ||
+    WEBSITE_TITLE ||
+    "Dashboard";
 
-  const cShell = useColorModeValue("white", dashboardPalette.shell);
-  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
+  const logoUrl =
+    user?.companyDetails?.logo?.url ||
+    (typeof user?.company === "object" ? (user.company as any)?.logo?.url : null) ||
+    activeCompany?.logo?.url;
 
-  const brandMark = WEBSITE_TITLE
-    ? WEBSITE_TITLE
-        .split(/[\s-]+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join("·")
-    : "B·A";
+  const storedThemeColor =
+    typeof window !== "undefined"
+      ? localStorage.getItem("vendor_primary_theme_color") || localStorage.getItem("gym_primary_theme_color")
+      : null;
+
+  const userThemeColor =
+    user?.companyDetails?.primaryThemeColor ||
+    user?.companyOrg?.primaryThemeColor ||
+    (typeof user?.company === "object" ? (user.company as any)?.primaryThemeColor : null) ||
+    activeCompany?.primaryThemeColor ||
+    storedThemeColor ||
+    brandScale[500] ||
+    themeConfig.colors.primary;
+
+  const ringBackground = userThemeColor
+    ? `linear-gradient(135deg, ${userThemeColor} 0%, rgba(255,255,255,0.2) 100%)`
+    : `linear-gradient(135deg, ${brandScale[600] || "#065F68"} 0%, ${brandScale[400] || "#2A8A94"} 100%)`;
+
+  const ringShadow = userThemeColor
+    ? `0 0 0 2px ${userThemeColor}40, 0 4px 12px ${userThemeColor}4D`
+    : `0 0 0 2px ${brandScale[500] || "#065F68"}40, 0 4px 12px ${brandScale[500] || "#065F68"}4D`;
+
+  const ringHoverShadow = userThemeColor
+    ? `0 0 0 3px ${userThemeColor}66, 0 10px 24px ${userThemeColor}80`
+    : `0 0 0 3px ${brandScale[500] || "#065F68"}66, 0 10px 24px ${brandScale[500] || "#065F68"}80`;
+
+  const accentLineBackground = userThemeColor
+    ? `linear-gradient(90deg, transparent, ${userThemeColor}99 30%, ${userThemeColor}99 70%, transparent)`
+    : `linear-gradient(90deg, transparent, ${brandScale[500] || "#065F68"}99 30%, ${brandScale[400] || "#2A8A94"}99 70%, transparent)`;
+
+  const initials = (companyName || "BV")
+    .split(" ")
+    .slice(0, 2)
+    .map((w: string) => w[0]?.toUpperCase())
+    .join("");
+
+  const shouldShowBrand = !isCallapse || showBrand;
 
   return (
-    <Flex
-      bg={cShell}
-      justifyContent={isCallapse ? "center" : undefined}
-      flexDirection={isCallapse ? "column" : undefined}
-      alignItems="center"
-      height={headerHeight}
-      borderBottom="1px solid"
-      borderBottomColor={cBorder}
+    <LogoWrapper
+      $height={headerHeight}
+      onClick={() => router.push(dashboard.home)}
+      role="button"
+      aria-label="Go to home"
     >
-      <Box
-        cursor="pointer"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        zIndex={9999999}
-        onClick={() => router.push(dashboard.home)}
+      <AvatarRing
+        $background={ringBackground}
+        $boxShadow={ringShadow}
+        $hoverBoxShadow={ringHoverShadow}
       >
-        {isCallapse ? (
-          <Text fontWeight={700} fontSize="lg" color={cAccentStrong}>
-            {brandMark}
-          </Text>
+        {logoUrl ? (
+          <Avatar
+            src={logoUrl}
+            size="sm"
+            borderRadius="10px"
+            bg={brandScale[500] || "transparent"}
+            style={{ objectFit: "contain" }}
+          />
         ) : (
-          <Flex alignItems="center" columnGap={4} maxW="100%" px={4} ml={2}>
-            <Box display="none" position="relative" width={isCallapse ? "35px" : "50px"} height={isCallapse ? "35px" : "50px"}>
-              <NextImage
-                src={"/images/whiteLogo.png"}
-                alt={WEBSITE_TITLE}
-                fill
-                style={{ objectFit: "contain", borderRadius: "50%" }}
-              />
-            </Box>
-            <Tooltip
-              label={WEBSITE_TITLE}
-              hasArrow
-              isDisabled={false}
-            >
-              <Box>
-                <Text
-                  textAlign="left"
-                  fontSize="32px"
-                  fontFamily="heading"
-                  fontWeight="bold"
-                  lineHeight="0.95"
-                  letterSpacing="0.08em"
-                  color={cAccentStrong}
-                  noOfLines={1}
-                  isTruncated
-                >
-                  {brandMark}
-                </Text>
-                <Text
-                  mt={1}
-                  fontSize="xs"
-                  letterSpacing="0.18em"
-                  textTransform="uppercase"
-                  color={cTextSoft}
-                  noOfLines={1}
-                >
-                  Merchant Studio
-                </Text>
-              </Box>
-            </Tooltip>
-          </Flex>
+          <Monogram>{initials}</Monogram>
         )}
-      </Box>
-    </Flex>
+      </AvatarRing>
+
+      {shouldShowBrand && (
+        <BrandText>
+          <CompanyName>{companyName}</CompanyName>
+          <TagLine>Dashboard</TagLine>
+        </BrandText>
+      )}
+
+      <AccentLine $background={accentLineBackground} />
+    </LogoWrapper>
   );
 });
 
 export default SidebarLogo;
+
+const LogoWrapper = styled.div<{ $height: string }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: ${({ $height }) => $height};
+  padding: 0 18px;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.25) 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+
+  backdrop-filter: blur(6px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(2px);
+  }
+
+  transition: all 0.2s ease;
+`;
+
+const AvatarRing = styled.div<{
+  $background: string;
+  $boxShadow: string;
+  $hoverBoxShadow: string;
+}>`
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${({ $background }) => $background};
+  box-shadow: ${({ $boxShadow }) => $boxShadow};
+  transition: all 0.25s ease;
+
+  ${LogoWrapper}:hover & {
+    transform: scale(1.08);
+    box-shadow: ${({ $hoverBoxShadow }) => $hoverBoxShadow};
+  }
+`;
+
+const Monogram = styled.span`
+  font-family: "Sora", "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sidebar-active-text, #ffffff);
+`;
+
+const BrandText = styled.div`
+  display: flex;
+  flex-direction: column;
+  animation: ${fadeSlide} 0.25s ease both;
+`;
+
+const CompanyName = styled.h2`
+  font-family: "Sora", "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sidebar-active-text, #ffffff);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+`;
+
+const TagLine = styled.span`
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sidebar-inactive-text, rgba(255, 255, 255, 0.7));
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const AccentLine = styled.div<{ $background: string }>`
+  position: absolute;
+  bottom: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: ${({ $background }) => $background};
+`;

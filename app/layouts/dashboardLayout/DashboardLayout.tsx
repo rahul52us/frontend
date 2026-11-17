@@ -13,25 +13,25 @@ import DashboardMobileBottomNav from './DashboardMobileBottomNav/DashboardMobile
 import { ChevronRightIcon, CloseIcon } from '@chakra-ui/icons';
 import PageLoader from '../../component/common/Loader/PageLoader';
 import ThemeChangeContainer from '../../component/common/ThemeChangeContainer/ThemeChangeContainer';
-import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth } from '../../component/config/utils/variable';
+import { contentLargeBodyPadding, contentSmallBodyPadding, headerHeight, mediumSidebarWidth, sidebarWidth } from '../../component/config/utils/variable';
 import { dashboardPalette } from './dashboardPalette';
 import useRegisterOverlay from '../../hooks/useRegisterOverlay';
 
-const MainContainer = styled.div<{ $isMobile: boolean; $bgPattern: string }>`
+const MainContainer = styled.div<{ $isMobile: boolean }>`
   display: flex;
   transition: all 0.3s ease-in-out;
   overflow: hidden;
-  margin-left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
   min-height: 100vh;
-  background: ${(props) => props.$bgPattern};
+  background: transparent;
 `;
 
-const Container = styled.div<{ $fullScreenMode: boolean }>`
+const Container = styled.div<{ $fullScreenMode: boolean; $sidebarOffset: string }>`
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease-in-out;
   min-height: 100vh;
-  width: 100%;
+  width: ${({ $sidebarOffset }) => `calc(100% - ${$sidebarOffset})`};
+  margin-left: ${({ $sidebarOffset }) => $sidebarOffset};
 `;
 
 const HeaderContainer = styled.div<{
@@ -42,6 +42,7 @@ const HeaderContainer = styled.div<{
   $runtimeTopInset: number;
   $bgHeader: string;
   $borderColor: string;
+  $sidebarOffset: string;
 }>`
   z-index: 99;
   height: calc(${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} + var(--safe-area-top, env(safe-area-inset-top, 0px)));
@@ -53,7 +54,7 @@ const HeaderContainer = styled.div<{
   background: ${(props) => props.$bgHeader};
   backdrop-filter: blur(14px);
   border-bottom: 1px solid ${(props) => props.$borderColor};
-  left: ${(props) => (props.$isMobile ? '0px' : mediumSidebarWidth)};
+  left: ${({ $sidebarOffset }) => $sidebarOffset};
   transition: all 0.3s ease-in-out;
 `;
 
@@ -64,25 +65,22 @@ const ContentContainer = styled.div<{
   $isMobile: boolean;
   $runtimeTopInset: number;
   $textColor: string;
-  $bgContent: string;
   $hasMobileBottomNav: boolean;
+  $sidebarOffset: string;
 }>`
-  padding: ${({ $isMobile }) =>
-    $isMobile ? '4px 6px' : `${contentLargeBodyPadding}`};
+  padding: 0;
   padding-bottom: ${({ $isMobile, $hasMobileBottomNav }) =>
     $isMobile && $hasMobileBottomNav
       ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
-      : $isMobile
-      ? '8px'
-      : `${contentLargeBodyPadding}`};
-  width: ${({ $isMobile }) =>
-    $isMobile ? '100vw' : `calc(100vw - ${mediumSidebarWidth})`};
+      : '0px'};
+  width: ${({ $isMobile, $sidebarOffset }) =>
+    $isMobile ? '100vw' : `calc(100vw - ${$sidebarOffset})`};
   overflow-x: hidden;
   min-height: calc(100vh - ${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} - var(--safe-area-top, env(safe-area-inset-top, 0px)));
   transition: all 0.3s ease-in-out;
   margin-top: calc(${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} + var(--safe-area-top, env(safe-area-inset-top, 0px)));
   color: ${(props) => props.$textColor};
-  background: ${(props) => props.$bgContent};
+  background: transparent;
 
   @media (max-width: 1023px) {
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
@@ -296,10 +294,11 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   const isErrorBanner = shopStatusBanner?.status === 'error';
   const shopBannerBorder = isErrorBanner ? shopBannerBorderError : shopBannerBorderWarning;
   const shopBannerIconBg = isErrorBanner ? shopBannerIconBgError : shopBannerIconBgWarning;
+  const sidebarOffset = isMobile ? '0px' : isCallapse ? mediumSidebarWidth : sidebarWidth;
 
   return user ? (
-    <Box>
-      <MainContainer $isMobile={isMobile} $bgPattern={bgPagePattern}>
+    <Box bg={pageBg} minH="100vh">
+      <MainContainer $isMobile={isMobile}>
         <Box ref={sidebarRef}>
           <SidebarLayout
             onItemClick={handleSidebarItemClick}
@@ -309,7 +308,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             setOpenMobileSideDrawer={closeDrawerModel}
           />
         </Box>
-        <Container $fullScreenMode={fullScreenMode}>
+        <Container $fullScreenMode={fullScreenMode} $sidebarOffset={sidebarOffset}>
           <HeaderContainer
             $isMobile={isMobile}
             $sizeStatus={sizeStatus}
@@ -318,6 +317,7 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
             $runtimeTopInset={runtimeTopInset}
             $bgHeader={bgHeader}
             $borderColor={borderColor}
+            $sidebarOffset={sidebarOffset}
           >
             <HeaderLayout />
           </HeaderContainer>
@@ -331,8 +331,8 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   $sizeStatus={sizeStatus}
   $runtimeTopInset={runtimeTopInset}
   $textColor={textColor}
-  $bgContent={bgContent}
   $hasMobileBottomNav={showMobileBottomNav}
+  $sidebarOffset={sidebarOffset}
 >
   {shouldRenderShopStatusBanner ? (
     <Alert

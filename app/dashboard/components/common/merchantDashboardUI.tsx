@@ -153,7 +153,6 @@ export const MerchantPageShell = ({
   children: React.ReactNode;
   maxW?: any;
 }) => {
-  const pageBg = useColorModeValue("gray.50", dashboardPalette.page);
   const formSx = useMerchantFormSx();
 
   // CSS variables shared by every child component
@@ -171,11 +170,11 @@ export const MerchantPageShell = ({
   };
 
   return (
-    <Box minH="100vh" bg={pageBg} style={themeVars as any}>
+    <Box minH="100%" bg="transparent" style={themeVars as any}>
       <Container
         maxW={maxW}
-        px={{ base: 2, sm: 4, md: 6 }}
-        py={{ base: 1, md: 6 }}
+        px={{ base: 3, sm: 4, md: 6 }}
+        py={{ base: 3, md: 5 }}
         sx={{
           ...(formSx as any),
           "@media (prefers-reduced-motion: reduce)": {

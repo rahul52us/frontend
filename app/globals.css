@@ -334,4 +334,21 @@ select {
   --skeleton-end-color: var(--skeleton-end) !important;
 }
 
+/* Custom Scrollbar for dashboard sidebar and drawer */
+.customScrollBar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.customScrollBar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.customScrollBar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+}
+.customScrollBar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+
 

@@ -1,6 +1,6 @@
-"use client"; // Add this for client-side component in Next.js
+"use client";
 
-import { Box, Flex, IconButton, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
+import { Flex, IconButton, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi";
 import stores from "../../../../../store/stores";
@@ -8,58 +8,54 @@ import SearchBar from "../HeaderNavbar/SearchBar/SearchBar";
 import { dashboardPalette } from "../../../dashboardPalette";
 
 const HeaderLogo = observer(() => {
-  const isLargerThanXl = useBreakpointValue({ lg: true }) ?? false;
+  const isLargerThanLg = useBreakpointValue({ base: false, lg: true }) ?? false;
 
   const {
-    layout: { fullScreenMode, openDashSidebarFun, isCallapse },
+    layout: { openDashSidebarFun, isCallapse },
   } = stores;
 
-  // Theme-aware tokens
-  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cBorder = useColorModeValue("blue.100", dashboardPalette.border);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
+  const toggleBtnBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
+  const toggleBtnHoverBg = useColorModeValue("blackAlpha.100", "whiteAlpha.200");
+  const toggleBtnActiveBg = useColorModeValue("blackAlpha.200", "whiteAlpha.300");
+  const toggleBtnColor = useColorModeValue("gray.700", "gray.200");
+  const toggleBtnBorder = useColorModeValue("rgba(0,0,0,0.06)", "rgba(255,255,255,0.08)");
 
   return (
-    <Flex width="100%" alignItems="center"  display="flex" ml={2}>
-      {isLargerThanXl && (
-        <Flex alignItems="center">
+    <Flex width={{ base: "100%", md: "auto" }} minW={0} alignItems="center" gap={{ base: 2, md: 3 }} flexShrink={0}>
+      {isLargerThanLg && (
+        <Flex alignItems="center" flexShrink={0}>
           <IconButton
-            variant="ghost"
-            aria-label="Collapse Sidebar"
-            fontSize="2xl"
-            color={cText}
-            bg={cSurfaceAlt}
-            border="1px solid"
-            borderColor={cBorder}
-            _hover={{ color: cAccent, bg: cSurfaceSoft }}
-            _active={{ bg: cSurfaceSoft }}
+            aria-label="Toggle sidebar"
             icon={
               isCallapse ? (
-                <BiRightArrowAlt fontSize={25} />
+                <BiRightArrowAlt fontSize={21} />
               ) : (
-                <BiLeftArrowAlt fontSize={25} />
+                <BiLeftArrowAlt fontSize={21} />
               )
             }
-            size="md"
-            borderRadius="12px"
-            sx={{ marginRight: "1.5rem" }}
-            onClick={() => {
-              openDashSidebarFun();
+            onClick={() => openDashSidebarFun()}
+            isRound
+            bg={toggleBtnBg}
+            color={toggleBtnColor}
+            border="1px solid"
+            borderColor={toggleBtnBorder}
+            w="38px"
+            h="38px"
+            minW="38px"
+            _hover={{
+              bg: toggleBtnHoverBg,
+              color: "var(--color-primary, #065F68)",
+              transform: "scale(1.05)",
             }}
-            transition="all 0.2s"
+            _active={{
+              bg: toggleBtnActiveBg,
+              transform: "scale(0.96)",
+            }}
+            transition="all 0.2s ease"
           />
         </Flex>
       )}
       <SearchBar />
-      <Box></Box>
-      {/* <Input
-        type="text"
-        value=""
-        placeholder="Search here"
-        w={isLargerThanXl ? "90%" : "95%"}
-      /> */}
     </Flex>
   );
 });
