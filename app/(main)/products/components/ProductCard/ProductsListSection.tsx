@@ -31,7 +31,7 @@ import {
 import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   FiCheck,
   FiFilter,
@@ -1267,4 +1267,4 @@ const ProductsListSection = observer(() => {
   );
 });
 
-export default ProductsListSection;
+export default memo(ProductsListSection);

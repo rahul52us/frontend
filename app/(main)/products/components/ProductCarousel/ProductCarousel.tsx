@@ -21,7 +21,7 @@ import {
 import { motion } from 'framer-motion';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { FaCartPlus, FaHeart, FaRegHeart, FaStar } from 'react-icons/fa';
 import { FiArrowRight, FiAward, FiShoppingCart } from 'react-icons/fi';
 import { useCartToast } from '../../../../hooks/useCartToast';
@@ -145,7 +145,7 @@ const ProductCarouselSkeleton = () => {
 };
 
 // ─── Mobile-First Product Card Component ────────────────────────────────
-const ProductCard = ({
+const ProductCard = React.memo(({
   product,
   onSelect,
   onAddToCart,
@@ -398,7 +398,7 @@ const ProductCard = ({
       </Flex>
     </MotionBox>
   );
-};
+});
 
 // ─── Main Carousel Component ────────────────────────────────────────────
 const ProductCarousel = observer(() => {
@@ -464,12 +464,12 @@ const ProductCarousel = observer(() => {
   const { cartStore } = stores;
   const { showAddToCartToast } = useCartToast();
 
-  const handleSelectProduct = (product: Product) => {
+  const handleSelectProduct = useCallback((product: Product) => {
     const targetId = product.productId || product._id || product.id;
     router.push(`/product?productId=${targetId}`);
-  };
+  }, [router]);
 
-  const handleAddToCart = async (product: Product) => {
+  const handleAddToCart = useCallback(async (product: Product) => {
     try {
       const productToAdd = product.raw || product;
       await cartStore.addToCart(productToAdd);
@@ -484,7 +484,7 @@ const ProductCarousel = observer(() => {
         position: 'bottom-right',
       });
     }
-  };
+  }, [cartStore, showAddToCartToast, toast]);
 
   if (isLoading) {
     return <ProductCarouselSkeleton />;
@@ -671,4 +671,4 @@ const ProductCarousel = observer(() => {
     </Box>
   );
 });
-export default ProductCarousel;
+export default memo(ProductCarousel);

@@ -17,7 +17,7 @@ import {
 import { keyframes } from "@emotion/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { memo } from "react";
 import { FaStar } from "react-icons/fa";
 import {
   FiArrowUpRight,
@@ -851,4 +851,4 @@ const ShopCard: React.FC<ShopCardProps> = ({
   );
 };
 
-export default ShopCard;
+export default memo(ShopCard);

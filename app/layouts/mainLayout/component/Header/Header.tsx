@@ -27,6 +27,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   FiCreditCard,
   FiGift,
@@ -43,9 +44,7 @@ import {
   FiUser,
   FiZap,
 } from "react-icons/fi";
-import CartDrawer from "../../../../component/Cart/component/CartDrawer/CartDrawer";
 import WhatsAppButton from "../../../../component/common/whatsApp/whatsAppButton";
-import WishlistDrawer from "../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer";
 import useRegisterOverlay from "../../../../hooks/useRegisterOverlay";
 import stores from "../../../../store/stores";
 import {  ThemeModeSwitcher } from "../../../../theme/ThemeModeSwitcher";
@@ -53,6 +52,15 @@ import HeroNavButton from "./component/HeroNavButton";
 import NavItemsLayout from "./component/NavItemsLayout";
 import UserMenu from "./component/UserMenu";
 import SearchInput from "./element/SearchInput";
+
+const CartDrawer = dynamic(
+  () => import("../../../../component/Cart/component/CartDrawer/CartDrawer"),
+  { ssr: false }
+);
+const WishlistDrawer = dynamic(
+  () => import("../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer"),
+  { ssr: false }
+);
 
 const promoMessages = [
   { text: "Flash Sale: Up to 60% off on local treasures!", icon: FiZap },

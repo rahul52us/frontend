@@ -12,7 +12,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { FiCheck, FiPlus } from "react-icons/fi";
 import { useCartToast } from "../../../../hooks/useCartToast";
 import stores from "../../../../store/stores";
@@ -279,4 +279,4 @@ const ProductCard = ({ product, i }: { product: any; i?: number }) => {
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);

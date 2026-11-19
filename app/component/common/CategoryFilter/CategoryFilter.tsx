@@ -20,7 +20,7 @@ import {
 import { motion } from 'framer-motion';
 import { observer } from 'mobx-react-lite';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, memo } from 'react';
 import { FiArrowRight, FiArrowUpRight, FiGrid } from 'react-icons/fi';
 import categoryStore from '../../../store/categoryStore/categoryStore';
 
@@ -47,7 +47,9 @@ const CategorySection = observer(() => {
   const skeletonEnd = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
-    categoryStore.getAllCategories({ isActive: true, isFeatured: true });
+    if (!categoryStore.categories || categoryStore.categories.length === 0) {
+      categoryStore.getAllCategories({ isActive: true, isFeatured: true });
+    }
   }, []);
 
   const checkScroll = useCallback(() => {
@@ -395,4 +397,4 @@ const CategorySection = observer(() => {
   );
 });
 
-export default CategorySection;
+export default memo(CategorySection);
