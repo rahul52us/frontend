@@ -173,8 +173,8 @@ export const MerchantPageShell = ({
     <Box minH="100%" bg="transparent" style={themeVars as any}>
       <Container
         maxW={maxW}
-        px={{ base: 3, sm: 4, md: 6 }}
-        py={{ base: 3, md: 5 }}
+        px={{ base: 3, sm: 4, md: 5 }}
+        py={{ base: 2, md: 3 }}
         sx={{
           ...(formSx as any),
           "@media (prefers-reduced-motion: reduce)": {

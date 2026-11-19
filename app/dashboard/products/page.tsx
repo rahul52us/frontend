@@ -678,7 +678,7 @@ const ProductsPage = observer(() => {
 
   return (
     <Box bg="transparent">
-      <Box maxW="1500px" mx="auto" px={{ base: 4, sm: 6, md: 8 }} pb={{ base: 6, md: 10 }} pt={{ base: 4, md: 6 }}>
+      <Box maxW="1500px" mx="auto" px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 4, md: 6 }} pt={{ base: 2, md: 3 }}>
         <Flex align="start" justify="space-between" gap={4}>
           <Box>
             <HStack

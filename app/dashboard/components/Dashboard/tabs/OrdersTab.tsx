@@ -50,14 +50,14 @@ function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.900", "white");
   const textMuted = useColorModeValue("gray.500", "gray.400");
-  
+
   const toneConfig: Record<string, any> = {
     primary: { bg: useColorModeValue("blue.50", "blue.900"), color: useColorModeValue("blue.600", "blue.200"), ring: useColorModeValue("blue.100", "blue.800") },
     mint: { bg: useColorModeValue("green.50", "green.900"), color: useColorModeValue("green.600", "green.200"), ring: useColorModeValue("green.100", "green.800") },
     peach: { bg: useColorModeValue("orange.50", "orange.900"), color: useColorModeValue("orange.600", "orange.200"), ring: useColorModeValue("orange.100", "orange.800") },
     amber: { bg: useColorModeValue("yellow.50", "yellow.900"), color: useColorModeValue("yellow.600", "yellow.200"), ring: useColorModeValue("yellow.100", "yellow.800") },
   };
-  
+
   const t = toneConfig[tone] || toneConfig.primary;
 
   return (
@@ -96,7 +96,7 @@ function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
 const OrderCard = ({ order, onClick, bg, borderColor, textColor, textMuted, getStatusMeta }: any) => {
   const meta = getStatusMeta(order.orderStatus);
   const initials = (order.user?.name || "U K").split(" ").map((n: string) => n[0]).slice(0, 2).join("");
-  
+
   const addressStr = [
     order.shippingAddress?.addressLine1,
     order.shippingAddress?.city,
@@ -264,7 +264,7 @@ const OrdersTab = observer(() => {
       Number(orderStore.statusCounts.shipped || 0);
     const delivered = Number(orderStore.statusCounts.delivered || 0);
     const revenue = Number(orderStore.summary?.revenueTotal || 0);
-    
+
     return { total, pending, inTransit, delivered, revenue };
   }, [orderStore.statusCounts, orderStore.summary]);
 
@@ -291,7 +291,7 @@ const OrdersTab = observer(() => {
   const handleCloseDrawer = () => {
     onClose();
     setSelectedOrderId(null);
-    fetchOrders(); 
+    fetchOrders();
   };
 
   const selectedOrder = orderStore.companyOrders.find(
@@ -308,40 +308,44 @@ const OrdersTab = observer(() => {
     })?.key || "all";
 
   return (
-    <Box minH="100vh" bg={bg} fontFamily="body">
-      <Box px={{ sm: 4 }} pb={{ base: 40, md: 24 }} pt={{ base: 0, sm: 6 }}>
-   
-
-          <Box 
-  mb={{ base: 3, sm: 6 }} 
-  borderRadius={{ base: "xl", sm: "28px" }} // Sleeker radius on mobile
-  border="1px solid" 
-  borderColor={borderColor} 
-  bg={cardBg} 
-  px={{base:3,md:6}}
-  py={{ base: 2, md: 6 }} // Tighter padding on mobile
-  boxShadow={{ base: "none", sm: "sm" }}
->
-  <Flex 
-    direction={{ base: "column", sm: "row" }} 
-    align={{ sm: "center" }} 
-    justify={{ sm: "space-between" }} 
+    <Box minH="100%" bg="transparent" fontFamily="body">
+      <Box
+        maxW="1500px"
+        mx="auto"
+        px={{ base: 3, sm: 4, md: 5 }}
+        pb={{ base: 4, md: 6 }}
+        pt={{ base: 2, md: 3 }}
+      >
+        <Box
+          mb={{ base: 3, sm: 4 }}
+          borderRadius={{ base: "xl", sm: "20px" }}
+          border="1px solid"
+          borderColor={borderColor}
+          bg={cardBg}
+          px={{ base: 3, md: 5 }}
+          py={{ base: 2.5, md: 4 }}
+          boxShadow={{ base: "none", sm: "sm" }}
+        >
+  <Flex
+    direction={{ base: "column", sm: "row" }}
+    align={{ sm: "center" }}
+    justify={{ sm: "space-between" }}
     gap={{ base: 3, sm: 4 }}
   >
     <Box minW={0} w="full">
       {/* Top Meta Row: Badge + Mobile Revenue */}
       <Flex justify="space-between" align="center" mb={{ sm: 2 }}>
-        <Badge 
-          display="inline-flex" 
-          alignItems="center" 
-          gap={1.5} 
-          borderRadius="full" 
-          bg="green.100" 
-          color="green.700" 
-          px={2.5} 
-          py={{base:0.5,md:1}} 
-          fontSize={{base:"10px",md:"11px"}} 
-          fontWeight="semibold" 
+        <Badge
+          display="inline-flex"
+          alignItems="center"
+          gap={1.5}
+          borderRadius="full"
+          bg="green.100"
+          color="green.700"
+          px={2.5}
+          py={{base:0.5,md:1}}
+          fontSize={{base:"10px",md:"11px"}}
+          fontWeight="semibold"
           textTransform="none"
         >
           <Circle size={1.5} bg="green.600" />
@@ -359,11 +363,11 @@ const OrdersTab = observer(() => {
         </Box>
       </Flex>
 
-      <Heading 
-        fontFamily="heading" 
-        fontSize={{ sm: "2xl" }} 
-        fontWeight="bold" 
-        letterSpacing="tight" 
+      <Heading
+        fontFamily="heading"
+        fontSize={{ sm: "2xl" }}
+        fontWeight="bold"
+        letterSpacing="tight"
         color={textColor}
       >
         Good day, Merchant 👋
@@ -536,7 +540,7 @@ const OrdersTab = observer(() => {
                     const meta = getOrderStatusMeta(o.orderStatus);
                     const initials = (o.user?.name || "U K").split(" ").map((n: string) => n[0]).slice(0, 2).join("");
                     const addressStr = [o.shippingAddress?.addressLine1, o.shippingAddress?.city].filter(Boolean).join(", ") || "No address provided";
-                    
+
                     return (
                       <Tr key={o._id} onClick={() => handleRowClick(o)} cursor="pointer" borderBottom="1px solid" borderColor={borderColor} transition="all 0.2s" _hover={{ bg: useColorModeValue("gray.50", "gray.700") }} _last={{ borderBottom: "none" }}>
                         <Td px={5} py={4}>
