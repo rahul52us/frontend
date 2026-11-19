@@ -677,9 +677,9 @@ const ProductsPage = observer(() => {
   }
 
   return (
-    <Box bg={pageBg}>
-      <Box maxW="1500px" mx="auto" px={{ base: 0, md: 1 }} pb={{ base: 4, md: 8 }} pt={{ base: 2, md: 4 }}>
-        <Flex align="start" justify="space-between" gap={4} px={{ base: 0, md: 1 }}>
+    <Box bg="transparent">
+      <Box maxW="1500px" mx="auto" px={{ base: 4, sm: 6, md: 8 }} pb={{ base: 6, md: 10 }} pt={{ base: 4, md: 6 }}>
+        <Flex align="start" justify="space-between" gap={4}>
           <Box>
             <HStack
               spacing={1.5}
@@ -724,11 +724,10 @@ const ProductsPage = observer(() => {
         </Flex>
 
         <Grid
-        templateColumns={{base:"1fr 1fr",md:"1fr 1fr 1fr 1fr"}}
+          templateColumns={{ base: "1fr 1fr", md: "1fr 1fr 1fr 1fr" }}
           mt={6}
-          gap={3}
+          gap={4}
           overflowX="auto"
-          px={{ base: 0, md: 1 }}
           pb={1}
         >
           {loading ? (
@@ -743,17 +742,17 @@ const ProductsPage = observer(() => {
           )}
         </Grid>
 
-        <VStack align="stretch" spacing={3} mt={{base:2,md:6}} px={{ base: 0, md: 1 }}>
+        <VStack align="stretch" spacing={3.5} mt={{ base: 4, md: 6 }}>
           <InputGroup>
             <InputLeftElement pointerEvents="none" h="100%">
               <Icon as={FaSearch} color={textSoft} />
             </InputLeftElement>
             <Input
-              h={{base:38,md:"48px"}}
+              h={{ base: "40px", md: "48px" }}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search products, brands..."
-              borderRadius="22px"
+              borderRadius="20px"
               bg={surface}
               borderColor={border}
               color={text}
@@ -768,7 +767,7 @@ const ProductsPage = observer(() => {
 
           <Flex
             align={{ base: "stretch", md: "center" }}
-            gap={2}
+            gap={2.5}
             direction={{ base: "column", sm: "row" }}
           >
             <CategoryFilterDropdown
@@ -865,14 +864,14 @@ const ProductsPage = observer(() => {
           </HStack>
         </VStack>
 
-        <Flex justify="space-between" align="end" mt={7} px={{ base: 0, md: 1 }}>
+        <Flex justify="space-between" align="end" mt={8}>
           <Text fontSize={{ base: "lg", md: "2xl" }} fontWeight="700" color={text}>
             {showInactive ? "Recently deleted" : "Active catalog"}
           </Text>
           <Badge
             borderRadius="full"
-            px={{base:2,md:3}}
-            py={{base:1,md:1.5}}
+            px={{ base: 2.5, md: 3.5 }}
+            py={{ base: 1, md: 1.5 }}
             bg={accentSoft}
             color={accentStrong}
             borderWidth="1px"
@@ -883,7 +882,7 @@ const ProductsPage = observer(() => {
         </Flex>
 
         {loading ? (
-          <SimpleGrid columns={{ base: 2, md: 4, xl: 5 }} spacing={{ base: 2.5, md: 4 }} mt={4} px={{ base: 0, md: 1 }}>
+          <SimpleGrid columns={{ base: 2, md: 4, xl: 5 }} spacing={{ base: 3, md: 4.5 }} mt={4}>
             {Array.from({ length: 8 }).map((_, index) => (
               <ProductCardSkeleton key={index} />
             ))}
