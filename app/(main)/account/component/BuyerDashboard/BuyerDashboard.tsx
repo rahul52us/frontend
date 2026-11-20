@@ -286,7 +286,7 @@ const BuyerDashboard = () => {
         </Flex>
       </Box>
 
-      <Box px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} flex="1" overflowY="auto">
+      <Box px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} flex="1" overflowY="auto" bg="var(--color-bg)">
         {purchaseLoading ? (
           <Flex
             minH="280px"
@@ -294,13 +294,13 @@ const BuyerDashboard = () => {
             justify="center"
             direction="column"
             gap={3}
-            bg="white"
+            bg="var(--color-surface)"
             borderRadius="2xl"
             borderWidth="1px"
-            borderColor="gray.200"
+            borderColor="var(--color-border)"
           >
             <Spinner color="var(--color-primary)" thickness="3px" size="lg" />
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="var(--color-text-secondary)">
               Loading purchase items...
             </Text>
           </Flex>
@@ -311,14 +311,14 @@ const BuyerDashboard = () => {
             justify="center"
             direction="column"
             gap={3}
-            bg="white"
+            bg="var(--color-surface)"
             borderRadius="2xl"
             borderWidth="1px"
-            borderColor="red.100"
+            borderColor="red.300"
             p={6}
           >
             <Icon as={FiAlertCircle} color="red.400" boxSize={7} />
-            <Text fontSize="sm" color="red.500" textAlign="center">
+            <Text fontSize="sm" color="red.400" textAlign="center">
               {purchaseError}
             </Text>
           </Flex>
@@ -329,52 +329,52 @@ const BuyerDashboard = () => {
             justify="center"
             direction="column"
             gap={3}
-            bg="white"
+            bg="var(--color-surface)"
             borderRadius="2xl"
             borderWidth="1px"
-            borderColor="gray.200"
+            borderColor="var(--color-border)"
             p={6}
           >
-            <Icon as={FiShoppingBag} color="var(--color-secondary)" boxSize={8} />
-            <Text fontWeight="700" color="gray.700">
+            <Icon as={FiShoppingBag} color="var(--color-primary)" boxSize={8} />
+            <Text fontWeight="700" color="var(--color-text-primary)">
               No posted purchases yet
             </Text>
-            <Text fontSize="sm" color="gray.500" textAlign="center" maxW="380px">
+            <Text fontSize="sm" color="var(--color-text-secondary)" textAlign="center" maxW="380px">
               This seller connection exists, but there are no posted purchase records to show yet.
             </Text>
           </Flex>
         ) : (
           <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3}>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
                 <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
                   Posted Bills
                 </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-primary)" mt={1.5} lineHeight="1.05">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-text-primary)" mt={1.5} lineHeight="1.05">
                   {purchaseDetails.summary.totalRecords}
                 </Text>
               </Box>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="green.100" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="green.700" textTransform="uppercase" letterSpacing="0.08em">
+              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+                <Text fontSize="10px" fontWeight="800" color="green.400" textTransform="uppercase" letterSpacing="0.08em">
                   Total Spent
                 </Text>
-                <Text fontSize={{ base: "md", md: "xl" }} fontWeight="900" color="green.800" mt={1.5} lineHeight="1.1" wordBreak="break-word">
+                <Text fontSize={{ base: "md", md: "xl" }} fontWeight="900" color="green.400" mt={1.5} lineHeight="1.1" wordBreak="break-word">
                   {formatCurrency(purchaseDetails.summary.totalSpent)}
                 </Text>
               </Box>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
                 <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
                   Item Lines
                 </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-primary)" mt={1.5} lineHeight="1.05">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-text-primary)" mt={1.5} lineHeight="1.05">
                   {purchaseDetails.summary.totalLineItems}
                 </Text>
               </Box>
-              <Box bg="white" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="orange.100" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="orange.700" textTransform="uppercase" letterSpacing="0.08em">
+              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
+                <Text fontSize="10px" fontWeight="800" color="orange.400" textTransform="uppercase" letterSpacing="0.08em">
                   Total Qty
                 </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="orange.800" mt={1.5} lineHeight="1.05">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="orange.400" mt={1.5} lineHeight="1.05">
                   {purchaseDetails.summary.totalQuantity}
                 </Text>
               </Box>
@@ -385,37 +385,37 @@ const BuyerDashboard = () => {
               justify="space-between"
               align={{ base: "stretch", md: "start" }}
               gap={3}
-              bg="white"
+              bg="var(--color-surface)"
               borderRadius="2xl"
               borderWidth="1px"
-              borderColor="gray.200"
+              borderColor="var(--color-border)"
               boxShadow="sm"
               p={{ base: 3.5, md: 4 }}
             >
-              <Text fontSize="sm" color="gray.500">
+              <Text fontSize="sm" color="var(--color-text-secondary)">
                 Showing latest {purchaseDetails.summary.shownRecords} purchase records
                 {purchaseDetails.summary.totalRecords > purchaseDetails.summary.shownRecords
                   ? ` out of ${purchaseDetails.summary.totalRecords}`
                   : ""}
                 .
               </Text>
-              <Text fontSize="sm" color="gray.500" fontWeight="700">
+              <Text fontSize="sm" color="var(--color-text-primary)" fontWeight="700">
                 Last purchase: {formatDate(purchaseDetails.summary.lastPurchaseAt)}
               </Text>
             </Flex>
 
-            <Divider borderColor="gray.300" />
+            <Divider borderColor="var(--color-border)" />
 
             <VStack align="stretch" spacing={4}>
               {purchaseDetails.records.map((record) => (
                 <Box
                   key={record._id}
-                  bg="white"
+                  bg="var(--color-surface)"
                   borderRadius="2xl"
                   borderWidth="1px"
-                  borderColor="gray.200"
+                  borderColor="var(--color-border)"
                   p={{ base: 3.5, md: 4 }}
-                  boxShadow="0 14px 28px rgba(15, 31, 92, 0.06)"
+                  boxShadow="sm"
                 >
                   <Flex
                     direction={{ base: "column", md: "row" }}
@@ -435,13 +435,13 @@ const BuyerDashboard = () => {
                           Qty {record.totalQuantity}
                         </Badge>
                       </HStack>
-                      <Text mt={2} fontSize="sm" color="gray.500">
+                      <Text mt={2} fontSize="sm" color="var(--color-text-secondary)">
                         {formatDate(record.saleDate || record.createdAt)}
                       </Text>
                     </Box>
                     <Box
                       textAlign={{ base: "left", md: "right" }}
-                      bg="linear-gradient(135deg, #0f1f5c 0%, #1743a4 100%)"
+                      bg="linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)"
                       color="white"
                       borderRadius="xl"
                       px={{ base: 3.5, md: 4 }}
@@ -466,40 +466,40 @@ const BuyerDashboard = () => {
                         justify="space-between"
                         align={{ base: "stretch", sm: "center" }}
                         gap={3}
-                        bg="#f8faff"
+                        bg="var(--color-surface-soft)"
                         borderRadius="xl"
                         borderWidth="1px"
-                        borderColor="rgba(15, 31, 92, 0.08)"
+                        borderColor="var(--color-border)"
                         px={{ base: 3, md: 3.5 }}
                         py={{ base: 3, md: 3.5 }}
                       >
                         <Box minW={0}>
-                          <Text fontSize="sm" fontWeight="700" color="gray.800" noOfLines={2}>
+                          <Text fontSize="sm" fontWeight="700" color="var(--color-text-primary)" noOfLines={2}>
                             {item.itemName}
                           </Text>
                           <HStack mt={2} spacing={2} flexWrap="wrap">
                             <Badge borderRadius="full" px={2.5} py={1} bg="var(--color-surface-hover)" color="var(--color-primary)">
                               Qty {item.quantity}
                             </Badge>
-                            <Text fontSize="xs" color="gray.500" fontWeight="600">
+                            <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="600">
                               {formatCurrency(item.unitPrice)} each
                             </Text>
                           </HStack>
                         </Box>
                         <Box
-                          bg="white"
+                          bg="var(--color-surface)"
                           borderRadius="lg"
                           borderWidth="1px"
-                          borderColor="gray.200"
+                          borderColor="var(--color-border)"
                           px={3}
                           py={2}
                           alignSelf={{ base: "flex-start", sm: "auto" }}
                           flexShrink={0}
                         >
-                          <Text fontSize="10px" color="gray.500" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
+                          <Text fontSize="10px" color="var(--color-text-secondary)" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
                             Line Total
                           </Text>
-                          <Text fontSize="sm" fontWeight="900" color="gray.900" mt={0.5}>
+                          <Text fontSize="sm" fontWeight="900" color="var(--color-text-primary)" mt={0.5}>
                             {formatCurrency(item.lineTotal)}
                           </Text>
                         </Box>
@@ -512,7 +512,7 @@ const BuyerDashboard = () => {
                       <Text fontSize="xs" color="var(--color-primary)" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
                         Note
                       </Text>
-                      <Text mt={1} fontSize="sm" color="gray.700">
+                      <Text mt={1} fontSize="sm" color="var(--color-text-secondary)">
                         {record.notes}
                       </Text>
                     </Box>
@@ -548,8 +548,8 @@ const BuyerDashboard = () => {
     <VStack align="stretch" spacing={6}>
       {/* Header */}
       <Box>
-        <Heading size="md" color="gray.800">Dashboard</Heading>
-        <Text fontSize="sm" color="gray.500" mt={1}>
+        <Heading size="md" color="var(--color-text-primary)">Dashboard</Heading>
+        <Text fontSize="sm" color="var(--color-text-secondary)" mt={1}>
           View your connections with sellers and track your outstanding balances.
         </Text>
       </Box>
@@ -557,44 +557,47 @@ const BuyerDashboard = () => {
       {/* Summary Cards */}
       <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
         <Box
-          bg="linear-gradient(135deg, #EBF4FF 0%, #DBEAFE 100%)"
+          bg="var(--color-surface)"
           borderRadius="xl"
           p={5}
           borderWidth="1px"
           borderColor="var(--color-border)"
+          shadow="sm"
         >
           <Text fontSize="xs" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
             Connected Sellers
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="var(--color-primary)" mt={1}>
+          <Text fontSize="2xl" fontWeight="900" color="var(--color-text-primary)" mt={1}>
             {summary.totalSellers}
           </Text>
         </Box>
         <Box
-          bg="linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)"
+          bg="var(--color-surface)"
           borderRadius="xl"
           p={5}
           borderWidth="1px"
-          borderColor="orange.200"
+          borderColor="var(--color-border)"
+          shadow="sm"
         >
-          <Text fontSize="xs" fontWeight="800" color="orange.700" textTransform="uppercase" letterSpacing="0.08em">
+          <Text fontSize="xs" fontWeight="800" color="orange.400" textTransform="uppercase" letterSpacing="0.08em">
             Outstanding (You Owe)
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="orange.600" mt={1}>
+          <Text fontSize="2xl" fontWeight="900" color="orange.400" mt={1}>
             {formatCurrency(summary.totalOutstanding)}
           </Text>
         </Box>
         <Box
-          bg="linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)"
+          bg="var(--color-surface)"
           borderRadius="xl"
           p={5}
           borderWidth="1px"
-          borderColor="green.200"
+          borderColor="var(--color-border)"
+          shadow="sm"
         >
-          <Text fontSize="xs" fontWeight="800" color="green.700" textTransform="uppercase" letterSpacing="0.08em">
+          <Text fontSize="xs" fontWeight="800" color="green.400" textTransform="uppercase" letterSpacing="0.08em">
             Payable (Suppliers)
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="green.600" mt={1}>
+          <Text fontSize="2xl" fontWeight="900" color="green.400" mt={1}>
             {formatCurrency(summary.totalPayable)}
           </Text>
         </Box>
@@ -603,24 +606,24 @@ const BuyerDashboard = () => {
       {/* Connection Cards */}
       {connections.length === 0 ? (
         <Box
-          bg="white"
+          bg="var(--color-surface)"
           borderRadius="2xl"
           p={8}
           borderWidth="1px"
-          borderColor="gray.200"
+          borderColor="var(--color-border)"
           textAlign="center"
         >
           <Icon as={FiShoppingBag} boxSize={10} color="var(--color-secondary)" mb={3} />
-          <Text fontWeight="700" color="gray.700" fontSize="md">
+          <Text fontWeight="700" color="var(--color-text-primary)" fontSize="md">
             No seller connections yet
           </Text>
-          <Text fontSize="sm" color="gray.500" mt={2} maxW="360px" mx="auto">
+          <Text fontSize="sm" color="var(--color-text-secondary)" mt={2} maxW="360px" mx="auto">
             When sellers add you to their customer ledger, they will appear here so you can track your transactions.
           </Text>
         </Box>
       ) : (
         <VStack align="stretch" spacing={4}>
-          <Text fontSize="sm" fontWeight="700" color="gray.600" textTransform="uppercase" letterSpacing="0.08em">
+          <Text fontSize="sm" fontWeight="700" color="var(--color-text-secondary)" textTransform="uppercase" letterSpacing="0.08em">
             Your Sellers ({connections.length})
           </Text>
           {connections.map((conn) => {
@@ -628,22 +631,22 @@ const BuyerDashboard = () => {
             const balance = conn.outstandingBalance;
             const isPositiveBalance = balance > 0;
             const balanceColor = conn.partyType === "customer"
-              ? (isPositiveBalance ? "red.500" : "green.500")
-              : (isPositiveBalance ? "orange.500" : "green.500");
+              ? (isPositiveBalance ? "red.400" : "green.400")
+              : (isPositiveBalance ? "orange.400" : "green.400");
 
             return (
               <Box
                 key={conn.profileId}
-                bg="white"
+                bg="var(--color-surface)"
                 borderRadius="xl"
                 p={5}
                 borderWidth="1px"
-                borderColor="gray.200"
+                borderColor="var(--color-border)"
                 shadow="sm"
                 cursor="pointer"
                 role="button"
                 tabIndex={0}
-                _hover={{ shadow: "md", borderColor: "blue.200", transform: "translateY(-1px)" }}
+                _hover={{ shadow: "md", borderColor: "var(--color-border-strong)", transform: "translateY(-1px)" }}
                 _focusVisible={{ boxShadow: "0 0 0 3px rgba(59,130,246,0.18)", borderColor: "blue.300" }}
                 transition="all 0.2s"
                 onClick={() => openPurchaseModal(conn)}
@@ -663,7 +666,7 @@ const BuyerDashboard = () => {
                       borderRadius="xl"
                       overflow="hidden"
                       flexShrink={0}
-                      bg="gray.100"
+                      bg="var(--color-surface-soft)"
                     >
                       <img
                         src={shop.logo}
@@ -676,7 +679,7 @@ const BuyerDashboard = () => {
                       w="52px"
                       h="52px"
                       borderRadius="xl"
-                      bg="var(--color-surface-hover)"
+                      bg="var(--color-surface-soft)"
                       color="var(--color-primary)"
                       align="center"
                       justify="center"
@@ -692,11 +695,11 @@ const BuyerDashboard = () => {
                   <Box flex="1" minW={0}>
                     <Flex justify="space-between" align="start" gap={3}>
                       <Box minW={0}>
-                        <Text fontSize="md" fontWeight="800" color="gray.900" noOfLines={1}>
+                        <Text fontSize="md" fontWeight="800" color="var(--color-text-primary)" noOfLines={1}>
                           {shop?.name || "Unknown Shop"}
                         </Text>
                         {(shop?.city || shop?.state) && (
-                          <HStack spacing={1} mt={0.5} color="gray.500">
+                          <HStack spacing={1} mt={0.5} color="var(--color-text-secondary)">
                             <Icon as={FiMapPin} boxSize={3.5} />
                             <Text fontSize="sm">
                               {[shop.city, shop.state].filter(Boolean).join(", ")}
@@ -706,7 +709,7 @@ const BuyerDashboard = () => {
                       </Box>
 
                       <VStack spacing={0} align="end" flexShrink={0}>
-                        <Text fontSize="xs" color="gray.500" fontWeight="700" textTransform="uppercase">
+                        <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="700" textTransform="uppercase">
                           Balance
                         </Text>
                         <Text fontSize="lg" fontWeight="900" color={balanceColor} lineHeight="1">
@@ -737,14 +740,14 @@ const BuyerDashboard = () => {
                         {conn.isBlocked ? "Blocked" : "Active"}
                       </Badge>
                       {conn.lastPurchaseAt && (
-                        <Text fontSize="xs" color="gray.500" fontWeight="600">
+                        <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="600">
                           Last: {formatDate(conn.lastPurchaseAt)}
                         </Text>
                       )}
                     </Flex>
 
                     {shop?.phone && (
-                      <HStack mt={2} spacing={1.5} color="gray.500">
+                      <HStack mt={2} spacing={1.5} color="var(--color-text-secondary)">
                         <Icon as={FiPhone} boxSize={3.5} />
                         <Text fontSize="sm">{shop.phone}</Text>
                       </HStack>
@@ -761,54 +764,35 @@ const BuyerDashboard = () => {
         </VStack>
       )}
 
-      {isMobilePurchaseSheet ? (
-        <Drawer isOpen={isOpen} placement="bottom" onClose={closePurchaseModal} size="full">
-          <DrawerOverlay bg="blackAlpha.500" />
-          <DrawerContent
-            bg="#f4f7fb"
-            h="94dvh"
-            maxH="94dvh"
-            borderTopRadius="28px"
-            boxShadow="0 -12px 30px rgba(15, 31, 92, 0.22)"
-            overflow="hidden"
-          >
-            <DrawerCloseButton
-              top={4}
-              right={4}
-              color="white"
-              bg="whiteAlpha.220"
-              borderRadius="full"
-              _hover={{ bg: "whiteAlpha.300" }}
-              _active={{ bg: "whiteAlpha.340" }}
-            />
-            {purchasePanelContent}
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Modal isOpen={isOpen} onClose={closePurchaseModal} size="3xl" scrollBehavior="inside">
-          <ModalOverlay bg="blackAlpha.500" />
-          <ModalContent
-            overflow="hidden"
-            bg="#f4f7fb"
-            mx={4}
-            my={6}
-            maxH="88vh"
-            borderRadius="2xl"
-            boxShadow="0 24px 60px rgba(15, 31, 92, 0.18)"
-          >
-            <ModalCloseButton
-              top={5}
-              right={5}
-              color="white"
-              bg="whiteAlpha.220"
-              borderRadius="full"
-              _hover={{ bg: "whiteAlpha.300" }}
-              _active={{ bg: "whiteAlpha.340" }}
-            />
-            {purchasePanelContent}
-          </ModalContent>
-        </Modal>
-      )}
+      {/* Purchase Details Drawer */}
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        onClose={closePurchaseModal}
+        size={{ base: "full", md: "lg", xl: "xl" }}
+      >
+        <DrawerOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <DrawerContent
+          bg="var(--color-bg)"
+          maxH="100vh"
+          boxShadow="-8px 0 30px rgba(0, 0, 0, 0.3)"
+          overflow="hidden"
+          borderLeftWidth="1px"
+          borderLeftColor="var(--color-border)"
+        >
+          <DrawerCloseButton
+            top={4}
+            right={4}
+            color="white"
+            bg="whiteAlpha.200"
+            borderRadius="full"
+            zIndex={20}
+            _hover={{ bg: "whiteAlpha.300" }}
+            _active={{ bg: "whiteAlpha.400" }}
+          />
+          {purchasePanelContent}
+        </DrawerContent>
+      </Drawer>
     </VStack>
   );
 };

@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite'
 import stores from '../store/stores'
 import CompanyRequiredState from './components/common/CompanyRequiredState'
 import BuyerDashboard from '../(main)/account/component/BuyerDashboard/BuyerDashboard'
+import { MerchantPageShell } from './components/common/merchantDashboardUI'
 
 const page = observer(() => {
   const { user } = stores.auth;
@@ -15,9 +16,9 @@ const page = observer(() => {
 
   if (isBuyerOnlyUser) {
     return (
-      <Box p={{ base: 4, sm: 6, md: 8 }} maxW="1400px" mx="auto">
+      <MerchantPageShell>
         <BuyerDashboard />
-      </Box>
+      </MerchantPageShell>
     );
   }
 

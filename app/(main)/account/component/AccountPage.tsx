@@ -239,10 +239,8 @@ const AccountPage = observer(() => {
 
   return (
     <Box
-      maxW="container.xl"
-      mx="auto"
-      py={{ base: 3, md: 12 }}
-      px={{ base: 3, md: 4 }}
+      py={{ base: 4, sm: 6, md: 8 }}
+      px={{ base: 4, sm: 6, md: 8, lg: 10 }}
       bg={pageBg}
       minH={{ md: "100vh" }}
     >
