@@ -15,7 +15,7 @@ const page = observer(() => {
 
   if (isBuyerOnlyUser) {
     return (
-      <Box>
+      <Box p={{ base: 4, sm: 6, md: 8 }} maxW="1400px" mx="auto">
         <BuyerDashboard />
       </Box>
     );
