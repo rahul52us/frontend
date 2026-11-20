@@ -9,7 +9,7 @@ import {
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { memo, useMemo } from "react";
 
 const extractImageUrl = (item: any): string => {
   if (!item) return "";
@@ -17,21 +17,22 @@ const extractImageUrl = (item: any): string => {
   return item?.file?.url || item?.url || item?.src || "";
 };
 
-const ShopImages = ({ shopData }: { shopData: any }) => {
+const ShopImages = memo(({ shopData }: { shopData: any }) => {
   const textPrimary = useColorModeValue("gray.900", "white");
   const textMuted = useColorModeValue("gray.500", "gray.400");
   const cardBorder = useColorModeValue("gray.100", "gray.750");
 
-  const rawGallery =
-    shopData?.gallery ||
-    shopData?.images ||
-    shopData?.photos ||
-    shopData?.data?.gallery ||
-    [];
-
-  const gallery: string[] = Array.isArray(rawGallery)
-    ? rawGallery.map(extractImageUrl).filter(Boolean)
-    : [];
+  const gallery: string[] = useMemo(() => {
+    const rawGallery =
+      shopData?.gallery ||
+      shopData?.images ||
+      shopData?.photos ||
+      shopData?.data?.gallery ||
+      [];
+    return Array.isArray(rawGallery)
+      ? rawGallery.map(extractImageUrl).filter(Boolean)
+      : [];
+  }, [shopData]);
 
   if (gallery.length === 0) {
     return null;
@@ -89,6 +90,7 @@ const ShopImages = ({ shopData }: { shopData: any }) => {
                 alt={`Shop photo ${index + 1}`}
                 objectFit="cover"
                 loading="lazy"
+                decoding="async"
               />
             </AspectRatio>
           </Box>
@@ -96,6 +98,8 @@ const ShopImages = ({ shopData }: { shopData: any }) => {
       </Box>
     </VStack>
   );
-};
+});
+
+ShopImages.displayName = "ShopImages";
 
 export default ShopImages;

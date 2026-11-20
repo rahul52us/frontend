@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import {
   Box,
   Heading,
@@ -16,19 +16,25 @@ const OrdersSection = observer(() => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchOrders = async () => {
       try {
         const res = await stores.orderStore.fetchMyOrders();
-        if (res.success) {
-          setOrders(res.data);
+        if (isMounted && res?.success) {
+          setOrders(res.data || []);
         }
       } catch (err) {
         console.error("Failed to fetch orders", err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     fetchOrders();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) return <Center p={10}><Spinner /></Center>;
@@ -52,4 +58,4 @@ const OrdersSection = observer(() => {
   );
 });
 
-export default OrdersSection;
+export default memo(OrdersSection);

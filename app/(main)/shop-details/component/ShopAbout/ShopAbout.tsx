@@ -10,7 +10,7 @@ import {
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { memo } from "react";
 
 type ShopAboutProps = {
   shopData: {
@@ -20,7 +20,7 @@ type ShopAboutProps = {
   };
 };
 
-const ShopAbout: React.FC<ShopAboutProps> = ({ shopData }) => {
+const ShopAbout: React.FC<ShopAboutProps> = memo(({ shopData }) => {
   const cardBg = useColorModeValue("white", "gray.850");
   const borderColor = useColorModeValue("gray.100", "gray.750");
   const textPrimary = useColorModeValue("gray.900", "white");
@@ -83,6 +83,8 @@ const ShopAbout: React.FC<ShopAboutProps> = ({ shopData }) => {
       </VStack>
     </Box>
   );
-};
+});
+
+ShopAbout.displayName = "ShopAbout";
 
 export default ShopAbout;

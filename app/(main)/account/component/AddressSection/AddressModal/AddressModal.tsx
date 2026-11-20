@@ -17,10 +17,10 @@ import {
   Checkbox,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { memo } from "react";
 import BottomSheetDrawer from "../../../../../component/common/Drawer/BottomSheetDrawer";
 
-export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any; onSubmit: any }) => {
+export const AddressForm = memo(({ currentAddress, onSubmit }: { currentAddress?: any; onSubmit: any }) => {
   return (
     <form onSubmit={onSubmit} id="address-form">
       <VStack spacing={4} align="stretch">
@@ -168,7 +168,7 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
         <FormControl pt={1}>
           <Checkbox
             name="isDefault"
-            defaultChecked={currentAddress?.isDefault || false}
+            defaultChecked={Boolean(currentAddress?.isDefault)}
             colorScheme="brand"
             color="var(--color-text)"
             fontSize="sm"
@@ -179,7 +179,8 @@ export const AddressForm = ({ currentAddress, onSubmit }: { currentAddress?: any
       </VStack>
     </form>
   );
-};
+});
+AddressForm.displayName = "AddressForm";
 
 interface AddressModalProps {
   isOpen: boolean;
@@ -251,4 +252,4 @@ const AddressModal: React.FC<AddressModalProps> = ({
   );
 };
 
-export default AddressModal;
+export default memo(AddressModal);

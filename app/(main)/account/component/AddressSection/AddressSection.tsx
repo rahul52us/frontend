@@ -15,15 +15,14 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { FaMapMarkedAlt, FaPlus } from "react-icons/fa";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
-import GetCurrentLocation from "../../../../component/common/Locations/GetCurrentLocation";
 import stores from "../../../../store/stores";
 import AddressCard from "./AddressCard/AddressCard";
 import AddressModal from "./AddressModal/AddressModal";
 
-export const AddressesSection = observer(() => {
+export const AddressesSection = memo(observer(() => {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { auth } = stores;
@@ -34,7 +33,7 @@ export const AddressesSection = observer(() => {
   const [deletingAddress, setDeletingAddress] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Theme tokens (hoisted above any early return)
+  // Theme tokens
   const mutedColor = useColorModeValue("gray.500", "gray.400");
   const headingColor = useColorModeValue("gray.800", "white");
   const emptyBg = useColorModeValue("gray.50", "whiteAlpha.50");
@@ -48,23 +47,23 @@ export const AddressesSection = observer(() => {
     }
   }, [auth.token, auth.addresses.length, auth]);
 
-  const handleAddNew = () => {
+  const handleAddNew = useCallback(() => {
     setCurrentAddress(null);
     setIsEditing(false);
     onOpen();
-  };
+  }, [onOpen]);
 
-  const handleEdit = (address: any) => {
+  const handleEdit = useCallback((address: any) => {
     setCurrentAddress(address);
     setIsEditing(true);
     onOpen();
-  };
+  }, [onOpen]);
 
-  const handleDeleteClick = (address: any) => {
+  const handleDeleteClick = useCallback((address: any) => {
     setDeletingAddress(address);
-  };
+  }, []);
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (!deletingAddress) return;
     setIsDeleting(true);
     try {
@@ -82,9 +81,9 @@ export const AddressesSection = observer(() => {
       setIsDeleting(false);
       setDeletingAddress(null);
     }
-  };
+  }, [auth, deletingAddress, toast]);
 
-  const handleSetDefault = async (id: string) => {
+  const handleSetDefault = useCallback(async (id: string) => {
     const address = auth.addresses.find((a: any) => (a._id || a.id) === id);
     if (address) {
       try {
@@ -100,9 +99,9 @@ export const AddressesSection = observer(() => {
         toast({ title: "Failed to set default", status: "error" });
       }
     }
-  };
+  }, [auth, toast]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = useCallback(async (e: any) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data: any = Object.fromEntries(formData.entries());
@@ -143,21 +142,21 @@ export const AddressesSection = observer(() => {
     } catch {
       toast({ title: "Operation failed", description: "Could not save address", status: "error" });
     }
-  };
+  }, [auth, currentAddress, isEditing, onClose, toast]);
 
   const isInitialLoading = auth.isLoading && auth.addresses.length === 0;
 
   // Default address first, then the rest in their existing order
-  const sortedAddresses = [...auth.addresses].sort(
-    (a: any, b: any) => Number(!!b.isDefault) - Number(!!a.isDefault)
-  );
+  const sortedAddresses = useMemo(() => {
+    return [...auth.addresses].sort(
+      (a: any, b: any) => Number(Boolean(b.isDefault)) - Number(Boolean(a.isDefault))
+    );
+  }, [auth.addresses]);
 
   const gridColumns = { base: "1fr", lg: "repeat(2, 1fr)" };
 
   return (
     <Box>
-      {/* <GetCurrentLocation /> */}
-
       {/* Header */}
       <Flex justify="space-between" align="center" gap={3} mb={5}>
         <Box minW={0}>
@@ -263,7 +262,7 @@ export const AddressesSection = observer(() => {
 
       {deletingAddress && (
         <ConfirmationModal
-          isOpen={!!deletingAddress}
+          isOpen={Boolean(deletingAddress)}
           onClose={() => setDeletingAddress(null)}
           onConfirm={confirmDelete}
           title="Delete address"
@@ -275,4 +274,6 @@ export const AddressesSection = observer(() => {
       )}
     </Box>
   );
-});
+}));
+
+AddressesSection.displayName = "AddressesSection";

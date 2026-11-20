@@ -4,7 +4,6 @@ import {
   Badge,
   Box,
   Button,
-  Container,
   Flex,
   HStack,
   Heading,
@@ -18,7 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { FaHeart, FaRegHeart, FaStar, FaStore } from "react-icons/fa";
 import {
   FiArrowLeft,
@@ -55,7 +54,7 @@ export interface ShopHeroSectionProps {
   onShopProductsClick?: () => void;
 }
 
-const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
+const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(({
   shopData,
   onShopProductsClick,
 }) => {
@@ -83,18 +82,23 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
 
   // Address for directions
   const loc = shopData?.location;
-  const formattedAddress = [
-    loc?.address,
-    loc?.city,
-    loc?.state,
-    loc?.postalCode || loc?.pincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const formattedAddress = useMemo(() => {
+    return [
+      loc?.address,
+      loc?.city,
+      loc?.state,
+      loc?.postalCode || loc?.pincode,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  }, [loc?.address, loc?.city, loc?.postalCode, loc?.pincode, loc?.state]);
 
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-    formattedAddress || shopData?.name || ""
-  )}`;
+  const directionsUrl = useMemo(
+    () => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+      formattedAddress || shopData?.name || ""
+    )}`,
+    [formattedAddress, shopData?.name]
+  );
 
   const phone = shopData?.contactInfo?.phone;
 
@@ -118,7 +122,7 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
   }, [shopData]);
 
   // Handle Share
-  const handleShare = async () => {
+  const handleShare = useCallback(async () => {
     if (typeof window === "undefined") return;
     const shareData = {
       title: shopData?.name || "Shop Details",
@@ -141,19 +145,22 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
     } catch {
       // User cancelled share
     }
-  };
+  }, [shopData?.name, toast]);
 
   // Handle Save / Favorite
-  const handleToggleSave = () => {
-    setIsSaved((prev) => !prev);
-    toast({
-      title: !isSaved ? "Saved to favorites" : "Removed from favorites",
-      status: !isSaved ? "success" : "info",
-      duration: 2000,
-      isClosable: true,
-      position: "top",
+  const handleToggleSave = useCallback(() => {
+    setIsSaved((prev) => {
+      const next = !prev;
+      toast({
+        title: next ? "Saved to favorites" : "Removed from favorites",
+        status: next ? "success" : "info",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      return next;
     });
-  };
+  }, [toast]);
 
   const coverUrl =
     shopData?.coverImage?.url ||
@@ -183,316 +190,341 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = ({
             h="full"
             objectFit="cover"
             filter="brightness(0.85)"
-            transform="scale(1.05)"
-            transition="transform 0.4s ease"
           />
         </MotionBox>
-
-        {/* Hero Overlay Gradient */}
         <Box
           position="absolute"
           inset={0}
-          bgGradient="linear(to-b, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.7) 100%)"
+          bgGradient="linear(to-t, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)"
         />
 
-        {/* Top Floating Action Bar */}
+        {/* Top Floating Actions Bar */}
         <Flex
           position="absolute"
-          top={0}
-          insetX={0}
+          top={{ base: 4, md: 6 }}
+          left={{ base: 4, md: 8 }}
+          right={{ base: 4, md: 8 }}
           justify="space-between"
           align="center"
-          p={{ base: 4, md: 6 }}
-          zIndex={5}
+          zIndex={10}
         >
           <IconButton
-            aria-label="Back"
+            aria-label="Go Back"
             icon={<FiArrowLeft size={20} />}
             onClick={() => router.back()}
             size="md"
             borderRadius="full"
-            bg="rgba(255, 255, 255, 0.85)"
-            color="gray.800"
-            _hover={{ bg: "white", transform: "scale(1.05)" }}
-            _active={{ transform: "scale(0.92)" }}
+            bg="rgba(0, 0, 0, 0.5)"
+            color="white"
             backdropFilter="blur(8px)"
-            boxShadow="sm"
+            _hover={{ bg: "rgba(0, 0, 0, 0.75)", transform: "scale(1.05)" }}
+            _active={{ transform: "scale(0.95)" }}
+            transition="all 0.2s"
           />
 
           <HStack spacing={2}>
-            <Tooltip label="Share Shop" placement="bottom">
-              <IconButton
-                aria-label="Share"
-                icon={<FiShare2 size={18} />}
-                onClick={handleShare}
-                size="md"
-                borderRadius="full"
-                bg="rgba(255, 255, 255, 0.85)"
-                color="gray.800"
-                _hover={{ bg: "white", transform: "scale(1.05)" }}
-                _active={{ transform: "scale(0.92)" }}
-                backdropFilter="blur(8px)"
-                boxShadow="sm"
-              />
-            </Tooltip>
-
-            <Tooltip
-              label={isSaved ? "Saved" : "Save Shop"}
-              placement="bottom"
-            >
-              <IconButton
-                aria-label="Save"
-                icon={
-                  isSaved ? (
-                    <FaHeart size={18} color="#e53e3e" />
-                  ) : (
-                    <FaRegHeart size={18} />
-                  )
-                }
-                onClick={handleToggleSave}
-                size="md"
-                borderRadius="full"
-                bg="rgba(255, 255, 255, 0.85)"
-                color={isSaved ? "red.500" : "gray.800"}
-                _hover={{ bg: "white", transform: "scale(1.05)" }}
-                _active={{ transform: "scale(0.92)" }}
-                backdropFilter="blur(8px)"
-                boxShadow="sm"
-              />
-            </Tooltip>
+            <IconButton
+              aria-label="Share"
+              icon={<FiShare2 size={18} />}
+              onClick={handleShare}
+              size="md"
+              borderRadius="full"
+              bg="rgba(0, 0, 0, 0.5)"
+              color="white"
+              backdropFilter="blur(8px)"
+              _hover={{ bg: "rgba(0, 0, 0, 0.75)", transform: "scale(1.05)" }}
+              _active={{ transform: "scale(0.95)" }}
+              transition="all 0.2s"
+            />
+            <IconButton
+              aria-label="Favorite"
+              icon={
+                isSaved ? (
+                  <FaHeart size={18} color="#EF4444" />
+                ) : (
+                  <FaRegHeart size={18} />
+                )
+              }
+              onClick={handleToggleSave}
+              size="md"
+              borderRadius="full"
+              bg="rgba(0, 0, 0, 0.5)"
+              color="white"
+              backdropFilter="blur(8px)"
+              _hover={{ bg: "rgba(0, 0, 0, 0.75)", transform: "scale(1.05)" }}
+              _active={{ transform: "scale(0.95)" }}
+              transition="all 0.2s"
+            />
           </HStack>
         </Flex>
       </Box>
 
-      {/* Identity Card Overlapping Cover */}
-      <Container maxW="6xl" px={4} position="relative" zIndex={2}>
-        <MotionBox
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          mt={{ base: "-70px", md: "-100px" }}
+      {/* Floating Identity & Info Card */}
+      <Box
+        maxW="7xl"
+        mx="auto"
+        px={{ base: 4, md: 8 }}
+        position="relative"
+        mt={{ base: "-60px", md: "-80px" }}
+        zIndex={10}
+      >
+        <Box
           bg={cardBg}
-          borderRadius="3xl"
+          borderRadius={{ base: "2xl", md: "3xl" }}
           p={{ base: 5, md: 8 }}
-          boxShadow="0 10px 30px -5px rgba(0, 0, 0, 0.08)"
+          boxShadow="0 10px 40px -10px rgba(0, 0, 0, 0.12)"
           border="1px solid"
           borderColor={borderColor}
         >
-          {/* Logo & Main Info */}
-          <Flex gap={{ base: 4, md: 6 }} align="flex-start">
-            {/* Shop Logo */}
-            <Box
-              mt={{ base: "-46px", md: "-64px" }}
-              w={{ base: "80px", md: "112px" }}
-              h={{ base: "80px", md: "112px" }}
-              flexShrink={0}
-              borderRadius="2xl"
-              overflow="hidden"
-              border="4px solid"
-              borderColor={cardBg}
-              bg="gray.100"
-              boxShadow="0 8px 20px -4px rgba(0,0,0,0.12)"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            align={{ base: "flex-start", md: "flex-end" }}
+            justify="space-between"
+            gap={6}
+          >
+            {/* Left: Avatar + Titles */}
+            <Flex
+              direction={{ base: "column", sm: "row" }}
+              align={{ base: "flex-start", sm: "center" }}
+              gap={5}
+              flex={1}
             >
-              {shopData?.logo?.url ? (
-                <Image
-                  src={shopData.logo.url}
-                  alt={shopData.name}
-                  w="full"
-                  h="full"
-                  objectFit="cover"
-                />
-              ) : (
-                <Icon as={FaStore} boxSize={{ base: 8, md: 12 }} color="gray.400" />
-              )}
-            </Box>
-
-            {/* Shop Name & Categories */}
-            <Box minW={0} flex={1}>
-              <HStack spacing={2} align="center">
-                <Heading
-                  as="h1"
-                  fontSize={{ base: "xl", sm: "2xl", md: "4xl" }}
-                  fontWeight="800"
-                  color={textPrimary}
-                  letterSpacing="-0.02em"
-                  noOfLines={1}
+              {/* Logo / Avatar with verified badge */}
+              <Box position="relative">
+                <Box
+                  boxSize={{ base: "90px", md: "115px" }}
+                  borderRadius="2xl"
+                  border="4px solid"
+                  borderColor={cardBg}
+                  overflow="hidden"
+                  bg="gray.100"
+                  boxShadow="md"
+                  flexShrink={0}
                 >
-                  {shopData?.name}
-                </Heading>
-                {(shopData?.verified || shopData?.isVerified) && (
-                  <Tooltip label="Verified Shop" placement="top">
-                    <Box as="span" display="inline-flex" color="var(--color-primary)">
-                      <MdVerified size={24} />
+                  {shopData?.logo?.url ? (
+                    <Image
+                      src={shopData.logo.url}
+                      alt={shopData.name}
+                      boxSize="full"
+                      objectFit="cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <Flex
+                      boxSize="full"
+                      bg="linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)"
+                      align="center"
+                      justify="center"
+                      color="white"
+                    >
+                      <Icon as={FaStore} boxSize={8} />
+                    </Flex>
+                  )}
+                </Box>
+                {shopData?.isVerified && (
+                  <Tooltip label="Verified Merchant" placement="top">
+                    <Box
+                      position="absolute"
+                      bottom="-4px"
+                      right="-4px"
+                      bg={cardBg}
+                      borderRadius="full"
+                      p="2px"
+                    >
+                      <Icon as={MdVerified} boxSize={6} color="blue.500" />
                     </Box>
                   </Tooltip>
                 )}
-              </HStack>
+              </Box>
 
-              {shopData?.categories && shopData.categories.length > 0 && (
-                <Text
-                  mt={1}
-                  fontSize={{ base: "xs", md: "sm" }}
-                  color={textMuted}
-                  fontWeight="medium"
-                  noOfLines={1}
+              {/* Text Info */}
+              <Box minW={0} flex={1}>
+                <HStack spacing={2.5} flexWrap="wrap" mb={1}>
+                  <Heading
+                    as="h1"
+                    fontSize={{ base: "2xl", md: "3xl" }}
+                    fontWeight="800"
+                    color={textPrimary}
+                    letterSpacing="-0.02em"
+                    lineHeight="shorter"
+                  >
+                    {shopData?.name}
+                  </Heading>
+
+                  {/* Open / Closed Live Badge */}
+                  <Badge
+                    colorScheme={status.isOpen ? "green" : "red"}
+                    variant="subtle"
+                    px={2.5}
+                    py={0.5}
+                    borderRadius="full"
+                    fontSize="xs"
+                    fontWeight="bold"
+                    textTransform="capitalize"
+                  >
+                    {status.isOpen ? "● Open Now" : "○ Closed"}
+                  </Badge>
+                </HStack>
+
+                {/* Tagline / Subtitle */}
+                {shopData?.tagline && (
+                  <Text
+                    fontSize="sm"
+                    color={textMuted}
+                    mb={2.5}
+                    noOfLines={2}
+                  >
+                    {shopData.tagline}
+                  </Text>
+                )}
+
+                {/* Chips Row: Category, Rating, Location */}
+                <HStack
+                  spacing={{ base: 2, md: 3 }}
+                  flexWrap="wrap"
+                  fontSize="xs"
+                  color={chipText}
                 >
-                  {shopData.categories.slice(0, 3).join(" · ")}
-                </Text>
-              )}
-            </Box>
-          </Flex>
+                  {/* Category Chip */}
+                  {shopData?.category && (
+                    <HStack
+                      bg={chipBg}
+                      px={2.5}
+                      py={1}
+                      borderRadius="md"
+                      spacing={1.5}
+                    >
+                      <Icon as={FiShoppingBag} boxSize={3.5} />
+                      <Text fontWeight="semibold">
+                        {typeof shopData.category === "object"
+                          ? shopData.category?.name
+                          : shopData.category}
+                      </Text>
+                    </HStack>
+                  )}
 
-          {/* Badges / Chips Row */}
-          <Flex
-            mt={4}
-            flexWrap="wrap"
-            align="center"
-            gap={2}
-            fontSize="sm"
-            fontWeight="semibold"
-          >
-            {totalRatings > 0 && (
-              <HStack
-                spacing={1.5}
-                bg={chipBg}
-                color={chipText}
-                px={3}
-                py={1}
-                borderRadius="full"
-              >
-                <Icon as={FaStar} color="orange.400" boxSize={3.5} />
-                <Text as="b" color={textPrimary}>
-                  {Number(avgRating).toFixed(1)}
-                </Text>
-                <Text fontSize="xs" color={textMuted}>
-                  ({totalRatings})
-                </Text>
-              </HStack>
-            )}
+                  {/* Rating Chip */}
+                  <HStack
+                    bg={chipBg}
+                    px={2.5}
+                    py={1}
+                    borderRadius="md"
+                    spacing={1.5}
+                  >
+                    <Icon as={FaStar} boxSize={3} color="orange.400" />
+                    <Text fontWeight="bold">{avgRating.toFixed(1)}</Text>
+                    {totalRatings > 0 && (
+                      <Text color={textMuted}>({totalRatings})</Text>
+                    )}
+                  </HStack>
 
-            {/* Live Open / Closed Status Pill */}
+                  {/* Location Chip */}
+                  {loc?.city && (
+                    <HStack
+                      bg={chipBg}
+                      px={2.5}
+                      py={1}
+                      borderRadius="md"
+                      spacing={1.5}
+                    >
+                      <Icon as={FiMapPin} boxSize={3.5} />
+                      <Text fontWeight="semibold">
+                        {loc.city}
+                        {loc.state ? `, ${loc.state}` : ""}
+                      </Text>
+                    </HStack>
+                  )}
+                </HStack>
+              </Box>
+            </Flex>
+
+            {/* Right: Quick Action Buttons (Call, Directions, Shop) */}
             <HStack
-              spacing={2}
-              bg={status.isOpen ? "green.50" : "red.50"}
-              color={status.isOpen ? "green.700" : "red.600"}
-              px={3}
-              py={1}
-              borderRadius="full"
+              spacing={2.5}
+              w={{ base: "full", md: "auto" }}
+              justify={{ base: "stretch", md: "flex-end" }}
+              flexShrink={0}
             >
-              <Box
-                w="8px"
-                h="8px"
-                borderRadius="full"
-                bg={status.isOpen ? "green.500" : "red.500"}
-                boxShadow={
-                  status.isOpen
-                    ? "0 0 0 2px rgba(72, 187, 120, 0.3)"
-                    : undefined
-                }
-              />
-              <Text fontSize="xs" fontWeight="bold">
-                {status.isOpen
-                  ? `Open · till ${formatTimeString(status.hours?.close)}`
-                  : "Closed now"}
-              </Text>
-            </HStack>
+              {phone && (
+                <Button
+                  as="a"
+                  href={`tel:${phone}`}
+                  leftIcon={<FiPhone />}
+                  size="md"
+                  h="44px"
+                  px={4}
+                  borderRadius="xl"
+                  border="1px solid"
+                  borderColor={ghostBtnBorder}
+                  bg={ghostBtnBg}
+                  color={textPrimary}
+                  _hover={{ bg: ghostBtnHover, transform: "translateY(-1px)" }}
+                  _active={{ transform: "scale(0.98)" }}
+                  transition="all 0.2s"
+                  fontWeight="bold"
+                  fontSize="sm"
+                  flex={{ base: 1, md: "initial" }}
+                >
+                  Call
+                </Button>
+              )}
 
-            {/* City Chip */}
-            {loc?.city && (
-              <HStack
-                spacing={1.5}
-                bg={chipBg}
-                color={chipText}
-                px={3}
-                py={1}
-                borderRadius="full"
-                fontSize="xs"
-              >
-                <Icon as={FiMapPin} boxSize={3.5} color="var(--color-primary)" />
-                <Text>{loc.city}</Text>
-              </HStack>
-            )}
-          </Flex>
-
-          {/* Desktop Action Buttons */}
-          <HStack
-            mt={6}
-            spacing={3}
-            display={{ base: "none", md: "flex" }}
-          >
-            {phone && (
               <Button
                 as="a"
-                href={`tel:${phone}`}
-                leftIcon={<FiPhone />}
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                leftIcon={<FiNavigation />}
                 size="md"
-                h="46px"
-                px={5}
-                borderRadius="2xl"
+                h="44px"
+                px={4}
+                borderRadius="xl"
                 border="1px solid"
                 borderColor={ghostBtnBorder}
                 bg={ghostBtnBg}
                 color={textPrimary}
-                fontWeight="semibold"
-                _hover={{ bg: ghostBtnHover, transform: "scale(1.02)" }}
-                _active={{ transform: "scale(0.96)" }}
+                _hover={{ bg: ghostBtnHover, transform: "translateY(-1px)" }}
+                _active={{ transform: "scale(0.98)" }}
                 transition="all 0.2s"
+                fontWeight="bold"
+                fontSize="sm"
+                flex={{ base: 1, md: "initial" }}
               >
-                Call
+                Directions
               </Button>
-            )}
 
-            <Button
-              as="a"
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              leftIcon={<FiNavigation />}
-              size="md"
-              h="46px"
-              px={5}
-              borderRadius="2xl"
-              border="1px solid"
-              borderColor={ghostBtnBorder}
-              bg={ghostBtnBg}
-              color={textPrimary}
-              fontWeight="semibold"
-              _hover={{ bg: ghostBtnHover, transform: "scale(1.02)" }}
-              _active={{ transform: "scale(0.96)" }}
-              transition="all 0.2s"
-            >
-              Directions
-            </Button>
-
-            <Button
-              onClick={onShopProductsClick}
-              leftIcon={<FiShoppingBag />}
-              size="md"
-              h="46px"
-              px={6}
-              borderRadius="2xl"
-              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
-              color="white"
-              fontWeight="bold"
-              boxShadow="0 4px 15px rgba(37, 99, 235, 0.35)"
-              _hover={{
-                bgGradient: "linear(to-r, blue.700, indigo.700)",
-                transform: "scale(1.02)",
-                boxShadow: "0 6px 20px rgba(37, 99, 235, 0.45)",
-              }}
-              _active={{ transform: "scale(0.96)" }}
-              transition="all 0.2s"
-            >
-              Shop products
-            </Button>
-          </HStack>
-        </MotionBox>
-      </Container>
+              <Button
+                onClick={onShopProductsClick}
+                leftIcon={<FiShoppingBag />}
+                size="md"
+                h="44px"
+                px={5}
+                borderRadius="xl"
+                bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
+                color="white"
+                fontWeight="bold"
+                fontSize="sm"
+                boxShadow="0 4px 16px rgba(37, 99, 235, 0.35)"
+                _hover={{
+                  opacity: 0.9,
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 6px 20px rgba(37, 99, 235, 0.45)",
+                }}
+                _active={{ transform: "scale(0.98)" }}
+                transition="all 0.2s"
+                flex={{ base: 2, md: "initial" }}
+              >
+                Shop Products
+              </Button>
+            </HStack>
+          </Flex>
+        </Box>
+      </Box>
     </Box>
   );
-};
+});
+
+ShopHeroSection.displayName = "ShopHeroSection";
 
 export default ShopHeroSection;

@@ -4,17 +4,16 @@ import {
   Box,
   Button,
   Flex,
-  HStack,
   Heading,
   Icon,
   Text,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { FiMapPin, FiNavigation } from "react-icons/fi";
 
-const LocationSection = ({ shopData }: any) => {
+const LocationSection = memo(({ shopData }: any) => {
   const cardBg = useColorModeValue("white", "gray.850");
   const borderColor = useColorModeValue("gray.100", "gray.750");
   const textPrimary = useColorModeValue("gray.900", "white");
@@ -23,26 +22,28 @@ const LocationSection = ({ shopData }: any) => {
   const btnBg = useColorModeValue("blue.50", "whiteAlpha.200");
   const btnColor = useColorModeValue("blue.600", "blue.300");
 
-  const loc = shopData?.location;
-  const address = [
-    loc?.address,
-    loc?.city,
-    loc?.state,
-    loc?.postalCode || loc?.pincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const displayAddress = useMemo(() => {
+    const loc = shopData?.location;
+    const address = [
+      loc?.address,
+      loc?.city,
+      loc?.state,
+      loc?.postalCode || loc?.pincode,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    return address || shopData?.address || "Address not specified";
+  }, [shopData?.location, shopData?.address]);
 
-  const displayAddress =
-    address || shopData?.address || "Address not specified";
+  const mapsUrl = useMemo(
+    () => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`,
+    [displayAddress]
+  );
 
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    displayAddress
-  )}`;
-
-  const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(
-    displayAddress
-  )}&output=embed`;
+  const mapEmbedUrl = useMemo(
+    () => `https://maps.google.com/maps?q=${encodeURIComponent(displayAddress)}&output=embed`,
+    [displayAddress]
+  );
 
   return (
     <Box
@@ -129,6 +130,8 @@ const LocationSection = ({ shopData }: any) => {
       </VStack>
     </Box>
   );
-};
+});
+
+LocationSection.displayName = "LocationSection";
 
 export default LocationSection;

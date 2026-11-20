@@ -23,7 +23,7 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { IconType } from "react-icons";
 import {
   FaCheck,
@@ -47,13 +47,15 @@ import stores from "../../../../store/stores";
 
 type SocialKey = "facebook" | "instagram" | "twitter" | "linkedin" | "website";
 
-const SOCIALS: {
+interface SocialItem {
   key: SocialKey;
   label: string;
   icon: IconType;
   placeholder: string;
   color: string;
-}[] = [
+}
+
+const SOCIALS: SocialItem[] = [
   { key: "facebook", label: "Facebook", icon: FaFacebook, placeholder: "facebook.com/username", color: "#1877F2" },
   { key: "instagram", label: "Instagram", icon: FaInstagram, placeholder: "instagram.com/username", color: "#E4405F" },
   { key: "twitter", label: "Twitter (X)", icon: FaTwitter, placeholder: "twitter.com/username", color: "#1DA1F2" },
@@ -85,15 +87,15 @@ const EMPTY_ERRORS: FormErrors = {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const buildForm = (user: any): FormState => ({
-  email: user.email || "",
-  phone: user.phone || "",
-  alternatePhone: user.alternatePhone || "",
-  alternateEmail: user.alternateEmail || "",
-  facebook: user.socialLinks?.facebook || "",
-  instagram: user.socialLinks?.instagram || "",
-  twitter: user.socialLinks?.twitter || "",
-  linkedin: user.socialLinks?.linkedin || "",
-  website: user.socialLinks?.website || "",
+  email: user?.email || "",
+  phone: user?.phone || "",
+  alternatePhone: user?.alternatePhone || "",
+  alternateEmail: user?.alternateEmail || "",
+  facebook: user?.socialLinks?.facebook || "",
+  instagram: user?.socialLinks?.instagram || "",
+  twitter: user?.socialLinks?.twitter || "",
+  linkedin: user?.socialLinks?.linkedin || "",
+  website: user?.socialLinks?.website || "",
 });
 
 /** Adds https:// when the user typed a bare domain such as "site.com" */
@@ -112,7 +114,7 @@ const prettyUrl = (value: string) =>
 /* -------------------------------------------------------------------------- */
 
 /** Titled block. `divided` renders rows separated by hairlines (view mode). */
-function Group({
+const Group = memo(({
   title,
   children,
   divided = false,
@@ -120,7 +122,7 @@ function Group({
   title: string;
   children: React.ReactNode;
   divided?: boolean;
-}) {
+}) => {
   const titleColor = useColorModeValue("var(--color-text)", "var(--color-text)");
   const bg = useColorModeValue("gray.50", "var(--color-surface)");
   const border = useColorModeValue("var(--color-border)", "var(--color-border)");
@@ -141,10 +143,11 @@ function Group({
       </Box>
     </Box>
   );
-}
+});
+Group.displayName = "Group";
 
 /** One read-only line: icon tile, label, value (optionally tappable). */
-function InfoRow({
+const InfoRow = memo(({
   icon,
   label,
   value,
@@ -160,7 +163,7 @@ function InfoRow({
   external?: boolean;
   iconColor?: string;
   display?: string;
-}) {
+}) => {
   const labelColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
   const valueColor = useColorModeValue("var(--color-text)", "var(--color-text)");
   const emptyColor = useColorModeValue("gray.400", "gray.500");
@@ -214,10 +217,11 @@ function InfoRow({
       </Box>
     </Flex>
   );
-}
+});
+InfoRow.displayName = "InfoRow";
 
 /** Input with an inline icon, sized for thumbs (48px, 16px text = no iOS zoom). */
-function Field({
+const Field = memo(({
   label,
   icon,
   error,
@@ -228,7 +232,7 @@ function Field({
   icon: IconType;
   error?: string;
   helper?: string;
-} & InputProps) {
+} & InputProps) => {
   const labelColor = useColorModeValue("var(--color-text)", "var(--color-text)");
   const inputBg = useColorModeValue("white", "var(--color-surface-hover)");
   const inputBorder = useColorModeValue("var(--color-border)", "var(--color-border)");
@@ -267,13 +271,14 @@ function Field({
       ) : null}
     </FormControl>
   );
-}
+});
+Field.displayName = "Field";
 
 /* -------------------------------------------------------------------------- */
 /*  Main component                                                            */
 /* -------------------------------------------------------------------------- */
 
-export function ProfileSection({ user }: { user: any }) {
+export const ProfileSection = memo(({ user }: { user: any }) => {
   const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -283,23 +288,22 @@ export function ProfileSection({ user }: { user: any }) {
   const headingColor = useColorModeValue("var(--color-text)", "var(--color-text)");
   const mutedColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
   const barBg = useColorModeValue("whiteAlpha.950", "var(--color-surface)");
-  const barBorder = useColorModeValue("var(--color-border)", "var(--color-border)");
   const noteColor = useColorModeValue("var(--color-text-muted)", "var(--color-text-muted)");
 
-  const startEdit = () => {
+  const startEdit = useCallback(() => {
     // Always start from the latest saved values
     setFormData(buildForm(user));
     setErrors(EMPTY_ERRORS);
     setIsEditing(true);
-  };
+  }, [user]);
 
-  const cancelEdit = () => {
+  const cancelEdit = useCallback(() => {
     setFormData(buildForm(user));
     setErrors(EMPTY_ERRORS);
     setIsEditing(false);
-  };
+  }, [user]);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: FormErrors = { ...EMPTY_ERRORS };
     let isValid = true;
 
@@ -327,9 +331,9 @@ export function ProfileSection({ user }: { user: any }) {
 
     setErrors(newErrors);
     return isValid;
-  };
+  }, [formData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -389,18 +393,23 @@ export function ProfileSection({ user }: { user: any }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formData, toast, user, validateForm]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear a field's error as soon as the user starts fixing it
-    if (name in errors && errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
-  };
+    setErrors((prev) => {
+      if (name in prev && prev[name as keyof FormErrors]) {
+        return { ...prev, [name]: "" };
+      }
+      return prev;
+    });
+  }, []);
 
-  const filledSocials = SOCIALS.filter(({ key }) => !!user.socialLinks?.[key]);
+  const filledSocials = useMemo(() => {
+    return SOCIALS.filter(({ key }) => Boolean(user?.socialLinks?.[key]));
+  }, [user?.socialLinks]);
 
   return (
     <VStack spacing={5} align="stretch">
@@ -442,21 +451,20 @@ export function ProfileSection({ user }: { user: any }) {
           </Group>
 
           <Group title="Contact" divided>
-            <Grid templateColumns={{md:'1fr 1fr'}}>
-
-            <InfoRow
-              icon={FaEnvelope}
-              label="Email"
-              value={user.email}
-              href={user.email ? `mailto:${user.email}` : undefined}
+            <Grid templateColumns={{ md: '1fr 1fr' }}>
+              <InfoRow
+                icon={FaEnvelope}
+                label="Email"
+                value={user.email}
+                href={user.email ? `mailto:${user.email}` : undefined}
               />
-            <InfoRow
-              icon={FaPhoneAlt}
-              label="Phone"
-              value={user.phone}
-              href={user.phone ? `tel:${user.phone}` : undefined}
+              <InfoRow
+                icon={FaPhoneAlt}
+                label="Phone"
+                value={user.phone}
+                href={user.phone ? `tel:${user.phone}` : undefined}
               />
-              </Grid>
+            </Grid>
           </Group>
 
           <Group title="Alternate contact" divided>
@@ -512,7 +520,7 @@ export function ProfileSection({ user }: { user: any }) {
             <Flex align="center" gap={2} mt={-3} px={1}>
               <Icon as={FaInfoCircle} boxSize={3} color={noteColor} />
               <Text fontSize="xs" color={noteColor}>
-                Your name can't be changed.
+                Your name can&apos;t be changed.
               </Text>
             </Flex>
 
@@ -637,4 +645,5 @@ export function ProfileSection({ user }: { user: any }) {
       )}
     </VStack>
   );
-}
+});
+ProfileSection.displayName = "ProfileSection";

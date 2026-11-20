@@ -289,7 +289,7 @@ const UserMenu = observer(() => {
                   label="Personal Details"
                   icon={FiUser}
                   color="teal"
-                  onClick={() => router.push("/account?tab=profile")}
+                  onClick={() => router.push("/account?tab=details")}
                 />
                 <MenuRow
                   index={next()}
@@ -322,18 +322,27 @@ const UserMenu = observer(() => {
                   index={next()}
                   label="Account Settings"
                   icon={FiUser}
-                  color="red"
-                  onClick={() => router.push("/super-admin/account")}
+                  color="teal"
+                  onClick={() => router.push("/account?tab=details")}
                 />
               </>
             ) : isSeller ? (
-              <MenuRow
-                index={next()}
-                label="Seller Dashboard"
-                icon={FiGrid}
-                color="orange"
-                onClick={() => router.push("/dashboard")}
-              />
+              <>
+                <MenuRow
+                  index={next()}
+                  label="Seller Dashboard"
+                  icon={FiGrid}
+                  color="orange"
+                  onClick={() => router.push("/dashboard")}
+                />
+                <MenuRow
+                  index={next()}
+                  label="Account Settings"
+                  icon={FiUser}
+                  color="teal"
+                  onClick={() => router.push("/account?tab=details")}
+                />
+              </>
             ) : (
               <>
                 <MenuRow
@@ -342,6 +351,13 @@ const UserMenu = observer(() => {
                   icon={FiGrid}
                   color="blue"
                   onClick={() => router.push("/dashboard")}
+                />
+                <MenuRow
+                  index={next()}
+                  label="Account Settings"
+                  icon={FiUser}
+                  color="teal"
+                  onClick={() => router.push("/account?tab=details")}
                 />
                 <MenuRow
                   index={next()}

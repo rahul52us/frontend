@@ -1,3 +1,4 @@
+import React, { memo, useMemo } from "react";
 import {
   Card,
   CardBody,
@@ -16,12 +17,33 @@ import { observer } from "mobx-react-lite";
 import { FaRupeeSign } from "react-icons/fa";
 import OrderStatusBadge from "./OrderStatusBadge";
 
-const OrderCard = ({ order }) => {
+interface OrderItem {
+  item_id?: string;
+  productImage?: string;
+  productName?: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+interface OrderCardProps {
+  order: any;
+}
+
+const OrderCard = ({ order }: OrderCardProps) => {
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
 
-  const orderItems = order.items || [];
-  const orderTotal = order.quote?.price?.value || order.total || 0;
+  const orderItems: OrderItem[] = useMemo(() => order?.items || [], [order?.items]);
+  const orderTotal = order?.quote?.price?.value || order?.total || 0;
+
+  const formattedDate = useMemo(() => {
+    if (!order?.createdAt) return "N/A";
+    return new Date(order.createdAt).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }, [order?.createdAt]);
 
   return (
     <Card
@@ -34,21 +56,17 @@ const OrderCard = ({ order }) => {
       <CardBody>
         <VStack align="stretch" spacing={2}>
           {/* Order Header */}
-          <HStack justify="space-between">
+          <HStack justify="space-between" flexWrap="wrap" gap={2}>
             <VStack align="start" spacing={1}>
-              <Heading fontSize={"lg"}>Order #{order?.orderId}</Heading>
+              <Heading fontSize="lg">Order #{order?.orderId}</Heading>
               <Text fontSize="sm" color="gray.500">
-                Ordered on{" "}
-                {order?.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                }) : "N/A"}
+                Ordered on {formattedDate}
               </Text>
             </VStack>
             <OrderStatusBadge status={order?.orderStatus || "pending"} />
           </HStack>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 1 }} spacing={4}>
+
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 1 }} spacing={4} mt={2}>
             {orderItems.map((item, index) => (
               <Flex
                 key={item.item_id || index}
@@ -59,22 +77,26 @@ const OrderCard = ({ order }) => {
               >
                 <Image
                   src={item.productImage || "/placeholder.png"}
-                  alt={item.productName}
-                  w={"80px"}
-                  h={"80px"}
+                  alt={item.productName || "Product"}
+                  w="80px"
+                  h="80px"
                   objectFit="contain"
                   mr={4}
                   fallbackSrc="https://via.placeholder.com/80"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <VStack align="start" spacing={1} flex={1}>
-                  <Text fontWeight="medium" noOfLines={2}>{item.productName}</Text>
+                  <Text fontWeight="medium" noOfLines={2}>
+                    {item.productName}
+                  </Text>
                   <Text fontSize="sm" color="gray.500">
                     Qty: {item.quantity}
                   </Text>
                   <HStack>
                     <Icon as={FaRupeeSign} color="green.500" boxSize={3} />
                     <Text>
-                      {(item.unitPrice * item.quantity).toLocaleString("en-IN")}
+                      {((item.unitPrice || 0) * (item.quantity || 1)).toLocaleString("en-IN")}
                     </Text>
                   </HStack>
                 </VStack>
@@ -82,7 +104,7 @@ const OrderCard = ({ order }) => {
             ))}
           </SimpleGrid>
 
-          <Divider />
+          <Divider my={2} />
 
           {/* Order Summary */}
           <HStack justify="space-between">
@@ -104,4 +126,4 @@ const OrderCard = ({ order }) => {
   );
 };
 
-export default observer(OrderCard);
+export default memo(observer(OrderCard));

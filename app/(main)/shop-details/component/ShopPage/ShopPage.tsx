@@ -18,7 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -46,119 +46,132 @@ const TABS = [
 
 type TabType = (typeof TABS)[number]["id"];
 
-const ShopPage = observer(({ shopData }: any) => {
-  const {
-    shopStore: { getShopProducts },
-  } = stores;
+const ShopPage = memo(
+  observer(({ shopData }: any) => {
+    const {
+      shopStore: { getShopProducts },
+    } = stores;
 
-  const [tab, setTab] = useState<TabType>("products");
-  const [products, setProducts] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+    const [tab, setTab] = useState<TabType>("products");
+    const [products, setProducts] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Color tokens
-  const pageBg = useColorModeValue("gray.50", "gray.950");
-  const cardBg = useColorModeValue("white", "gray.850");
-  const borderColor = useColorModeValue("gray.100", "gray.750");
-  const textPrimary = useColorModeValue("gray.900", "white");
-  const textMuted = useColorModeValue("gray.500", "gray.400");
-  const stickyBg = useColorModeValue(
-    "rgba(255, 255, 255, 0.9)",
-    "rgba(23, 25, 35, 0.9)"
-  );
-  const trackBg = useColorModeValue("gray.100", "gray.800");
-  const pillBg = useColorModeValue("white", "gray.700");
-  const btnBg = useColorModeValue("white", "gray.800");
-  const hoverBg = useColorModeValue("gray.100", "gray.700");
+    // Color tokens
+    const pageBg = useColorModeValue("gray.50", "gray.950");
+    const cardBg = useColorModeValue("white", "gray.850");
+    const borderColor = useColorModeValue("gray.100", "gray.750");
+    const textPrimary = useColorModeValue("gray.900", "white");
+    const textMuted = useColorModeValue("gray.500", "gray.400");
+    const stickyBg = useColorModeValue(
+      "rgba(255, 255, 255, 0.9)",
+      "rgba(23, 25, 35, 0.9)"
+    );
+    const trackBg = useColorModeValue("gray.100", "gray.800");
+    const pillBg = useColorModeValue("white", "gray.700");
+    const btnBg = useColorModeValue("white", "gray.800");
+    const hoverBg = useColorModeValue("gray.100", "gray.700");
 
-  // Fetch shop products using actual shopStore API
-  const fetchProducts = async (page = 1) => {
-    if (!shopData?._id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getShopProducts({
-        company: shopData?._id,
-        page: page,
-        limit: 8,
-      });
-      const data = res?.data?.products || [];
-      const total = res?.data?.totalPages || 1;
+    // Fetch shop products using actual shopStore API
+    const fetchProducts = useCallback(
+      async (page = 1) => {
+        if (!shopData?._id) return;
+        setLoading(true);
+        setError(null);
+        try {
+          const res = await getShopProducts({
+            company: shopData?._id,
+            page: page,
+            limit: 8,
+          });
+          const data = res?.data?.products || [];
+          const total = res?.data?.totalPages || 1;
 
-      setProducts(data);
-      setTotalPages(total);
-      setCurrentPage(page);
-    } catch (err: any) {
-      setError(err?.message || "Couldn't load products");
-    } finally {
-      setLoading(false);
-    }
-  };
+          setProducts(data);
+          setTotalPages(total);
+          setCurrentPage(page);
+        } catch (err: any) {
+          setError(err?.message || "Couldn't load products");
+        } finally {
+          setLoading(false);
+        }
+      },
+      [getShopProducts, shopData?._id]
+    );
 
-  useEffect(() => {
-    if (shopData?._id) {
-      fetchProducts(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shopData?._id]);
+    useEffect(() => {
+      if (shopData?._id) {
+        fetchProducts(1);
+      }
+    }, [shopData?._id, fetchProducts]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      fetchProducts(newPage);
+    const handlePageChange = useCallback(
+      (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+          fetchProducts(newPage);
+          document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
+        }
+      },
+      [fetchProducts, totalPages]
+    );
+
+    const handleSwitchToProducts = useCallback(() => {
+      setTab("products");
       document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+    }, []);
 
-  const handleSwitchToProducts = () => {
-    setTab("products");
-    document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
-  };
+    // Categories list
+    const categories = useMemo(
+      () => ["All", ...(shopData?.categories ?? [])],
+      [shopData?.categories]
+    );
 
-  // Categories list
-  const categories = useMemo(
-    () => ["All", ...(shopData?.categories ?? [])],
-    [shopData]
-  );
+    // Filtered products based on selected category
+    const filteredProducts = useMemo(() => {
+      if (selectedCategory === "All") return products;
+      return products.filter((p: any) => {
+        const pCat =
+          typeof p.category === "object" ? p.category?.name : p.category;
+        return String(pCat || "").toLowerCase() === selectedCategory.toLowerCase();
+      });
+    }, [products, selectedCategory]);
 
-  // Filtered products based on selected category
-  const filteredProducts = useMemo(() => {
-    if (selectedCategory === "All") return products;
-    return products.filter((p: any) => {
-      const pCat =
-        typeof p.category === "object" ? p.category?.name : p.category;
-      return String(pCat || "").toLowerCase() === selectedCategory.toLowerCase();
-    });
-  }, [products, selectedCategory]);
+    // Directions & Contact info for mobile bottom bar
+    const loc = shopData?.location;
+    const address = useMemo(
+      () =>
+        [
+          loc?.address,
+          loc?.city,
+          loc?.state,
+          loc?.postalCode || loc?.pincode,
+        ]
+          .filter(Boolean)
+          .join(", "),
+      [loc?.address, loc?.city, loc?.postalCode, loc?.pincode, loc?.state]
+    );
 
-  // Directions & Contact info for mobile bottom bar
-  const loc = shopData?.location;
-  const address = [
-    loc?.address,
-    loc?.city,
-    loc?.state,
-    loc?.postalCode || loc?.pincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
+    const directionsUrl = useMemo(
+      () =>
+        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+          address || shopData?.name || ""
+        )}`,
+      [address, shopData?.name]
+    );
 
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-    address || shopData?.name || ""
-  )}`;
+    const phone = shopData?.contactInfo?.phone;
 
-  const phone = shopData?.contactInfo?.phone;
+    return (
+      <Box minH="100vh" bg={pageBg} pb={{ base: 28, md: 14 }}>
+        {/* Shop Hero Section with Cover & Floating Identity Card */}
+        <ShopHeroSection
+          shopData={shopData}
+          onShopProductsClick={handleSwitchToProducts}
+        />
 
-  return (
-    <Box minH="100vh" bg={pageBg} pb={{ base: 28, md: 14 }}>
-      {/* Shop Hero Section with Cover & Floating Identity Card */}
-      <ShopHeroSection
-        shopData={shopData}
-        onShopProductsClick={handleSwitchToProducts}
-      />
-
-      {/* Main Container */}
         {/* Sticky Segmented Pill Tabs Navigation */}
         <Box
           id="tabs"
@@ -471,32 +484,52 @@ const ShopPage = observer(({ shopData }: any) => {
           )}
         </AnimatePresence>
 
-      {/* Footer Section */}
-      <Box mt={16}>
-        <ShopFooterSection shopData={shopData} />
-      </Box>
+        {/* Footer Section */}
+        <Box mt={16}>
+          <ShopFooterSection shopData={shopData} />
+        </Box>
 
-      {/* Mobile Sticky Bottom Action Bar */}
-      <Box
-        display={{ base: "block", md: "none" }}
-        position="fixed"
-        bottom={0}
-        left={0}
-        right={0}
-        zIndex={99}
-        bg={cardBg}
-        backdropFilter="blur(16px)"
-        borderTop="1px solid"
-        borderColor={borderColor}
-        p={3}
-        boxShadow="0 -4px 20px rgba(0, 0, 0, 0.08)"
-      >
-        <HStack spacing={2} w="full">
-          {phone && (
+        {/* Mobile Sticky Bottom Action Bar */}
+        <Box
+          display={{ base: "block", md: "none" }}
+          position="fixed"
+          bottom={0}
+          left={0}
+          right={0}
+          zIndex={99}
+          bg={cardBg}
+          backdropFilter="blur(16px)"
+          borderTop="1px solid"
+          borderColor={borderColor}
+          p={3}
+          boxShadow="0 -4px 20px rgba(0, 0, 0, 0.08)"
+        >
+          <HStack spacing={2} w="full">
+            {phone && (
+              <Button
+                as="a"
+                href={`tel:${phone}`}
+                aria-label="Call"
+                size="md"
+                h="44px"
+                px={4}
+                borderRadius="xl"
+                border="1px solid"
+                borderColor={borderColor}
+                bg={cardBg}
+                color={textPrimary}
+                _active={{ transform: "scale(0.95)" }}
+              >
+                <FiPhone size={16} />
+              </Button>
+            )}
+
             <Button
               as="a"
-              href={`tel:${phone}`}
-              aria-label="Call"
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Directions"
               size="md"
               h="44px"
               px={4}
@@ -507,49 +540,32 @@ const ShopPage = observer(({ shopData }: any) => {
               color={textPrimary}
               _active={{ transform: "scale(0.95)" }}
             >
-              <FiPhone size={16} />
+              <FiNavigation size={16} />
             </Button>
-          )}
 
-          <Button
-            as="a"
-            href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Directions"
-            size="md"
-            h="44px"
-            px={4}
-            borderRadius="xl"
-            border="1px solid"
-            borderColor={borderColor}
-            bg={cardBg}
-            color={textPrimary}
-            _active={{ transform: "scale(0.95)" }}
-          >
-            <FiNavigation size={16} />
-          </Button>
-
-          <Button
-            onClick={handleSwitchToProducts}
-            leftIcon={<FiShoppingBag />}
-            flex={1}
-            size="md"
-            h="44px"
-            borderRadius="xl"
-            bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
-            color="white"
-            fontWeight="bold"
-            fontSize="sm"
-            boxShadow="0 4px 12px rgba(37, 99, 235, 0.3)"
-            _active={{ transform: "scale(0.97)" }}
-          >
-            Shop products
-          </Button>
-        </HStack>
+            <Button
+              onClick={handleSwitchToProducts}
+              leftIcon={<FiShoppingBag />}
+              flex={1}
+              size="md"
+              h="44px"
+              borderRadius="xl"
+              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
+              color="white"
+              fontWeight="bold"
+              fontSize="sm"
+              boxShadow="0 4px 12px rgba(37, 99, 235, 0.3)"
+              _active={{ transform: "scale(0.97)" }}
+            >
+              Shop products
+            </Button>
+          </HStack>
+        </Box>
       </Box>
-    </Box>
-  );
-});
+    );
+  })
+);
+
+ShopPage.displayName = "ShopPage";
 
 export default ShopPage;

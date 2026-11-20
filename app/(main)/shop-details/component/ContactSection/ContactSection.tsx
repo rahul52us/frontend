@@ -3,18 +3,15 @@
 import {
   Box,
   Circle,
-  Divider,
-  Flex,
   Heading,
   HStack,
   Icon,
   Link,
   Text,
-  Tooltip,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { memo } from "react";
 import {
   FiFacebook,
   FiGlobe,
@@ -24,7 +21,7 @@ import {
   FiTwitter,
 } from "react-icons/fi";
 
-const ContactSection = ({ shopData }: any) => {
+const ContactSection = memo(({ shopData }: any) => {
   const cardBg = useColorModeValue("white", "gray.850");
   const borderColor = useColorModeValue("gray.100", "gray.750");
   const textPrimary = useColorModeValue("gray.900", "white");
@@ -178,44 +175,28 @@ const ContactSection = ({ shopData }: any) => {
         )}
 
         {socials.length > 0 && (
-          <>
-            <Divider my={1} borderColor={borderColor} />
-            <Box px={3} pt={1}>
-              <Text fontSize="xs" fontWeight="bold" color={textMuted} mb={2}>
-                SOCIAL MEDIA
-              </Text>
-              <HStack spacing={3}>
-                {socials.map((social) => (
-                  <Tooltip
-                    key={social.name}
-                    label={social.name}
-                    placement="top"
-                  >
-                    <Circle
-                      as="a"
-                      href={social.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      size="36px"
-                      bg="gray.100"
-                      color={social.color}
-                      _hover={{
-                        transform: "scale(1.1)",
-                        boxShadow: "md",
-                      }}
-                      transition="all 0.2s"
-                    >
-                      <Icon as={social.icon} boxSize={4} />
-                    </Circle>
-                  </Tooltip>
-                ))}
-              </HStack>
-            </Box>
-          </>
+          <HStack spacing={3} pt={2}>
+            {socials.map((s) => (
+              <Link
+                key={s.name}
+                href={s.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                _hover={{ transform: "scale(1.1)" }}
+                transition="transform 0.2s"
+              >
+                <Circle size="36px" bg={rowHoverBg} color={s.color}>
+                  <Icon as={s.icon} boxSize={4} />
+                </Circle>
+              </Link>
+            ))}
+          </HStack>
         )}
       </VStack>
     </Box>
   );
-};
+});
+
+ContactSection.displayName = "ContactSection";
 
 export default ContactSection;

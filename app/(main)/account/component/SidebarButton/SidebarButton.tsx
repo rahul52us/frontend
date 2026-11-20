@@ -1,6 +1,6 @@
 import { Box, Button, Divider, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { memo } from "react";
 
 interface SidebarButtonProps {
   label: string;
@@ -57,4 +57,4 @@ const SidebarButton = ({
   );
 };
 
-export default observer(SidebarButton);
+export default memo(observer(SidebarButton));

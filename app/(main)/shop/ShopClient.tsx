@@ -1,6 +1,7 @@
 "use client";
+
 import { Box, Button, Flex, Text, VStack } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useSearchParams, useRouter } from "next/navigation";
 import ShopLayoutSkeletan from "../shop-details/component/ShopPage/ShopLayoutSkeletan";
@@ -8,92 +9,115 @@ import ShopPage from "../shop-details/component/ShopPage/ShopPage";
 import stores from "../../store/stores";
 import { authentication } from "../../config/utils/routes";
 
-const dummyData = {
-  ratings: {
-    average: 4.8,
-    total: 256,
-  },
+const DEFAULT_RATINGS = {
+  average: 4.8,
+  total: 256,
 };
 
-const Page = observer(() => {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [shopData, setShopData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+const ShopContent = memo(
+  observer(() => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const shopId = searchParams.get("id");
 
-  const searchParams = useSearchParams();
-  const shopId = searchParams.get('id');
+    const [loading, setLoading] = useState(true);
+    const [shopData, setShopData] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
 
-  const {
-    shopStore: { getSingleShopById },
-  } = stores;
+    const {
+      shopStore: { getSingleShopById },
+    } = stores;
 
-  useEffect(() => {
-    if (!shopId) return;
+    useEffect(() => {
+      let isMounted = true;
 
-    const fetchShopData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getSingleShopById(shopId);
-        if (!data?.data) {
-          setError("Shop not found");
-          return;
-        }
-        setShopData(data.data);
-      } catch {
-        setError("Something went wrong. Please try again.");
-      } finally {
+      if (!shopId) {
         setLoading(false);
+        setError("Shop ID is required");
+        return;
       }
-    };
 
-    fetchShopData();
-  }, [shopId, getSingleShopById]);
+      const fetchShopData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const data = await getSingleShopById(shopId);
+          if (!isMounted) return;
 
-  if (loading) return <ShopLayoutSkeletan />;
+          if (!data?.data) {
+            setError("Shop not found");
+            return;
+          }
+          setShopData(data.data);
+        } catch {
+          if (isMounted) {
+            setError("Something went wrong. Please try again.");
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      };
 
-  if (error || !shopData) {
+      fetchShopData();
+
+      return () => {
+        isMounted = false;
+      };
+    }, [shopId, getSingleShopById]);
+
+    const handleExploreShops = useCallback(() => {
+      router.push("/shops");
+    }, [router]);
+
+    const handleStartShop = useCallback(() => {
+      router.push(authentication.register);
+    }, [router]);
+
+    const fullShopData = useMemo(() => {
+      if (!shopData) return null;
+      return {
+        ...shopData,
+        ratings: shopData.ratings || DEFAULT_RATINGS,
+      };
+    }, [shopData]);
+
+    if (loading) return <ShopLayoutSkeletan />;
+
+    if (error || !fullShopData) {
+      return (
+        <Flex minH="70vh" align="center" justify="center" px={4} py={10}>
+          <VStack spacing={4} maxW="520px" textAlign="center">
+            <Text fontSize="2xl" fontWeight="700">
+              Shop unavailable
+            </Text>
+            <Text color="gray.500">
+              {error || "This shop is currently not available."}
+            </Text>
+            <Flex gap={3} wrap="wrap" justify="center">
+              <Button onClick={handleExploreShops} colorScheme="brand">
+                Explore shops
+              </Button>
+              <Button onClick={handleStartShop} variant="outline">
+                Start your shop
+              </Button>
+            </Flex>
+          </VStack>
+        </Flex>
+      );
+    }
+
     return (
-      <Flex minH="70vh" align="center" justify="center" px={4} py={10}>
-        <VStack spacing={4} maxW="520px" textAlign="center">
-          <Text fontSize="2xl" fontWeight="700">
-            Shop unavailable
-          </Text>
-          <Text color="gray.500">
-            {error || "This shop is currently not available."}
-          </Text>
-          <Flex gap={3} wrap="wrap" justify="center">
-            <Button onClick={() => router.push("/shops")} colorScheme="brand">
-              Explore shops
-            </Button>
-            <Button onClick={() => router.push(authentication.register)} variant="outline">
-              Start your shop
-            </Button>
-          </Flex>
-        </VStack>
-      </Flex>
+      <Box minH="100vh">
+        <ShopPage shopData={fullShopData} />
+      </Box>
     );
-  }
+  })
+);
 
-  return (
-    <Box minH="100vh">
-      <ShopPage
-        shopData={{
-          ...shopData,
-          ratings: dummyData.ratings,
-        }}
-      />
-    </Box>
-  );
-});
-
+ShopContent.displayName = "ShopContent";
 
 export default function ShopClientPage() {
-  return (
-    <React.Suspense fallback={<ShopLayoutSkeletan />}>
-      <Page />
-    </React.Suspense>
-  );
+  return <ShopContent />;
 }
-

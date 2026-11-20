@@ -1,17 +1,14 @@
 import { Box, Container, Flex, Image, Text, VStack, HStack, Icon, Link, Heading, SimpleGrid } from '@chakra-ui/react';
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { FiArrowUpRight, FiInstagram, FiTwitter, FiFacebook } from 'react-icons/fi';
+import { FiInstagram, FiTwitter, FiFacebook } from 'react-icons/fi';
 
-const MotionBox = motion(Box);
-const MotionText = motion(Text);
-
-const ShopFooterSection = ({ shopData }: any) => {
+const ShopFooterSection = memo(({ shopData }: any) => {
   const currentYear = new Date().getFullYear();
 
   // Marquee items for brand slogans
   const marqueeItems = [
-    shopData.name,
+    shopData?.name || "SHOP",
     "PURVEYOR OF FINERIES",
     "ESTABLISHED " + currentYear,
     "THE PRISM STANDARD",
@@ -64,20 +61,24 @@ const ShopFooterSection = ({ shopData }: any) => {
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={12} mb={16}>
           {/* Column 1: Brand Signature */}
           <VStack align="flex-start" spacing={6}>
-            <Box
-              bg="white"
-              p={3}
-              borderRadius="xl"
-            >
-              <Image
-                src={shopData.logo?.url}
-                alt={shopData.name}
-                boxSize="40px"
-                objectFit="contain"
-              />
-            </Box>
+            {shopData?.logo?.url && (
+              <Box
+                bg="white"
+                p={3}
+                borderRadius="xl"
+              >
+                <Image
+                  src={shopData.logo.url}
+                  alt={shopData.name}
+                  boxSize="40px"
+                  objectFit="contain"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </Box>
+            )}
             <VStack align="flex-start" spacing={1}>
-              <Heading size="sm" fontWeight="800" letterSpacing="-0.02em">{shopData.name}</Heading>
+              <Heading size="sm" fontWeight="800" letterSpacing="-0.02em">{shopData?.name}</Heading>
               <Text fontSize="10px" fontWeight="800" color="gray.500" letterSpacing="1px">PRISM CERTIFIED VENDOR</Text>
             </VStack>
           </VStack>
@@ -145,7 +146,7 @@ const ShopFooterSection = ({ shopData }: any) => {
             gap={4}
           >
             <Text fontSize="10px" fontWeight="700" color="whiteAlpha.300" letterSpacing="1px">
-              © {String(currentYear)} {shopData.name.toUpperCase()} • ALL RIGHTS RESERVED
+              © {String(currentYear)} {String(shopData?.name || "").toUpperCase()} • ALL RIGHTS RESERVED
             </Text>
             <HStack spacing={8}>
               <Link fontSize="9px" fontWeight="700" color="whiteAlpha.300" _hover={{ color: "white" }}>PRIVACY</Link>
@@ -157,6 +158,8 @@ const ShopFooterSection = ({ shopData }: any) => {
       </Container>
     </Box>
   );
-};
+});
+
+ShopFooterSection.displayName = "ShopFooterSection";
 
 export default ShopFooterSection;

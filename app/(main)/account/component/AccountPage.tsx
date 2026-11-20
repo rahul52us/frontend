@@ -21,7 +21,7 @@ import {
 import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaBox,
   FaHome,
@@ -82,10 +82,13 @@ const AccountPage = observer(() => {
 
   // Keep state synchronized with URL searchParams (including browser back/forward)
   useEffect(() => {
-    const tab = searchParams?.get("tab");
+    let tab = searchParams?.get("tab");
     if (tab === "dashboard") {
       router.replace("/dashboard");
       return;
+    }
+    if (tab === "profile") {
+      tab = "details";
     }
 
     if (tab && VALID_TABS.includes(tab as TabType)) {
@@ -107,6 +110,18 @@ const AccountPage = observer(() => {
   const accentColor = "var(--color-primary)";
   const activeBorder = "2px solid var(--color-primary)";
 
+  const menuHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const menuActiveBg = useColorModeValue("purple.50", "whiteAlpha.100");
+  const iconTileBg = useColorModeValue("purple.50", "whiteAlpha.100");
+  const iconTileBlueBg = useColorModeValue("blue.50", "whiteAlpha.100");
+  const iconTileTealBg = useColorModeValue("teal.50", "whiteAlpha.100");
+  const iconTileOrangeBg = useColorModeValue("orange.50", "whiteAlpha.100");
+  const iconTileGreenBg = useColorModeValue("green.50", "whiteAlpha.100");
+  const logoutBorderColor = useColorModeValue("red.100", "red.900");
+  const logoutCardBg = useColorModeValue("red.50", "rgba(239, 68, 68, 0.08)");
+  const logoutIconTileBg = useColorModeValue("red.100", "red.900");
+  const logoutMutedText = useColorModeValue("red.400", "red.300");
+
   const {
     isOpen: isLogoutOpen,
     onOpen: onLogoutOpen,
@@ -116,12 +131,12 @@ const AccountPage = observer(() => {
   const { user: authUser, logout, addresses } = stores.auth;
   const { cartStore } = stores;
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     window.location.href = "/";
-  };
+  }, [logout]);
 
-  const user = {
+  const user = useMemo(() => ({
     ...authUser,
     name: authUser?.name || "User",
     email: authUser?.email || "",
@@ -131,25 +146,25 @@ const AccountPage = observer(() => {
       `https://ui-avatars.com/api/?name=${encodeURIComponent(
         authUser?.name || "User"
       )}&background=6B46C1&color=fff&size=128`,
-  };
+  }), [authUser]);
 
   // Desktop tab navigation
-  const handleDesktopTabChange = (tab: string) => {
+  const handleDesktopTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
     router.push(`/account?tab=${tab}`);
-  };
+  }, [router]);
 
   // Mobile navigation: navigate to individual section view
-  const handleMobileSelectTab = (tab: string) => {
+  const handleMobileSelectTab = useCallback((tab: string) => {
     setMobileSelectedTab(tab);
     router.push(`/account?tab=${tab}`);
-  };
+  }, [router]);
 
   // Mobile navigation: return to main options list
-  const handleMobileBack = () => {
+  const handleMobileBack = useCallback(() => {
     setMobileSelectedTab(null);
     router.push("/account");
-  };
+  }, [router]);
 
   // Register mobile section subview with overlayManager so native back closes it first
   useRegisterOverlay(
@@ -160,14 +175,14 @@ const AccountPage = observer(() => {
   );
 
   // Menu items list (shared configuration)
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       tab: "details",
       label: "Personal Details",
       subtitle: "Profile info, phone & contact details",
       icon: FaUser,
       iconColor: "purple.600",
-      iconBg: useColorModeValue("purple.50", "whiteAlpha.100"),
+      iconBg: iconTileBg,
     },
     {
       tab: "cart",
@@ -178,7 +193,7 @@ const AccountPage = observer(() => {
           : "View items & checkout",
       icon: FaShoppingCart,
       iconColor: "blue.600",
-      iconBg: useColorModeValue("blue.50", "whiteAlpha.100"),
+      iconBg: iconTileBlueBg,
       badge:
         isMounted && cartStore.totalItems > 0 ? (
           <Badge
@@ -202,7 +217,7 @@ const AccountPage = observer(() => {
           : "Manage delivery addresses",
       icon: FaHome,
       iconColor: "teal.600",
-      iconBg: useColorModeValue("teal.50", "whiteAlpha.100"),
+      iconBg: iconTileTealBg,
     },
     {
       tab: "orders",
@@ -210,7 +225,7 @@ const AccountPage = observer(() => {
       subtitle: "Track, return and view order history",
       icon: FaBox,
       iconColor: "orange.600",
-      iconBg: useColorModeValue("orange.50", "whiteAlpha.100"),
+      iconBg: iconTileOrangeBg,
     },
     {
       tab: "wallet",
@@ -218,9 +233,9 @@ const AccountPage = observer(() => {
       subtitle: "Balance, payments & saved cards",
       icon: FaWallet,
       iconColor: "green.600",
-      iconBg: useColorModeValue("green.50", "whiteAlpha.100"),
+      iconBg: iconTileGreenBg,
     },
-  ];
+  ], [addresses?.length, cartStore.totalItems, iconTileBg, iconTileBlueBg, iconTileGreenBg, iconTileOrangeBg, iconTileTealBg, isMounted]);
 
   return (
     <Box
@@ -229,7 +244,7 @@ const AccountPage = observer(() => {
       py={{ base: 3, md: 12 }}
       px={{ base: 3, md: 4 }}
       bg={pageBg}
-      minH={{md:"100vh"}}
+      minH={{ md: "100vh" }}
     >
       {/* ===================================================================
           1. DESKTOP VIEW (Visible on md and larger) - Unchanged Layout & Logic
@@ -427,9 +442,9 @@ const AccountPage = observer(() => {
                       px={4}
                       py={3.5}
                       transition="all 0.15s ease"
-                      _hover={{ bg: useColorModeValue("gray.50", "whiteAlpha.50") }}
+                      _hover={{ bg: menuHoverBg }}
                       _active={{
-                        bg: useColorModeValue("purple.50", "whiteAlpha.100"),
+                        bg: menuActiveBg,
                         transform: "scale(0.995)",
                       }}
                       onClick={() => handleMobileSelectTab(item.tab)}
@@ -507,8 +522,8 @@ const AccountPage = observer(() => {
               borderRadius="2xl"
               boxShadow="sm"
               border="1px solid"
-              borderColor={useColorModeValue("red.100", "red.900")}
-              bg={useColorModeValue("red.50", "rgba(239, 68, 68, 0.08)")}
+              borderColor={logoutBorderColor}
+              bg={logoutCardBg}
               as="button"
               type="button"
               w="full"
@@ -523,7 +538,7 @@ const AccountPage = observer(() => {
                       w="36px"
                       h="36px"
                       rounded="xl"
-                      bg={useColorModeValue("red.100", "red.900")}
+                      bg={logoutIconTileBg}
                       color="red.600"
                       align="center"
                       justify="center"
@@ -536,7 +551,7 @@ const AccountPage = observer(() => {
                       </Text>
                       <Text
                         fontSize="3xs"
-                        color={useColorModeValue("red.400", "red.300")}
+                        color={logoutMutedText}
                       >
                         Sign out of this device
                       </Text>
@@ -628,4 +643,4 @@ const AccountPage = observer(() => {
   );
 });
 
-export default AccountPage;
+export default memo(AccountPage);

@@ -4,7 +4,6 @@ import {
   Badge,
   Box,
   Button,
-  Container,
   Flex,
   Heading,
   HStack,
@@ -121,7 +120,17 @@ const textItem = {
 };
 
 // Indicator pill with its own progress fill (isolated so only it re-renders)
-const ProgressPill = ({ active, paused, onSelect, onComplete }) => {
+const ProgressPill = memo(({
+  active,
+  paused,
+  onSelect,
+  onComplete,
+}: {
+  active: boolean;
+  paused: boolean;
+  onSelect: () => void;
+  onComplete: () => void;
+}) => {
   const [progress, setProgress] = useState(0);
   const completeRef = useRef(onComplete);
   completeRef.current = onComplete;
@@ -132,9 +141,9 @@ const ProgressPill = ({ active, paused, onSelect, onComplete }) => {
       return;
     }
     if (paused) return;
-    let raf;
+    let raf: number;
     let last = performance.now();
-    const tick = (now) => {
+    const tick = (now: number) => {
       const dt = now - last;
       last = now;
       setProgress((p) => Math.min(100, p + (dt / SLIDE_DURATION) * 100));
@@ -173,10 +182,11 @@ const ProgressPill = ({ active, paused, onSelect, onComplete }) => {
       />
     </Box>
   );
-};
+});
+ProgressPill.displayName = "ProgressPill";
 
 // Floating glass chip
-const GlassChip = ({ children, delay = 0, ...props }) => (
+const GlassChip = memo(({ children, delay = 0, ...props }: any) => (
   <MotionBox
     animate={{ y: [0, -6, 0] }}
     transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay }}
@@ -193,10 +203,11 @@ const GlassChip = ({ children, delay = 0, ...props }) => (
   >
     {children}
   </MotionBox>
-);
+));
+GlassChip.displayName = "GlassChip";
 
 // One slide: gradient + orbs + text + layout-specific visual
-const Slide = ({ slide, onNavigate }) => {
+const Slide = memo(({ slide, onNavigate }: { slide: (typeof heroSlides)[0]; onNavigate: (link: string) => void }) => {
   const kenBurns = {
     initial: { scale: 1.18 },
     animate: { scale: 1 },
@@ -220,7 +231,15 @@ const Slide = ({ slide, onNavigate }) => {
           }}
         >
           <MotionBox w="full" h="full" {...kenBurns}>
-            <Image src={slide.image} alt={slide.title} w="full" h="full" objectFit="cover" />
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              w="full"
+              h="full"
+              objectFit="cover"
+              loading="eager"
+              decoding="async"
+            />
           </MotionBox>
           <Box
             position="absolute"
@@ -258,7 +277,15 @@ const Slide = ({ slide, onNavigate }) => {
             boxShadow="0 20px 45px rgba(0,0,0,0.35)"
           >
             <MotionBox w="full" h="full" {...kenBurns}>
-              <Image src={slide.image} alt={slide.title} w="full" h="full" objectFit="cover" />
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                w="full"
+                h="full"
+                objectFit="cover"
+                loading="lazy"
+                decoding="async"
+              />
             </MotionBox>
           </MotionBox>
           {/* Back card for depth */}
@@ -312,7 +339,15 @@ const Slide = ({ slide, onNavigate }) => {
             boxShadow="0 20px 45px rgba(0,0,0,0.35)"
           >
             <MotionBox w="full" h="full" {...kenBurns}>
-              <Image src={slide.image} alt={slide.title} w="full" h="full" objectFit="cover" />
+              <Image
+                src={slide.image}
+                alt={slide.title}
+                w="full"
+                h="full"
+                objectFit="cover"
+                loading="lazy"
+                decoding="async"
+              />
             </MotionBox>
           </MotionBox>
         </Box>
@@ -516,7 +551,8 @@ const Slide = ({ slide, onNavigate }) => {
       </Flex>
     </MotionBox>
   );
-};
+});
+Slide.displayName = "Slide";
 
 const HeroSection = () => {
   const router = useRouter();
@@ -536,212 +572,225 @@ const HeroSection = () => {
     []
   );
 
+  const handleNavigate = useCallback(
+    (link: string) => {
+      router.push(link);
+    },
+    [router]
+  );
+
   const activeSlide = heroSlides[currentSlide];
 
   // Swipe support for mobile
-  const handleDragEnd = (_, info) => {
-    setIsPaused(false);
-    if (info.offset.x < -60 || info.velocity.x < -400) nextSlide();
-    else if (info.offset.x > 60 || info.velocity.x > 400) prevSlide();
-  };
+  const handleDragEnd = useCallback(
+    (_: any, info: any) => {
+      setIsPaused(false);
+      if (info.offset.x < -60 || info.velocity.x < -400) nextSlide();
+      else if (info.offset.x > 60 || info.velocity.x > 400) prevSlide();
+    },
+    [nextSlide, prevSlide]
+  );
+
+  const handlePause = useCallback(() => setIsPaused(true), []);
+  const handleResume = useCallback(() => setIsPaused(false), []);
 
   return (
     <Box bg="var(--color-bg)" borderBottom="1px solid" borderColor="var(--color-border)" pb={{ base: 3, md: 6 }}>
-        {/* HERO BANNER */}
-        <MotionBox
-          position="relative"
-          rounded="2xl"
-          overflow="hidden"
-          h={{ base: "230px", sm: "285px", md: "345px", lg: "380px" }}
-          boxShadow="0 10px 30px rgba(0,0,0,0.12)"
-          bg="gray.900"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.12}
-          dragDirectionLock
-          style={{ touchAction: "pan-y" }}
-          onDragStart={() => setIsPaused(true)}
-          onDragEnd={handleDragEnd}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+      {/* HERO BANNER */}
+      <MotionBox
+        position="relative"
+        rounded="2xl"
+        overflow="hidden"
+        h={{ base: "230px", sm: "285px", md: "345px", lg: "380px" }}
+        boxShadow="0 10px 30px rgba(0,0,0,0.12)"
+        bg="gray.900"
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.12}
+        dragDirectionLock
+        style={{ touchAction: "pan-y" }}
+        onDragStart={handlePause}
+        onDragEnd={handleDragEnd}
+        onMouseEnter={handlePause}
+        onMouseLeave={handleResume}
+      >
+        {/* Crossfade: old and new slide overlap, so there's no blank flash */}
+        <AnimatePresence initial={false}>
+          <Slide
+            key={activeSlide.id}
+            slide={activeSlide}
+            onNavigate={handleNavigate}
+          />
+        </AnimatePresence>
+
+        {/* Prev / Next */}
+        <IconButton
+          display={{ base: "none", md: "flex" }}
+          aria-label="Previous slide"
+          icon={<FiChevronLeft size={20} />}
+          position="absolute"
+          left={4}
+          top="50%"
+          transform="translateY(-50%)"
+          size="sm"
+          rounded="full"
+          bg="blackAlpha.400"
+          color="white"
+          backdropFilter="blur(6px)"
+          _hover={{ bg: "blackAlpha.700", transform: "translateY(-50%) scale(1.1)" }}
+          _active={{ transform: "translateY(-50%) scale(0.95)" }}
+          transition="all 0.2s ease"
+          onClick={prevSlide}
+          zIndex={5}
+        />
+        <IconButton
+          display={{ base: "none", md: "flex" }}
+          aria-label="Next slide"
+          icon={<FiChevronRight size={20} />}
+          position="absolute"
+          right={4}
+          top="50%"
+          transform="translateY(-50%)"
+          size="sm"
+          rounded="full"
+          bg="blackAlpha.400"
+          color="white"
+          backdropFilter="blur(6px)"
+          _hover={{ bg: "blackAlpha.700", transform: "translateY(-50%) scale(1.1)" }}
+          _active={{ transform: "translateY(-50%) scale(0.95)" }}
+          transition="all 0.2s ease"
+          onClick={nextSlide}
+          zIndex={5}
+        />
+
+        {/* Progress pills */}
+        <HStack
+          position="absolute"
+          bottom={3}
+          left="50%"
+          transform="translateX(-50%)"
+          spacing={2}
+          zIndex={5}
         >
-          {/* Crossfade: old and new slide overlap, so there's no blank flash */}
-          <AnimatePresence initial={false}>
-            <Slide
-              key={activeSlide.id}
-              slide={activeSlide}
-              onNavigate={(link) => router.push(link)}
+          {heroSlides.map((s, idx) => (
+            <ProgressPill
+              key={s.id}
+              active={currentSlide === idx}
+              paused={isPaused}
+              onSelect={() => setCurrentSlide(idx)}
+              onComplete={nextSlide}
             />
-          </AnimatePresence>
+          ))}
+        </HStack>
+      </MotionBox>
 
-          {/* Prev / Next */}
-          <IconButton
-            display={{ base: "none", md: "flex" }}
-            aria-label="Previous slide"
-            icon={<FiChevronLeft size={20} />}
-            position="absolute"
-            left={4}
-            top="50%"
-            transform="translateY(-50%)"
-            size="sm"
-            rounded="full"
-            bg="blackAlpha.400"
-            color="white"
-            backdropFilter="blur(6px)"
-            _hover={{ bg: "blackAlpha.700", transform: "translateY(-50%) scale(1.1)" }}
-            _active={{ transform: "translateY(-50%) scale(0.95)" }}
-            transition="all 0.2s ease"
-            onClick={prevSlide}
-            zIndex={5}
-          />
-          <IconButton
-            display={{ base: "none", md: "flex" }}
-            aria-label="Next slide"
-            icon={<FiChevronRight size={20} />}
-            position="absolute"
-            right={4}
-            top="50%"
-            transform="translateY(-50%)"
-            size="sm"
-            rounded="full"
-            bg="blackAlpha.400"
-            color="white"
-            backdropFilter="blur(6px)"
-            _hover={{ bg: "blackAlpha.700", transform: "translateY(-50%) scale(1.1)" }}
-            _active={{ transform: "translateY(-50%) scale(0.95)" }}
-            transition="all 0.2s ease"
-            onClick={nextSlide}
-            zIndex={5}
-          />
-
-          {/* Progress pills */}
-          <HStack
-            position="absolute"
-            bottom={3}
-            left="50%"
-            transform="translateX(-50%)"
-            spacing={2}
-            zIndex={5}
+      {/* SELLER RIBBON */}
+      <MotionFlex
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        mt={{ base: 2.5, md: 3.5 }}
+        bg={ribbonBg}
+        border="1px solid"
+        borderColor={ribbonBorder}
+        rounded="xl"
+        px={{ base: 3, md: 4 }}
+        py={2}
+        align="center"
+        justify="space-between"
+        gap={2}
+      >
+        <HStack spacing={2} minW={0}>
+          <Badge colorScheme="orange" fontSize="9px" rounded="md" px={1.5} flexShrink={0}>
+            SELLER HUB
+          </Badge>
+          <Text
+            fontSize={{ base: "11px", sm: "xs" }}
+            fontWeight="600"
+            color={ribbonText}
+            noOfLines={1}
           >
-            {heroSlides.map((s, idx) => (
-              <ProgressPill
-                key={s.id}
-                active={currentSlide === idx}
-                paused={isPaused}
-                onSelect={() => setCurrentSlide(idx)}
-                onComplete={nextSlide}
-              />
-            ))}
-          </HStack>
-        </MotionBox>
-
-        {/* SELLER RIBBON */}
-        <MotionFlex
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          mt={{ base: 2.5, md: 3.5 }}
-          bg={ribbonBg}
-          border="1px solid"
-          borderColor={ribbonBorder}
-          rounded="xl"
-          px={{ base: 3, md: 4 }}
-          py={2}
-          align="center"
-          justify="space-between"
-          gap={2}
+            Own a local shop or business? Reach thousands of customers in your city with 0% setup fee.
+          </Text>
+        </HStack>
+        <Button
+          size="xs"
+          colorScheme="orange"
+          rounded="lg"
+          px={3}
+          flexShrink={0}
+          rightIcon={<FiArrowRight size={11} />}
+          _hover={{ transform: "translateY(-1px)" }}
+          _active={{ transform: "scale(0.97)" }}
+          transition="all 0.2s ease"
+          onClick={() => handleNavigate("/register?role=seller")}
         >
-          <HStack spacing={2} minW={0}>
-            <Badge colorScheme="orange" fontSize="9px" rounded="md" px={1.5} flexShrink={0}>
-              SELLER HUB
-            </Badge>
-            <Text
-              fontSize={{ base: "11px", sm: "xs" }}
-              fontWeight="600"
-              color={ribbonText}
-              noOfLines={1}
+          Start Selling Free
+        </Button>
+      </MotionFlex>
+
+      {/* TRUST STRIP */}
+      <Box
+        mt={{ base: 2.5, md: 3.5 }}
+        bg="var(--color-surface)"
+        rounded="2xl"
+        border="1px solid"
+        borderColor="var(--color-border)"
+        p={{ base: 3, md: 3.5 }}
+        boxShadow="xs"
+      >
+        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={{ base: 2.5, md: 4 }}>
+          {trustFeatures.map((item, i) => (
+            <MotionBox
+              key={item.title}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: i * 0.08, ease: "easeOut" }}
+              whileHover={{ y: -2 }}
             >
-              Own a local shop or business? Reach thousands of customers in your city with 0% setup fee.
-            </Text>
-          </HStack>
-          <Button
-            size="xs"
-            colorScheme="orange"
-            rounded="lg"
-            px={3}
-            flexShrink={0}
-            rightIcon={<FiArrowRight size={11} />}
-            _hover={{ transform: "translateY(-1px)" }}
-            _active={{ transform: "scale(0.97)" }}
-            transition="all 0.2s ease"
-            onClick={() => router.push("/register?role=seller")}
-          >
-            Start Selling Free
-          </Button>
-        </MotionFlex>
-
-        {/* TRUST STRIP */}
-        <Box
-          mt={{ base: 2.5, md: 3.5 }}
-          bg="var(--color-surface)"
-          rounded="2xl"
-          border="1px solid"
-          borderColor="var(--color-border)"
-          p={{ base: 3, md: 3.5 }}
-          boxShadow="xs"
-        >
-          <SimpleGrid columns={{ base: 2, md: 4 }} spacing={{ base: 2.5, md: 4 }}>
-            {trustFeatures.map((item, i) => (
-              <MotionBox
-                key={item.title}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: i * 0.08, ease: "easeOut" }}
-                whileHover={{ y: -2 }}
+              <HStack
+                spacing={3}
+                align="center"
+                justify={{ base: "flex-start", md: "center" }}
               >
-                <HStack
-                  spacing={3}
+                <Flex
+                  w={{ base: "32px", md: "36px" }}
+                  h={{ base: "32px", md: "36px" }}
+                  rounded="xl"
+                  bg="var(--color-surface-hover)"
+                  color="var(--color-primary)"
                   align="center"
-                  justify={{ base: "flex-start", md: "center" }}
+                  justify="center"
+                  flexShrink={0}
                 >
-                  <Flex
-                    w={{ base: "32px", md: "36px" }}
-                    h={{ base: "32px", md: "36px" }}
-                    rounded="xl"
-                    bg="var(--color-surface-hover)"
-                    color="var(--color-primary)"
-                    align="center"
-                    justify="center"
-                    flexShrink={0}
+                  <Icon as={item.icon} boxSize={4} />
+                </Flex>
+                <Box minW={0}>
+                  <Text
+                    fontSize={{ base: "11px", md: "xs" }}
+                    fontWeight="700"
+                    color="var(--color-text)"
+                    noOfLines={1}
                   >
-                    <Icon as={item.icon} boxSize={4} />
-                  </Flex>
-                  <Box minW={0}>
-                    <Text
-                      fontSize={{ base: "11px", md: "xs" }}
-                      fontWeight="700"
-                      color="var(--color-text)"
-                      noOfLines={1}
-                    >
-                      {item.title}
-                    </Text>
-                    <Text
-                      fontSize="10px"
-                      color="var(--color-text-muted)"
-                      noOfLines={1}
-                      display={{ base: "none", sm: "block" }}
-                    >
-                      {item.desc}
-                    </Text>
-                  </Box>
-                </HStack>
-              </MotionBox>
-            ))}
-          </SimpleGrid>
-        </Box>
+                    {item.title}
+                  </Text>
+                  <Text
+                    fontSize="10px"
+                    color="var(--color-text-muted)"
+                    noOfLines={1}
+                    display={{ base: "none", sm: "block" }}
+                  >
+                    {item.desc}
+                  </Text>
+                </Box>
+              </HStack>
+            </MotionBox>
+          ))}
+        </SimpleGrid>
       </Box>
+    </Box>
   );
 };
 

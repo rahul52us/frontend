@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   chakra,
-  Container,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -16,7 +15,6 @@ import {
   Icon,
   IconButton,
   Image,
-  // keyframes,
   Skeleton,
   Text,
   useBreakpointValue,
@@ -28,7 +26,7 @@ import {
 } from '@chakra-ui/react';
 import { keyframes } from '@emotion/react';
 import { observer } from 'mobx-react-lite';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import type { IconType } from 'react-icons';
 import {
   FaBabyCarriage,
@@ -909,22 +907,35 @@ const BentoGridSection = observer(() => {
 
   // 1. Fetch categories
   useEffect(() => {
+    let isMounted = true;
     const fetchCategories = async () => {
       try {
+        if (categoryStore.categories && categoryStore.categories.length > 0) {
+          setCategories(categoryStore.categories);
+          setLoading(false);
+          return;
+        }
         const res = await categoryStore.getAllCategories({});
+        if (!isMounted) return;
         if (res?.status === 'success' && Array.isArray(res.data)) {
           setCategories(res.data);
+        } else if (Array.isArray(categoryStore.categories)) {
+          setCategories(categoryStore.categories);
         } else {
           throw new Error('Invalid categories response');
         }
       } catch (err) {
+        if (!isMounted) return;
         console.error(err);
         toast({ title: 'Error', description: 'Failed to load categories', status: 'error', duration: 3000 });
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     fetchCategories();
+    return () => {
+      isMounted = false;
+    };
   }, [toast]);
 
   // 2. Fetch product images for each category
@@ -1190,4 +1201,4 @@ const BentoGridSection = observer(() => {
   );
 });
 
-export default BentoGridSection;
+export default memo(BentoGridSection);

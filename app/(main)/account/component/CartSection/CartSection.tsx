@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FaHouse,
   FaLocationDot,
@@ -47,13 +47,15 @@ import ConfirmationModal from "../../../../component/common/ConfirmationModal/Co
 import stores from "../../../../store/stores";
 
 const FREE_SHIPPING_THRESHOLD = 499;
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80";
 
 /* -------------------------------------------------------------------------- */
 /*  Exact Inline Illustrations matching Reference Design                      */
 /* -------------------------------------------------------------------------- */
 
 // Delivery Truck Illustration with teal motion lines & salmon cab
-const DeliveryTruckIllustration = () => (
+const DeliveryTruckIllustration = memo(() => (
   <Box flexShrink={0}>
     <svg
       width="72"
@@ -87,10 +89,11 @@ const DeliveryTruckIllustration = () => (
       <circle cx="55" cy="28" r="2" fill="#E2E8F0" />
     </svg>
   </Box>
-);
+));
+DeliveryTruckIllustration.displayName = "DeliveryTruckIllustration";
 
 // House Illustration for Delivery Address Card
-const HouseIllustration = () => (
+const HouseIllustration = memo(() => (
   <Box
     position="absolute"
     right="8px"
@@ -136,10 +139,201 @@ const HouseIllustration = () => (
       <rect x="45" y="31" width="6" height="6" rx="1" fill="#38BDF8" />
     </svg>
   </Box>
-);
+));
+HouseIllustration.displayName = "HouseIllustration";
 
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80";
+/* -------------------------------------------------------------------------- */
+/*  Subcomponent: CartItemCard                                                */
+/* -------------------------------------------------------------------------- */
+
+interface CartItemCardProps {
+  item: any;
+  cSurfaceElevated: string;
+  cBorderLight: string;
+  cPrimary: string;
+  cBorder: string;
+  cSurface: string;
+  cText: string;
+  cBannerBg: string;
+  cPrimarySoft: string;
+  bannerBorderTeal: string;
+  onRemove: (id: string) => void;
+  onUpdateQuantity: (id: string, qty: number) => void;
+}
+
+const CartItemCard = memo(({
+  item,
+  cSurfaceElevated,
+  cBorderLight,
+  cPrimary,
+  cBorder,
+  cSurface,
+  cText,
+  cBannerBg,
+  cPrimarySoft,
+  bannerBorderTeal,
+  onRemove,
+  onUpdateQuantity,
+}: CartItemCardProps) => {
+  const id = item.product._id || item.product.id;
+  const image =
+    item.product.image ||
+    (Array.isArray(item.product.images) ? item.product.images[0] : "") ||
+    FALLBACK_IMAGE;
+  const price = Number(item.product.discountPrice ?? item.product.price) || 0;
+  const title = item.product.name || item.product.title || "Product";
+
+  const handleDecrease = useCallback(() => {
+    if (item.quantity <= 1) {
+      onRemove(id);
+    } else {
+      onUpdateQuantity(id, item.quantity - 1);
+    }
+  }, [id, item.quantity, onRemove, onUpdateQuantity]);
+
+  const handleIncrease = useCallback(() => {
+    onUpdateQuantity(id, item.quantity + 1);
+  }, [id, item.quantity, onUpdateQuantity]);
+
+  const handleRemove = useCallback(() => {
+    onRemove(id);
+  }, [id, onRemove]);
+
+  return (
+    <Box
+      bg={cSurfaceElevated}
+      backdropFilter="auto"
+      backdropBlur="10px"
+      border="1px solid"
+      borderColor={cBorderLight}
+      borderRadius="16px"
+      p={{ base: 3.5, sm: 4 }}
+      boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
+      transition="all 0.15s ease"
+      _hover={{ borderColor: cPrimary }}
+    >
+      <Flex align="center" justify="space-between" gap={{ base: 3, sm: 4 }}>
+        {/* Product Image + Details */}
+        <HStack spacing={{ base: 3, sm: 4 }} flex="1" minW={0} align="center">
+          {/* Image */}
+          <Box
+            boxSize={{ base: "64px", sm: "74px" }}
+            borderRadius="14px"
+            overflow="hidden"
+            border="1px solid"
+            borderColor={cBorder}
+            bg={cSurface}
+            flexShrink={0}
+          >
+            <Image
+              src={image}
+              fallbackSrc={FALLBACK_IMAGE}
+              alt={title}
+              w="full"
+              h="full"
+              objectFit="cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </Box>
+
+          {/* Title & Bold Teal Price */}
+          <Box flex="1" minW={0}>
+            <Text
+              fontWeight="700"
+              fontSize={{ base: "sm", sm: "15px" }}
+              color={cText}
+              noOfLines={2}
+              lineHeight="1.3"
+            >
+              {title}
+            </Text>
+
+            <Text
+              fontWeight="800"
+              fontSize={{ base: "md", sm: "18px" }}
+              color={cPrimary}
+              mt={1}
+              letterSpacing="-0.01em"
+            >
+              ₹{price}
+            </Text>
+          </Box>
+        </HStack>
+
+        {/* Right: Trash Icon (Top) + Mint Quantity Stepper (Bottom) */}
+        <Flex
+          direction="column"
+          align="flex-end"
+          justify="space-between"
+          minH={{ base: "64px", sm: "74px" }}
+          flexShrink={0}
+        >
+          {/* Delete Trash Icon */}
+          <IconButton
+            aria-label="Remove item"
+            icon={<Icon as={FiTrash2} boxSize={4} />}
+            size="xs"
+            variant="ghost"
+            color="#94A3B8"
+            _hover={{ color: "#E53E3E", bg: cBannerBg }}
+            onClick={handleRemove}
+          />
+
+          {/* Mint Quantity Pill Stepper */}
+          <HStack
+            spacing={0}
+            bg={cPrimarySoft}
+            border="1px solid"
+            borderColor={bannerBorderTeal}
+            borderRadius="full"
+            h="32px"
+            px={1}
+            align="center"
+          >
+            <IconButton
+              aria-label="Decrease quantity"
+              icon={<Icon as={FiMinus} boxSize={3.5} strokeWidth={3} />}
+              size="xs"
+              variant="ghost"
+              color={cPrimary}
+              _hover={{ bg: "whiteAlpha.600" }}
+              borderRadius="full"
+              boxSize="24px"
+              minW="24px"
+              onClick={handleDecrease}
+            />
+
+            <Text
+              px={2}
+              minW="22px"
+              textAlign="center"
+              fontSize="13px"
+              fontWeight="800"
+              color={cText}
+            >
+              {item.quantity}
+            </Text>
+
+            <IconButton
+              aria-label="Increase quantity"
+              icon={<Icon as={FiPlus} boxSize={3.5} strokeWidth={3} />}
+              size="xs"
+              variant="ghost"
+              color={cPrimary}
+              _hover={{ bg: "whiteAlpha.600" }}
+              borderRadius="full"
+              boxSize="24px"
+              minW="24px"
+              onClick={handleIncrease}
+            />
+          </HStack>
+        </Flex>
+      </Flex>
+    </Box>
+  );
+});
+CartItemCard.displayName = "CartItemCard";
 
 /* -------------------------------------------------------------------------- */
 /*  Main Cart Section Component                                               */
@@ -178,7 +372,7 @@ const CartSection = observer(() => {
     }
   }, [addresses, selectedAddress]);
 
-  const handleAddNewAddress = async (newAddress: any) => {
+  const handleAddNewAddress = useCallback(async (newAddress: any) => {
     try {
       const res = await auth.addAddress(newAddress);
       await auth.fetchAddresses();
@@ -199,24 +393,24 @@ const CartSection = observer(() => {
         isClosable: true,
       });
     }
-  };
+  }, [auth, toast]);
 
-  const handleUpdateAddress = async (id: string, data: any) => {
+  const handleUpdateAddress = useCallback(async (id: string, data: any) => {
     try {
       await auth.updateAddress(id, data);
       await auth.fetchAddresses();
     } catch {}
-  };
+  }, [auth]);
 
-  const handleDeleteAddress = async (id: string) => {
+  const handleDeleteAddress = useCallback(async (id: string) => {
     try {
       await auth.deleteAddress(id);
       await auth.fetchAddresses();
       if (selectedAddress === id) setSelectedAddress("");
     } catch {}
-  };
+  }, [auth, selectedAddress]);
 
-  const handleClearCart = () => {
+  const handleClearCart = useCallback(() => {
     cartStore.clearCart();
     setIsClearModalOpen(false);
     toast({
@@ -226,13 +420,47 @@ const CartSection = observer(() => {
       duration: 2000,
       isClosable: true,
     });
-  };
+  }, [cartStore, toast]);
 
-  const subtotal = cartStore.cartItems.reduce((sum, item) => {
-    if (!item.product) return sum;
-    const price = Number(item.product.discountPrice ?? item.product.price) || 0;
-    return sum + price * (item.quantity || 1);
-  }, 0);
+  const handleRemoveItem = useCallback((id: string) => {
+    cartStore.removeFromCart(id);
+  }, [cartStore]);
+
+  const handleUpdateItemQuantity = useCallback((id: string, qty: number) => {
+    cartStore.updateQuantity(id, qty);
+  }, [cartStore]);
+
+  const handleNavigateProducts = useCallback(() => {
+    router.push("/products");
+  }, [router]);
+
+  const handleNavigateCheckout = useCallback(() => {
+    router.push("/checkout");
+  }, [router]);
+
+  const handleOpenClearModal = useCallback(() => {
+    setIsClearModalOpen(true);
+  }, []);
+
+  const handleCloseClearModal = useCallback(() => {
+    setIsClearModalOpen(false);
+  }, []);
+
+  const handleSelectAddress = useCallback((id: string) => {
+    setSelectedAddress(id);
+  }, []);
+
+  const subtotal = useMemo(() => {
+    return cartStore.cartItems.reduce((sum, item) => {
+      if (!item.product) return sum;
+      const price = Number(item.product.discountPrice ?? item.product.price) || 0;
+      return sum + price * (item.quantity || 1);
+    }, 0);
+  }, [cartStore.cartItems]);
+
+  const validCartItems = useMemo(() => {
+    return cartStore.cartItems.filter((item) => Boolean(item.product));
+  }, [cartStore.cartItems]);
 
   const isFreeDelivery = subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0;
   const deliveryFee = isFreeDelivery ? 0 : 40;
@@ -242,11 +470,14 @@ const CartSection = observer(() => {
     Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100)
   );
 
-  const currentAddress =
-    addresses.find((a: any) => (a._id || a.id) === selectedAddress) ||
-    addresses[0];
+  const currentAddress = useMemo(() => {
+    return (
+      addresses.find((a: any) => (a._id || a.id) === selectedAddress) ||
+      addresses[0]
+    );
+  }, [addresses, selectedAddress]);
 
-  const isEmpty = cartStore.cartItems.length === 0;
+  const isEmpty = validCartItems.length === 0;
 
   const cSurface = useColorModeValue("#FFFFFF", "var(--color-surface)");
   const cSurfaceElevated = useColorModeValue("#FAFBFD", "var(--color-surface-elevated)");
@@ -259,6 +490,8 @@ const CartSection = observer(() => {
   const cPrimarySoft = useColorModeValue("#E6F7F3", "rgba(6, 95, 104, 0.2)");
   const cBannerBg = useColorModeValue("#FFF0F0", "rgba(239, 68, 68, 0.12)");
   const cBannerBorder = useColorModeValue("#FFD5D5", "rgba(239, 68, 68, 0.25)");
+  const bannerBorderTeal = useColorModeValue("#B5E9DF", "rgba(6, 95, 104, 0.4)");
+  const progressBg = useColorModeValue("#D1F2EB", "whiteAlpha.200");
 
   return (
     <Box
@@ -332,7 +565,7 @@ const CartSection = observer(() => {
               color="#E53E3E"
               _hover={{ bg: cBannerBg, color: "#DC2626" }}
               leftIcon={<Icon as={FiTrash2} boxSize={4} />}
-              onClick={() => setIsClearModalOpen(true)}
+              onClick={handleOpenClearModal}
               fontSize="xs"
               fontWeight="600"
               h="36px"
@@ -352,7 +585,7 @@ const CartSection = observer(() => {
               borderRadius="full"
               _hover={{ bg: cPrimarySoft, borderColor: cPrimaryHover }}
               leftIcon={<Icon as={FiShoppingBag} boxSize={3.5} />}
-              onClick={() => router.push("/products")}
+              onClick={handleNavigateProducts}
               fontSize="xs"
               fontWeight="700"
               h="38px"
@@ -405,7 +638,7 @@ const CartSection = observer(() => {
             borderRadius="full"
             fontWeight="700"
             fontSize="sm"
-            onClick={() => router.push("/products")}
+            onClick={handleNavigateProducts}
             boxShadow="0 8px 20px -4px rgba(6, 95, 104, 0.4)"
             _hover={{ opacity: 0.9 }}
             _active={{ transform: "scale(0.98)" }}
@@ -423,7 +656,7 @@ const CartSection = observer(() => {
           mt={5}
         >
           {/* ─────────────────────────────────────────────────────────────
-              LEFT COLUMN: Free Delivery Banner + Product Cards + Bag Image
+              LEFT COLUMN: Free Delivery Banner + Product Cards
              ───────────────────────────────────────────────────────────── */}
           <Flex
             direction="column"
@@ -431,34 +664,13 @@ const CartSection = observer(() => {
             position="relative"
             minH={{ base: "320px", lg: "440px" }}
           >
-            {/* Background Shopping Bag Image Anchored at Bottom-Left */}
-            {/* <Box
-              position="absolute"
-              bottom={0}
-              left={0}
-              zIndex={0}
-              pointerEvents="none"
-              userSelect="none"
-              maxW={{ base: "130px", sm: "160px", md: "190px" }}
-              lineHeight={0}
-            >
-              <Image
-                src="/images/shopping-bag.jpg"
-                fallbackSrc="/shopping-bag.jpg"
-                alt="Shopping Bag"
-                w="full"
-                h="auto"
-                objectFit="contain"
-              />
-            </Box> */}
-
             {/* Free Delivery Banner (Foreground) */}
             <Box
               position="relative"
               zIndex={1}
               bg={cPrimarySoft}
               border="1px solid"
-              borderColor={useColorModeValue("#B5E9DF", "rgba(6, 95, 104, 0.4)")}
+              borderColor={bannerBorderTeal}
               borderRadius="16px"
               p={{ base: 3, sm: "12px 18px" }}
             >
@@ -499,174 +711,34 @@ const CartSection = observer(() => {
                     size="xs"
                     borderRadius="full"
                     colorScheme="brand"
-                    bg={useColorModeValue("#D1F2EB", "whiteAlpha.200")}
+                    bg={progressBg}
                   />
                 </Box>
               )}
             </Box>
 
-            {/* Cart Product Cards List (Overlaps the background shopping bag) */}
+            {/* Cart Product Cards List */}
             <VStack spacing={3} align="stretch" position="relative" zIndex={1}>
-              {cartStore.cartItems
-                .filter((item) => item.product)
-                .map((item) => {
-                  const id = item.product._id || item.product.id;
-                  const image =
-                    item.product.image ||
-                    (Array.isArray(item.product.images)
-                      ? item.product.images[0]
-                      : "") ||
-                    FALLBACK_IMAGE;
-                  const price =
-                    Number(item.product.discountPrice ?? item.product.price) || 0;
-                  const title =
-                    item.product.name || item.product.title || "Product";
-
-                  return (
-                    <Box
-                      key={id}
-                      bg={cSurfaceElevated}
-                      backdropFilter={'auto'}
-                      backdropBlur={'10px'}
-                      border="1px solid"
-                      borderColor={cBorderLight}
-                      borderRadius="16px"
-                      p={{ base: 3.5, sm: 4 }}
-                      boxShadow="0 2px 8px rgba(0, 0, 0, 0.02)"
-                      transition="all 0.15s ease"
-                      _hover={{ borderColor: cPrimary }}
-                    >
-                      <Flex
-                        align="center"
-                        justify="space-between"
-                        gap={{ base: 3, sm: 4 }}
-                      >
-                        {/* Product Image + Details */}
-                        <HStack spacing={{ base: 3, sm: 4 }} flex="1" minW={0} align="center">
-                          {/* Image */}
-                          <Box
-                            boxSize={{ base: "64px", sm: "74px" }}
-                            borderRadius="14px"
-                            overflow="hidden"
-                            border="1px solid"
-                            borderColor={cBorder}
-                            bg={cSurface}
-                            flexShrink={0}
-                          >
-                            <Image
-                              src={image}
-                              fallbackSrc={FALLBACK_IMAGE}
-                              alt={title}
-                              w="full"
-                              h="full"
-                              objectFit="cover"
-                            />
-                          </Box>
-
-                          {/* Title & Bold Teal Price */}
-                          <Box flex="1" minW={0}>
-                            <Text
-                              fontWeight="700"
-                              fontSize={{ base: "sm", sm: "15px" }}
-                              color={cText}
-                              noOfLines={2}
-                              lineHeight="1.3"
-                            >
-                              {title}
-                            </Text>
-
-                            <Text
-                              fontWeight="800"
-                              fontSize={{ base: "md", sm: "18px" }}
-                              color={cPrimary}
-                              mt={1}
-                              letterSpacing="-0.01em"
-                            >
-                              ₹{price}
-                            </Text>
-                          </Box>
-                        </HStack>
-
-                        {/* Right: Trash Icon (Top) + Mint Quantity Stepper (Bottom) */}
-                        <Flex
-                          direction="column"
-                          align="flex-end"
-                          justify="space-between"
-                          minH={{ base: "64px", sm: "74px" }}
-                          flexShrink={0}
-                        >
-                          {/* Delete Trash Icon */}
-                          <IconButton
-                            aria-label="Remove item"
-                            icon={<Icon as={FiTrash2} boxSize={4} />}
-                            size="xs"
-                            variant="ghost"
-                            color="#94A3B8"
-                            _hover={{ color: "#E53E3E", bg: cBannerBg }}
-                            onClick={() => cartStore.removeFromCart(id)}
-                          />
-
-                          {/* Mint Quantity Pill Stepper */}
-                          <HStack
-                            spacing={0}
-                            bg={cPrimarySoft}
-                            border="1px solid"
-                            borderColor={useColorModeValue("#B5E9DF", "rgba(6, 95, 104, 0.4)")}
-                            borderRadius="full"
-                            h="32px"
-                            px={1}
-                            align="center"
-                          >
-                            <IconButton
-                              aria-label="Decrease quantity"
-                              icon={<Icon as={FiMinus} boxSize={3.5} strokeWidth={3} />}
-                              size="xs"
-                              variant="ghost"
-                              color={cPrimary}
-                              _hover={{ bg: "whiteAlpha.600" }}
-                              borderRadius="full"
-                              boxSize="24px"
-                              minW="24px"
-                              onClick={() => {
-                                if (item.quantity <= 1) {
-                                  cartStore.removeFromCart(id);
-                                } else {
-                                  cartStore.updateQuantity(id, item.quantity - 1);
-                                }
-                              }}
-                            />
-
-                            <Text
-                              px={2}
-                              minW="22px"
-                              textAlign="center"
-                              fontSize="13px"
-                              fontWeight="800"
-                              color={cText}
-                            >
-                              {item.quantity}
-                            </Text>
-
-                            <IconButton
-                              aria-label="Increase quantity"
-                              icon={<Icon as={FiPlus} boxSize={3.5} strokeWidth={3} />}
-                              size="xs"
-                              variant="ghost"
-                              color={cPrimary}
-                              _hover={{ bg: "whiteAlpha.600" }}
-                              borderRadius="full"
-                              boxSize="24px"
-                              minW="24px"
-                              onClick={() =>
-                                cartStore.updateQuantity(id, item.quantity + 1)
-                              }
-                            />
-                          </HStack>
-                        </Flex>
-                      </Flex>
-                    </Box>
-                  );
-                })}
+              {validCartItems.map((item) => {
+                const id = item.product._id || item.product.id;
+                return (
+                  <CartItemCard
+                    key={id}
+                    item={item}
+                    cSurfaceElevated={cSurfaceElevated}
+                    cBorderLight={cBorderLight}
+                    cPrimary={cPrimary}
+                    cBorder={cBorder}
+                    cSurface={cSurface}
+                    cText={cText}
+                    cBannerBg={cBannerBg}
+                    cPrimarySoft={cPrimarySoft}
+                    bannerBorderTeal={bannerBorderTeal}
+                    onRemove={handleRemoveItem}
+                    onUpdateQuantity={handleUpdateItemQuantity}
+                  />
+                );
+              })}
             </VStack>
           </Flex>
 
@@ -869,7 +941,7 @@ const CartSection = observer(() => {
                 fontSize="14px"
                 leftIcon={<Icon as={FiLock} boxSize={4} />}
                 rightIcon={<Icon as={FiArrowRight} boxSize={4} />}
-                onClick={() => router.push("/checkout")}
+                onClick={handleNavigateCheckout}
                 boxShadow="0 8px 20px -4px rgba(6, 95, 104, 0.4)"
                 _hover={{
                   opacity: 0.9,
@@ -924,7 +996,7 @@ const CartSection = observer(() => {
         onClose={onAddressClose}
         addresses={addresses}
         selectedAddress={selectedAddress}
-        onSelectAddress={(id) => setSelectedAddress(id)}
+        onSelectAddress={handleSelectAddress}
         onAddNewAddress={handleAddNewAddress}
         onUpdateAddress={handleUpdateAddress}
         onDeleteAddress={handleDeleteAddress}
@@ -933,7 +1005,7 @@ const CartSection = observer(() => {
       {/* Clear Cart Confirmation Dialog */}
       <ConfirmationModal
         isOpen={isClearModalOpen}
-        onClose={() => setIsClearModalOpen(false)}
+        onClose={handleCloseClearModal}
         onConfirm={handleClearCart}
         title="Empty Cart?"
         message="Are you sure you want to remove all items from your cart?"
@@ -944,4 +1016,5 @@ const CartSection = observer(() => {
     </Box>
   );
 });
-export default CartSection;
+
+export default memo(CartSection);

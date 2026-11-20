@@ -21,7 +21,7 @@ import {
 import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -43,8 +43,8 @@ import ProductDetailsSection from "./ProductDetailsSection";
 
 const MotionBox = motion(Box);
 
-// ─── Native-Feel Skeleton Loader (Replaces blank 100vh spinner) ─────────
-const ProductPageSkeleton = () => {
+// ─── Native-Feel Skeleton Loader ─────────────────────────────────────────
+const ProductPageSkeleton = memo(() => {
   const pageBg = useColorModeValue("#F8FAFC", "gray.950");
   const cardBg = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("gray.100", "gray.800");
@@ -92,93 +92,204 @@ const ProductPageSkeleton = () => {
       </Container>
     </Box>
   );
-};
+});
+ProductPageSkeleton.displayName = "ProductPageSkeleton";
 
-const DetailedProductPage = ({ productId }: { productId: string }) => {
-  const router = useRouter();
-  const toast = useToast();
-  const { showAddToCartToast } = useCartToast();
-  const { shopStore, cartStore } = stores;
+const formatINR = (val: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(val);
 
-  const [loading, setLoading] = useState(true);
-  const [product, setProduct] = useState<any>(null);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
-  const [isAddingCart, setIsAddingCart] = useState(false);
-  const [addedSuccess, setAddedSuccess] = useState(false);
-  const [isBuyingNow, setIsBuyingNow] = useState(false);
+const DetailedProductPage = memo(
+  observer(({ productId }: { productId: string }) => {
+    const router = useRouter();
+    const toast = useToast();
+    const { showAddToCartToast } = useCartToast();
+    const { shopStore, cartStore } = stores;
 
-  // Hoisted Theme Tokens
-  const pageBg = useColorModeValue("#F8FAFC", "gray.950");
-  const cardBg = useColorModeValue("white", "gray.900");
-  const stickyBarBg = useColorModeValue(
-    "rgba(255, 255, 255, 0.96)",
-    "rgba(17, 24, 39, 0.96)"
-  );
-  const textColor = useColorModeValue("gray.900", "white");
-  const mutedText = useColorModeValue("gray.500", "gray.400");
-  const borderColor = useColorModeValue("gray.100", "gray.800");
+    const [loading, setLoading] = useState(true);
+    const [product, setProduct] = useState<any>(null);
+    const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+    const [isAddingCart, setIsAddingCart] = useState(false);
+    const [addedSuccess, setAddedSuccess] = useState(false);
+    const [isBuyingNow, setIsBuyingNow] = useState(false);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const res = await shopStore.getProductById(productId);
-        const loadedProduct = res?.data ? res.data : res;
+    // Hoisted Theme Tokens
+    const pageBg = useColorModeValue("#F8FAFC", "gray.950");
+    const cardBg = useColorModeValue("white", "gray.900");
+    const stickyBarBg = useColorModeValue(
+      "rgba(255, 255, 255, 0.96)",
+      "rgba(17, 24, 39, 0.96)"
+    );
+    const textColor = useColorModeValue("gray.900", "white");
+    const mutedText = useColorModeValue("gray.500", "gray.400");
+    const borderColor = useColorModeValue("gray.100", "gray.800");
 
-        if (loadedProduct && (loadedProduct._id || loadedProduct.name || loadedProduct.title)) {
-          setProduct(loadedProduct);
+    useEffect(() => {
+      let isMounted = true;
 
-          // Fetch related products
-          if (loadedProduct.category) {
-            const subCategories = loadedProduct.subCategories;
-            const subCategory =
-              Array.isArray(subCategories) && subCategories.length > 0
-                ? subCategories[0]._id || subCategories[0]
-                : undefined;
+      const fetchProduct = async () => {
+        try {
+          setLoading(true);
+          const res = await shopStore.getProductById(productId);
+          if (!isMounted) return;
 
-            try {
-              const relatedRes = await shopStore.searchGlobalProducts({
-                category: loadedProduct.category?._id || loadedProduct.category,
-                subCategory,
-                excludeId: loadedProduct._id,
-                limit: 6,
-              });
-              if (relatedRes?.data?.products) {
-                setRelatedProducts(relatedRes.data.products);
+          const loadedProduct = res?.data ? res.data : res;
+
+          if (loadedProduct && (loadedProduct._id || loadedProduct.name || loadedProduct.title)) {
+            setProduct(loadedProduct);
+
+            // Fetch related products
+            if (loadedProduct.category) {
+              const subCategories = loadedProduct.subCategories;
+              const subCategory =
+                Array.isArray(subCategories) && subCategories.length > 0
+                  ? subCategories[0]._id || subCategories[0]
+                  : undefined;
+
+              try {
+                const relatedRes = await shopStore.searchGlobalProducts({
+                  category: loadedProduct.category?._id || loadedProduct.category,
+                  subCategory,
+                  excludeId: loadedProduct._id,
+                  limit: 6,
+                });
+                if (isMounted && relatedRes?.data?.products) {
+                  setRelatedProducts(relatedRes.data.products);
+                }
+              } catch (relErr) {
+                console.warn("Could not load related products:", relErr);
               }
-            } catch (relErr) {
-              console.warn("Could not load related products:", relErr);
             }
+          } else {
+            setProduct(null);
           }
-        } else {
-          setProduct(null);
+        } catch (error: any) {
+          if (isMounted) {
+            toast({
+              title: "Unable to load product",
+              description: error?.message || "Please try again in a moment.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            });
+            setProduct(null);
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
         }
-      } catch (error: any) {
-        toast({
-          title: "Unable to load product",
-          description: error?.message || "Please try again in a moment.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        setProduct(null);
-      } finally {
-        setLoading(false);
+      };
+
+      if (productId) {
+        fetchProduct();
       }
-    };
 
-    if (productId) {
-      fetchProduct();
+      return () => {
+        isMounted = false;
+      };
+    }, [productId, shopStore, toast]);
+
+    // Safely resolve product images
+    const images = useMemo(() => {
+      if (!product) return [];
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        return product.images;
+      }
+      return product.image ? [product.image] : [];
+    }, [product]);
+
+    const categoryName = useMemo(() => {
+      if (!product) return "Products";
+      return typeof product.category === "object"
+        ? product.category?.name
+        : product.category || "Products";
+    }, [product]);
+
+    const productTitle = product?.name || product?.title || "Product";
+    const finalPrice = Number(product?.price ?? product?.sellingPrice ?? 0);
+    const originalPrice = Number(product?.originalPrice ?? product?.mrp ?? 0);
+    const hasDiscount = originalPrice > finalPrice && finalPrice > 0;
+    const discountPercent = hasDiscount
+      ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
+      : 0;
+
+    const handleMobileAddToCart = useCallback(async () => {
+      if (isAddingCart || !product) return;
+      try {
+        setIsAddingCart(true);
+        await cartStore.addToCart(product);
+        showAddToCartToast(product);
+        setAddedSuccess(true);
+        setTimeout(() => setAddedSuccess(false), 1400);
+      } finally {
+        setIsAddingCart(false);
+      }
+    }, [cartStore, isAddingCart, product, showAddToCartToast]);
+
+    const handleMobileBuyNow = useCallback(async () => {
+      if (isBuyingNow || !product) return;
+      try {
+        setIsBuyingNow(true);
+        await cartStore.addToCart(product);
+        if (cartStore.openCart) {
+          cartStore.openCart();
+        } else {
+          router.push("/checkout");
+        }
+      } finally {
+        setIsBuyingNow(false);
+      }
+    }, [cartStore, isBuyingNow, product, router]);
+
+    const handleShare = useCallback(async () => {
+      const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: productTitle,
+            text: `Check out ${productTitle} on Business Sahayata!`,
+            url: shareUrl,
+          });
+          return;
+        } catch {
+          // user cancelled share sheet
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Product link copied to your clipboard.",
+          status: "success",
+          duration: 2000,
+        });
+      }
+    }, [productTitle, toast]);
+
+    const handleBack = useCallback(() => {
+      router.back();
+    }, [router]);
+
+    const handleGoToCategories = useCallback(() => {
+      router.push("/categories");
+    }, [router]);
+
+    const handleGoToProducts = useCallback(() => {
+      router.push("/products");
+    }, [router]);
+
+    if (loading) {
+      return <ProductPageSkeleton />;
     }
-  }, [productId, shopStore, toast]);
 
-  if (loading) {
-    return <ProductPageSkeleton />;
-  }
-
-  if (!product) {
-    return (
-      <Box bg={pageBg} minH="75vh" py={16} px={4}>
+    if (!product) {
+      return (
+        <Box bg={pageBg} minH="75vh" py={16} px={4}>
           <VStack
             bg={cardBg}
             p={8}
@@ -188,6 +299,8 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
             spacing={4}
             textAlign="center"
             boxShadow="xs"
+            maxW="md"
+            mx="auto"
           >
             <Flex
               w="52px"
@@ -212,108 +325,26 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               px={6}
               rounded="full"
               colorScheme="brand"
-              onClick={() => router.push("/products")}
+              onClick={handleGoToProducts}
             >
               Browse Available Products
             </Button>
           </VStack>
-      </Box>
-    );
-  }
-
-  // Safely resolve product images
-  const images =
-    Array.isArray(product.images) && product.images.length > 0
-      ? product.images
-      : product.image
-      ? [product.image]
-      : [];
-
-  const categoryName =
-    typeof product.category === "object"
-      ? product.category?.name
-      : product.category || "Products";
-
-  const productTitle = product.name || product.title || "Product";
-  const finalPrice = Number(product.price ?? product.sellingPrice ?? 0);
-  const originalPrice = Number(product.originalPrice ?? product.mrp ?? 0);
-  const hasDiscount = originalPrice > finalPrice && finalPrice > 0;
-  const discountPercent = hasDiscount
-    ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
-    : 0;
-
-  const formatINR = (val: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(val);
-
-  const handleMobileAddToCart = async () => {
-    if (isAddingCart) return;
-    try {
-      setIsAddingCart(true);
-      await cartStore.addToCart(product);
-      showAddToCartToast(product);
-      setAddedSuccess(true);
-      setTimeout(() => setAddedSuccess(false), 1400);
-    } finally {
-      setIsAddingCart(false);
+        </Box>
+      );
     }
-  };
 
-  const handleMobileBuyNow = async () => {
-    if (isBuyingNow) return;
-    try {
-      setIsBuyingNow(true);
-      await cartStore.addToCart(product);
-      if (cartStore.openCart) {
-        cartStore.openCart();
-      } else {
-        router.push("/checkout");
-      }
-    } finally {
-      setIsBuyingNow(false);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: productTitle,
-          text: `Check out ${productTitle} on Business Sahayata!`,
-          url: shareUrl,
-        });
-        return;
-      } catch {
-        // user cancelled share sheet
-      }
-    }
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Link copied!",
-        description: "Product link copied to your clipboard.",
-        status: "success",
-        duration: 2000,
-      });
-    }
-  };
-
-  return (
-    <Box
-      bg={pageBg}
-      minH="100vh"
-      pb={{
-        base: "70px",
-        lg: 12,
-      }}
-      px={{ base: 2, sm: 4, md: 6, lg: 8 }}
-    >
-        {/* 1. Top Navigation Bar: Compact Back + Share on Mobile, Breadcrumbs on Desktop */}
+    return (
+      <Box
+        bg={pageBg}
+        minH="100vh"
+        pb={{
+          base: "70px",
+          lg: 12,
+        }}
+        px={{ base: 2, sm: 4, md: 6, lg: 8 }}
+      >
+        {/* 1. Top Navigation Bar */}
         <Flex
           justify="space-between"
           align="center"
@@ -332,7 +363,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               border="1px solid"
               borderColor={borderColor}
               leftIcon={<FiArrowLeft size={13} />}
-              onClick={() => router.back()}
+              onClick={handleBack}
               fontWeight="600"
               flexShrink={0}
             >
@@ -349,7 +380,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
               <Icon as={FiChevronRight} boxSize={3} flexShrink={0} />
               <Text
                 as="button"
-                onClick={() => router.push("/categories")}
+                onClick={handleGoToCategories}
                 _hover={{ color: "blue.600", textDecoration: "underline" }}
                 fontWeight="500"
                 noOfLines={1}
@@ -391,13 +422,13 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
           />
         </Flex>
 
-        {/* 2. Main Product Grid: Image Gallery (Left) + Details & Buy Box (Right) */}
+        {/* 2. Main Product Grid */}
         <Grid
           templateColumns={{ base: "1fr", lg: "1.12fr 1fr" }}
           gap={{ base: 3.5, lg: 7 }}
           alignItems="start"
         >
-          {/* LEFT COLUMN: Image Gallery (Sticky on Desktop) */}
+          {/* LEFT COLUMN: Image Gallery */}
           <Box
             position={{ lg: "sticky" }}
             top={{ lg: "96px" }}
@@ -450,7 +481,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
           <ProductAboutSection product={product} />
         </Box>
 
-        {/* 4. Related Products Section (Horizontal Scroll on Mobile, Grid on Desktop) */}
+        {/* 4. Related Products Section */}
         {relatedProducts.length > 0 && (
           <Box mt={{ base: 6, md: 10 }}>
             <Flex justify="space-between" align="flex-end" mb={{ base: 3.5, md: 5 }}>
@@ -486,7 +517,7 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
                 variant="ghost"
                 colorScheme="brand"
                 rightIcon={<FiArrowRight />}
-                onClick={() => router.push("/products")}
+                onClick={handleGoToProducts}
               >
                 View More
               </Button>
@@ -510,108 +541,111 @@ const DetailedProductPage = ({ productId }: { productId: string }) => {
           </Box>
         )}
 
-      {/* 5. Native App-Style Mobile Sticky Action Dock */}
-      <Box
-        display={{ base: "block", lg: "none" }}
-        position="fixed"
-        bottom={0}
-        left={0}
-        right={0}
-        zIndex={1010} // Above MobileBottomNav on product detail view so CTAs are always reachable
-        bg={stickyBarBg}
-        backdropFilter="blur(16px)"
-        borderTop="1px solid"
-        borderColor={borderColor}
-        px={3.5}
-        pt={2.5}
-        pb="calc(10px + env(safe-area-inset-bottom, 0px))"
-        boxShadow="0 -8px 25px rgba(15, 23, 42, 0.08)"
-      >
-        <Flex align="center" justify="space-between" gap={3} maxW="500px" mx="auto">
-          {/* Live Price Summary on Left */}
-          <Box minW="76px" flexShrink={0}>
-            <HStack spacing={1.5} align="baseline">
-              <Text
-                fontSize="lg"
-                fontWeight="800"
-                color={textColor}
-                lineHeight="1.1"
-              >
-                {formatINR(finalPrice)}
-              </Text>
-              {discountPercent > 0 && (
-                <Badge
-                  colorScheme="green"
-                  variant="subtle"
-                  fontSize="9px"
-                  px={1.5}
-                  rounded="sm"
+        {/* 5. Native App-Style Mobile Sticky Action Dock */}
+        <Box
+          display={{ base: "block", lg: "none" }}
+          position="fixed"
+          bottom={0}
+          left={0}
+          right={0}
+          zIndex={1010}
+          bg={stickyBarBg}
+          backdropFilter="blur(16px)"
+          borderTop="1px solid"
+          borderColor={borderColor}
+          px={3.5}
+          pt={2.5}
+          pb="calc(10px + env(safe-area-inset-bottom, 0px))"
+          boxShadow="0 -8px 25px rgba(15, 23, 42, 0.08)"
+        >
+          <Flex align="center" justify="space-between" gap={3} maxW="500px" mx="auto">
+            {/* Live Price Summary on Left */}
+            <Box minW="76px" flexShrink={0}>
+              <HStack spacing={1.5} align="baseline">
+                <Text
+                  fontSize="lg"
+                  fontWeight="800"
+                  color={textColor}
+                  lineHeight="1.1"
                 >
-                  {discountPercent}% off
-                </Badge>
+                  {formatINR(finalPrice)}
+                </Text>
+                {discountPercent > 0 && (
+                  <Badge
+                    colorScheme="green"
+                    variant="subtle"
+                    fontSize="9px"
+                    px={1.5}
+                    rounded="sm"
+                  >
+                    {discountPercent}% off
+                  </Badge>
+                )}
+              </HStack>
+              {hasDiscount ? (
+                <Text
+                  fontSize="10px"
+                  color={mutedText}
+                  textDecoration="line-through"
+                  fontWeight="500"
+                >
+                  MRP {formatINR(originalPrice)}
+                </Text>
+              ) : (
+                <Text fontSize="10px" color="green.600" fontWeight="600">
+                  Inclusive of all taxes
+                </Text>
               )}
-            </HStack>
-            {hasDiscount ? (
-              <Text
-                fontSize="10px"
-                color={mutedText}
-                textDecoration="line-through"
-                fontWeight="500"
+            </Box>
+
+            {/* Action Buttons on Right */}
+            <HStack spacing={2} flex="1" justify="flex-end">
+              <Button
+                flex="1"
+                h="42px"
+                rounded="xl"
+                variant="outline"
+                colorScheme={addedSuccess ? "green" : "blue"}
+                bg={addedSuccess ? "green.50" : "blue.50"}
+                borderColor={addedSuccess ? "green.300" : "blue.200"}
+                color={addedSuccess ? "green.700" : "blue.700"}
+                fontWeight="700"
+                fontSize="xs"
+                leftIcon={
+                  addedSuccess ? <FiCheck size={14} /> : <FiShoppingCart size={14} />
+                }
+                isLoading={isAddingCart}
+                onClick={handleMobileAddToCart}
+                _active={{ transform: "scale(0.97)" }}
               >
-                MRP {formatINR(originalPrice)}
-              </Text>
-            ) : (
-              <Text fontSize="10px" color="green.600" fontWeight="600">
-                Inclusive of all taxes
-              </Text>
-            )}
-          </Box>
+                {addedSuccess ? "Added" : "Add to Cart"}
+              </Button>
 
-          {/* Action Buttons on Right */}
-          <HStack spacing={2} flex="1" justify="flex-end">
-            <Button
-              flex="1"
-              h="42px"
-              rounded="xl"
-              variant="outline"
-              colorScheme={addedSuccess ? "green" : "blue"}
-              bg={addedSuccess ? "green.50" : "blue.50"}
-              borderColor={addedSuccess ? "green.300" : "blue.200"}
-              color={addedSuccess ? "green.700" : "blue.700"}
-              fontWeight="700"
-              fontSize="xs"
-              leftIcon={
-                addedSuccess ? <FiCheck size={14} /> : <FiShoppingCart size={14} />
-              }
-              isLoading={isAddingCart}
-              onClick={handleMobileAddToCart}
-              _active={{ transform: "scale(0.97)" }}
-            >
-              {addedSuccess ? "Added" : "Add to Cart"}
-            </Button>
-
-            <Button
-              flex="1"
-              h="42px"
-              rounded="xl"
-              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
-              color="white"
-              fontWeight="700"
-              fontSize="xs"
-              leftIcon={<FiZap size={14} />}
-              isLoading={isBuyingNow}
-              onClick={handleMobileBuyNow}
-              boxShadow="0 6px 16px -4px var(--color-primary-soft)"
-              _hover={{ opacity: 0.9 }}
-              _active={{ transform: "scale(0.97)" }}
-            >
-              Buy Now
-            </Button>
-          </HStack>
-        </Flex>
+              <Button
+                flex="1"
+                h="42px"
+                rounded="xl"
+                bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
+                color="white"
+                fontWeight="700"
+                fontSize="xs"
+                leftIcon={<FiZap size={14} />}
+                isLoading={isBuyingNow}
+                onClick={handleMobileBuyNow}
+                boxShadow="0 6px 16px -4px var(--color-primary-soft)"
+                _hover={{ opacity: 0.9 }}
+                _active={{ transform: "scale(0.97)" }}
+              >
+                Buy Now
+              </Button>
+            </HStack>
+          </Flex>
+        </Box>
       </Box>
-    </Box>
-  );
-};
+    );
+  })
+);
 
-export default observer(DetailedProductPage);
+DetailedProductPage.displayName = "DetailedProductPage";
+
+export default DetailedProductPage;

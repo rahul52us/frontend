@@ -13,7 +13,7 @@ import {
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { FiChevronDown, FiClock } from "react-icons/fi";
 
 const DAYS = [
@@ -34,7 +34,7 @@ const formatTimeString = (time?: string) => {
   return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
 };
 
-const OperatingHours = ({ shopData }: any) => {
+const OperatingHours = memo(({ shopData }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const cardBg = useColorModeValue("white", "gray.850");
@@ -44,27 +44,37 @@ const OperatingHours = ({ shopData }: any) => {
   const activeDayBg = useColorModeValue("blue.50", "whiteAlpha.100");
   const activeDayColor = useColorModeValue("blue.600", "blue.300");
 
-  const list: any[] = Array.isArray(shopData?.operatingHours)
-    ? shopData.operatingHours
-    : [];
+  const list: any[] = useMemo(
+    () => (Array.isArray(shopData?.operatingHours) ? shopData.operatingHours : []),
+    [shopData?.operatingHours]
+  );
 
   const todayIndex = new Date().getDay();
-  // Adjust Sunday (0 in JS getDay) to index in DAYS
-  const todayName = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ][todayIndex];
+  // Adjust Sunday (0 in JS getDay) to day name
+  const todayName = useMemo(
+    () =>
+      [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ][todayIndex],
+    [todayIndex]
+  );
 
-  const todayHours = list.find((d: any) => d.day === todayName);
+  const todaySummary = useMemo(() => {
+    const todayHours = list.find((d: any) => d.day === todayName);
+    return todayHours?.open && todayHours?.close
+      ? `${formatTimeString(todayHours.open)} – ${formatTimeString(todayHours.close)}`
+      : "Closed";
+  }, [list, todayName]);
 
-  const todaySummary = todayHours?.open && todayHours?.close
-    ? `${formatTimeString(todayHours.open)} – ${formatTimeString(todayHours.close)}`
-    : "Closed";
+  const toggleOpen = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
   return (
     <Box
@@ -83,7 +93,7 @@ const OperatingHours = ({ shopData }: any) => {
         align="center"
         justify="space-between"
         gap={3}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={toggleOpen}
         textAlign="left"
         cursor="pointer"
         _focus={{ outline: "none" }}
@@ -170,6 +180,8 @@ const OperatingHours = ({ shopData }: any) => {
       </Collapse>
     </Box>
   );
-};
+});
+
+OperatingHours.displayName = "OperatingHours";
 
 export default OperatingHours;

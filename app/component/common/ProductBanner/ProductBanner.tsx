@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Collapse,
-  Container,
   Flex,
   Heading,
   HStack,
@@ -29,9 +28,8 @@ import {
   Wrap,
 } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import {
-  // FiClose,
   FiSearch,
   FiShoppingBag,
   FiSliders,
@@ -72,23 +70,30 @@ const ProductBanner = observer(() => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch Categories
+  // Fetch Categories once (or read from store cache)
   useEffect(() => {
+    let isMounted = true;
     const fetchCategories = async () => {
       try {
+        if (categoryStore.categories && categoryStore.categories.length > 0) {
+          setCategories(categoryStore.categories);
+          return;
+        }
         const response = await categoryStore.getAllCategories({});
+        if (!isMounted) return;
         if (response?.status === 'success' && Array.isArray(response.data)) {
           setCategories(response.data);
         } else if (Array.isArray(categoryStore.categories)) {
           setCategories(categoryStore.categories);
-        } else {
-          setCategories([]);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
     };
     fetchCategories();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch Products from Backend
@@ -201,20 +206,22 @@ const ProductBanner = observer(() => {
     Boolean(searchQuery.trim()) ||
     sortBy !== 'popularity';
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSelectedCategory('all');
     setPriceRange([minProductPrice, maxProductPrice]);
     setSortBy('popularity');
     setSearchQuery('');
-  };
+  }, [minProductPrice, maxProductPrice]);
 
   const categoryOptions = useMemo(
     () => [{ _id: 'all', name: 'All Items' }, ...categories],
     [categories]
   );
 
-  const formatPrice = (price: number) =>
-    `₹${Math.round(price).toLocaleString('en-IN')}`;
+  const formatPrice = useCallback(
+    (price: number) => `₹${Math.round(price).toLocaleString('en-IN')}`,
+    []
+  );
 
   return (
     <Box
@@ -224,395 +231,395 @@ const ProductBanner = observer(() => {
       borderBottom="1px solid"
       borderColor={borderColor}
     >
-        {/* 1. Compact Flash Sale Header Banner */}
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          justify="space-between"
-          align={{ base: 'flex-start', md: 'flex-end' }}
-          mb={{ base: 3.5, md: 5 }}
-          gap={2}
-        >
-          <Box>
-            <HStack spacing={2} mb={1}>
-              <Badge
-                bgGradient="linear(to-r, orange.500, red.500)"
-                color="white"
-                fontSize="10px"
-                fontWeight="800"
-                px={2.5}
-                py={0.5}
-                borderRadius="full"
-                display="inline-flex"
-                alignItems="center"
-                gap={1}
-              >
-                <Icon as={FiZap} boxSize={2.5} />
-                FLASH DEALS
-              </Badge>
-              <Text fontSize="xs" fontWeight="600" color="orange.600">
-                Up to 50% Off Local Favorites
-              </Text>
-            </HStack>
-
-            <Heading
-              as="h2"
-              fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+      {/* 1. Compact Flash Sale Header Banner */}
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        justify="space-between"
+        align={{ base: 'flex-start', md: 'flex-end' }}
+        mb={{ base: 3.5, md: 5 }}
+        gap={2}
+      >
+        <Box>
+          <HStack spacing={2} mb={1}>
+            <Badge
+              bgGradient="linear(to-r, orange.500, red.500)"
+              color="white"
+              fontSize="10px"
               fontWeight="800"
-              color={titleColor}
-              letterSpacing="tight"
-              lineHeight="1.2"
+              px={2.5}
+              py={0.5}
+              borderRadius="full"
+              display="inline-flex"
+              alignItems="center"
+              gap={1}
             >
-              Explore All Deals & Offers
-            </Heading>
-          </Box>
+              <Icon as={FiZap} boxSize={2.5} />
+              FLASH DEALS
+            </Badge>
+            <Text fontSize="xs" fontWeight="600" color="orange.600">
+              Up to 50% Off Local Favorites
+            </Text>
+          </HStack>
 
-          <Text fontSize="xs" fontWeight="600" color={mutedText}>
-            {loading
-              ? 'Loading catalog...'
-              : `Showing ${filteredProducts.length} ${
-                  filteredProducts.length === 1 ? 'product' : 'products'
-                }`}
-          </Text>
-        </Flex>
-
-        {/* 2. Horizontal Swipeable Category Chips (Replaces Clunky Category Select) */}
-        <Flex
-          gap={2}
-          overflowX="auto"
-          pb={2.5}
-          mb={2}
-          sx={{
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
-          {categoryOptions.map((cat) => {
-            const isSelected = selectedCategory === cat._id;
-            return (
-              <Button
-                key={cat._id}
-                size="xs"
-                h={{ base: '30px', md: '34px' }}
-                px={3.5}
-                rounded="full"
-                flexShrink={0}
-                fontSize="xs"
-                fontWeight="700"
-                bg={isSelected ? 'blue.600' : cardBg}
-                color={isSelected ? 'white' : titleColor}
-                border="1px solid"
-                borderColor={isSelected ? 'blue.600' : borderColor}
-                boxShadow="2xs"
-                _hover={{
-                  bg: isSelected ? 'blue.700' : subtleBg,
-                  borderColor: isSelected ? 'blue.700' : 'blue.200',
-                }}
-                onClick={() => setSelectedCategory(cat._id)}
-              >
-                {cat.name}
-              </Button>
-            );
-          })}
-        </Flex>
-
-        {/* 3. Compact Search, Sort & Price Filter Toolbar */}
-        <Box
-          bg={cardBg}
-          p={{ base: 2.5, md: 3 }}
-          rounded="2xl"
-          border="1px solid"
-          borderColor={borderColor}
-          boxShadow="2xs"
-          mb={4}
-        >
-          <Flex
-            direction={{ base: 'column', sm: 'row' }}
-            gap={2.5}
-            align="center"
-            justify="space-between"
+          <Heading
+            as="h2"
+            fontSize={{ base: 'lg', sm: 'xl', md: '2xl' }}
+            fontWeight="800"
+            color={titleColor}
+            letterSpacing="tight"
+            lineHeight="1.2"
           >
-            {/* Search Input */}
-            <InputGroup size="sm" flex="1" w="full">
-              <InputLeftElement pointerEvents="none" h="36px">
-                <Icon as={FiSearch} color="gray.400" boxSize={3.5} />
-              </InputLeftElement>
-              <Input
-                placeholder="Search deals, products, brands..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                h="36px"
-                rounded="xl"
-                bg={subtleBg}
-                border="1px solid"
-                borderColor={borderColor}
-                fontSize="xs"
-                _focus={{
-                  bg: cardBg,
-                  borderColor: 'blue.500',
-                  boxShadow: '0 0 0 2px rgba(37, 99, 235, 0.12)',
-                }}
-              />
-              {searchQuery && (
-                <InputRightElement h="36px">
-                  <IconButton
-                    aria-label="Clear search"
-                    icon={<AiFillCloseCircle size={11} />}
-                    size="xs"
-                    variant="ghost"
-                    rounded="full"
-                    onClick={() => setSearchQuery('')}
-                  />
-                </InputRightElement>
-              )}
-            </InputGroup>
-
-            {/* Right Controls: Sort Dropdown + Price Filter Button + Reset */}
-            <HStack spacing={2} w={{ base: 'full', sm: 'auto' }}>
-              <Select
-                size="sm"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                h="36px"
-                rounded="xl"
-                bg={subtleBg}
-                borderColor={borderColor}
-                fontSize="xs"
-                fontWeight="600"
-                flex={{ base: 1, sm: 'initial' }}
-                w={{ sm: '165px' }}
-              >
-                <option value="popularity">Sort: Popular</option>
-                <option value="price_low">Price: Low to High</option>
-                <option value="price_high">Price: High to Low</option>
-                <option value="rating">Top Rated</option>
-                <option value="sales">Best Selling</option>
-              </Select>
-
-              <Button
-                size="sm"
-                h="36px"
-                px={3.5}
-                rounded="xl"
-                variant={showFilters || isPriceFiltered ? 'solid' : 'outline'}
-                colorScheme={showFilters || isPriceFiltered ? 'blue' : 'gray'}
-                borderColor={borderColor}
-                leftIcon={<Icon as={FiSliders} boxSize={3.5} />}
-                fontSize="xs"
-                fontWeight="700"
-                flexShrink={0}
-                onClick={() => setShowFilters((prev) => !prev)}
-              >
-                Price
-                {isPriceFiltered ? ' •' : ''}
-              </Button>
-
-              {hasActiveFilters && (
-                <IconButton
-                  aria-label="Reset all filters"
-                  icon={<AiFillCloseCircle size={14} />}
-                  size="sm"
-                  h="36px"
-                  w="36px"
-                  rounded="xl"
-                  colorScheme="red"
-                  variant="subtle"
-                  onClick={clearFilters}
-                />
-              )}
-            </HStack>
-          </Flex>
-
-          {/* Collapsible Price Range & Quick Budget Chips */}
-          <Collapse in={showFilters} animateOpacity>
-            <Box
-              pt={3.5}
-              mt={3}
-              borderTop="1px solid"
-              borderColor={borderColor}
-            >
-              <Flex
-                direction={{ base: 'column', md: 'row' }}
-                justify="space-between"
-                align={{ base: 'stretch', md: 'center' }}
-                gap={4}
-              >
-                <Box flex="1">
-                  <HStack justify="space-between" mb={2}>
-                    <Text fontSize="xs" fontWeight="700" color={titleColor}>
-                      Price Range:{' '}
-                      <Text as="span" color="var(--color-primary)">
-                        {formatPrice(priceRange[0])} – {formatPrice(priceRange[1])}
-                      </Text>
-                    </Text>
-                    {isPriceFiltered && (
-                      <Button
-                        size="xs"
-                        variant="link"
-                        colorScheme="brand"
-                        onClick={() =>
-                          setPriceRange([minProductPrice, maxProductPrice])
-                        }
-                      >
-                        Reset Price
-                      </Button>
-                    )}
-                  </HStack>
-
-                  {maxProductPrice > minProductPrice && (
-                    <Box px={2}>
-                      <RangeSlider
-                        aria-label={['Minimum price', 'Maximum price']}
-                        min={minProductPrice}
-                        max={maxProductPrice}
-                        step={Math.max(
-                          10,
-                          Math.round((maxProductPrice - minProductPrice) / 50)
-                        )}
-                        value={priceRange}
-                        onChange={(val) =>
-                          setPriceRange(val as [number, number])
-                        }
-                        colorScheme="brand"
-                      >
-                        <RangeSliderTrack h="5px" rounded="full">
-                          <RangeSliderFilledTrack />
-                        </RangeSliderTrack>
-                        <RangeSliderThumb
-                          index={0}
-                          boxSize={4}
-                          border="2px solid"
-                          borderColor="var(--color-primary)"
-                        />
-                        <RangeSliderThumb
-                          index={1}
-                          boxSize={4}
-                          border="2px solid"
-                          borderColor="var(--color-primary)"
-                        />
-                      </RangeSlider>
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Quick Budget Tap Pills */}
-                <Wrap spacing={1.5} flexShrink={0}>
-                  {[299, 499, 999, 1999]
-                    .filter((cap) => cap > minProductPrice && cap <= maxProductPrice)
-                    .map((cap) => {
-                      const isActive =
-                        priceRange[0] === minProductPrice &&
-                        priceRange[1] === cap;
-                      return (
-                        <Button
-                          key={cap}
-                          size="xs"
-                          h="26px"
-                          px={2.5}
-                          rounded="full"
-                          fontSize="11px"
-                          variant={isActive ? 'solid' : 'outline'}
-                          colorScheme={isActive ? 'blue' : 'gray'}
-                          onClick={() =>
-                            setPriceRange([minProductPrice, cap])
-                          }
-                        >
-                          Under ₹{cap}
-                        </Button>
-                      );
-                    })}
-                </Wrap>
-              </Flex>
-            </Box>
-          </Collapse>
+            Explore All Deals & Offers
+          </Heading>
         </Box>
 
-        {/* 4. Product Grid (2 Columns on Mobile, 3 on Tablet, 4 on Desktop) */}
-        {loading ? (
-          <SimpleGrid
-            columns={{ base: 2, sm: 2, md: 3, lg: 4 }}
-            spacing={{ base: 2.5, sm: 3.5, md: 5 }}
-          >
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <Box
-                key={idx}
-                bg={cardBg}
-                rounded="2xl"
-                p={2.5}
-                border="1px solid"
-                borderColor={borderColor}
-              >
-                <Skeleton
-                  h={{ base: '140px', sm: '165px', md: '190px' }}
-                  rounded="xl"
-                  mb={2.5}
+        <Text fontSize="xs" fontWeight="600" color={mutedText}>
+          {loading
+            ? 'Loading catalog...'
+            : `Showing ${filteredProducts.length} ${
+                filteredProducts.length === 1 ? 'product' : 'products'
+              }`}
+        </Text>
+      </Flex>
+
+      {/* 2. Horizontal Swipeable Category Chips */}
+      <Flex
+        gap={2}
+        overflowX="auto"
+        pb={2.5}
+        mb={2}
+        sx={{
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
+        {categoryOptions.map((cat) => {
+          const isSelected = selectedCategory === cat._id;
+          return (
+            <Button
+              key={cat._id}
+              size="xs"
+              h={{ base: '30px', md: '34px' }}
+              px={3.5}
+              rounded="full"
+              flexShrink={0}
+              fontSize="xs"
+              fontWeight="700"
+              bg={isSelected ? 'blue.600' : cardBg}
+              color={isSelected ? 'white' : titleColor}
+              border="1px solid"
+              borderColor={isSelected ? 'blue.600' : borderColor}
+              boxShadow="2xs"
+              _hover={{
+                bg: isSelected ? 'blue.700' : subtleBg,
+                borderColor: isSelected ? 'blue.700' : 'blue.200',
+              }}
+              onClick={() => setSelectedCategory(cat._id)}
+            >
+              {cat.name}
+            </Button>
+          );
+        })}
+      </Flex>
+
+      {/* 3. Compact Search, Sort & Price Filter Toolbar */}
+      <Box
+        bg={cardBg}
+        p={{ base: 2.5, md: 3 }}
+        rounded="2xl"
+        border="1px solid"
+        borderColor={borderColor}
+        boxShadow="2xs"
+        mb={4}
+      >
+        <Flex
+          direction={{ base: 'column', sm: 'row' }}
+          gap={2.5}
+          align="center"
+          justify="space-between"
+        >
+          {/* Search Input */}
+          <InputGroup size="sm" flex="1" w="full">
+            <InputLeftElement pointerEvents="none" h="36px">
+              <Icon as={FiSearch} color="gray.400" boxSize={3.5} />
+            </InputLeftElement>
+            <Input
+              placeholder="Search deals, products, brands..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              h="36px"
+              rounded="xl"
+              bg={subtleBg}
+              border="1px solid"
+              borderColor={borderColor}
+              fontSize="xs"
+              _focus={{
+                bg: cardBg,
+                borderColor: 'blue.500',
+                boxShadow: '0 0 0 2px rgba(37, 99, 235, 0.12)',
+              }}
+            />
+            {searchQuery && (
+              <InputRightElement h="36px">
+                <IconButton
+                  aria-label="Clear search"
+                  icon={<AiFillCloseCircle size={11} />}
+                  size="xs"
+                  variant="ghost"
+                  rounded="full"
+                  onClick={() => setSearchQuery('')}
                 />
-                <Skeleton h="10px" w="45%" mb={2} rounded="sm" />
-                <Skeleton h="14px" w="85%" mb={1.5} rounded="sm" />
-                <Skeleton h="14px" w="60%" mb={3} rounded="sm" />
-                <Flex justify="space-between" align="center">
-                  <Skeleton h="18px" w="40%" rounded="md" />
-                  <Skeleton h="28px" w="56px" rounded="lg" />
-                </Flex>
-              </Box>
-            ))}
-          </SimpleGrid>
-        ) : filteredProducts.length > 0 ? (
-          <SimpleGrid
-            columns={{ base: 2, sm: 2, md: 3, lg:6 }}
-            spacing={{ base: 2.5, sm: 3.5, md: 5 }}
-          >
-            {filteredProducts.map((product, index) => (
-              <ProductCard
-                key={product._id || product.id || index}
-                product={product}
+              </InputRightElement>
+            )}
+          </InputGroup>
+
+          {/* Right Controls: Sort Dropdown + Price Filter Button + Reset */}
+          <HStack spacing={2} w={{ base: 'full', sm: 'auto' }}>
+            <Select
+              size="sm"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              h="36px"
+              rounded="xl"
+              bg={subtleBg}
+              borderColor={borderColor}
+              fontSize="xs"
+              fontWeight="600"
+              flex={{ base: 1, sm: 'initial' }}
+              w={{ sm: '165px' }}
+            >
+              <option value="popularity">Sort: Popular</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="sales">Best Selling</option>
+            </Select>
+
+            <Button
+              size="sm"
+              h="36px"
+              px={3.5}
+              rounded="xl"
+              variant={showFilters || isPriceFiltered ? 'solid' : 'outline'}
+              colorScheme={showFilters || isPriceFiltered ? 'blue' : 'gray'}
+              borderColor={borderColor}
+              leftIcon={<Icon as={FiSliders} boxSize={3.5} />}
+              fontSize="xs"
+              fontWeight="700"
+              flexShrink={0}
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
+              Price
+              {isPriceFiltered ? ' •' : ''}
+            </Button>
+
+            {hasActiveFilters && (
+              <IconButton
+                aria-label="Reset all filters"
+                icon={<AiFillCloseCircle size={14} />}
+                size="sm"
+                h="36px"
+                w="36px"
+                rounded="xl"
+                colorScheme="red"
+                variant="subtle"
+                onClick={clearFilters}
               />
-            ))}
-          </SimpleGrid>
-        ) : (
-          /* Clean Empty State */
-          <VStack
-            py={12}
-            px={4}
-            spacing={2.5}
-            bg={cardBg}
-            rounded="2xl"
-            border="1px dashed"
+            )}
+          </HStack>
+        </Flex>
+
+        {/* Collapsible Price Range & Quick Budget Chips */}
+        <Collapse in={showFilters} animateOpacity>
+          <Box
+            pt={3.5}
+            mt={3}
+            borderTop="1px solid"
             borderColor={borderColor}
-            textAlign="center"
           >
             <Flex
-              w="44px"
-              h="44px"
-              rounded="full"
-              bg="var(--color-surface-hover)"
-              color="var(--color-primary)"
-              align="center"
-              justify="center"
+              direction={{ base: 'column', md: 'row' }}
+              justify="space-between"
+              align={{ base: 'stretch', md: 'center' }}
+              gap={4}
             >
-              <Icon as={FiShoppingBag} boxSize={5} />
+              <Box flex="1">
+                <HStack justify="space-between" mb={2}>
+                  <Text fontSize="xs" fontWeight="700" color={titleColor}>
+                    Price Range:{' '}
+                    <Text as="span" color="var(--color-primary)">
+                      {formatPrice(priceRange[0])} – {formatPrice(priceRange[1])}
+                    </Text>
+                  </Text>
+                  {isPriceFiltered && (
+                    <Button
+                      size="xs"
+                      variant="link"
+                      colorScheme="brand"
+                      onClick={() =>
+                        setPriceRange([minProductPrice, maxProductPrice])
+                      }
+                    >
+                      Reset Price
+                    </Button>
+                  )}
+                </HStack>
+
+                {maxProductPrice > minProductPrice && (
+                  <Box px={2}>
+                    <RangeSlider
+                      aria-label={['Minimum price', 'Maximum price']}
+                      min={minProductPrice}
+                      max={maxProductPrice}
+                      step={Math.max(
+                        10,
+                        Math.round((maxProductPrice - minProductPrice) / 50)
+                      )}
+                      value={priceRange}
+                      onChange={(val) =>
+                        setPriceRange(val as [number, number])
+                      }
+                      colorScheme="brand"
+                    >
+                      <RangeSliderTrack h="5px" rounded="full">
+                        <RangeSliderFilledTrack />
+                      </RangeSliderTrack>
+                      <RangeSliderThumb
+                        index={0}
+                        boxSize={4}
+                        border="2px solid"
+                        borderColor="var(--color-primary)"
+                      />
+                      <RangeSliderThumb
+                        index={1}
+                        boxSize={4}
+                        border="2px solid"
+                        borderColor="var(--color-primary)"
+                      />
+                    </RangeSlider>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Quick Budget Tap Pills */}
+              <Wrap spacing={1.5} flexShrink={0}>
+                {[299, 499, 999, 1999]
+                  .filter((cap) => cap > minProductPrice && cap <= maxProductPrice)
+                  .map((cap) => {
+                    const isActive =
+                      priceRange[0] === minProductPrice &&
+                      priceRange[1] === cap;
+                    return (
+                      <Button
+                        key={cap}
+                        size="xs"
+                        h="26px"
+                        px={2.5}
+                        rounded="full"
+                        fontSize="11px"
+                        variant={isActive ? 'solid' : 'outline'}
+                        colorScheme={isActive ? 'blue' : 'gray'}
+                        onClick={() =>
+                          setPriceRange([minProductPrice, cap])
+                        }
+                      >
+                        Under ₹{cap}
+                      </Button>
+                    );
+                  })}
+              </Wrap>
             </Flex>
-            <Text fontSize="md" fontWeight="700" color={titleColor}>
-              No matching products found
-            </Text>
-            <Text fontSize="xs" color={mutedText} maxW="xs">
-              Try adjusting your price slider or clearing your active search
-              filters.
-            </Text>
-            <Button
-              size="xs"
-              h="32px"
-              px={4}
-              mt={1}
-              colorScheme="brand"
-              rounded="full"
-              onClick={clearFilters}
+          </Box>
+        </Collapse>
+      </Box>
+
+      {/* 4. Product Grid */}
+      {loading ? (
+        <SimpleGrid
+          columns={{ base: 2, sm: 2, md: 3, lg: 4 }}
+          spacing={{ base: 2.5, sm: 3.5, md: 5 }}
+        >
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <Box
+              key={idx}
+              bg={cardBg}
+              rounded="2xl"
+              p={2.5}
+              border="1px solid"
+              borderColor={borderColor}
             >
-              Reset All Filters
-            </Button>
-          </VStack>
-        )}
+              <Skeleton
+                h={{ base: '140px', sm: '165px', md: '190px' }}
+                rounded="xl"
+                mb={2.5}
+              />
+              <Skeleton h="10px" w="45%" mb={2} rounded="sm" />
+              <Skeleton h="14px" w="85%" mb={1.5} rounded="sm" />
+              <Skeleton h="14px" w="60%" mb={3} rounded="sm" />
+              <Flex justify="space-between" align="center">
+                <Skeleton h="18px" w="40%" rounded="md" />
+                <Skeleton h="28px" w="56px" rounded="lg" />
+              </Flex>
+            </Box>
+          ))}
+        </SimpleGrid>
+      ) : filteredProducts.length > 0 ? (
+        <SimpleGrid
+          columns={{ base: 2, sm: 2, md: 3, lg: 6 }}
+          spacing={{ base: 2.5, sm: 3.5, md: 5 }}
+        >
+          {filteredProducts.map((product, index) => (
+            <ProductCard
+              key={product._id || product.id || index}
+              product={product}
+            />
+          ))}
+        </SimpleGrid>
+      ) : (
+        /* Clean Empty State */
+        <VStack
+          py={12}
+          px={4}
+          spacing={2.5}
+          bg={cardBg}
+          rounded="2xl"
+          border="1px dashed"
+          borderColor={borderColor}
+          textAlign="center"
+        >
+          <Flex
+            w="44px"
+            h="44px"
+            rounded="full"
+            bg="var(--color-surface-hover)"
+            color="var(--color-primary)"
+            align="center"
+            justify="center"
+          >
+            <Icon as={FiShoppingBag} boxSize={5} />
+          </Flex>
+          <Text fontSize="md" fontWeight="700" color={titleColor}>
+            No matching products found
+          </Text>
+          <Text fontSize="xs" color={mutedText} maxW="xs">
+            Try adjusting your price slider or clearing your active search
+            filters.
+          </Text>
+          <Button
+            size="xs"
+            h="32px"
+            px={4}
+            mt={1}
+            colorScheme="brand"
+            rounded="full"
+            onClick={clearFilters}
+          >
+            Reset All Filters
+          </Button>
+        </VStack>
+      )}
     </Box>
   );
 });
 
-export default ProductBanner;
+export default memo(ProductBanner);
