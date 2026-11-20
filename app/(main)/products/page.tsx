@@ -2,20 +2,19 @@
 import { Box, Flex, Skeleton } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import dynamic from "next/dynamic";
-import { Suspense, memo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, memo, useEffect } from "react";
 import CategoryFilter from "../../component/common/CategoryFilter/CategoryFilter";
 import HeroSection from "../../component/HeroSection/HeroSection";
 import ProductsListSection from "./components/ProductCard/ProductsListSection";
 import ProductCarousel from "./components/ProductCarousel/ProductCarousel";
 
 // ── Performance Optimization: Lazy load heavy below-the-fold components ──
-// MapMarker loads @react-google-maps/api (heavy script & DOM) -> lazy load
 const MapComponent = dynamic(() => import("../../component/maps/MapMarker"), {
   ssr: false,
   loading: () => <Skeleton height="350px" borderRadius="24px" my={6} />,
 });
 
-// IndianStateFilter and ProductBanner are below the fold
 const IndianStateFilter = dynamic(
   () => import("../../component/common/StateFilter/StateFilter"),
   {
@@ -40,10 +39,30 @@ const BentoGridSection = dynamic(
   }
 );
 
+// Backward-compatibility: Redirect any legacy `/products?search=...` to `/search?q=...`
+const SearchRedirectWatcher = memo(() => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const query = searchParams.get("q") || searchParams.get("search");
+    if (query) {
+      router.replace(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  }, [router, searchParams]);
+
+  return null;
+});
+SearchRedirectWatcher.displayName = "SearchRedirectWatcher";
+
 const Page = memo(
   observer(() => {
     return (
       <Box overflowX="hidden">
+        <Suspense fallback={null}>
+          <SearchRedirectWatcher />
+        </Suspense>
+
         {/* Above the fold (Fast First Paint) */}
         <HeroSection />
         <CategoryFilter />
