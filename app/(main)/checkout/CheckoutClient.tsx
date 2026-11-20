@@ -13,6 +13,7 @@ import {
   HStack,
   Icon,
   Image,
+  Link as ChakraLink,
   Radio,
   RadioGroup,
   Spinner,
@@ -507,8 +508,41 @@ const CheckoutClient = memo(
             orderIds = [initializedOrder._id || initializedOrder.id];
           }
 
+          // Auto-heal fallback: if orderIds not found, try initializing immediately
           if (orderIds.length === 0) {
-            throw new Error("Unable to identify order references for payment.");
+            let itemsPayload: any[] = [];
+            if (isBuyNow && buyNowProduct) {
+              itemsPayload.push({
+                product: buyNowProduct._id || buyNowProduct.id,
+                quantity: 1,
+                variant: buyNowProduct.variant,
+              });
+            } else if (cartStore.cartItems.length > 0) {
+              itemsPayload = cartStore.cartItems.map((item) => ({
+                product: item.product?._id || item.product?.id,
+                quantity: item.quantity || 1,
+                variant: item.product?.variant,
+              }));
+            }
+
+            if (itemsPayload.length > 0) {
+              const res = await orderStore.initializeOrder({
+                items: itemsPayload,
+                shippingAddress: address,
+              });
+              if (res?.success && res.data) {
+                setInitializedOrder(res.data);
+                if (res.data.orders && Array.isArray(res.data.orders)) {
+                  orderIds = res.data.orders.map((o: any) => o._id || o.id).filter(Boolean);
+                } else if (res.data._id || res.data.id) {
+                  orderIds = [res.data._id || res.data.id];
+                }
+              }
+            }
+          }
+
+          if (orderIds.length === 0) {
+            throw new Error("Unable to identify order references for payment. Please refresh the page and try again.");
           }
 
           const paymentOrder = await stores.orderStore.createPaymentOrder({
@@ -526,7 +560,7 @@ const CheckoutClient = memo(
           const options = {
             key:
               process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-              "rzp_test_0XDl7Od4MRUktB",
+              "rzp_test_U2NFA72AhT9dGg",
             amount: rzpOrder.amount,
             currency: rzpOrder.currency || "INR",
             name: "Business Sahayata",
@@ -1611,8 +1645,29 @@ const CheckoutClient = memo(
                   textAlign="center"
                   lineHeight="tall"
                 >
-                  By placing this order, you agree to our Terms of Service & Privacy
-                  Policy.
+                  By placing this order, you agree to our{" "}
+                  <ChakraLink
+                    as={NextLink}
+                    href="/terms"
+                    target="_blank"
+                    color={cPrimary}
+                    textDecoration="underline"
+                    _hover={{ opacity: 0.8 }}
+                  >
+                    Terms of Service
+                  </ChakraLink>{" "}
+                  &{" "}
+                  <ChakraLink
+                    as={NextLink}
+                    href="/privacy"
+                    target="_blank"
+                    color={cPrimary}
+                    textDecoration="underline"
+                    _hover={{ opacity: 0.8 }}
+                  >
+                    Privacy Policy (DPDP Compliant)
+                  </ChakraLink>
+                  .
                 </Text>
 
                 <Divider my={4} borderColor={cBorder} />
