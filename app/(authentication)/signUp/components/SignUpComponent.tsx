@@ -492,8 +492,6 @@ const SignUpForm = observer(() => {
     [categoryOptions],
   );
 
-  console.log('rootCategoryOptions--',toJS(categoryOptions));
-
   const mapCenter = useMemo(() => {
     if (selectedPoint) {
       return { lat: selectedPoint.lat, lng: selectedPoint.lng };

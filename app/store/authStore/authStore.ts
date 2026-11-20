@@ -193,10 +193,11 @@ class AuthStore {
 
       if (this.token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN, this.token);
-        await this.fetchUser();
+        // Non-blocking background hydration for fast UI response
+        void this.fetchUser();
       }
 
-      return response?.data?.data
+      return response?.data?.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
     } finally {
@@ -209,7 +210,7 @@ class AuthStore {
     this.isLoading = true;
     try {
       const response = await axios.post("/auth/login", payload);
-      return response?.data?.data
+      return response?.data?.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
     } finally {
@@ -225,11 +226,12 @@ class AuthStore {
 
       if (this.token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN, this.token);
-        stores.cartStore.syncCart();
-        await this.fetchUser();
+        // Fast-path: kick off cart sync and user profile in background without blocking navigation
+        void stores.cartStore.syncCart();
+        void this.fetchUser();
       }
 
-      return response?.data?.data
+      return response?.data?.data;
     } catch (err: any) {
       return Promise.reject(err?.response?.data || err);
     } finally {
@@ -243,11 +245,7 @@ class AuthStore {
     if (!this.token) return;
 
     try {
-      const response = await axios.post("/auth/me", {
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+      const response = await axios.post("/auth/me");
 
       this.user = response.data?.data;
       this.company = this.user?.company

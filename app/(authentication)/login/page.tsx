@@ -358,6 +358,7 @@ const LoginFormContent = observer(() => {
         router.push("/");
       }
     } catch (err: any) {
+      otpAutoSubmitRef.current = ""; // Reset ref so user can retry auto-submit upon editing
       openNotification({
         title: "Invalid OTP",
         message: err.message,
