@@ -103,7 +103,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
             fontSize="lg"
             borderRadius="md"
             padding={0} // Remove padding to center text fully
-            _focus={{ borderColor: "blue.500", boxShadow: "0 0 0 1px blue.500" }}
+            _focus={{ borderColor: "brand.500", boxShadow: "0 0 0 1px var(--color-primary, #065F68)" }}
           />
         ))}
       </HStack>

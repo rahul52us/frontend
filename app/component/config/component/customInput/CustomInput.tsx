@@ -79,6 +79,12 @@ interface CustomInputProps {
 
 const cssVar = (name: string, fallback: string) => `var(${name}, ${fallback})`;
 
+const brandPrimary = "var(--color-primary, #065F68)";
+const brandPrimaryHover = "var(--color-primary-hover, #055159)";
+const brandPrimarySoft = "var(--color-primary-soft, rgba(6, 95, 104, 0.12))";
+const brandPrimaryBorder = "var(--color-primary-border, rgba(6, 95, 104, 0.28))";
+const brandPrimaryText = "var(--color-primary-text, #065F68)";
+
 const fieldShellStyles = {
   bg: cssVar("--dashboard-input-bg", "white"),
   borderColor: cssVar("--dashboard-input-border", "#CBD5E0"),
@@ -90,11 +96,11 @@ const fieldShellStyles = {
     fontSize: "13px",
   },
   _hover: {
-    borderColor: cssVar("--dashboard-accent", "#3182CE"),
+    borderColor: brandPrimary,
   },
   _focusVisible: {
-    borderColor: cssVar("--dashboard-accent", "#3182CE"),
-    boxShadow: `0 0 0 1px ${cssVar("--dashboard-accent", "#3182CE")}`,
+    borderColor: brandPrimary,
+    boxShadow: `0 0 0 1px ${brandPrimary}`,
   },
   _disabled: {
     opacity: 0.72,
@@ -242,7 +248,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
             name={name}
             onChange={onChange}
             isChecked={value}
-            colorScheme="yellow"
+            colorScheme="brand"
             {...rest}
           />
         );
@@ -253,16 +259,16 @@ const CustomInput: React.FC<CustomInputProps> = ({
             name={name}
             onChange={onChange}
             isChecked={value}
-            colorScheme="yellow"
+            colorScheme="brand"
             sx={{
               ".chakra-checkbox__control": {
                 bg: cssVar("--dashboard-checkbox-bg", "white"),
                 borderColor: cssVar("--dashboard-checkbox-border", "#CBD5E0"),
               },
               ".chakra-checkbox__control[data-checked]": {
-                bg: cssVar("--dashboard-checkbox-active-bg", "#EBF8FF"),
-                borderColor: cssVar("--dashboard-accent", "#3182CE"),
-                color: cssVar("--dashboard-accent", "#3182CE"),
+                bg: brandPrimary,
+                borderColor: brandPrimary,
+                color: "white",
               },
             }}
             {...rest}
@@ -339,10 +345,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
                 minH="52px"
                 borderRadius="16px"
                 border="1px solid"
-                borderColor={cssVar("--dashboard-border-strong", "#CBD5E0")}
-                bg={cssVar("--dashboard-tag-button-bg", "#EBF8FF")}
-                color={cssVar("--dashboard-tag-button-text", "#2B6CB0")}
-                _hover={{ bg: cssVar("--dashboard-accent-soft", "#BEE3F8") }}
+                borderColor={brandPrimaryBorder}
+                bg={brandPrimarySoft}
+                color={brandPrimaryText}
+                _hover={{ bg: brandPrimarySoft, filter: "brightness(0.95)" }}
                 isDisabled={!inputValue.trim()}
                 onClick={() => handleTagAdd(inputValue)}
                 aria-label="Add Data"
@@ -358,14 +364,14 @@ const CustomInput: React.FC<CustomInputProps> = ({
                     px={3}
                     py={2}
                     borderRadius="full"
-                    bg={cssVar("--dashboard-tag-bg", "#EBF8FF")}
-                    color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                    bg={brandPrimarySoft}
+                    color={brandPrimaryText}
                     border="1px solid"
-                    borderColor={cssVar("--dashboard-border", "#BEE3F8")}
+                    borderColor={brandPrimaryBorder}
                   >
                     <TagLabel>{tag}</TagLabel>
                     <TagCloseButton
-                      color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                      color={brandPrimaryText}
                       onClick={() => handleTagRemove(tag)}
                     />
                   </Tag>
@@ -394,14 +400,14 @@ const CustomInput: React.FC<CustomInputProps> = ({
                     px={3}
                     py={2}
                     borderRadius="full"
-                    bg={cssVar("--dashboard-tag-bg", "#EBF8FF")}
-                    color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                    bg={brandPrimarySoft}
+                    color={brandPrimaryText}
                     border="1px solid"
-                    borderColor={cssVar("--dashboard-border", "#BEE3F8")}
+                    borderColor={brandPrimaryBorder}
                   >
                     <TagLabel>{date}</TagLabel>
                     <TagCloseButton
-                      color={cssVar("--dashboard-tag-text", "#2B6CB0")}
+                      color={brandPrimaryText}
                       onClick={() => handleRemoveDate(date)}
                     />
                   </Tag>
@@ -445,10 +451,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
               px={6}
               borderRadius="16px"
               variant="outline"
-              bg={cssVar("--dashboard-file-drop-button-bg", "transparent")}
-              color={cssVar("--dashboard-file-drop-button-text", "#2B6CB0")}
-              borderColor={cssVar("--dashboard-border-strong", "#CBD5E0")}
-              _hover={{ bg: cssVar("--dashboard-accent-soft", "#EBF8FF") }}
+              bg={brandPrimarySoft}
+              color={brandPrimaryText}
+              borderColor={brandPrimaryBorder}
+              _hover={{ bg: brandPrimarySoft, filter: "brightness(0.95)" }}
               onClick={() =>
                 (
                   document.getElementById(
@@ -516,15 +522,15 @@ const CustomInput: React.FC<CustomInputProps> = ({
                 minHeight: 52,
                 borderRadius: 16,
                 borderColor: state.isFocused
-                  ? cssVar("--dashboard-accent", "#3182CE")
+                  ? brandPrimary
                   : cssVar("--dashboard-input-border", "#CBD5E0"),
                 backgroundColor: cssVar("--dashboard-input-bg", "white"),
                 color: cssVar("--dashboard-input-text", "#1A202C"),
                 boxShadow: state.isFocused
-                  ? `0 0 0 1px ${cssVar("--dashboard-accent", "#3182CE")}`
+                  ? `0 0 0 1px ${brandPrimary}`
                   : "none",
                 "&:hover": {
-                  borderColor: cssVar("--dashboard-accent", "#3182CE"),
+                  borderColor: brandPrimary,
                 },
               }),
               valueContainer: (styles) => ({
@@ -557,31 +563,31 @@ const CustomInput: React.FC<CustomInputProps> = ({
               option: (styles, { isSelected, isFocused }) => ({
                 ...styles,
                 backgroundColor: isSelected
-                  ? cssVar("--dashboard-accent-soft", "#EBF8FF")
+                  ? brandPrimarySoft
                   : isFocused
                     ? cssVar("--dashboard-surface-soft", "#EDF2F7")
                     : cssVar("--dashboard-surface", "white"),
                 color: isSelected
-                  ? cssVar("--dashboard-accent-strong", "#2B6CB0")
+                  ? brandPrimary
                   : cssVar("--dashboard-input-text", "#1A202C"),
                 padding: "10px 12px",
                 cursor: "pointer",
               }),
               multiValue: (styles) => ({
                 ...styles,
-                backgroundColor: cssVar("--dashboard-tag-bg", "#EBF8FF"),
+                backgroundColor: brandPrimarySoft,
                 borderRadius: 999,
               }),
               multiValueLabel: (styles) => ({
                 ...styles,
-                color: cssVar("--dashboard-tag-text", "#2B6CB0"),
+                color: brandPrimaryText,
               }),
               multiValueRemove: (styles) => ({
                 ...styles,
-                color: cssVar("--dashboard-tag-text", "#2B6CB0"),
+                color: brandPrimaryText,
                 ":hover": {
                   backgroundColor: "transparent",
-                  color: cssVar("--dashboard-accent", "#3182CE"),
+                  color: brandPrimary,
                 },
               }),
               clearIndicator: (styles) => ({
