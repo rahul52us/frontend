@@ -16,7 +16,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const params = useParams();
   const pathname = usePathname();
   const isHomePage = pathname === "/" || pathname === "/home";
-  const isShopPage = !!params?.shopTitle || !!params?.shopId;
+  const isShopPage =
+    pathname === "/shop" ||
+    pathname === "/shop-details" ||
+    pathname?.startsWith("/shop/") ||
+    pathname?.startsWith("/shop-details/") ||
+    !!params?.shopTitle ||
+    !!params?.shopId;
   const isProductDetailPage =
     pathname === "/product" ||
     pathname === "/individual-product" ||
