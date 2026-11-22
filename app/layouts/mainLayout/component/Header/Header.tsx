@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Button,
+  Circle,
   Divider,
   Drawer,
   DrawerBody,
@@ -57,6 +58,9 @@ const CartDrawer = dynamic(
   () => import("../../../../component/Cart/component/CartDrawer/CartDrawer"),
   { ssr: false }
 );
+
+import LocationSelectModal from "../../../../component/common/LocationModal/LocationSelectModal";
+import AddressModal from "../../../../(main)/account/component/AddressSection/AddressModal/AddressModal";
 const WishlistDrawer = dynamic(
   () => import("../../../../component/Wishlist/component/WishlistDrawer/WishlistDrawer"),
   { ssr: false }
@@ -184,9 +188,23 @@ const Header = observer(() => {
     onClose: onWishlistClose,
   } = useDisclosure();
 
+  // Location selector modal & quick Add Address modal
+  const {
+    isOpen: isLocationModalOpen,
+    onOpen: onLocationModalOpen,
+    onClose: onLocationModalClose,
+  } = useDisclosure();
+
+  const {
+    isOpen: isAddAddressOpen,
+    onOpen: onAddAddressOpen,
+    onClose: onAddAddressClose,
+  } = useDisclosure();
+
   // Register mobile drawer & wishlist drawer for native back-button dismissal
   useRegisterOverlay(isOpen, onClose, 'header_nav_drawer');
   useRegisterOverlay(isWishlistOpen, onWishlistClose, 'wishlist_drawer');
+  useRegisterOverlay(isLocationModalOpen, onLocationModalClose, 'location_modal');
 
   const handleLogout = () => {
     logout();
@@ -196,6 +214,37 @@ const Header = observer(() => {
 
   const isAuthenticated = isMounted && Boolean(user);
   const greetingName = user?.name?.split(" ")[0] || "There";
+
+  // Dynamic user location directly from User schema (fastest & zero join)
+  const userLocation = user?.location;
+  const userAddresses = user?.addresses || stores.auth.addresses || [];
+  const defaultAddress = userAddresses.find((a: any) => a.isDefault) || userAddresses[0];
+
+  const fullDisplayAddress = userLocation?.address
+    ? [
+        userLocation.address,
+        userLocation.city,
+        userLocation.state,
+        userLocation.postalCode,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : defaultAddress
+    ? [
+        defaultAddress.line1 || defaultAddress.addressLine1,
+        defaultAddress.city,
+        defaultAddress.state,
+        defaultAddress.postalCode,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "Gwalior, Madhya Pradesh - 474001";
+
+  const localityTitle = userLocation?.city
+    ? `${userLocation.city}, ${userLocation.state || "MP"}`
+    : defaultAddress?.city
+    ? `${defaultAddress.city}, ${defaultAddress.state || "MP"}`
+    : "Gwalior, MP";
   const userAvatar =
     user?.avatar ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -236,85 +285,16 @@ const Header = observer(() => {
       borderColor={headerBorder}
       transition="all 0.2s ease"
     >
-      {/* Slim Top Announcement Bar - Collapses smoothly on scroll for compact height */}
-      <Box
-        bg="gray.900"
-        color="white"
-        px={{ base: 3, md: 8 }}
-        h={isScrolled ? "0px" : "30px"}
-        opacity={isScrolled ? 0 : 1}
-        overflow="hidden"
-        transition="all 0.25s ease"
-      >
-        <Flex
-          mx="auto"
-          h="full"
-          // align="center"
-          justify={{ base: "center", md: "space-between" }}
-          fontSize="xs"
-        >
-          <HStack spacing={2} overflow="hidden">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentPromoIndex}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                style={{ display: "flex", alignItems: "center", gap: "6px" }}
-              >
-                <Icon as={CurrentPromoIcon} color="amber.400" boxSize={3.5} />
-                <Text fontWeight="medium" noOfLines={1} color="gray.100">
-                  {promoMessages[currentPromoIndex].text}
-                </Text>
-              </motion.div>
-            </AnimatePresence>
-          </HStack>
-
-          <HStack
-            spacing={4}
-            display={{ base: "none", md: "flex" }}
-            color="gray.300"
-          >
-            <Text>24h local fulfillment</Text>
-            <Text color="whiteAlpha.400">•</Text>
-            <Button
-              variant="link"
-              size="xs"
-              color="white"
-              fontWeight="medium"
-              leftIcon={<FiHelpCircle />}
-              onClick={() => router.push("/contact-us")}
-              _hover={{ color: "blue.300", textDecoration: "none" }}
-            >
-              Help
-            </Button>
-          </HStack>
-        </Flex>
-      </Box>
-
       {/* Main Primary Header Row */}
       <Box px={{ base: 3, md: 8 }} py={{ base: 2, md: 2.5 }}>
         <Flex
-          // maxW="8xl"
           mx="auto"
           align="center"
           justify="space-between"
           gap={{ base: 2, md: 6 }}
         >
-          {/* Left: Mobile Menu Trigger & Brand Logo */}
-          <HStack spacing={{ base: 1.5, md: 3 }} flexShrink={0}>
-            {/* <IconButton
-              display={{ base: "flex", md: "none" }}
-              icon={<HamburgerIcon boxSize={5} />}
-              aria-label="Open menu"
-              variant="ghost"
-              color={iconColor}
-              size="sm"
-              onClick={onOpen}
-              borderRadius="lg"
-            /> */}
-
+          {/* Left: Brand Logo + Location Selector (Blinkit / Swiggy Style) */}
+          <HStack spacing={{ base: 2, md: 4 }} flexShrink={0}>
             <Flex
               as="button"
               onClick={() => router.push("/")}
@@ -326,7 +306,7 @@ const Header = observer(() => {
               <Image
                 src="/images/logo3.jpg"
                 alt="Business Sahayata"
-                h={{ base: "30px", md: "36px" }}
+                h={{ base: "30px", md: "38px" }}
                 w="auto"
                 objectFit="contain"
                 borderRadius="md"
@@ -334,7 +314,7 @@ const Header = observer(() => {
               <Box display={{ base: "block", sm: "block" }}>
                 <Text
                   fontWeight="800"
-                  fontSize={{ base: "sm", md: "md" }}
+                  fontSize={{ base: "13px", md: "md" }}
                   bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
                   bgClip="text"
                   letterSpacing="tight"
@@ -352,13 +332,88 @@ const Header = observer(() => {
                 </Text>
               </Box>
             </Flex>
+
+            {/* Subtle Divider between Logo and Location on Desktop */}
+            <Box
+              display={{ base: "none", md: "block" }}
+              h="28px"
+              w="1px"
+              bg={headerBorder}
+            />
+
+            {/* Blinkit/Zepto Quick-Commerce Style Delivery & Full Address Header */}
+            <Tooltip
+              label={`Deliver to: ${fullDisplayAddress}`}
+              hasArrow
+              placement="bottom-start"
+              openDelay={250}
+            >
+              <HStack
+                as="button"
+                spacing={2.5}
+                py={1.5}
+                px={2.5}
+                borderRadius="xl"
+                _hover={{
+                  bg: useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
+                }}
+                transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                textAlign="left"
+                cursor="pointer"
+                _focus={{ outline: "none" }}
+                role="group"
+                onClick={() => {
+                  onLocationModalOpen();
+                }}
+              >
+                <Circle
+                  size="36px"
+                  bg="var(--color-primary-soft)"
+                  color="var(--color-primary)"
+                  flexShrink={0}
+                  transition="transform 0.2s ease"
+                  _groupHover={{ transform: "scale(1.08)" }}
+                >
+                  <Icon as={FiMapPin} boxSize={4} />
+                </Circle>
+                <Box minW={0} lineHeight="1.2">
+                  <HStack spacing={1.5} align="center">
+                    <Text
+                      fontSize="13px"
+                      fontWeight="800"
+                      color={useColorModeValue("gray.900", "white")}
+                      letterSpacing="-0.2px"
+                    >
+                      Delivery in 15-30 mins
+                    </Text>
+                    <Text
+                      fontSize="11px"
+                      color="gray.400"
+                      transition="transform 0.2s"
+                      _groupHover={{ transform: "translateY(1px)", color: "var(--color-primary)" }}
+                    >
+                      ▼
+                    </Text>
+                  </HStack>
+                  <Text
+                    fontSize="11.5px"
+                    fontWeight="500"
+                    color="gray.500"
+                    noOfLines={1}
+                    maxW={{ base: "140px", md: "220px", lg: "320px" }}
+                  >
+                    {fullDisplayAddress}
+                  </Text>
+                </Box>
+              </HStack>
+            </Tooltip>
           </HStack>
 
-          {/* Center: Clean Search Bar (Desktop & Tablet) */}
+          {/* Center: Clean Wide Search Bar */}
           <Box
             display={{ base: "none", md: "block" }}
             flex="1"
-            maxW="580px"
+            maxW="680px"
           >
             <Suspense fallback={null}>
               <SearchInput />
@@ -776,6 +831,42 @@ const Header = observer(() => {
       {/* Cart & Wishlist Drawers */}
       <CartDrawer isOpen={isCartOpen} onClose={onCartClose} />
       <WishlistDrawer isOpen={isWishlistOpen} onClose={onWishlistClose} />
+
+      {/* Blinkit-Style Location Selector Modal / Mobile Drawer */}
+      <LocationSelectModal
+        isOpen={isLocationModalOpen}
+        onClose={onLocationModalClose}
+        onOpenAddNewAddress={() => onAddAddressOpen()}
+      />
+
+      {/* Quick Add Address Modal */}
+      {isAddAddressOpen && (
+        <AddressModal
+          isOpen={isAddAddressOpen}
+          onClose={onAddAddressClose}
+          handleSubmit={async (e: any) => {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+              name: form.name.value,
+              phone: form.phone.value,
+              line1: form.line1.value,
+              line2: form.line2?.value || "",
+              city: form.city.value,
+              state: form.state.value,
+              postalCode: form.postalCode.value,
+              country: form.country?.value || "India",
+              isDefault: Boolean(form.isDefault?.checked),
+            };
+            try {
+              await stores.auth.addAddress(payload);
+              onAddAddressClose();
+            } catch (err: any) {
+              console.error("Failed to add address:", err);
+            }
+          }}
+        />
+      )}
     </Box>
   );
 });

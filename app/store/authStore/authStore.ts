@@ -350,6 +350,58 @@ class AuthStore {
     }
   };
 
+  setDefaultAddress = async (addressId: string) => {
+    try {
+      const { data } = await axios.put(`/user/address/set-default/${addressId}`);
+      if (data?.data?.addresses) {
+        this.addresses = data.data.addresses;
+        if (this.user) {
+          this.user.addresses = data.data.addresses;
+          this.user.defaultAddress = data.data.activeAddress;
+          if (data.data.activeAddress) {
+            this.user.location = {
+              type: "Point",
+              coordinates: data.data.activeAddress.location?.coordinates || [78.1792, 26.2183],
+              address: [data.data.activeAddress.addressLine1, data.data.activeAddress.addressLine2].filter(Boolean).join(", "),
+              city: data.data.activeAddress.city,
+              state: data.data.activeAddress.state,
+              postalCode: data.data.activeAddress.postalCode,
+            };
+          }
+        }
+      }
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
+  updateCurrentLocation = async (locationData: {
+    coordinates?: [number, number];
+    address?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    area?: string;
+  }) => {
+    try {
+      const { data } = await axios.put("/user/location/update-current", locationData);
+      if (data?.data) {
+        if (this.user) {
+          if (data.data.location) this.user.location = data.data.location;
+          if (data.data.activeAddress) this.user.defaultAddress = data.data.activeAddress;
+          if (data.data.addresses) {
+            this.addresses = data.data.addresses;
+            this.user.addresses = data.data.addresses;
+          }
+        }
+      }
+      return data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err);
+    }
+  };
+
   updateProfile = async (profileData: { phone?: string; email?: string }) => {
     try {
       const { data } = await axios.put("/user/profile", profileData);

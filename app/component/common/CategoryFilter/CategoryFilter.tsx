@@ -63,32 +63,35 @@ const CategoryCardItem = memo(
       <MotionBox
         as="button"
         onClick={() => onClick(category)}
-        w={{ base: '112px', sm: '136px', md: '168px' }}
+        w={{ base: '78px', sm: '96px', md: '110px' }}
         flexShrink={0}
-        borderColor={borderColor}
-        rounded={{ base: 'xl', md: '2xl' }}
-        p={{ base: 2, md: 2.5 }}
-        textAlign="left"
+        p={{ base: 1.5, sm: 2 }}
+        textAlign="center"
         position="relative"
         role="group"
         whileHover={{ y: -4 }}
-        whileTap={{ scale: 0.97 }}
+        whileTap={{ scale: 0.95 }}
         transition={{ duration: 0.18 }}
-        _hover={{
-          bg: cardHoverBg,
-          borderColor: hoverBorderColor,
-          boxShadow: '0 10px 25px -8px rgba(37, 99, 235, 0.14)',
-        }}
       >
-        {/* Image Container */}
+        {/* Circular / Squircle Story Bubble for All Screens */}
         <Box
-          w="full"
-          h={{ base: '92px', sm: '100px', md: '120px' }}
-          rounded={{ base: 'lg', md: '3xl' }}
+          w={{ base: '64px', sm: '76px', md: '84px' }}
+          h={{ base: '64px', sm: '76px', md: '84px' }}
+          mx="auto"
+          rounded="full"
           overflow="hidden"
           bg={imageBg}
+          border="2.5px solid"
+          borderColor="transparent"
           position="relative"
-          mb={{ base: 2, md: 2.5 }}
+          mb={2}
+          boxShadow="sm"
+          transition="all 0.25s ease"
+          _groupHover={{
+            borderColor: "var(--color-primary)",
+            transform: "scale(1.06)",
+            boxShadow: "0 8px 20px -4px rgba(37, 99, 235, 0.25)",
+          }}
         >
           <Image
             src={imageUrl}
@@ -99,65 +102,45 @@ const CategoryCardItem = memo(
             loading="lazy"
             decoding="async"
             transition="transform 0.35s ease"
-            _groupHover={{ transform: 'scale(1.07)' }}
+            _groupHover={{ transform: 'scale(1.12)' }}
           />
 
           {typeof productCount === 'number' && productCount > 0 && (
             <Badge
               position="absolute"
-              top={1.5}
-              right={1.5}
-              bg="blackAlpha.700"
+              bottom={1}
+              left="50%"
+              transform="translateX(-50%)"
+              bg="blackAlpha.800"
               color="white"
               backdropFilter="blur(4px)"
               rounded="full"
-              px={2}
-              py={0.5}
-              fontSize="9px"
-              fontWeight="600"
+              px={1.5}
+              py={0.2}
+              fontSize="8px"
+              fontWeight="700"
+              whiteSpace="nowrap"
             >
               {productCount}+
             </Badge>
           )}
         </Box>
 
-        {/* Category Name & Subtle Action Icon */}
-        <HStack justify="space-between" align="center" spacing={1} px={0.5}>
-          <Box minW={0} flex="1">
-            <Text
-              fontSize={{ base: 'xs', md: 'sm' }}
-              fontWeight="700"
-              color={titleColor}
-              noOfLines={1}
-              lineHeight="1.2"
-              _groupHover={{ color: 'var(--color-primary)' }}
-              transition="color 0.15s ease"
-            >
-              {category.name}
-            </Text>
-          </Box>
-
-          <Flex
-            display={{ base: 'none', sm: 'flex' }}
-            w="22px"
-            h="22px"
-            rounded="full"
-            bg="white"
-            color="gray.400"
-            align="center"
-            justify="center"
-            flexShrink={0}
-            boxShadow="2xs"
-            transition="all 0.2s ease"
-            _groupHover={{
-              bg: 'var(--color-primary)',
-              color: 'white',
-              transform: 'translate(1px, -1px)',
-            }}
+        {/* Category Name */}
+        <Box minW={0} w="full" px={1}>
+          <Text
+            fontSize={{ base: '11px', md: '12px' }}
+            fontWeight="700"
+            color={titleColor}
+            noOfLines={1}
+            lineHeight="1.2"
+            textAlign="center"
+            _groupHover={{ color: 'var(--color-primary)' }}
+            transition="color 0.15s ease"
           >
-            <Icon as={FiArrowUpRight} boxSize={3} />
-          </Flex>
-        </HStack>
+            {category.name}
+          </Text>
+        </Box>
       </MotionBox>
     );
   }
