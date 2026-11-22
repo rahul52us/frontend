@@ -17,9 +17,10 @@ const fadeSlide = keyframes`
 
 interface SidebarLogoProps {
   showBrand?: boolean;
+  isDrawer?: boolean;
 }
 
-const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false }) => {
+const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false, isDrawer = false }) => {
   const router = useRouter();
   const {
     layout: { isCallapse },
@@ -81,7 +82,13 @@ const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false })
   return (
     <LogoWrapper
       $height={headerHeight}
-      onClick={() => router.push(dashboard.home)}
+      $isDrawer={isDrawer}
+      onClick={() => {
+        if (isDrawer) {
+          stores.layout.setOpenMobileSideDrawer(false);
+        }
+        router.push(dashboard.home);
+      }}
       role="button"
       aria-label="Go to home"
     >
@@ -117,7 +124,7 @@ const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false })
 
 export default SidebarLogo;
 
-const LogoWrapper = styled.div<{ $height: string }>`
+const LogoWrapper = styled.div<{ $height: string; $isDrawer?: boolean }>`
   position: relative;
   display: flex;
   align-items: center;
@@ -126,18 +133,22 @@ const LogoWrapper = styled.div<{ $height: string }>`
   padding: 0 18px;
   cursor: pointer;
   overflow: hidden;
+  flex: ${({ $isDrawer }) => ($isDrawer ? "1" : "none")};
   flex-shrink: 0;
 
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.25) 0%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
+  background: ${({ $isDrawer }) =>
+    $isDrawer
+      ? "transparent"
+      : `linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.25) 0%,
+          rgba(0, 0, 0, 0.1) 100%
+        )`};
 
   backdrop-filter: blur(6px);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: ${({ $isDrawer }) => ($isDrawer ? "transparent" : "rgba(255, 255, 255, 0.06)")};
     transform: translateX(2px);
   }
 

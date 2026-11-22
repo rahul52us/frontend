@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, IconButton, useColorModeValue, useMediaQuery } from "@chakra-ui/react";
+import { Box, Flex, IconButton, useColorModeValue, useMediaQuery } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { FaBars } from "react-icons/fa";
 import HeaderNotification from "./HeaderNotification/HeaderNotification";
@@ -28,7 +28,9 @@ const HeaderNavbar = observer(() => {
       gap={{ base: 2, md: 3 }}
       flexShrink={0}
     >
-      <HeaderThemeSwitch />
+      <Box display={{ base: "none", md: "block" }}>
+        <HeaderThemeSwitch />
+      </Box>
       <HeaderNotification />
       <HeaderProfile />
 

@@ -4,8 +4,12 @@ import {
   FaBox,
   FaChartPie,
   FaCog,
+  FaHeart,
+  FaMapMarkerAlt,
+  FaShoppingBag,
   FaTag,
   FaUsers,
+  FaWallet,
 } from "react-icons/fa";
 
 interface SidebarItem {
@@ -24,6 +28,20 @@ const sidebarDatas: SidebarItem[] = [
     icon: <FaChartPie />,
     url: "/dashboard",
     role: ["buyer", "seller", "admin"],
+  },
+  {
+    id: 201,
+    name: "My Orders",
+    icon: <BsBoxSeam />,
+    url: "/dashboard/my-orders",
+    role: ["buyer"],
+  },
+  {
+    id: 202,
+    name: "Seller Khata",
+    icon: <FaUsers />,
+    url: "/dashboard/my-sellers",
+    role: ["buyer"],
   },
   {
     id: 101,

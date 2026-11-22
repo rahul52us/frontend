@@ -100,6 +100,49 @@ const DashboardMobileBottomNav = observer(() => {
     normalizedRoles.includes('superAdmin') ||
     pathname.startsWith('/dashboard/super-admin');
 
+  const hasCompany = Boolean(user?.company?._id || user?.company);
+  const isBuyerOnly = !isSuperAdmin && !hasCompany && user?.type !== 'seller';
+
+  // Buyer Navigation Items (Consumer / Vyapari App UX)
+  const buyerNavItems: NavItem[] = [
+    {
+      id: 'buyer-home',
+      label: 'Home',
+      icon: FiShoppingBag,
+      path: '/',
+      sidebarId: 0,
+    },
+    {
+      id: 'buyer-orders',
+      label: 'My Orders',
+      icon: FiClipboard,
+      path: '/dashboard/my-orders',
+      sidebarId: 201,
+    },
+    {
+      id: 'buyer-dashboard',
+      label: 'Dashboard',
+      icon: FiHome,
+      path: '/dashboard',
+      sidebarId: 1,
+      isCenter: true,
+    },
+    {
+      id: 'buyer-sellers',
+      label: 'Khata',
+      icon: FiUsers,
+      path: '/dashboard/my-sellers',
+      sidebarId: 202,
+    },
+    {
+      id: 'buyer-more',
+      label: 'Profile',
+      icon: FiMenu,
+      path: '',
+      isMore: true,
+    },
+  ];
+
   // SuperAdmin Navigation Items - Center Tab is Dashboard
   const superAdminNavItems: NavItem[] = [
     {
@@ -180,7 +223,11 @@ const DashboardMobileBottomNav = observer(() => {
     },
   ];
 
-  const currentNavItems = isSuperAdmin ? superAdminNavItems : sellerNavItems;
+  const currentNavItems = isSuperAdmin
+    ? superAdminNavItems
+    : isBuyerOnly
+    ? buyerNavItems
+    : sellerNavItems;
 
   const isTabActive = (item: NavItem) => {
     if (item.isMore) {

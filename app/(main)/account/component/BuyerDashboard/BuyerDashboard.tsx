@@ -4,161 +4,106 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
+  Circle,
   Divider,
-  Drawer,
-  DrawerCloseButton,
-  DrawerContent,
-  DrawerOverlay,
   Flex,
-  Heading,
   HStack,
   Icon,
-  Modal,
-  ModalCloseButton,
-  ModalContent,
-  ModalOverlay,
+  IconButton,
   SimpleGrid,
-  Spinner,
   Text,
-  useBreakpointValue,
+  useColorModeValue,
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { FiAlertCircle, FiMapPin, FiPhone, FiShoppingBag } from "react-icons/fi";
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiCreditCard,
+  FiEye,
+  FiMapPin,
+  FiPackage,
+  FiRefreshCw,
+  FiShoppingBag,
+  FiTruck,
+  FiUsers,
+} from "react-icons/fi";
+import {
+  MerchantBadge,
+  merchantFadeUp,
+  MerchantPageHeader,
+  MerchantPageShell,
+  MerchantPanel,
+  merchantSpin,
+} from "../../../../dashboard/components/common/merchantDashboardUI";
+import { BuyerDashboardSkeleton } from "./BuyerDashboardSkeleton";
+import { BuyerSpendingChart } from "./BuyerSpendingChart";
+import { SellerPurchaseDrawer } from "./SellerPurchaseDrawer";
+import { BuyerStats, ConnectionSummary, RecentOrder, SellerConnection, SellerPurchaseDetails, SpendingChartPoint } from "./types";
+import { formatCurrency, formatDate } from "./utils";
 
-type SellerShop = {
-  _id: string;
-  name: string;
-  logo: string | null;
-  city: string | null;
-  state: string | null;
-  phone: string | null;
-};
-
-type SellerConnection = {
-  profileId: string;
-  partyType: "customer" | "supplier";
-  sellerShop: SellerShop | null;
-  displayName: string | null;
-  outstandingBalance: number;
-  isBlocked: boolean;
-  lastPurchaseAt: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-};
-
-type ConnectionSummary = {
-  totalSellers: number;
-  totalOutstanding: number;
-  totalPayable: number;
-};
-
-type SellerPurchaseItem = {
-  itemName: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  tax: number;
-  lineTotal: number;
-};
-
-type SellerPurchaseRecord = {
-  _id: string;
-  saleDate: string | null;
-  grandTotal: number;
-  subtotal: number;
-  discountTotal: number;
-  taxTotal: number;
-  status: "draft" | "posted" | "void";
-  notes: string;
-  postedAt: string | null;
-  createdAt: string | null;
-  itemCount: number;
-  totalQuantity: number;
-  items: SellerPurchaseItem[];
-};
-
-type SellerPurchaseDetailsSummary = {
-  totalRecords: number;
-  totalSpent: number;
-  totalLineItems: number;
-  totalQuantity: number;
-  lastPurchaseAt: string | null;
-  shownRecords: number;
-};
-
-type SellerPurchaseDetails = {
-  profileId: string;
-  partyType: "customer" | "supplier";
-  sellerShop: SellerShop | null;
-  displayName: string | null;
-  summary: SellerPurchaseDetailsSummary;
-  records: SellerPurchaseRecord[];
-};
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(amount);
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return "-";
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-};
-
-const formatShortId = (value?: string | null) => (value ? value.slice(-6).toUpperCase() : "-");
-const getShopInitials = (name?: string | null) =>
-  name
-    ? name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-    : "SH";
-
-const BuyerDashboard = () => {
+export default function BuyerDashboard() {
+  const [stats, setStats] = useState<BuyerStats | null>(null);
+  const [spendingChart, setSpendingChart] = useState<SpendingChartPoint[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [connections, setConnections] = useState<SellerConnection[]>([]);
-  const [summary, setSummary] = useState<ConnectionSummary>({ totalSellers: 0, totalOutstanding: 0, totalPayable: 0 });
+  const [summary, setSummary] = useState<ConnectionSummary>({
+    totalSellers: 0,
+    totalOutstanding: 0,
+    totalPayable: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [selectedConnection, setSelectedConnection] = useState<SellerConnection | null>(null);
   const [purchaseDetails, setPurchaseDetails] = useState<SellerPurchaseDetails | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const [purchaseError, setPurchaseError] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const isMobilePurchaseSheet = useBreakpointValue({ base: true, md: false }) ?? false;
+
+  const cardBg = useColorModeValue("white", "gray.800");
+  const softBg = useColorModeValue("gray.50", "gray.900");
+  const borderColor = useColorModeValue("gray.100", "gray.700");
+  const textPrimary = useColorModeValue("gray.800", "white");
+  const textMuted = useColorModeValue("gray.500", "gray.400");
 
   useEffect(() => {
-    const fetchConnections = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const response = await axios.get("/buyer/my-sellers");
-        const data = response.data?.data;
-        setConnections(data?.connections || []);
-        setSummary(data?.summary || { totalSellers: 0, totalOutstanding: 0, totalPayable: 0 });
-      } catch (err: any) {
-        setError(err?.response?.data?.message || err?.message || "Failed to load dashboard");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConnections();
+    fetchDashboardData();
   }, []);
 
-  const closePurchaseModal = () => {
-    onClose();
-    setSelectedConnection(null);
-    setPurchaseDetails(null);
-    setPurchaseLoading(false);
-    setPurchaseError("");
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [overviewRes, connectionsRes] = await Promise.all([
+        axios.get("/buyer/overview"),
+        axios.get("/buyer/my-sellers"),
+      ]);
+
+      if (overviewRes.data?.success) {
+        setStats(overviewRes.data.data?.stats || null);
+        setSpendingChart(overviewRes.data.data?.spendingChart || []);
+        setRecentOrders(overviewRes.data.data?.recentOrders || []);
+      }
+
+      if (connectionsRes.data?.success) {
+        const data = connectionsRes.data?.data;
+        setConnections(data?.connections || []);
+        setSummary(data?.summary || { totalSellers: 0, totalOutstanding: 0, totalPayable: 0 });
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to load dashboard");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openPurchaseModal = async (connection: SellerConnection) => {
+  const openPurchaseDrawer = async (connection: SellerConnection) => {
     setSelectedConnection(connection);
     setPurchaseDetails(null);
     setPurchaseError("");
@@ -177,624 +122,657 @@ const BuyerDashboard = () => {
     }
   };
 
-  const activePurchaseShop = purchaseDetails?.sellerShop || selectedConnection?.sellerShop || null;
-
-  const purchasePanelContent = (
-    <Box h="100%" display="flex" flexDirection="column">
-      <Box
-        position="relative"
-        overflow="hidden"
-        bgGradient="linear(to-br, var(--color-primary), var(--color-secondary))"
-        color="white"
-        px={{ base: 4, md: 6 }}
-        pt={{ base: 3, md: 5 }}
-        pb={{ base: 5, md: 6 }}
-        flexShrink={0}
-      >
-        <Box
-          display={{ base: "block", md: "none" }}
-          w="42px"
-          h="4px"
-          borderRadius="full"
-          bg="whiteAlpha.600"
-          mx="auto"
-          mb={4}
-        />
-        <Box
-          position="absolute"
-          top="-30px"
-          right="-28px"
-          h="130px"
-          w="130px"
-          borderRadius="full"
-          bg="radial-gradient(circle, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 46%, rgba(255,255,255,0) 72%)"
-          pointerEvents="none"
-        />
-        <Box
-          position="absolute"
-          left="-54px"
-          bottom="-60px"
-          h="180px"
-          w="180px"
-          borderRadius="full"
-          bg="radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0) 74%)"
-          pointerEvents="none"
-        />
-
-        <Flex position="relative" align="start" gap={3} pr={12}>
-          <Avatar
-            size="md"
-            name={activePurchaseShop?.name || "Shop"}
-            src={activePurchaseShop?.logo || undefined}
-            bg="whiteAlpha.250"
-            color="white"
-            border="1px solid rgba(255,255,255,0.22)"
-          />
-          <Box minW={0}>
-            <HStack spacing={2} flexWrap="wrap" mb={2}>
-              <Badge
-                borderRadius="full"
-                px={2.5}
-                py={1}
-                bg="whiteAlpha.220"
-                color="white"
-                textTransform="uppercase"
-                fontSize="9px"
-                fontWeight="900"
-                letterSpacing="0.05em"
-              >
-                Purchase History
-              </Badge>
-              {purchaseDetails?.summary?.totalRecords ? (
-                <Badge
-                  borderRadius="full"
-                  px={2.5}
-                  py={1}
-                  bg="#2BC45A"
-                  color="white"
-                  fontSize="9px"
-                  fontWeight="900"
-                >
-                  {purchaseDetails.summary.totalRecords} Bills
-                </Badge>
-              ) : null}
-            </HStack>
-            <Heading
-              size="md"
-              fontSize={{ base: "xl", md: "2xl" }}
-              lineHeight="1.08"
-              noOfLines={2}
-            >
-              {activePurchaseShop?.name || "Seller Purchases"}
-            </Heading>
-            <Text mt={1.5} fontSize={{ base: "sm", md: "sm" }} color="whiteAlpha.820" maxW="380px">
-              Review posted purchase bills and the exact items you bought from this seller.
-            </Text>
-            <HStack mt={3} spacing={3} flexWrap="wrap" color="whiteAlpha.820">
-              {(activePurchaseShop?.city || activePurchaseShop?.state) && (
-                <Text fontSize="xs" fontWeight="600">
-                  {[activePurchaseShop?.city, activePurchaseShop?.state].filter(Boolean).join(", ")}
-                </Text>
-              )}
-              {activePurchaseShop?.phone && (
-                <Text fontSize="xs" fontWeight="600">
-                  {activePurchaseShop.phone}
-                </Text>
-              )}
-            </HStack>
-          </Box>
-        </Flex>
-      </Box>
-
-      <Box px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }} flex="1" overflowY="auto" bg="var(--color-bg)">
-        {purchaseLoading ? (
-          <Flex
-            minH="280px"
-            align="center"
-            justify="center"
-            direction="column"
-            gap={3}
-            bg="var(--color-surface)"
-            borderRadius="2xl"
-            borderWidth="1px"
-            borderColor="var(--color-border)"
-          >
-            <Spinner color="var(--color-primary)" thickness="3px" size="lg" />
-            <Text fontSize="sm" color="var(--color-text-secondary)">
-              Loading purchase items...
-            </Text>
-          </Flex>
-        ) : purchaseError ? (
-          <Flex
-            minH="220px"
-            align="center"
-            justify="center"
-            direction="column"
-            gap={3}
-            bg="var(--color-surface)"
-            borderRadius="2xl"
-            borderWidth="1px"
-            borderColor="red.300"
-            p={6}
-          >
-            <Icon as={FiAlertCircle} color="red.400" boxSize={7} />
-            <Text fontSize="sm" color="red.400" textAlign="center">
-              {purchaseError}
-            </Text>
-          </Flex>
-        ) : !purchaseDetails || purchaseDetails.records.length === 0 ? (
-          <Flex
-            minH="220px"
-            align="center"
-            justify="center"
-            direction="column"
-            gap={3}
-            bg="var(--color-surface)"
-            borderRadius="2xl"
-            borderWidth="1px"
-            borderColor="var(--color-border)"
-            p={6}
-          >
-            <Icon as={FiShoppingBag} color="var(--color-primary)" boxSize={8} />
-            <Text fontWeight="700" color="var(--color-text-primary)">
-              No posted purchases yet
-            </Text>
-            <Text fontSize="sm" color="var(--color-text-secondary)" textAlign="center" maxW="380px">
-              This seller connection exists, but there are no posted purchase records to show yet.
-            </Text>
-          </Flex>
-        ) : (
-          <VStack align="stretch" spacing={{ base: 4, md: 5 }}>
-            <SimpleGrid columns={{ base: 2, md: 4 }} spacing={3}>
-              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
-                  Posted Bills
-                </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-text-primary)" mt={1.5} lineHeight="1.05">
-                  {purchaseDetails.summary.totalRecords}
-                </Text>
-              </Box>
-              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="green.400" textTransform="uppercase" letterSpacing="0.08em">
-                  Total Spent
-                </Text>
-                <Text fontSize={{ base: "md", md: "xl" }} fontWeight="900" color="green.400" mt={1.5} lineHeight="1.1" wordBreak="break-word">
-                  {formatCurrency(purchaseDetails.summary.totalSpent)}
-                </Text>
-              </Box>
-              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
-                  Item Lines
-                </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="var(--color-text-primary)" mt={1.5} lineHeight="1.05">
-                  {purchaseDetails.summary.totalLineItems}
-                </Text>
-              </Box>
-              <Box bg="var(--color-surface)" borderRadius="2xl" p={{ base: 3.5, md: 4 }} borderWidth="1px" borderColor="var(--color-border)" boxShadow="sm">
-                <Text fontSize="10px" fontWeight="800" color="orange.400" textTransform="uppercase" letterSpacing="0.08em">
-                  Total Qty
-                </Text>
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="orange.400" mt={1.5} lineHeight="1.05">
-                  {purchaseDetails.summary.totalQuantity}
-                </Text>
-              </Box>
-            </SimpleGrid>
-
-            <Flex
-              direction={{ base: "column", md: "row" }}
-              justify="space-between"
-              align={{ base: "stretch", md: "start" }}
-              gap={3}
-              bg="var(--color-surface)"
-              borderRadius="2xl"
-              borderWidth="1px"
-              borderColor="var(--color-border)"
-              boxShadow="sm"
-              p={{ base: 3.5, md: 4 }}
-            >
-              <Text fontSize="sm" color="var(--color-text-secondary)">
-                Showing latest {purchaseDetails.summary.shownRecords} purchase records
-                {purchaseDetails.summary.totalRecords > purchaseDetails.summary.shownRecords
-                  ? ` out of ${purchaseDetails.summary.totalRecords}`
-                  : ""}
-                .
-              </Text>
-              <Text fontSize="sm" color="var(--color-text-primary)" fontWeight="700">
-                Last purchase: {formatDate(purchaseDetails.summary.lastPurchaseAt)}
-              </Text>
-            </Flex>
-
-            <Divider borderColor="var(--color-border)" />
-
-            <VStack align="stretch" spacing={4}>
-              {purchaseDetails.records.map((record) => (
-                <Box
-                  key={record._id}
-                  bg="var(--color-surface)"
-                  borderRadius="2xl"
-                  borderWidth="1px"
-                  borderColor="var(--color-border)"
-                  p={{ base: 3.5, md: 4 }}
-                  boxShadow="sm"
-                >
-                  <Flex
-                    direction={{ base: "column", md: "row" }}
-                    justify="space-between"
-                    align={{ base: "stretch", md: "start" }}
-                    gap={3}
-                  >
-                    <Box>
-                      <HStack spacing={2} flexWrap="wrap">
-                        <Badge colorScheme="brand" borderRadius="full" px={2.5} py={0.5}>
-                          Bill #{formatShortId(record._id)}
-                        </Badge>
-                        <Badge colorScheme="green" borderRadius="full" px={2.5} py={0.5}>
-                          {record.itemCount} items
-                        </Badge>
-                        <Badge colorScheme="brand" borderRadius="full" px={2.5} py={0.5}>
-                          Qty {record.totalQuantity}
-                        </Badge>
-                      </HStack>
-                      <Text mt={2} fontSize="sm" color="var(--color-text-secondary)">
-                        {formatDate(record.saleDate || record.createdAt)}
-                      </Text>
-                    </Box>
-                    <Box
-                      textAlign={{ base: "left", md: "right" }}
-                      bg="linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)"
-                      color="white"
-                      borderRadius="xl"
-                      px={{ base: 3.5, md: 4 }}
-                      py={{ base: 3, md: 3.5 }}
-                      minW={{ md: "180px" }}
-                      alignSelf={{ base: "stretch", md: "start" }}
-                    >
-                      <Text fontSize="10px" color="whiteAlpha.800" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
-                        Grand Total
-                      </Text>
-                      <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="900" color="white" mt={1}>
-                        {formatCurrency(record.grandTotal)}
-                      </Text>
-                    </Box>
-                  </Flex>
-
-                  <VStack align="stretch" spacing={2.5} mt={4}>
-                    {record.items.map((item, index) => (
-                      <Flex
-                        key={`${record._id}-${item.itemName}-${index}`}
-                        direction={{ base: "column", sm: "row" }}
-                        justify="space-between"
-                        align={{ base: "stretch", sm: "center" }}
-                        gap={3}
-                        bg="var(--color-surface-soft)"
-                        borderRadius="xl"
-                        borderWidth="1px"
-                        borderColor="var(--color-border)"
-                        px={{ base: 3, md: 3.5 }}
-                        py={{ base: 3, md: 3.5 }}
-                      >
-                        <Box minW={0}>
-                          <Text fontSize="sm" fontWeight="700" color="var(--color-text-primary)" noOfLines={2}>
-                            {item.itemName}
-                          </Text>
-                          <HStack mt={2} spacing={2} flexWrap="wrap">
-                            <Badge borderRadius="full" px={2.5} py={1} bg="var(--color-surface-hover)" color="var(--color-primary)">
-                              Qty {item.quantity}
-                            </Badge>
-                            <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="600">
-                              {formatCurrency(item.unitPrice)} each
-                            </Text>
-                          </HStack>
-                        </Box>
-                        <Box
-                          bg="var(--color-surface)"
-                          borderRadius="lg"
-                          borderWidth="1px"
-                          borderColor="var(--color-border)"
-                          px={3}
-                          py={2}
-                          alignSelf={{ base: "flex-start", sm: "auto" }}
-                          flexShrink={0}
-                        >
-                          <Text fontSize="10px" color="var(--color-text-secondary)" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
-                            Line Total
-                          </Text>
-                          <Text fontSize="sm" fontWeight="900" color="var(--color-text-primary)" mt={0.5}>
-                            {formatCurrency(item.lineTotal)}
-                          </Text>
-                        </Box>
-                      </Flex>
-                    ))}
-                  </VStack>
-
-                  {record.notes ? (
-                    <Box mt={3} bg="var(--color-surface-hover)" borderRadius="xl" px={3.5} py={3} borderWidth="1px" borderColor="var(--color-border)">
-                      <Text fontSize="xs" color="var(--color-primary)" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
-                        Note
-                      </Text>
-                      <Text mt={1} fontSize="sm" color="var(--color-text-secondary)">
-                        {record.notes}
-                      </Text>
-                    </Box>
-                  ) : null}
-                </Box>
-              ))}
-            </VStack>
-          </VStack>
-        )}
-      </Box>
-    </Box>
-  );
+  const closePurchaseDrawer = () => {
+    onClose();
+    setSelectedConnection(null);
+    setPurchaseDetails(null);
+    setPurchaseLoading(false);
+    setPurchaseError("");
+  };
 
   if (loading) {
-    return (
-      <Flex minH="300px" align="center" justify="center" direction="column" gap={3}>
-        <Spinner color="var(--color-primary)" thickness="3px" size="lg" />
-        <Text fontSize="sm" color="gray.500">Loading your dashboard...</Text>
-      </Flex>
-    );
+    return <BuyerDashboardSkeleton />;
   }
 
-  if (error) {
-    return (
-      <Flex minH="200px" align="center" justify="center" direction="column" gap={3}>
-        <Icon as={FiAlertCircle} color="red.400" boxSize={8} />
-        <Text fontSize="sm" color="red.500">{error}</Text>
-      </Flex>
-    );
-  }
+  // Active in-progress order
+  const activeOrders = recentOrders.filter((o) => {
+    const s = String(o.orderStatus || "").toLowerCase();
+    return s !== "delivered" && s !== "completed" && s !== "cancelled" && s !== "returned";
+  });
+  const heroOrder = activeOrders[0] || recentOrders[0] || null;
+  const isOrderActive = heroOrder && heroOrder.orderStatus !== "delivered" && heroOrder.orderStatus !== "completed";
 
   return (
-    <VStack align="stretch" spacing={6}>
-      {/* Header */}
-      <Box>
-        <Heading size="md" color="var(--color-text-primary)">Dashboard</Heading>
-        <Text fontSize="sm" color="var(--color-text-secondary)" mt={1}>
-          View your connections with sellers and track your outstanding balances.
-        </Text>
-      </Box>
+    <VStack align="stretch" spacing={{ base: 4, md: 5 }} py={{ base: 1, md: 2 }}>
+      {/* 1. Unified Enterprise Merchant Page Header with Circular Icon */}
+      <MerchantPageHeader
+        icon={FiShoppingBag}
+        title="Buyer Console"
+        description="Here is what's happening with your orders, deliveries, and store khatas today"
+        mobileActions={
+          <HStack spacing={1.5}>
+            <Button
+              as={Link}
+              href="/dashboard/my-orders"
+              size="xs"
+              colorScheme="brand"
+              borderRadius="full"
+              px={2.5}
+              py={1}
+              fontSize="11px"
+            >
+              Orders
+            </Button>
+            <IconButton
+              aria-label="Refresh"
+              icon={
+                <Icon
+                  as={FiRefreshCw}
+                  animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
+                />
+              }
+              size="sm"
+              w="36px"
+              h="36px"
+              onClick={fetchDashboardData}
+              isDisabled={loading}
+              borderRadius="12px"
+              variant="outline"
+              borderColor={borderColor}
+            />
+          </HStack>
+        }
+        badges={
+          <HStack spacing={2} align="center">
+            <HStack
+              spacing={1.5}
+              px={3}
+              py={1}
+              borderRadius="full"
+              border="1px solid"
+              borderColor={borderColor}
+              bg={softBg}
+            >
+              <Circle size="6px" bg="green.500" />
+              <Text fontSize="11px" fontWeight="700" color={textPrimary} letterSpacing="0.3px">
+                Buyer Account
+              </Text>
+            </HStack>
+            {stats?.activeOrders ? (
+              <HStack
+                spacing={1.5}
+                px={3}
+                py={1}
+                borderRadius="full"
+                border="1px solid"
+                borderColor="orange.300"
+                bg="orange.50"
+                _dark={{ bg: "rgba(221, 107, 32, 0.15)", borderColor: "rgba(221, 107, 32, 0.4)" }}
+              >
+                <Circle size="6px" bg="orange.400" />
+                <Text fontSize="11px" fontWeight="700" color="orange.600" _dark={{ color: "orange.300" }}>
+                  {stats.activeOrders} In-Transit
+                </Text>
+              </HStack>
+            ) : null}
+          </HStack>
+        }
+        actions={
+          <HStack spacing={2}>
+            <Button
+              as={Link}
+              href="/dashboard/my-orders"
+              size="sm"
+              colorScheme="brand"
+              borderRadius="12px"
+              rightIcon={<FiArrowRight />}
+            >
+              All Purchases
+            </Button>
+            <IconButton
+              size="sm"
+              aria-label="Refresh"
+              icon={
+                <Icon
+                  as={FiRefreshCw}
+                  animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
+                />
+              }
+              variant="outline"
+              borderRadius="12px"
+              borderColor={borderColor}
+              onClick={fetchDashboardData}
+            />
+          </HStack>
+        }
+      />
 
-      {/* Summary Cards */}
-      <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
+      {/* 2. Primary 4 KPI Stat Cards (Desktop 4-col, Mobile 2x2 grid with tight padding) */}
+      <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={{ base: 2.5, md: 4 }}>
+        {/* IN DELIVERY */}
         <Box
-          bg="var(--color-surface)"
-          borderRadius="xl"
-          p={5}
-          borderWidth="1px"
-          borderColor="var(--color-border)"
-          shadow="sm"
+          as={Link}
+          href="/dashboard/my-orders"
+          bg={cardBg}
+          p={{ base: 3, md: 4 }}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          transition="all 0.2s"
+          _hover={{ transform: "translateY(-1px)", boxShadow: "md", borderColor: "blue.300" }}
         >
-          <Text fontSize="xs" fontWeight="800" color="var(--color-primary)" textTransform="uppercase" letterSpacing="0.08em">
-            Connected Sellers
+          <Flex justify="space-between" align="center" mb={1}>
+            <Text fontSize={{ base: "10px", md: "xs" }} fontWeight="700" color={textMuted} textTransform="uppercase">
+              In Delivery
+            </Text>
+            <Circle size={{ base: "26px", md: "32px" }} bg="blue.50" color="blue.500">
+              <Icon as={FiTruck} boxSize={{ base: 3, md: 4 }} />
+            </Circle>
+          </Flex>
+          <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="900" color={textPrimary}>
+            {stats?.activeOrders ?? 0}
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="var(--color-text-primary)" mt={1}>
-            {summary.totalSellers}
+          <Text fontSize={{ base: "10px", md: "11px" }} color="blue.500" fontWeight="600" mt={0.5} noOfLines={1}>
+            {stats?.activeOrders ? "Active & on the way" : "No active shipment"}
           </Text>
         </Box>
+
+        {/* TOTAL KHATA DUE */}
         <Box
-          bg="var(--color-surface)"
-          borderRadius="xl"
-          p={5}
-          borderWidth="1px"
-          borderColor="var(--color-border)"
-          shadow="sm"
+          as={Link}
+          href="/dashboard/my-sellers"
+          bg={cardBg}
+          p={{ base: 3, md: 4 }}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={summary.totalOutstanding > 0 ? "orange.300" : borderColor}
+          boxShadow="sm"
+          transition="all 0.2s"
+          _hover={{ transform: "translateY(-1px)", boxShadow: "md", borderColor: "orange.400" }}
         >
-          <Text fontSize="xs" fontWeight="800" color="orange.400" textTransform="uppercase" letterSpacing="0.08em">
-            Outstanding (You Owe)
-          </Text>
-          <Text fontSize="2xl" fontWeight="900" color="orange.400" mt={1}>
+          <Flex justify="space-between" align="center" mb={1}>
+            <Text fontSize={{ base: "10px", md: "xs" }} fontWeight="700" color={textMuted} textTransform="uppercase">
+              Total Khata Due
+            </Text>
+            <Circle size={{ base: "26px", md: "32px" }} bg="orange.50" color="orange.500">
+              <Icon as={FiCreditCard} boxSize={{ base: 3, md: 4 }} />
+            </Circle>
+          </Flex>
+          <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="900" color={summary.totalOutstanding > 0 ? "orange.500" : textPrimary} noOfLines={1}>
             {formatCurrency(summary.totalOutstanding)}
           </Text>
-        </Box>
-        <Box
-          bg="var(--color-surface)"
-          borderRadius="xl"
-          p={5}
-          borderWidth="1px"
-          borderColor="var(--color-border)"
-          shadow="sm"
-        >
-          <Text fontSize="xs" fontWeight="800" color="green.400" textTransform="uppercase" letterSpacing="0.08em">
-            Payable (Suppliers)
+          <Text fontSize={{ base: "10px", md: "11px" }} color={summary.totalOutstanding > 0 ? "orange.600" : "green.500"} fontWeight="600" mt={0.5} noOfLines={1}>
+            {summary.totalOutstanding > 0 ? "Outstanding to sellers" : "All khata clear"}
           </Text>
-          <Text fontSize="2xl" fontWeight="900" color="green.400" mt={1}>
-            {formatCurrency(summary.totalPayable)}
+        </Box>
+
+        {/* DELIVERED */}
+        <Box
+          as={Link}
+          href="/dashboard/my-orders"
+          bg={cardBg}
+          p={{ base: 3, md: 4 }}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          transition="all 0.2s"
+          _hover={{ transform: "translateY(-1px)", boxShadow: "md", borderColor: "green.300" }}
+        >
+          <Flex justify="space-between" align="center" mb={1}>
+            <Text fontSize={{ base: "10px", md: "xs" }} fontWeight="700" color={textMuted} textTransform="uppercase">
+              Delivered
+            </Text>
+            <Circle size={{ base: "26px", md: "32px" }} bg="green.50" color="green.500">
+              <Icon as={FiCheckCircle} boxSize={{ base: 3, md: 4 }} />
+            </Circle>
+          </Flex>
+          <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="900" color={textPrimary}>
+            {stats?.deliveredOrders ?? 0}
+          </Text>
+          <Text fontSize={{ base: "10px", md: "11px" }} color="green.500" fontWeight="600" mt={0.5} noOfLines={1}>
+            Successfully received
+          </Text>
+        </Box>
+
+        {/* STORES / VYAPARI */}
+        <Box
+          as={Link}
+          href="/dashboard/my-sellers"
+          bg={cardBg}
+          p={{ base: 3, md: 4 }}
+          borderRadius="2xl"
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          transition="all 0.2s"
+          _hover={{ transform: "translateY(-1px)", boxShadow: "md", borderColor: "teal.300" }}
+        >
+          <Flex justify="space-between" align="center" mb={1}>
+            <Text fontSize={{ base: "10px", md: "xs" }} fontWeight="700" color={textMuted} textTransform="uppercase">
+              Stores / Vyapari
+            </Text>
+            <Circle size={{ base: "26px", md: "32px" }} bg="teal.50" color="teal.500">
+              <Icon as={FiUsers} boxSize={{ base: 3, md: 4 }} />
+            </Circle>
+          </Flex>
+          <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="900" color={textPrimary}>
+            {connections.length}
+          </Text>
+          <Text fontSize={{ base: "10px", md: "11px" }} color="teal.600" fontWeight="600" mt={0.5} noOfLines={1}>
+            Linked suppliers
           </Text>
         </Box>
       </SimpleGrid>
 
-      {/* Connection Cards */}
-      {connections.length === 0 ? (
+      {/* 3. LATEST ORDER STATUS (Clean & Instant Comprehension) */}
+      {heroOrder && (
         <Box
-          bg="var(--color-surface)"
+          as={Link}
+          href="/dashboard/my-orders"
+          bg={cardBg}
           borderRadius="2xl"
-          p={8}
-          borderWidth="1px"
-          borderColor="var(--color-border)"
-          textAlign="center"
+          p={{ base: 3.5, md: 4 }}
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+          display="block"
+          cursor="pointer"
+          transition="all 0.2s"
+          _hover={{ borderColor: "blue.300", transform: "translateY(-1px)", boxShadow: "md" }}
         >
-          <Icon as={FiShoppingBag} boxSize={10} color="var(--color-secondary)" mb={3} />
-          <Text fontWeight="700" color="var(--color-text-primary)" fontSize="md">
-            No seller connections yet
-          </Text>
-          <Text fontSize="sm" color="var(--color-text-secondary)" mt={2} maxW="360px" mx="auto">
-            When sellers add you to their customer ledger, they will appear here so you can track your transactions.
-          </Text>
-        </Box>
-      ) : (
-        <VStack align="stretch" spacing={4}>
-          <Text fontSize="sm" fontWeight="700" color="var(--color-text-secondary)" textTransform="uppercase" letterSpacing="0.08em">
-            Your Sellers ({connections.length})
-          </Text>
-          {connections.map((conn) => {
-            const shop = conn.sellerShop;
-            const balance = conn.outstandingBalance;
-            const isPositiveBalance = balance > 0;
-            const balanceColor = conn.partyType === "customer"
-              ? (isPositiveBalance ? "red.400" : "green.400")
-              : (isPositiveBalance ? "orange.400" : "green.400");
+          {/* Header */}
+          <Flex justify="space-between" align="center" mb={2.5}>
+            <HStack spacing={2} minW={0}>
+              <Circle size="24px" bg={isOrderActive ? "blue.50" : "green.50"} color={isOrderActive ? "blue.600" : "green.600"}>
+                <Icon as={isOrderActive ? FiTruck : FiCheckCircle} boxSize={3} />
+              </Circle>
+              <Text fontSize="12px" fontWeight="800" color={textPrimary} noOfLines={1}>
+                {isOrderActive ? "Tracking Your Ongoing Order" : "Latest Purchase Details"}
+              </Text>
+            </HStack>
 
-            return (
-              <Box
-                key={conn.profileId}
-                bg="var(--color-surface)"
-                borderRadius="xl"
-                p={5}
-                borderWidth="1px"
-                borderColor="var(--color-border)"
-                shadow="sm"
-                cursor="pointer"
-                role="button"
-                tabIndex={0}
-                _hover={{ shadow: "md", borderColor: "var(--color-border-strong)", transform: "translateY(-1px)" }}
-                _focusVisible={{ boxShadow: "0 0 0 3px rgba(59,130,246,0.18)", borderColor: "blue.300" }}
-                transition="all 0.2s"
-                onClick={() => openPurchaseModal(conn)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openPurchaseModal(conn);
-                  }
-                }}
-              >
-                <Flex align="start" gap={4}>
-                  {/* Avatar / Logo */}
-                  {shop?.logo ? (
-                    <Box
-                      w="52px"
-                      h="52px"
-                      borderRadius="xl"
-                      overflow="hidden"
-                      flexShrink={0}
-                      bg="var(--color-surface-soft)"
-                    >
-                      <img
-                        src={shop.logo}
-                        alt={shop.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    </Box>
-                  ) : (
-                    <Flex
-                      w="52px"
-                      h="52px"
-                      borderRadius="xl"
-                      bg="var(--color-surface-soft)"
-                      color="var(--color-primary)"
-                      align="center"
-                      justify="center"
-                      fontWeight="900"
-                      fontSize="lg"
-                      flexShrink={0}
-                    >
-                      {getShopInitials(shop?.name)}
-                    </Flex>
-                  )}
+            <Badge
+              colorScheme={isOrderActive ? "blue" : "green"}
+              borderRadius="full"
+              px={2.5}
+              py={0.5}
+              fontSize="10px"
+              fontWeight="800"
+              textTransform="uppercase"
+            >
+              {isOrderActive ? "On The Way" : "Delivered"}
+            </Badge>
+          </Flex>
 
-                  {/* Details */}
-                  <Box flex="1" minW={0}>
-                    <Flex justify="space-between" align="start" gap={3}>
-                      <Box minW={0}>
-                        <Text fontSize="md" fontWeight="800" color="var(--color-text-primary)" noOfLines={1}>
-                          {shop?.name || "Unknown Shop"}
-                        </Text>
-                        {(shop?.city || shop?.state) && (
-                          <HStack spacing={1} mt={0.5} color="var(--color-text-secondary)">
-                            <Icon as={FiMapPin} boxSize={3.5} />
-                            <Text fontSize="sm">
-                              {[shop.city, shop.state].filter(Boolean).join(", ")}
-                            </Text>
-                          </HStack>
-                        )}
-                      </Box>
-
-                      <VStack spacing={0} align="end" flexShrink={0}>
-                        <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="700" textTransform="uppercase">
-                          Balance
-                        </Text>
-                        <Text fontSize="lg" fontWeight="900" color={balanceColor} lineHeight="1">
-                          {formatCurrency(Math.abs(balance))}
-                        </Text>
-                      </VStack>
-                    </Flex>
-
-                    <Flex mt={3} gap={2} wrap="wrap" align="center">
-                      <Badge
-                        borderRadius="full"
-                        px={2.5}
-                        py={0.5}
-                        colorScheme={conn.partyType === "supplier" ? "purple" : "blue"}
-                        textTransform="capitalize"
-                        fontSize="0.65rem"
-                      >
-                        {conn.partyType === "supplier" ? "Supplier" : "Customer"}
-                      </Badge>
-                      <Badge
-                        borderRadius="full"
-                        px={2.5}
-                        py={0.5}
-                        colorScheme={conn.isBlocked ? "red" : "green"}
-                        textTransform="uppercase"
-                        fontSize="0.65rem"
-                      >
-                        {conn.isBlocked ? "Blocked" : "Active"}
-                      </Badge>
-                      {conn.lastPurchaseAt && (
-                        <Text fontSize="xs" color="var(--color-text-secondary)" fontWeight="600">
-                          Last: {formatDate(conn.lastPurchaseAt)}
-                        </Text>
-                      )}
-                    </Flex>
-
-                    {shop?.phone && (
-                      <HStack mt={2} spacing={1.5} color="var(--color-text-secondary)">
-                        <Icon as={FiPhone} boxSize={3.5} />
-                        <Text fontSize="sm">{shop.phone}</Text>
-                      </HStack>
-                    )}
-
-                    <Text mt={3} fontSize="xs" fontWeight="700" color="var(--color-primary)">
-                      Click to view purchased items
-                    </Text>
-                  </Box>
-                </Flex>
+          {/* Product row with price */}
+          <Flex
+            p={3}
+            borderRadius="xl"
+            bg={softBg}
+            align="center"
+            justify="space-between"
+            gap={2.5}
+            mb={3}
+          >
+            <HStack spacing={3} minW={0}>
+              <Avatar
+                size="sm"
+                name={heroOrder.firstItem?.name || "Product"}
+                src={heroOrder.firstItem?.image}
+                borderRadius="lg"
+              />
+              <Box minW={0}>
+                <Text fontSize="13px" fontWeight="800" color={textPrimary} noOfLines={1}>
+                  {heroOrder.firstItem?.name || "Order Item"}
+                </Text>
+                <Text fontSize="11px" color={textMuted} noOfLines={1}>
+                  Store: <b>{heroOrder.companyName}</b> • {formatDate(heroOrder.createdAt)}
+                </Text>
               </Box>
-            );
-          })}
-        </VStack>
+            </HStack>
+
+            <Box textAlign="right" flexShrink={0}>
+              <Text fontSize="14px" fontWeight="900" color={textPrimary}>
+                {formatCurrency(heroOrder.totalAmount)}
+              </Text>
+              <Text fontSize="10px" color="green.600" fontWeight="700" textTransform="uppercase">
+                Paid Online
+              </Text>
+            </Box>
+          </Flex>
+
+          {/* 3 Step Progress Tracker with human text */}
+          <Box px={{ base: 2, md: 4 }} py={1}>
+            <Flex justify="space-between" align="center" position="relative">
+              {/* Step 1: Placed */}
+              <VStack spacing={1} zIndex={1} align="center">
+                <Circle size="22px" bg="green.500" color="white">
+                  <Icon as={FiCheckCircle} boxSize={2.5} />
+                </Circle>
+                <Text fontSize="11px" fontWeight="700" color={textPrimary}>
+                  Order Placed
+                </Text>
+              </VStack>
+
+              {/* Line 1 */}
+              <Box
+                flex="1"
+                h="2.5px"
+                bg={heroOrder.orderStatus !== "created" ? "green.500" : "gray.200"}
+                mx={2}
+                borderRadius="full"
+              />
+
+              {/* Step 2: Dispatched */}
+              <VStack spacing={1} zIndex={1} align="center">
+                <Circle
+                  size="22px"
+                  bg={heroOrder.orderStatus !== "created" ? "blue.500" : "gray.200"}
+                  color={heroOrder.orderStatus !== "created" ? "white" : "gray.400"}
+                >
+                  <Icon as={FiPackage} boxSize={2.5} />
+                </Circle>
+                <Text fontSize="11px" fontWeight="700" color={heroOrder.orderStatus !== "created" ? textPrimary : textMuted}>
+                  Dispatched
+                </Text>
+              </VStack>
+
+              {/* Line 2 */}
+              <Box
+                flex="1"
+                h="2.5px"
+                bg={heroOrder.orderStatus === "delivered" ? "green.500" : "gray.200"}
+                mx={2}
+                borderRadius="full"
+              />
+
+              {/* Step 3: Delivered */}
+              <VStack spacing={1} zIndex={1} align="center">
+                <Circle
+                  size="22px"
+                  bg={heroOrder.orderStatus === "delivered" ? "green.500" : "gray.200"}
+                  color={heroOrder.orderStatus === "delivered" ? "white" : "gray.400"}
+                >
+                  <Icon as={FiCheckCircle} boxSize={2.5} />
+                </Circle>
+                <Text fontSize="11px" fontWeight="700" color={heroOrder.orderStatus === "delivered" ? textPrimary : textMuted}>
+                  Delivered
+                </Text>
+              </VStack>
+            </Flex>
+          </Box>
+        </Box>
       )}
 
-      {/* Purchase Details Drawer */}
-      <Drawer
-        isOpen={isOpen}
-        placement="right"
-        onClose={closePurchaseModal}
-        size={{ base: "full", md: "lg", xl: "xl" }}
-      >
-        <DrawerOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
-        <DrawerContent
-          bg="var(--color-bg)"
-          maxH="100vh"
-          boxShadow="-8px 0 30px rgba(0, 0, 0, 0.3)"
-          overflow="hidden"
-          borderLeftWidth="1px"
-          borderLeftColor="var(--color-border)"
+      {/* 4. SMART PURCHASING TREND CHART */}
+      <BuyerSpendingChart spendingChart={spendingChart} />
+
+      {/* 5. SPLIT WORKSPACE: Recent Purchases & Connected Stores */}
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 4, md: 5 }}>
+        {/* Left: Recent Purchases */}
+        <Box
+          bg={cardBg}
+          borderRadius="2xl"
+          p={{ base: 4, md: 5 }}
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
         >
-          <DrawerCloseButton
-            top={4}
-            right={4}
-            color="white"
-            bg="whiteAlpha.200"
-            borderRadius="full"
-            zIndex={20}
-            _hover={{ bg: "whiteAlpha.300" }}
-            _active={{ bg: "whiteAlpha.400" }}
-          />
-          {purchasePanelContent}
-        </DrawerContent>
-      </Drawer>
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            justify="space-between"
+            align={{ base: "flex-start", sm: "center" }}
+            gap={2.5}
+            mb={4}
+          >
+            <HStack spacing={2.5} minW={0} flex="1">
+              <Circle size="34px" bg="blue.50" color="blue.600" _dark={{ bg: "blue.900", color: "blue.200" }} flexShrink={0}>
+                <Icon as={FiShoppingBag} boxSize={4} />
+              </Circle>
+              <Box minW={0}>
+                <Text fontSize="sm" fontWeight="800" color={textPrimary} noOfLines={1}>
+                  Recent Purchases
+                </Text>
+                <Text fontSize="11px" color={textMuted} noOfLines={1}>
+                  Last {recentOrders.length} orders from your suppliers
+                </Text>
+              </Box>
+            </HStack>
+            <Button
+              as={Link}
+              href="/dashboard/my-orders"
+              size="xs"
+              variant="outline"
+              borderRadius="full"
+              borderColor={borderColor}
+              color={textPrimary}
+              _hover={{ bg: softBg, borderColor: "brand.500", color: "brand.500" }}
+              rightIcon={<FiArrowRight />}
+              flexShrink={0}
+              alignSelf={{ base: "flex-start", sm: "auto" }}
+            >
+              View All ({stats?.totalOrders ?? 0})
+            </Button>
+          </Flex>
+
+          {recentOrders.length === 0 ? (
+            <Box py={8} textAlign="center">
+              <Circle size="40px" bg={softBg} mx="auto" mb={2}>
+                <Icon as={FiShoppingBag} boxSize={4} color={textMuted} />
+              </Circle>
+              <Text fontSize="xs" fontWeight="700" color={textPrimary}>
+                No orders placed yet
+              </Text>
+            </Box>
+          ) : (
+            <VStack align="stretch" spacing={2.5}>
+              {recentOrders.slice(0, 4).map((order) => {
+                const isDelivered = order.orderStatus === "delivered" || order.orderStatus === "completed";
+                const isCancelled = order.orderStatus === "cancelled";
+                return (
+                  <Flex
+                    key={order._id}
+                    as={Link}
+                    href="/dashboard/my-orders"
+                    p={3}
+                    borderRadius="14px"
+                    bg={softBg}
+                    align="center"
+                    justify="space-between"
+                    gap={3}
+                    border="1px solid"
+                    borderColor="transparent"
+                    transition="all 0.2s ease"
+                    _hover={{
+                      bg: cardBg,
+                      borderColor: borderColor,
+                      transform: "translateY(-1px)",
+                      boxShadow: "sm",
+                    }}
+                  >
+                    <HStack spacing={3} minW={0}>
+                      <Avatar
+                        size="sm"
+                        name={order.companyName}
+                        src={order.companyLogo || undefined}
+                        borderRadius="10px"
+                        border="1px solid"
+                        borderColor={borderColor}
+                      />
+                      <Box minW={0}>
+                        <Text fontSize="13px" fontWeight="700" color={textPrimary} noOfLines={1}>
+                          {order.companyName}
+                        </Text>
+                        <Text fontSize="11px" color={textMuted} noOfLines={1}>
+                          #{order.orderId.slice(-8)} • {formatDate(order.createdAt)}
+                        </Text>
+                      </Box>
+                    </HStack>
+
+                    <HStack spacing={2.5} flexShrink={0}>
+                      <Box textAlign="right">
+                        <Text fontSize="13px" fontWeight="800" color={textPrimary}>
+                          {formatCurrency(order.totalAmount)}
+                        </Text>
+                        <Badge
+                          colorScheme={isDelivered ? "green" : isCancelled ? "red" : "blue"}
+                          fontSize="9px"
+                          fontWeight="700"
+                          borderRadius="full"
+                          px={2}
+                          py={0.5}
+                          textTransform="uppercase"
+                        >
+                          {order.orderStatus}
+                        </Badge>
+                      </Box>
+
+                      <Circle size="28px" bg={cardBg} border="1px solid" borderColor={borderColor} color={textMuted}>
+                        <Icon as={FiArrowRight} boxSize={3} />
+                      </Circle>
+                    </HStack>
+                  </Flex>
+                );
+              })}
+            </VStack>
+          )}
+        </Box>
+
+        {/* Right: Connected Stores / Khata */}
+        <Box
+          bg={cardBg}
+          borderRadius="2xl"
+          p={{ base: 4, md: 5 }}
+          border="1px solid"
+          borderColor={borderColor}
+          boxShadow="sm"
+        >
+          <Flex
+            direction={{ base: "column", sm: "row" }}
+            justify="space-between"
+            align={{ base: "flex-start", sm: "center" }}
+            gap={2.5}
+            mb={4}
+          >
+            <HStack spacing={2.5} minW={0} flex="1">
+              <Circle size="34px" bg="purple.50" color="purple.600" _dark={{ bg: "purple.900", color: "purple.200" }} flexShrink={0}>
+                <Icon as={FiUsers} boxSize={4} />
+              </Circle>
+              <Box minW={0}>
+                <Text fontSize="sm" fontWeight="800" color={textPrimary} noOfLines={1}>
+                  My Seller Khata
+                </Text>
+                <Text fontSize="11px" color={textMuted} noOfLines={1}>
+                  Stores where your credit/khata is active
+                </Text>
+              </Box>
+            </HStack>
+            <Button
+              as={Link}
+              href="/dashboard/my-sellers"
+              size="xs"
+              variant="outline"
+              borderRadius="full"
+              borderColor={borderColor}
+              color={textPrimary}
+              _hover={{ bg: softBg, borderColor: "brand.500", color: "brand.500" }}
+              rightIcon={<FiArrowRight />}
+              flexShrink={0}
+              alignSelf={{ base: "flex-start", sm: "auto" }}
+            >
+              Full Ledger
+            </Button>
+          </Flex>
+
+          {connections.length === 0 ? (
+            <Box py={8} textAlign="center">
+              <Circle size="40px" bg={softBg} mx="auto" mb={2}>
+                <Icon as={FiUsers} boxSize={4} color={textMuted} />
+              </Circle>
+              <Text fontSize="xs" fontWeight="700" color={textPrimary}>
+                No linked stores
+              </Text>
+            </Box>
+          ) : (
+            <VStack align="stretch" spacing={2.5}>
+              {connections.slice(0, 4).map((conn) => {
+                const shop = conn.sellerShop;
+                const due = conn.outstandingBalance;
+                const hasDue = due > 0;
+
+                return (
+                  <Box
+                    key={conn.profileId}
+                    p={3}
+                    borderRadius="14px"
+                    bg={softBg}
+                    cursor="pointer"
+                    border="1px solid"
+                    borderColor="transparent"
+                    transition="all 0.2s ease"
+                    _hover={{
+                      bg: cardBg,
+                      borderColor: borderColor,
+                      transform: "translateY(-1px)",
+                      boxShadow: "sm",
+                    }}
+                    onClick={() => openPurchaseDrawer(conn)}
+                  >
+                    <Flex justify="space-between" align="center" gap={3}>
+                      <HStack spacing={3} minW={0}>
+                        <Avatar
+                          size="sm"
+                          name={shop?.name || conn.displayName || "Store"}
+                          src={shop?.logo || undefined}
+                          borderRadius="10px"
+                          border="1px solid"
+                          borderColor={borderColor}
+                        />
+                        <Box minW={0}>
+                          <Text fontSize="13px" fontWeight="700" color={textPrimary} noOfLines={1}>
+                            {shop?.name || conn.displayName}
+                          </Text>
+                          <HStack spacing={1.5} fontSize="11px" color={textMuted}>
+                            <Icon as={FiMapPin} boxSize={3} />
+                            <Text noOfLines={1}>{[shop?.city, shop?.state].filter(Boolean).join(", ") || "India"}</Text>
+                          </HStack>
+                        </Box>
+                      </HStack>
+
+                      <HStack spacing={2.5} flexShrink={0}>
+                        <Box textAlign="right">
+                          <Text fontSize="10px" color={textMuted} textTransform="uppercase" fontWeight="700">
+                            {hasDue ? "Pending Due" : "Settled"}
+                          </Text>
+                          <Text fontSize="13px" fontWeight="900" color={hasDue ? "orange.500" : "green.600"}>
+                            {formatCurrency(due)}
+                          </Text>
+                        </Box>
+
+                        <Circle size="28px" bg={cardBg} border="1px solid" borderColor={borderColor} color={textMuted}>
+                          <Icon as={FiArrowRight} boxSize={3} />
+                        </Circle>
+                      </HStack>
+                    </Flex>
+                  </Box>
+                );
+              })}
+            </VStack>
+          )}
+        </Box>
+      </SimpleGrid>
+
+      {/* Slide-in Purchase Drawer for Invoices */}
+      <SellerPurchaseDrawer
+        isOpen={isOpen}
+        onClose={closePurchaseDrawer}
+        selectedConnection={selectedConnection}
+        purchaseDetails={purchaseDetails}
+        loading={purchaseLoading}
+        error={purchaseError}
+      />
     </VStack>
   );
-};
-
-export default BuyerDashboard;
+}

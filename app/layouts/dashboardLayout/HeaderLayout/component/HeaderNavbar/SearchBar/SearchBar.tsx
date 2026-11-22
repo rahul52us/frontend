@@ -151,9 +151,14 @@ const SearchBar = observer(() => {
 
 
   return (
-    <Box position="relative" width={{ base: "full", md: "320px" }} ref={dropdownRef}>
-      <InputGroup size="md">
-        <InputLeftElement pointerEvents="none" h="full" px={4}>
+    <Box
+      position="relative"
+      width={{ base: "full", md: "320px" }}
+      display="block"
+      ref={dropdownRef}
+    >
+      <InputGroup size={{ base: "sm", md: "md" }}>
+        <InputLeftElement pointerEvents="none" h="full" px={{ base: 3, md: 4 }}>
           <Icon as={FaSearch} color={cTextMuted} boxSize={3.5} />
         </InputLeftElement>
         <Input
@@ -162,17 +167,17 @@ const SearchBar = observer(() => {
           border="1px solid"
           borderColor={cBorder}
           color={cText}
-          _placeholder={{ color: cTextMuted, fontSize: "sm" }}
+          _placeholder={{ color: cTextMuted, fontSize: { base: "xs", md: "sm" } }}
           _focus={{ 
             borderColor: cAccent, 
             boxShadow: `0 0 0 1px ${cAccent}, 0 4px 20px ${cAccentGlow}`,
             bg: cSurface
           }}
           _hover={{ borderColor: cBorderStrong }}
-          borderRadius="18px"
-          h="44px"
-          pl={10}
-          fontSize="sm"
+          borderRadius="full"
+          h={{ base: "36px", md: "44px" }}
+          pl={{ base: 8, md: 10 }}
+          fontSize={{ base: "xs", md: "sm" }}
           fontWeight="500"
           value={searchQuery}
           onChange={(e) => handleSearchDebounced(e.target.value)}

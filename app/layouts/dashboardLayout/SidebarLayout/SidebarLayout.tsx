@@ -10,6 +10,7 @@ import {
   Box,
   Flex,
   Icon,
+  IconButton,
   Popover,
   PopoverBody,
   PopoverContent,
@@ -27,7 +28,7 @@ import {
   Tooltip,
   useTheme,
 } from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronRightIcon, CloseIcon } from "@chakra-ui/icons";
 import { observer } from "mobx-react-lite";
 import { useRouter, usePathname } from "next/navigation";
 import { FaCircle } from "react-icons/fa";
@@ -544,6 +545,9 @@ const SidebarLayout: React.FC<SidebarProps> = observer(
     const handleLeafItemClick = (item: SidebarItem) => {
       setActiveItemId(item.id);
       onLeafItemClick(item);
+      if (isMobile) {
+        setOpenMobileSideDrawer(false);
+      }
       router.push(item.url);
     };
 
@@ -562,28 +566,46 @@ const SidebarLayout: React.FC<SidebarProps> = observer(
         <Drawer
           isOpen={openMobileSideDrawer}
           placement="left"
+          size="full"
           onClose={() => setOpenMobileSideDrawer(false)}
         >
           <DrawerOverlay />
           <DrawerContent
             bg={userThemeColor || "#0B1120"}
             bgImage={sidebarGradient}
-            maxW="300px"
-            borderTopRightRadius="24px"
-            borderBottomRightRadius="24px"
+            maxW="100%"
+            w="100vw"
+            h="100vh"
+            borderRadius="0"
             overflow="hidden"
             style={cssVars}
           >
-            <DrawerCloseButton
-              variant="ghost"
-              fontSize="lg"
-              color={INACTIVE_TEXT}
-              _hover={{ color: "white", bg: HOVER_BG }}
-              mt={2}
-              _focus={{ boxShadow: "none" }}
-            />
-            <SidebarLogo showBrand />
-            <DrawerBody px={3} pb={5} className="customScrollBar">
+            <Flex
+              align="center"
+              justify="space-between"
+              pr={3}
+              bg="rgba(0, 0, 0, 0.2)"
+              borderBottom="1px solid"
+              borderColor={BORDER_COLOR}
+            >
+              <SidebarLogo showBrand isDrawer />
+              <IconButton
+                aria-label="Close navigation"
+                icon={<CloseIcon boxSize="12px" />}
+                size="sm"
+                w="36px"
+                h="36px"
+                variant="ghost"
+                color="whiteAlpha.900"
+                bg="whiteAlpha.100"
+                borderRadius="10px"
+                _hover={{ color: "white", bg: "whiteAlpha.200" }}
+                _active={{ bg: "whiteAlpha.300" }}
+                _focus={{ boxShadow: "none" }}
+                onClick={() => setOpenMobileSideDrawer(false)}
+              />
+            </Flex>
+            <DrawerBody px={4} py={4} className="customScrollBar">
               <SidebarAccordion
                 items={sidebarData}
                 onClick={onItemClick}
