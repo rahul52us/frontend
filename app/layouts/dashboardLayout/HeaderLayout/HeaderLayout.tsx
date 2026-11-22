@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, useBreakpointValue, useColorModeValue } from "@chakra-ui/react";
+import { Flex, useColorModeValue } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import HeaderNavbar from "./component/HeaderNavbar/HeaderNavbar";
 import HeaderLogo from "./component/Logo/HeaderLogo";
@@ -8,8 +8,6 @@ import { headerHeight } from "../../../component/config/utils/variable";
 import { dashboardPalette } from "../dashboardPalette";
 
 const HeaderLayout = observer(() => {
-  const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
-
   const bgHeader = useColorModeValue(
     "#FFFFFF",
     "#0B1120"

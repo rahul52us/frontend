@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Circle,
-  Divider,
   Flex,
   HStack,
   Icon,
@@ -24,7 +23,6 @@ import {
   FiArrowRight,
   FiCheckCircle,
   FiCreditCard,
-  FiEye,
   FiMapPin,
   FiPackage,
   FiRefreshCw,
@@ -34,10 +32,8 @@ import {
 } from "react-icons/fi";
 import {
   MerchantBadge,
-  merchantFadeUp,
   MerchantPageHeader,
   MerchantPageShell,
-  MerchantPanel,
   merchantSpin,
 } from "../../../../dashboard/components/common/merchantDashboardUI";
 import { BuyerDashboardSkeleton } from "./BuyerDashboardSkeleton";

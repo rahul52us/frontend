@@ -1,19 +1,14 @@
 "use client";
 
 import {
-  Avatar,
-  Badge,
   Box,
   Button,
   Flex,
-  Heading,
   HStack,
-  Icon,
   IconButton,
   SimpleGrid,
   Skeleton,
   SkeletonCircle,
-  Spinner,
   Text,
   useColorModeValue,
   useDisclosure,
@@ -22,7 +17,7 @@ import {
 import axios from "axios";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { FiArrowLeft, FiArrowRight, FiRefreshCw, FiUsers } from "react-icons/fi";
+import { FiArrowLeft, FiRefreshCw, FiUsers } from "react-icons/fi";
 import { ConnectedSellersList } from "../../(main)/account/component/BuyerDashboard/ConnectedSellersList";
 import { SellerPurchaseDrawer } from "../../(main)/account/component/BuyerDashboard/SellerPurchaseDrawer";
 import { ConnectionSummary, SellerConnection, SellerPurchaseDetails } from "../../(main)/account/component/BuyerDashboard/types";
@@ -46,11 +41,8 @@ export default function BuyerDashboardSellersPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const cardBg = useColorModeValue("white", "gray.800");
-  const softBg = useColorModeValue("gray.50", "gray.900");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textPrimary = useColorModeValue("gray.800", "white");
-  const textMuted = useColorModeValue("gray.500", "gray.400");
-  const cardBorder = useColorModeValue("rgba(226, 232, 240, 0.8)", "rgba(255, 255, 255, 0.08)");
 
   const fetchConnections = async () => {
     try {
