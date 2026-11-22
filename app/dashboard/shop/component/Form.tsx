@@ -805,9 +805,9 @@ const StickyActionBar = ({
   onSubmit: () => void;
   isUpdateMode: boolean;
 }) => {
-  const tone = useMerchantTone(activeSection.tint);
+  const tone = useColorModeValue("brand.700","brand.200");
   const borderColor = useColorModeValue("rgba(226, 232, 240, 0.92)", dashboardPalette.border);
-  const backBg = useColorModeValue("#FFFFFF", "rgba(23,37,64,0.92)");
+  const backBg = useColorModeValue("brand.50", "rgba(23,37,64,0.92)");
   const backColor = useColorModeValue("#0F172A", dashboardPalette.text);
   const stepInfoColor = useColorModeValue("#64748B", dashboardPalette.textSoft);
 
@@ -869,11 +869,11 @@ const StickyActionBar = ({
                 minH={{ base: "42px", md: "44px" }}
                 px={{ base: 3.5, md: 4.5 }}
                 bg={backBg}
-                borderColor={tone.border}
-                color={tone.text}
+                borderColor={tone}
+                color={tone}
                 onClick={onSaveSection}
                 isLoading={isSubmitting}
-                _hover={{ bg: tone.soft }}
+                _hover={{ bg: tone }}
               >
                 Save section
               </Button>
@@ -885,11 +885,11 @@ const StickyActionBar = ({
                 px={{ base: 4, sm: 6 }}
                 minW={{ base: "112px", sm: "132px" }}
                 borderRadius="16px"
-                bg={tone.gradient}
+                bg={tone}
                 color="white"
                 onClick={onSubmit}
                 isLoading={isSubmitting}
-                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _hover={{ bg: tone, filter: "brightness(0.98)" }}
                 _active={{ transform: "scale(0.98)" }}
               >
                 {isUpdateMode ? "Save shop" : "Publish shop"}
@@ -900,12 +900,12 @@ const StickyActionBar = ({
                 px={{ base: 4, sm: 6 }}
                 minW={{ base: "112px", sm: "132px" }}
                 borderRadius="16px"
-                bg={tone.gradient}
+                bg={tone}
                 color="white"
                 rightIcon={<FaChevronRight size={13} />}
                 onClick={onNext}
                 isDisabled={isSubmitting}
-                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _hover={{ bg: tone, filter: "brightness(0.98)" }}
                 _active={{ transform: "scale(0.98)" }}
               >
                 Next

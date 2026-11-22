@@ -276,11 +276,11 @@ const ProductsPage = observer(() => {
   const text = useColorModeValue("#0F172A", dashboardPalette.text);
   const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
   const textSoft = useColorModeValue("#94A3B8", dashboardPalette.textSoft);
-  const accent = useColorModeValue("#2563EB", dashboardPalette.accent);
-  const accentStrong = useColorModeValue("#1D4ED8", dashboardPalette.accentStrong);
+  const accent = useColorModeValue("brand.500", dashboardPalette.accent);
+  const accentStrong = useColorModeValue("brand.500", dashboardPalette.accentStrong);
   const accentSoft = useColorModeValue("rgba(37, 99, 235, 0.08)", dashboardPalette.accentSoft);
-  const heroBadgeBg = useColorModeValue("rgba(37, 99, 235, 0.10)", dashboardPalette.accentSoft);
-  const heroBadgeColor = useColorModeValue("#1D4ED8", dashboardPalette.accentStrong);
+  const heroBadgeBg = useColorModeValue("brand.500", "brad.100");
+  const heroBadgeColor = useColorModeValue("brand.50", "brand.100");
   const shadow = useColorModeValue("0 22px 44px rgba(37, 99, 235, 0.12)", "0 28px 54px rgba(2, 6, 23, 0.34)");
 
   const selectedProduct = useMemo(
@@ -685,6 +685,7 @@ const ProductsPage = observer(() => {
               spacing={1.5}
               px={3}
               py={1.5}
+              display={{base:"none",md:"block"}}
               borderRadius="full"
               bg={heroBadgeBg}
               color={heroBadgeColor}
@@ -969,7 +970,7 @@ const ProductsPage = observer(() => {
         display={{ base: "flex", md: "none" }}
         position="fixed"
         right={4}
-        bottom="calc(76px + env(safe-area-inset-bottom, 0px))"
+        bottom="calc(130px + env(safe-area-inset-bottom, 0px))"
         zIndex={110}
         h="52px"
         w="52px"

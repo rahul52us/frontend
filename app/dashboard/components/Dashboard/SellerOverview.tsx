@@ -455,7 +455,7 @@ const SellerOverview = observer(() => {
         badges={
           <HStack spacing={2}>
             <MerchantBadge tone="success">
-              <Box w="6px" h="6px" borderRadius="full" bg={dashboardPalette.success} mr={1} />
+              {/* <Box w="5px" h="5px" borderRadius="full" bg={dashboardPalette.success} mr={1} /> */}
               {String(company?.shopStatus || "Active").toUpperCase()}
             </MerchantBadge>
             {unreadCount > 0 && (

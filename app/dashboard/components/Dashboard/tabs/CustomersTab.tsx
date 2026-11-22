@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Text,
@@ -9,6 +8,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
+import React, { useEffect, useMemo, useState } from "react";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
 import stores from "../../../../store/stores";
 import { MerchantPageShell } from "../../common/merchantDashboardUI";
