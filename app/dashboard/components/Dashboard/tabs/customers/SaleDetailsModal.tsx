@@ -916,10 +916,10 @@ export const SaleDetailsModal: React.FC<SaleDetailsModalProps> = ({
               flex={{ sm: 1 }}
               minH="46px"
               borderRadius="16px"
-              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
+              bg={'brand.500'}
               color="white"
               boxShadow="0 14px 28px rgba(37, 99, 235, 0.24)"
-              _hover={{ bgGradient: "linear(135deg, #1D4ED8 0%, #0F766E 100%)" }}
+              _hover={{ bg:"brand.600" }}
               _active={{ transform: "scale(0.98)" }}
               onClick={() => onConfirmInvoiceOption(true)}
               isLoading={isInvoiceBusy}

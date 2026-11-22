@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { AddIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import {
   Badge,
@@ -18,6 +17,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
+import React from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import {
   FiArrowDownLeft,
@@ -174,13 +174,13 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
       <Box
         bg={headerGradient}
         px={{ base: 3, md: 6 }}
-        pt={2}
-        pb={2}
+        pt={3}
+        pb={3}
         borderBottom="1px solid"
         borderColor={cBorder}
       >
-        {/* Top nav row */}
-        <Flex justify="space-between" align="center" mb={2}>
+        {/* Back · avatar · identity · delete (single compact row) */}
+        <Flex align="center" gap={2.5}>
           <IconButton
             aria-label={`Back to ${partyPluralLabel}`}
             icon={<ArrowBackIcon boxSize={4} />}
@@ -189,30 +189,19 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             variant="ghost"
             borderRadius="full"
             color={cTextMuted}
+            flexShrink={0}
             _hover={{ bg: cIconButtonHover }}
           />
-          <IconButton
-            aria-label={`Delete ${partySingularLabel}`}
-            icon={<FiTrash2 size={15} />}
-            onClick={() => onDeleteBuyer(selectedLedgerBuyer)}
-            size="sm"
-            variant="ghost"
-            colorScheme="red"
-            borderRadius="full"
-          />
-        </Flex>
 
-        {/* Avatar + name row */}
-        <Flex align="center" gap={3} mb={4}>
           <Box position="relative" flexShrink={0}>
             <Flex
-              h={{ base: "52px", md: "60px" }}
-              w={{ base: "52px", md: "60px" }}
-              borderRadius="16px"
+              h={{ base: "46px", md: "56px" }}
+              w={{ base: "46px", md: "56px" }}
+              borderRadius="14px"
               align="center"
               justify="center"
               fontWeight="800"
-              fontSize={{ base: "xl", md: "2xl" }}
+              fontSize={{ base: "lg", md: "xl" }}
               bg={accentBg}
               color={accentColor}
               boxShadow={`0 2px 12px ${accentBg}`}
@@ -272,30 +261,56 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
               </Flex>
             )}
           </Box>
+
+          <IconButton
+            aria-label={`Delete ${partySingularLabel}`}
+            icon={<FiTrash2 size={15} />}
+            onClick={() => onDeleteBuyer(selectedLedgerBuyer)}
+            size="sm"
+            variant="ghost"
+            colorScheme="red"
+            borderRadius="full"
+            flexShrink={0}
+          />
         </Flex>
 
-        {/* Balance + action strip */}
+        {/* Balance + contact actions */}
         <Box
+          mt={3}
           bg={cSurfaceElevated}
           border="1px solid"
           borderColor={cBorder}
-          borderRadius="14px"
+          borderRadius="16px"
           p={3}
           boxShadow={cCardShadow}
         >
-          <Flex align="center" justify="space-between" gap={2}>
-            <Box>
+          <Flex align="center" justify="space-between" gap={3}>
+            <Box minW={0}>
+              <HStack spacing={1.5}>
+                <Box
+                  boxSize="6px"
+                  borderRadius="full"
+                  bg={
+                    balanceMeta.state === "settled"
+                      ? cTextSoft
+                      : balanceMeta.state === "receivable"
+                        ? "green.500"
+                        : "red.500"
+                  }
+                />
+                <Text
+                  fontSize="10px"
+                  color={cTextSoft}
+                  textTransform="uppercase"
+                  fontWeight="700"
+                  letterSpacing="0.08em"
+                  noOfLines={1}
+                >
+                  {balanceMeta.detailLabel}
+                </Text>
+              </HStack>
               <Text
-                fontSize="9px"
-                color={cTextSoft}
-                textTransform="uppercase"
-                fontWeight="700"
-                letterSpacing="0.08em"
-              >
-                {balanceMeta.detailLabel}
-              </Text>
-              <Text
-                mt={0.5}
+                mt={1}
                 fontSize={{ base: "xl", md: "2xl" }}
                 fontWeight="800"
                 color={
@@ -306,7 +321,8 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
                       : "red.500"
                 }
                 letterSpacing="-0.5px"
-                lineHeight="1"
+                lineHeight="1.1"
+                noOfLines={1}
               >
                 {balanceMeta.state === "settled"
                   ? "₹0.00"
@@ -314,7 +330,7 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
               </Text>
             </Box>
 
-            <HStack spacing={2}>
+            <HStack spacing={1.5} flexShrink={0}>
               {[
                 {
                   label: "Call",
@@ -346,10 +362,14 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
                   isDisabled={disabled}
                   size="sm"
                   variant="ghost"
+                  h="36px"
+                  w="36px"
+                  minW="36px"
                   borderRadius="10px"
                   bg={cIconButtonMutedBg}
                   color={disabled ? cTextSoft : color}
                   _hover={{ bg: cBadgeBg }}
+                  _active={{ transform: "scale(0.94)" }}
                   border="1px solid"
                   borderColor={cBorder}
                 />
@@ -362,34 +382,29 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
       {/* ── ACTIVITY SECTION ───────────────────────────── */}
       <Box
         px={{ base: 3, md: 6 }}
-        pt={3}
-        pb={isCompact ? "90px" : "72px"}
+        pt={4}
+        pb={isCompact ? "120px" : "80px"}
         flex="1"
         overflowY="auto"
       >
         {/* Section header */}
         <Flex justify="space-between" align="center" mb={3}>
-          <Text
-            fontSize="10px"
-            fontWeight="700"
-            color={cTextSoft}
-            textTransform="uppercase"
-            letterSpacing="0.08em"
-          >
-            Activity
+          <HStack spacing={2}>
+            <Text fontSize="sm" fontWeight="800" color={cText}>
+              Activity
+            </Text>
             <Box
-              as="span"
-              ml={1.5}
               px={1.5}
               py="1px"
               bg={cBadgeBg}
-              borderRadius="5px"
+              borderRadius="6px"
               color={cTextSoft}
-              fontSize="9px"
+              fontSize="10px"
+              fontWeight="700"
             >
               {ledgerTotal}
             </Box>
-          </Text>
+          </HStack>
           <Button
             size="xs"
             variant="outline"
@@ -398,13 +413,15 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             color={cTextMuted}
             fontWeight="600"
             fontSize="xs"
-            h="28px"
+            h="30px"
             px={3}
+            leftIcon={<AddIcon fontSize="8px" />}
             bg={cSurfaceElevated}
             _hover={{ bg: cSurfaceMuted }}
+            _active={{ transform: "scale(0.97)" }}
             onClick={onRecordPayment}
           >
-            + Record
+            Record payment
           </Button>
         </Flex>
 
@@ -414,12 +431,14 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             {Array.from({ length: 4 }).map((_, i) => (
               <Box
                 key={`skel-${i}`}
-                bg={cSurfaceMuted}
-                borderRadius="12px"
+                bg={cSurfaceElevated}
+                border="1px solid"
+                borderColor={cBorder}
+                borderRadius="14px"
                 p={3}
               >
                 <HStack spacing={3}>
-                  <SkeletonCircle size="7" />
+                  <SkeletonCircle size="8" />
                   <Box flex="1">
                     <Skeleton h="10px" w="55%" borderRadius="4px" />
                     <Skeleton h="8px" w="35%" mt={2} borderRadius="4px" />
@@ -436,14 +455,20 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             justify="center"
             py={10}
             bg={cSurfaceMuted}
-            borderRadius="14px"
+            borderRadius="16px"
             border="1px dashed"
             borderColor={cBorderStrong}
           >
-            <Circle size="40px" bg={cSurfaceElevated} border="1px solid" borderColor={cBorderStrong} mb={3}>
-              <Icon as={FiUsers} boxSize={4} color={cTextSoft} />
+            <Circle
+              size="44px"
+              bg={cSurfaceElevated}
+              border="1px solid"
+              borderColor={cBorderStrong}
+              mb={3}
+            >
+              <Icon as={FiUsers} boxSize={4.5} color={cTextSoft} />
             </Circle>
-            <Text fontSize="sm" fontWeight="600" color={cTextMuted}>
+            <Text fontSize="sm" fontWeight="700" color={cTextMuted}>
               No activity yet
             </Text>
             <Text mt={1} fontSize="xs" color={cTextSoft} textAlign="center" px={6}>
@@ -453,217 +478,270 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             </Text>
           </Flex>
         ) : (
-          <VStack align="stretch" spacing={2}>
-            {ledgerEntries.map((entry) => {
-              const note = entry.notes?.trim() || getTimelineTitle(entry, isSelectedSupplier);
-              const linkedSaleRecordId = getLinkedSaleRecordIdFromEntry(entry);
-              const isDebit = entry.direction === "debit";
-              const isReversed = entry.status === "reversed";
-              const hasLinkedSaleSummary = Boolean(entry.linkedSaleSummary);
-              const remainingTone = isEntryFullySettled(entry) ? dashboardPalette.success : cAccentStrong;
+          <VStack align="stretch" spacing={4}>
+            {(() => {
+              // Group entries by month for easier scanning
+              const groups: { label: string; items: typeof ledgerEntries }[] = [];
+              ledgerEntries.forEach((entry) => {
+                const d = new Date(entry.entryDate || entry.createdAt);
+                const label = Number.isNaN(d.getTime())
+                  ? ""
+                  : d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+                const last = groups[groups.length - 1];
+                if (last && last.label === label) last.items.push(entry);
+                else groups.push({ label, items: [entry] });
+              });
 
-              return (
-                <Box
-                  key={entry._id}
-                  bg={cSurfaceElevated}
-                  border="1px solid"
-                  borderColor={cBorder}
-                  borderRadius="12px"
-                  p={3}
-                  opacity={isReversed ? 0.6 : 1}
-                  position="relative"
-                  overflow="hidden"
-                  _before={
-                    !isReversed
-                      ? {
-                          content: '""',
-                          position: "absolute",
-                          left: 0,
-                          top: "20%",
-                          bottom: "20%",
-                          w: "3px",
-                          borderRadius: "0 3px 3px 0",
-                          bg: isDebit ? "red.400" : "green.400",
-                        }
-                      : {}
-                  }
-                >
-                  <Flex align="start" gap={2.5}>
-                    {/* Icon */}
-                    <Circle
-                      size="30px"
-                      bg={isDebit ? cDangerAccentSoft : cSuccessAccentSoft}
-                      color={isDebit ? "red.500" : "green.500"}
-                      flexShrink={0}
+              return groups.map((group, groupIndex) => (
+                <Box key={`${group.label}-${groupIndex}`}>
+                  {group.label && (
+                    <Text
+                      mb={2}
+                      px={0.5}
+                      fontSize="10px"
+                      fontWeight="700"
+                      color={cTextSoft}
+                      textTransform="uppercase"
+                      letterSpacing="0.08em"
                     >
-                      <Icon
-                        as={isDebit ? FiArrowUpRight : FiArrowDownLeft}
-                        boxSize={3.5}
-                      />
-                    </Circle>
+                      {group.label}
+                    </Text>
+                  )}
 
-                    {/* Content */}
-                    <Box flex="1" minW={0}>
-                      <Flex justify="space-between" align="start" gap={2}>
-                        <Box minW={0} flex="1">
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={cText}
-                            noOfLines={1}
-                            lineHeight="1.3"
-                          >
-                            {note}
-                          </Text>
-                          <Text mt={0.5} fontSize="10px" color={cTextSoft}>
-                            {getLedgerEntryTypeLabel(entry.entryType, partyType)}
-                            {" · "}
-                            {formatDateOnly(entry.entryDate || entry.createdAt)}
-                          </Text>
-                        </Box>
-
-                        {/* Amount */}
-                        <Box textAlign="right" flexShrink={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="700"
-                            color={getLedgerAmountColor(entry, cAccentStrong)}
-                            letterSpacing="-0.3px"
-                          >
-                            {formatSignedAmount(entry)}
-                          </Text>
-                          <Text mt={0.5} fontSize="9px" color={cTextSoft} textTransform="capitalize">
-                            {isReversed ? "reversed" : getLedgerEffectLabel(entry, partyType).toLowerCase()}
-                          </Text>
-                        </Box>
-                      </Flex>
-
-                      {entry.notes && (
-                        <Text
-                          mt={1.5}
-                          fontSize="xs"
-                          color={cTextMuted}
-                          lineHeight="1.4"
-                          noOfLines={2}
-                        >
-                          {entry.notes}
-                        </Text>
-                      )}
-
-                      {hasLinkedSaleSummary ? (
-                        <SimpleGrid columns={{ base: 2, md: 2 }} spacing={2} mt={2.5}>
-                          <Box
-                            bg={cSurfaceMuted}
-                            border="1px solid"
-                            borderColor={cBorder}
-                            borderRadius="10px"
-                            px={2.5}
-                            py={2}
-                          >
-                            <Text
-                              fontSize="9px"
-                              color={cTextSoft}
-                              textTransform="uppercase"
-                              letterSpacing="0.08em"
-                              fontWeight="700"
-                            >
-                              {isSelectedSupplier ? "Paid out" : "Paid"}
-                            </Text>
-                            <Text mt={1} fontSize="sm" fontWeight="700" color={dashboardPalette.success}>
-                              {getEntryPaidText(entry)}
-                            </Text>
-                          </Box>
-                          <Box
-                            bg={cSurfaceMuted}
-                            border="1px solid"
-                            borderColor={cBorder}
-                            borderRadius="10px"
-                            px={2.5}
-                            py={2}
-                          >
-                            <Text
-                              fontSize="9px"
-                              color={cTextSoft}
-                              textTransform="uppercase"
-                              letterSpacing="0.08em"
-                              fontWeight="700"
-                            >
-                              Remaining
-                            </Text>
-                            <Text mt={1} fontSize="sm" fontWeight="700" color={remainingTone}>
-                              {getEntryRemainingText(entry)}
-                            </Text>
-                          </Box>
-                        </SimpleGrid>
-                      ) : null}
-
-                      {!isReversed &&
+                  <VStack align="stretch" spacing={2}>
+                    {group.items.map((entry) => {
+                      const title = getTimelineTitle(entry, isSelectedSupplier);
+                      const linkedSaleRecordId = getLinkedSaleRecordIdFromEntry(entry);
+                      const isDebit = entry.direction === "debit";
+                      const isReversed = entry.status === "reversed";
+                      const hasLinkedSaleSummary = Boolean(entry.linkedSaleSummary);
+                      const remainingTone = isEntryFullySettled(entry)
+                        ? dashboardPalette.success
+                        : cAccentStrong;
+                      const saleTotal = Number(entry.linkedSaleSummary?.saleAmount ?? 0);
+                      const salePaid = Number(entry.linkedSaleSummary?.paidAmount ?? 0);
+                      const paidPercent =
+                        saleTotal > 0
+                          ? Math.min(Math.max((salePaid / saleTotal) * 100, 0), 100)
+                          : 0;
+                      const showActions =
+                        !isReversed &&
                         (linkedSaleRecordId ||
                           canDownloadLedgerInvoice(entry, partyType) ||
-                          canPayEntry(entry)) && (
-                          <Flex mt={2.5} gap={1.5} flexWrap="wrap">
-                            {linkedSaleRecordId && (
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                borderRadius="full"
-                                borderColor={cBorderStrong}
-                                color={cTextMuted}
-                                fontWeight="600"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                onClick={() => onOpenSaleDetailsFromEntry(entry)}
-                              >
-                                Details
-                              </Button>
-                            )}
-                            {canDownloadLedgerInvoice(entry, partyType) && (
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                borderRadius="full"
-                                borderColor={cBorderStrong}
-                                color={cTextMuted}
-                                fontWeight="600"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-                                onClick={() => onDownloadLedgerInvoice(entry)}
-                              >
-                                Invoice
-                              </Button>
-                            )}
-                            {canPayEntry(entry) && (
-                              <Button
-                                size="xs"
-                                bg={dashboardPalette.accent}
-                                color="white"
-                                borderRadius="full"
-                                fontWeight="700"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                _hover={{ opacity: 0.9 }}
-                                onClick={() => onPayEntry(entry)}
-                              >
-                                Pay
-                              </Button>
-                            )}
+                          canPayEntry(entry));
+
+                      return (
+                        <Box
+                          key={entry._id}
+                          bg={cSurfaceElevated}
+                          border="1px solid"
+                          borderColor={cBorder}
+                          borderRadius="14px"
+                          p={3}
+                          opacity={isReversed ? 0.6 : 1}
+                          position="relative"
+                          overflow="hidden"
+                          boxShadow={cCardShadow}
+                          _before={
+                            !isReversed
+                              ? {
+                                  content: '""',
+                                  position: "absolute",
+                                  left: 0,
+                                  top: "20%",
+                                  bottom: "20%",
+                                  w: "3px",
+                                  borderRadius: "0 3px 3px 0",
+                                  bg: isDebit ? "red.400" : "green.400",
+                                }
+                              : {}
+                          }
+                        >
+                          <Flex align="start" gap={2.5}>
+                            <Circle
+                              size="32px"
+                              bg={isDebit ? cDangerAccentSoft : cSuccessAccentSoft}
+                              color={isDebit ? "red.500" : "green.500"}
+                              flexShrink={0}
+                            >
+                              <Icon
+                                as={isDebit ? FiArrowUpRight : FiArrowDownLeft}
+                                boxSize={4}
+                              />
+                            </Circle>
+
+                            <Box flex="1" minW={0}>
+                              {/* Title + amount */}
+                              <Flex justify="space-between" align="start" gap={2}>
+                                <Box minW={0} flex="1">
+                                  <Text
+                                    fontSize="sm"
+                                    fontWeight="700"
+                                    color={cText}
+                                    noOfLines={1}
+                                    lineHeight="1.3"
+                                  >
+                                    {title}
+                                  </Text>
+                                  <Text mt={0.5} fontSize="11px" color={cTextSoft} noOfLines={1}>
+                                    {getLedgerEntryTypeLabel(entry.entryType, partyType)}
+                                    {" · "}
+                                    {formatDateOnly(entry.entryDate || entry.createdAt)}
+                                  </Text>
+                                </Box>
+
+                                <Box textAlign="right" flexShrink={0}>
+                                  <Text
+                                    fontSize="sm"
+                                    fontWeight="800"
+                                    color={getLedgerAmountColor(entry, cAccentStrong)}
+                                    letterSpacing="-0.3px"
+                                    textDecoration={isReversed ? "line-through" : "none"}
+                                  >
+                                    {formatSignedAmount(entry)}
+                                  </Text>
+                                  <Text
+                                    mt={0.5}
+                                    fontSize="10px"
+                                    color={cTextSoft}
+                                    textTransform="capitalize"
+                                  >
+                                    {isReversed
+                                      ? "reversed"
+                                      : getLedgerEffectLabel(entry, partyType).toLowerCase()}
+                                  </Text>
+                                </Box>
+                              </Flex>
+
+                              {/* Notes */}
+                              {entry.notes?.trim() && (
+                                <Text
+                                  mt={1.5}
+                                  fontSize="xs"
+                                  color={cTextMuted}
+                                  lineHeight="1.4"
+                                  noOfLines={2}
+                                >
+                                  {entry.notes.trim()}
+                                </Text>
+                              )}
+
+                              {/* Paid / remaining progress */}
+                              {hasLinkedSaleSummary ? (
+                                <Box mt={2.5}>
+                                  <Box
+                                    h="4px"
+                                    borderRadius="full"
+                                    bg={cBorder}
+                                    overflow="hidden"
+                                  >
+                                    <Box
+                                      h="full"
+                                      w={`${paidPercent}%`}
+                                      bg={dashboardPalette.success}
+                                      borderRadius="full"
+                                      transition="width 0.4s ease"
+                                    />
+                                  </Box>
+                                  <Flex justify="space-between" align="center" mt={1.5} gap={2}>
+                                    <Text fontSize="11px" color={cTextSoft} noOfLines={1}>
+                                      {isSelectedSupplier ? "Paid out " : "Paid "}
+                                      <Text
+                                        as="span"
+                                        fontWeight="700"
+                                        color={dashboardPalette.success}
+                                      >
+                                        {getEntryPaidText(entry)}
+                                      </Text>
+                                    </Text>
+                                    <Text fontSize="11px" color={cTextSoft} noOfLines={1}>
+                                      Remaining{" "}
+                                      <Text as="span" fontWeight="700" color={remainingTone}>
+                                        {getEntryRemainingText(entry)}
+                                      </Text>
+                                    </Text>
+                                  </Flex>
+                                </Box>
+                              ) : null}
+
+                              {/* Actions */}
+                              {showActions && (
+                                <Flex
+                                  mt={2.5}
+                                  pt={2.5}
+                                  gap={1.5}
+                                  align="center"
+                                  borderTop="1px solid"
+                                  borderColor={cBorder}
+                                >
+                                  {linkedSaleRecordId && (
+                                    <Button
+                                      size="xs"
+                                      variant="outline"
+                                      borderRadius="full"
+                                      borderColor={cBorderStrong}
+                                      color={cTextMuted}
+                                      fontWeight="600"
+                                      h="26px"
+                                      fontSize="11px"
+                                      px={3}
+                                      onClick={() => onOpenSaleDetailsFromEntry(entry)}
+                                    >
+                                      Details
+                                    </Button>
+                                  )}
+                                  {canDownloadLedgerInvoice(entry, partyType) && (
+                                    <Button
+                                      size="xs"
+                                      variant="outline"
+                                      borderRadius="full"
+                                      borderColor={cBorderStrong}
+                                      color={cTextMuted}
+                                      fontWeight="600"
+                                      h="26px"
+                                      fontSize="11px"
+                                      px={3}
+                                      isLoading={invoiceDownloadingLedgerEntryId === entry._id}
+                                      onClick={() => onDownloadLedgerInvoice(entry)}
+                                    >
+                                      Invoice
+                                    </Button>
+                                  )}
+                                  {canPayEntry(entry) && (
+                                    <Button
+                                      size="xs"
+                                      ml="auto"
+                                      bg={dashboardPalette.accent}
+                                      color="white"
+                                      borderRadius="full"
+                                      fontWeight="700"
+                                      h="26px"
+                                      fontSize="11px"
+                                      px={4}
+                                      _hover={{ opacity: 0.9 }}
+                                      _active={{ transform: "scale(0.96)" }}
+                                      onClick={() => onPayEntry(entry)}
+                                    >
+                                      Pay
+                                    </Button>
+                                  )}
+                                </Flex>
+                              )}
+                            </Box>
                           </Flex>
-                        )}
-                    </Box>
-                  </Flex>
+                        </Box>
+                      );
+                    })}
+                  </VStack>
                 </Box>
-              );
-            })}
+              ));
+            })()}
           </VStack>
         )}
 
         {/* ── PAGINATION ─────────────────────────────── */}
         {(ledgerTotalPages || 1) > 1 && (
-          <Flex justify="space-between" align="center" mt={4}>
+          <Flex justify="space-between" align="center" mt={5}>
             <Button
               size="xs"
               variant="outline"
@@ -671,7 +749,8 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
               borderColor={cBorderStrong}
               color={cTextMuted}
               fontWeight="600"
-              h="28px"
+              h="30px"
+              w="84px"
               isDisabled={ledgerPage <= 1 || ledgerLoading}
               onClick={() => {
                 if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
@@ -680,7 +759,7 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             >
               ← Prev
             </Button>
-            <Text fontSize="10px" color={cTextSoft} fontWeight="600">
+            <Text fontSize="xs" color={cTextSoft} fontWeight="700">
               {ledgerPage} / {ledgerTotalPages || 1}
             </Text>
             <Button
@@ -690,7 +769,8 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
               borderColor={cBorderStrong}
               color={cTextMuted}
               fontWeight="600"
-              h="28px"
+              h="30px"
+              w="84px"
               isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
               onClick={() => {
                 if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;

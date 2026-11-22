@@ -1,18 +1,15 @@
 "use client";
 
-import React from "react";
-import { ArrowBackIcon, DownloadIcon } from "@chakra-ui/icons";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
   Divider,
   Flex,
   FormControl,
-  FormErrorMessage,
   FormLabel,
   HStack,
   IconButton,
-  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -23,10 +20,13 @@ import {
   SimpleGrid,
   Stack,
   Text,
-  Textarea,
+  useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
+import React from "react";
 import BottomSheetDrawer from "../../../../../component/common/Drawer/BottomSheetDrawer";
+import CustomDrawer from "../../../../../component/common/Drawer/CustomDrawer";
+import CustomInput from "../../../../../component/config/component/customInput/CustomInput";
 import { useCustomerTheme } from "./theme";
 import {
   BuyerFormErrors,
@@ -114,16 +114,17 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
   const partyPluralLabel = normalizedActivePartyType === "supplier" ? "Suppliers" : "Customers";
 
   const renderBuyerFormFields = (isCompact: boolean) => {
-    const inputHeight = isCompact ? "56px" : "52px";
-    const radius = isCompact ? "18px" : "16px";
     const draftPartyLabel = formValues.partyType === "supplier" ? "Supplier" : "Customer";
     const draftPartyLabelLower = draftPartyLabel.toLowerCase();
+
+    const isCustomerActive = formValues.partyType === "customer";
+    const isSupplierActive = formValues.partyType === "supplier";
 
     return (
       <VStack spacing={4} align="stretch">
         <Box
           p={4}
-          borderRadius="24px"
+          borderRadius="20px"
           bg={cFormInfoBg}
           border="1px solid"
           borderColor={cBorder}
@@ -136,51 +137,59 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
           </Text>
         </Box>
 
-        <FormControl isInvalid={Boolean(buyerFormErrors.fullName)}>
-          <FormLabel color={cText} fontWeight="700">
-            Full name
-          </FormLabel>
-          <Input
-            value={formValues.fullName}
-            onChange={(e) =>
-              setFormValues((prev) => ({
-                ...prev,
-                fullName: e.target.value,
-                displayName: prev.displayName === prev.fullName ? e.target.value : prev.displayName,
-              }))
-            }
-            placeholder={`${draftPartyLabel} full name`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-            onChangeCapture={() => clearBuyerFormErrors("fullName")}
-          />
-          <FormErrorMessage>{buyerFormErrors.fullName}</FormErrorMessage>
-        </FormControl>
+        <CustomInput
+          type="text"
+          name="fullName"
+          label="Full name"
+          required
+          placeholder={`${draftPartyLabel} full name`}
+          value={formValues.fullName}
+          onChange={(e: any) => {
+            const val = e.target.value;
+            setFormValues((prev) => ({
+              ...prev,
+              fullName: val,
+              displayName: prev.displayName === prev.fullName ? val : prev.displayName,
+            }));
+            clearBuyerFormErrors("fullName");
+          }}
+          error={buyerFormErrors.fullName}
+          showError={Boolean(buyerFormErrors.fullName)}
+        />
 
         <FormControl>
-          <FormLabel color={cText} fontWeight="700">
+          <FormLabel color={cText} fontWeight="700" mb={2}>
             Party type
           </FormLabel>
           <HStack
-            spacing={1}
-            p={1}
-            borderRadius="18px"
+            spacing={1.5}
+            p={1.5}
+            borderRadius="16px"
             bg={cInputMutedBg}
             border="1px solid"
             borderColor={cBorder}
           >
             <Button
               flex="1"
-              h="42px"
-              borderRadius="14px"
-              bg={formValues.partyType === "customer" ? cHeroGradient : "transparent"}
-              color={formValues.partyType === "customer" ? "white" : cTextMuted}
-              fontWeight="800"
-              _hover={{ color: formValues.partyType === "customer" ? "white" : cText }}
+              h="40px"
+              borderRadius="12px"
+              bg={isCustomerActive ? "brand.500" : "transparent"}
+              color={
+                isCustomerActive
+                  ? "white"
+                  : useColorModeValue("gray.600", "gray.300")
+              }
+              boxShadow={isCustomerActive ? "0 2px 8px rgba(6, 95, 104, 0.25)" : "none"}
+              fontWeight="700"
+              fontSize="sm"
+              _hover={{
+                bg: isCustomerActive
+                  ? "brand.600"
+                  : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
+                color: isCustomerActive
+                  ? "white"
+                  : useColorModeValue("gray.800", "white"),
+              }}
               _active={{ transform: "scale(0.98)" }}
               onClick={() => setFormValues((prev) => ({ ...prev, partyType: "customer" }))}
             >
@@ -188,12 +197,25 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
             </Button>
             <Button
               flex="1"
-              h="42px"
-              borderRadius="14px"
-              bg={formValues.partyType === "supplier" ? cHeroGradient : "transparent"}
-              color={formValues.partyType === "supplier" ? "white" : cTextMuted}
-              fontWeight="800"
-              _hover={{ color: formValues.partyType === "supplier" ? "white" : cText }}
+              h="40px"
+              borderRadius="12px"
+              bg={isSupplierActive ? "brand.500" : "transparent"}
+              color={
+                isSupplierActive
+                  ? "white"
+                  : useColorModeValue("gray.600", "gray.300")
+              }
+              boxShadow={isSupplierActive ? "0 2px 8px rgba(6, 95, 104, 0.25)" : "none"}
+              fontWeight="700"
+              fontSize="sm"
+              _hover={{
+                bg: isSupplierActive
+                  ? "brand.600"
+                  : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
+                color: isSupplierActive
+                  ? "white"
+                  : useColorModeValue("gray.800", "white"),
+              }}
               _active={{ transform: "scale(0.98)" }}
               onClick={() => setFormValues((prev) => ({ ...prev, partyType: "supplier" }))}
             >
@@ -203,112 +225,84 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
         </FormControl>
 
         <HStack align="start" spacing={3}>
-          <FormControl maxW="118px" isInvalid={Boolean(buyerFormErrors.phone)}>
-            <FormLabel color={cText} fontWeight="700">
-              Code
-            </FormLabel>
-            <Input
+          <Box maxW="110px">
+            <CustomInput
+              type="text"
+              name="phoneCountryCode"
+              label="Code"
+              placeholder="+91"
               value={formValues.phoneCountryCode}
-              onChange={(e) =>
+              onChange={(e: any) => {
+                const code = e.target.value;
                 setFormValues((prev) => ({
                   ...prev,
-                  phoneCountryCode: e.target.value,
-                  phone: `${e.target.value}${prev.phoneNationalNumber}`.trim(),
-                }))
-              }
-              onChangeCapture={() => clearBuyerFormErrors("phone")}
-              placeholder="+91"
-              bg={cInputBg}
-              borderColor={cInputBorder}
-              borderRadius={radius}
-              h={inputHeight}
-              textAlign="center"
-              _placeholder={{ color: cPlaceholder }}
-              _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
+                  phoneCountryCode: code,
+                  phone: `${code}${prev.phoneNationalNumber}`.trim(),
+                }));
+                clearBuyerFormErrors("phone");
+              }}
             />
-          </FormControl>
-          <FormControl flex="1" isInvalid={Boolean(buyerFormErrors.phone)}>
-            <FormLabel color={cText} fontWeight="700">
-              Phone
-            </FormLabel>
-            <Input
-              value={formValues.phoneNationalNumber}
-              onChange={(e) =>
-                setFormValues((prev) => {
-                  const localPhone = e.target.value.replace(/\D/g, "");
-                  return {
-                    ...prev,
-                    phoneNationalNumber: localPhone,
-                    phone: `${prev.phoneCountryCode}${localPhone}`.trim(),
-                  };
-                })
-              }
-              onChangeCapture={() => clearBuyerFormErrors("phone", "email")}
+          </Box>
+          <Box flex="1">
+            <CustomInput
+              type="text"
+              name="phoneNationalNumber"
+              label="Phone"
               placeholder="Phone number"
-              inputMode="tel"
-              bg={cInputBg}
-              borderColor={cInputBorder}
-              borderRadius={radius}
-              h={inputHeight}
-              _placeholder={{ color: cPlaceholder }}
-              _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
+              value={formValues.phoneNationalNumber}
+              onChange={(e: any) => {
+                const localPhone = e.target.value.replace(/\D/g, "");
+                setFormValues((prev) => ({
+                  ...prev,
+                  phoneNationalNumber: localPhone,
+                  phone: `${prev.phoneCountryCode}${localPhone}`.trim(),
+                }));
+                clearBuyerFormErrors("phone", "email");
+              }}
+              error={buyerFormErrors.phone}
+              showError={Boolean(buyerFormErrors.phone)}
             />
-            <FormErrorMessage>{buyerFormErrors.phone}</FormErrorMessage>
-          </FormControl>
+          </Box>
         </HStack>
 
-        <FormControl isInvalid={Boolean(buyerFormErrors.email)}>
-          <FormLabel color={cText} fontWeight="700">
-            Email
-          </FormLabel>
-          <Input
-            value={formValues.email}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
-            onChangeCapture={() => clearBuyerFormErrors("email", "phone")}
-            placeholder={`${draftPartyLabelLower}@example.com`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-          <FormErrorMessage>{buyerFormErrors.email}</FormErrorMessage>
-        </FormControl>
+        <CustomInput
+          type="text"
+          name="email"
+          label="Email"
+          placeholder={`${draftPartyLabelLower}@example.com`}
+          value={formValues.email}
+          onChange={(e: any) => {
+            const email = e.target.value;
+            setFormValues((prev) => ({ ...prev, email }));
+            clearBuyerFormErrors("email", "phone");
+          }}
+          error={buyerFormErrors.email}
+          showError={Boolean(buyerFormErrors.email)}
+        />
 
-        <FormControl>
-          <FormLabel color={cText} fontWeight="700">
-            Display name
-          </FormLabel>
-          <Input
-            value={formValues.displayName}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
-            placeholder={`How this ${draftPartyLabelLower} should appear`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-        </FormControl>
+        <CustomInput
+          type="text"
+          name="displayName"
+          label="Display name"
+          placeholder={`How this ${draftPartyLabelLower} should appear`}
+          value={formValues.displayName}
+          onChange={(e: any) => {
+            const displayName = e.target.value;
+            setFormValues((prev) => ({ ...prev, displayName }));
+          }}
+        />
 
-        <FormControl>
-          <FormLabel color={cText} fontWeight="700">
-            Tags
-          </FormLabel>
-          <Input
-            value={formValues.tags}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
-            placeholder="wholesale, repeat, priority"
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-        </FormControl>
+        <CustomInput
+          type="text"
+          name="tags"
+          label="Tags"
+          placeholder="wholesale, repeat, priority"
+          value={formValues.tags}
+          onChange={(e: any) => {
+            const tags = e.target.value;
+            setFormValues((prev) => ({ ...prev, tags }));
+          }}
+        />
 
         <Button
           variant="ghost"
@@ -324,114 +318,79 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
 
         {showContactExtraFields ? (
           <VStack align="stretch" spacing={3}>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Address line 1
-              </FormLabel>
-              <Input
-                value={formValues.addressLine1}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine1: e.target.value }))}
-                placeholder="Shop or street address"
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                h={inputHeight}
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Address line 2
-              </FormLabel>
-              <Input
-                value={formValues.addressLine2}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine2: e.target.value }))}
-                placeholder="Area, landmark"
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                h={inputHeight}
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </FormControl>
+            <CustomInput
+              type="text"
+              name="addressLine1"
+              label="Address line 1"
+              placeholder="Shop or street address"
+              value={formValues.addressLine1}
+              onChange={(e: any) =>
+                setFormValues((prev) => ({ ...prev, addressLine1: e.target.value }))
+              }
+            />
+            <CustomInput
+              type="text"
+              name="addressLine2"
+              label="Address line 2"
+              placeholder="Area, landmark"
+              value={formValues.addressLine2}
+              onChange={(e: any) =>
+                setFormValues((prev) => ({ ...prev, addressLine2: e.target.value }))
+              }
+            />
             <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  City
-                </FormLabel>
-                <Input
-                  value={formValues.city}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, city: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  State
-                </FormLabel>
-                <Input
-                  value={formValues.state}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, state: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  Postal code
-                </FormLabel>
-                <Input
-                  value={formValues.postalCode}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, postalCode: e.target.value }))}
-                  inputMode="numeric"
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  Country
-                </FormLabel>
-                <Input
-                  value={formValues.country}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, country: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-            </SimpleGrid>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Notes
-              </FormLabel>
-              <Textarea
-                value={formValues.notes}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder={`Anything useful to remember about this ${formValues.partyType}`}
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                minH="116px"
-                resize="vertical"
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
+              <CustomInput
+                type="text"
+                name="city"
+                label="City"
+                placeholder="City"
+                value={formValues.city}
+                onChange={(e: any) =>
+                  setFormValues((prev) => ({ ...prev, city: e.target.value }))
+                }
               />
-            </FormControl>
+              <CustomInput
+                type="text"
+                name="state"
+                label="State"
+                placeholder="State"
+                value={formValues.state}
+                onChange={(e: any) =>
+                  setFormValues((prev) => ({ ...prev, state: e.target.value }))
+                }
+              />
+              <CustomInput
+                type="text"
+                name="postalCode"
+                label="Postal code"
+                placeholder="PIN / Postal code"
+                value={formValues.postalCode}
+                onChange={(e: any) =>
+                  setFormValues((prev) => ({ ...prev, postalCode: e.target.value }))
+                }
+              />
+              <CustomInput
+                type="text"
+                name="country"
+                label="Country"
+                placeholder="Country"
+                value={formValues.country}
+                onChange={(e: any) =>
+                  setFormValues((prev) => ({ ...prev, country: e.target.value }))
+                }
+              />
+            </SimpleGrid>
+            <CustomInput
+              type="textarea"
+              name="notes"
+              label="Notes"
+              rows={3}
+              placeholder={`Anything useful to remember about this ${formValues.partyType}`}
+              value={formValues.notes}
+              onChange={(e: any) =>
+                setFormValues((prev) => ({ ...prev, notes: e.target.value }))
+              }
+            />
           </VStack>
         ) : null}
       </VStack>
@@ -452,14 +411,14 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
                 Import {partyPluralLabel.toLowerCase()} directly from device contacts.
               </Text>
 
-              <FormControl>
-                <FormLabel>Default Tags (comma-separated)</FormLabel>
-                <Input
-                  value={importDefaultTags}
-                  onChange={(e) => setImportDefaultTags(e.target.value)}
-                  placeholder="retail, repeat"
-                />
-              </FormControl>
+              <CustomInput
+                type="text"
+                name="importDefaultTags"
+                label="Default Tags (comma-separated)"
+                value={importDefaultTags}
+                onChange={(e: any) => setImportDefaultTags(e.target.value)}
+                placeholder="retail, repeat"
+              />
 
               {canUseDeviceContactImport ? (
                 <>
@@ -618,7 +577,7 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
         </ModalContent>
       </Modal>
 
-      {/* Add / Edit Customer Drawer or Modal */}
+      {/* Add / Edit Customer Drawer */}
       {useCompactBuyerView ? (
         <BottomSheetDrawer
           isOpen={isOpen}
@@ -655,10 +614,10 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
                 flex="1"
                 minH="52px"
                 borderRadius="16px"
-                bgGradient={cHeroGradient}
+                bg="brand.500"
                 color="white"
-                boxShadow="0 16px 30px rgba(69, 104, 255, 0.22)"
-                _hover={{ filter: "brightness(1.05)" }}
+                boxShadow="0 14px 28px rgba(6, 95, 104, 0.24)"
+                _hover={{ bg: "brand.600" }}
               >
                 Save {partySingularLabel}
               </Button>
@@ -668,32 +627,37 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
           {renderBuyerFormFields(true)}
         </BottomSheetDrawer>
       ) : (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
-          <ModalOverlay />
-          <ModalContent borderRadius="28px" bg={cSurface}>
-            <ModalHeader>Add {partySingularLabel}</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody px={6} py={5}>
-              {renderBuyerFormFields(false)}
-            </ModalBody>
-            <ModalFooter borderTopWidth="1px" borderTopColor={cBorder}>
-              <Button variant="ghost" mr={3} onClick={onClose}>
+        <CustomDrawer
+          isOpen={isOpen}
+          onClose={onClose}
+          title={`Add ${partySingularLabel}`}
+          subtitle={`Create a new ${partySingularLabel.toLowerCase()} record`}
+          size="md"
+          showDivider={true}
+          bodyProps={{
+            px: { base: 4, md: 5 },
+            py: 4,
+            pb: 8,
+          }}
+          footer={
+            <HStack spacing={3} w="full" justify="flex-end">
+              <Button variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
               <Button
                 onClick={onSubmitBuyer}
                 isLoading={submitting}
-                bgGradient={cHeroGradient}
-                color="white"
-                borderRadius="16px"
-                px={5}
-                _hover={{ filter: "brightness(1.05)" }}
+                colorScheme="brand"
+                px={6}
+                fontWeight="800"
               >
                 Save {partySingularLabel}
               </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+            </HStack>
+          }
+        >
+          {renderBuyerFormFields(false)}
+        </CustomDrawer>
       )}
     </>
   );

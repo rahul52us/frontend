@@ -19,6 +19,7 @@ import {
   SkeletonCircle,
   Stack,
   Text,
+  useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import {
@@ -203,33 +204,71 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
               <Flex mt={{ base: 2, md: 4 }} gap={2} flexWrap="wrap" align="center">
                 <HStack
                   spacing={1}
-                  borderRadius="18px"
-                  bg="whiteAlpha.180"
-                  borderColor="whiteAlpha.280"
+                  p={1}
+                  borderRadius="16px"
+                  bg={useColorModeValue("blackAlpha.50", "whiteAlpha.100")}
+                  border="1px solid"
+                  borderColor={useColorModeValue("blackAlpha.100", "whiteAlpha.150")}
                 >
                   <Button
-                    h={{ base: "32px", md: "38px" }}
-                    px={4}
-                    borderRadius="14px"
-                    bg={normalizedActivePartyType === "customer" ? dashboardPalette.accent : "transparent"}
-                    color={normalizedActivePartyType === "customer" ? "white" : "blackAlpha.700"}
+                    h={{ base: "32px", md: "36px" }}
+                    px={{ base: 3, md: 4 }}
+                    borderRadius="12px"
+                    bg={normalizedActivePartyType === "customer" ? "brand.500" : "transparent"}
+                    color={
+                      normalizedActivePartyType === "customer"
+                        ? "white"
+                        : useColorModeValue("gray.600", "gray.300")
+                    }
                     fontSize="sm"
-                    fontWeight="800"
-                    _hover={{ bg: normalizedActivePartyType === "customer" ? dashboardPalette.accent : "whiteAlpha.180" }}
+                    fontWeight="700"
+                    boxShadow={
+                      normalizedActivePartyType === "customer"
+                        ? "0 2px 8px rgba(6, 95, 104, 0.25)"
+                        : "none"
+                    }
+                    _hover={{
+                      bg:
+                        normalizedActivePartyType === "customer"
+                          ? "brand.600"
+                          : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
+                      color:
+                        normalizedActivePartyType === "customer"
+                          ? "white"
+                          : useColorModeValue("gray.800", "white"),
+                    }}
                     _active={{ transform: "scale(0.98)" }}
                     onClick={() => setActivePartyType("customer")}
                   >
                     Customers
                   </Button>
                   <Button
-                    h={{ base: "32px", md: "38px" }}
-                    px={4}
-                    borderRadius="14px"
-                    bg={normalizedActivePartyType === "supplier" ? dashboardPalette.accent : "transparent"}
-                    color={normalizedActivePartyType === "supplier" ? "white" : "blackAlpha.900"}
+                    h={{ base: "32px", md: "36px" }}
+                    px={{ base: 3, md: 4 }}
+                    borderRadius="12px"
+                    bg={normalizedActivePartyType === "supplier" ? "brand.500" : "transparent"}
+                    color={
+                      normalizedActivePartyType === "supplier"
+                        ? "white"
+                        : useColorModeValue("gray.600", "gray.300")
+                    }
                     fontSize="sm"
-                    fontWeight="800"
-                    _hover={{ bg: normalizedActivePartyType === "supplier" ? dashboardPalette.accent : "whiteAlpha.180" }}
+                    fontWeight="700"
+                    boxShadow={
+                      normalizedActivePartyType === "supplier"
+                        ? "0 2px 8px rgba(6, 95, 104, 0.25)"
+                        : "none"
+                    }
+                    _hover={{
+                      bg:
+                        normalizedActivePartyType === "supplier"
+                          ? "brand.600"
+                          : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
+                      color:
+                        normalizedActivePartyType === "supplier"
+                          ? "white"
+                          : useColorModeValue("gray.800", "white"),
+                    }}
                     _active={{ transform: "scale(0.98)" }}
                     onClick={() => setActivePartyType("supplier")}
                   >
@@ -576,18 +615,19 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
       {isCompact ? (
         <Button
           position="fixed"
-          right="18px"
+          right="16px"
           bottom="calc(76px + env(safe-area-inset-bottom, 0px))"
           zIndex={110}
-          h="56px"
-          px={5}
+          h="44px"
+          px={4}
           borderRadius="full"
-          bgGradient={cHeroGradient}
+          bg="brand.500"
           color="white"
-          leftIcon={<Icon as={FiUserPlus} boxSize={4.5} />}
-          fontWeight="800"
-          boxShadow="0 18px 34px rgba(69, 104, 255, 0.28)"
-          _hover={{ filter: "brightness(1.05)" }}
+          leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
+          fontWeight="700"
+          fontSize="sm"
+          boxShadow="0 8px 24px rgba(6, 95, 104, 0.35)"
+          _hover={{ bg: "brand.600" }}
           _active={{ transform: "scale(0.97)" }}
           onClick={onOpenAddBuyer}
         >
