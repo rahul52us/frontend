@@ -708,11 +708,11 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
         position={isCompact ? "fixed" : "absolute"}
         bottom={
           isCompact
-            ? "calc(60px + env(safe-area-inset-bottom, 8px))"
+            ? "calc(76px + env(safe-area-inset-bottom, 0px))"
             : "16px"
         }
-        right={{ base: "12px", md: "20px" }}
-        zIndex={30}
+        right={{ base: "16px", md: "20px" }}
+        zIndex={110}
       >
         <Button
           h={{ base: "42px", md: "46px" }}

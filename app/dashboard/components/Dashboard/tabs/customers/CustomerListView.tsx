@@ -577,8 +577,8 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
         <Button
           position="fixed"
           right="18px"
-          bottom="calc(18px + env(safe-area-inset-bottom, 0px))"
-          zIndex={30}
+          bottom="calc(76px + env(safe-area-inset-bottom, 0px))"
+          zIndex={110}
           h="56px"
           px={5}
           borderRadius="full"
