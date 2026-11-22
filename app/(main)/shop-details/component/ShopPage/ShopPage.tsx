@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Circle,
+  Container,
   Flex,
   Heading,
   HStack,
@@ -18,12 +19,14 @@ import {
 } from "@chakra-ui/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  FiAlertCircle,
   FiChevronLeft,
   FiChevronRight,
-  FiNavigation,
-  FiPhone,
+  FiInfo,
+  FiMapPin,
+  FiRefreshCw,
   FiShoppingBag,
 } from "react-icons/fi";
 import stores from "../../../../store/stores";
@@ -32,19 +35,25 @@ import ContactSection from "../ContactSection/ContactSection";
 import LocationSection from "../LocationSection/LocationSection";
 import OperatingHours from "../OperatingHours/OperatingHours";
 import ShopAbout from "../ShopAbout/ShopAbout";
-import ShopFooterSection from "../ShopFooterSection/ShopFooterSection";
 import ShopHeroSection from "../ShopHeroSection/ShopHeroSection";
 import ShopImages from "../ShopImages/ShopImages";
 
 const MotionBox = motion(Box);
 
 const TABS = [
-  { id: "products", label: "Products" },
-  { id: "about", label: "About" },
-  { id: "info", label: "Visit" },
+  { id: "products", label: "Products", icon: FiShoppingBag },
+  { id: "about", label: "About", icon: FiInfo },
+  { id: "info", label: "Visit", icon: FiMapPin },
 ] as const;
 
 type TabType = (typeof TABS)[number]["id"];
+
+const tabMotion = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -12 },
+  transition: { duration: 0.3, ease: "easeOut" },
+} as const;
 
 const ShopPage = memo(
   observer(({ shopData }: any) => {
@@ -61,21 +70,24 @@ const ShopPage = memo(
     const [selectedCategory, setSelectedCategory] = useState("All");
 
     // Color tokens
-    const pageBg = useColorModeValue("gray.50", "gray.950");
-    const cardBg = useColorModeValue("white", "gray.850");
-    const borderColor = useColorModeValue("gray.100", "gray.750");
+    const pageBg = useColorModeValue("gray.50", "gray.900");
+    const cardBg = useColorModeValue("white", "gray.800");
+    const borderColor = useColorModeValue("gray.100", "whiteAlpha.200");
     const textPrimary = useColorModeValue("gray.900", "white");
     const textMuted = useColorModeValue("gray.500", "gray.400");
     const stickyBg = useColorModeValue(
-      "rgba(255, 255, 255, 0.9)",
-      "rgba(23, 25, 35, 0.9)"
+      "rgba(249, 250, 251, 0.85)",
+      "rgba(23, 25, 35, 0.85)"
     );
-    const trackBg = useColorModeValue("gray.100", "gray.800");
-    const pillBg = useColorModeValue("white", "gray.700");
-    const btnBg = useColorModeValue("white", "gray.800");
-    const hoverBg = useColorModeValue("gray.100", "gray.700");
+    const trackBg = useColorModeValue("gray.100", "whiteAlpha.100");
+    const pillBg = useColorModeValue("white", "whiteAlpha.300");
+    const chipBg = useColorModeValue("white", "whiteAlpha.100");
+    const chipHover = useColorModeValue("gray.100", "whiteAlpha.200");
+    const errBg = useColorModeValue("red.50", "whiteAlpha.100");
+    const emptyBg = useColorModeValue("gray.100", "whiteAlpha.100");
+    const emptyIcon = useColorModeValue("gray.400", "gray.500");
 
-    // Fetch shop products using actual shopStore API
+    // Fetch shop products
     const fetchProducts = useCallback(
       async (page = 1) => {
         if (!shopData?._id) return;
@@ -84,17 +96,14 @@ const ShopPage = memo(
         try {
           const res = await getShopProducts({
             company: shopData?._id,
-            page: page,
+            page,
             limit: 8,
           });
-          const data = res?.data?.products || [];
-          const total = res?.data?.totalPages || 1;
-
-          setProducts(data);
-          setTotalPages(total);
+          setProducts(res?.data?.products || []);
+          setTotalPages(res?.data?.totalPages || 1);
           setCurrentPage(page);
         } catch (err: any) {
-          setError(err?.message || "Couldn't load products");
+          setError(err?.message || "Couldn’t load products");
         } finally {
           setLoading(false);
         }
@@ -108,28 +117,44 @@ const ShopPage = memo(
       }
     }, [shopData?._id, fetchProducts]);
 
+    // Scroll to the top of the tab content (accounts for the sticky tab bar)
+    const scrollToContent = useCallback((force = false) => {
+      const el = document.getElementById("shop-content");
+      if (!el) return;
+      if (force || el.getBoundingClientRect().top < 72) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, []);
+
+    const handleTabChange = useCallback(
+      (id: TabType) => {
+        setTab(id);
+        scrollToContent();
+      },
+      [scrollToContent]
+    );
+
     const handlePageChange = useCallback(
       (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
           fetchProducts(newPage);
-          document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
+          scrollToContent(true);
         }
       },
-      [fetchProducts, totalPages]
+      [fetchProducts, totalPages, scrollToContent]
     );
 
     const handleSwitchToProducts = useCallback(() => {
       setTab("products");
-      document.getElementById("tabs")?.scrollIntoView({ behavior: "smooth" });
-    }, []);
+      scrollToContent(true);
+    }, [scrollToContent]);
 
-    // Categories list
+    // Categories
     const categories = useMemo(
       () => ["All", ...(shopData?.categories ?? [])],
       [shopData?.categories]
     );
 
-    // Filtered products based on selected category
     const filteredProducts = useMemo(() => {
       if (selectedCategory === "All") return products;
       return products.filter((p: any) => {
@@ -139,428 +164,340 @@ const ShopPage = memo(
       });
     }, [products, selectedCategory]);
 
-    // Directions & Contact info for mobile bottom bar
-    const loc = shopData?.location;
-    const address = useMemo(
-      () =>
-        [
-          loc?.address,
-          loc?.city,
-          loc?.state,
-          loc?.postalCode || loc?.pincode,
-        ]
-          .filter(Boolean)
-          .join(", "),
-      [loc?.address, loc?.city, loc?.postalCode, loc?.pincode, loc?.state]
-    );
+    const stateCard = {
+      py: 12,
+      px: 6,
+      spacing: 3,
+      textAlign: "center",
+      bg: cardBg,
+      borderRadius: "3xl",
+      border: "1px solid",
+      borderColor,
+    } as const;
 
-    const directionsUrl = useMemo(
-      () =>
-        `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-          address || shopData?.name || ""
-        )}`,
-      [address, shopData?.name]
-    );
-
-    const phone = shopData?.contactInfo?.phone;
+    const gridProps = {
+      columns: { base: 2, md: 3, lg: 5 },
+      spacing: { base: 3, md: 5 },
+    } as const;
 
     return (
-      <Box minH="100vh" bg={pageBg} pb={{ base: 28, md: 14 }}>
-        {/* Shop Hero Section with Cover & Floating Identity Card */}
+      <Box minH="100vh" bg={pageBg} pb={{ base: 2, md: 14 }}>
         <ShopHeroSection
           shopData={shopData}
           onShopProductsClick={handleSwitchToProducts}
         />
 
-        {/* Sticky Segmented Pill Tabs Navigation */}
+        {/* Sticky segmented tabs (full-bleed bar) */}
         <Box
           id="tabs"
           position="sticky"
-          top={{ base: "0px", md: "0px" }}
+          top="0px"
           zIndex={20}
+          mt={3}
+          py={2}
           bg={stickyBg}
           backdropFilter="blur(16px)"
-          py={3}
-          px={2}
-          mx={-2}
-          mb={6}
-          borderRadius="2xl"
-          transition="all 0.2s"
+          borderBottom="1px solid"
+          borderColor={borderColor}
         >
-          <Box
-            position="relative"
-            display="grid"
-            gridTemplateColumns="repeat(3, 1fr)"
-            borderRadius="full"
-            bg={trackBg}
-            p="4px"
-            maxW={{ base: "full", sm: "420px" }}
-            mx="auto"
-          >
-            {TABS.map((t) => {
-              const isActive = tab === t.id;
-              return (
-                <Box
-                  as="button"
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  position="relative"
-                  zIndex={1}
-                  py={2.5}
-                  borderRadius="full"
-                  fontSize="sm"
-                  fontWeight="bold"
-                  color={isActive ? textPrimary : textMuted}
-                  transition="color 0.2s"
-                  textAlign="center"
-                  _focus={{ outline: "none" }}
-                >
-                  {isActive && (
-                    <MotionBox
-                      layoutId="activeShopTabPill"
-                      position="absolute"
-                      inset={0}
-                      borderRadius="full"
-                      bg={pillBg}
-                      boxShadow="0 2px 10px rgba(0, 0, 0, 0.08)"
-                      zIndex={-1}
-                      transition={{
-                        type: "spring",
-                        stiffness: 450,
-                        damping: 32,
-                      }}
-                    />
-                  )}
-                  {t.label}
-                </Box>
-              );
-            })}
-          </Box>
+          <Container maxW="100%" px={{ base: 3, md: 8 }}>
+            <Box
+              role="tablist"
+              display="grid"
+              gridTemplateColumns="repeat(3, 1fr)"
+              borderRadius="full"
+              bg={trackBg}
+              p="4px"
+              maxW={{ base: "full", md: "420px" }}
+            >
+              {TABS.map((t) => {
+                const isActive = tab === t.id;
+                return (
+                  <Box
+                    as="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    key={t.id}
+                    onClick={() => handleTabChange(t.id)}
+                    position="relative"
+                    py={2}
+                    borderRadius="full"
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color={isActive ? textPrimary : textMuted}
+                    transition="color 0.2s"
+                    _focus={{ outline: "none" }}
+                    _focusVisible={{ boxShadow: "outline" }}
+                  >
+                    {isActive && (
+                      <MotionBox
+                        layoutId="activeShopTabPill"
+                        position="absolute"
+                        inset={0}
+                        borderRadius="full"
+                        bg={pillBg}
+                        boxShadow="0 2px 10px rgba(0, 0, 0, 0.08)"
+                        transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                      />
+                    )}
+                    <HStack
+                      position="relative"
+                      zIndex={1}
+                      justify="center"
+                      spacing={1.5}
+                    >
+                      <Icon as={t.icon} boxSize={4} />
+                      <Text as="span">{t.label}</Text>
+                    </HStack>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Container>
         </Box>
 
-        {/* Tab Content Display */}
-        <AnimatePresence mode="wait">
-          {tab === "products" && (
-            <MotionBox
-              key="products-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              {/* Category Filter Pills (Horizontal Scroll) */}
-              {categories.length > 1 && (
-                <Box
-                  overflowX="auto"
-                  display="flex"
-                  gap={2}
-                  pb={3}
-                  mb={6}
-                  mx={{ base: -2, md: 0 }}
-                  px={{ base: 2, md: 0 }}
-                  css={{
-                    "&::-webkit-scrollbar": { display: "none" },
-                    scrollbarWidth: "none",
-                  }}
-                >
-                  {categories.map((cat: string) => {
-                    const isSelected = selectedCategory === cat;
-                    return (
-                      <Button
-                        key={cat}
-                        size="sm"
-                        h="36px"
-                        px={4}
-                        borderRadius="full"
-                        flexShrink={0}
-                        variant={isSelected ? "solid" : "outline"}
-                        bg={
-                          isSelected
-                            ? "linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)"
-                            : btnBg
-                        }
-                        color={isSelected ? "white" : textMuted}
-                        borderColor={isSelected ? "transparent" : borderColor}
-                        _hover={{
-                          bg: isSelected
-                            ? "linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%)"
-                            : hoverBg,
-                          transform: "scale(1.02)",
-                        }}
-                        _active={{ transform: "scale(0.96)" }}
-                        fontWeight="semibold"
-                        fontSize="xs"
-                        onClick={() => setSelectedCategory(cat)}
-                        boxShadow={
-                          isSelected
-                            ? "0 4px 12px rgba(37, 99, 235, 0.25)"
-                            : "none"
-                        }
-                        transition="all 0.2s"
-                      >
-                        {cat}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              )}
-
-              {/* Error State */}
-              {error ? (
-                <VStack
-                  py={16}
-                  spacing={4}
-                  textAlign="center"
-                  bg={cardBg}
-                  borderRadius="3xl"
-                  border="1px solid"
-                  borderColor={borderColor}
-                  p={8}
-                >
-                  <Circle size="60px" bg="red.50" color="red.500">
-                    <Icon as={FiShoppingBag} boxSize={7} />
-                  </Circle>
-                  <Heading size="md" fontWeight="bold" color={textPrimary}>
-                    Couldn't load products
-                  </Heading>
-                  <Text fontSize="sm" color={textMuted} maxW="sm">
-                    {error}
-                  </Text>
-                  <Button
-                    size="sm"
-                    colorScheme="brand"
-                    borderRadius="full"
-                    px={6}
-                    onClick={() => fetchProducts(currentPage)}
+        {/* Tab content */}
+        <Container
+          id="shop-content"
+          maxW="100%"
+          px={{ base: 3, md: 8 }}
+          pt={{ base: 4, md: 6 }}
+          scrollMarginTop="72px"
+        >
+          <AnimatePresence mode="wait">
+            {tab === "products" && (
+              <MotionBox key="products-tab" {...tabMotion}>
+                {/* Category chips */}
+                {categories.length > 1 && (
+                  <Box
+                    display="flex"
+                    gap={2}
+                    overflowX="auto"
+                    mx={{ base: -3, md: 0 }}
+                    px={{ base: 3, md: 0 }}
+                    pb={3}
+                    css={{
+                      "&::-webkit-scrollbar": { display: "none" },
+                      scrollbarWidth: "none",
+                    }}
                   >
-                    Try again
-                  </Button>
-                </VStack>
-              ) : loading ? (
-                /* Skeleton Loading State */
-                <SimpleGrid
-                  columns={{ base: 2, sm: 2, md: 3, lg: 4 }}
-                  spacing={{ base: 3, md: 5 }}
-                >
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <Box
-                      key={i}
-                      borderRadius="2xl"
-                      overflow="hidden"
+                    {categories.map((cat: string) => {
+                      const isSelected = selectedCategory === cat;
+                      return (
+                        <Button
+                          key={cat}
+                          size="sm"
+                          h="34px"
+                          px={4}
+                          flexShrink={0}
+                          borderRadius="full"
+                          border="1px solid"
+                          bg={isSelected ? "brand.500" : chipBg}
+                          color={isSelected ? "white" : textMuted}
+                          borderColor={isSelected ? "transparent" : borderColor}
+                          fontWeight="semibold"
+                          fontSize="xs"
+                          boxShadow={
+                            isSelected ? "0 4px 12px rgba(37, 99, 235, 0.25)" : "none"
+                          }
+                          _hover={{
+                            bg: isSelected ? "brand.500" : chipHover,
+                            transform: "translateY(-1px)",
+                          }}
+                          _active={{ transform: "scale(0.96)" }}
+                          transition="all 0.2s"
+                          onClick={() => setSelectedCategory(cat)}
+                        >
+                          {cat}
+                        </Button>
+                      );
+                    })}
+                  </Box>
+                )}
+
+                {/* Section header */}
+                <Flex justify="space-between" align="baseline" mb={3}>
+                  <Heading
+                    as="h2"
+                    fontSize={{ base: "lg", md: "xl" }}
+                    fontWeight="800"
+                    letterSpacing="-0.01em"
+                    color={textPrimary}
+                  >
+                    {selectedCategory === "All" ? "All products" : selectedCategory}
+                  </Heading>
+                  {!loading && !error && filteredProducts.length > 0 && (
+                    <Text fontSize="xs" fontWeight="semibold" color={textMuted}>
+                      {filteredProducts.length}{" "}
+                      {filteredProducts.length === 1 ? "item" : "items"}
+                    </Text>
+                  )}
+                </Flex>
+
+                {error ? (
+                  <VStack {...stateCard}>
+                    <Circle size="56px" bg={errBg} color="red.400">
+                      <Icon as={FiAlertCircle} boxSize={6} />
+                    </Circle>
+                    <Heading size="sm" fontWeight="bold" color={textPrimary}>
+                      Couldn’t load products
+                    </Heading>
+                    <Text fontSize="sm" color={textMuted} maxW="sm">
+                      {error}
+                    </Text>
+                    <Button
+                      size="sm"
+                      colorScheme="brand"
+                      borderRadius="full"
+                      px={5}
+                      leftIcon={<FiRefreshCw />}
+                      onClick={() => fetchProducts(currentPage)}
+                    >
+                      Try again
+                    </Button>
+                  </VStack>
+                ) : loading ? (
+                  <SimpleGrid {...gridProps}>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <Box
+                        key={i}
+                        borderRadius="2xl"
+                        overflow="hidden"
+                        bg={cardBg}
+                        border="1px solid"
+                        borderColor={borderColor}
+                        p={3}
+                      >
+                        <AspectRatio ratio={1} w="full" mb={3}>
+                          <Skeleton borderRadius="xl" />
+                        </AspectRatio>
+                        <Skeleton height="14px" width="80%" mb={2} borderRadius="md" />
+                        <Skeleton height="12px" width="40%" borderRadius="md" />
+                      </Box>
+                    ))}
+                  </SimpleGrid>
+                ) : filteredProducts.length === 0 ? (
+                  <VStack {...stateCard}>
+                    <Circle size="56px" bg={emptyBg} color={emptyIcon}>
+                      <Icon as={FiShoppingBag} boxSize={6} />
+                    </Circle>
+                    <Heading size="sm" fontWeight="bold" color={textPrimary}>
+                      No products yet
+                    </Heading>
+                    <Text fontSize="sm" color={textMuted} maxW="sm">
+                      {selectedCategory === "All"
+                        ? "Check back soon for new arrivals."
+                        : `No products found under “${selectedCategory}”.`}
+                    </Text>
+                    {selectedCategory !== "All" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        borderRadius="full"
+                        px={5}
+                        onClick={() => setSelectedCategory("All")}
+                      >
+                        Show all products
+                      </Button>
+                    )}
+                  </VStack>
+                ) : (
+                  <SimpleGrid {...gridProps}>
+                    {filteredProducts.map((product, i) => (
+                      <MotionBox
+                        key={`${product._id || product.id || product.productId}-${product.name}`}
+                        h="full"
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          duration: 0.35,
+                          delay: Math.min(i, 8) * 0.04,
+                          ease: "easeOut",
+                        }}
+                      >
+                        <ProductCard product={product} />
+                      </MotionBox>
+                    ))}
+                  </SimpleGrid>
+                )}
+
+                {/* Pagination */}
+                {!loading && !error && totalPages > 1 && (
+                  <Flex justify="center" mt={8}>
+                    <HStack
+                      spacing={1}
+                      p={1}
                       bg={cardBg}
                       border="1px solid"
                       borderColor={borderColor}
-                      p={3}
+                      borderRadius="full"
+                      boxShadow="sm"
                     >
-                      <AspectRatio ratio={1} w="full" mb={3}>
-                        <Skeleton borderRadius="xl" />
-                      </AspectRatio>
-                      <Skeleton height="14px" width="80%" mb={2} borderRadius="md" />
-                      <Skeleton height="12px" width="40%" borderRadius="md" />
-                    </Box>
-                  ))}
-                </SimpleGrid>
-              ) : filteredProducts.length === 0 ? (
-                /* Empty State */
-                <VStack
-                  py={16}
-                  spacing={3}
-                  textAlign="center"
-                  bg={cardBg}
-                  borderRadius="3xl"
-                  border="1px solid"
-                  borderColor={borderColor}
-                  p={8}
-                >
-                  <Circle size="60px" bg="gray.100" color="gray.400">
-                    <Icon as={FiShoppingBag} boxSize={7} />
-                  </Circle>
-                  <Heading size="md" fontWeight="bold" color={textPrimary}>
-                    No products yet
-                  </Heading>
-                  <Text fontSize="sm" color={textMuted} maxW="sm">
-                    {selectedCategory === "All"
-                      ? "Check back soon for new arrivals."
-                      : `No products found under category "${selectedCategory}".`}
-                  </Text>
-                </VStack>
-              ) : (
-                /* Products Grid */
-                <SimpleGrid
-                  columns={{ base: 2, sm: 2, md: 3, lg: 4 }}
-                  spacing={{ base: 3, md: 5 }}
-                >
-                  {filteredProducts.map((product) => (
-                    <ProductCard
-                      key={`${product._id || product.id || product.productId}-${product.name}`}
-                      product={product}
-                    />
-                  ))}
-                </SimpleGrid>
-              )}
-
-              {/* Pagination Controls */}
-              {!loading && totalPages > 1 && (
-                <Flex justify="center" align="center" mt={10} gap={4}>
-                  <IconButton
-                    aria-label="Previous Page"
-                    icon={<FiChevronLeft size={18} />}
-                    size="sm"
-                    borderRadius="full"
-                    isDisabled={currentPage === 1 || loading}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    variant="outline"
-                    bg={cardBg}
-                    borderColor={borderColor}
-                  />
-
-                  <HStack spacing={1.5}>
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <Box
-                        as="button"
-                        key={i}
-                        aria-label={`Page ${i + 1}`}
-                        onClick={() => handlePageChange(i + 1)}
-                        w={currentPage === i + 1 ? "24px" : "8px"}
-                        h="8px"
+                      <IconButton
+                        aria-label="Previous page"
+                        icon={<FiChevronLeft size={18} />}
+                        size="sm"
+                        variant="ghost"
                         borderRadius="full"
-                        bg={currentPage === i + 1 ? "blue.600" : "gray.300"}
-                        transition="all 0.3s ease"
-                        _hover={{ bg: "blue.400" }}
+                        isDisabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
                       />
-                    ))}
-                  </HStack>
-
-                  <IconButton
-                    aria-label="Next Page"
-                    icon={<FiChevronRight size={18} />}
-                    size="sm"
-                    borderRadius="full"
-                    isDisabled={currentPage === totalPages || loading}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    variant="outline"
-                    bg={cardBg}
-                    borderColor={borderColor}
-                  />
-                </Flex>
-              )}
-            </MotionBox>
-          )}
-
-          {tab === "about" && (
-            <MotionBox
-              key="about-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <VStack spacing={6} align="stretch">
-                <ShopAbout shopData={shopData} />
-                <ShopImages shopData={shopData} />
-              </VStack>
-            </MotionBox>
-          )}
-
-          {tab === "info" && (
-            <MotionBox
-              key="info-tab"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} alignItems="start">
-                {/* Left Column: Location & Google Map */}
-                <LocationSection shopData={shopData} />
-
-                {/* Right Column: Opening Hours & Contact */}
-                <VStack spacing={6} align="stretch">
-                  <OperatingHours shopData={shopData} />
-                  <ContactSection shopData={shopData} />
-                </VStack>
-              </SimpleGrid>
-            </MotionBox>
-          )}
-        </AnimatePresence>
-
-        {/* Footer Section */}
-        <Box mt={16}>
-          <ShopFooterSection shopData={shopData} />
-        </Box>
-
-        {/* Mobile Sticky Bottom Action Bar */}
-        <Box
-          display={{ base: "block", md: "none" }}
-          position="fixed"
-          bottom={0}
-          left={0}
-          right={0}
-          zIndex={99}
-          bg={cardBg}
-          backdropFilter="blur(16px)"
-          borderTop="1px solid"
-          borderColor={borderColor}
-          p={3}
-          boxShadow="0 -4px 20px rgba(0, 0, 0, 0.08)"
-        >
-          <HStack spacing={2} w="full">
-            {phone && (
-              <Button
-                as="a"
-                href={`tel:${phone}`}
-                aria-label="Call"
-                size="md"
-                h="44px"
-                px={4}
-                borderRadius="xl"
-                border="1px solid"
-                borderColor={borderColor}
-                bg={cardBg}
-                color={textPrimary}
-                _active={{ transform: "scale(0.95)" }}
-              >
-                <FiPhone size={16} />
-              </Button>
+                      <Text
+                        fontSize="xs"
+                        fontWeight="bold"
+                        color={textPrimary}
+                        px={3}
+                        minW="88px"
+                        textAlign="center"
+                      >
+                        Page {currentPage} of {totalPages}
+                      </Text>
+                      <IconButton
+                        aria-label="Next page"
+                        icon={<FiChevronRight size={18} />}
+                        size="sm"
+                        variant="ghost"
+                        borderRadius="full"
+                        isDisabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                      />
+                    </HStack>
+                  </Flex>
+                )}
+              </MotionBox>
             )}
 
-            <Button
-              as="a"
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Directions"
-              size="md"
-              h="44px"
-              px={4}
-              borderRadius="xl"
-              border="1px solid"
-              borderColor={borderColor}
-              bg={cardBg}
-              color={textPrimary}
-              _active={{ transform: "scale(0.95)" }}
-            >
-              <FiNavigation size={16} />
-            </Button>
+            {tab === "about" && (
+              <MotionBox key="about-tab" {...tabMotion}>
+                <VStack spacing={4} align="stretch">
+                  <ShopAbout shopData={shopData} />
+                  <ShopImages shopData={shopData} />
+                </VStack>
+              </MotionBox>
+            )}
 
-            <Button
-              onClick={handleSwitchToProducts}
-              leftIcon={<FiShoppingBag />}
-              flex={1}
-              size="md"
-              h="44px"
-              borderRadius="xl"
-              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
-              color="white"
-              fontWeight="bold"
-              fontSize="sm"
-              boxShadow="0 4px 12px rgba(37, 99, 235, 0.3)"
-              _active={{ transform: "scale(0.97)" }}
-            >
-              Shop products
-            </Button>
-          </HStack>
-        </Box>
+            {tab === "info" && (
+              <MotionBox key="info-tab" {...tabMotion}>
+                <SimpleGrid
+                  columns={{ base: 1, lg: 2 }}
+                  spacing={{ base: 4, md: 6 }}
+                  alignItems="start"
+                >
+                  <LocationSection shopData={shopData} />
+                  <VStack spacing={{ base: 4, md: 6 }} align="stretch">
+                    <OperatingHours shopData={shopData} />
+                    <ContactSection shopData={shopData} />
+                  </VStack>
+                </SimpleGrid>
+              </MotionBox>
+            )}
+          </AnimatePresence>
+        </Container>
+
+        {/* Footer (desktop only) */}
+        {/* <Box mt={12} display={{ base: "none", md: "block" }}>
+          <ShopFooterSection shopData={shopData} />
+        </Box> */}
       </Box>
     );
   })

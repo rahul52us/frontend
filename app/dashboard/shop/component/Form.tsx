@@ -668,21 +668,21 @@ const ShopFormHero = ({
       borderColor={borderColor}
       boxShadow={{ base: "none", md: "0 6px 20px rgba(15, 23, 42, 0.04)" }}
     >
-      <Box px={{ base: 4, md: 4 }} py={{ base: 3, md: 4 }}>
-        <Flex align="center" justify="space-between" gap={3}>
-          <HStack spacing={2} fontSize="xs" fontWeight="600" color={stepText}>
+      <Box px={{ base: 3, md: 4 }} py={{ base: 2, md: 3.5 }}>
+        <Flex align="center" justify="space-between" gap={2}>
+          <HStack spacing={1.5} fontSize="xs" fontWeight="600" color={stepText}>
             <Icon as={activeSection.icon} boxSize={3.5} color={tone.text} />
-            <Text>Shop setup</Text>
+            <Text fontSize={{ base: "xs", md: "xs" }}>Shop setup</Text>
           </HStack>
           <Badge
-            px={3}
-            py={1}
+            px={{ base: 2, md: 3 }}
+            py={{ base: 0.5, md: 1 }}
             borderRadius="full"
             bg={tone.soft}
             color={tone.text}
             border="1px solid"
             borderColor={tone.border}
-            fontSize="11px"
+            fontSize={{ base: "10px", md: "11px" }}
             fontWeight="700"
             textTransform="none"
           >
@@ -691,21 +691,21 @@ const ShopFormHero = ({
         </Flex>
 
         <Flex
-          mt={3}
+          mt={{ base: 1.5, md: 2.5 }}
           align={{ base: "start", md: "center" }}
           justify="space-between"
           direction={{ base: "column", md: "row" }}
-          gap={2}
+          gap={1}
         >
           <Box>
-            <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color={titleColor} letterSpacing="-0.02em">
+            <Text fontSize={{ base: "md", md: "xl" }} fontWeight="700" color={titleColor} letterSpacing="-0.02em" lineHeight="short">
               {activeSection.headline}
             </Text>
             <Text display={{ base: "none", md: "block" }} mt={0.5} fontSize="sm" color={mutedText}>
               {activeSection.description}
             </Text>
           </Box>
-          <Text fontSize="xs" fontWeight="600" color={mutedText}>
+          <Text fontSize="xs" fontWeight="600" color={mutedText} display={{ base: "none", md: "block" }}>
             {activeSectionIndex + 1}/{total}
           </Text>
         </Flex>
@@ -805,9 +805,11 @@ const StickyActionBar = ({
   onSubmit: () => void;
   isUpdateMode: boolean;
 }) => {
-  const tone = useMerchantTone(activeSection.tint);
+  const tone = useColorModeValue("brand.700","brand.200");
+  const saveSectionHoverBg = useColorModeValue("brand.600", "brand.300");
+  const saveSectionHoverColor = useColorModeValue("white", "gray.900");
   const borderColor = useColorModeValue("rgba(226, 232, 240, 0.92)", dashboardPalette.border);
-  const backBg = useColorModeValue("#FFFFFF", "rgba(23,37,64,0.92)");
+  const backBg = useColorModeValue("brand.50", "rgba(23,37,64,0.92)");
   const backColor = useColorModeValue("#0F172A", dashboardPalette.text);
   const stepInfoColor = useColorModeValue("#64748B", dashboardPalette.textSoft);
 
@@ -818,25 +820,26 @@ const StickyActionBar = ({
       borderTop="1px solid"
       borderColor={borderColor}
     >
-      <Box px={{ base: 4, md: 0 }}>
+      <Box px={{ base: 3, md: 0 }}>
         <Flex
           align="center"
           justify="space-between"
-          gap={{ base: 2, md: 3 }}
-          py={{ base: 2.5, md: 3 }}
-          // pb={{"calc(env(safe-area-inset-bottom) + 0.65rem)"}}
+          gap={{ base: 1.5, md: 3 }}
+          py={{ base: 2, md: 3 }}
           wrap="nowrap"
         >
           <Button
             variant="outline"
             borderRadius="16px"
-            minH={{ base: "42px", md: "44px" }}
-            minW={{ base: "86px", sm: "96px" }}
-            px={{ base: 3.5, md: 4 }}
+            h={{ base: "36px", md: "42px" }}
+            minH={{ base: "36px", md: "42px" }}
+            minW={{ base: "70px", sm: "90px" }}
+            fontSize={{ base: "xs", md: "sm" }}
+            px={{ base: 2.5, md: 4 }}
             bg={backBg}
             borderColor="var(--dashboard-border-strong)"
             color={backColor}
-            leftIcon={<FaChevronLeft size={13} />}
+            leftIcon={<FaChevronLeft size={11} />}
             onClick={onBack}
             isDisabled={activeSectionIndex === 0 || isSubmitting}
             _hover={{ bg: "var(--dashboard-surface-alt)", color: "var(--dashboard-text)" }}
@@ -861,19 +864,21 @@ const StickyActionBar = ({
             Step {activeSectionIndex + 1} / {sections.length} · {activeSection.label}
           </Text>
 
-          <HStack spacing={{ base: 2, md: 3 }} flexShrink={0}>
+          <HStack spacing={{ base: 1.5, md: 3 }} flexShrink={0}>
             {isUpdateMode ? (
               <Button
                 variant="outline"
                 borderRadius="16px"
-                minH={{ base: "42px", md: "44px" }}
-                px={{ base: 3.5, md: 4.5 }}
+                h={{ base: "36px", md: "42px" }}
+                minH={{ base: "36px", md: "42px" }}
+                fontSize={{ base: "xs", md: "sm" }}
+                px={{ base: 2.5, md: 4.5 }}
                 bg={backBg}
-                borderColor={tone.border}
-                color={tone.text}
+                borderColor={tone}
+                color={tone}
                 onClick={onSaveSection}
                 isLoading={isSubmitting}
-                _hover={{ bg: tone.soft }}
+                _hover={{ bg: saveSectionHoverBg, color: saveSectionHoverColor }}
               >
                 Save section
               </Button>
@@ -881,31 +886,35 @@ const StickyActionBar = ({
 
             {isLastStep ? (
               <Button
-                minH={{ base: "42px", md: "44px" }}
-                px={{ base: 4, sm: 6 }}
-                minW={{ base: "112px", sm: "132px" }}
+                h={{ base: "36px", md: "42px" }}
+                minH={{ base: "36px", md: "42px" }}
+                px={{ base: 3, sm: 5, md: 6 }}
+                minW={{ base: "84px", sm: "100px", md: "120px" }}
+                fontSize={{ base: "xs", md: "sm" }}
                 borderRadius="16px"
-                bg={tone.gradient}
+                bg={tone}
                 color="white"
                 onClick={onSubmit}
                 isLoading={isSubmitting}
-                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _hover={{ bg: tone, filter: "brightness(0.92)" }}
                 _active={{ transform: "scale(0.98)" }}
               >
                 {isUpdateMode ? "Save shop" : "Publish shop"}
               </Button>
             ) : (
               <Button
-                minH={{ base: "36px", md: "44px" }}
-                px={{ base: 4, sm: 6 }}
-                minW={{ base: "112px", sm: "132px" }}
+                h={{ base: "36px", md: "42px" }}
+                minH={{ base: "36px", md: "42px" }}
+                px={{ base: 3, sm: 5, md: 6 }}
+                minW={{ base: "74px", sm: "90px", md: "110px" }}
+                fontSize={{ base: "xs", md: "sm" }}
                 borderRadius="16px"
-                bg={tone.gradient}
+                bg={tone}
                 color="white"
-                rightIcon={<FaChevronRight size={13} />}
+                rightIcon={<FaChevronRight size={11} />}
                 onClick={onNext}
                 isDisabled={isSubmitting}
-                _hover={{ bg: tone.gradient, filter: "brightness(0.98)" }}
+                _hover={{ bg: tone, filter: "brightness(0.92)" }}
                 _active={{ transform: "scale(0.98)" }}
               >
                 Next

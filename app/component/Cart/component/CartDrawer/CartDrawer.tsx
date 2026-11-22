@@ -65,14 +65,14 @@ const CartDrawer = observer(
     const borderColor = useColorModeValue("blackAlpha.100", "whiteAlpha.100");
     const textColor = useColorModeValue("gray.900", "whiteAlpha.900");
     const mutedText = useColorModeValue("gray.500", "gray.400");
-    const accentText = useColorModeValue("purple.600", "purple.200");
+    const accentText = useColorModeValue("brand.600", "brand.200");
     const subtleBg = useColorModeValue("gray.50", "whiteAlpha.50");
     const clearHoverBg = useColorModeValue("red.50", "whiteAlpha.100");
-    const purpleSurfaceBg = useColorModeValue("purple.50", "whiteAlpha.50");
-    const purpleBorder = useColorModeValue("purple.100", "whiteAlpha.100");
-    const progressTrack = useColorModeValue("purple.100", "whiteAlpha.100");
-    const emptyIconBg = useColorModeValue("purple.50", "whiteAlpha.100");
-    const emptyRingBg = useColorModeValue("purple.50", "whiteAlpha.50");
+    const brandSurfaceBg = useColorModeValue("brand.50", "whiteAlpha.50");
+    const brandBorder = useColorModeValue("brand.100", "whiteAlpha.100");
+    const progressTrack = useColorModeValue("brand.100", "whiteAlpha.100");
+    const emptyIconBg = useColorModeValue("brand.50", "whiteAlpha.100");
+    const emptyRingBg = useColorModeValue("brand.50", "whiteAlpha.50");
     const successBg = useColorModeValue("green.50", "whiteAlpha.50");
     const successBorder = useColorModeValue("green.100", "whiteAlpha.100");
 
@@ -272,7 +272,7 @@ const CartDrawer = observer(
                       </Text>
                       {!isEmpty && (
                         <Badge
-                          bg={purpleSurfaceBg}
+                          bg={brandSurfaceBg}
                           color={accentText}
                           fontSize="10px"
                           fontWeight="700"
@@ -411,9 +411,9 @@ const CartDrawer = observer(
                   <Box
                     p={3}
                     rounded="xl"
-                    bg={isFreeDelivery ? successBg : purpleSurfaceBg}
+                    bg={isFreeDelivery ? successBg : brandSurfaceBg}
                     border="1px solid"
-                    borderColor={isFreeDelivery ? successBorder : purpleBorder}
+                    borderColor={isFreeDelivery ? successBorder : brandBorder}
                   >
                     <Flex align="center" gap={2.5}>
                       <Flex
@@ -421,7 +421,7 @@ const CartDrawer = observer(
                         h="34px"
                         rounded="lg"
                         bg={surfaceBg}
-                        color={isFreeDelivery ? "green.500" : "purple.500"}
+                        color={isFreeDelivery ? "green.500" : "brand.500"}
                         align="center"
                         justify="center"
                         flexShrink={0}
@@ -469,7 +469,7 @@ const CartDrawer = observer(
                       size="xs"
                       mt={2.5}
                       rounded="full"
-                      colorScheme={isFreeDelivery ? "green" : "purple"}
+                      colorScheme={isFreeDelivery ? "green" : "brand"}
                       bg={progressTrack}
                     />
                   </Box>
@@ -502,7 +502,7 @@ const CartDrawer = observer(
                             boxShadow="0 4px 16px -12px rgba(15, 23, 42, 0.18)"
                             transition="border-color 0.2s ease, box-shadow 0.2s ease"
                             _hover={{
-                              borderColor: "purple.200",
+                              borderColor: "brand.200",
                               boxShadow:
                                 "0 8px 24px -16px rgba(128, 90, 213, 0.45)",
                             }}
@@ -554,10 +554,10 @@ const CartDrawer = observer(
                   rounded="xl"
                   textAlign="left"
                   transition="border-color 0.15s ease, background 0.15s ease"
-                  _hover={{ borderColor: "purple.300" }}
+                  _hover={{ borderColor: "brand.300" }}
                   _focusVisible={{
                     outline: "2px solid",
-                    outlineColor: "purple.400",
+                    outlineColor: "brand.400",
                     outlineOffset: "2px",
                   }}
                   onClick={onAddressModalOpen}
@@ -573,7 +573,7 @@ const CartDrawer = observer(
                       w="38px"
                       h="38px"
                       rounded="xl"
-                      bg={purpleSurfaceBg}
+                      bg={brandSurfaceBg}
                       color="var(--color-primary)"
                       align="center"
                       justify="center"
@@ -717,7 +717,7 @@ const CartDrawer = observer(
                   w="full"
                   h="50px"
                   colorScheme="brand"
-                  bg="purple.600"
+                  bg="brand.600"
                   color="white"
                   rounded="xl"
                   fontWeight="700"
@@ -725,8 +725,8 @@ const CartDrawer = observer(
                   rightIcon={<Icon as={FiArrowRight} boxSize={4} />}
                   onClick={handleCheckout}
                   boxShadow="0 12px 24px -14px rgba(128, 90, 213, 0.9)"
-                  _hover={{ bg: "purple.700", transform: "translateY(-1px)" }}
-                  _active={{ bg: "purple.700", transform: "scale(0.99)" }}
+                  _hover={{ bg: "brand.700", transform: "translateY(-1px)" }}
+                  _active={{ bg: "brand.700", transform: "scale(0.99)" }}
                 >
                   Checkout · ₹{formatAmount(grandTotal)}
                 </Button>

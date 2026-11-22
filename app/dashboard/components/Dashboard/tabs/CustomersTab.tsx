@@ -1,375 +1,72 @@
 "use client";
 
-import { FileViewer } from "@capacitor/file-viewer";
-import { Directory, Filesystem } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
-import { AddIcon, ArrowBackIcon, CopyIcon, DownloadIcon } from "@chakra-ui/icons";
 import {
-  Badge,
   Box,
-  Button,
-  Circle,
-  Divider,
-  Flex,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Heading,
-  HStack,
-  Icon,
-  IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  SimpleGrid,
-  Skeleton,
-  SkeletonCircle,
-  Spinner,
-  Stack,
   Text,
-  Textarea,
   useBreakpointValue,
-  useColorMode,
-  useColorModeValue,
   useDisclosure,
   useToast,
-  VStack
 } from "@chakra-ui/react";
-import { motion } from "framer-motion";
 import { observer } from "mobx-react-lite";
 import React, { useEffect, useMemo, useState } from "react";
-import { FaWhatsapp } from "react-icons/fa";
-import {
-  FiArrowDownLeft,
-  FiArrowUpRight,
-  FiChevronRight,
-  FiMail,
-  FiPhone,
-  FiSearch,
-  FiTrash2,
-  FiTrendingDown,
-  FiTrendingUp,
-  FiUserPlus,
-  FiUsers,
-} from "react-icons/fi";
 import ConfirmationModal from "../../../../component/common/ConfirmationModal/ConfirmationModal";
-import BottomSheetDrawer from "../../../../component/common/Drawer/BottomSheetDrawer";
-import CustomDrawer from "../../../../component/common/Drawer/CustomDrawer";
-import {
-  dashboardMobileLedgerDetailTheme as androidTheme,
-  dashboardHeroGradient,
-  dashboardPalette,
-  dashboardMobileLedgerPalette as mobileLedgerPalette,
-} from "../../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../../store/stores";
-import { ProductStatCard } from "../../../products/components/ProductStatCard";
+import { MerchantPageShell } from "../../common/merchantDashboardUI";
 import {
-  MerchantBadge,
-  merchantBadgeStyles,
-  merchantGhostButtonProps,
-  MerchantPageShell
-} from "../../common/merchantDashboardUI";
-
-const MotionBox = motion(Box);
-
-type BuyerProfile = {
-  _id: string;
-  partyType?: "customer" | "supplier";
-  displayName?: string;
-  tags?: string[];
-  outstandingBalance?: number;
-  isBlocked?: boolean;
-  source?: "manual" | "import" | "order";
-  createdAt?: string;
-  updatedAt?: string;
-  buyerId?: {
-    fullName?: string;
-    phoneE164?: string;
-    emailNormalized?: string;
-  };
-};
-
-type LedgerEntryType = "sale" | "payment" | "adjustment";
-type LedgerDirection = "debit" | "credit";
-type LedgerReferenceType = "order" | "manual" | "refund" | "import" | "saleRecord";
-
-type BuyerLedgerEntry = {
-  _id: string;
-  entryType: LedgerEntryType;
-  amount: number;
-  direction: LedgerDirection;
-  referenceType?: LedgerReferenceType;
-  referenceId?: string;
-  linkedLedgerEntryId?: string;
-  linkedSaleRecordId?: string;
-  notes?: string;
-  entryDate?: string;
-  balanceAfter?: number;
-  status?: "active" | "reversed";
-  createdAt?: string;
-  reversedAt?: string;
-  relationType?: "direct" | "reversal";
-  isPrimarySaleLedgerEntry?: boolean;
-  linkedSaleSummary?: SaleRecordDetailsSummary;
-};
-
-type BuyerSaleRecordStatus = "draft" | "posted" | "void";
-
-type BuyerSaleItem = {
-  itemName: string;
-  quantity: number;
-  unitPrice: number;
-  discount?: number;
-  tax?: number;
-  lineTotal?: number;
-};
-
-type BuyerSaleRecord = {
-  _id: string;
-  saleDate?: string;
-  items?: BuyerSaleItem[];
-  itemCount?: number;
-  itemPreview?: string;
-  subtotal?: number;
-  discountTotal?: number;
-  taxTotal?: number;
-  grandTotal: number;
-  notes?: string;
-  status: BuyerSaleRecordStatus;
-  source?: "manual" | "import" | "order";
-  ledgerEntryId?: string;
-  postedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-type SaleFormItem = {
-  itemSource: "catalog" | "manual";
-  productId?: string;
-  itemName: string;
-  quantity: string;
-  unitPrice: string;
-  discount: string;
-  tax: string;
-};
-
-type InventoryProductSuggestion = {
-  _id: string;
-  name: string;
-  price?: number;
-  stock?: number;
-  brand?: string;
-  sku?: string;
-};
-
-type LedgerSummary = {
-  totalDebit: number;
-  totalCredit: number;
-  outstandingBalance: number;
-  creditLimit: number;
-  isBlocked: boolean;
-};
-
-type BuyerImportContact = {
-  fullName?: string;
-  phone?: string;
-  email?: string;
-};
-
-type SaleRecordDetailsSummary = {
-  saleAmount: number;
-  paidAmount: number;
-  adjustmentDebitAmount: number;
-  adjustmentCreditAmount: number;
-  remainingDue: number;
-  isPosted: boolean;
-  eventCount: number;
-};
-
-type BuyerSaleRecordDetails = {
-  saleRecord: BuyerSaleRecord;
-  timeline: BuyerLedgerEntry[];
-  summary: SaleRecordDetailsSummary;
-};
-
-type PendingSaleInvoiceDownload = {
-  saleId: string;
-  source: "sale" | "ledger";
-  saleRecord?: BuyerSaleRecord;
-  ledgerEntry?: BuyerLedgerEntry;
-};
-
-type BuyerFilterKey = "all" | "receivable" | "payable" | "settled";
-
-type BuyerFormErrors = Partial<Record<"fullName" | "phone" | "email", string>>;
-
-const isValidImportEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email);
-const isValidImportPhone = (phone: string) => /^[0-9+\-\s()]{7,20}$/.test(phone);
-
-const getReadableErrorMessage = (error: any, fallback = "Please try again.") => {
-  if (!error) {
-    return fallback;
-  }
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (Array.isArray(error?.data) && error.data.length > 0) {
-    return String(error.data[0]);
-  }
-
-  if (typeof error?.message === "string" && error.message.trim()) {
-    return error.message;
-  }
-
-  if (typeof error?.response?.data === "string" && error.response.data.trim()) {
-    return error.response.data;
-  }
-
-  if (typeof error?.response?.data?.message === "string" && error.response.data.message.trim()) {
-    return error.response.data.message;
-  }
-
-  return fallback;
-};
-
-const isMissingImportEndpointError = (error: any) => {
-  const text = getReadableErrorMessage(error, "").toLowerCase();
-
-  return (
-    text.includes("cannot post /api/buyer/import-contacts") ||
-    text.includes("cannot post /buyer/import-contacts") ||
-    text.includes("not found") ||
-    error?.statusCode === 404 ||
-    error?.response?.status === 404
-  );
-};
-
-const defaultLedgerSummary: LedgerSummary = {
-  totalDebit: 0,
-  totalCredit: 0,
-  outstandingBalance: 0,
-  creditLimit: 0,
-  isBlocked: false,
-};
-
-const renderMerchantBadge = (
-  label: React.ReactNode,
-  tone: "accent" | "success" | "danger" | "soft" = "soft",
-  props?: Record<string, any>,
-) => {
-  return (
-    <MerchantBadge tone={tone} textTransform="capitalize" {...props}>
-      {label}
-    </MerchantBadge>
-  );
-};
-
-const defaultSaleFormItem = (): SaleFormItem => ({
-  itemSource: "manual",
-  productId: "",
-  itemName: "",
-  quantity: "1",
-  unitPrice: "",
-  discount: "0",
-  tax: "0",
-});
-
-const getDefaultBuyerFormValues = () => ({
-  fullName: "",
-  phone: "",
-  phoneCountryCode: "+91",
-  phoneNationalNumber: "",
-  email: "",
-  displayName: "",
-  tags: "",
-  addressLine1: "",
-  addressLine2: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  country: "India",
-  notes: "",
-  partyType: "customer" as "customer" | "supplier",
-});
+  CustomerDetailView,
+  CustomerFormModals,
+  CustomerListView,
+  PaymentModal,
+  SaleDetailsModal,
+  SaleRecordModal,
+} from "./customers";
+import { useCustomerTheme } from "./customers/theme";
+import {
+  BuyerFilterKey,
+  BuyerFormErrors,
+  BuyerImportContact,
+  BuyerLedgerEntry,
+  BuyerProfile,
+  BuyerSaleRecord,
+  BuyerSaleRecordDetails,
+  defaultLedgerSummary,
+  defaultSaleFormItem,
+  getDefaultBuyerFormValues,
+  getDefaultLedgerFormValues,
+  InventoryProductSuggestion,
+  LedgerFormValues,
+  LedgerSummary,
+  PendingSaleInvoiceDownload,
+  SaleFormItem,
+} from "./customers/types";
+import {
+  canDownloadLedgerInvoice,
+  composePhoneFromForm,
+  deliverPdfBlob,
+  ensureDeviceContactsPermission,
+  formatCurrency,
+  formatShortId,
+  getBuyerBalanceState,
+  getBuyerDisplayName,
+  getFileNameFromContentDisposition,
+  getLinkedSaleRecordIdFromEntry,
+  getLinkedSaleRemainingDue,
+  getReadableErrorMessage,
+  isMissingImportEndpointError,
+  isValidImportEmail,
+  isValidImportPhone,
+  readBlobErrorMessage,
+  splitPhoneParts,
+} from "./customers/utils";
 
 const CustomersTab: React.FC = observer(() => {
-  const { colorMode } = useColorMode();
-  const cAccentSoft = useColorModeValue("blue.50", dashboardPalette.accentSoft);
-  const cAccentStrong = useColorModeValue("blue.700", dashboardPalette.accentStrong);
-  const cAccent = useColorModeValue("blue.600", dashboardPalette.accent);
-  const cTextMuted = useColorModeValue("gray.500", dashboardPalette.textMuted);
-  const cText = useColorModeValue("gray.800", dashboardPalette.text);
-  const cTextSoft = useColorModeValue("gray.500", dashboardPalette.textSoft);
-  const cSurface = useColorModeValue("white", dashboardPalette.surface);
-  const cSurfaceAlt = useColorModeValue("gray.50", dashboardPalette.surfaceAlt);
-  const cBorder = useColorModeValue("gray.200", dashboardPalette.border);
-  const cBorderStrong = useColorModeValue("gray.300", dashboardPalette.borderStrong);
-  const cSurfaceSoft = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cPage = useColorModeValue("white", dashboardPalette.page);
-  const cDanger = useColorModeValue("red.500", dashboardPalette.danger);
-  const cSuccess = useColorModeValue("green.500", dashboardPalette.success);
-  const cHeroGradient = useColorModeValue(
-    "white",
-    dashboardHeroGradient,
-  );
-  const cGlassSurface = useColorModeValue("white", "rgba(11, 17, 32, 0.82)");
-  const cSoftShadow = useColorModeValue(
-    "0 4px 6px rgba(15, 23, 42, 0.04)",
-    "0 22px 48px rgba(0, 0, 0, 0.32)",
-  );
-  const cStrongShadow = useColorModeValue(
-    "0 24px 56px rgba(15, 23, 42, 0.12)",
-    "0 28px 60px rgba(0, 0, 0, 0.38)",
-  );
-  const cInputBg = useColorModeValue("white", dashboardPalette.surfaceAlt);
-  const cInputMutedBg = useColorModeValue("gray.50", dashboardPalette.surfaceSoft);
-  const cInputBorder = useColorModeValue("gray.200", dashboardPalette.borderStrong);
-  const cPlaceholder = useColorModeValue("gray.400", dashboardPalette.textSoft);
-  const cSuccessSoftBg = useColorModeValue("green.50", dashboardPalette.successSoft);
-  const cDangerSoftBg = useColorModeValue("red.50", dashboardPalette.dangerSoft);
-  const cFormInfoBg = useColorModeValue("rgba(69, 104, 255, 0.06)", "rgba(59, 130, 246, 0.12)");
-  const cSurfaceElevated = useColorModeValue("white", dashboardPalette.shellElevated);
-  const cSurfaceMuted = useColorModeValue("gray.50", dashboardPalette.shell);
-  const cBadgeBg = useColorModeValue("gray.100", dashboardPalette.surfaceSoft);
-  const cDangerAccentSoft = useColorModeValue("red.50", dashboardPalette.dangerSoft);
-  const cSuccessAccentSoft = useColorModeValue("green.50", dashboardPalette.successSoft);
-  const cIconButtonHover = useColorModeValue("blackAlpha.100", "whiteAlpha.120");
-  const cIconButtonMutedBg = useColorModeValue("gray.50", dashboardPalette.surfaceSoft);
-  const cCardShadow = useColorModeValue("0 1px 6px rgba(0,0,0,0.04)", "0 16px 32px rgba(0,0,0,0.22)");
-  const cFabShadow = useColorModeValue("0 4px 16px rgba(0,0,0,0.18)", "0 18px 36px rgba(0,0,0,0.34)");
-  
-                            
+  const { auth, buyerStore, shopStore } = stores;
+  const theme = useCustomerTheme();
+  const { cPage, mobileLedgerPalette } = theme;
   const toast = useToast();
+
+  // Disclosures
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    isOpen: isLedgerEntryOpen,
-    onOpen: onLedgerEntryOpen,
-    onClose: onLedgerEntryClose,
-  } = useDisclosure();
-  const {
-    isOpen: isDeleteOpen,
-    onOpen: onDeleteOpen,
-    onClose: onDeleteClose,
-  } = useDisclosure();
-  const {
-    isOpen: isReverseOpen,
-    onOpen: onReverseOpen,
-    onClose: onReverseClose,
-  } = useDisclosure();
-  const {
-    isOpen: isSaleRecordOpen,
-    onOpen: onSaleRecordOpen,
-    onClose: onSaleRecordClose,
-  } = useDisclosure();
   const {
     isOpen: isImportOpen,
     onOpen: onImportOpen,
@@ -386,6 +83,26 @@ const CustomersTab: React.FC = observer(() => {
     onClose: onBuyerSuccessClose,
   } = useDisclosure();
   const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
+  const {
+    isOpen: isReverseOpen,
+    onOpen: onReverseOpen,
+    onClose: onReverseClose,
+  } = useDisclosure();
+  const {
+    isOpen: isLedgerEntryOpen,
+    onOpen: onLedgerEntryOpen,
+    onClose: onLedgerEntryClose,
+  } = useDisclosure();
+  const {
+    isOpen: isSaleRecordOpen,
+    onOpen: onSaleRecordOpen,
+    onClose: onSaleRecordClose,
+  } = useDisclosure();
+  const {
     isOpen: isSaleDetailsOpen,
     onOpen: onSaleDetailsOpen,
     onClose: onSaleDetailsClose,
@@ -395,8 +112,8 @@ const CustomersTab: React.FC = observer(() => {
     onOpen: onInvoiceOptionsOpen,
     onClose: onInvoiceOptionsClose,
   } = useDisclosure();
-  const { auth, buyerStore, shopStore } = stores;
 
+  // State
   const [buyers, setBuyers] = useState<BuyerProfile[]>([]);
   const [activePartyType, setActivePartyType] = useState<"customer" | "supplier">("customer");
   const [selectedLedgerBuyer, setSelectedLedgerBuyer] = useState<BuyerProfile | null>(null);
@@ -434,7 +151,6 @@ const CustomersTab: React.FC = observer(() => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-
   const [ledgerPage, setLedgerPage] = useState(1);
   const [ledgerTotalPages, setLedgerTotalPages] = useState(1);
   const [ledgerTotal, setLedgerTotal] = useState(0);
@@ -442,9 +158,9 @@ const CustomersTab: React.FC = observer(() => {
   const [saleTotalPages, setSaleTotalPages] = useState(1);
   const [saleTotal, setSaleTotal] = useState(0);
 
-  const limit = 10;
-  const ledgerLimit = 10;
-  const saleLimit = 10;
+  const limit = 20;
+  const ledgerLimit = 20;
+  const saleLimit = 20;
 
   const [formValues, setFormValues] = useState(getDefaultBuyerFormValues);
   const [buyerFormErrors, setBuyerFormErrors] = useState<BuyerFormErrors>({});
@@ -452,29 +168,21 @@ const CustomersTab: React.FC = observer(() => {
   const [isPickedContactFlow, setIsPickedContactFlow] = useState(false);
   const [lastCreatedBuyer, setLastCreatedBuyer] = useState<BuyerProfile | null>(null);
 
-  const [ledgerFormValues, setLedgerFormValues] = useState({
-    entryType: "payment" as LedgerEntryType,
-    amount: "",
-    direction: "credit" as LedgerDirection,
-    referenceType: "manual" as LedgerReferenceType,
-    referenceId: "",
-    linkedLedgerEntryId: "",
-    linkedSaleRecordId: "",
-    entryDate: "",
-    notes: "",
-  });
+  const [ledgerFormValues, setLedgerFormValues] = useState<LedgerFormValues>(getDefaultLedgerFormValues);
+
   const [saleFormValues, setSaleFormValues] = useState({
     saleDate: "",
     notes: "",
     postToLedger: true,
     items: [defaultSaleFormItem()],
   });
+
   const [importDefaultTags, setImportDefaultTags] = useState("");
 
-  const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
   const isMobileLedgerView = useBreakpointValue({ base: true, md: false }) ?? false;
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isDesktopBuyerView, setIsDesktopBuyerView] = useState(false);
+
   const isAndroidRuntime = useMemo(() => {
     if (typeof window === "undefined") return false;
     const platform = (window as any)?.Capacitor?.getPlatform?.();
@@ -508,37 +216,29 @@ const CustomersTab: React.FC = observer(() => {
 
   useEffect(() => {
     if (!selectedLedgerBuyer || typeof window === "undefined") return;
-
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedLedgerBuyer]);
 
+  const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime || isMobileDevice;
   const useCompactBuyerView = !isDesktopBuyerView;
   const canUseDeviceContactImport = isAndroidRuntime;
-  const activeSaleItemQuery = useMemo(() => {
-    if (activeSaleItemIndex === null) {
-      return "";
-    }
 
-    return saleFormValues.items[activeSaleItemIndex]?.itemName?.trim() || "";
-  }, [activeSaleItemIndex, saleFormValues.items]);
-
-  const getBuyerDisplayName = (buyer: BuyerProfile) => {
-    return buyer.displayName || buyer.buyerId?.fullName || "-";
-  };
   const normalizedActivePartyType = activePartyType === "supplier" ? "supplier" : "customer";
   const isSupplierTab = normalizedActivePartyType === "supplier";
   const partySingularLabel = isSupplierTab ? "Supplier" : "Customer";
   const partyPluralLabel = isSupplierTab ? "Suppliers" : "Customers";
   const selectedPartyType = (selectedLedgerBuyer?.partyType || normalizedActivePartyType) as "customer" | "supplier";
   const isSelectedSupplier = selectedPartyType === "supplier";
-  const transactionSingularLabel = isSupplierTab ? "Purchase" : "Sale";
   const selectedTransactionSingularLabel = isSelectedSupplier ? "Purchase" : "Sale";
-  const selectedTransactionPluralLabel = isSelectedSupplier ? "Purchases" : "Sales";
-  const companyDisplayName =
-    (typeof auth.company === "object" && auth.company?.companyName) ||
-    (typeof auth.company === "object" && auth.company?.name) ||
-    "My Business";
+
+  const activeSaleItemQuery = useMemo(() => {
+    if (activeSaleItemIndex === null) {
+      return "";
+    }
+    return saleFormValues.items[activeSaleItemIndex]?.itemName?.trim() || "";
+  }, [activeSaleItemIndex, saleFormValues.items]);
+
   const buyerOverview = useMemo(() => {
     return buyers.reduce(
       (summary, buyer) => {
@@ -567,34 +267,7 @@ const CustomersTab: React.FC = observer(() => {
       { receivable: 0, payable: 0, active: 0 },
     );
   }, [buyers, normalizedActivePartyType]);
-  const outstandingHeadlineLabel = isSupplierTab ? "You will give" : "You will get";
-  const oppositeOutstandingLabel = isSupplierTab ? "You will get" : "You will give";
-  const mobileLeftSummary = isSupplierTab
-    ? {
-      label: oppositeOutstandingLabel,
-      value: buyerOverview.receivable,
-      color: "green.500",
-    }
-    : {
-      label: oppositeOutstandingLabel,
-      value: buyerOverview.payable,
-      color: "red.500",
-    };
-  const mobileRightSummary = isSupplierTab
-    ? {
-      label: outstandingHeadlineLabel,
-      value: buyerOverview.payable,
-      color: "red.500",
-    }
-    : {
-      label: outstandingHeadlineLabel,
-      value: buyerOverview.receivable,
-      color: "green.500",
-    };
-  const mobileListHeading = `All ${partyPluralLabel}`;
-  const whatsappSupportUrl = `https://wa.me/919899129943?text=${encodeURIComponent(
-    `Hello, I need help with the ${partySingularLabel.toLowerCase()} ledger.`,
-  )}`;
+
   const buyerFilterOptions = useMemo<{ key: BuyerFilterKey; label: string }[]>(() => {
     if (isSupplierTab) {
       return [
@@ -610,93 +283,34 @@ const CustomersTab: React.FC = observer(() => {
       { key: "settled", label: "Settled" },
     ];
   }, [isSupplierTab]);
-  const getBuyerPartyType = (buyer?: BuyerProfile | null) =>
-    (buyer?.partyType === "supplier" ? "supplier" : buyer?.partyType === "customer" ? "customer" : normalizedActivePartyType) as
-      | "customer"
-      | "supplier";
-  const getBuyerBalanceState = (buyer?: BuyerProfile | null): Exclude<BuyerFilterKey, "all"> => {
-    const outstanding = Number(buyer?.outstandingBalance || 0);
-    if (!Number.isFinite(outstanding) || outstanding === 0) {
-      return "settled";
+
+  const filteredBuyers = useMemo(() => {
+    if (balanceFilter === "all") {
+      return buyers;
     }
+    return buyers.filter((buyer) => getBuyerBalanceState(buyer, normalizedActivePartyType) === balanceFilter);
+  }, [balanceFilter, buyers, normalizedActivePartyType]);
 
-    const isSupplier = getBuyerPartyType(buyer) === "supplier";
-    const isReceivable = isSupplier ? outstanding < 0 : outstanding > 0;
-    return isReceivable ? "receivable" : "payable";
-  };
-  const getBuyerBalanceMeta = (buyer?: BuyerProfile | null) => {
-    const state = getBuyerBalanceState(buyer);
-    const amount = Math.abs(Number(buyer?.outstandingBalance || 0));
-    const isSupplier = getBuyerPartyType(buyer) === "supplier";
-
-    if (state === "settled") {
-      return {
-        state,
-        amount: 0,
-        color: cTextMuted,
-        helper: "—",
-        listLabel: "Settled",
-        detailLabel: "Account settled",
-      };
+  useEffect(() => {
+    const isAllowedFilter = buyerFilterOptions.some((option) => option.key === balanceFilter);
+    if (!isAllowedFilter) {
+      setBalanceFilter("all");
     }
+  }, [balanceFilter, buyerFilterOptions]);
 
-    if (state === "receivable") {
-      return {
-        state,
-        amount,
-        color: cSuccess,
-        helper: "to receive",
-        listLabel: "To receive",
-        detailLabel: isSupplier ? "Supplier owes you" : "Customer owes you",
-      };
-    }
-
-    return {
-      state,
-      amount,
-      color: cDanger,
-      helper: "to pay",
-      listLabel: "To pay",
-      detailLabel: isSupplier ? "You owe supplier" : "You owe customer",
-    };
-  };
-  const getBuyerAvatarHue = (buyer: BuyerProfile) =>
-    Array.from(`${buyer._id}-${getBuyerDisplayName(buyer)}`).reduce((total, char) => total + char.charCodeAt(0), 0) % 360;
-  const getBuyerPrimaryContact = (buyer?: BuyerProfile | null) =>
-    buyer?.buyerId?.phoneE164 || buyer?.buyerId?.emailNormalized || "No contact added";
-  const getBuyerActionPhone = (buyer?: BuyerProfile | null) => String(buyer?.buyerId?.phoneE164 || "").trim();
-  const getWhatsAppHref = (phone?: string) => {
-    const digits = String(phone || "").replace(/\D/g, "");
-    return digits ? `https://wa.me/${digits}` : "";
-  };
-  const openExternalLink = (url: string) => {
-    if (!url || typeof window === "undefined") {
-      return;
-    }
-
-    if (url.startsWith("tel:") || url.startsWith("mailto:")) {
-      window.location.href = url;
-      return;
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-  const clearBuyerFormErrors = (...fields: (keyof BuyerFormErrors)[]) => {
+  const clearBuyerFormErrors = (...fields: Array<"fullName" | "phone" | "email">) => {
     setBuyerFormErrors((prev) => {
-      if (!fields.some((field) => prev[field])) {
-        return prev;
-      }
-
-      const nextErrors = { ...prev };
+      const next = { ...prev };
       fields.forEach((field) => {
-        delete nextErrors[field];
+        delete next[field];
       });
-      return nextErrors;
+      return next;
     });
   };
+
   const validateBuyerForm = () => {
     const errors: BuyerFormErrors = {};
-    const composedPhone = composePhoneFromForm();
+    const composedPhone = composePhoneFromForm(formValues);
     const fullName = formValues.fullName.trim();
     const displayName = formValues.displayName.trim();
     const email = formValues.email.trim();
@@ -730,328 +344,6 @@ const CustomersTab: React.FC = observer(() => {
         errors.email ||
         "Please review the highlighted fields.",
     };
-  };
-  const filteredBuyers = useMemo(() => {
-    if (balanceFilter === "all") {
-      return buyers;
-    }
-
-    return buyers.filter((buyer) => getBuyerBalanceState(buyer) === balanceFilter);
-  }, [balanceFilter, buyers, normalizedActivePartyType]);
-
-  useEffect(() => {
-    const isAllowedFilter = buyerFilterOptions.some((option) => option.key === balanceFilter);
-    if (!isAllowedFilter) {
-      setBalanceFilter("all");
-    }
-  }, [balanceFilter, buyerFilterOptions]);
-
-  const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toFixed(2)}`;
-  const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : "-");
-  const formatShortId = (value?: string) => (value ? value.slice(-6) : "");
-  const formatDateOnly = (value?: string) =>
-    value ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-";
-  const formatCompactCurrency = (amount: number) => {
-    const numericAmount = Number(amount || 0);
-    const hasDecimals = Math.abs(numericAmount % 1) > 0;
-    return `Rs ${numericAmount.toLocaleString("en-IN", {
-      minimumFractionDigits: hasDecimals ? 2 : 0,
-      maximumFractionDigits: hasDecimals ? 2 : 0,
-    })}`;
-  };
-  const getSaleRecordItemCount = (record: BuyerSaleRecord) =>
-    typeof record.itemCount === "number"
-      ? record.itemCount
-      : Array.isArray(record.items)
-        ? record.items.length
-        : 0;
-  const getSaleRecordItemPreview = (record: BuyerSaleRecord) => {
-    if (typeof record.itemPreview === "string" && record.itemPreview.trim()) {
-      return record.itemPreview;
-    }
-
-    const itemCount = getSaleRecordItemCount(record);
-    const previewText =
-      itemCount > 0 && Array.isArray(record.items)
-        ? record.items
-          .slice(0, 2)
-          .map((item) => `${item.itemName} x ${item.quantity}`)
-          .join(", ")
-        : "-";
-
-    return itemCount > 2 ? `${previewText} +${itemCount - 2} more` : previewText;
-  };
-  const formatRelativeTime = (value?: string) => {
-    if (!value) {
-      return "Recently added";
-    }
-
-    const timestamp = new Date(value).getTime();
-    if (Number.isNaN(timestamp)) {
-      return "Recently added";
-    }
-
-    const diffInSeconds = Math.round((timestamp - Date.now()) / 1000);
-    const absoluteSeconds = Math.abs(diffInSeconds);
-    const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-    if (absoluteSeconds < 60) {
-      return formatter.format(diffInSeconds, "second");
-    }
-    if (absoluteSeconds < 3600) {
-      return formatter.format(Math.round(diffInSeconds / 60), "minute");
-    }
-    if (absoluteSeconds < 86400) {
-      return formatter.format(Math.round(diffInSeconds / 3600), "hour");
-    }
-    if (absoluteSeconds < 604800) {
-      return formatter.format(Math.round(diffInSeconds / 86400), "day");
-    }
-    if (absoluteSeconds < 2629800) {
-      return formatter.format(Math.round(diffInSeconds / 604800), "week");
-    }
-    if (absoluteSeconds < 31557600) {
-      return formatter.format(Math.round(diffInSeconds / 2629800), "month");
-    }
-
-    return formatter.format(Math.round(diffInSeconds / 31557600), "year");
-  };
-  const getBuyerInitials = (buyer: BuyerProfile) => {
-    const rawName = getBuyerDisplayName(buyer).trim();
-    if (!rawName || rawName === "-") {
-      return "C";
-    }
-
-    const parts = rawName.split(/\s+/).filter(Boolean);
-    if (parts.length === 1) {
-      return parts[0].slice(0, 1).toUpperCase();
-    }
-
-    return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
-  };
-  const getBuyerSecondaryLabel = (buyer: BuyerProfile) => {
-    const relativeLabel = formatRelativeTime(buyer.updatedAt || buyer.createdAt);
-    const sourceLabel = buyer.source ? buyer.source.charAt(0).toUpperCase() + buyer.source.slice(1) : "Manual";
-    return `${relativeLabel} - ${sourceLabel}`;
-  };
-  const splitPhoneParts = (value?: string) => {
-    const raw = String(value || "").trim();
-    if (!raw) {
-      return {
-        phoneCountryCode: "+91",
-        phoneNationalNumber: "",
-        phone: "",
-      };
-    }
-
-    const normalized = raw.replace(/[^0-9+]/g, "");
-    const explicitMatch = normalized.match(/^(\+\d{1,4})(\d{4,})$/);
-    if (explicitMatch) {
-      return {
-        phoneCountryCode: explicitMatch[1],
-        phoneNationalNumber: explicitMatch[2],
-        phone: `${explicitMatch[1]}${explicitMatch[2]}`,
-      };
-    }
-
-    const digitsOnly = normalized.replace(/\D/g, "");
-    if (!digitsOnly) {
-      return {
-        phoneCountryCode: "+91",
-        phoneNationalNumber: "",
-        phone: "",
-      };
-    }
-
-    if (digitsOnly.length > 10) {
-      const countryDigits = digitsOnly.slice(0, digitsOnly.length - 10);
-      const localDigits = digitsOnly.slice(-10);
-      return {
-        phoneCountryCode: `+${countryDigits}`,
-        phoneNationalNumber: localDigits,
-        phone: `+${countryDigits}${localDigits}`,
-      };
-    }
-
-    return {
-      phoneCountryCode: "+91",
-      phoneNationalNumber: digitsOnly,
-      phone: `+91${digitsOnly}`,
-    };
-  };
-  const composePhoneFromForm = () => {
-    const localPhone = String(formValues.phoneNationalNumber || "").replace(/\D/g, "");
-    const countryCode = String(formValues.phoneCountryCode || "")
-      .replace(/[^\d+]/g, "")
-      .trim();
-
-    if (localPhone) {
-      return `${countryCode || ""}${localPhone}`.trim();
-    }
-
-    return formValues.phone.trim();
-  };
-  const formatLedgerReference = (entry: BuyerLedgerEntry) =>
-    entry.referenceId
-      ? `${entry.referenceType || "manual"}: ${formatShortId(entry.referenceId)}`
-      : entry.referenceType || "manual";
-  const formatSignedAmount = (entry: BuyerLedgerEntry) =>
-    `${entry.direction === "credit" ? "-" : "+"}${formatCurrency(Number(entry.amount || 0))}`;
-  const getLinkedSaleRecordIdFromEntry = (entry?: BuyerLedgerEntry | null) => {
-    if (!entry) {
-      return "";
-    }
-
-    return (
-      entry.linkedSaleRecordId ||
-      (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "")
-    );
-  };
-  const getLinkedSaleRemainingDue = (entry?: BuyerLedgerEntry | null) => {
-    const remainingDue = Number(entry?.linkedSaleSummary?.remainingDue);
-    return Number.isFinite(remainingDue) ? remainingDue : null;
-  };
-  const getEntryRemainingText = (entry?: BuyerLedgerEntry | null) => {
-    const remainingDue = getLinkedSaleRemainingDue(entry);
-    if (remainingDue === null) {
-      return "-";
-    }
-    if (remainingDue < 0) {
-      return `Overpaid ${formatCurrency(Math.abs(remainingDue))}`;
-    }
-    return formatCurrency(remainingDue);
-  };
-  const getEntryPaidText = (entry?: BuyerLedgerEntry | null) => {
-    const paidAmount = Number(entry?.linkedSaleSummary?.paidAmount);
-    return Number.isFinite(paidAmount) ? formatCurrency(paidAmount) : "-";
-  };
-  const canPayEntry = (entry?: BuyerLedgerEntry | null) => {
-    if (!entry || entry.status === "reversed" || entry.direction !== "debit") {
-      return false;
-    }
-
-    const remainingDue = getLinkedSaleRemainingDue(entry);
-    return remainingDue === null || remainingDue > 0;
-  };
-  const isEntryFullySettled = (entry?: BuyerLedgerEntry | null) => {
-    const remainingDue = getLinkedSaleRemainingDue(entry);
-    return remainingDue !== null && remainingDue <= 0;
-  };
-
-  const canDownloadLedgerInvoice = (entry?: BuyerLedgerEntry | null) =>
-    Boolean(
-      entry &&
-      entry.status !== "reversed" &&
-      selectedPartyType !== "supplier" &&
-      (Boolean(getLinkedSaleRecordIdFromEntry(entry)) || entry.direction === "debit"),
-    );
-  const getBuyerLedgerDirectionLabel = (
-    direction: LedgerDirection,
-    entryType?: LedgerEntryType,
-    partyType: "customer" | "supplier" = selectedPartyType,
-  ) => {
-    if (partyType === "supplier") {
-      if (direction === "debit") {
-        return "You will give";
-      }
-      if (entryType === "payment") {
-        return "Payment sent";
-      }
-      return "Due reduced";
-    }
-
-    if (direction === "debit") {
-      return "You will get";
-    }
-    if (entryType === "payment") {
-      return "Payment received";
-    }
-    return "Due reduced";
-  };
-  const getBuyerLedgerDirectionColorScheme = (
-    direction: LedgerDirection,
-    entryType?: LedgerEntryType,
-    partyType: "customer" | "supplier" = selectedPartyType,
-  ) => {
-    if (partyType === "supplier") {
-      if (direction === "debit") {
-        return "red";
-      }
-      return "green";
-    }
-
-    if (direction === "debit") {
-      return "green";
-    }
-    if (entryType === "payment") {
-      return "green";
-    }
-    return "red";
-  };
-  const getLedgerEffectLabel = (entry: BuyerLedgerEntry) => {
-    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
-      return selectedPartyType === "supplier" ? "Payment sent" : "Payment received";
-    }
-    return getBuyerLedgerDirectionLabel(entry.direction, entry.entryType);
-  };
-  const getLedgerEffectColorScheme = (entry: BuyerLedgerEntry) => {
-    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
-      return "green";
-    }
-    return getBuyerLedgerDirectionColorScheme(entry.direction, entry.entryType);
-  };
-  const getLedgerAmountColor = (entry: BuyerLedgerEntry) => {
-    if (entry.direction === "debit" && isEntryFullySettled(entry)) {
-      return dashboardPalette.success;
-    }
-    return entry.direction === "credit" ? dashboardPalette.success : cAccentStrong;
-  };
-  const getBuyerLedgerDirectionTextColor = (
-    direction: LedgerDirection,
-    entryType?: LedgerEntryType,
-    partyType: "customer" | "supplier" = selectedPartyType,
-  ) => {
-    if (partyType === "supplier") {
-      if (direction === "debit") {
-        return "red.700";
-      }
-      return "green.700";
-    }
-
-    if (direction === "debit") {
-      return "green.700";
-    }
-    if (entryType === "payment") {
-      return "green.700";
-    }
-    return "red.700";
-  };
-  const getLedgerEntryTypeLabel = (
-    entryType: LedgerEntryType,
-    partyType: "customer" | "supplier" = selectedPartyType,
-  ) => {
-    if (entryType === "sale") {
-      return partyType === "supplier" ? "Purchase" : "Sale";
-    }
-    if (entryType === "payment") {
-      return "Payment";
-    }
-    return "Correction";
-  };
-  const getTimelineTitle = (entry: BuyerLedgerEntry) => {
-    if (entry.relationType === "reversal") {
-      return "Reversal Correction";
-    }
-    if (entry.isPrimarySaleLedgerEntry) {
-      return "Posted To Ledger";
-    }
-    if (entry.entryType === "payment") {
-      return isSelectedSupplier ? "Payment Sent" : "Payment Received";
-    }
-    if (entry.entryType === "adjustment") {
-      return "Balance Correction";
-    }
-    return isSelectedSupplier ? "Purchase Ledger Entry" : "Sale Ledger Entry";
   };
 
   const fetchBuyers = async (pageToLoad = 1, query = search) => {
@@ -1169,8 +461,8 @@ const CustomersTab: React.FC = observer(() => {
       setSaleTotal(nextTotal);
     } catch (error: any) {
       toast({
-        title: `Failed to load ${transactionSingularLabel.toLowerCase()} records`,
-        description: error?.message || `Unable to fetch ${transactionSingularLabel.toLowerCase()} records`,
+        title: `Failed to load ${selectedTransactionSingularLabel.toLowerCase()} records`,
+        description: error?.message || `Unable to fetch ${selectedTransactionSingularLabel.toLowerCase()} records`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -1231,207 +523,6 @@ const CustomersTab: React.FC = observer(() => {
     } as BuyerSaleRecord);
   };
 
-  const blobToBase64 = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result;
-        if (typeof result !== "string") {
-          reject(new Error("Failed to read file data"));
-          return;
-        }
-        const base64 = result.split(",")[1];
-        if (!base64) {
-          reject(new Error("Failed to encode file"));
-          return;
-        }
-        resolve(base64);
-      };
-      reader.onerror = () => reject(reader.error || new Error("Failed to read file"));
-      reader.readAsDataURL(blob);
-    });
-
-  const getFileNameFromContentDisposition = (contentDisposition?: string, fallback = "invoice.pdf") => {
-    if (!contentDisposition) {
-      return fallback;
-    }
-
-    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
-    if (utf8Match?.[1]) {
-      return decodeURIComponent(utf8Match[1]).replace(/["']/g, "");
-    }
-
-    const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
-    if (basicMatch?.[1]) {
-      return basicMatch[1].trim();
-    }
-
-    return fallback;
-  };
-
-  const readBlobErrorMessage = async (error: any, fallback = "Please try again.") => {
-    const blobLike = error?.response?.data;
-    if (blobLike instanceof Blob) {
-      try {
-        const rawText = await blobLike.text();
-        if (!rawText) {
-          return fallback;
-        }
-
-        try {
-          const parsed = JSON.parse(rawText);
-          if (typeof parsed?.message === "string" && parsed.message.trim()) {
-            return parsed.message;
-          }
-        } catch {
-          return rawText.trim() || fallback;
-        }
-      } catch {
-        return fallback;
-      }
-    }
-
-    return getReadableErrorMessage(error, fallback);
-  };
-
-  const ensureNativeInvoiceStoragePermission = async () => {
-    try {
-      const permissionStatus = await Filesystem.checkPermissions();
-      if (permissionStatus.publicStorage === "granted") {
-        return;
-      }
-
-      const requested = await Filesystem.requestPermissions();
-      if (requested.publicStorage !== "granted") {
-        throw new Error("Storage permission was denied");
-      }
-    } catch (error: any) {
-      const message = String(error?.message || "").toLowerCase();
-      if (message.includes("not implemented") || message.includes("unavailable")) {
-        return;
-      }
-      throw error;
-    }
-  };
-
-  const deliverPdfBlob = async (pdfBlob: Blob, fileName: string) => {
-    if (typeof window === "undefined") {
-      return "downloaded" as const;
-    }
-
-    const isNativeCapacitor = Boolean((window as any)?.Capacitor?.isNativePlatform?.()) || isAndroidRuntime;
-    if (!isNativeCapacitor) {
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const anchor = document.createElement("a");
-      anchor.href = blobUrl;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.download = fileName;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-      return "downloaded" as const;
-    }
-
-    const base64Data = await blobToBase64(pdfBlob);
-
-    try {
-      await ensureNativeInvoiceStoragePermission();
-
-      const filePath = `BusinessSahayata/Invoices/${fileName}`;
-      await Filesystem.writeFile({
-        path: filePath,
-        data: base64Data,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-
-      try {
-        const uriResult = await Filesystem.getUri({
-          path: filePath,
-          directory: Directory.Documents,
-        });
-        const localOpenPath = uriResult.uri.startsWith("file://")
-          ? uriResult.uri.replace("file://", "")
-          : uriResult.uri;
-
-        try {
-          await FileViewer.openDocumentFromLocalPath({
-            path: localOpenPath,
-          });
-          return "savedPrompted" as const;
-        } catch (viewerError: any) {
-          console.warn("Saved invoice could not be opened directly, falling back to share", viewerError);
-        }
-
-        const shareAvailability = await Share.canShare();
-        if (shareAvailability.value) {
-          await Share.share({
-            title: fileName,
-            files: [uriResult.uri],
-            dialogTitle: "Open invoice",
-          });
-          return "savedPrompted" as const;
-        }
-      } catch (openError: any) {
-        const openMessage = String(openError?.message || "").toLowerCase();
-        if (openMessage.includes("cancel") || openMessage.includes("abort")) {
-          return "saved" as const;
-        }
-        console.warn("Invoice saved but open/share chooser for saved file was unavailable", openError);
-      }
-
-      return "saved" as const;
-    } catch (saveError: any) {
-      console.warn("Falling back from native file save for invoice delivery", saveError);
-
-      try {
-        const cachePath = `invoices/${fileName}`;
-        await Filesystem.writeFile({
-          path: cachePath,
-          data: base64Data,
-          directory: Directory.Cache,
-          recursive: true,
-        });
-
-        const uriResult = await Filesystem.getUri({
-          path: cachePath,
-          directory: Directory.Cache,
-        });
-
-        const shareAvailability = await Share.canShare();
-        if (shareAvailability.value) {
-          await Share.share({
-            title: fileName,
-            files: [uriResult.uri],
-            dialogTitle: "Share invoice",
-          });
-          return "shared" as const;
-        }
-      } catch (shareError: any) {
-        const shareMessage = String(shareError?.message || "").toLowerCase();
-        if (shareMessage.includes("cancel") || shareMessage.includes("abort")) {
-          return "cancelled" as const;
-        }
-        console.warn("Falling back from native share for invoice delivery", shareError);
-      }
-    }
-
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    const anchor = document.createElement("a");
-    anchor.href = blobUrl;
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-
-    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-    return "downloaded" as const;
-  };
-
   const openSaleInvoiceOptions = (download: PendingSaleInvoiceDownload) => {
     if (!selectedLedgerBuyer?._id || !download.saleId) {
       return;
@@ -1476,7 +567,7 @@ const CustomersTab: React.FC = observer(() => {
         response?.headers?.["content-disposition"],
         `INV-${formatShortId(saleId).toUpperCase() || saleId}.pdf`,
       );
-      const deliveryResult = await deliverPdfBlob(response.data, fileName);
+      const deliveryResult = await deliverPdfBlob(response.data, fileName, isAndroidRuntime);
       if (deliveryResult !== "cancelled") {
         toast({
           title:
@@ -1492,7 +583,7 @@ const CustomersTab: React.FC = observer(() => {
               ? "Saved in Documents/BusinessSahayata/Invoices."
               : includeLedgerHistory
                 ? "Invoice includes linked ledger history."
-              : undefined,
+                : undefined,
           status: "success",
           duration: 2600,
           isClosable: true,
@@ -1545,7 +636,7 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const handleDownloadLedgerEntryInvoice = async (entry: BuyerLedgerEntry) => {
-    if (!selectedLedgerBuyer?._id || !entry?._id || !canDownloadLedgerInvoice(entry)) {
+    if (!selectedLedgerBuyer?._id || !entry?._id || !canDownloadLedgerInvoice(entry, selectedPartyType)) {
       return;
     }
 
@@ -1566,7 +657,7 @@ const CustomersTab: React.FC = observer(() => {
         response?.headers?.["content-disposition"],
         `INV-MANUAL-${formatShortId(entry._id).toUpperCase() || entry._id}.pdf`,
       );
-      const deliveryResult = await deliverPdfBlob(response.data, fileName);
+      const deliveryResult = await deliverPdfBlob(response.data, fileName, isAndroidRuntime);
       if (deliveryResult !== "cancelled") {
         toast({
           title:
@@ -1642,17 +733,7 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const resetLedgerForm = () => {
-    setLedgerFormValues({
-      entryType: "payment",
-      amount: "",
-      direction: "credit",
-      referenceType: "manual",
-      referenceId: "",
-      linkedLedgerEntryId: "",
-      linkedSaleRecordId: "",
-      entryDate: "",
-      notes: "",
-    });
+    setLedgerFormValues(getDefaultLedgerFormValues());
   };
 
   const resetSaleForm = () => {
@@ -1725,9 +806,7 @@ const CustomersTab: React.FC = observer(() => {
     contacts.forEach((contact) => {
       const fullNameRaw = String(contact.fullName || "").trim();
       const phoneRaw = String(contact.phone || "").trim();
-      const emailRaw = String(contact.email || "")
-        .trim()
-        .toLowerCase();
+      const emailRaw = String(contact.email || "").trim().toLowerCase();
 
       const fullName = fullNameRaw ? fullNameRaw.slice(0, 120) : undefined;
       const phone = phoneRaw && isValidImportPhone(phoneRaw) ? phoneRaw : undefined;
@@ -1769,26 +848,6 @@ const CustomersTab: React.FC = observer(() => {
       phone: String(phone || "").trim() || undefined,
       email: String(email || "").trim().toLowerCase() || undefined,
     };
-  };
-
-  const ensureDeviceContactsPermission = async (capacitorContacts: any) => {
-    if (!capacitorContacts?.checkPermissions) {
-      return;
-    }
-
-    const currentPermission = await capacitorContacts.checkPermissions();
-    if (currentPermission?.contacts === "granted") {
-      return;
-    }
-
-    if (!capacitorContacts.requestPermissions) {
-      throw new Error("Contacts permission is not available on this device");
-    }
-
-    const requestedPermission = await capacitorContacts.requestPermissions();
-    if (requestedPermission?.contacts !== "granted") {
-      throw new Error("Contacts permission was denied");
-    }
   };
 
   const submitImportedContacts = async (contacts: BuyerImportContact[]) => {
@@ -2236,10 +1295,10 @@ const CustomersTab: React.FC = observer(() => {
       items: prev.items.map((item, idx) =>
         idx === index
           ? {
-            ...item,
-            [key]: value,
-            ...(key === "itemName" ? { productId: "", itemSource: "manual" as const } : {}),
-          }
+              ...item,
+              [key]: value,
+              ...(key === "itemName" ? { productId: "", itemSource: "manual" as const } : {}),
+            }
           : item,
       ),
     }));
@@ -2251,15 +1310,15 @@ const CustomersTab: React.FC = observer(() => {
       items: prev.items.map((item, idx) =>
         idx === index
           ? {
-            ...item,
-            itemSource: "catalog",
-            productId: product._id,
-            itemName: product.name,
-            unitPrice:
-              typeof product.price === "number" && Number.isFinite(product.price)
-                ? String(product.price)
-                : item.unitPrice,
-          }
+              ...item,
+              itemSource: "catalog",
+              productId: product._id,
+              itemName: product.name,
+              unitPrice:
+                typeof product.price === "number" && Number.isFinite(product.price)
+                  ? String(product.price)
+                  : item.unitPrice,
+            }
           : item,
       ),
     }));
@@ -2294,16 +1353,6 @@ const CustomersTab: React.FC = observer(() => {
       }
       return current > index ? current - 1 : current;
     });
-  };
-
-  const calculateSaleLineTotal = (item: SaleFormItem) => {
-    const quantity = Number(item.quantity || 0);
-    const unitPrice = Number(item.unitPrice || 0);
-    const discount = Math.max(Number(item.discount || 0), 0);
-    const tax = Math.max(Number(item.tax || 0), 0);
-    const subtotal = Math.max(quantity * unitPrice, 0);
-    const cappedDiscount = Math.min(discount, subtotal);
-    return Math.max(subtotal - cappedDiscount + tax, 0);
   };
 
   const handleCreateSaleRecord = async () => {
@@ -2396,40 +1445,6 @@ const CustomersTab: React.FC = observer(() => {
     }
   };
 
-  const handlePostSaleRecordToLedger = async (saleId: string) => {
-    if (!selectedLedgerBuyer?._id || !saleId) {
-      return;
-    }
-
-    setPostingSaleId(saleId);
-    try {
-      await buyerStore.postBuyerSaleRecordToLedger(selectedLedgerBuyer._id, saleId, {});
-      toast({
-        title: `${selectedTransactionSingularLabel} posted to ledger`,
-        status: "success",
-        duration: 2500,
-        isClosable: true,
-      });
-
-      setLedgerPage(1);
-      await Promise.all([
-        fetchSaleRecords(selectedLedgerBuyer._id, salePage),
-        fetchLedgerEntries(selectedLedgerBuyer._id, 1),
-        fetchBuyers(page, search),
-      ]);
-    } catch (error: any) {
-      toast({
-        title: `Failed to post ${selectedTransactionSingularLabel.toLowerCase()}`,
-        description: error?.message || "Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setPostingSaleId("");
-    }
-  };
-
   const openReverseModal = (entry: BuyerLedgerEntry) => {
     setSelectedLedgerEntry(entry);
     onReverseOpen();
@@ -2440,9 +1455,10 @@ const CustomersTab: React.FC = observer(() => {
       entry.linkedSaleRecordId ||
       (entry.referenceType === "saleRecord" ? entry.referenceId || "" : "");
     const remainingDue = getLinkedSaleRemainingDue(entry);
-    const suggestedPaymentAmount = remainingDue !== null && remainingDue > 0
-      ? remainingDue
-      : Number(entry.amount || 0);
+    const suggestedPaymentAmount =
+      remainingDue !== null && remainingDue > 0
+        ? remainingDue
+        : Number(entry.amount || 0);
 
     setPaymentContextEntry(entry);
     setLedgerFormValues({
@@ -2620,2910 +1636,7 @@ const CustomersTab: React.FC = observer(() => {
     };
   }, [activeSaleItemIndex, activeSaleItemQuery, companyId, isSaleRecordOpen, shopStore]);
 
-  const buyerTableData = useMemo(() => {
-    return buyers.map((buyer) => ({
-      ...buyer,
-      name: getBuyerDisplayName(buyer),
-      phone: buyer.buyerId?.phoneE164 || "-",
-      email: buyer.buyerId?.emailNormalized || "-",
-      sourceBadge: renderMerchantBadge(buyer.source || "manual", "accent"),
-      outstandingText: formatCurrency(Number(buyer.outstandingBalance || 0)),
-      statusBadge: renderMerchantBadge(
-        buyer.isBlocked ? "Blocked" : "Active",
-        buyer.isBlocked ? "danger" : "success",
-      ),
-      tagsDisplay:
-        buyer.tags && buyer.tags.length ? (
-          <HStack spacing={1} wrap="wrap">
-            {buyer.tags.slice(0, 3).map((tag, idx) => (
-              <Badge
-                key={`${buyer._id}-${tag}-${idx}`}
-                {...merchantBadgeStyles}
-                px={2.5}
-                py={1}
-                bg={cSurfaceAlt}
-                color={cTextSoft}
-                borderColor={cBorderStrong}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </HStack>
-        ) : (
-          "-"
-        ),
-    }));
-  }, [buyers]);
-
-  const buyerColumns = [
-    { headerName: "Name", key: "name" },
-    { headerName: "Phone", key: "phone" },
-    { headerName: "Email", key: "email" },
-    {
-      headerName: "Source",
-      key: "sourceBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.sourceBadge },
-    },
-    { headerName: "Outstanding", key: "outstandingText" },
-    {
-      headerName: "Status",
-      key: "statusBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.statusBadge },
-    },
-    {
-      headerName: "Tags",
-      key: "tagsDisplay",
-      type: "component",
-      metaData: { component: (row: any) => row.tagsDisplay },
-    },
-    { headerName: "Action", key: "action", type: "table-actions", props: { isSticky: true } },
-  ];
-
-  const buyerTableActions = {
-    actionBtn: {
-      viewKey: {
-        showViewButton: true,
-        title: "View Ledger",
-        function: (row: BuyerProfile) => openLedgerView(row),
-      },
-      deleteKey: {
-        showDeleteButton: true,
-        title: `Delete ${partySingularLabel}`,
-        function: (row: BuyerProfile) => openDeleteModal(row),
-      },
-    },
-    pagination: {
-      show: true,
-      currentPage: page,
-      totalPages: totalPages || 1,
-      limit,
-      onClick: (nextPage: number) => {
-        setPage(nextPage);
-        fetchBuyers(nextPage, search);
-      },
-    },
-    search: {
-      show: true,
-      placeholder: "Search by name, phone or email",
-      searchValue: search,
-      onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
-    },
-  };
-
-  const renderBuyerProfilesMobile = () => renderCustomersReferenceList(true);
-
-  const ledgerTableData = ledgerEntries.map((entry) => ({
-    ...entry,
-    entryDate: entry.entryDate,
-    typeBadge: renderMerchantBadge(
-      getLedgerEntryTypeLabel(entry.entryType),
-      entry.entryType === "payment"
-        ? "success"
-        : entry.entryType === "sale"
-          ? "accent"
-          : "soft",
-    ),
-    directionBadge: renderMerchantBadge(
-      getLedgerEffectLabel(entry),
-      getLedgerEffectColorScheme(entry) === "green" ? "success" : "danger",
-    ),
-    amountDisplay: (
-      <Text
-        color={getLedgerAmountColor(entry)}
-        fontWeight="bold"
-      >
-        {formatCurrency(entry.amount || 0)}
-      </Text>
-    ),
-    remainingText: getEntryRemainingText(entry),
-    paidText: getEntryPaidText(entry),
-    referenceText: entry.referenceId ? (
-      <HStack spacing={1}>
-        <Text color={cTextMuted}>{entry.referenceType || "manual"}:</Text>
-        <Text fontWeight="600" color={cAccentStrong} cursor="pointer" onClick={() => {
-          navigator.clipboard.writeText(entry.referenceId || '');
-          toast({ title: 'ID Copied', status: 'success', duration: 1000, isClosable: true });
-        }}>
-          {formatShortId(entry.referenceId)}
-        </Text>
-      </HStack>
-    ) : (
-      <Text color={cTextMuted}>{entry.referenceType || "manual"}</Text>
-    ),
-    statusBadge: renderMerchantBadge(entry.status || "active", entry.status === "reversed" ? "danger" : "success"),
-    activityAction:
-      entry.status === "reversed" ? (
-        <Text color={cTextSoft}>-</Text>
-      ) : (
-        <HStack spacing={2}>
-          {getLinkedSaleRecordIdFromEntry(entry) && (
-            <Button
-              size="xs"
-              onClick={() => openSaleDetailsFromLedgerEntry(entry)}
-              {...merchantGhostButtonProps}
-              h="32px"
-              minW="auto"
-              px={3}
-              color={cAccentStrong}
-            >
-              Details
-            </Button>
-          )}
-          {canDownloadLedgerInvoice(entry) && (
-            <Button
-              size="xs"
-              variant="outline"
-              isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-              onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-              {...merchantGhostButtonProps}
-              h="32px"
-              minW="auto"
-              px={3}
-              color={cAccentStrong}
-            >
-              Invoice
-            </Button>
-          )}
-          {canPayEntry(entry) && (
-            <Button
-              size="xs"
-              onClick={() => openPayModal(entry)}
-              {...merchantGhostButtonProps}
-              h="32px"
-              minW="auto"
-              px={3}
-              color={dashboardPalette.success}
-            >
-              Pay
-            </Button>
-          )}
-        </HStack>
-      ),
-  }));
-
-  const ledgerColumns = [
-    { headerName: "Date", key: "entryDate", type: "date" },
-    {
-      headerName: "Effect",
-      key: "directionBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.directionBadge },
-    },
-    {
-      headerName: "Amount",
-      key: "amountDisplay",
-      type: "component",
-      metaData: { component: (row: any) => row.amountDisplay },
-    },
-    { headerName: "Paid", key: "paidText" },
-    { headerName: "Remaining", key: "remainingText" },
-    { headerName: "Notes", key: "notes" },
-    {
-      headerName: "Status",
-      key: "statusBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.statusBadge },
-    },
-    {
-      headerName: "Action",
-      key: "activityAction",
-      type: "component",
-      metaData: { component: (row: any) => row.activityAction },
-    },
-  ];
-
-  const ledgerTableActions = {
-    pagination: {
-      show: true,
-      currentPage: ledgerPage,
-      totalPages: ledgerTotalPages || 1,
-      limit: ledgerLimit,
-      onClick: (nextPage: number) => {
-        if (!selectedLedgerBuyer?._id) {
-          return;
-        }
-        setLedgerPage(nextPage);
-        fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
-      },
-    },
-  };
-
-  const saleTableData = saleRecords.map((record) => {
-    const itemsCount = getSaleRecordItemCount(record);
-
-    return {
-      ...record,
-      saleDate: record.saleDate,
-      itemsCount,
-      idDisplay: (
-        <Text
-          fontWeight="600"
-          color={cAccentStrong}
-          cursor="pointer"
-          textDecoration="underline"
-          onClick={() => openSaleDetails(record)}
-        >
-          {record._id.slice(-6)}
-        </Text>
-      ),
-      itemPreview: getSaleRecordItemPreview(record),
-      grandTotalText: formatCurrency(Number(record.grandTotal || 0)),
-      statusBadge: renderMerchantBadge(
-        record.status,
-        record.status === "posted" ? "success" : record.status === "void" ? "danger" : "accent",
-      ),
-      postAction:
-        record.status === "draft" && !record.ledgerEntryId ? (
-          <Button
-            size="xs"
-            variant="outline"
-            isLoading={postingSaleId === record._id}
-            onClick={() => handlePostSaleRecordToLedger(record._id)}
-            {...merchantGhostButtonProps}
-            h="32px"
-            minW="auto"
-            px={3}
-            color={cAccentStrong}
-          >
-            Post {isSelectedSupplier ? "purchase" : "sale"} to ledger
-          </Button>
-        ) : (
-          <Text color={cTextSoft}>-</Text>
-        ),
-    };
-  });
-
-
-  const saleColumns = [
-    { headerName: "Date", key: "saleDate", type: "date" },
-    {
-      headerName: "ID",
-      key: "idDisplay",
-      type: "component",
-      metaData: { component: (row: any) => row.idDisplay },
-    },
-    { headerName: "Items", key: "itemPreview" },
-    { headerName: "Item Count", key: "itemsCount" },
-    { headerName: "Total", key: "grandTotalText" },
-    { headerName: "Notes", key: "notes" },
-    {
-      headerName: "Status",
-      key: "statusBadge",
-      type: "component",
-      metaData: { component: (row: any) => row.statusBadge },
-    },
-    {
-      headerName: "Action",
-      key: "postAction",
-      type: "component",
-      metaData: { component: (row: any) => row.postAction },
-    },
-  ];
-
-  const saleTableActions = {
-    pagination: {
-      show: true,
-      currentPage: salePage,
-      totalPages: saleTotalPages || 1,
-      limit: saleLimit,
-      onClick: (nextPage: number) => {
-        if (!selectedLedgerBuyer?._id) {
-          return;
-        }
-        setSalePage(nextPage);
-        fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
-      },
-    },
-  };
-
-  const renderLedgerMobile = () => (
-    <VStack align="stretch" spacing={androidTheme.spacing.sectionGap}>
-      {ledgerLoading ? (
-        <VStack spacing={3} py={8} px={4} {...androidTheme.card}>
-          <Spinner color={androidTheme.colors.primary} thickness="3px" size="lg" />
-          <Text fontSize="sm" color={androidTheme.colors.textMuted}>
-            Loading ledger activity...
-          </Text>
-        </VStack>
-      ) : ledgerEntries.length === 0 ? (
-        <VStack
-          spacing={2}
-          py={8}
-          px={5}
-          {...androidTheme.card}
-          bg="linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)"
-        >
-          <Text fontSize="sm" fontWeight="800" color="#1E3A5F">
-            No activity yet
-          </Text>
-          <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
-            {isSelectedSupplier
-              ? "Purchases and payments for this supplier will appear here."
-              : "Sales and payments for this customer will appear here."}
-          </Text>
-        </VStack>
-      ) : (
-        ledgerEntries.map((entry) => {
-          const entryTone =
-            entry.entryType === "sale"
-              ? androidTheme.tones.sale
-              : entry.entryType === "payment"
-                ? androidTheme.tones.payment
-                : androidTheme.tones.adjustment;
-
-          return (
-            <Box
-              key={entry._id}
-              {...androidTheme.card}
-              borderColor={entryTone.softBorder}
-              bg="linear-gradient(180deg, #FFFFFF 0%, #FBF8F2 100%)"
-              boxShadow="0 16px 38px rgba(15, 23, 42, 0.08)"
-              overflow="hidden"
-            >
-              <Box
-                px={4}
-                py={3.5}
-                bgGradient={entryTone.softBg}
-                borderBottomWidth="1px"
-                borderBottomColor={androidTheme.colors.border}
-              >
-                <Flex justify="space-between" align="flex-start" gap={3}>
-                  <VStack align="start" spacing={2} flex="1" minW={0}>
-                    <HStack spacing={2} flexWrap="wrap">
-                      <Badge
-                        {...androidTheme.badge}
-                        colorScheme={
-                          entry.entryType === "sale"
-                            ? "orange"
-                            : entry.entryType === "payment"
-                              ? "green"
-                              : "blue"
-                        }
-                        textTransform="capitalize"
-                      >
-                        {getLedgerEntryTypeLabel(entry.entryType)}
-                      </Badge>
-                      <Badge
-                        {...androidTheme.badge}
-                        colorScheme={getLedgerEffectColorScheme(entry)}
-                        textTransform="none"
-                      >
-                        {getLedgerEffectLabel(entry)}
-                      </Badge>
-                    </HStack>
-                    <Text fontSize="11px" fontWeight="700" color={androidTheme.colors.textMuted} letterSpacing="0.01em">
-                      {entry.status === "reversed"
-                        ? "This entry has been reversed"
-                        : `Recorded in ${isSelectedSupplier ? "supplier" : "customer"} ledger`}
-                    </Text>
-                  </VStack>
-
-                  <VStack align="end" spacing={0} minW="fit-content">
-                    <Text
-                      fontSize="10px"
-                      color={androidTheme.colors.textSubtle}
-                      fontWeight="700"
-                      textTransform="uppercase"
-                      letterSpacing="0.08em"
-                    >
-                      Amount
-                    </Text>
-                    <Text
-                      fontWeight="900"
-                      fontSize="md"
-                      lineHeight="1.1"
-                      color={getLedgerAmountColor(entry)}
-                    >
-                      {formatCurrency(entry.amount || 0)}
-                    </Text>
-                  </VStack>
-                </Flex>
-              </Box>
-              <VStack align="stretch" spacing={3.5} p={4}>
-                <SimpleGrid columns={{ base: 2, sm: 3 }} spacing={3}>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Date
-                    </Text>
-                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="700" mt={1}>
-                      {formatDateTime(entry.entryDate)}
-                    </Text>
-                  </Box>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Paid
-                    </Text>
-                    <Text fontSize="13px" color={dashboardPalette.success} fontWeight="900" mt={1}>
-                      {getEntryPaidText(entry)}
-                    </Text>
-                  </Box>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Remaining
-                    </Text>
-                    <Text fontSize="13px" color="#0F172A" fontWeight="900" mt={1}>
-                      {getEntryRemainingText(entry)}
-                    </Text>
-                  </Box>
-                </SimpleGrid>
-                <Box>
-                  <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                    Reference
-                  </Text>
-                  <Box
-                    {...androidTheme.infoCard}
-                    mt={1.5}
-                    bg={androidTheme.colors.infoSoft}
-                    borderColor={androidTheme.colors.infoBorder}
-                    minH="unset"
-                    py={2.5}
-                  >
-                    <Text fontSize="13px" color="#244261" fontWeight="700" fontFamily="mono" wordBreak="break-word">
-                      {formatLedgerReference(entry)}
-                    </Text>
-                  </Box>
-                </Box>
-                {entry.notes ? (
-                  <Box>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Notes
-                    </Text>
-                    <Box
-                      {...androidTheme.infoCard}
-                      mt={1.5}
-                      bg={androidTheme.colors.warningSoft}
-                      borderColor={androidTheme.colors.warningBorder}
-                      minH="unset"
-                      py={2.5}
-                    >
-                      <Text fontSize="13px" color="#5B5340" lineHeight="1.5">
-                        {entry.notes}
-                      </Text>
-                    </Box>
-                  </Box>
-                ) : null}
-                <Flex justify="space-between" align="center" gap={3} wrap="wrap">
-                  <Badge
-                    {...androidTheme.badge}
-                    alignSelf="flex-start"
-                    colorScheme={entry.status === "reversed" ? "red" : "green"}
-                    textTransform="capitalize"
-                    px={3}
-                  >
-                    {entry.status || "active"}
-                  </Badge>
-                  {entry.status !== "reversed" ? (
-                    <Flex flex="1" justify="flex-end" gap={2} wrap="wrap">
-                      {getLinkedSaleRecordIdFromEntry(entry) && (
-                        <Button
-                          {...androidTheme.button.small}
-                          bg={androidTheme.colors.primarySoft}
-                          color={androidTheme.colors.primary}
-                          onClick={() => openSaleDetailsFromLedgerEntry(entry)}
-                          _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
-                        >
-                          Details
-                        </Button>
-                      )}
-                      {canDownloadLedgerInvoice(entry) && (
-                        <Button
-                          {...androidTheme.button.small}
-                          bg={androidTheme.colors.primarySoft}
-                          color={androidTheme.colors.primary}
-                          isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-                          onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-                          _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
-                        >
-                          Invoice
-                        </Button>
-                      )}
-                      {canPayEntry(entry) && (
-                        <Button
-                          {...androidTheme.button.small}
-                          bg={androidTheme.colors.success}
-                          color="white"
-                          onClick={() => openPayModal(entry)}
-                          _hover={{ bg: "#148551" }}
-                        >
-                          Pay
-                        </Button>
-                      )}
-                    </Flex>
-                  ) : null}
-                </Flex>
-              </VStack>
-            </Box>
-          );
-        })
-      )}
-
-      <HStack justify="space-between" pt={1}>
-        <Button
-          {...androidTheme.button.pagination}
-          isDisabled={ledgerPage <= 1 || ledgerLoading}
-          onClick={() => {
-            if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
-            const nextPage = ledgerPage - 1;
-            setLedgerPage(nextPage);
-            fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
-          }}
-        >
-          Previous
-        </Button>
-        <Text fontSize="sm" color={androidTheme.colors.textMuted}>
-          Page {ledgerPage} of {ledgerTotalPages || 1}
-        </Text>
-        <Button
-          {...androidTheme.button.pagination}
-          isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
-          onClick={() => {
-            if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;
-            const nextPage = ledgerPage + 1;
-            setLedgerPage(nextPage);
-            fetchLedgerEntries(selectedLedgerBuyer._id, nextPage);
-          }}
-        >
-          Next
-        </Button>
-      </HStack>
-    </VStack>
-  );
-
-  const renderSaleRecordsMobile = () => (
-    <VStack align="stretch" spacing={androidTheme.spacing.sectionGap}>
-      {saleLoading ? (
-        <VStack spacing={3} py={8} px={4} {...androidTheme.card}>
-          <Spinner color={androidTheme.colors.primary} thickness="3px" size="lg" />
-          <Text fontSize="sm" color={androidTheme.colors.textMuted}>
-            Loading {isSelectedSupplier ? "purchase" : "sale"} records...
-          </Text>
-        </VStack>
-      ) : saleRecords.length === 0 ? (
-        <VStack spacing={2} py={8} px={5} {...androidTheme.card}>
-          <Text fontSize="sm" fontWeight="800" color={androidTheme.colors.text}>
-            No {isSelectedSupplier ? "purchase" : "sale"} records found
-          </Text>
-          <Text fontSize="sm" color={androidTheme.colors.textMuted} textAlign="center">
-            {isSelectedSupplier
-              ? "Your purchases and supplier bills will appear here."
-              : "Your sales and customer bills will appear here."}
-          </Text>
-        </VStack>
-      ) : (
-        saleRecords.map((record) => {
-          const itemsCount = getSaleRecordItemCount(record);
-          const preview = getSaleRecordItemPreview(record);
-
-          return (
-            <Box
-              key={record._id}
-              {...androidTheme.card}
-              borderColor={androidTheme.colors.borderStrong}
-              boxShadow="0 16px 34px rgba(15, 23, 42, 0.08)"
-              overflow="hidden"
-            >
-              <Box
-                px={4}
-                py={3.5}
-                bg={androidTheme.colors.infoSoft}
-                borderBottomWidth="1px"
-                borderBottomColor={androidTheme.colors.border}
-              >
-                <HStack justify="space-between" align="center">
-                  <Badge
-                    {...androidTheme.badge}
-                    colorScheme={record.status === "posted" ? "green" : record.status === "void" ? "red" : "orange"}
-                    textTransform="capitalize"
-                  >
-                    {record.status}
-                  </Badge>
-                  <Text fontWeight="900" color={androidTheme.colors.primaryDark} fontSize="md">
-                    {formatCurrency(Number(record.grandTotal || 0))}
-                  </Text>
-                </HStack>
-              </Box>
-              <VStack align="stretch" spacing={3} p={4}>
-                <SimpleGrid columns={2} spacing={3}>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      ID
-                    </Text>
-                    <Text
-                      fontSize="13px"
-                      color={androidTheme.colors.primary}
-                      fontWeight="700"
-                      cursor="pointer"
-                      mt={1}
-                      onClick={() => openSaleDetails(record)}
-                    >
-                      {record._id.slice(-6)}
-                    </Text>
-                  </Box>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Date
-                    </Text>
-                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="700" mt={1}>
-                      {formatDateTime(record.saleDate)}
-                    </Text>
-                  </Box>
-                  <Box {...androidTheme.infoCard}>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Item Count
-                    </Text>
-                    <Text fontSize="13px" color={androidTheme.colors.text} fontWeight="900" mt={1}>
-                      {itemsCount}
-                    </Text>
-                  </Box>
-                </SimpleGrid>
-                <Box>
-                  <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                    Items
-                  </Text>
-                  <Box
-                    {...androidTheme.infoCard}
-                    mt={1.5}
-                    bg={androidTheme.colors.surfaceMuted}
-                    borderColor={androidTheme.colors.border}
-                    minH="unset"
-                    py={2.5}
-                  >
-                    <Text fontSize="13px" color={androidTheme.colors.textMuted}>
-                      {itemsCount > 2 ? `${preview} +${itemsCount - 2} more` : preview}
-                    </Text>
-                  </Box>
-                </Box>
-                {record.notes ? (
-                  <Box>
-                    <Text fontSize="10px" color={androidTheme.colors.textSubtle} textTransform="uppercase" fontWeight="800" letterSpacing="0.08em">
-                      Notes
-                    </Text>
-                    <Box
-                      {...androidTheme.infoCard}
-                      mt={1.5}
-                      bg={androidTheme.colors.warningSoft}
-                      borderColor={androidTheme.colors.warningBorder}
-                      minH="unset"
-                      py={2.5}
-                    >
-                      <Text fontSize="13px" color="#5B5340">
-                        {record.notes}
-                      </Text>
-                    </Box>
-                  </Box>
-                ) : null}
-                <Flex justify="space-between" align="center" gap={3} wrap="wrap">
-                  <Button
-                    {...androidTheme.button.small}
-                    bg={androidTheme.colors.primarySoft}
-                    color={androidTheme.colors.primary}
-                    onClick={() => openSaleDetails(record)}
-                    _hover={{ bg: "rgba(214, 183, 114, 0.18)" }}
-                  >
-                    View Details
-                  </Button>
-                  {record.status === "draft" && !record.ledgerEntryId ? (
-                    <Button
-                      {...androidTheme.button.small}
-                      variant="outline"
-                      borderColor={androidTheme.colors.primary}
-                      color={androidTheme.colors.primary}
-                      bg="transparent"
-                      isLoading={postingSaleId === record._id}
-                      onClick={() => handlePostSaleRecordToLedger(record._id)}
-                      _hover={{ bg: androidTheme.colors.primarySoft }}
-                    >
-                      Post to Ledger
-                    </Button>
-                  ) : null}
-                </Flex>
-              </VStack>
-            </Box>
-          );
-        })
-      )}
-
-      <HStack justify="space-between" pt={1}>
-        <Button
-          {...androidTheme.button.pagination}
-          isDisabled={salePage <= 1 || saleLoading}
-          onClick={() => {
-            if (!selectedLedgerBuyer?._id || salePage <= 1) return;
-            const nextPage = salePage - 1;
-            setSalePage(nextPage);
-            fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
-          }}
-        >
-          Previous
-        </Button>
-        <Text fontSize="sm" color={androidTheme.colors.textMuted}>
-          Page {salePage} of {saleTotalPages || 1}
-        </Text>
-        <Button
-          {...androidTheme.button.pagination}
-          isDisabled={salePage >= (saleTotalPages || 1) || saleLoading}
-          onClick={() => {
-            if (!selectedLedgerBuyer?._id || salePage >= (saleTotalPages || 1)) return;
-            const nextPage = salePage + 1;
-            setSalePage(nextPage);
-            fetchSaleRecords(selectedLedgerBuyer._id, nextPage);
-          }}
-        >
-          Next
-        </Button>
-      </HStack>
-    </VStack>
-  );
-
-  const renderLedgerDetailMobile = () => renderCustomersReferenceDetail(true);
-
-  const renderSaleDetailsContent = () => {
-    const activeSaleRecord = saleRecordDetails?.saleRecord || selectedSaleRecord;
-
-    if (saleDetailsLoading) {
-      return (
-        <Flex minH="240px" align="center" justify="center" direction="column" gap={3}>
-          <Spinner color={cAccent} thickness="3px" size="lg" />
-          <Text fontSize="sm" color="gray.500">
-            Loading {isSelectedSupplier ? "purchase" : "sale"} history{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}...
-          </Text>
-        </Flex>
-      );
-    }
-
-    if (!saleRecordDetails) {
-      return (
-        <Flex minH="200px" align="center" justify="center">
-          <Text fontSize="sm" color="gray.500">
-            {selectedTransactionSingularLabel} details are not available{activeSaleRecord ? ` for ${formatShortId(activeSaleRecord._id)}` : ""}.
-          </Text>
-        </Flex>
-      );
-    }
-
-    const { saleRecord, summary, timeline } = saleRecordDetails;
-    const totalItems = Array.isArray(saleRecord.items)
-      ? saleRecord.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
-      : 0;
-
-    return (
-      <VStack align="stretch" spacing={5}>
-        <Box
-          borderWidth="1px"
-          borderColor="rgba(214, 183, 114, 0.22)"
-          bg="rgba(214, 183, 114, 0.10)"
-          borderRadius="xl"
-          p={4}
-        >
-          <HStack justify="space-between" align="start" spacing={3}>
-            <Box>
-              <Text fontSize="xs" textTransform="uppercase" color={cAccent} fontWeight="700">
-                {selectedTransactionSingularLabel} ID
-              </Text>
-              <Text fontSize="lg" fontWeight="800" color="gray.900" wordBreak="break-all">
-                {saleRecord._id}
-              </Text>
-              <HStack spacing={2} mt={2} wrap="wrap">
-                <Badge colorScheme={saleRecord.status === "posted" ? "green" : saleRecord.status === "void" ? "red" : "orange"} textTransform="capitalize">
-                  {saleRecord.status}
-                </Badge>
-                <Badge colorScheme={summary.isPosted ? "blue" : "gray"}>
-                  {summary.isPosted ? "Ledger Linked" : "Not Posted"}
-                </Badge>
-                {saleRecord.source ? (
-                  <Badge colorScheme="brand" textTransform="capitalize">
-                    {saleRecord.source}
-                  </Badge>
-                ) : null}
-              </HStack>
-            </Box>
-            <VStack align="stretch" spacing={2} minW={{ base: "132px", sm: "172px" }}>
-              {!isSelectedSupplier ? (
-                <Button
-                  size="sm"
-                  leftIcon={<DownloadIcon />}
-                  colorScheme="brand"
-                  variant="solid"
-                  borderRadius="full"
-                  isLoading={invoiceDownloadingSaleId === saleRecord._id}
-                  onClick={() => void handleDownloadSaleInvoice(saleRecordDetails)}
-                >
-                  Download Invoice
-                </Button>
-              ) : null}
-              <IconButton
-                aria-label={`Copy ${selectedTransactionSingularLabel.toLowerCase()} ID`}
-                icon={<CopyIcon />}
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(saleRecord._id || "");
-                  toast({ title: `${selectedTransactionSingularLabel} ID Copied`, status: "success", duration: 1000, isClosable: true });
-                }}
-              />
-            </VStack>
-          </HStack>
-        </Box>
-
-        <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-          <Box p={3} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              {selectedTransactionSingularLabel} Total
-            </Text>
-            <Text fontSize="lg" fontWeight="800" color="gray.900">
-              {formatCurrency(summary.saleAmount)}
-            </Text>
-          </Box>
-          <Box p={3} borderWidth="1px" borderColor="green.200" borderRadius="xl" bg="green.50">
-            <Text fontSize="xs" color="green.700" textTransform="uppercase" fontWeight="700">
-              {isSelectedSupplier ? "Paid Out" : "Paid"}
-            </Text>
-            <Text fontSize="lg" fontWeight="800" color="green.800">
-              {formatCurrency(summary.paidAmount)}
-            </Text>
-          </Box>
-          <Box p={3} borderWidth="1px" borderColor="orange.200" borderRadius="xl" bg="orange.50">
-            <Text fontSize="xs" color="orange.700" textTransform="uppercase" fontWeight="700">
-              Debit Corrections
-            </Text>
-            <Text fontSize="lg" fontWeight="800" color="orange.800">
-              {formatCurrency(summary.adjustmentDebitAmount)}
-            </Text>
-          </Box>
-          <Box
-            p={3}
-            borderWidth="1px"
-            borderColor="rgba(214, 183, 114, 0.22)"
-            borderRadius="xl"
-            bg="rgba(214, 183, 114, 0.10)"
-          >
-            <Text fontSize="xs" color={cAccent} textTransform="uppercase" fontWeight="700">
-              {isSelectedSupplier ? "Remaining Payable" : "Remaining Due"}
-            </Text>
-            <Text fontSize="lg" fontWeight="800" color={cPage}>
-              {formatCurrency(summary.remainingDue)}
-            </Text>
-          </Box>
-        </SimpleGrid>
-
-        <SimpleGrid columns={1} spacing={3}>
-          <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              {selectedTransactionSingularLabel} Meta
-            </Text>
-            <VStack align="stretch" spacing={2} mt={3}>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  {selectedTransactionSingularLabel} Date
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
-                  {formatDateTime(saleRecord.saleDate)}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Created
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
-                  {formatDateTime(saleRecord.createdAt)}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Posted At
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
-                  {formatDateTime(saleRecord.postedAt)}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Items
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
-                  {saleRecord.items?.length || 0} lines / {totalItems} qty
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Ledger Entry
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" wordBreak="break-word" maxW="70%">
-                  {saleRecord.ledgerEntryId ? formatShortId(saleRecord.ledgerEntryId) : "-"}
-                </Text>
-              </Flex>
-              {saleRecord.notes ? (
-                <Box pt={1}>
-                  <Text fontSize="sm" color="gray.600" mb={1}>
-                    Notes
-                  </Text>
-                  <Text fontSize="sm" color="gray.800">
-                    {saleRecord.notes}
-                  </Text>
-                </Box>
-              ) : null}
-            </VStack>
-          </Box>
-
-          <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="700">
-              {selectedTransactionSingularLabel} Totals
-            </Text>
-            <VStack align="stretch" spacing={2} mt={3}>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Subtotal
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
-                  {formatCurrency(Number(saleRecord.subtotal || 0))}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Discount
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
-                  {formatCurrency(Number(saleRecord.discountTotal || 0))}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Tax
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
-                  {formatCurrency(Number(saleRecord.taxTotal || 0))}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  Credit Corrections
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
-                  {formatCurrency(summary.adjustmentCreditAmount)}
-                </Text>
-              </Flex>
-              <Flex justify="space-between" align="flex-start" gap={3} wrap="wrap">
-                <Text fontSize="sm" color="gray.600">
-                  History Events
-                </Text>
-                <Text fontSize="sm" fontWeight="600" color="gray.800" textAlign="right" maxW="70%">
-                  {summary.eventCount}
-                </Text>
-              </Flex>
-            </VStack>
-          </Box>
-        </SimpleGrid>
-
-        <Box>
-          <Text fontSize="sm" color="gray.500" textTransform="uppercase" fontWeight="700" mb={3}>
-            Items
-          </Text>
-          <VStack align="stretch" spacing={3}>
-            {saleRecord.items?.map((item, index) => (
-              <Box key={`${saleRecord._id}-item-${index}`} p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
-                <HStack justify="space-between" align="start">
-                  <Box>
-                    <Text fontSize="sm" fontWeight="700" color="gray.900">
-                      {item.itemName}
-                    </Text>
-                    <Text fontSize="sm" color="gray.500">
-                      Qty {item.quantity} x {formatCurrency(Number(item.unitPrice || 0))}
-                    </Text>
-                  </Box>
-                  <Text fontSize="sm" fontWeight="800" color={cAccent}>
-                    {formatCurrency(Number(item.lineTotal || 0))}
-                  </Text>
-                </HStack>
-              </Box>
-            ))}
-          </VStack>
-        </Box>
-
-        <Box>
-          <Text fontSize="sm" color="gray.500" textTransform="uppercase" fontWeight="700" mb={3}>
-            History
-          </Text>
-          <VStack align="stretch" spacing={3}>
-            {timeline.length === 0 ? (
-              <Text fontSize="sm" color="gray.500">
-                No ledger activity linked to this {selectedTransactionSingularLabel.toLowerCase()} yet.
-              </Text>
-            ) : (
-              timeline.map((entry) => (
-                <Box key={entry._id} p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="white">
-                  <HStack justify="space-between" align="start" spacing={3}>
-                    <Box>
-                      <HStack spacing={2} wrap="wrap">
-                        <Text fontSize="sm" fontWeight="700" color="gray.900">
-                          {getTimelineTitle(entry)}
-                        </Text>
-                        <Badge colorScheme={entry.entryType === "sale" ? "orange" : entry.entryType === "payment" ? "green" : "blue"} textTransform="capitalize">
-                          {getLedgerEntryTypeLabel(entry.entryType)}
-                        </Badge>
-                        <Badge
-                          colorScheme={getLedgerEffectColorScheme(entry)}
-                          textTransform="none"
-                        >
-                          {getLedgerEffectLabel(entry)}
-                        </Badge>
-                        {entry.status ? (
-                          <Badge colorScheme={entry.status === "reversed" ? "red" : "green"} textTransform="capitalize">
-                            {entry.status}
-                          </Badge>
-                        ) : null}
-                        {entry.relationType === "reversal" ? <Badge colorScheme="brand">Linked Reversal</Badge> : null}
-                      </HStack>
-                      <Text fontSize="sm" color="gray.500" mt={1}>
-                        {formatDateTime(entry.entryDate || entry.createdAt)}
-                      </Text>
-                      <Text fontSize="sm" color="gray.700" mt={2}>
-                        {entry.notes || formatLedgerReference(entry)}
-                      </Text>
-                      {entry.referenceId ? (
-                        <Text fontSize="xs" color="gray.500" mt={1}>
-                          Ref: {formatLedgerReference(entry)}
-                        </Text>
-                      ) : null}
-                    </Box>
-                    <Box textAlign="right">
-                      <Text
-                        fontSize="sm"
-                        fontWeight="800"
-                        color={getLedgerAmountColor(entry)}
-                      >
-                        {formatSignedAmount(entry)}
-                      </Text>
-                      <Text fontSize="xs" color="gray.500" mt={1}>
-                        Customer balance {formatCurrency(Number(entry.balanceAfter || 0))}
-                      </Text>
-                    </Box>
-                  </HStack>
-                </Box>
-              ))
-            )}
-
-            <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="xl" bg="gray.50">
-              <HStack justify="space-between" align="start">
-                <Box>
-                  <Text fontSize="sm" fontWeight="700" color="gray.900">
-                    {selectedTransactionSingularLabel} Record Created
-                  </Text>
-                  <Text fontSize="sm" color="gray.500">
-                    {formatDateTime(saleRecord.createdAt || saleRecord.saleDate)}
-                  </Text>
-                </Box>
-                <Text fontSize="sm" fontWeight="800" color={cAccent}>
-                  {formatCurrency(summary.saleAmount)}
-                </Text>
-              </HStack>
-            </Box>
-          </VStack>
-        </Box>
-      </VStack>
-    );
-  };
-
-  const renderLedgerEntryFormFields = () => {
-    const contextSummary = paymentContextEntry?.linkedSaleSummary;
-    const contextRemainingDue = getLinkedSaleRemainingDue(paymentContextEntry);
-    const parsedPaymentAmount = Number(ledgerFormValues.amount || 0);
-    const paymentAmount = Number.isFinite(parsedPaymentAmount) ? Math.max(parsedPaymentAmount, 0) : 0;
-    const remainingAfterPayment =
-      contextRemainingDue !== null ? Math.max(contextRemainingDue - paymentAmount, 0) : null;
-
-    return (
-    <VStack spacing={4} align="stretch">
-      {paymentContextEntry ? (
-        <Box
-          borderWidth="1px"
-          borderColor={cBorder}
-          bg={cAccentSoft}
-          borderRadius="lg"
-          p={4}
-        >
-          <HStack justify="space-between" align="start" spacing={3}>
-            <Box flex="1" minW={0}>
-              <Text fontSize="xs" fontWeight="800" color={cTextMuted} textTransform="uppercase">
-                Paying this {selectedTransactionSingularLabel.toLowerCase()}
-              </Text>
-              <Text fontSize="md" fontWeight="800" color={cText} mt={1}>
-                {getLedgerEntryTypeLabel(paymentContextEntry.entryType)} of {formatCurrency(paymentContextEntry.amount || 0)}
-              </Text>
-              <Text fontSize="sm" color={cTextMuted} mt={1}>
-                {formatDateTime(paymentContextEntry.entryDate)}
-              </Text>
-              <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={2.5} mt={3}>
-                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
-                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
-                    Total
-                  </Text>
-                  <Text fontSize="sm" fontWeight="900" color={cText} mt={1}>
-                    {formatCurrency(contextSummary?.saleAmount ?? paymentContextEntry.amount ?? 0)}
-                  </Text>
-                </Box>
-                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
-                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
-                    Paid
-                  </Text>
-                  <Text fontSize="sm" fontWeight="900" color={dashboardPalette.success} mt={1}>
-                    {formatCurrency(contextSummary?.paidAmount ?? 0)}
-                  </Text>
-                </Box>
-                <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="md" p={3}>
-                  <Text fontSize="10px" fontWeight="800" color={cTextMuted} textTransform="uppercase">
-                    Remaining
-                  </Text>
-                  <Text fontSize="sm" fontWeight="900" color={cAccentStrong} mt={1}>
-                    {contextRemainingDue !== null ? getEntryRemainingText(paymentContextEntry) : "Calculated after save"}
-                  </Text>
-                </Box>
-              </SimpleGrid>
-              {remainingAfterPayment !== null ? (
-                <Text fontSize="sm" color={cTextMuted} mt={3}>
-                  After this payment, remaining will be {formatCurrency(remainingAfterPayment)}.
-                </Text>
-              ) : (
-                <Text fontSize="sm" color={cTextMuted} mt={3}>
-                  This payment is linked to this entry and will reduce its due amount.
-                </Text>
-              )}
-              {paymentContextEntry.notes ? (
-                <Text fontSize="sm" color={cTextMuted} mt={2}>
-                  {paymentContextEntry.notes}
-                </Text>
-              ) : null}
-            </Box>
-            {getLinkedSaleRecordIdFromEntry(paymentContextEntry) ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => openSaleDetailsFromLedgerEntry(paymentContextEntry)}
-                {...merchantGhostButtonProps}
-              >
-                History
-              </Button>
-            ) : null}
-          </HStack>
-        </Box>
-      ) : (
-        <Box borderWidth="1px" borderColor={cBorder} bg={cSurfaceAlt} borderRadius="lg" p={4}>
-          <Text fontSize="sm" color={cTextMuted}>
-            This records money {isSelectedSupplier ? "sent to the supplier" : "received from the customer"} and reduces the open balance.
-          </Text>
-        </Box>
-      )}
-
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-        <FormControl>
-          <FormLabel>Payment Amount</FormLabel>
-          <Input
-            type="number"
-            min="0"
-            max={contextRemainingDue !== null ? contextRemainingDue : undefined}
-            step="0.01"
-            value={ledgerFormValues.amount}
-            onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, amount: e.target.value }))}
-            placeholder="Enter payment amount"
-          />
-          {contextRemainingDue !== null ? (
-            <Text fontSize="xs" color={cTextMuted} mt={1}>
-              Maximum: {formatCurrency(Math.max(contextRemainingDue, 0))}
-            </Text>
-          ) : null}
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Payment Date</FormLabel>
-          <Input
-            type="date"
-            value={ledgerFormValues.entryDate}
-            onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, entryDate: e.target.value }))}
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <FormControl>
-        <FormLabel>Notes (optional)</FormLabel>
-        <Input
-          value={ledgerFormValues.notes}
-          onChange={(e) => setLedgerFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-          placeholder="Payment mode, receipt number, or short note"
-        />
-      </FormControl>
-    </VStack>
-    );
-  };
-
-  const renderSaleRecordFormFields = () => (
-    <VStack spacing={4} align="stretch">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-        <FormControl>
-          <FormLabel>{isSelectedSupplier ? "Purchase" : "Sale"} Date (optional)</FormLabel>
-          <Input
-            type="datetime-local"
-            value={saleFormValues.saleDate}
-            onChange={(e) => setSaleFormValues((prev) => ({ ...prev, saleDate: e.target.value }))}
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel>Notes (optional)</FormLabel>
-          <Input
-            value={saleFormValues.notes}
-            onChange={(e) => setSaleFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-            placeholder={isSelectedSupplier ? "Purchase remarks" : "Sale remarks"}
-          />
-        </FormControl>
-      </SimpleGrid>
-
-      <Box borderWidth="1px" borderColor={cBorder} bg={cAccentSoft} borderRadius="lg" p={3}>
-        <Text fontSize="sm" color={cTextMuted}>
-          This will appear immediately in the activity list with its item details.
-        </Text>
-      </Box>
-
-      <VStack align="stretch" spacing={4}>
-        {saleFormValues.items.map((item, index) => (
-          <Box key={`sale-item-${index}`} borderWidth="1px" borderRadius="md" p={3}>
-            <SimpleGrid columns={{ base: 1, md: 2, xl: 6 }} spacing={3}>
-              <FormControl position="relative" gridColumn={{ base: "auto", md: "span 2 / span 2" }}>
-                <FormLabel>Item Name</FormLabel>
-                <Input
-                  value={item.itemName}
-                  onChange={(e) => updateSaleItem(index, "itemName", e.target.value)}
-                  onFocus={() => setActiveSaleItemIndex(index)}
-                  onBlur={() => {
-                    window.setTimeout(() => {
-                      setActiveSaleItemIndex((current) => (current === index ? null : current));
-                    }, 120);
-                  }}
-                  placeholder="e.g. Cement Bag"
-                  autoComplete="off"
-                />
-                {activeSaleItemIndex === index && item.itemName.trim() ? (
-                  <Box
-                    position="absolute"
-                    top="calc(100% + 8px)"
-                    left={0}
-                    right={0}
-                    bg="white"
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                    borderRadius="lg"
-                    boxShadow="xl"
-                    zIndex={20}
-                    overflow="hidden"
-                    maxH="320px"
-                    overflowY="auto"
-                  >
-                    {saleItemSuggestionsLoading ? (
-                      <Flex align="center" justify="center" py={4} gap={2}>
-                        <Spinner size="sm" color="var(--color-primary)" />
-                        <Text fontSize="sm" color="gray.600">
-                          Searching your inventory...
-                        </Text>
-                      </Flex>
-                    ) : saleItemSuggestions.length > 0 ? (
-                      <VStack align="stretch" spacing={0}>
-                        {saleItemSuggestions.map((product, suggestionIndex) => (
-                          <Box
-                            key={product._id}
-                            px={3}
-                            py={3}
-                            cursor="pointer"
-                            bg="white"
-                            borderTopWidth={suggestionIndex === 0 ? "0" : "1px"}
-                            borderColor="gray.100"
-                            _hover={{ bg: "gray.50" }}
-                            onMouseDown={(event) => {
-                              event.preventDefault();
-                              applySuggestedProductToSaleItem(index, product);
-                            }}
-                          >
-                            <Flex justify="space-between" align="flex-start" gap={3}>
-                              <Box minW={0}>
-                                <Text
-                                  fontSize="sm"
-                                  fontWeight="semibold"
-                                  color="gray.800"
-                                  whiteSpace="normal"
-                                  lineHeight="short"
-                                >
-                                  {product.name}
-                                </Text>
-                                <Text
-                                  fontSize="xs"
-                                  color="gray.500"
-                                  whiteSpace="normal"
-                                  lineHeight="short"
-                                  mt={1}
-                                >
-                                  {[product.brand, product.sku ? `SKU: ${product.sku}` : ""]
-                                    .filter(Boolean)
-                                    .join(" | ") || "Inventory product"}
-                                </Text>
-                              </Box>
-                              <Box textAlign="right" flexShrink={0}>
-                                <Text fontSize="sm" fontWeight="semibold" color="var(--color-primary)">
-                                  {formatCurrency(Number(product.price || 0))}
-                                </Text>
-                                {typeof product.stock === "number" && Number.isFinite(product.stock) ? (
-                                  <Text fontSize="xs" color="gray.500">
-                                    Stock {product.stock}
-                                  </Text>
-                                ) : null}
-                              </Box>
-                            </Flex>
-                          </Box>
-                        ))}
-                      </VStack>
-                    ) : (
-                      <Box px={3} py={3}>
-                        <Text fontSize="sm" color="gray.600">
-                          No matching inventory items found.
-                        </Text>
-                      </Box>
-                    )}
-                  </Box>
-                ) : null}
-                {item.productId ? (
-                  <Text mt={2} fontSize="xs" color="var(--color-primary)" fontWeight="medium">
-                    Price auto-filled from your inventory. You can still edit this row.
-                  </Text>
-                ) : null}
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Quantity</FormLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.quantity}
-                  onChange={(e) => updateSaleItem(index, "quantity", e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Unit Price</FormLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.unitPrice}
-                  onChange={(e) => updateSaleItem(index, "unitPrice", e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Discount</FormLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.discount}
-                  onChange={(e) => updateSaleItem(index, "discount", e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Tax</FormLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.tax}
-                  onChange={(e) => updateSaleItem(index, "tax", e.target.value)}
-                />
-              </FormControl>
-            </SimpleGrid>
-
-            <Flex mt={3} justify="space-between" align="center">
-              <Text fontSize="sm" color="gray.600">
-                Line Total: {formatCurrency(calculateSaleLineTotal(item))}
-              </Text>
-              <Button
-                size="xs"
-                colorScheme="red"
-                variant="ghost"
-                onClick={() => removeSaleItem(index)}
-                isDisabled={saleFormValues.items.length <= 1}
-              >
-                Remove
-              </Button>
-            </Flex>
-          </Box>
-        ))}
-      </VStack>
-
-      <Button size="sm" variant="outline" leftIcon={<AddIcon />} alignSelf="flex-start" onClick={addSaleItem}>
-        Add Item Row
-      </Button>
-    </VStack>
-  );
-
-  const renderBuyerFormFields = (isCompact: boolean) => {
-    const inputHeight = isCompact ? "56px" : "52px";
-    const radius = isCompact ? "18px" : "16px";
-    const draftPartyLabel = formValues.partyType === "supplier" ? "Supplier" : "Customer";
-    const draftPartyLabelLower = draftPartyLabel.toLowerCase();
-
-    return (
-      <VStack spacing={4} align="stretch">
-        <Box
-          p={4}
-          borderRadius="24px"
-          bg={cFormInfoBg}
-          border="1px solid"
-          borderColor={cBorder}
-        >
-          <Text fontSize="sm" fontWeight="800" color={cText}>
-            Quick create
-          </Text>
-          <Text mt={1} fontSize="sm" color={cTextMuted}>
-            Add a name and at least one way to reach this {draftPartyLabelLower}.
-          </Text>
-        </Box>
-
-        <FormControl isInvalid={Boolean(buyerFormErrors.fullName)}>
-          <FormLabel color={cText} fontWeight="700">
-            Full name
-          </FormLabel>
-          <Input
-            value={formValues.fullName}
-            onChange={(e) =>
-              setFormValues((prev) => ({
-                ...prev,
-                fullName: e.target.value,
-                displayName: prev.displayName === prev.fullName ? e.target.value : prev.displayName,
-              }))
-            }
-            placeholder={`${draftPartyLabel} full name`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-            onChangeCapture={() => clearBuyerFormErrors("fullName")}
-          />
-          <FormErrorMessage>{buyerFormErrors.fullName}</FormErrorMessage>
-        </FormControl>
-
-        <FormControl>
-          <FormLabel color={cText} fontWeight="700">
-            Party type
-          </FormLabel>
-          <HStack
-            spacing={1}
-            p={1}
-            borderRadius="18px"
-            bg={cInputMutedBg}
-            border="1px solid"
-            borderColor={cBorder}
-          >
-            <Button
-              flex="1"
-              h="42px"
-              borderRadius="14px"
-              bg={formValues.partyType === "customer" ? cHeroGradient : "transparent"}
-              color={formValues.partyType === "customer" ? "white" : cTextMuted}
-              fontWeight="800"
-              _hover={{ color: formValues.partyType === "customer" ? "white" : cText }}
-              _active={{ transform: "scale(0.98)" }}
-              onClick={() => setFormValues((prev) => ({ ...prev, partyType: "customer" }))}
-            >
-              Customer
-            </Button>
-            <Button
-              flex="1"
-              h="42px"
-              borderRadius="14px"
-              bg={formValues.partyType === "supplier" ? cHeroGradient : "transparent"}
-              color={formValues.partyType === "supplier" ? "white" : cTextMuted}
-              fontWeight="800"
-              _hover={{ color: formValues.partyType === "supplier" ? "white" : cText }}
-              _active={{ transform: "scale(0.98)" }}
-              onClick={() => setFormValues((prev) => ({ ...prev, partyType: "supplier" }))}
-            >
-              Supplier
-            </Button>
-          </HStack>
-        </FormControl>
-
-        <HStack align="start" spacing={3}>
-          <FormControl maxW="118px" isInvalid={Boolean(buyerFormErrors.phone)}>
-            <FormLabel color={cText} fontWeight="700">
-              Code
-            </FormLabel>
-            <Input
-              value={formValues.phoneCountryCode}
-              onChange={(e) =>
-                setFormValues((prev) => ({
-                  ...prev,
-                  phoneCountryCode: e.target.value,
-                  phone: `${e.target.value}${prev.phoneNationalNumber}`.trim(),
-                }))
-              }
-              onChangeCapture={() => clearBuyerFormErrors("phone")}
-              placeholder="+91"
-              bg={cInputBg}
-              borderColor={cInputBorder}
-              borderRadius={radius}
-              h={inputHeight}
-              textAlign="center"
-              _placeholder={{ color: cPlaceholder }}
-              _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-            />
-          </FormControl>
-          <FormControl flex="1" isInvalid={Boolean(buyerFormErrors.phone)}>
-            <FormLabel color={cText} fontWeight="700">
-              Phone
-            </FormLabel>
-            <Input
-              value={formValues.phoneNationalNumber}
-              onChange={(e) =>
-                setFormValues((prev) => {
-                  const localPhone = e.target.value.replace(/\D/g, "");
-                  return {
-                    ...prev,
-                    phoneNationalNumber: localPhone,
-                    phone: `${prev.phoneCountryCode}${localPhone}`.trim(),
-                  };
-                })
-              }
-              onChangeCapture={() => clearBuyerFormErrors("phone", "email")}
-              placeholder="Phone number"
-              inputMode="tel"
-              bg={cInputBg}
-              borderColor={cInputBorder}
-              borderRadius={radius}
-              h={inputHeight}
-              _placeholder={{ color: cPlaceholder }}
-              _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-            />
-            <FormErrorMessage>{buyerFormErrors.phone}</FormErrorMessage>
-          </FormControl>
-        </HStack>
-
-        <FormControl isInvalid={Boolean(buyerFormErrors.email)}>
-          <FormLabel color={cText} fontWeight="700">
-            Email
-          </FormLabel>
-          <Input
-            value={formValues.email}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, email: e.target.value }))}
-            onChangeCapture={() => clearBuyerFormErrors("email", "phone")}
-            placeholder={`${draftPartyLabelLower}@example.com`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-          <FormErrorMessage>{buyerFormErrors.email}</FormErrorMessage>
-        </FormControl>
-
-        <FormControl>
-          <FormLabel color={cText} fontWeight="700">
-            Display name
-          </FormLabel>
-          <Input
-            value={formValues.displayName}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, displayName: e.target.value }))}
-            placeholder={`How this ${draftPartyLabelLower} should appear`}
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormLabel color={cText} fontWeight="700">
-            Tags
-          </FormLabel>
-          <Input
-            value={formValues.tags}
-            onChange={(e) => setFormValues((prev) => ({ ...prev, tags: e.target.value }))}
-            placeholder="wholesale, repeat, priority"
-            bg={cInputBg}
-            borderColor={cInputBorder}
-            borderRadius={radius}
-            h={inputHeight}
-            _placeholder={{ color: cPlaceholder }}
-            _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-          />
-        </FormControl>
-
-        <Button
-          variant="ghost"
-          justifyContent="flex-start"
-          px={0}
-          color={cAccentStrong}
-          fontWeight="800"
-          _hover={{ bg: "transparent", color: cAccent }}
-          onClick={() => setShowContactExtraFields((prev) => !prev)}
-        >
-          {showContactExtraFields ? "Hide address & notes" : "Add address & notes"}
-        </Button>
-
-        {showContactExtraFields ? (
-          <VStack align="stretch" spacing={3}>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Address line 1
-              </FormLabel>
-              <Input
-                value={formValues.addressLine1}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine1: e.target.value }))}
-                placeholder="Shop or street address"
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                h={inputHeight}
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Address line 2
-              </FormLabel>
-              <Input
-                value={formValues.addressLine2}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, addressLine2: e.target.value }))}
-                placeholder="Area, landmark"
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                h={inputHeight}
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </FormControl>
-            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={3}>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  City
-                </FormLabel>
-                <Input
-                  value={formValues.city}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, city: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  State
-                </FormLabel>
-                <Input
-                  value={formValues.state}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, state: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  Postal code
-                </FormLabel>
-                <Input
-                  value={formValues.postalCode}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, postalCode: e.target.value }))}
-                  inputMode="numeric"
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel color={cText} fontWeight="700">
-                  Country
-                </FormLabel>
-                <Input
-                  value={formValues.country}
-                  onChange={(e) => setFormValues((prev) => ({ ...prev, country: e.target.value }))}
-                  bg={cInputBg}
-                  borderColor={cInputBorder}
-                  borderRadius={radius}
-                  h={inputHeight}
-                  _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-                />
-              </FormControl>
-            </SimpleGrid>
-            <FormControl>
-              <FormLabel color={cText} fontWeight="700">
-                Notes
-              </FormLabel>
-              <Textarea
-                value={formValues.notes}
-                onChange={(e) => setFormValues((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder={`Anything useful to remember about this ${formValues.partyType}`}
-                bg={cInputBg}
-                borderColor={cInputBorder}
-                borderRadius={radius}
-                minH="116px"
-                resize="vertical"
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </FormControl>
-          </VStack>
-        ) : null}
-      </VStack>
-    );
-  };
-
-  const selectedBuyerName = selectedLedgerBuyer ? getBuyerDisplayName(selectedLedgerBuyer) : "";
   const showMobileBuyerManagement = !selectedLedgerBuyer && useCompactBuyerView;
-  const showMobileLedgerDetail = Boolean(selectedLedgerBuyer && useCompactLedgerView);
-  const blockedCount = Math.max(total - buyerOverview.active, 0);
-
-  const renderCustomersReferenceList = (isCompact: boolean) => {
-    const sectionX = { base: 3, md: 6, xl: 0 };
-    const heroDescription = isSupplierTab
-      ? "Manage supplier relationships, track payables, and keep every payout in one clean flow."
-      : "Manage customer relationships, track collections, and keep every balance easy to review.";
-    const statCards = [
-      {
-        key: "total",
-        icon: FiUsers,
-        label: `Total ${partyPluralLabel}`,
-        value: String(total),
-        iconBg: cAccentSoft,
-        iconColor: cAccentStrong,
-        valueColor: cText,
-      },
-      {
-        key: "receivable",
-        icon: FiTrendingUp,
-        label: "To receive",
-        value: formatCompactCurrency(buyerOverview.receivable),
-        iconBg: cSuccessSoftBg,
-        iconColor: cSuccess,
-        valueColor: cSuccess,
-      },
-      {
-        key: "payable",
-        icon: FiTrendingDown,
-        label: "To pay",
-        value: formatCompactCurrency(buyerOverview.payable),
-        iconBg: cDangerSoftBg,
-        iconColor: cDanger,
-        valueColor: cDanger,
-      },
-    ];
-
-    return (
-      <Box
-        bg={isCompact ? cPage : "transparent"}
-        // borderRadius={{ base: "none", md: "14px" }}
-        overflow="hidden"
-        mt={{base:-2,md:0}}
-        mx={isCompact ? -2 : 0}
-        minH={isCompact ? "100dvh" : "auto"}
-      >
-        <Box
-          bgGradient={cHeroGradient}
-          px={sectionX}
-          pt={{ base: 2, md: 0 }}
-          pb={{ base: 14, md: 16 }}
-          position="relative"
-          overflow="hidden"
-        >
-          <Box
-            position="absolute"
-            top="-36px"
-            right="-28px"
-            w={{ base: "164px", md: "220px" }}
-            h={{ base: "164px", md: "220px" }}
-            borderRadius="full"
-            bg="whiteAlpha.180"
-            filter="blur(18px)"
-          />
-          <Box
-            position="absolute"
-            bottom="-74px"
-            left="-24px"
-            w={{ base: "140px", md: "180px" }}
-            h={{ base: "140px", md: "180px" }}
-            borderRadius="full"
-            bg="whiteAlpha.120"
-          />
-
-          <Box position="relative" zIndex={1}>
-            <Flex justify="space-between" align={{ base: "start", md: "center" }} gap={4} flexWrap="wrap">
-              <Box maxW="2xl">
-                <Text fontSize="xs" fontWeight="800"  textTransform="uppercase" letterSpacing="0.14em">
-                  Workspace
-                </Text>
-                <Heading mt={2} fontSize={{ base: "2xl", md: "4xl" }} lineHeight="0.98" letterSpacing="-0.03em" display={{base:"none",md:"block"}}>
-                  {partyPluralLabel}
-                </Heading>
-                <Text mt={2} color="whiteAlpha.860" fontSize={{ base: "sm", md: "md" }} maxW="xl" display={{base:"none",md:"block"}}>
-                  {heroDescription}
-                </Text>
-
-                <Flex mt={{base:2,md:4}} gap={2} flexWrap="wrap" align="center">
-                  <HStack
-                    spacing={1}
-                    borderRadius="18px"
-                    bg="whiteAlpha.180"
-                    borderColor="whiteAlpha.280"
-                  >
-                    <Button
-                      h={{base:"32px",md:"38px"}}
-                      px={4}
-                      borderRadius="14px"
-                      bg={normalizedActivePartyType === "customer" ? dashboardPalette.accent : "transparent"}
-                      color={normalizedActivePartyType === "customer" ? 'white' : "blackAlpha.700"}
-                      fontSize="sm"
-                      fontWeight="800"
-                      _hover={{ bg: normalizedActivePartyType === "customer" ? dashboardPalette.accent  : "whiteAlpha.180" }}
-                      _active={{ transform: "scale(0.98)" }}
-                      onClick={() => setActivePartyType("customer")}
-                    >
-                      Customers
-                    </Button>
-                    <Button
-                      // h="38px"
-                      h={{base:"32px",md:"38px"}}
-                      px={4}
-                      borderRadius="14px"
-                      bg={normalizedActivePartyType === "supplier" ? dashboardPalette.accent : "transparent"}
-                      color={normalizedActivePartyType === "supplier" ? 'white' : "blackAlpha.900"}
-                      fontSize="sm"
-                      fontWeight="800"
-                      _hover={{ bg: normalizedActivePartyType === "supplier" ?  dashboardPalette.accent : "whiteAlpha.180" }}
-                      _active={{ transform: "scale(0.98)" }}
-                      onClick={() => setActivePartyType("supplier")}
-                    >
-                      Suppliers
-                    </Button>
-                  </HStack>
-
-                  {blockedCount > 0 ? (
-                    <Badge px={3} py={1.5} borderRadius="full" bg="rgba(127, 29, 29, 0.26)" color="white" textTransform="none" fontWeight="800">
-                      {blockedCount} blocked
-                    </Badge>
-                  ) : null}
-                </Flex>
-              </Box>
-
-              {!isCompact ? (
-                <Stack direction={{ base: "column", sm: "row" }} spacing={3} w={{ base: "full", md: "auto" }}>
-                  {canUseDeviceContactImport ? (
-                    <Button
-                      onClick={onImportOpen}
-                      leftIcon={<DownloadIcon />}
-                      minH="46px"
-                      borderRadius="full"
-                      bg="whiteAlpha.180"
-                      color="white"
-                      border="1px solid"
-                      borderColor="whiteAlpha.280"
-                      _hover={{ bg: "whiteAlpha.240" }}
-                      _active={{ transform: "scale(0.98)" }}
-                    >
-                      Import
-                    </Button>
-                  ) : null}
-                  <Button
-                    leftIcon={<FiUserPlus />}
-                    onClick={openManualBuyerModal}
-                    minH="46px"
-                    px={5}
-                    borderRadius="full"
-                    bg="white"
-                    color={cAccentStrong}
-                    fontWeight="800"
-                    boxShadow="0 16px 34px rgba(15, 23, 42, 0.14)"
-                    _hover={{ transform: "translateY(-1px)" }}
-                    _active={{ transform: "scale(0.98)" }}
-                  >
-                    Add {partySingularLabel}
-                  </Button>
-                </Stack>
-              ) : null}
-            </Flex>
-
-            <SimpleGrid columns={{base:1,md:3}} spacing={{ base: 2, md: 4 }} mt={6}>
-              {statCards.map((stat) => (
-
-                <ProductStatCard
-                icon={stat.icon} label={stat.label} value={stat.value} tint="sage"
-                />
-              
-              ))}
-            </SimpleGrid>
-          </Box>
-        </Box>
-
-
-                {/* <Box
-                  key={stat.key}
-                  // bg="whiteAlpha.140"
-                  border="2px solid"
-                  shadow={'base'}
-                  borderColor={stat.iconBg}
-                  borderRadius={{ base: "20px", md: "24px" }}
-                  px={{ base: 3, md: 4 }}
-                  py={{ base: 3, md: 4 }}
-                  backdropFilter="blur(14px)"
-                >
-                  <HStack spacing={2} align="center">
-                    <Circle size={{ base: "28px", md: "32px" }} bg={stat.iconBg} color={stat.iconColor}>
-                      <Icon as={stat.icon} boxSize={4} />
-                    </Circle>
-                    <Text fontSize={{ base: "10px", md: "11px" }} color="whiteAlpha.820" fontWeight="800" textTransform="uppercase" letterSpacing="0.08em">
-                      {stat.label}
-                    </Text>
-                  </HStack>
-                  <Text mt={3} color={stat.iconColor} fontSize={{ base: "lg", md: "2xl" }} fontWeight="900" lineHeight="0.95" noOfLines={1}>
-                    {stat.value}
-                  </Text>
-                </Box> */}
-
-
-
-        <Box px={sectionX} mt={{ base: -6, md: -7 }} position="sticky" top={0} zIndex={20}>
-          <Box
-            bg={cGlassSurface}
-            border="1px solid"
-            borderColor={cBorder}
-            borderRadius="24px"
-            p={{ base: 2, md: 3 }}
-            boxShadow={cSoftShadow}
-            backdropFilter="blur(18px)"
-          >
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" h="100%">
-                <Icon as={FiSearch} color={cTextMuted} boxSize={4} />
-              </InputLeftElement>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={`Search ${partyPluralLabel.toLowerCase()} by name or phone`}
-                pl={10}
-                h={{base:"38px",md:"46px"}}
-                borderRadius="18px"
-                bg={cInputMutedBg}
-                borderColor="transparent"
-                color={cText}
-                fontSize="sm"
-                _placeholder={{ color: cPlaceholder }}
-                _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
-              />
-            </InputGroup>
-
-            <Flex
-              mt={2}
-              gap={2}
-              overflowX="auto"
-              pb={0.5}
-              sx={{
-                scrollbarWidth: "none",
-                "&::-webkit-scrollbar": { display: "none" },
-              }}
-            >
-              {buyerFilterOptions.map((filterOption) => {
-                const isActive = balanceFilter === filterOption.key;
-                return (
-                  <Button
-                    key={filterOption.key}
-                    h="34px"
-                    px={4}
-                    borderRadius="full"
-                    flexShrink={0}
-                    bg={isActive ? dashboardPalette.accent : "transparent"}
-                    color={isActive ? "white" : cTextMuted}
-                    fontSize="xs"
-                    fontWeight="800"
-                    border={isActive ? "none" : "1px solid"}
-                    borderColor={isActive ? "transparent" : cBorder}
-                    boxShadow={isActive ? "0 12px 24px rgba(69, 104, 255, 0.20)" : "none"}
-                    _hover={{ color: isActive ? "white" : cText }}
-                    _active={{ transform: "scale(0.98)" }}
-                    onClick={() => setBalanceFilter(filterOption.key)}
-                  >
-                    {filterOption.label}
-                  </Button>
-                );
-              })}
-            </Flex>
-          </Box>
-        </Box>
-
-        <Box px={sectionX} mt={4} pb={isCompact ? "104px" : 8}>
-          {loading ? (
-            <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={3}>
-              {Array.from({ length: isCompact ? 4 : 6 }).map((_, index) => (
-                <Box
-                  key={`buyer-skeleton-${index}`}
-                  bg={cSurface}
-                  border="1px solid"
-                  borderColor={cBorder}
-                  borderRadius="24px"
-                  p={4}
-                  boxShadow={cSoftShadow}
-                >
-                  <HStack align="start" spacing={3}>
-                    <SkeletonCircle size="12" />
-                    <Box flex="1">
-                      <Skeleton h="16px" w="48%" />
-                      <Skeleton h="12px" w="72%" mt={2} />
-                      <HStack spacing={2} mt={3}>
-                        <Skeleton h="20px" w="58px" borderRadius="full" />
-                        <Skeleton h="20px" w="52px" borderRadius="full" />
-                      </HStack>
-                    </Box>
-                    <Box minW="88px">
-                      <Skeleton h="18px" w="74px" ml="auto" />
-                      <Skeleton h="10px" w="54px" mt={2} ml="auto" />
-                    </Box>
-                  </HStack>
-                </Box>
-              ))}
-            </SimpleGrid>
-          ) : filteredBuyers.length === 0 ? (
-            <Box
-              textAlign="center"
-              py={{ base: 12, md: 16 }}
-              px={5}
-              bg={cSurface}
-              border="1px solid"
-              borderColor={cBorder}
-              borderRadius="26px"
-              boxShadow={cSoftShadow}
-            >
-              <Circle mx="auto" size="14" bg={cAccentSoft} color={cAccentStrong}>
-                <Icon as={FiUsers} boxSize={6} />
-              </Circle>
-              <Text mt={4} fontSize="md" fontWeight="800" color={cText}>
-                No {partyPluralLabel.toLowerCase()} found
-              </Text>
-              <Text mt={1} fontSize="sm" color={cTextMuted}>
-                {balanceFilter === "all"
-                  ? `Try a different search or add a new ${partySingularLabel.toLowerCase()}.`
-                  : `No ${partyPluralLabel.toLowerCase()} match the selected filter.`}
-              </Text>
-            </Box>
-          ) : (
-            <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={{base:1,md:3}}>
-              {filteredBuyers.map((buyer) => {
-                const balanceMeta = getBuyerBalanceMeta(buyer);
-                const tagList = buyer.tags?.length
-                  ? buyer.tags.slice(0, 2)
-                  : [buyer.source ? buyer.source.charAt(0).toUpperCase() + buyer.source.slice(1) : "Manual"];
-
-                return (
-                  <Box
-                    key={buyer._id}
-                    as="button"
-                    type="button"
-                    w="full"
-                    textAlign="left"
-                    bg={cSurface}
-                    border="1px solid"
-                    borderColor={cBorder}
-                    borderRadius="24px"
-                    px={{base:3,md:4}}
-                    py={{base:2,md:4}}
-                    boxShadow={'sm'}
-                    transition="all 0.2s ease"
-                    _hover={{ transform: "translateY(-2px)", borderColor: cAccentSoft }}
-                    _active={{ transform: "scale(0.99)" }}
-                    onClick={() => openLedgerView(buyer)}
-                  >
-                    <Flex align="center" gap={3}>
-                      <Box position="relative">
-                        <Flex
-                          h={{base:"32px",md:"48px"}}
-                          w={{base:"32px",md:"48px"}}
-                          // w="48px"
-                          borderRadius="full"
-                          align="center"
-                          justify="center"
-                          color="white"
-                          fontWeight="700"
-                          fontSize={{base:'sm',md:"lg"}}
-                          bg={dashboardPalette.accent}
-                          // bgGradient={`linear(135deg, hsl(${avatarHue}, 82%, 62%) 0%, hsl(${(avatarHue + 40) % 360}, 78%, 52%) 100%)`}
-                          boxShadow="0 10px 24px rgba(69, 104, 255, 0.18)"
-                          flexShrink={0}
-                        >
-                          {getBuyerInitials(buyer)}
-                        </Flex>
-                        {buyer.isBlocked ? (
-                          <Circle
-                            position="absolute"
-                            bottom="-1px"
-                            right="-1px"
-                            size="18px"
-                            bg={cDanger}
-                            color="white"
-                            border="2px solid"
-                            borderColor={cSurface}
-                            fontSize="10px"
-                            fontWeight="900"
-                          >
-                            !
-                          </Circle>
-                        ) : null}
-                      </Box>
-
-                      <Box flex="1" minW={0}>
-                        <Text fontSize={{ base: "sm", md: "md" }} fontWeight="800" color={cText} noOfLines={1}>
-                          {getBuyerDisplayName(buyer)}
-                        </Text>
-                        <Text mt={0.5} fontSize="xs" color={cTextMuted} noOfLines={1}>
-                          {getBuyerPrimaryContact(buyer)}
-                        </Text>
-                        <Flex mt={1} gap={1.5} flexWrap="wrap">
-                          {tagList.map((tag) => (
-                            <Badge
-                              key={`${buyer._id}-${tag}`}
-                              px={2.5}
-                              py={0.5}
-                              borderRadius="full"
-                              bg={cAccentSoft}
-                              color={cAccentStrong}
-                              textTransform="none"
-                              fontSize="10px"
-                              fontWeight="700"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </Flex>
-                      </Box>
-
-                      <VStack align="end" spacing={1} flexShrink={0}>
-                        <Text fontSize="sm" fontWeight="700" color={balanceMeta.color} textAlign="right">
-                          {balanceMeta.state === "settled" ? "Settled" : formatCurrency(balanceMeta.amount)}
-                        </Text>
-                        <Text fontSize="10px" color={cTextMuted}>
-                          {balanceMeta.helper}
-                        </Text>
-                        <Icon as={FiChevronRight} boxSize={4} color={cTextMuted} />
-                      </VStack>
-                    </Flex>
-                  </Box>
-                );
-              })}
-            </SimpleGrid>
-          )}
-
-          {(totalPages || 1) > 1 ? (
-            <Flex justify="space-between" align="center" gap={3} mt={4}>
-              <Button
-                minW="96px"
-                h="38px"
-                borderRadius="full"
-                bg={cSurface}
-                border="1px solid"
-                borderColor={cBorder}
-                color={cTextMuted}
-                boxShadow={cSoftShadow}
-                _hover={{ color: cText }}
-                _active={{ transform: "scale(0.98)" }}
-                isDisabled={page <= 1 || loading}
-                onClick={() => {
-                  if (page <= 1) return;
-                  const nextPage = page - 1;
-                  setPage(nextPage);
-                  fetchBuyers(nextPage, search);
-                }}
-              >
-                Previous
-              </Button>
-              <Text fontSize="sm" color={cTextMuted} fontWeight="700">
-                Page {page} of {totalPages || 1}
-              </Text>
-              <Button
-                minW="96px"
-                h="38px"
-                borderRadius="full"
-                bg={cSurface}
-                border="1px solid"
-                borderColor={cBorder}
-                color={cTextMuted}
-                boxShadow={cSoftShadow}
-                _hover={{ color: cText }}
-                _active={{ transform: "scale(0.98)" }}
-                isDisabled={page >= (totalPages || 1) || loading}
-                onClick={() => {
-                  if (page >= (totalPages || 1)) return;
-                  const nextPage = page + 1;
-                  setPage(nextPage);
-                  fetchBuyers(nextPage, search);
-                }}
-              >
-                Next
-              </Button>
-            </Flex>
-          ) : null}
-        </Box>
-
-        {isCompact ? (
-          <Button
-            position="fixed"
-            right="18px"
-            bottom="calc(18px + env(safe-area-inset-bottom, 0px))"
-            zIndex={30}
-            h="56px"
-            px={5}
-            borderRadius="full"
-            bgGradient={cHeroGradient}
-            color="white"
-            leftIcon={<Icon as={FiUserPlus} boxSize={4.5} />}
-            fontWeight="800"
-            boxShadow="0 18px 34px rgba(69, 104, 255, 0.28)"
-            _hover={{ filter: "brightness(1.05)" }}
-            _active={{ transform: "scale(0.97)" }}
-            onClick={openManualBuyerModal}
-          >
-            Add {partySingularLabel}
-          </Button>
-        ) : null}
-      </Box>
-    );
-  };
-
-
-  const renderCustomersReferenceDetail = (isCompact: boolean) => {
-  if (!selectedLedgerBuyer) return null;
-
-  const balanceMeta :any= getBuyerBalanceMeta(selectedLedgerBuyer);
-  const phone = getBuyerActionPhone(selectedLedgerBuyer);
-  const email = String(selectedLedgerBuyer.buyerId?.emailNormalized || "").trim();
-  const whatsappHref = getWhatsAppHref(phone);
-  const avatarHue = getBuyerAvatarHue(selectedLedgerBuyer);
-  const tagList = selectedLedgerBuyer.tags?.length
-    ? selectedLedgerBuyer.tags.slice(0, 3)
-    : selectedLedgerBuyer.source
-      ? [selectedLedgerBuyer.source.charAt(0).toUpperCase() + selectedLedgerBuyer.source.slice(1)]
-      : [];
-
-  const isDarkMode = colorMode === "dark";
-  const accentBg = isDarkMode
-    ? `hsla(${avatarHue}, 72%, 56%, 0.18)`
-    : `hsl(${avatarHue}, 60%, 92%)`;
-  const accentColor = isDarkMode
-    ? `hsl(${avatarHue}, 88%, 78%)`
-    : `hsl(${avatarHue}, 70%, 28%)`;
-  const accentMid = isDarkMode
-    ? `hsla(${avatarHue}, 72%, 56%, 0.12)`
-    : `hsl(${avatarHue}, 55%, 96%)`;
-  const headerGradient = isDarkMode
-    ? `linear-gradient(160deg, ${accentMid} 0%, ${cSurface} 70%)`
-    : `linear-gradient(160deg, ${accentMid} 0%, white 70%)`;
-
-  return (
-    <MotionBox
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 24 }}
-      transition={{ duration: 0.2 }}
-      bg={cSurface}
-      borderRadius={{ base: "none", md: "20px" }}
-      overflow="hidden"
-      minH={isCompact ? "100dvh" : "auto"}
-      position="relative"
-      display="flex"
-      flexDirection="column"
-    >
-      {/* ── HERO HEADER ────────────────────────────────── */}
-      <Box
-        bg={headerGradient}
-        px={{ base: 3, md: 6 }}
-        pt={2}
-        pb={2}
-        borderBottom="1px solid"
-        borderColor={cBorder}
-      >
-        {/* Top nav row */}
-        <Flex justify="space-between" align="center" mb={2}>
-          <IconButton
-            aria-label={`Back to ${partyPluralLabel}`}
-            icon={<ArrowBackIcon boxSize={4} />}
-            onClick={closeLedgerView}
-            size="sm"
-            variant="ghost"
-            borderRadius="full"
-            color={cTextMuted}
-            _hover={{ bg: cIconButtonHover }}
-          />
-          <IconButton
-            aria-label={`Delete ${partySingularLabel}`}
-            icon={<FiTrash2 size={15} />}
-            onClick={() => openDeleteModal(selectedLedgerBuyer)}
-            size="sm"
-            variant="ghost"
-            colorScheme="red"
-            borderRadius="full"
-          />
-        </Flex>
-
-        {/* Avatar + name row */}
-        <Flex align="center" gap={3} mb={4}>
-          <Box position="relative" flexShrink={0}>
-            <Flex
-              h={{ base: "52px", md: "60px" }}
-              w={{ base: "52px", md: "60px" }}
-              borderRadius="16px"
-              align="center"
-              justify="center"
-              fontWeight="800"
-              fontSize={{ base: "xl", md: "2xl" }}
-              bg={accentBg}
-              color={accentColor}
-              boxShadow={`0 2px 12px ${accentBg}`}
-              letterSpacing="-0.5px"
-            >
-              {getBuyerInitials(selectedLedgerBuyer)}
-            </Flex>
-            {selectedLedgerBuyer.isBlocked && (
-              <Circle
-                position="absolute"
-                bottom="-3px"
-                right="-3px"
-                size="18px"
-                bg="red.500"
-                color="white"
-                border="2px solid"
-                borderColor={cSurface}
-                fontSize="9px"
-                fontWeight="900"
-              >
-                !
-              </Circle>
-            )}
-          </Box>
-
-          <Box flex="1" minW={0}>
-            <Heading
-              color={cText}
-              fontSize={{ base: "md", md: "lg" }}
-              fontWeight="700"
-              lineHeight="1.2"
-              noOfLines={1}
-            >
-              {selectedBuyerName}
-            </Heading>
-            <Text color={cTextSoft} fontSize="xs" mt={0.5} noOfLines={1}>
-              {getBuyerPrimaryContact(selectedLedgerBuyer)}
-            </Text>
-            {tagList.length > 0 && (
-              <Flex mt={1.5} gap={1.5} flexWrap="wrap">
-                {tagList.map((tag) => (
-                  <Badge
-                    key={`${selectedLedgerBuyer._id}-${tag}`}
-                    px={2}
-                    py="2px"
-                    borderRadius="6px"
-                    bg={accentBg}
-                    color={accentColor}
-                    textTransform="none"
-                    fontWeight="600"
-                    fontSize="10px"
-                    letterSpacing="0"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </Flex>
-            )}
-          </Box>
-        </Flex>
-
-        {/* Balance + action strip */}
-        <Box
-          bg={cSurfaceElevated}
-          border="1px solid"
-          borderColor={cBorder}
-          borderRadius="14px"
-          p={3}
-          boxShadow={cCardShadow}
-        >
-          <Flex align="center" justify="space-between" gap={2}>
-            <Box>
-              <Text
-                fontSize="9px"
-                color={cTextSoft}
-                textTransform="uppercase"
-                fontWeight="700"
-                letterSpacing="0.08em"
-              >
-                {balanceMeta.detailLabel}
-              </Text>
-              <Text
-                mt={0.5}
-                fontSize={{ base: "xl", md: "2xl" }}
-                fontWeight="800"
-                color={
-                  balanceMeta.state === "settled"
-                    ? cTextSoft
-                    : balanceMeta.state === "receivable"
-                      ? "green.600"
-                      : "red.500"
-                }
-                letterSpacing="-0.5px"
-                lineHeight="1"
-              >
-                {balanceMeta.state === "settled"
-                  ? "₹0.00"
-                  : formatCurrency(balanceMeta.amount)}
-              </Text>
-            </Box>
-
-            <HStack spacing={2}>
-              {[
-                {
-                  label: "Call",
-                  icon: <FiPhone size={15} />,
-                  href: phone ? `tel:${phone}` : "",
-                  disabled: !phone,
-                  color: "blue.500",
-                },
-                {
-                  label: "WhatsApp",
-                  icon: <FaWhatsapp size={15} />,
-                  href: whatsappHref,
-                  disabled: !whatsappHref,
-                  color: "green.500",
-                },
-                {
-                  label: "Email",
-                  icon: <FiMail size={15} />,
-                  href: email ? `mailto:${email}` : "",
-                  disabled: !email,
-                  color: "purple.500",
-                },
-              ].map(({ label, icon, href, disabled, color }) => (
-                <IconButton
-                  key={label}
-                  aria-label={label}
-                  icon={icon}
-                  onClick={() => openExternalLink(href)}
-                  isDisabled={disabled}
-                  size="sm"
-                  variant="ghost"
-                  borderRadius="10px"
-                  bg={cIconButtonMutedBg}
-                  color={disabled ? cTextSoft : color}
-                  _hover={{ bg: cBadgeBg }}
-                  border="1px solid"
-                  borderColor={cBorder}
-                />
-              ))}
-            </HStack>
-          </Flex>
-        </Box>
-      </Box>
-
-      {/* ── ACTIVITY SECTION ───────────────────────────── */}
-      <Box
-        px={{ base: 3, md: 6 }}
-        pt={3}
-        pb={isCompact ? "90px" : "72px"}
-        flex="1"
-        overflowY="auto"
-      >
-        {/* Section header */}
-        <Flex justify="space-between" align="center" mb={3}>
-          <Text
-            fontSize="10px"
-            fontWeight="700"
-            color={cTextSoft}
-            textTransform="uppercase"
-            letterSpacing="0.08em"
-          >
-            Activity
-            <Box
-              as="span"
-              ml={1.5}
-              px={1.5}
-              py="1px"
-              bg={cBadgeBg}
-              borderRadius="5px"
-              color={cTextSoft}
-              fontSize="9px"
-            >
-              {ledgerTotal}
-            </Box>
-          </Text>
-          <Button
-            size="xs"
-            variant="outline"
-            borderRadius="full"
-            borderColor={cBorderStrong}
-            color={cTextMuted}
-            fontWeight="600"
-            fontSize="xs"
-            h="28px"
-            px={3}
-            bg={cSurfaceElevated}
-            _hover={{ bg: cSurfaceMuted }}
-            onClick={() => {
-              resetLedgerForm();
-              onLedgerEntryOpen();
-            }}
-          >
-            + Record
-          </Button>
-        </Flex>
-
-        {/* States */}
-        {ledgerLoading ? (
-          <VStack spacing={2} align="stretch">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Box
-                key={`skel-${i}`}
-                bg={cSurfaceMuted}
-                borderRadius="12px"
-                p={3}
-              >
-                <HStack spacing={3}>
-                  <SkeletonCircle size="7" />
-                  <Box flex="1">
-                    <Skeleton h="10px" w="55%" borderRadius="4px" />
-                    <Skeleton h="8px" w="35%" mt={2} borderRadius="4px" />
-                  </Box>
-                  <Skeleton h="14px" w="14" borderRadius="4px" />
-                </HStack>
-              </Box>
-            ))}
-          </VStack>
-        ) : ledgerEntries.length === 0 ? (
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            py={10}
-            bg={cSurfaceMuted}
-            borderRadius="14px"
-            border="1px dashed"
-            borderColor={cBorderStrong}
-          >
-            <Circle size="40px" bg={cSurfaceElevated} border="1px solid" borderColor={cBorderStrong} mb={3}>
-              <Icon as={FiUsers} boxSize={4} color={cTextSoft} />
-            </Circle>
-            <Text fontSize="sm" fontWeight="600" color={cTextMuted}>
-              No activity yet
-            </Text>
-            <Text mt={1} fontSize="xs" color={cTextSoft} textAlign="center" px={6}>
-              {isSelectedSupplier
-                ? "Purchases and payouts will appear here."
-                : "Sales and payments will appear here."}
-            </Text>
-          </Flex>
-        ) : (
-          <VStack align="stretch" spacing={2}>
-            {ledgerEntries.map((entry) => {
-              const note = entry.notes?.trim() || getTimelineTitle(entry);
-              const linkedSaleRecordId = getLinkedSaleRecordIdFromEntry(entry);
-              const isDebit = entry.direction === "debit";
-              const isReversed = entry.status === "reversed";
-              const hasLinkedSaleSummary = Boolean(entry.linkedSaleSummary);
-              const remainingTone = isEntryFullySettled(entry) ? dashboardPalette.success : cAccentStrong;
-
-              return (
-                <Box
-                  key={entry._id}
-                  bg={cSurfaceElevated}
-                  border="1px solid"
-                  borderColor={cBorder}
-                  borderRadius="12px"
-                  p={3}
-                  opacity={isReversed ? 0.6 : 1}
-                  position="relative"
-                  overflow="hidden"
-                  _before={
-                    !isReversed
-                      ? {
-                          content: '""',
-                          position: "absolute",
-                          left: 0,
-                          top: "20%",
-                          bottom: "20%",
-                          w: "3px",
-                          borderRadius: "0 3px 3px 0",
-                          bg: isDebit ? "red.400" : "green.400",
-                        }
-                      : {}
-                  }
-                >
-                  <Flex align="start" gap={2.5}>
-                    {/* Icon */}
-                    <Circle
-                      size="30px"
-                      bg={isDebit ? cDangerAccentSoft : cSuccessAccentSoft}
-                      color={isDebit ? "red.500" : "green.500"}
-                      flexShrink={0}
-                    >
-                      <Icon
-                        as={isDebit ? FiArrowUpRight : FiArrowDownLeft}
-                        boxSize={3.5}
-                      />
-                    </Circle>
-
-                    {/* Content */}
-                    <Box flex="1" minW={0}>
-                      <Flex justify="space-between" align="start" gap={2}>
-                        <Box minW={0} flex="1">
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color={cText}
-                            noOfLines={1}
-                            lineHeight="1.3"
-                          >
-                            {note}
-                          </Text>
-                          <Text mt={0.5} fontSize="10px" color={cTextSoft}>
-                            {getLedgerEntryTypeLabel(entry.entryType)}
-                            {" · "}
-                            {formatDateOnly(entry.entryDate || entry.createdAt)}
-                          </Text>
-                        </Box>
-
-                        {/* Amount */}
-                        <Box textAlign="right" flexShrink={0}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="700"
-                            color={getLedgerAmountColor(entry)}
-                            letterSpacing="-0.3px"
-                          >
-                            {formatSignedAmount(entry)}
-                          </Text>
-                          <Text mt={0.5} fontSize="9px" color={cTextSoft} textTransform="capitalize">
-                            {isReversed ? "reversed" : getLedgerEffectLabel(entry).toLowerCase()}
-                          </Text>
-                        </Box>
-                      </Flex>
-
-                      {entry.notes && (
-                        <Text
-                          mt={1.5}
-                          fontSize="xs"
-                          color={cTextMuted}
-                          lineHeight="1.4"
-                          noOfLines={2}
-                        >
-                          {entry.notes}
-                        </Text>
-                      )}
-
-                      {hasLinkedSaleSummary ? (
-                        <SimpleGrid columns={{ base: 2, md: 2 }} spacing={2} mt={2.5}>
-                          <Box
-                            bg={cSurfaceMuted}
-                            border="1px solid"
-                            borderColor={cBorder}
-                            borderRadius="10px"
-                            px={2.5}
-                            py={2}
-                          >
-                            <Text
-                              fontSize="9px"
-                              color={cTextSoft}
-                              textTransform="uppercase"
-                              letterSpacing="0.08em"
-                              fontWeight="700"
-                            >
-                              {isSelectedSupplier ? "Paid out" : "Paid"}
-                            </Text>
-                            <Text mt={1} fontSize="sm" fontWeight="700" color={dashboardPalette.success}>
-                              {getEntryPaidText(entry)}
-                            </Text>
-                          </Box>
-                          <Box
-                            bg={cSurfaceMuted}
-                            border="1px solid"
-                            borderColor={cBorder}
-                            borderRadius="10px"
-                            px={2.5}
-                            py={2}
-                          >
-                            <Text
-                              fontSize="9px"
-                              color={cTextSoft}
-                              textTransform="uppercase"
-                              letterSpacing="0.08em"
-                              fontWeight="700"
-                            >
-                              Remaining
-                            </Text>
-                            <Text mt={1} fontSize="sm" fontWeight="700" color={remainingTone}>
-                              {getEntryRemainingText(entry)}
-                            </Text>
-                          </Box>
-                        </SimpleGrid>
-                      ) : null}
-
-                      {!isReversed &&
-                        (linkedSaleRecordId ||
-                          canDownloadLedgerInvoice(entry) ||
-                          canPayEntry(entry)) && (
-                          <Flex mt={2.5} gap={1.5} flexWrap="wrap">
-                            {linkedSaleRecordId && (
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                borderRadius="full"
-                                borderColor={cBorderStrong}
-                                color={cTextMuted}
-                                fontWeight="600"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                onClick={() => openSaleDetailsFromLedgerEntry(entry)}
-                              >
-                                Details
-                              </Button>
-                            )}
-                            {canDownloadLedgerInvoice(entry) && (
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                borderRadius="full"
-                                borderColor={cBorderStrong}
-                                color={cTextMuted}
-                                fontWeight="600"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                isLoading={invoiceDownloadingLedgerEntryId === entry._id}
-                                onClick={() => void handleDownloadLedgerEntryInvoice(entry)}
-                              >
-                                Invoice
-                              </Button>
-                            )}
-                            {canPayEntry(entry) && (
-                              <Button
-                                size="xs"
-                                bg={dashboardPalette.accent}
-                                color="white"
-                                borderRadius="full"
-                                fontWeight="700"
-                                h="24px"
-                                fontSize="10px"
-                                px={2.5}
-                                _hover={{ opacity: 0.9 }}
-                                onClick={() => openPayModal(entry)}
-                              >
-                                Pay
-                              </Button>
-                            )}
-                          </Flex>
-                        )}
-                    </Box>
-                  </Flex>
-                </Box>
-              );
-            })}
-          </VStack>
-        )}
-
-        {/* ── PAGINATION ─────────────────────────────── */}
-        {(ledgerTotalPages || 1) > 1 && (
-          <Flex justify="space-between" align="center" mt={4}>
-            <Button
-              size="xs"
-              variant="outline"
-              borderRadius="full"
-              borderColor={cBorderStrong}
-              color={cTextMuted}
-              fontWeight="600"
-              h="28px"
-              isDisabled={ledgerPage <= 1 || ledgerLoading}
-              onClick={() => {
-                if (!selectedLedgerBuyer?._id || ledgerPage <= 1) return;
-                const p = ledgerPage - 1;
-                setLedgerPage(p);
-                fetchLedgerEntries(selectedLedgerBuyer._id, p);
-              }}
-            >
-              ← Prev
-            </Button>
-            <Text fontSize="10px" color={cTextSoft} fontWeight="600">
-              {ledgerPage} / {ledgerTotalPages || 1}
-            </Text>
-            <Button
-              size="xs"
-              variant="outline"
-              borderRadius="full"
-              borderColor={cBorderStrong}
-              color={cTextMuted}
-              fontWeight="600"
-              h="28px"
-              isDisabled={ledgerPage >= (ledgerTotalPages || 1) || ledgerLoading}
-              onClick={() => {
-                if (!selectedLedgerBuyer?._id || ledgerPage >= (ledgerTotalPages || 1)) return;
-                const p = ledgerPage + 1;
-                setLedgerPage(p);
-                fetchLedgerEntries(selectedLedgerBuyer._id, p);
-              }}
-            >
-              Next →
-            </Button>
-          </Flex>
-        )}
-      </Box>
-
-      {/* ── FLOATING ACTION BUTTON ─────────────────────── */}
-      <Box
-        position={isCompact ? "fixed" : "absolute"}
-        bottom={
-          isCompact
-            ? "calc(60px + env(safe-area-inset-bottom, 8px))"
-            : "16px"
-        }
-        right={{ base: "12px", md: "20px" }}
-        zIndex={30}
-      >
-        <Button
-          h={{ base: "42px", md: "46px" }}
-          px={{ base: 4, md: 5 }}
-          borderRadius="full"
-          bg={dashboardPalette.accent}
-          color="white"
-          leftIcon={<AddIcon fontSize="9px" />}
-          fontWeight="700"
-          fontSize="sm"
-          boxShadow={cFabShadow}
-          _hover={{ opacity: 0.92 }}
-          _active={{ transform: "scale(0.96)" }}
-          onClick={onSaleRecordOpen}
-        >
-          New entry
-        </Button>
-      </Box>
-    </MotionBox>
-  );
-};
-
-
-  const renderDesktopBuyerManagement = () => renderCustomersReferenceList(false);
-
-  const renderDesktopLedgerView = () => renderCustomersReferenceDetail(false);
 
   const pendingInvoiceHistoryCount =
     pendingSaleInvoiceDownload?.source === "sale"
@@ -5532,484 +1645,208 @@ const CustomersTab: React.FC = observer(() => {
 
   return (
     <>
-      {showMobileBuyerManagement || showMobileLedgerDetail ? (
+      {useCompactLedgerView ? (
         <Box
-          px={{ base: 0, md: 4 }}
           pt={{ base: 2, md: 4 }}
           pb={0}
           bg={showMobileBuyerManagement ? mobileLedgerPalette.page : cPage}
           minH="100dvh"
         >
-          {showMobileBuyerManagement ? renderBuyerProfilesMobile() : renderLedgerDetailMobile()}
+          {selectedLedgerBuyer ? (
+            <CustomerDetailView
+              selectedLedgerBuyer={selectedLedgerBuyer}
+              ledgerEntries={ledgerEntries}
+              ledgerSummary={ledgerSummary}
+              ledgerLoading={ledgerLoading}
+              ledgerTotal={ledgerTotal}
+              ledgerPage={ledgerPage}
+              ledgerTotalPages={ledgerTotalPages}
+              isCompact={true}
+              invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
+              onBack={closeLedgerView}
+              onDeleteBuyer={openDeleteModal}
+              onRecordPayment={() => {
+                resetLedgerForm();
+                onLedgerEntryOpen();
+              }}
+              onAddSaleRecord={onSaleRecordOpen}
+              onPayEntry={openPayModal}
+              onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
+              onDownloadLedgerInvoice={handleDownloadLedgerEntryInvoice}
+              onLedgerPageChange={(newPage) => {
+                setLedgerPage(newPage);
+                fetchLedgerEntries(selectedLedgerBuyer._id, newPage);
+              }}
+            />
+          ) : (
+            <CustomerListView
+              buyers={buyers}
+              filteredBuyers={filteredBuyers}
+              total={total}
+              page={page}
+              totalPages={totalPages}
+              loading={loading}
+              search={search}
+              setSearch={setSearch}
+              activePartyType={activePartyType}
+              setActivePartyType={setActivePartyType}
+              balanceFilter={balanceFilter}
+              setBalanceFilter={setBalanceFilter}
+              buyerFilterOptions={buyerFilterOptions}
+              buyerOverview={buyerOverview}
+              isCompact={true}
+              canUseDeviceContactImport={canUseDeviceContactImport}
+              onOpenAddBuyer={openManualBuyerModal}
+              onOpenImport={onImportOpen}
+              onSelectBuyer={openLedgerView}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                fetchBuyers(newPage, search);
+              }}
+            />
+          )}
         </Box>
       ) : (
         <MerchantPageShell>
-          {selectedLedgerBuyer ? renderDesktopLedgerView() : renderDesktopBuyerManagement()}
+          {selectedLedgerBuyer ? (
+            <CustomerDetailView
+              selectedLedgerBuyer={selectedLedgerBuyer}
+              ledgerEntries={ledgerEntries}
+              ledgerSummary={ledgerSummary}
+              ledgerLoading={ledgerLoading}
+              ledgerTotal={ledgerTotal}
+              ledgerPage={ledgerPage}
+              ledgerTotalPages={ledgerTotalPages}
+              isCompact={false}
+              invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
+              onBack={closeLedgerView}
+              onDeleteBuyer={openDeleteModal}
+              onRecordPayment={() => {
+                resetLedgerForm();
+                onLedgerEntryOpen();
+              }}
+              onAddSaleRecord={onSaleRecordOpen}
+              onPayEntry={openPayModal}
+              onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
+              onDownloadLedgerInvoice={handleDownloadLedgerEntryInvoice}
+              onLedgerPageChange={(newPage) => {
+                setLedgerPage(newPage);
+                fetchLedgerEntries(selectedLedgerBuyer._id, newPage);
+              }}
+            />
+          ) : (
+            <CustomerListView
+              buyers={buyers}
+              filteredBuyers={filteredBuyers}
+              total={total}
+              page={page}
+              totalPages={totalPages}
+              loading={loading}
+              search={search}
+              setSearch={setSearch}
+              activePartyType={activePartyType}
+              setActivePartyType={setActivePartyType}
+              balanceFilter={balanceFilter}
+              setBalanceFilter={setBalanceFilter}
+              buyerFilterOptions={buyerFilterOptions}
+              buyerOverview={buyerOverview}
+              isCompact={false}
+              canUseDeviceContactImport={canUseDeviceContactImport}
+              onOpenAddBuyer={openManualBuyerModal}
+              onOpenImport={onImportOpen}
+              onSelectBuyer={openLedgerView}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                fetchBuyers(newPage, search);
+              }}
+            />
+          )}
         </MerchantPageShell>
       )}
 
-      {useCompactLedgerView ? (
-        <Modal isOpen={isSaleDetailsOpen} onClose={closeSaleDetails} size="full" scrollBehavior="inside">
-          <ModalOverlay />
-          <ModalContent bg={cPage} color={cText}>
-            <ModalHeader
-              bg="linear-gradient(135deg, rgba(22, 20, 27, 0.98) 0%, rgba(35, 31, 39, 0.98) 100%)"
-              color={cAccentStrong}
-              borderBottom="1px solid"
-              borderBottomColor={cAccent}
-            >
-              {selectedTransactionSingularLabel} Details
-            </ModalHeader>
-            <ModalCloseButton color={cAccentStrong} />
-            <ModalBody pb={6}>{renderSaleDetailsContent()}</ModalBody>
-          </ModalContent>
-        </Modal>
-      ) : (
-          <CustomDrawer
-            open={isSaleDetailsOpen}
-            close={closeSaleDetails}
-            title={`${selectedTransactionSingularLabel} Details`}
-            size="md"
-            loading={saleDetailsLoading && !saleRecordDetails}
-            showDivider={false}
-            contentProps={{
-              bg: cPage,
-              color: cText,
-              borderLeft: "1px solid",
-              borderLeftColor: cBorder,
-            }}
-            headerProps={{
-              bg: "linear-gradient(135deg, rgba(22, 20, 27, 0.98) 0%, rgba(35, 31, 39, 0.98) 100%)",
-              color: cAccentStrong,
-              borderBottom: "1px solid",
-              borderBottomColor: cAccent,
-              boxShadow: "0 12px 32px rgba(0, 0, 0, 0.28)",
-              px: 6,
-              py: 5,
-            }}
-            closeButtonProps={{
-              color: cText,
-              bg: cSurfaceAlt,
-              border: "1px solid",
-              borderColor: cBorderStrong,
-              borderRadius: "12px",
-              _hover: {
-                bg: cSurfaceSoft,
-                color: cAccentStrong,
-              },
-            }}
-            bodyProps={{
-              bg: cPage,
-              px: { base: 3, md: 4 },
-              py: 4,
-            }}
-        >
-          {renderSaleDetailsContent()}
-        </CustomDrawer>
-      )}
+      {/* Sale Details Modal / Drawer */}
+      <SaleDetailsModal
+        isOpen={isSaleDetailsOpen}
+        onClose={closeSaleDetails}
+        useCompact={useCompactLedgerView}
+        saleRecordDetails={saleRecordDetails}
+        selectedSaleRecord={selectedSaleRecord}
+        loading={saleDetailsLoading}
+        invoiceDownloadingSaleId={invoiceDownloadingSaleId}
+        selectedPartyType={selectedPartyType}
+        onDownloadInvoice={handleDownloadSaleInvoice}
+        isInvoiceOptionsOpen={isInvoiceOptionsOpen}
+        onCloseInvoiceOptions={closeInvoiceOptions}
+        onConfirmInvoiceOption={handleInvoiceOptionConfirm}
+        invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
+        pendingInvoiceHistoryCount={pendingInvoiceHistoryCount}
+      />
 
-      <Modal isOpen={isInvoiceOptionsOpen} onClose={closeInvoiceOptions} isCentered size="md">
-        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(6px)" />
-        <ModalContent
-          borderRadius={{ base: "24px 24px 0 0", md: "24px" }}
-          mb={{ base: 0, md: "auto" }}
-          mt={{ base: "auto", md: "auto" }}
-          mx={{ base: 0, md: "auto" }}
-          overflow="hidden"
-          bg={cSurface}
-          color={cText}
-        >
-          <ModalHeader pb={2}>
-            Include ledger history?
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack align="stretch" spacing={4}>
-              <Text fontSize="sm" color={cTextSoft}>
-                Do you want this invoice to also show the linked ledger timeline, including posting,
-                payments received, corrections, and remaining balance?
-              </Text>
-              <Box
-                border="1px solid"
-                borderColor={cBorder}
-                bg={cSurfaceAlt}
-                borderRadius="2xl"
-                p={4}
-              >
-                <Text fontSize="xs" textTransform="uppercase" letterSpacing="0.08em" color={cTextSoft} fontWeight="800">
-                  Ledger history
-                </Text>
-                <Text mt={1} fontSize="sm" color={cText} fontWeight="700">
-                  {pendingInvoiceHistoryCount
-                    ? `${pendingInvoiceHistoryCount} linked ${pendingInvoiceHistoryCount === 1 ? "entry" : "entries"} found`
-                    : "No linked entries found yet"}
-                </Text>
-                <Text mt={1} fontSize="xs" color={cTextSoft}>
-                  Invoice-only keeps the PDF shorter. Include history when the customer needs payment proof.
-                </Text>
-              </Box>
-            </VStack>
-          </ModalBody>
-          <ModalFooter gap={3} flexDirection={{ base: "column-reverse", sm: "row" }} alignItems="stretch">
-            <Button
-              variant="outline"
-              w={{ base: "full", sm: "auto" }}
-              minH="44px"
-              borderRadius="16px"
-              onClick={() => void handleInvoiceOptionConfirm(false)}
-              isLoading={Boolean(invoiceDownloadingSaleId || invoiceDownloadingLedgerEntryId)}
-            >
-              Invoice Only
-            </Button>
-            <Button
-              w={{ base: "full", sm: "auto" }}
-              minH="44px"
-              borderRadius="16px"
-              bgGradient="linear(to-r, var(--color-primary), var(--color-secondary))"
-              color="white"
-              boxShadow="0 14px 28px rgba(37, 99, 235, 0.24)"
-              _hover={{ bgGradient: "linear(135deg, #1D4ED8 0%, #0F766E 100%)" }}
-              _active={{ transform: "scale(0.98)" }}
-              onClick={() => void handleInvoiceOptionConfirm(true)}
-              isLoading={Boolean(invoiceDownloadingSaleId || invoiceDownloadingLedgerEntryId)}
-            >
-              Include Ledger History
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {/* Customer Form & Import Modals */}
+      <CustomerFormModals
+        isOpen={isOpen}
+        onClose={closeBuyerModal}
+        isImportOpen={isImportOpen}
+        onCloseImport={closeImportModal}
+        isContactReviewOpen={isContactReviewOpen}
+        onCloseContactReview={closeContactReviewModal}
+        isBuyerSuccessOpen={isBuyerSuccessOpen}
+        onCloseBuyerSuccess={closeBuyerSuccessModal}
+        lastCreatedBuyer={lastCreatedBuyer}
+        formValues={formValues}
+        setFormValues={setFormValues}
+        buyerFormErrors={buyerFormErrors}
+        clearBuyerFormErrors={clearBuyerFormErrors}
+        showContactExtraFields={showContactExtraFields}
+        setShowContactExtraFields={setShowContactExtraFields}
+        submitting={submitting}
+        isImportingContacts={isImportingContacts}
+        importDefaultTags={importDefaultTags}
+        setImportDefaultTags={setImportDefaultTags}
+        canUseDeviceContactImport={canUseDeviceContactImport}
+        useCompactBuyerView={useCompactBuyerView}
+        activePartyType={activePartyType}
+        onSubmitBuyer={handleCreateBuyer}
+        onPickSingleContact={handlePickSingleContact}
+        onImportFromDevice={handleImportFromDevice}
+        onOpenLedgerFromSuccess={openLedgerView}
+      />
 
-      <Modal isOpen={isImportOpen} onClose={closeImportModal} isCentered size="xl">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Import {partyPluralLabel} From Contacts</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4} align="stretch">
-              <Text fontSize="sm" color="gray.600">
-                Import {partyPluralLabel.toLowerCase()} directly from device contacts.
-              </Text>
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isLedgerEntryOpen}
+        onClose={closeLedgerEntryModal}
+        useCompact={useCompactBuyerView}
+        paymentContextEntry={paymentContextEntry}
+        ledgerFormValues={ledgerFormValues}
+        setLedgerFormValues={setLedgerFormValues}
+        submitting={ledgerSubmitting}
+        onSubmit={handleCreateLedgerEntry}
+        selectedPartyType={selectedPartyType}
+        onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
+      />
 
-              <FormControl>
-                <FormLabel>Default Tags (comma-separated)</FormLabel>
-                <Input
-                  value={importDefaultTags}
-                  onChange={(e) => setImportDefaultTags(e.target.value)}
-                  placeholder="retail, repeat"
-                />
-              </FormControl>
+      {/* Sale Record Modal */}
+      <SaleRecordModal
+        isOpen={isSaleRecordOpen}
+        onClose={closeSaleRecordModal}
+        useCompact={useCompactBuyerView}
+        saleFormValues={saleFormValues}
+        setSaleFormValues={setSaleFormValues}
+        activeSaleItemIndex={activeSaleItemIndex}
+        setActiveSaleItemIndex={setActiveSaleItemIndex}
+        saleItemSuggestions={saleItemSuggestions}
+        saleItemSuggestionsLoading={saleItemSuggestionsLoading}
+        onApplySuggestedProduct={applySuggestedProductToSaleItem}
+        onAddSaleItem={addSaleItem}
+        onRemoveSaleItem={removeSaleItem}
+        onUpdateSaleItem={updateSaleItem}
+        submitting={saleSubmitting}
+        onSubmit={handleCreateSaleRecord}
+        selectedPartyType={selectedPartyType}
+      />
 
-              {canUseDeviceContactImport ? (
-                <>
-                  <Stack direction={{ base: "column", sm: "row" }} spacing={3} align="stretch">
-                    <Button
-                      colorScheme="brand"
-                      variant="solid"
-                      onClick={handlePickSingleContact}
-                      isLoading={isImportingContacts}
-                      flex={1}
-                      size="lg"
-                      minH={{ base: "60px", sm: "64px" }}
-                      borderRadius="xl"
-                      fontWeight="semibold"
-                      fontSize="md"
-                      whiteSpace="normal"
-                      textAlign="center"
-                      px={6}
-                      boxShadow="sm"
-                      _hover={{ transform: "translateY(-1px)", boxShadow: "md" }}
-                      _active={{ transform: "translateY(0)" }}
-                    >
-                      Pick Contact
-                    </Button>
-                    <Button
-                      colorScheme="brand"
-                      variant="outline"
-                      onClick={handleImportFromDevice}
-                      isLoading={isImportingContacts}
-                      flex={1}
-                      size="lg"
-                      minH={{ base: "60px", sm: "64px" }}
-                      borderRadius="xl"
-                      fontWeight="semibold"
-                      fontSize="md"
-                      whiteSpace="normal"
-                      textAlign="center"
-                      px={6}
-                      borderWidth="1.5px"
-                      bg="rgba(214, 183, 114, 0.10)"
-                      borderColor={cAccent}
-                      color={cAccent}
-                      _hover={{ bg: "rgba(214, 183, 114, 0.16)", transform: "translateY(-1px)" }}
-                      _active={{ transform: "translateY(0)" }}
-                    >
-                      Import All Contacts
-                    </Button>
-                  </Stack>
-
-                  <Divider />
-                </>
-              ) : null}
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={closeImportModal}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal isOpen={isContactReviewOpen} onClose={closeContactReviewModal} size="full" scrollBehavior="inside">
-        <ModalOverlay />
-        <ModalContent bg="#F7FAFC">
-          <Box bgGradient={dashboardHeroGradient} px={4} py={4} color="white">
-            <HStack spacing={3}>
-              <IconButton
-                aria-label="Back"
-                icon={<ArrowBackIcon />}
-                onClick={closeContactReviewModal}
-                variant="ghost"
-                color="white"
-                _hover={{ bg: "whiteAlpha.200" }}
-                _active={{ bg: "whiteAlpha.300" }}
-              />
-              <Text fontSize="2xl" fontWeight="700">
-                Add Party
-              </Text>
-            </HStack>
-          </Box>
-
-          <ModalBody px={4} py={5}>
-            {renderBuyerFormFields(true)}
-          </ModalBody>
-
-          <ModalFooter px={4} py={4} borderTopWidth="1px" borderTopColor="gray.200" bg="white">
-            <Button
-              w="full"
-              h="58px"
-              colorScheme="brand"
-              borderRadius="16px"
-              fontSize="lg"
-              onClick={handleCreateBuyer}
-              isLoading={submitting}
-            >
-              Add {formValues.partyType === "supplier" ? "Supplier" : "Customer"}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <Modal isOpen={isBuyerSuccessOpen} onClose={closeBuyerSuccessModal} isCentered size="sm">
-        <ModalOverlay bg="blackAlpha.500" />
-        <ModalContent borderRadius="24px" overflow="hidden">
-          <Box bgGradient="linear(180deg, #0E7A44 0%, #0A6538 100%)" color="white" px={6} py={7}>
-            <VStack spacing={3}>
-              <Flex
-                h="64px"
-                w="64px"
-                borderRadius="full"
-                bg="whiteAlpha.250"
-                align="center"
-                justify="center"
-                fontSize="3xl"
-                fontWeight="900"
-              >
-                OK
-              </Flex>
-              <Text fontSize="2xl" fontWeight="800">
-                {lastCreatedBuyer?.partyType === "supplier" ? "Supplier saved" : "Customer saved"}
-              </Text>
-              <Text fontSize="sm" color="whiteAlpha.900" textAlign="center">
-                {lastCreatedBuyer
-                  ? `${getBuyerDisplayName(lastCreatedBuyer)} is ready for ledger entries.`
-                  : `The contact has been added to your ${normalizedActivePartyType === "supplier" ? "supplier" : "customer"} list.`}
-              </Text>
-            </VStack>
-          </Box>
-          <ModalBody px={6} py={5}>
-            <VStack spacing={3} align="stretch">
-              <Button
-                colorScheme="brand"
-                h="52px"
-                borderRadius="16px"
-                onClick={async () => {
-                  closeBuyerSuccessModal();
-                  if (lastCreatedBuyer?._id) {
-                    await openLedgerView(lastCreatedBuyer);
-                  }
-                }}
-              >
-                Open Ledger
-              </Button>
-              <Button
-                variant="outline"
-                h="52px"
-                borderRadius="16px"
-                onClick={closeBuyerSuccessModal}
-              >
-                Done
-              </Button>
-            </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      {useCompactBuyerView ? (
-        <BottomSheetDrawer
-          isOpen={isOpen}
-          onClose={closeBuyerModal}
-          title={`Add ${partySingularLabel}`}
-          overlayBg="blackAlpha.600"
-          contentProps={{
-            bg: cSurface,
-            borderTopRadius: "28px",
-          }}
-          headerProps={{
-            borderBottomColor: cBorder,
-            px: 5,
-            py: 4,
-          }}
-          bodyProps={{
-            px: 4,
-            py: 4,
-          }}
-          footerProps={{
-            borderTopColor: cBorder,
-            px: 4,
-            py: 4,
-            flexDirection: "row",
-          }}
-          footer={
-            <>
-              <Button variant="ghost" onClick={closeBuyerModal} minH="52px" borderRadius="16px">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateBuyer}
-                isLoading={submitting}
-                flex="1"
-                minH="52px"
-                borderRadius="16px"
-                bgGradient={cHeroGradient}
-                color="white"
-                boxShadow="0 16px 30px rgba(69, 104, 255, 0.22)"
-                _hover={{ filter: "brightness(1.05)" }}
-              >
-                Save {partySingularLabel}
-              </Button>
-            </>
-          }
-        >
-          {renderBuyerFormFields(true)}
-        </BottomSheetDrawer>
-      ) : (
-        <Modal isOpen={isOpen} onClose={closeBuyerModal} isCentered size="lg">
-          <ModalOverlay />
-          <ModalContent borderRadius="28px" bg={cSurface}>
-            <ModalHeader>Add {partySingularLabel}</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody px={6} py={5}>
-              {renderBuyerFormFields(false)}
-            </ModalBody>
-            <ModalFooter borderTopWidth="1px" borderTopColor={cBorder}>
-              <Button variant="ghost" mr={3} onClick={closeBuyerModal}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateBuyer}
-                isLoading={submitting}
-                bgGradient={cHeroGradient}
-                color="white"
-                borderRadius="16px"
-                px={5}
-                _hover={{ filter: "brightness(1.05)" }}
-              >
-                Save {partySingularLabel}
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      )}
-
-      {useCompactBuyerView ? (
-        <>
-          <BottomSheetDrawer
-            isOpen={isLedgerEntryOpen}
-            onClose={closeLedgerEntryModal}
-            title="Record Payment"
-            footer={
-              <>
-                <Button variant="ghost" onClick={closeLedgerEntryModal}>
-                  Cancel
-                </Button>
-                <Button colorScheme="brand" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting} flex="1" h="52px">
-                  Save Payment
-                </Button>
-              </>
-            }
-          >
-            {renderLedgerEntryFormFields()}
-          </BottomSheetDrawer>
-
-          <BottomSheetDrawer
-            isOpen={isSaleRecordOpen}
-            onClose={closeSaleRecordModal}
-            title={`Add ${isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record`}
-            size="full"
-            bodyProps={{ py: 4 }}
-            footer={
-              <>
-                <Button variant="ghost" onClick={closeSaleRecordModal}>
-                  Cancel
-                </Button>
-                <Button colorScheme="brand" onClick={handleCreateSaleRecord} isLoading={saleSubmitting} flex="1" h="52px">
-                  Save {selectedTransactionSingularLabel} Record
-                </Button>
-              </>
-            }
-          >
-            {renderSaleRecordFormFields()}
-          </BottomSheetDrawer>
-        </>
-      ) : (
-        <>
-          <Modal isOpen={isLedgerEntryOpen} onClose={closeLedgerEntryModal} isCentered size="lg">
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Record Payment</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>{renderLedgerEntryFormFields()}</ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" mr={3} onClick={closeLedgerEntryModal}>
-                  Cancel
-                </Button>
-                <Button colorScheme="brand" onClick={handleCreateLedgerEntry} isLoading={ledgerSubmitting}>
-                  Save Payment
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-
-          <Modal isOpen={isSaleRecordOpen} onClose={closeSaleRecordModal} isCentered size="4xl">
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Add {isSelectedSupplier ? "Supplier Purchase" : "Customer Sale"} Record</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>{renderSaleRecordFormFields()}</ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" mr={3} onClick={closeSaleRecordModal}>
-                  Cancel
-                </Button>
-                <Button colorScheme="brand" onClick={handleCreateSaleRecord} isLoading={saleSubmitting}>
-                  Save {selectedTransactionSingularLabel} Record
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-        </>
-      )}
-
+      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
@@ -6018,7 +1855,7 @@ const CustomersTab: React.FC = observer(() => {
         message={
           <Text>
             Are you sure you want to delete {selectedBuyer?.partyType === "supplier" ? "supplier" : "customer"}{" "}
-            <strong>{selectedBuyer?.displayName || selectedBuyer?.buyerId?.fullName || "-"}</strong>?
+            <strong>{selectedBuyer ? getBuyerDisplayName(selectedBuyer) : "-"}</strong>?
             This action cannot be undone.
           </Text>
         }
@@ -6027,6 +1864,7 @@ const CustomersTab: React.FC = observer(() => {
         isLoading={isDeleting}
       />
 
+      {/* Reverse Confirmation Modal */}
       <ConfirmationModal
         isOpen={isReverseOpen}
         onClose={onReverseClose}

@@ -1,4 +1,5 @@
 "use client";
+
 import { CloseIcon, SearchIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -28,18 +29,25 @@ const SearchInput = observer(() => {
   const searchParams = useSearchParams();
   const { layout } = stores;
   const inputRef = useRef<HTMLInputElement>(null);
-  const productsUrlSyncTimerRef = useRef<number | null>(null);
+  const searchUrlSyncTimerRef = useRef<number | null>(null);
 
   const productSearchParam =
-    searchParams.get("search") || searchParams.get("q") || "";
+    searchParams.get("q") || searchParams.get("search") || "";
 
+  // Synchronize input with URL query when on search page, or clear when navigating home
   useEffect(() => {
-    if (pathname?.startsWith("/products")) {
+    if (pathname?.startsWith("/search") || pathname?.startsWith("/products")) {
       setQuery(productSearchParam);
       layout.setProductSearchQuery(productSearchParam);
+    } else if (pathname === "/" || pathname === "/home") {
+      if (!productSearchParam) {
+        setQuery("");
+        layout.setProductSearchQuery("");
+      }
     }
   }, [layout, pathname, productSearchParam]);
 
+  // Rotate animated placeholders
   useEffect(() => {
     const interval = window.setInterval(() => {
       setPlaceholderIndex(
@@ -50,120 +58,81 @@ const SearchInput = observer(() => {
     return () => window.clearInterval(interval);
   }, []);
 
-  const getProductsSearchHref = useCallback(
-    (searchTerm: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      const trimmedSearch = searchTerm.trim();
+  const getSearchHref = useCallback((searchTerm: string) => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      return "/search";
+    }
+    return `/search?q=${encodeURIComponent(trimmed)}`;
+  }, []);
 
-      params.delete("q");
-
-      if (trimmedSearch) {
-        params.set("search", trimmedSearch);
-      } else {
-        params.delete("search");
-      }
-
-      const queryString = params.toString();
-      return `/products${queryString ? `?${queryString}` : ""}`;
-    },
-    [searchParams]
-  );
-
-  const updateProductsSearch = useCallback(
-    (value: string, mode: "replace" | "push" = "replace") => {
-      const trimmedValue = value.trim();
-      const isProductsPage = pathname?.startsWith("/products");
-
-      if (!trimmedValue && !isProductsPage) {
-        return;
-      }
-
-      const href = getProductsSearchHref(trimmedValue);
-
-      if (mode === "push") {
-        router.push(href);
-        return;
-      }
-
-      if (isProductsPage && typeof window !== "undefined") {
-        window.history.replaceState(window.history.state, "", href);
-        return;
-      }
-
-      router.replace(href, { scroll: false });
-    },
-    [getProductsSearchHref, pathname, router]
-  );
-
-  const clearProductsUrlSyncTimer = useCallback(() => {
-    if (productsUrlSyncTimerRef.current) {
-      window.clearTimeout(productsUrlSyncTimerRef.current);
-      productsUrlSyncTimerRef.current = null;
+  const clearSyncTimer = useCallback(() => {
+    if (searchUrlSyncTimerRef.current) {
+      window.clearTimeout(searchUrlSyncTimerRef.current);
+      searchUrlSyncTimerRef.current = null;
     }
   }, []);
 
-  const queueProductsUrlSync = useCallback(
+  // Live URL sync ONLY when user is already on the dedicated /search page
+  const queueUrlSync = useCallback(
     (value: string) => {
-      if (!pathname?.startsWith("/products")) {
+      if (!pathname?.startsWith("/search")) {
         return;
       }
 
-      clearProductsUrlSyncTimer();
-      productsUrlSyncTimerRef.current = window.setTimeout(() => {
-        updateProductsSearch(value);
-        productsUrlSyncTimerRef.current = null;
-      }, 450);
+      clearSyncTimer();
+      searchUrlSyncTimerRef.current = window.setTimeout(() => {
+        const trimmed = value.trim();
+        const href = getSearchHref(trimmed);
+        if (typeof window !== "undefined") {
+          window.history.replaceState(window.history.state, "", href);
+        } else {
+          router.replace(href, { scroll: false });
+        }
+        searchUrlSyncTimerRef.current = null;
+      }, 400);
     },
-    [clearProductsUrlSyncTimer, pathname, updateProductsSearch]
+    [clearSyncTimer, getSearchHref, pathname, router]
   );
 
   const handleSearchChange = (value: string) => {
     setQuery(value);
     layout.setProductSearchQuery(value);
-    queueProductsUrlSync(value);
+    queueUrlSync(value);
   };
 
-  useEffect(() => clearProductsUrlSyncTimer, [clearProductsUrlSyncTimer]);
-
-  useEffect(() => {
-    if (pathname?.startsWith("/products") || !query.trim()) {
-      return undefined;
-    }
-
-    if (document.activeElement !== inputRef.current) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      updateProductsSearch(query, "push");
-    }, 700);
-
-    return () => window.clearTimeout(timer);
-  }, [pathname, query, updateProductsSearch]);
+  useEffect(() => clearSyncTimer, [clearSyncTimer]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const submittedSearch = String(formData.get("search") || "").trim();
+    const submittedSearch = String(
+      formData.get("q") || formData.get("search") || query || ""
+    ).trim();
 
     setQuery(submittedSearch);
     layout.setProductSearchQuery(submittedSearch);
-    clearProductsUrlSyncTimer();
-    updateProductsSearch(submittedSearch, "push");
+    clearSyncTimer();
+
+    // Redirect user to the dedicated Search Results page on Enter
+    const targetHref = getSearchHref(submittedSearch);
+    router.push(targetHref);
     inputRef.current?.blur();
   };
 
   const clearSearch = () => {
     setQuery("");
     layout.setProductSearchQuery("");
-    clearProductsUrlSyncTimer();
-    updateProductsSearch("");
+    clearSyncTimer();
+    if (pathname?.startsWith("/search")) {
+      router.replace("/search", { scroll: false });
+    }
     inputRef.current?.focus();
   };
 
   return (
     <Box position="relative" w="full">
-      <Box as="form" action="/products" method="get" onSubmit={handleSubmit}>
+      <Box as="form" action="/search" method="get" onSubmit={handleSubmit}>
         <InputGroup size="md" w="full">
           <InputLeftElement
             pointerEvents="none"
@@ -179,7 +148,7 @@ const SearchInput = observer(() => {
 
           <Input
             ref={inputRef}
-            name="search"
+            name="q"
             value={query}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder={placeholderSuggestions[placeholderIndex]}

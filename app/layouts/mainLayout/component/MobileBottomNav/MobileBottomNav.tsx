@@ -217,7 +217,7 @@ const MobileBottomNav = observer(() => {
               aria-label={item.label}
             >
               {/* Shared Sliding Background Pill for Active Side Tab */}
-              {isActive && (
+              {/* {isActive && (
                 <MotionBox
                   layoutId="mobileNavActivePill"
                   position="absolute"
@@ -231,7 +231,7 @@ const MobileBottomNav = observer(() => {
                     damping: 30,
                   }}
                 />
-              )}
+              )} */}
 
               {/* Icon Wrapper with Cart Badge & Spring Animation */}
               <MotionBox
@@ -304,7 +304,7 @@ const MobileBottomNav = observer(() => {
                 fontSize="10px"
                 fontWeight={isActive ? '700' : '500'}
                 color={isActive ? activeColor : inactiveColor}
-                mt={1}
+                mt={0}
                 lineHeight="1"
                 letterSpacing="-0.01em"
                 transition="color 0.2s ease"
@@ -313,7 +313,7 @@ const MobileBottomNav = observer(() => {
               </Text>
 
               {/* Top Active Indicator Line */}
-              {isActive && (
+              {/* {isActive && (
                 <MotionBox
                   layoutId="mobileNavActiveDot"
                   position="absolute"
@@ -328,7 +328,7 @@ const MobileBottomNav = observer(() => {
                     damping: 28,
                   }}
                 />
-              )}
+              )} */}
             </MotionFlex>
           );
         })}

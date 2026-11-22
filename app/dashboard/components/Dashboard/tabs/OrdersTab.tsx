@@ -176,6 +176,7 @@ const OrdersTab = observer(() => {
 
   const { orderStore, auth } = stores;
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [hasOrderChanges, setHasOrderChanges] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -285,13 +286,17 @@ const OrdersTab = observer(() => {
 
   const handleRowClick = (row: any) => {
     setSelectedOrderId(row._id || row.orderId);
+    setHasOrderChanges(false);
     onOpen();
   };
 
   const handleCloseDrawer = () => {
     onClose();
     setSelectedOrderId(null);
-    fetchOrders();
+    if (hasOrderChanges) {
+      fetchOrders();
+      setHasOrderChanges(false);
+    }
   };
 
   const selectedOrder = orderStore.companyOrders.find(
@@ -631,6 +636,7 @@ const OrdersTab = observer(() => {
           isOpen={isOpen}
           onClose={handleCloseDrawer}
           order={selectedOrder}
+          onOrderUpdated={() => setHasOrderChanges(true)}
         />
       ) : null}
     </Box>

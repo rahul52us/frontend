@@ -408,7 +408,7 @@ const DashboardMobileBottomNav = observer(() => {
                     layoutId="dashboardMobileNavPill"
                     position="absolute"
                     inset="3px 4px"
-                    bg={activePillBg}
+                    // bg={'activePillBg'}
                     borderRadius="xl"
                     zIndex={0}
                     transition={{
@@ -420,7 +420,7 @@ const DashboardMobileBottomNav = observer(() => {
                 )}
 
                 {/* Top Active Line - breathing space above icon */}
-                {isActive && (
+                {/* {isActive && (
                   <MotionBox
                     layoutId="dashboardMobileActiveDot"
                     position="absolute"
@@ -436,7 +436,7 @@ const DashboardMobileBottomNav = observer(() => {
                       damping: 28,
                     }}
                   />
-                )}
+                )} */}
 
                 {/* Icon Wrapper */}
                 <MotionBox
