@@ -34,9 +34,12 @@ import {
 import { observer } from "mobx-react-lite";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  FiArrowRight,
+  FiBriefcase,
   FiCheck,
-  FiCompass,
+  FiHome,
   FiMapPin,
+  FiNavigation,
   FiPlus,
   FiSearch,
 } from "react-icons/fi";
@@ -102,21 +105,7 @@ export const LocationSelectModal = observer(
       auth.user?.defaultAddress ||
       auth.addresses.find((a: any) => a.isDefault)?._id;
 
-    // Filter saved addresses based on search query
-    const filteredAddresses = auth.addresses.filter((addr: any) => {
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase();
-      const name = (addr.name || addr.fullName || "").toLowerCase();
-      const line1 = (addr.line1 || addr.addressLine1 || "").toLowerCase();
-      const city = (addr.city || "").toLowerCase();
-      const postal = (addr.postalCode || "").toLowerCase();
-      return (
-        name.includes(q) ||
-        line1.includes(q) ||
-        city.includes(q) ||
-        postal.includes(q)
-      );
-    });
+    const savedAddressesList = auth.addresses;
 
     // Google Places Autocomplete Query
     useEffect(() => {
@@ -312,7 +301,6 @@ export const LocationSelectModal = observer(
                 }
               );
             } else {
-              // Fallback
               await auth.updateCurrentLocation({
                 coordinates: [lng, lat],
                 city: "Gwalior",
@@ -339,72 +327,111 @@ export const LocationSelectModal = observer(
       );
     };
 
+    // Helper to get contextual icon for address type
+    const getAddressIcon = (name: string = "") => {
+      const lower = name.toLowerCase();
+      if (lower.includes("home") || lower.includes("house") || lower.includes("flat") || lower.includes("apt")) {
+        return FiHome;
+      }
+      if (lower.includes("work") || lower.includes("office") || lower.includes("desk")) {
+        return FiBriefcase;
+      }
+      if (lower.includes("current")) {
+        return FiNavigation;
+      }
+      return FiMapPin;
+    };
+
+    // Color tokens
+    const textPrimary = useColorModeValue("gray.800", "white");
+    const textSecondary = useColorModeValue("gray.500", "gray.400");
+    const searchBg = useColorModeValue("gray.50", "whiteAlpha.100");
+    const itemBg = useColorModeValue("white", "whiteAlpha.50");
+    const itemBorder = useColorModeValue("gray.100", "whiteAlpha.100");
+
     const contentBody = (
-      <VStack spacing={4} align="stretch" py={2}>
-        {/* Google Places Search Input */}
-        <Box>
+      <VStack spacing={4} align="stretch" pb={2} pt={1} position="relative">
+        {/* Sleek Search Bar */}
+        <Box position="relative">
           <InputGroup size="md">
-            <InputLeftElement pointerEvents="none">
+            <InputLeftElement pointerEvents="none" pl={3.5} h="full">
               {isSearchingCity ? (
                 <Spinner size="xs" color="var(--color-primary)" />
               ) : (
-                <Icon as={FiSearch} color="gray.400" />
+                <Icon as={FiSearch} color="gray.400" boxSize={4} />
               )}
             </InputLeftElement>
             <Input
-              placeholder="Search area, city or pincode via Google Maps..."
+              placeholder="Search area, landmark, city or pincode..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              borderRadius="xl"
-              bg={useColorModeValue("gray.50", "whiteAlpha.100")}
-              borderColor={useColorModeValue("gray.200", "whiteAlpha.200")}
+              borderRadius="16px"
+              h="50px"
+              pl="42px"
+              fontSize="14px"
+              bg={searchBg}
+              border="1.5px solid transparent"
+              _hover={{ bg: "gray.100", borderColor: "gray.200" }}
               _focus={{
+                bg: "white",
                 borderColor: "var(--color-primary)",
-                boxShadow: "0 0 0 1px var(--color-primary)",
+                boxShadow: "0 0 0 3px rgba(6, 95, 104, 0.12)",
               }}
+              transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
             />
           </InputGroup>
 
-          {/* Google Places Predictions Dropdown */}
+          {/* Floating Dropdown for Google Search Results */}
           {placePredictions.length > 0 && (
             <VStack
+              position="absolute"
+              top="100%"
+              left={0}
+              right={0}
               mt={2}
+              zIndex={50}
               spacing={1}
               align="stretch"
               bg={useColorModeValue("white", "gray.800")}
-              borderRadius="xl"
+              borderRadius="20px"
               border="1px solid"
-              borderColor={useColorModeValue("gray.200", "whiteAlpha.200")}
-              boxShadow="lg"
-              p={1.5}
+              borderColor={useColorModeValue("gray.100", "whiteAlpha.200")}
+              boxShadow="0 24px 48px -12px rgba(0,0,0,0.25)"
+              p={2.5}
+              maxH="260px"
+              overflowY="auto"
             >
-              <Text fontSize="10px" fontWeight="700" color="gray.400" px={2} pt={1}>
-                GOOGLE MAPS RESULTS (TAP TO SET DEFAULT)
+              <Text fontSize="10px" fontWeight="800" color="gray.400" px={3} pt={1} pb={0.5} letterSpacing="0.8px">
+                SUGGESTIONS FROM GOOGLE MAPS
               </Text>
               {placePredictions.map((pred) => (
                 <HStack
                   key={pred.place_id}
                   as="button"
-                  onClick={() => handleSelectGooglePlace(pred)}
-                  p={2}
-                  borderRadius="lg"
-                  _hover={{ bg: useColorModeValue("blue.50", "whiteAlpha.100") }}
+                  onClick={() => {
+                    handleSelectGooglePlace(pred);
+                    setPlacePredictions([]);
+                    setSearchQuery("");
+                  }}
+                  p={2.5}
+                  borderRadius="14px"
+                  _hover={{ bg: "var(--color-primary-soft)" }}
                   transition="all 0.15s ease"
                   textAlign="left"
                   w="full"
                 >
-                  <Circle size="24px" bg="var(--color-primary-soft)" color="var(--color-primary)">
-                    <Icon as={FiMapPin} boxSize={3} />
+                  <Circle size="32px" bg="var(--color-primary-soft)" color="var(--color-primary)" flexShrink={0}>
+                    <Icon as={FiMapPin} boxSize={4} />
                   </Circle>
                   <Box minW={0} flex={1}>
-                    <Text fontSize="12.5px" fontWeight="700" noOfLines={1}>
+                    <Text fontSize="13.5px" fontWeight="700" color={textPrimary} noOfLines={1}>
                       {pred.structured_formatting?.main_text || pred.description}
                     </Text>
-                    <Text fontSize="10.5px" color="gray.500" noOfLines={1}>
+                    <Text fontSize="11px" color={textSecondary} noOfLines={1} mt={0.5}>
                       {pred.structured_formatting?.secondary_text || pred.description}
                     </Text>
                   </Box>
-                  <Text fontSize="10px" fontWeight="700" color="var(--color-primary)">
+                  <Text fontSize="11px" fontWeight="700" color="var(--color-primary)">
                     Select ▾
                   </Text>
                 </HStack>
@@ -413,63 +440,106 @@ export const LocationSelectModal = observer(
           )}
         </Box>
 
-        {/* Action: Use Current Location (GPS) */}
-        <HStack
+        {/* Action: Use Current Location (GPS) Card */}
+        <Box
           as="button"
           onClick={handleUseCurrentLocation}
           p={3.5}
-          borderRadius="xl"
-          border="1.5px solid"
-          borderColor="var(--color-primary)"
-          bg="var(--color-primary-soft)"
-          _hover={{ opacity: 0.9, transform: "translateY(-1px)" }}
-          transition="all 0.2s ease"
+          borderRadius="20px"
+          bg="linear-gradient(135deg, rgba(6, 95, 104, 0.08) 0%, rgba(6, 95, 104, 0.02) 100%)"
+          border="1px solid"
+          borderColor="rgba(6, 95, 104, 0.18)"
+          _hover={{
+            borderColor: "var(--color-primary)",
+            bg: "linear-gradient(135deg, rgba(6, 95, 104, 0.12) 0%, rgba(6, 95, 104, 0.04) 100%)",
+            transform: "translateY(-1px)",
+            boxShadow: "0 6px 20px rgba(6, 95, 104, 0.12)",
+          }}
+          transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
           w="full"
-          justify="space-between"
           cursor="pointer"
+          textAlign="left"
         >
-          <HStack spacing={3}>
-            <Circle size="34px" bg="var(--color-primary)" color="white">
-              {isLocating ? (
-                <Spinner size="xs" color="white" />
-              ) : (
-                <Icon as={FiCompass} boxSize={4} />
-              )}
-            </Circle>
-            <Box textAlign="left">
-              <Text fontSize="13px" fontWeight="800" color="var(--color-primary)">
-                {isLocating ? "Detecting location via GPS..." : "Use Current Location"}
-              </Text>
-              <Text fontSize="11px" color="gray.500">
-                Detect precise location via Google Maps GPS
-              </Text>
-            </Box>
-          </HStack>
-          <Text fontSize="11px" fontWeight="700" color="var(--color-primary)">
-            GPS 📍
-          </Text>
-        </HStack>
+          <HStack justify="space-between" align="center">
+            <HStack spacing={3.5} align="center">
+              <Circle
+                size="42px"
+                bg="linear-gradient(135deg, var(--color-primary) 0%, #0d7a86 100%)"
+                color="white"
+                boxShadow="0 4px 14px rgba(6, 95, 104, 0.35)"
+                flexShrink={0}
+              >
+                {isLocating ? (
+                  <Spinner size="sm" color="white" />
+                ) : (
+                  <Icon as={FiNavigation} boxSize={4} />
+                )}
+              </Circle>
+              <Box>
+                <HStack spacing={2} align="center">
+                  <Text fontSize="14px" fontWeight="800" color="var(--color-primary)">
+                    {isLocating ? "Locating via GPS..." : "Use Current Location"}
+                  </Text>
+                  <Badge
+                    bg="rgba(6, 95, 104, 0.15)"
+                    color="var(--color-primary)"
+                    fontSize="9.5px"
+                    fontWeight="800"
+                    px={2}
+                    py={0.5}
+                    borderRadius="full"
+                  >
+                    GPS
+                  </Badge>
+                </HStack>
+                <Text fontSize="11.5px" color="gray.500" mt={0.5}>
+                  Detect live GPS location & set as default
+                </Text>
+              </Box>
+            </HStack>
 
-        <Divider borderColor={useColorModeValue("gray.100", "whiteAlpha.100")} />
+            <Button
+              size="xs"
+              variant="solid"
+              bg="var(--color-primary)"
+              color="white"
+              borderRadius="full"
+              px={3}
+              h="28px"
+              fontSize="11.5px"
+              fontWeight="700"
+              _hover={{ bg: "#0d7a86" }}
+              rightIcon={<FiArrowRight />}
+              flexShrink={0}
+            >
+              Detect
+            </Button>
+          </HStack>
+        </Box>
+
+        <Divider borderColor={useColorModeValue("gray.100", "whiteAlpha.100")} my={0.5} />
 
         {/* Saved Addresses Section */}
         <Box>
-          <Flex justify="space-between" align="center" mb={2}>
+          <Flex justify="space-between" align="center" mb={2.5}>
             <Text
               fontSize="11px"
               fontWeight="800"
               color="gray.400"
               textTransform="uppercase"
-              letterSpacing="0.6px"
+              letterSpacing="0.8px"
             >
-              Saved Addresses ({auth.addresses.length})
+              Saved Addresses ({savedAddressesList.length})
             </Text>
             {onOpenAddNewAddress && (
               <Button
                 size="xs"
                 variant="ghost"
                 color="var(--color-primary)"
+                fontWeight="700"
+                fontSize="12px"
                 leftIcon={<FiPlus />}
+                _hover={{ bg: "var(--color-primary-soft)" }}
                 onClick={() => {
                   onClose();
                   onOpenAddNewAddress();
@@ -480,15 +550,23 @@ export const LocationSelectModal = observer(
             )}
           </Flex>
 
-          {auth.addresses.length === 0 ? (
+          {savedAddressesList.length === 0 ? (
             <Box
-              p={4}
+              p={6}
               textAlign="center"
-              borderRadius="xl"
+              borderRadius="20px"
               bg={useColorModeValue("gray.50", "whiteAlpha.50")}
+              border="1px dashed"
+              borderColor={useColorModeValue("gray.200", "whiteAlpha.200")}
             >
-              <Text fontSize="12px" color="gray.500" mb={2}>
-                No saved addresses found.
+              <Circle size="42px" bg="gray.100" color="gray.400" mx="auto" mb={2}>
+                <Icon as={FiMapPin} boxSize={4} />
+              </Circle>
+              <Text fontSize="13px" fontWeight="600" color="gray.600" mb={1}>
+                No saved addresses found
+              </Text>
+              <Text fontSize="11.5px" color="gray.400" mb={3}>
+                Add your home or office address for faster checkout
               </Text>
               {onOpenAddNewAddress && (
                 <Button
@@ -496,87 +574,104 @@ export const LocationSelectModal = observer(
                   colorScheme="brand"
                   bg="var(--color-primary)"
                   color="white"
+                  borderRadius="full"
+                  px={4}
+                  py={3}
                   onClick={() => {
                     onClose();
                     onOpenAddNewAddress();
                   }}
                 >
-                  + Add Address
+                  + Add New Address
                 </Button>
               )}
             </Box>
           ) : (
-            <VStack spacing={2} align="stretch" maxH="280px" overflowY="auto" pr={1}>
-              {filteredAddresses.map((addr: any) => {
+            <VStack spacing={2} align="stretch" maxH="280px" overflowY="auto" pr={0.5}>
+              {savedAddressesList.map((addr: any) => {
                 const id = addr._id || addr.id;
                 const isSelected = id === activeAddressId;
                 const isLoadingThis = isSwitching === id;
+                const IconComponent = getAddressIcon(addr.name || addr.fullName);
 
                 return (
                   <HStack
                     key={id}
                     as="button"
                     onClick={() => handleSelectAddress(addr)}
-                    p={3}
-                    borderRadius="xl"
+                    p={3.5}
+                    borderRadius="18px"
                     border="1.5px solid"
-                    borderColor={
-                      isSelected
-                        ? "var(--color-primary)"
-                        : useColorModeValue("gray.200", "whiteAlpha.200")
-                    }
+                    borderColor={isSelected ? "var(--color-primary)" : itemBorder}
                     bg={
                       isSelected
-                        ? useColorModeValue("blue.50", "whiteAlpha.100")
-                        : useColorModeValue("white", "whiteAlpha.50")
+                        ? "linear-gradient(135deg, rgba(6, 95, 104, 0.08) 0%, rgba(6, 95, 104, 0.02) 100%)"
+                        : itemBg
+                    }
+                    boxShadow={
+                      isSelected
+                        ? "0 4px 16px rgba(6,95,104,0.1)"
+                        : "0 1px 3px rgba(0,0,0,0.02)"
                     }
                     _hover={{
-                      borderColor: "var(--color-primary)",
-                      bg: useColorModeValue("blue.50", "whiteAlpha.100"),
+                      borderColor: isSelected ? "var(--color-primary)" : "gray.300",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
+                      transform: "translateY(-1px)",
                     }}
-                    transition="all 0.15s ease"
+                    transition="all 0.18s ease"
                     justify="space-between"
                     w="full"
                     textAlign="left"
                     cursor="pointer"
                     role="group"
                   >
-                    <HStack spacing={3} align="flex-start" minW={0} flex={1}>
+                    <HStack spacing={3.5} align="center" minW={0} flex={1}>
                       <Circle
-                        size="28px"
-                        bg={isSelected ? "var(--color-primary)" : "gray.100"}
+                        size="38px"
+                        bg={
+                          isSelected
+                            ? "linear-gradient(135deg, var(--color-primary) 0%, #0d7a86 100%)"
+                            : useColorModeValue("gray.100", "whiteAlpha.200")
+                        }
                         color={isSelected ? "white" : "gray.600"}
-                        mt={0.5}
                         flexShrink={0}
+                        transition="transform 0.2s"
+                        _groupHover={{ transform: "scale(1.06)" }}
+                        boxShadow={isSelected ? "0 2px 8px rgba(6,95,104,0.35)" : "none"}
                       >
-                        <Icon as={FiMapPin} boxSize={3.5} />
+                        <Icon as={IconComponent} boxSize={4} />
                       </Circle>
                       <Box minW={0} flex={1}>
-                        <HStack spacing={2}>
-                          <Text fontSize="13px" fontWeight="700" noOfLines={1}>
+                        <HStack spacing={2} align="center">
+                          <Text
+                            fontSize="13.5px"
+                            fontWeight="800"
+                            color={isSelected ? "var(--color-primary)" : textPrimary}
+                            noOfLines={1}
+                          >
                             {addr.name || addr.fullName || "Address"}
                           </Text>
                           {isSelected && (
                             <Badge
-                              fontSize="9.5px"
+                              fontSize="9px"
                               fontWeight="800"
-                              colorScheme="brand"
                               bg="var(--color-primary)"
                               color="white"
-                              px={1.5}
+                              px={2}
                               py={0.2}
                               borderRadius="full"
+                              letterSpacing="0.4px"
                             >
-                              DEFAULT
+                              DELIVER HERE
                             </Badge>
                           )}
                         </HStack>
                         <Text
                           fontSize="11.5px"
-                          color="gray.500"
+                          color={textSecondary}
                           noOfLines={2}
                           mt={0.5}
-                          lineHeight="1.3"
+                          lineHeight="1.4"
                         >
                           {[
                             addr.line1 || addr.addressLine1,
@@ -593,10 +688,24 @@ export const LocationSelectModal = observer(
                     {isLoadingThis ? (
                       <Spinner size="xs" color="var(--color-primary)" />
                     ) : isSelected ? (
-                      <Circle size="20px" bg="var(--color-primary)" color="white">
-                        <Icon as={FiCheck} boxSize={3} />
+                      <Circle
+                        size="22px"
+                        bg="var(--color-primary)"
+                        color="white"
+                        boxShadow="0 2px 8px rgba(6,95,104,0.35)"
+                        flexShrink={0}
+                      >
+                        <Icon as={FiCheck} boxSize={3.5} />
                       </Circle>
-                    ) : null}
+                    ) : (
+                      <Circle
+                        size="18px"
+                        border="1.5px solid"
+                        borderColor="gray.300"
+                        _groupHover={{ borderColor: "var(--color-primary)" }}
+                        flexShrink={0}
+                      />
+                    )}
                   </HStack>
                 );
               })}
@@ -609,13 +718,18 @@ export const LocationSelectModal = observer(
     if (isMobile) {
       return (
         <Drawer isOpen={isOpen} placement="bottom" onClose={onClose}>
-          <DrawerOverlay />
-          <DrawerContent borderTopRadius="2xl" maxH="80vh">
-            <DrawerCloseButton />
-            <DrawerHeader pb={2} pt={4} fontSize="md" fontWeight="800">
-              Select Delivery Location
+          <DrawerOverlay backdropFilter="blur(8px)" bg="blackAlpha.700" />
+          <DrawerContent borderTopRadius="28px" maxH="85vh" p={2}>
+            <DrawerCloseButton top={5} right={5} rounded="full" />
+            <DrawerHeader pb={1} pt={4} px={4}>
+              <Text fontSize="18px" fontWeight="800" color={textPrimary}>
+                Select Delivery Location
+              </Text>
+              <Text fontSize="12px" color="gray.400" fontWeight="500">
+                Choose or search your delivery destination
+              </Text>
             </DrawerHeader>
-            <DrawerBody pb={6}>{contentBody}</DrawerBody>
+            <DrawerBody pb={6} px={4}>{contentBody}</DrawerBody>
           </DrawerContent>
         </Drawer>
       );
@@ -623,13 +737,24 @@ export const LocationSelectModal = observer(
 
     return (
       <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
-        <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent borderRadius="2xl" overflow="hidden">
-          <ModalCloseButton />
-          <ModalHeader pb={2} fontSize="md" fontWeight="800">
-            Select Delivery Location
+        <ModalOverlay backdropFilter="blur(8px)" bg="blackAlpha.700" />
+        <ModalContent
+          borderRadius="28px"
+          overflow="hidden"
+          p={2}
+          bg={useColorModeValue("white", "gray.900")}
+          boxShadow="0 28px 64px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.04)"
+        >
+          <ModalCloseButton top={5} right={5} rounded="full" _hover={{ bg: "gray.100" }} />
+          <ModalHeader pb={1} pt={4} px={4}>
+            <Text fontSize="18px" fontWeight="800" color={textPrimary}>
+              Select Delivery Location
+            </Text>
+            <Text fontSize="12px" color="gray.400" fontWeight="500">
+              Choose or search your delivery destination
+            </Text>
           </ModalHeader>
-          <ModalBody pb={6}>{contentBody}</ModalBody>
+          <ModalBody pb={6} px={4}>{contentBody}</ModalBody>
         </ModalContent>
       </Modal>
     );
