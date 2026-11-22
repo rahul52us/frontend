@@ -154,14 +154,11 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
 
   return (
     <Box
-      bg={isCompact ? cPage : "transparent"}
       overflow="hidden"
       mt={{ base: -2, md: 0 }}
       mx={isCompact ? -2 : 0}
-      minH={isCompact ? "100dvh" : "auto"}
     >
       <Box
-        bgGradient={cHeroGradient}
         px={sectionX}
         pt={{ base: 2, md: 0 }}
         pb={{ base: 14, md: 16 }}

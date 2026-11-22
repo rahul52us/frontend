@@ -34,6 +34,7 @@ import {
   COMPANY_ORDER_STATUS_QUERY_MAP,
   getOrderStatusMeta,
 } from "../../../../utils/orderStatus";
+import DashboardMetricCard from "../../common/DashboardCard/DashboardMetricCard";
 import OrderDrawer from "./OrderDrawer";
 
 const formatCurrency = (amount: any) => {
@@ -45,53 +46,7 @@ const formatCurrency = (amount: any) => {
   }).format(numericAmount);
 };
 
-function StatCard({ label, value, delta, icon: IconCmp, tone }: any) {
-  const cardBg = useColorModeValue("white", "gray.800");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
-  const textColor = useColorModeValue("gray.900", "white");
-  const textMuted = useColorModeValue("gray.500", "gray.400");
 
-  const toneConfig: Record<string, any> = {
-    primary: { bg: useColorModeValue("blue.50", "blue.900"), color: useColorModeValue("blue.600", "blue.200"), ring: useColorModeValue("blue.100", "blue.800") },
-    mint: { bg: useColorModeValue("green.50", "green.900"), color: useColorModeValue("green.600", "green.200"), ring: useColorModeValue("green.100", "green.800") },
-    peach: { bg: useColorModeValue("orange.50", "orange.900"), color: useColorModeValue("orange.600", "orange.200"), ring: useColorModeValue("orange.100", "orange.800") },
-    amber: { bg: useColorModeValue("yellow.50", "yellow.900"), color: useColorModeValue("yellow.600", "yellow.200"), ring: useColorModeValue("yellow.100", "yellow.800") },
-  };
-
-  const t = toneConfig[tone] || toneConfig.primary;
-
-  return (
-    <Box
-      position="relative"
-      overflow="hidden"
-      borderRadius="3xl"
-      border="1px solid"
-      borderColor={borderColor}
-      bg={cardBg}
-      p={{ base: 3, sm: 4 }}
-      boxShadow={{ base: "none", sm: "sm" }}
-      transition="all 0.2s"
-      _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-    >
-      <Flex align="start" justify="space-between" gap={{base:1,md:3}}>
-        <Box minW={0}>
-          <Text fontSize="xs" fontWeight="medium" letterSpacing="wide" color={textMuted} textTransform="uppercase">
-            {label}
-          </Text>
-          <Text mt={{base:1,md:2}} fontFamily="heading" fontSize={{ base: "xl", sm: "3xl" }} fontWeight="bold" lineHeight="none" letterSpacing="tight" color={textColor}>
-            {value}
-          </Text>
-          {delta && (
-            <Text mt={{base:1,md:2}} fontSize="xs" fontWeight="medium" color={textMuted}>{delta}</Text>
-          )}
-        </Box>
-        <Flex h={8} w={8} flexShrink={0} align="center" justify="center" borderRadius="2xl" bg={t.bg} color={t.color} ring={2} ringColor={t.ring}>
-          <IconCmp size={20} strokeWidth={2} />
-        </Flex>
-      </Flex>
-    </Box>
-  );
-}
 
 const OrderCard = ({ order, onClick, bg, borderColor, textColor, textMuted, getStatusMeta }: any) => {
   const meta = getStatusMeta(order.orderStatus);
@@ -313,7 +268,7 @@ const OrdersTab = observer(() => {
     })?.key || "all";
 
   return (
-    <Box minH="100%" bg="transparent" fontFamily="body">
+    <Box fontFamily="body">
       <Box
         maxW="1500px"
         mx="auto"
@@ -396,12 +351,44 @@ const OrdersTab = observer(() => {
   </Flex>
 </Box>
 
-        {/* Stat grid */}
+        {/* Stat grid using common DashboardMetricCard */}
         <Grid templateColumns={{ base: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }} gap={{ base: 2, sm: 4 }} mb={{ base: 5, sm: 6 }}>
-          <StatCard label="Total" value={metrics.total} icon={FiClipboard} tone="primary" delta="All time" />
-          <StatCard label="Placed" value={metrics.pending} icon={FiClock} tone="amber" delta="Needs action" />
-          <StatCard label="In transit" value={metrics.inTransit} icon={FiTruck} tone="peach" delta="On the way" />
-          <StatCard label="Delivered" value={metrics.delivered} icon={FiCheckCircle} tone="mint" delta="Completed" />
+          <DashboardMetricCard
+            label="Total"
+            value={metrics.total}
+            icon={FiClipboard}
+            iconColor={dashboardPalette.accentStrong}
+            iconBg="rgba(59, 130, 246, 0.12)"
+            delta="All time"
+            variant="panel"
+          />
+          <DashboardMetricCard
+            label="Placed"
+            value={metrics.pending}
+            icon={FiClock}
+            iconColor={dashboardPalette.warning}
+            iconBg="rgba(245, 158, 11, 0.14)"
+            delta="Needs action"
+            variant="panel"
+          />
+          <DashboardMetricCard
+            label="In transit"
+            value={metrics.inTransit}
+            icon={FiTruck}
+            iconColor={dashboardPalette.danger}
+            iconBg="rgba(239, 107, 107, 0.14)"
+            delta="On the way"
+            variant="panel"
+          />
+          <DashboardMetricCard
+            label="Delivered"
+            value={metrics.delivered}
+            icon={FiCheckCircle}
+            iconColor={dashboardPalette.success}
+            iconBg="rgba(70, 201, 139, 0.14)"
+            delta="Completed"
+            variant="panel"
+          />
         </Grid>
 
         {/* Search + Filters */}

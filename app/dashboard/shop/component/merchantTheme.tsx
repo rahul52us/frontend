@@ -274,11 +274,9 @@ export function MerchantSectionCard({
     <Box
       className="merchant-section-card"
       bg={bg}
-      borderRadius={{ base: "0", sm: "28px" }}
+      borderRadius={{ base: "xl", sm: "20px" }}
       border="1px solid"
       borderColor={borderColor}
-      borderLeftWidth={{ base: "0", sm: "1px" }}
-      borderRightWidth={{ base: "0", sm: "1px" }}
       overflow="hidden"
       position="relative"
       boxShadow={{ base: "none", md: `0 4px 8px ${tone.glow}` }}

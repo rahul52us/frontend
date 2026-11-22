@@ -73,8 +73,7 @@ const ContentContainer = styled.div<{
     $isMobile && $hasMobileBottomNav
       ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
       : '0px'};
-  width: ${({ $isMobile, $sidebarOffset }) =>
-    $isMobile ? '100vw' : `calc(100vw - ${$sidebarOffset})`};
+  width: 100%;
   overflow-x: hidden;
   min-height: calc(100vh - ${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} - var(--safe-area-top, env(safe-area-inset-top, 0px)));
   transition: all 0.3s ease-in-out;
@@ -335,88 +334,89 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
   $sidebarOffset={sidebarOffset}
 >
   {shouldRenderShopStatusBanner ? (
-    <Alert
-      status={shopStatusBanner.status}
-      variant="unstyled"
-      mb={2}
-      display="flex"
-      flexDirection="row"
-      alignItems="center"
-      bg={shopBannerBg}
-      border="1px solid"
-      borderColor={shopBannerBorder}
-      borderRadius={{ base: "xl", md: "2xl" }}
-      p={{ base: 2, md: 4 }}
-      boxShadow={shopBannerShadow}
-      position="relative"
-      overflow="hidden"
-    >
-      <Box
-        position="absolute"
-        top="-20px"
-        left="-20px"
-        w="100px"
-        h="80px"
-        bg={shopStatusBanner.status === "error" ? "red.400" : "orange.400"}
-        filter="blur(40px)"
-        opacity={shopBannerGlowOpacity}
-        zIndex={0}
-      />
-
-      <Flex w="full" align="center" gap={{ base: 3, md: 4 }} zIndex={1}>
-        <Flex
-          justify="center"
-          align="center"
-          w={{ base: "36px", md: "44px" }}
-          h={{ base: "36px", md: "44px" }}
-          borderRadius="full"
-          bg={shopBannerIconBg}
-          flexShrink={0}
-        >
-          <AlertIcon w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} m={0} />
-        </Flex>
-
-        <Box flex="1" minW={0}>
-          <Text
-            fontWeight="700"
-            fontSize={{ base: "sm", md: "md" }}
-            color={textColor}
-            lineHeight="1.2"
-            noOfLines={1}
+        <Box px={{ base: 3, sm: 4, md: 5 }} pt={{ base: 2, md: 3 }} pb={1}>
+          <Alert
+            status={shopStatusBanner.status}
+            variant="unstyled"
+            display="flex"
+            flexDirection="row"
+            alignItems="center"
+            bg={shopBannerBg}
+            border="1px solid"
+            borderColor={shopBannerBorder}
+            borderRadius={{ base: "xl", md: "2xl" }}
+            p={{ base: 2, md: 4 }}
+            boxShadow={shopBannerShadow}
+            position="relative"
+            overflow="hidden"
           >
-            {shopStatusBanner.title}
-          </Text>
-          <Text
-            fontSize={{ base: "xs", md: "sm" }}
-            color={shopBannerDescriptionColor}
-            mt={0.5}
-            noOfLines={{ base: 1, md: 2 }}
-          >
-            {shopStatusBanner.description}
-          </Text>
+            <Box
+              position="absolute"
+              top="-20px"
+              left="-20px"
+              w="100px"
+              h="80px"
+              bg={shopStatusBanner.status === "error" ? "red.400" : "orange.400"}
+              filter="blur(40px)"
+              opacity={shopBannerGlowOpacity}
+              zIndex={0}
+            />
+
+            <Flex w="full" align="center" gap={{ base: 3, md: 4 }} zIndex={1}>
+              <Flex
+                justify="center"
+                align="center"
+                w={{ base: "36px", md: "44px" }}
+                h={{ base: "36px", md: "44px" }}
+                borderRadius="full"
+                bg={shopBannerIconBg}
+                flexShrink={0}
+              >
+                <AlertIcon w={{ base: 4, md: 5 }} h={{ base: 4, md: 5 }} m={0} />
+              </Flex>
+
+              <Box flex="1" minW={0}>
+                <Text
+                  fontWeight="700"
+                  fontSize={{ base: "sm", md: "md" }}
+                  color={textColor}
+                  lineHeight="1.2"
+                  noOfLines={1}
+                >
+                  {shopStatusBanner.title}
+                </Text>
+                <Text
+                  fontSize={{ base: "xs", md: "sm" }}
+                  color={shopBannerDescriptionColor}
+                  mt={0.5}
+                  noOfLines={{ base: 1, md: 2 }}
+                >
+                  {shopStatusBanner.description}
+                </Text>
+              </Box>
+
+              <HStack spacing={1} flexShrink={0}>
+                <IconButton
+                  aria-label="Banner details"
+                  icon={<ChevronRightIcon w={5} h={5} />}
+                  size="sm"
+                  variant="ghost"
+                  colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
+                  borderRadius="full"
+                />
+                <IconButton
+                  aria-label="Dismiss status banner"
+                  icon={<CloseIcon boxSize={2.5} />}
+                  size="sm"
+                  variant="ghost"
+                  onClick={closeShopStatusBanner}
+                  colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
+                  borderRadius="full"
+                />
+              </HStack>
+            </Flex>
+          </Alert>
         </Box>
-
-        <HStack spacing={1} flexShrink={0}>
-          <IconButton
-            aria-label="Banner details"
-            icon={<ChevronRightIcon w={5} h={5} />}
-            size="sm"
-            variant="ghost"
-            colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
-            borderRadius="full"
-          />
-          <IconButton
-            aria-label="Dismiss status banner"
-            icon={<CloseIcon boxSize={2.5} />}
-            size="sm"
-            variant="ghost"
-            onClick={closeShopStatusBanner}
-            colorScheme={shopStatusBanner.status === "error" ? "red" : "orange"}
-            borderRadius="full"
-          />
-        </HStack>
-      </Flex>
-    </Alert>
   ) : null}
   {children}
 </ContentContainer>

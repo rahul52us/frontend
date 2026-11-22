@@ -1650,7 +1650,6 @@ const CustomersTab: React.FC = observer(() => {
           pt={{ base: 2, md: 4 }}
           pb={0}
           bg={showMobileBuyerManagement ? mobileLedgerPalette.page : cPage}
-          minH="100dvh"
         >
           {selectedLedgerBuyer ? (
             <CustomerDetailView

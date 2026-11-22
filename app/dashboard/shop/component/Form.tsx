@@ -733,49 +733,89 @@ const ShopFormHero = ({
           })}
         </HStack> */}
 
-        <Flex mt={3} align="center" gap={{ base: 1.5, md: 2 }} display={{base:"none",md:"flex"}}>
+        <Flex
+          mt={3}
+          align="center"
+          gap={2}
+          overflowX="auto"
+          pb={1}
+          sx={{
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
           {sections.map((section, index) => {
             const isActive = index === activeSectionIndex;
             const isCompleted = index < activeSectionIndex;
 
             return (
-              <Button
+              <HStack
                 key={section.id}
-                variant="unstyled"
-                minW={0}
-                flex={1}
-                display="flex"
-                alignItems="center"
-                justifyContent={{ base: "center", md: "flex-start" }}
-                gap={2}
-                px={{ base: 0, md: 2 }}
-                py={1}
-                color={isActive ? titleColor : stepText}
+                as="button"
+                type="button"
                 onClick={() => onSelect(index)}
+                spacing={2}
+                px={3.5}
+                py={1.5}
+                borderRadius="full"
+                border="1px solid"
+                borderColor={isActive ? "var(--color-primary, #065F68)" : isCompleted ? borderColor : "transparent"}
+                bg={
+                  isActive
+                    ? useColorModeValue("rgba(6, 95, 104, 0.08)", "rgba(6, 95, 104, 0.22)")
+                    : isCompleted
+                    ? useColorModeValue("white", "rgba(255, 255, 255, 0.04)")
+                    : "transparent"
+                }
+                color={
+                  isActive
+                    ? "var(--color-primary, #065F68)"
+                    : isCompleted
+                    ? titleColor
+                    : mutedText
+                }
+                cursor="pointer"
+                flexShrink={0}
+                transition="all 0.18s ease"
+                _hover={{
+                  bg: isActive
+                    ? undefined
+                    : useColorModeValue("rgba(6, 95, 104, 0.05)", "rgba(255, 255, 255, 0.06)"),
+                  color: isActive ? undefined : titleColor,
+                }}
               >
                 <Flex
                   align="center"
                   justify="center"
-                  h={{ base: "28px", md: "30px" }}
-                  w={{ base: "28px", md: "30px" }}
+                  h="24px"
+                  w="24px"
                   borderRadius="full"
-                  bg={isActive ? tone.soft : isCompleted ? tone.soft : "transparent"}
-                  border="1px solid"
-                  borderColor={isActive || isCompleted ? tone.border : borderColor}
-                  color={isCompleted || isActive ? tone.text : mutedText}
-                  transition="all 0.2s ease"
+                  bg={
+                    isActive
+                      ? "var(--color-primary, #065F68)"
+                      : isCompleted
+                      ? useColorModeValue("green.100", "rgba(34, 197, 94, 0.2)")
+                      : useColorModeValue("gray.100", "whiteAlpha.100")
+                  }
+                  color={
+                    isActive
+                      ? "white"
+                      : isCompleted
+                      ? useColorModeValue("green.700", "green.300")
+                      : "inherit"
+                  }
                   flexShrink={0}
                 >
                   {isCompleted ? (
-                    <CheckIcon boxSize={3} />
+                    <CheckIcon boxSize={2.5} />
                   ) : (
                     <Icon as={section.icon} boxSize={3} />
                   )}
                 </Flex>
-                <Text display={{ base: "none", lg: "block" }} fontSize="xs" fontWeight="600" noOfLines={1}>
+                <Text fontSize="12.5px" fontWeight={isActive ? "700" : "600"} whiteSpace="nowrap">
                   {section.label}
                 </Text>
-              </Button>
+              </HStack>
             );
           })}
         </Flex>
@@ -1326,186 +1366,194 @@ const ShopForm = observer(() => {
   })();
 
   return (
-    <Box minH="100vh" bg={cPage} pb={{ base: "4px", md: "10px" }} sx={merchantFormSx}>
-      {reviewBanner ? (
-        <Box px={{ base: 4, md: 0 }} pt={{ base: 3, md: 4 }}>
-          <Alert
-            status={reviewBanner.status}
-            borderRadius={{ base: "20px", md: "24px" }}
-            alignItems="flex-start"
-            bg={cSurfaceAlt}
-            border="1px solid"
-            borderColor={reviewBanner.status === "error" ? "rgba(239, 68, 68, 0.24)" : cBorder}
-            color={cText}
-            boxShadow={{ base: "none", md: "sm" }}
-          >
-            <AlertIcon mt={1} color={reviewBanner.status === "error" ? cDanger : cAccentStrong} />
-            <Box>
-              <AlertTitle color={cText}>{reviewBanner.title}</AlertTitle>
-              <AlertDescription color={cTextMuted}>{reviewBanner.description}</AlertDescription>
-            </Box>
-          </Alert>
-        </Box>
-      ) : null}
-
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationSchema}
-        enableReinitialize
-        onSubmit={onSubmit}
+    <Box minH="100%" bg="transparent" sx={merchantFormSx}>
+      <Box
+        maxW="1500px"
+        mx="auto"
+        px={{ base: 3, sm: 4, md: 5 }}
+        py={{ base: 2, md: 3 }}
+        pb={{ base: 4, md: 6 }}
       >
-        {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm, setSubmitting, setValues }) => {
-          const activeSection = sections[activeSectionIndex];
-          const ActiveSectionComponent = activeSection.component;
-          const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSectionIndex);
-          const isLastStep = activeSectionIndex === sections.length - 1;
+        {reviewBanner ? (
+          <Box mb={{ base: 3, md: 4 }}>
+            <Alert
+              status={reviewBanner.status}
+              borderRadius={{ base: "xl", sm: "20px" }}
+              alignItems="flex-start"
+              bg={cSurfaceAlt}
+              border="1px solid"
+              borderColor={reviewBanner.status === "error" ? "rgba(239, 68, 68, 0.24)" : cBorder}
+              color={cText}
+              boxShadow="sm"
+            >
+              <AlertIcon mt={1} color={reviewBanner.status === "error" ? cDanger : cAccentStrong} />
+              <Box>
+                <AlertTitle color={cText}>{reviewBanner.title}</AlertTitle>
+                <AlertDescription color={cTextMuted}>{reviewBanner.description}</AlertDescription>
+              </Box>
+            </Alert>
+          </Box>
+        ) : null}
 
-          const goToSection = (index: number) => {
-            setActiveSectionIndex(Math.min(Math.max(index, 0), sections.length - 1));
-            scrollToTop();
-          };
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          enableReinitialize
+          onSubmit={onSubmit}
+        >
+          {({ values, errors, setFieldValue, isSubmitting, submitForm, validateForm, setSubmitting, setValues }) => {
+            const activeSection = sections[activeSectionIndex];
+            const ActiveSectionComponent = activeSection.component;
+            const currentSectionFieldLabels = getSectionFieldLabels(errors, activeSectionIndex);
+            const isLastStep = activeSectionIndex === sections.length - 1;
 
-          const validateActiveSection = async () => {
-            setShowError(true);
-            const validationErrors = await validateForm();
-            const activeFieldLabels = getSectionFieldLabels(validationErrors, activeSectionIndex);
+            const goToSection = (index: number) => {
+              setActiveSectionIndex(Math.min(Math.max(index, 0), sections.length - 1));
+              scrollToTop();
+            };
 
-            if (activeFieldLabels.length > 0) {
-              openNotification({
-                title: "Please review this step",
-                message: `Missing or invalid: ${activeFieldLabels.slice(0, 4).join(", ")}${activeFieldLabels.length > 4 ? "..." : ""}`,
-                type: "warning",
-              });
-              return false;
-            }
+            const validateActiveSection = async () => {
+              setShowError(true);
+              const validationErrors = await validateForm();
+              const activeFieldLabels = getSectionFieldLabels(validationErrors, activeSectionIndex);
 
-            return true;
-          };
-
-          const handleNextSection = async () => {
-            const isSectionValid = await validateActiveSection();
-            if (!isSectionValid) {
-              return;
-            }
-
-            goToSection(activeSectionIndex + 1);
-          };
-
-          const handleSaveSection = async () => {
-            const isSectionValid = await validateActiveSection();
-            if (!isSectionValid) {
-              return;
-            }
-
-            try {
-              setSubmitting(true);
-              const sectionPayload = await buildSectionPayload(values, activeSectionIndex);
-              await submitUpdatePayload({
-                payload: sectionPayload,
-                sectionIndex: activeSectionIndex,
-                successMessage: `${activeSection.label} section updated`,
-                currentValues: values,
-                setValues,
-              });
-            } catch (err) {
-              const { message, sectionIndex } = extractShopSubmitErrorDetails(err);
-
-              if (sectionIndex !== null) {
-                setActiveSectionIndex(sectionIndex);
-                setShowError(true);
-                scrollToTop();
+              if (activeFieldLabels.length > 0) {
+                openNotification({
+                  title: "Please review this step",
+                  message: `Missing or invalid: ${activeFieldLabels.slice(0, 4).join(", ")}${activeFieldLabels.length > 4 ? "..." : ""}`,
+                  type: "warning",
+                });
+                return false;
               }
 
-              openNotification({
-                title: "Update Failed",
-                message,
-                type: getStatusType(err?.status || err?.statusCode || 500),
-              });
-            } finally {
-              setSubmitting(false);
-            }
-          };
+              return true;
+            };
 
-          const handleFinalSubmit = async () => {
-            setShowError(true);
-            const validationErrors = await validateForm();
-            const firstErrorSection = resolveFirstErrorSection(validationErrors);
+            const handleNextSection = async () => {
+              const isSectionValid = await validateActiveSection();
+              if (!isSectionValid) {
+                return;
+              }
 
-            if (firstErrorSection !== null) {
-              goToSection(firstErrorSection);
-              const fieldLabels = getSectionFieldLabels(validationErrors, firstErrorSection);
-              openNotification({
-                title: "Please review the highlighted fields",
-                message:
-                  fieldLabels.length > 0
-                    ? `Missing or invalid: ${fieldLabels.slice(0, 4).join(", ")}${fieldLabels.length > 4 ? "..." : ""}`
-                    : `Some required details are missing in ${sections[firstErrorSection]?.headline}.`,
-                type: "warning",
-              });
-              return;
-            }
+              goToSection(activeSectionIndex + 1);
+            };
 
-            submitForm();
-          };
+            const handleSaveSection = async () => {
+              const isSectionValid = await validateActiveSection();
+              if (!isSectionValid) {
+                return;
+              }
 
-          return (
-            <Form>
-              <ShopFormHero
-                activeSection={activeSection}
-                activeSectionIndex={activeSectionIndex}
-                onSelect={goToSection}
-              />
+              try {
+                setSubmitting(true);
+                const sectionPayload = await buildSectionPayload(values, activeSectionIndex);
+                await submitUpdatePayload({
+                  payload: sectionPayload,
+                  sectionIndex: activeSectionIndex,
+                  successMessage: `${activeSection.label} section updated`,
+                  currentValues: values,
+                  setValues,
+                });
+              } catch (err) {
+                const { message, sectionIndex } = extractShopSubmitErrorDetails(err);
 
-              <Box px={{ base: 0, md: 4 }} pt={{ base: 2, md: 4 }}>
-                <VStack spacing={4} align="stretch">
-                  {showError && currentSectionFieldLabels.length > 0 ? (
-                    <Box px={{ base: 4, md: 0 }}>
-                      <Alert
-                        status="warning"
-                        borderRadius={{ base: "20px", md: "24px" }}
-                        alignItems="flex-start"
-                        bg={cSurfaceAlt}
-                        border="1px solid"
-                        borderColor={cBorder}
-                        color={cText}
-                        boxShadow={{ base: "none", md: "sm" }}
-                      >
-                        <AlertIcon mt={1} color={cAccentStrong} />
-                        <Box>
-                          <AlertTitle color={cText}>Please update these fields</AlertTitle>
-                          <AlertDescription color={cTextMuted}>
-                            {currentSectionFieldLabels.join(", ")}
-                          </AlertDescription>
-                        </Box>
-                      </Alert>
-                    </Box>
-                  ) : null}
+                if (sectionIndex !== null) {
+                  setActiveSectionIndex(sectionIndex);
+                  setShowError(true);
+                  scrollToTop();
+                }
 
-                  <ActiveSectionComponent
-                    values={values}
-                    errors={errors}
-                    setFieldValue={setFieldValue}
-                    showError={showError}
-                    isUpdateMode={isUpdateMode}
-                  />
-                </VStack>
-              </Box>
+                openNotification({
+                  title: "Update Failed",
+                  message,
+                  type: getStatusType(err?.status || err?.statusCode || 500),
+                });
+              } finally {
+                setSubmitting(false);
+              }
+            };
 
-              <StickyActionBar
-                activeSection={activeSection}
-                activeSectionIndex={activeSectionIndex}
-                isLastStep={isLastStep}
-                isSubmitting={isSubmitting}
-                onBack={() => goToSection(activeSectionIndex - 1)}
-                onSaveSection={handleSaveSection}
-                onNext={handleNextSection}
-                onSubmit={handleFinalSubmit}
-                isUpdateMode={isUpdateMode}
-              />
-            </Form>
-          );
-        }}
-      </Formik>
+            const handleFinalSubmit = async () => {
+              setShowError(true);
+              const validationErrors = await validateForm();
+              const firstErrorSection = resolveFirstErrorSection(validationErrors);
+
+              if (firstErrorSection !== null) {
+                goToSection(firstErrorSection);
+                const fieldLabels = getSectionFieldLabels(validationErrors, firstErrorSection);
+                openNotification({
+                  title: "Please review the highlighted fields",
+                  message:
+                    fieldLabels.length > 0
+                      ? `Missing or invalid: ${fieldLabels.slice(0, 4).join(", ")}${fieldLabels.length > 4 ? "..." : ""}`
+                      : `Some required details are missing in ${sections[firstErrorSection]?.headline}.`,
+                  type: "warning",
+                });
+                return;
+              }
+
+              submitForm();
+            };
+
+            return (
+              <Form>
+                <ShopFormHero
+                  activeSection={activeSection}
+                  activeSectionIndex={activeSectionIndex}
+                  onSelect={goToSection}
+                />
+
+                <Box pt={{ base: 3, md: 4 }}>
+                  <VStack spacing={4} align="stretch">
+                    {showError && currentSectionFieldLabels.length > 0 ? (
+                      <Box>
+                        <Alert
+                          status="warning"
+                          borderRadius={{ base: "xl", sm: "20px" }}
+                          alignItems="flex-start"
+                          bg={cSurfaceAlt}
+                          border="1px solid"
+                          borderColor={cBorder}
+                          color={cText}
+                          boxShadow="sm"
+                        >
+                          <AlertIcon mt={1} color={cAccentStrong} />
+                          <Box>
+                            <AlertTitle color={cText}>Please update these fields</AlertTitle>
+                            <AlertDescription color={cTextMuted}>
+                              {currentSectionFieldLabels.join(", ")}
+                            </AlertDescription>
+                          </Box>
+                        </Alert>
+                      </Box>
+                    ) : null}
+
+                    <ActiveSectionComponent
+                      values={values}
+                      errors={errors}
+                      setFieldValue={setFieldValue}
+                      showError={showError}
+                      isUpdateMode={isUpdateMode}
+                    />
+                  </VStack>
+                </Box>
+
+                <StickyActionBar
+                  activeSection={activeSection}
+                  activeSectionIndex={activeSectionIndex}
+                  isLastStep={isLastStep}
+                  isSubmitting={isSubmitting}
+                  onBack={() => goToSection(activeSectionIndex - 1)}
+                  onSaveSection={handleSaveSection}
+                  onNext={handleNextSection}
+                  onSubmit={handleFinalSubmit}
+                  isUpdateMode={isUpdateMode}
+                />
+              </Form>
+            );
+          }}
+        </Formik>
+      </Box>
     </Box>
   );
 });
