@@ -3,8 +3,9 @@ import {
   Badge,
   Box,
   Button,
-  Divider,
   Flex,
+  Grid,
+  GridItem,
   HStack,
   Heading,
   Icon,
@@ -15,9 +16,15 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FaHeart, FaRegHeart, FaStar, FaStore } from "react-icons/fa";
 import {
   FiArrowLeft,
@@ -31,12 +38,14 @@ import {
 import { MdVerified } from "react-icons/md";
 import { DAYS, fallback } from "./constant";
 
-const MotionBox = motion(Box);
-
 export interface ShopHeroSectionProps {
   shopData: any;
   onShopProductsClick?: () => void;
 }
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
 
 const formatTime = (t?: string) => {
   if (!t) return "";
@@ -46,50 +55,208 @@ const formatTime = (t?: string) => {
   return `${hr}${m ? `:${String(m).padStart(2, "0")}` : ""} ${suffix}`;
 };
 
+const toMinutes = (t: string) => {
+  const [h = 0, m = 0] = t.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// Local YYYY-MM-DD (toISOString() gives the UTC date, which is wrong
+// between 12:00 AM and 5:30 AM in India)
+const localDateKey = (d: Date) => {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
 const glassBtn = {
   size: "md",
   borderRadius: "full",
   bg: "rgba(0, 0, 0, 0.45)",
   color: "white",
   backdropFilter: "blur(10px)",
-  border: "1px solid rgba(255, 255, 255, 0.15)",
+  border: "1px solid rgba(255, 255, 255, 0.18)",
   _hover: { bg: "rgba(0, 0, 0, 0.7)", transform: "scale(1.06)" },
   _active: { transform: "scale(0.94)" },
+  _focusVisible: { boxShadow: "0 0 0 3px rgba(255, 255, 255, 0.85)" },
   transition: "all 0.2s",
 } as const;
+
+/* ------------------------------------------------------------------ */
+/* Cover image                                                         */
+/* ------------------------------------------------------------------ */
+
+// If the browser has to enlarge the picture by more than this to fill the
+// frame, it will look soft. In that case we stop stretching it: the photo is
+// shown at its natural proportions over a (deliberately) blurred copy of itself.
+const UPSCALE_LIMIT = 1.25;
+
+const CoverImage = ({
+  src,
+  alt,
+  children,
+}: {
+  src: string;
+  alt: string;
+  children?: React.ReactNode;
+}) => {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [current, setCurrent] = useState(src);
+  const [lowRes, setLowRes] = useState(false);
+
+  useEffect(() => {
+    setCurrent(src);
+    setLowRes(false);
+  }, [src]);
+
+  const measure = useCallback(() => {
+    const img = imgRef.current;
+    const frame = frameRef.current;
+    if (!img || !frame || !img.naturalWidth || !img.naturalHeight) return;
+    const scale = Math.max(
+      frame.clientWidth / img.naturalWidth,
+      frame.clientHeight / img.naturalHeight
+    );
+    setLowRes(scale > UPSCALE_LIMIT);
+  }, []);
+
+  useEffect(() => {
+    // covers images that finished loading before React attached onLoad
+    if (imgRef.current?.complete) measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [current, measure]);
+
+  return (
+    <Box
+      ref={frameRef}
+      position="relative"
+      w="full"
+      h={{ base: "190px", sm: "240px", md: "300px", lg: "340px" }}
+      overflow="hidden"
+      bg="gray.900"
+      borderRadius={{ base: 0, md: "3xl" }}
+    >
+      {lowRes && (
+        <Image
+          aria-hidden
+          src={current}
+          alt=""
+          position="absolute"
+          inset={0}
+          w="full"
+          h="full"
+          objectFit="cover"
+          transform="scale(1.15)"
+          filter="blur(28px) brightness(0.6)"
+          pointerEvents="none"
+        />
+      )}
+
+      <Image
+        ref={imgRef}
+        src={current}
+        alt={alt}
+        position="relative"
+        w="full"
+        h="full"
+        objectFit={lowRes ? "contain" : "cover"}
+        objectPosition="center"
+        decoding="async"
+        onLoad={measure}
+        onError={() => {
+          if (current !== fallback) setCurrent(fallback);
+        }}
+      />
+
+      {/* Light scrim at the top only, so the buttons stay readable */}
+      <Box
+        position="absolute"
+        inset={0}
+        pointerEvents="none"
+        bgGradient="linear(to-b, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0) 38%)"
+      />
+
+      {children}
+    </Box>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Small chip                                                          */
+/* ------------------------------------------------------------------ */
+
+const Chip = ({
+  icon,
+  iconColor,
+  children,
+}: {
+  icon: React.ElementType;
+  iconColor?: string;
+  children: React.ReactNode;
+}) => {
+  const bg = useColorModeValue("gray.100", "whiteAlpha.200");
+  const color = useColorModeValue("gray.700", "gray.200");
+  return (
+    <HStack
+      bg={bg}
+      color={color}
+      px={2.5}
+      py={1}
+      borderRadius="full"
+      spacing={1.5}
+      fontSize="xs"
+      fontWeight="semibold"
+      maxW="full"
+    >
+      <Icon as={icon} boxSize={3.5} color={iconColor} flexShrink={0} />
+      {children}
+    </HStack>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
 
 const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(
   ({ shopData, onShopProductsClick }) => {
     const router = useRouter();
     const toast = useToast();
     const [isSaved, setIsSaved] = useState(false);
-    const { scrollY } = useScroll();
-    const yParallax = useTransform(scrollY, [0, 300], [0, 40]);
+
+    // Time is read after mount so server and client markup match,
+    // and refreshed every minute so "Open now" stays accurate.
+    const [now, setNow] = useState<Date | null>(null);
+    useEffect(() => {
+      setNow(new Date());
+      const id = setInterval(() => setNow(new Date()), 60_000);
+      return () => clearInterval(id);
+    }, []);
 
     // Color tokens
-    const cardBg = useColorModeValue("white", "gray.800");
-    const borderColor = useColorModeValue("gray.100", "whiteAlpha.200");
+    const tileBg = useColorModeValue("white", "gray.800");
+    const tileBorder = useColorModeValue("white", "gray.800");
     const textPrimary = useColorModeValue("gray.900", "white");
-    const textMuted = useColorModeValue("gray.500", "gray.400");
-    const chipBg = useColorModeValue("gray.100", "whiteAlpha.200");
-    const chipText = useColorModeValue("gray.700", "gray.200");
-    const ghostBtnBorder = useColorModeValue("gray.200", "whiteAlpha.300");
-    const ghostBtnBg = useColorModeValue("white", "whiteAlpha.100");
-    const ghostBtnHover = useColorModeValue("gray.50", "whiteAlpha.200");
-    const callColor = useColorModeValue("green.500", "green.300");
-    const dirColor = useColorModeValue("blue.500", "blue.300");
+    const textMuted = useColorModeValue("gray.600", "gray.400");
+    const outlineBorder = useColorModeValue("gray.200", "whiteAlpha.300");
+    const outlineHover = useColorModeValue("gray.50", "whiteAlpha.200");
+    const callColor = useColorModeValue("green.600", "green.300");
+    const dirColor = useColorModeValue("blue.600", "blue.300");
 
-    // Ratings
-    const avgRating = shopData?.ratings?.average ?? 4.8;
-    const totalRatings = shopData?.ratings?.total ?? 0;
+    // Ratings (only shown when the shop actually has some)
+    const avgRating = Number(shopData?.ratings?.average);
+    const totalRatings = Number(shopData?.ratings?.total) || 0;
+    const hasRatings = totalRatings > 0 && Number.isFinite(avgRating);
 
-    // Address for directions
+    // Address / directions
     const loc = shopData?.location;
-    const formattedAddress = useMemo(() => {
-      return [loc?.address, loc?.city, loc?.state, loc?.postalCode || loc?.pincode]
-        .filter(Boolean)
-        .join(", ");
-    }, [loc?.address, loc?.city, loc?.postalCode, loc?.pincode, loc?.state]);
+    const formattedAddress = useMemo(
+      () =>
+        [loc?.address, loc?.city, loc?.state, loc?.postalCode || loc?.pincode]
+          .filter(Boolean)
+          .join(", "),
+      [loc?.address, loc?.city, loc?.postalCode, loc?.pincode, loc?.state]
+    );
 
     const directionsUrl = useMemo(
       () =>
@@ -101,32 +268,34 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(
 
     const phone = shopData?.contactInfo?.phone;
 
-    // Open status logic
+    // Open / closed
     const status = useMemo(() => {
-      const now = new Date();
+      if (!now) return null;
       const today = DAYS[now.getDay()] ?? "";
       const hours =
         shopData?.operatingHours?.find((d: any) => d.day === today) ?? null;
       const closedToday =
         Array.isArray(shopData?.closedDates) &&
-        shopData.closedDates.includes(now.toISOString().split("T")[0]);
+        shopData.closedDates.includes(localDateKey(now));
 
       let isOpen = false;
       let hint = "";
       if (closedToday) {
         hint = "Closed today";
       } else if (hours?.open && hours?.close) {
-        const [oh = 0, om = 0] = hours.open.split(":").map(Number);
-        const [ch = 0, cm = 0] = hours.close.split(":").map(Number);
         const nowMin = now.getHours() * 60 + now.getMinutes();
-        const openMin = oh * 60 + om;
-        const closeMin = ch * 60 + cm;
-        isOpen = nowMin >= openMin && nowMin < closeMin;
+        const openMin = toMinutes(hours.open);
+        const closeMin = toMinutes(hours.close);
+        // handles shops that close after midnight (e.g. 6 PM – 1 AM)
+        isOpen =
+          closeMin > openMin
+            ? nowMin >= openMin && nowMin < closeMin
+            : nowMin >= openMin || nowMin < closeMin;
         if (isOpen) hint = `Closes ${formatTime(hours.close)}`;
         else if (nowMin < openMin) hint = `Opens ${formatTime(hours.open)}`;
       }
-      return { today, hours, isOpen, closedToday, hint };
-    }, [shopData]);
+      return { isOpen, hint };
+    }, [now, shopData?.operatingHours, shopData?.closedDates]);
 
     // Share
     const handleShare = useCallback(async () => {
@@ -154,7 +323,7 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(
       }
     }, [shopData?.name, toast]);
 
-    // Save / Favorite
+    // Save / favorite
     const handleToggleSave = useCallback(() => {
       const next = !isSaved;
       setIsSaved(next);
@@ -168,233 +337,161 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(
     }, [isSaved, toast]);
 
     const coverUrl = shopData?.coverImage?.url || fallback;
+    const categoryName =
+      typeof shopData?.category === "object"
+        ? shopData.category?.name
+        : shopData?.category;
 
-    const mobileIconBtn = {
-      flex: 1,
-      h: "42px",
-      borderRadius: "xl",
-      border: "1px solid",
-      borderColor: ghostBtnBorder,
-      bg: ghostBtnBg,
-      _hover: { bg: ghostBtnHover, transform: "translateY(-1px)" },
-      _active: { transform: "scale(0.96)" },
-      transition: "all 0.2s",
-    } as const;
-
-    const desktopBtn = {
-      size: "md",
+    const outlineBtn = {
+      variant: "outline",
       h: "44px",
       px: 4,
       borderRadius: "xl",
-      border: "1px solid",
-      borderColor: ghostBtnBorder,
-      bg: ghostBtnBg,
-      color: textPrimary,
-      fontWeight: "bold",
+      borderColor: outlineBorder,
+      fontWeight: "semibold",
       fontSize: "sm",
-      _hover: { bg: ghostBtnHover, transform: "translateY(-1px)" },
+      _hover: { bg: outlineHover },
       _active: { transform: "scale(0.98)" },
       transition: "all 0.2s",
     } as const;
 
-    // Tagline + chips (rendered beside the logo on desktop, full width below on mobile)
-    const details = (
-      <>
-        {shopData?.tagline && (
-          <Text fontSize="sm" color={textMuted} mb={2.5} noOfLines={2}>
-            {shopData.tagline}
-          </Text>
-        )}
-        <Flex gap={2} flexWrap="wrap" fontSize="xs" color={chipText}>
-          {shopData?.category && (
-            <HStack bg={chipBg} px={2.5} py={1} borderRadius="full" spacing={1.5}>
-              <Icon as={FiShoppingBag} boxSize={3.5} />
-              <Text fontWeight="semibold">
-                {typeof shopData.category === "object"
-                  ? shopData.category?.name
-                  : shopData.category}
-              </Text>
-            </HStack>
-          )}
-          <HStack bg={chipBg} px={2.5} py={1} borderRadius="full" spacing={1.5}>
-            <Icon as={FaStar} boxSize={3} color="orange.400" />
-            <Text fontWeight="bold">{avgRating.toFixed(1)}</Text>
-            {totalRatings > 0 && <Text color={textMuted}>({totalRatings})</Text>}
-          </HStack>
-          {loc?.city && (
-            <HStack bg={chipBg} px={2.5} py={1} borderRadius="full" spacing={1.5}>
-              <Icon as={FiMapPin} boxSize={3.5} />
-              <Text fontWeight="semibold" noOfLines={1}>
-                {loc.city}
-                {loc.state ? `, ${loc.state}` : ""}
-              </Text>
-            </HStack>
-          )}
-        </Flex>
-      </>
-    );
-
     return (
       <Box w="full">
-        {/* Cover */}
-        <Box
-          position="relative"
-          h={{ base: "180px", md: "320px" }}
-          w="full"
-          overflow="hidden"
-          bg="gray.900"
-        >
-          <MotionBox
-            style={{ y: yParallax }}
-            position="absolute"
-            top="-30%"
-            left={0}
-            right={0}
-            h="130%"
-          >
-            <Image
-              src={coverUrl}
-              alt={shopData?.name || "Shop Cover"}
-              w="full"
-              h="full"
-              objectFit="cover"
-              filter="brightness(0.88)"
-            />
-          </MotionBox>
-          <Box
-            position="absolute"
-            inset={0}
-            pointerEvents="none"
-            bgGradient="linear(to-b, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.25) 100%)"
-          />
-
-          {/* Floating actions */}
-          <Flex
-            position="absolute"
-            top={{ base: 3, md: 6 }}
-            left={{ base: 3, md: 8 }}
-            right={{ base: 3, md: 8 }}
-            justify="space-between"
-            align="center"
-            zIndex={10}
-          >
-            <IconButton
-              aria-label="Go Back"
-              icon={<FiArrowLeft size={20} />}
-              onClick={() => router.back()}
-              {...glassBtn}
-            />
-            <HStack spacing={2}>
+        {/* ---------- Cover ---------- */}
+        <Box maxW="8xl" mx="auto" px={{ base: 0, md: 8 }} pt={{ base: 0, md: 6 }}>
+          <CoverImage src={coverUrl} alt={shopData?.name || "Shop cover"}>
+            <Flex
+              position="absolute"
+              top={{ base: 3, md: 4 }}
+              left={{ base: 3, md: 4 }}
+              right={{ base: 3, md: 4 }}
+              justify="space-between"
+              align="center"
+              zIndex={2}
+            >
               <IconButton
-                aria-label="Share"
-                icon={<FiShare2 size={18} />}
-                onClick={handleShare}
+                aria-label="Go back"
+                icon={<FiArrowLeft size={20} />}
+                onClick={() => router.back()}
                 {...glassBtn}
               />
-              <IconButton
-                aria-label={isSaved ? "Remove from favorites" : "Add to favorites"}
-                icon={
-                  isSaved ? (
-                    <FaHeart size={18} color="#EF4444" />
-                  ) : (
-                    <FaRegHeart size={18} />
-                  )
-                }
-                onClick={handleToggleSave}
-                {...glassBtn}
-              />
-            </HStack>
-          </Flex>
+              <HStack spacing={2}>
+                <IconButton
+                  aria-label="Share"
+                  icon={<FiShare2 size={18} />}
+                  onClick={handleShare}
+                  {...glassBtn}
+                />
+                <IconButton
+                  aria-label={
+                    isSaved ? "Remove from favorites" : "Add to favorites"
+                  }
+                  icon={
+                    isSaved ? (
+                      <FaHeart size={18} color="#EF4444" />
+                    ) : (
+                      <FaRegHeart size={18} />
+                    )
+                  }
+                  onClick={handleToggleSave}
+                  {...glassBtn}
+                />
+              </HStack>
+            </Flex>
+          </CoverImage>
         </Box>
 
-        {/* Info card (sits below the cover, no overlap) */}
-        <Box maxW="7xl" mx="auto" px={{ base: 3, md: 8 }} pt={{ base: 3, md: 6 }}>
-          <MotionBox
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            bg={cardBg}
-            borderRadius={{ base: "2xl", md: "3xl" }}
-            p={{ base: 4, md: 6 }}
-            boxShadow="0 8px 30px -12px rgba(0, 0, 0, 0.15)"
-            border="1px solid"
-            borderColor={borderColor}
+        {/* ---------- Identity + actions ---------- */}
+        <Box maxW="7xl" mx="auto" px={{ base: 4, md: 8 }} pb={{ base: 4, md: 6 }}>
+          <Grid
+            templateColumns={{ base: "auto minmax(0, 1fr)", md: "auto minmax(0, 1fr) auto" }}
+            templateAreas={{
+              base: `"logo head" "details details" "actions actions"`,
+              md: `"logo head actions" "logo details actions"`,
+            }}
+            columnGap={{ base: 3, md: 5 }}
+            rowGap={{ base: 3, md: 0 }}
           >
-            <Flex align={{ base: "center", md: "flex-start" }} gap={{ base: 3, md: 5 }}>
-              {/* Logo */}
-              <Box position="relative" flexShrink={0}>
+            {/* Logo (overlaps the cover) */}
+            <GridItem area="logo" mt={{ base: "-34px", md: "-56px" }} zIndex={3}>
+              <Box position="relative">
                 <Box
-                  boxSize={{ base: "68px", md: "112px" }}
+                  boxSize={{ base: "72px", md: "112px" }}
                   borderRadius={{ base: "xl", md: "2xl" }}
-                  border="1px solid"
-                  borderColor={borderColor}
+                  border="3px solid"
+                  borderColor={tileBorder}
+                  bg={tileBg}
                   overflow="hidden"
-                  bg="gray.100"
-                  boxShadow="sm"
+                  boxShadow="0 6px 20px -6px rgba(0, 0, 0, 0.3)"
                 >
                   {shopData?.logo?.url ? (
                     <Image
                       src={shopData.logo.url}
-                      alt={shopData.name}
+                      alt={shopData?.name || "Shop logo"}
                       boxSize="full"
                       objectFit="cover"
-                      loading="lazy"
                       decoding="async"
                     />
                   ) : (
                     <Flex
                       boxSize="full"
-                      bg="linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)"
+                      bg="var(--color-primary, #2563eb)"
                       align="center"
                       justify="center"
                       color="white"
                     >
-                      <Icon as={FaStore} boxSize={{ base: 6, md: 8 }} />
+                      <Icon as={FaStore} boxSize={{ base: 6, md: 9 }} />
                     </Flex>
                   )}
                 </Box>
                 {shopData?.isVerified && (
-                  <Tooltip label="Verified Merchant" placement="top">
+                  <Tooltip label="Verified merchant" placement="top">
                     <Box
                       position="absolute"
-                      bottom="-5px"
-                      right="-5px"
-                      bg={cardBg}
+                      bottom="-6px"
+                      right="-6px"
+                      bg={tileBg}
                       borderRadius="full"
                       p="2px"
+                      lineHeight={0}
                     >
                       <Icon as={MdVerified} boxSize={5} color="blue.500" />
                     </Box>
                   </Tooltip>
                 )}
               </Box>
+            </GridItem>
 
-              {/* Name + status (+ details on desktop) */}
-              <Box minW={0} flex={1}>
-                <Heading
-                  as="h1"
-                  fontSize={{ base: "lg", md: "3xl" }}
-                  fontWeight="800"
-                  color={textPrimary}
-                  letterSpacing="-0.02em"
-                  lineHeight="shorter"
-                  noOfLines={2}
-                >
-                  {shopData?.name}
-                </Heading>
+            {/* Name + open status */}
+            <GridItem area="head" minW={0} pt={{ base: 1.5, md: 4 }}>
+              <Heading
+                as="h1"
+                fontSize={{ base: "xl", md: "3xl" }}
+                fontWeight="800"
+                color={textPrimary}
+                letterSpacing="-0.02em"
+                lineHeight="shorter"
+                noOfLines={2}
+              >
+                {shopData?.name}
+              </Heading>
 
-                <HStack spacing={2} mt={1.5} mb={{ base: 0, md: 3 }} flexWrap="wrap">
+              {status && (
+                <HStack spacing={2} mt={1.5} flexWrap="wrap">
                   <Badge
                     colorScheme={status.isOpen ? "green" : "red"}
                     variant="subtle"
+                    display="inline-flex"
+                    alignItems="center"
+                    gap={1.5}
                     px={2.5}
                     py={0.5}
                     borderRadius="full"
                     fontSize="xs"
-                    fontWeight="bold"
-                    textTransform="capitalize"
+                    textTransform="none"
                   >
-                    {status.isOpen ? "● Open Now" : "○ Closed"}
+                    <Box boxSize="6px" borderRadius="full" bg="currentColor" />
+                    {status.isOpen ? "Open now" : "Closed"}
                   </Badge>
                   {status.hint && (
                     <HStack spacing={1} color={textMuted} fontSize="xs">
@@ -403,84 +500,106 @@ const ShopHeroSection: React.FC<ShopHeroSectionProps> = memo(
                     </HStack>
                   )}
                 </HStack>
+              )}
+            </GridItem>
 
-                <Box display={{ base: "none", md: "block" }}>{details}</Box>
-              </Box>
-
-              {/* Desktop actions */}
-              <HStack
-                spacing={2.5}
-                flexShrink={0}
-                alignSelf="center"
-                display={{ base: "none", md: "flex" }}
-              >
-                {phone && (
-                  <Button as="a" href={`tel:${phone}`} leftIcon={<FiPhone />} {...desktopBtn}>
-                    Call
-                  </Button>
-                )}
-                <Button
-                  as="a"
-                  href={directionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  leftIcon={<FiNavigation />}
-                  {...desktopBtn}
+            {/* Tagline + chips */}
+            <GridItem area="details" minW={0} pt={{ md: 3 }}>
+              {shopData?.tagline && (
+                <Text
+                  fontSize={{ base: "sm", md: "md" }}
+                  color={textMuted}
+                  mb={3}
+                  maxW="64ch"
+                  noOfLines={2}
                 >
-                  Directions
-                </Button>
+                  {shopData.tagline}
+                </Text>
+              )}
+              <Flex gap={2} flexWrap="wrap">
+                {categoryName && (
+                  <Chip icon={FiShoppingBag}>
+                    <Text noOfLines={1}>{categoryName}</Text>
+                  </Chip>
+                )}
+                {hasRatings ? (
+                  <Chip icon={FaStar} iconColor="orange.400">
+                    <Text fontWeight="bold">{avgRating.toFixed(1)}</Text>
+                    <Text color={textMuted} fontWeight="normal">
+                      ({totalRatings})
+                    </Text>
+                  </Chip>
+                ) : (
+                  <Chip icon={FaStar} iconColor="orange.400">
+                    <Text>New</Text>
+                  </Chip>
+                )}
+                {loc?.city && (
+                  <Chip icon={FiMapPin}>
+                    <Text noOfLines={1}>
+                      {loc.city}
+                      {loc.state ? `, ${loc.state}` : ""}
+                    </Text>
+                  </Chip>
+                )}
+              </Flex>
+            </GridItem>
+
+            {/* Actions: primary first on mobile, last on desktop */}
+            <GridItem area="actions" alignSelf={{ md: "start" }} pt={{ md: 4 }}>
+              <Flex
+                direction={{ base: "column", md: "row-reverse" }}
+                gap={2.5}
+                align={{ base: "stretch", md: "center" }}
+                justify={{ md: "flex-end" }}
+              >
                 <Button
                   onClick={onShopProductsClick}
                   leftIcon={<FiShoppingBag />}
-                  h="44px"
-                  px={5}
+                  h={{ base: "48px", md: "44px" }}
+                  px={6}
                   borderRadius="xl"
-                  bgGradient="linear(to-r, var(--color-primary, #2563eb), var(--color-secondary, #4f46e5))"
+                  bg="var(--color-primary, #2563eb)"
                   color="white"
                   fontWeight="bold"
                   fontSize="sm"
-                  boxShadow="0 4px 16px rgba(37, 99, 235, 0.35)"
-                  _hover={{
-                    opacity: 0.92,
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 6px 20px rgba(37, 99, 235, 0.45)",
-                  }}
+                  boxShadow="0 4px 14px rgba(37, 99, 235, 0.3)"
+                  _hover={{ opacity: 0.92, transform: "translateY(-1px)" }}
                   _active={{ transform: "scale(0.98)" }}
                   transition="all 0.2s"
                 >
-                  Shop Products
+                  Shop products
                 </Button>
-              </HStack>
-            </Flex>
 
-            {/* Mobile: details + icon actions */}
-            <Box display={{ base: "block", md: "none" }} mt={3}>
-              {details}
-              <Divider my={3} borderColor={borderColor} />
-              <HStack spacing={2}>
-                {phone && (
-                  <IconButton
+                <HStack spacing={2.5}>
+                  {phone && (
+                    <Button
+                      as="a"
+                      href={`tel:${phone}`}
+                      leftIcon={<FiPhone />}
+                      color={callColor}
+                      flex={{ base: 1, md: "initial" }}
+                      {...outlineBtn}
+                    >
+                      Call
+                    </Button>
+                  )}
+                  <Button
                     as="a"
-                    href={`tel:${phone}`}
-                    aria-label="Call shop"
-                    icon={<FiPhone size={18} />}
-                    color={callColor}
-                    {...mobileIconBtn}
-                  />
-                )}
-                <IconButton
-                  as="a"
-                  href={directionsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Get directions"
-                  icon={<FiNavigation size={18} />}
-                  color={dirColor}
-                  {...mobileIconBtn}
-                />
-              </HStack>
-            </Box>
-          </MotionBox>
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    leftIcon={<FiNavigation />}
+                    color={dirColor}
+                    flex={{ base: 1, md: "initial" }}
+                    {...outlineBtn}
+                  >
+                    Directions
+                  </Button>
+                </HStack>
+              </Flex>
+            </GridItem>
+          </Grid>
         </Box>
       </Box>
     );

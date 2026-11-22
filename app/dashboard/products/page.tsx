@@ -678,14 +678,14 @@ const ProductsPage = observer(() => {
 
   return (
     <Box bg="transparent">
-      <Box maxW="1500px" mx="auto" px={{ base: 3, sm: 4, md: 5 }} pb={{ base: 4, md: 6 }} pt={{ base: 2, md: 3 }}>
+      <Box px={{ base: 2, sm: 4, md: 5 }} pb={{ base: 4, md: 6 }} pt={{ base: 2, md: 3 }}>
         <Flex align="start" justify="space-between" gap={4}>
           <Box>
             <HStack
               spacing={1.5}
               px={3}
               py={1.5}
-              display={{base:"none",md:"block"}}
+              display={{base:"none",md:"flex"}}
               borderRadius="full"
               bg={heroBadgeBg}
               color={heroBadgeColor}
@@ -699,7 +699,7 @@ const ProductsPage = observer(() => {
               <Text>Inventory</Text>
             </HStack>
 
-            <Text mt={3} fontSize={{ base: "xl", md: "4xl" }} fontWeight="700" color={text} lineHeight="1.05">
+            <Text mt={3} fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color={text} lineHeight="1.05">
               Your products
             </Text>
             <Text mt={2} fontSize={{ base: "sm", md: "md" }} color={textMuted}>
