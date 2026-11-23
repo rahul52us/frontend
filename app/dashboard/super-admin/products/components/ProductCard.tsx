@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Badge,
   Box,
   Button,
-  Circle,
   Flex,
   HStack,
   Icon,
@@ -12,7 +11,6 @@ import {
   Text,
   Tooltip,
   useColorModeValue,
-  VStack,
 } from "@chakra-ui/react";
 import {
   FiBox,
@@ -37,20 +35,70 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const surfaceBg = useColorModeValue("white", dashboardPalette.surface);
-  const shellBg = useColorModeValue("#F8FAFC", dashboardPalette.surfaceAlt);
-  const borderCol = useColorModeValue("#E2E8F0", dashboardPalette.border);
-  const textCol = useColorModeValue("#0F172A", dashboardPalette.text);
-  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+  const [imageError, setImageError] = useState(false);
+
+  // Dynamic theme colors adapting seamlessly across light & dark themes
+  const cardBg = useColorModeValue(
+    "white",
+    dashboardPalette.surface
+  );
+  const cardBorder = useColorModeValue(
+    "gray.200",
+    dashboardPalette.border
+  );
+  const cardBorderHover = useColorModeValue(
+    "#094a82",
+    "#3b82f6"
+  );
+  const cardShadow = useColorModeValue(
+    "0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02)",
+    "0 4px 20px rgba(0, 0, 0, 0.22)"
+  );
+  const cardShadowHover = useColorModeValue(
+    "0 6px 20px rgba(37, 99, 235, 0.08)",
+    "0 8px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px var(--color-primary-soft, rgba(20, 184, 166, 0.2))"
+  );
+
+  const mediaFallbackBg = useColorModeValue(
+    "gray.100",
+    "linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%)"
+  );
+  const mediaFallbackText = useColorModeValue("gray.500", "gray.400");
+  const mediaIconBg = useColorModeValue(
+    "brand.50",
+    "rgba(20, 184, 166, 0.14)"
+  );
+  const mediaIconColor = useColorModeValue("brand.600", "teal.300");
+
+  const titleColor = useColorModeValue("gray.800", "var(--merchant-text, #ffffff)");
+  const titleColorHover = useColorModeValue("brand.600", "teal.300");
+  const metaTextColor = useColorModeValue("gray.600", "var(--merchant-text-muted, #94a3b8)");
+
+  const priceStripBg = useColorModeValue(
+    "gray.50",
+    "rgba(255, 255, 255, 0.03)"
+  );
+  const priceStripBorder = useColorModeValue(
+    "gray.200",
+    "rgba(255, 255, 255, 0.07)"
+  );
+  const priceColor = useColorModeValue("gray.900", "#ffffff");
+  const mrpColor = useColorModeValue("gray.400", "#64748b");
+
+  const viewBtnBorder = useColorModeValue("gray.300", "rgba(255, 255, 255, 0.14)");
+  const viewBtnColor = useColorModeValue("gray.700", "whiteAlpha.900");
+  const viewBtnBg = useColorModeValue("white", "rgba(255, 255, 255, 0.03)");
+  const viewBtnHoverBg = useColorModeValue("gray.50", "rgba(255, 255, 255, 0.08)");
 
   const images: string[] = Array.isArray(product.images)
     ? product.images.filter(Boolean)
     : [];
-  const primaryImage = images[0] || null;
+  const rawImage = images[0] || null;
+  const primaryImage = !imageError && rawImage ? rawImage : null;
 
   const companyName =
     product.company?.name ||
-    (typeof product.company === "string" ? product.company : "Direct");
+    (typeof product.company === "string" ? product.company : "Direct Store");
   const categoryName = product.category?.name || "General";
 
   const price =
@@ -66,27 +114,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Box
-      bg={surfaceBg}
-      // border="1px solid"
-      // borderColor={borderCol}
-      borderRadius="22px"
+      bg={cardBg}
+      border="1px solid"
+      borderColor={cardBorder}
+      borderRadius="18px"
       overflow="hidden"
       display="flex"
       flexDirection="column"
-      transition="all 0.22s cubic-bezier(0.4, 0, 0.2, 1)"
+      transition="border-color 0.2s ease, box-shadow 0.2s ease"
+      boxShadow={cardShadow}
       _hover={{
-        // borderColor: dashboardPalette.accent,
-        boxShadow: "0 14px 30px rgba(15, 23, 42, 0.08)",
-        transform: "translateY(-3px)",
+        borderColor: cardBorderHover,
+        boxShadow: cardShadowHover,
       }}
       position="relative"
     >
-      {/* Media Box */}
+      {/* Top Media Showcase */}
       <Box
-        h={{ base: "170px", sm: "190px", md: "205px" }}
+        h={{ base: "175px", sm: "195px", md: "210px" }}
         w="100%"
         position="relative"
-        bg={shellBg}
+        bg={useColorModeValue("gray.100", "#080e18")}
         overflow="hidden"
         cursor="pointer"
         onClick={() => onView(product)}
@@ -98,148 +146,276 @@ const ProductCard: React.FC<ProductCardProps> = ({
             w="100%"
             h="100%"
             objectFit="cover"
-            transition="transform 0.4s ease"
-            _hover={{ transform: "scale(1.06)" }}
+            onError={() => setImageError(true)}
           />
         ) : (
-          <Flex align="center" justify="center" h="100%">
-            <Icon as={FiBox} boxSize={10} color={textMuted} />
+          <Flex
+            align="center"
+            justify="center"
+            h="100%"
+            w="100%"
+            bg={mediaFallbackBg}
+            flexDirection="column"
+            gap={2.5}
+            userSelect="none"
+          >
+            <Flex
+              w="52px"
+              h="52px"
+              borderRadius="16px"
+              bg={mediaIconBg}
+              border="1px solid"
+              borderColor={useColorModeValue("brand.100", "rgba(20, 184, 166, 0.25)")}
+              align="center"
+              justify="center"
+              color={mediaIconColor}
+              boxShadow="0 4px 12px rgba(0, 0, 0, 0.15)"
+            >
+              <Icon as={FiBox} boxSize={6} />
+            </Flex>
+            <Text
+              fontSize="11px"
+              fontWeight="700"
+              color={mediaFallbackText}
+              letterSpacing="0.05em"
+              textTransform="uppercase"
+            >
+              No Product Photo
+            </Text>
           </Flex>
         )}
 
-        {/* Category Badge Overlaid */}
+        {/* Top Vignette Gradient Overlay */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          h="54px"
+          bg="linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%)"
+          pointerEvents="none"
+        />
+
+        {/* Category Pill Tag */}
         <Badge
           position="absolute"
           top={3}
           left={3}
-          colorScheme="brand"
-          variant="solid"
-          borderRadius="full"
+          bg="rgba(13, 148, 136, 0.9)"
+          backdropFilter="blur(8px)"
+          color="white"
+          borderRadius="8px"
           px={2.5}
-          py={0.5}
+          py={0.8}
           fontSize="10px"
           fontWeight="700"
-          boxShadow="0 4px 10px rgba(0, 0, 0, 0.12)"
+          letterSpacing="0.03em"
+          boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
           noOfLines={1}
-          maxW="130px"
+          maxW="140px"
         >
           {categoryName}
         </Badge>
 
-        {/* Multi-photo Indicator */}
+        {/* Multi-photo Counter */}
         {images.length > 1 && (
           <HStack
             position="absolute"
             top={3}
             right={3}
-            bg="blackAlpha.700"
-            backdropFilter="blur(4px)"
+            bg="rgba(0, 0, 0, 0.68)"
+            backdropFilter="blur(8px)"
             color="white"
-            borderRadius="full"
+            borderRadius="8px"
             px={2}
-            py={0.5}
+            py={0.8}
             spacing={1}
             fontSize="10px"
             fontWeight="700"
+            boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
           >
             <Icon as={FiImage} boxSize={2.5} />
             <Text>{images.length}</Text>
           </HStack>
         )}
 
-        {/* Stock Status Badge */}
+        {/* Stock Status Pill */}
         <Box position="absolute" bottom={3} left={3}>
           {isOutOfStock ? (
-            <Badge colorScheme="red" variant="solid" borderRadius="full" px={2} py={0.5} fontSize="10px">
-              Out of stock
+            <Badge
+              bg="rgba(239, 68, 68, 0.92)"
+              backdropFilter="blur(8px)"
+              color="white"
+              borderRadius="8px"
+              px={2.5}
+              py={0.8}
+              fontSize="10px"
+              fontWeight="700"
+              boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
+            >
+              ● OUT OF STOCK
             </Badge>
           ) : isLowStock ? (
-            <Badge colorScheme="orange" variant="solid" borderRadius="full" px={2} py={0.5} fontSize="10px">
-              Only {stock} left
+            <Badge
+              bg="rgba(245, 158, 11, 0.92)"
+              backdropFilter="blur(8px)"
+              color="white"
+              borderRadius="8px"
+              px={2.5}
+              py={0.8}
+              fontSize="10px"
+              fontWeight="700"
+              boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
+            >
+              ● ONLY {stock} LEFT
             </Badge>
           ) : stock !== undefined ? (
-            <Badge colorScheme="green" variant="solid" borderRadius="full" px={2} py={0.5} fontSize="10px">
-              In Stock ({stock})
+            <Badge
+              bg="rgba(16, 185, 129, 0.92)"
+              backdropFilter="blur(8px)"
+              color="white"
+              borderRadius="8px"
+              px={2.5}
+              py={0.8}
+              fontSize="10px"
+              fontWeight="700"
+              boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
+            >
+              ● IN STOCK ({stock})
             </Badge>
           ) : null}
         </Box>
       </Box>
 
-      {/* Body Info */}
-      <Flex direction="column" flex="1" p={{ base: 3.5, md: 4.5 }}>
-        {/* Shop Name */}
-        <HStack spacing={1.5} fontSize="xs" color={textMuted} mb={1.5}>
-          <Icon as={FiShoppingBag} color={dashboardPalette.accent} boxSize={3} flexShrink={0} />
-          <Text fontWeight="600" noOfLines={1}>
-            {companyName}
-          </Text>
-        </HStack>
+      {/* Card Content & Details */}
+      <Flex direction="column" flex="1" p={{ base: 3.5, md: 4 }}>
+        {/* Merchant & Subcategory Row */}
+        <Flex justify="space-between" align="center" mb={1.5} gap={2}>
+          <HStack spacing={1.5} fontSize="xs" color={metaTextColor} minW={0}>
+            <Icon
+              as={FiShoppingBag}
+              color="var(--merchant-accent, #14b8a6)"
+              boxSize={3}
+              flexShrink={0}
+            />
+            <Text fontWeight="600" noOfLines={1}>
+              {companyName}
+            </Text>
+          </HStack>
+
+          {Array.isArray(product.subCategories) && product.subCategories.length > 0 && (
+            <Badge
+              bg={useColorModeValue("gray.100", "rgba(255, 255, 255, 0.06)")}
+              color={metaTextColor}
+              variant="subtle"
+              fontSize="9px"
+              fontWeight="600"
+              borderRadius="6px"
+              px={1.5}
+              py={0.5}
+              flexShrink={0}
+              noOfLines={1}
+            >
+              {product.subCategories[0]?.name || product.subCategories[0]}
+            </Badge>
+          )}
+        </Flex>
 
         {/* Product Title */}
-        <Tooltip label={product.name} placement="top" openDelay={500}>
+        <Tooltip label={product.name} placement="top" openDelay={400}>
           <Text
-            fontSize={{ base: "sm", md: "md" }}
+            fontSize={{ base: "sm", md: "15px" }}
             fontWeight="700"
-            color={textCol}
-            lineHeight="1.3"
+            color={titleColor}
+            lineHeight="1.38"
             noOfLines={2}
-            minH={{ base: "36px", md: "42px" }}
+            minH={{ base: "38px", md: "42px" }}
             cursor="pointer"
-            _hover={{ color: dashboardPalette.accent }}
+            _hover={{ color: titleColorHover }}
             onClick={() => onView(product)}
+            transition="color 0.15s ease"
           >
             {product.name}
           </Text>
         </Tooltip>
 
-        {/* Subcategories (if any) */}
-        {Array.isArray(product.subCategories) && product.subCategories.length > 0 && (
-          <HStack spacing={1} mt={1.5} flexWrap="wrap" rowGap={1}>
-            {product.subCategories.slice(0, 2).map((sub: any, i: number) => (
-              <Badge key={i} colorScheme="gray" variant="subtle" fontSize="9px" borderRadius="full" px={1.5}>
-                {sub.name || sub}
-              </Badge>
-            ))}
-            {product.subCategories.length > 2 && (
-              <Text fontSize="9px" color={textMuted} fontWeight="600">
-                +{product.subCategories.length - 2} more
-              </Text>
-            )}
-          </HStack>
-        )}
-
-        <Box mt="auto" pt={3}>
-          {/* Price Section */}
-          <Flex align="baseline" justify="space-between" mb={3}>
-            <HStack align="baseline" spacing={1.5}>
-              <Text fontSize={{ base: "md", md: "xl" }} fontWeight="900" color={textCol} lineHeight="1">
+        <Box mt="auto" pt={3.5}>
+          {/* Price Strip Card */}
+          <Flex
+            align="center"
+            justify="space-between"
+            mb={3.5}
+            px={3}
+            py={2.5}
+            borderRadius="12px"
+            bg={priceStripBg}
+            border="1px solid"
+            borderColor={priceStripBorder}
+          >
+            <HStack align="baseline" spacing={2}>
+              <Text
+                fontSize={{ base: "md", md: "18px" }}
+                fontWeight="800"
+                color={priceColor}
+                lineHeight="1"
+              >
                 ₹{price.toLocaleString("en-IN")}
               </Text>
               {hasDiscount && (
-                <Text as="s" fontSize="xs" color={textMuted} fontWeight="600">
+                <Text as="s" fontSize="xs" color={mrpColor} fontWeight="600">
                   ₹{mrp.toLocaleString("en-IN")}
                 </Text>
               )}
             </HStack>
-            {hasDiscount && (
-              <Badge colorScheme="green" variant="subtle" fontSize="10px" borderRadius="full" px={1.5}>
-                {discountPct}% off
+
+            {hasDiscount ? (
+              <Badge
+                bg="rgba(16, 185, 129, 0.15)"
+                color="green.400"
+                border="1px solid"
+                borderColor="rgba(16, 185, 129, 0.3)"
+                fontSize="10px"
+                fontWeight="700"
+                borderRadius="6px"
+                px={1.5}
+                py={0.5}
+              >
+                {discountPct}% OFF
+              </Badge>
+            ) : (
+              <Badge
+                bg={useColorModeValue("gray.200", "rgba(255, 255, 255, 0.06)")}
+                color={metaTextColor}
+                fontSize="10px"
+                fontWeight="600"
+                borderRadius="6px"
+                px={1.5}
+                py={0.5}
+              >
+                STANDARD
               </Badge>
             )}
           </Flex>
 
           {/* Action Row */}
-          <HStack spacing={2} pt={1}>
+          <HStack spacing={2}>
             <Button
               size="sm"
               flex="1"
               variant="outline"
-              borderColor={borderCol}
-              borderRadius="full"
+              borderColor={viewBtnBorder}
+              color={viewBtnColor}
+              bg={viewBtnBg}
+              borderRadius="10px"
+              h="36px"
               fontSize="xs"
-              fontWeight="700"
-              leftIcon={<FiEye />}
-              _hover={{ bg: shellBg, borderColor: dashboardPalette.accent }}
+              fontWeight="600"
+              leftIcon={<FiEye size={14} />}
+              _hover={{
+                bg: viewBtnHoverBg,
+                borderColor: "teal.400",
+                color: "teal.300",
+              }}
               onClick={() => onView(product)}
             >
               View
@@ -249,11 +425,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
               size="sm"
               flex="1"
               variant="solid"
-              colorScheme="brand"
-              borderRadius="full"
+              bg="#094a82"
+              color="white"
+              borderRadius="10px"
+              h="36px"
               fontSize="xs"
               fontWeight="700"
-              leftIcon={<FiEdit3 />}
+              leftIcon={<FiEdit3 size={14} />}
+              _hover={{
+                bg: "#063864",
+              }}
               onClick={() => onEdit(product)}
             >
               Edit
@@ -263,10 +444,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
               size="sm"
               variant="ghost"
               colorScheme="red"
-              borderRadius="full"
-              icon={<FiTrash2 />}
+              borderRadius="10px"
+              h="36px"
+              w="36px"
+              minW="36px"
+              icon={<FiTrash2 size={15} />}
               aria-label="Delete product"
-              _hover={{ bg: "red.50" }}
+              _hover={{ bg: "rgba(239, 68, 68, 0.15)", color: "red.300" }}
               onClick={() => onDelete(product)}
             />
           </HStack>

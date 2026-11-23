@@ -366,74 +366,78 @@ const ShopsPage = observer(() => {
                 />
             </SimpleGrid>
 
-            <MerchantPanel p={{ base: 3, md: 6 }}>
-                <HStack spacing={2} mb={4} flexWrap="wrap" justify="space-between">
-                    <HStack spacing={2} flexWrap="wrap">
-                        <MerchantBadge tone="accent">{currentTabLabel}</MerchantBadge>
-                        <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
-                            {approvedCount} Approved In View
-                        </MerchantBadge>
-                    </HStack>
-                    <Text fontSize="xs" color={dashboardPalette.textMuted} fontWeight="600">
+            {/* ---------------- Clean Filter Tabs & Status Row ---------------- */}
+            <Flex
+                justify="space-between"
+                align="center"
+                mb={4}
+                flexWrap="wrap"
+                gap={2}
+            >
+                <Tabs
+                    variant="unstyled"
+                    index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
+                    onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
+                >
+                    <TabList
+                        gap={2}
+                        flexWrap="wrap"
+                        display="flex"
+                        alignItems="center"
+                    >
+                        {reviewTabs.map((tab) => {
+                            const isSelected = reviewStatus === tab.value;
+                            return (
+                                <Tab
+                                    key={tab.value}
+                                    px={3.5}
+                                    py={1.5}
+                                    borderRadius="10px"
+                                    fontSize="xs"
+                                    fontWeight="700"
+                                    letterSpacing="0.02em"
+                                    color="var(--merchant-text-muted)"
+                                    bg="transparent"
+                                    transition="all 0.2s ease"
+                                    _hover={{
+                                        color: "var(--merchant-text)",
+                                        bg: "var(--merchant-surface-alt)",
+                                    }}
+                                    _selected={{
+                                        color: "white",
+                                        bg: "#094a82",
+                                        boxShadow: "0 2px 8px rgba(9, 74, 130, 0.4)",
+                                    }}
+                                >
+                                    <HStack spacing={1.5}>
+                                        <Text>{tab.label}</Text>
+                                        {isSelected ? (
+                                            <Badge
+                                                bg="whiteAlpha.300"
+                                                color="white"
+                                                borderRadius="full"
+                                                px={1.5}
+                                                fontSize="10px"
+                                            >
+                                                {totalShops}
+                                            </Badge>
+                                        ) : null}
+                                    </HStack>
+                                </Tab>
+                            );
+                        })}
+                    </TabList>
+                </Tabs>
+
+                <HStack spacing={2} flexWrap="wrap">
+                    <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
+                        {approvedCount} Approved In View
+                    </MerchantBadge>
+                    <Text fontSize="xs" color="var(--merchant-text-muted)" fontWeight="600">
                         {totalShops} total shops recorded
                     </Text>
                 </HStack>
-
-                {/* Desktop Tabs */}
-                <Box display={{ base: "none", md: "block" }} mb={5}>
-                    <Tabs
-                        variant="unstyled"
-                        index={Math.max(reviewTabs.findIndex((tab) => tab.value === reviewStatus), 0)}
-                        onChange={(index) => setReviewStatus(reviewTabs[index]?.value || "pending")}
-                    >
-                        <TabList
-                            gap={1.5}
-                            flexWrap="wrap"
-                            bg={dashboardPalette.surfaceAlt}
-                            borderWidth="1px"
-                            borderColor={dashboardPalette.border}
-                            borderRadius="20px"
-                            p={1}
-                        >
-                            {reviewTabs.map((tab) => {
-                                const isSelected = reviewStatus === tab.value;
-                                return (
-                                    <Tab
-                                        key={tab.value}
-                                        borderRadius="16px"
-                                        color={dashboardPalette.textMuted}
-                                        fontSize="sm"
-                                        fontWeight="700"
-                                        px={4}
-                                        py={1.5}
-                                        _selected={{
-                                            bg: dashboardPalette.accentSoft,
-                                            color: dashboardPalette.accentStrong,
-                                            borderWidth: "1px",
-                                            borderColor: dashboardPalette.border,
-                                        }}
-                                        _hover={{ color: dashboardPalette.text }}
-                                    >
-                                        <HStack spacing={1.5}>
-                                            <Text>{tab.label}</Text>
-                                            {isSelected ? (
-                                                <Badge
-                                                    bg={dashboardPalette.surface}
-                                                    color={dashboardPalette.textMuted}
-                                                    borderRadius="full"
-                                                    px={1.5}
-                                                    fontSize="10px"
-                                                >
-                                                    {totalShops}
-                                                </Badge>
-                                            ) : null}
-                                        </HStack>
-                                    </Tab>
-                                );
-                            })}
-                        </TabList>
-                    </Tabs>
-                </Box>
+            </Flex>
 
                 {/* Mobile Filter: Segmented Dropdown + Horizontal Chips */}
                 <Box display={{ base: "block", md: "none" }} mb={4}>
@@ -498,10 +502,28 @@ const ShopsPage = observer(() => {
                     </Flex>
                 </Box>
 
-                {/* Desktop View: Custom Table */}
-                <Box display={{ base: "none", md: "block" }}>
+                {/* Desktop View: Custom Table with clean outer container */}
+                <Box
+                    display={{ base: "none", md: "block" }}
+                    dir="ltr"
+                    w="100%"
+                    sx={{
+                        "& > div": {
+                            bg: "transparent !important",
+                            boxShadow: "none !important",
+                            borderRadius: "0 !important",
+                            "& > div": {
+                                px: "0 !important",
+                                py: "0 !important",
+                                bg: "transparent !important",
+                                "& > div": {
+                                    borderRadius: "16px !important",
+                                },
+                            },
+                        },
+                    }}
+                >
                     <CustomTable
-                        title={`${currentTabLabel} (${totalShops})`}
                         columns={ShopColumns}
                         data={shops}
                         loading={loading}
@@ -757,7 +779,7 @@ const ShopsPage = observer(() => {
                         </HStack>
                     )}
                 </VStack>
-            </MerchantPanel>
+
 
             {/* Review Drawer (renders as BottomSheetDrawer on mobile, CustomDrawer on desktop) */}
             <ReviewShopDrawer

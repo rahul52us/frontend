@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Button,
+  ButtonGroup,
   Flex,
   HStack,
   Icon,
@@ -11,38 +12,43 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  InputRightElement,
   Select,
   SimpleGrid,
   Skeleton,
   Text,
-  useColorModeValue
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FiBox,
   FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
   FiDollarSign,
+  FiGrid,
   FiLayers,
+  FiList,
   FiRefreshCw,
-  FiSearch
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../../store/stores";
 import {
+  getMerchantTableProps,
   MerchantBadge,
   merchantGhostButtonProps,
   MerchantPageHeader,
   MerchantPageShell,
-  MerchantPanel,
   merchantSpin,
   MerchantStatCard,
 } from "../../components/common/merchantDashboardUI";
 import ProductForm from "../../products/components/ProductForm";
 import ProductCard from "./components/ProductCard";
+import { ProductColumns } from "./components/ProductColumns";
 import ProductViewDrawer from "./components/ProductViewDrawer";
 import { useProductDelete } from "./hooks/useProductDelete";
 import { useProductEdit } from "./hooks/useProductEdit";
@@ -50,15 +56,27 @@ import { useProductList } from "./hooks/useProductList";
 
 const SuperAdminProductsPage = observer(() => {
   const { offerStore } = stores;
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "low_stock" | "out_of_stock">("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
   const {
     products,
     loading,
     currentPage,
     totalPages,
     totalProducts,
+    summary,
+    setFilters,
     setCurrentPage,
     fetchProducts,
-  } = useProductList();
+  } = useProductList({
+    search: searchQuery,
+    category: selectedCategory,
+    stockFilter,
+  });
 
   const {
     isOpen: isDeleteOpen,
@@ -84,16 +102,25 @@ const SuperAdminProductsPage = observer(() => {
   const [selectedViewProduct, setSelectedViewProduct] = useState<any>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
 
-  // Local filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  // Debounced search sync to backend
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setFilters({
+        search: searchQuery,
+        category: selectedCategory,
+        stockFilter,
+      });
+      setCurrentPage(1);
+    }, 350);
 
-  const surfaceBg = useColorModeValue("white", dashboardPalette.surface);
-  const borderCol = useColorModeValue("#E2E8F0", dashboardPalette.border);
-  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+    return () => clearTimeout(handler);
+  }, [searchQuery, selectedCategory, stockFilter, setFilters, setCurrentPage]);
 
   React.useEffect(() => {
     offerStore.getAllOffers({ isActive: true });
+    if (stores.categoryStore.categories.length === 0) {
+      stores.categoryStore.getAllCategories();
+    }
   }, [offerStore]);
 
   const handleViewClick = (product: any) => {
@@ -101,55 +128,74 @@ const SuperAdminProductsPage = observer(() => {
     setIsViewOpen(true);
   };
 
-  const handleViewClose = () => {
+  const handleCloseView = () => {
     setIsViewOpen(false);
     setSelectedViewProduct(null);
   };
 
-  // Filtered products based on search & category
-  const filteredProducts = useMemo(() => {
-    return products.filter((item: any) => {
-      const q = searchQuery.toLowerCase().trim();
-      const matchesSearch =
-        !q ||
-        item.name?.toLowerCase().includes(q) ||
-        item.company?.name?.toLowerCase().includes(q) ||
-        (typeof item.company === "string" && item.company.toLowerCase().includes(q)) ||
-        item.category?.name?.toLowerCase().includes(q);
+  // Products directly from backend result (server-side filtered)
+  const filteredProducts = products;
 
-      const matchesCategory =
-        selectedCategory === "all" ||
-        item.category?._id === selectedCategory ||
-        item.category?.name === selectedCategory;
+  // Real-time backend summary metrics
+  const inStockCount = summary.inStock;
+  const lowStockCount = summary.low;
+  const outOfStockCount = Math.max(0, totalProducts - inStockCount);
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, searchQuery, selectedCategory]);
+  const populatedCategoryCount = useMemo(() => {
+    return products.filter((p: any) => Boolean(p.category)).length;
+  }, [products]);
 
-  // Derived stats
-  const inStockCount = products.filter(
-    (p: any) => (p.stock ?? p.quantity ?? 1) > 0
-  ).length;
-  const populatedCategoryCount = products.filter((p: any) =>
-    Boolean(p.category?.name)
-  ).length;
-  const totalValue = products.reduce(
-    (acc: number, p: any) => acc + (Number(p.price) || 0),
-    0
-  );
+  const totalValue = useMemo(() => {
+    return products.reduce((acc: number, p: any) => {
+      const price =
+        typeof p.price === "number" ? p.price : parseFloat(p.price) || 0;
+      return acc + price;
+    }, 0);
+  }, [products]);
+
   const avgPrice =
     products.length > 0 ? Math.round(totalValue / products.length) : 0;
 
-  // Extract unique category options for filter dropdown
+  // Extract category options from global categoryStore + active product categories
   const categoryOptions = useMemo(() => {
     const map = new Map<string, string>();
+    stores.categoryStore.categories.forEach((c: any) => {
+      if (c._id && c.name) {
+        map.set(String(c._id), c.name);
+      }
+    });
     products.forEach((p: any) => {
       if (p.category?._id && p.category?.name) {
-        map.set(p.category._id, p.category.name);
+        map.set(String(p.category._id), p.category.name);
       }
     });
     return Array.from(map.entries());
   }, [products]);
+
+  const tableActions = useMemo(() => ({
+    actionBtn: {
+      viewKey: {
+        showViewButton: true,
+        title: "View Product",
+        function: handleViewClick,
+      },
+      editKey: {
+        showEditButton: true,
+        title: "Edit Product",
+        function: handleEditClick,
+      },
+      deleteKey: {
+        showDeleteButton: true,
+        function: (row: any) => handleDeleteClick(row),
+      },
+    },
+    pagination: {
+      show: true,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      onClick: (page: number) => setCurrentPage(page),
+    },
+  }), [currentPage, totalPages]);
 
   return (
     <MerchantPageShell>
@@ -242,148 +288,294 @@ const SuperAdminProductsPage = observer(() => {
         />
       </SimpleGrid>
 
-      {/* Main Content Panel: Search, Filters, and Cards */}
-      <MerchantPanel p={{ base: 0, md: 6 }}>
-        {/* Filter and Search Bar */}
+      {/* Main Content Area */}
+      <Box w="100%">
+        {/* Clean Balanced Toolbar: [Left: Stock Filter Buttons + Search Bar adjacent] ----- [Right: Category & View Switcher] */}
         <Flex
-          direction={{ base: "column", sm: "row" }}
-          gap={3}
-          align={{ base: "stretch", sm: "center" }}
           justify="space-between"
+          align="center"
+          direction={{ base: "column", lg: "row" }}
+          gap={3}
           mb={5}
+          px={0.5}
         >
-          {/* Search Input */}
-          <InputGroup maxW={{ base: "100%", sm: "320px", md: "380px" }}>
-            <InputLeftElement pointerEvents="none">
-              <Icon as={FiSearch} color={textMuted} />
-            </InputLeftElement>
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, shop, category..."
-              borderRadius="full"
-              fontSize="sm"
-              bg={surfaceBg}
-              borderColor={borderCol}
-              _focusVisible={{
-                borderColor: dashboardPalette.accent,
-                boxShadow: `0 0 0 1px ${dashboardPalette.accent}`,
-              }}
-            />
-          </InputGroup>
+          {/* Left Cluster: Filters + Search Bar starting immediately next to them */}
+          <HStack spacing={3} flexWrap="wrap" flex={1} align="center">
+            {/* Quick Stock Filter Buttons */}
+            <HStack spacing={2} flexWrap="wrap">
+              <Button
+                size="sm"
+                h="38px"
+                px={4}
+                bg={stockFilter === "all" ? "#094a82" : "transparent"}
+                color={stockFilter === "all" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "all" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "all" ? "#063864" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "#094a82",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                onClick={() => setStockFilter("all")}
+              >
+                All ({totalProducts})
+              </Button>
+              <Button
+                size="sm"
+                h="38px"
+                px={4}
+                bg={stockFilter === "in_stock" ? "#094a82" : "transparent"}
+                color={stockFilter === "in_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "in_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "in_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "#094a82",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                onClick={() => setStockFilter("in_stock")}
+              >
+                In Stock ({inStockCount})
+              </Button>
+              <Button
+                size="sm"
+                h="38px"
+                px={4}
+                bg={stockFilter === "low_stock" ? "#094a82" : "transparent"}
+                color={stockFilter === "low_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "low_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "low_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "#094a82",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                onClick={() => setStockFilter("low_stock")}
+              >
+                Low Stock ({lowStockCount})
+              </Button>
+              <Button
+                size="sm"
+                h="38px"
+                px={4}
+                bg={stockFilter === "out_of_stock" ? "#094a82" : "transparent"}
+                color={stockFilter === "out_of_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "out_of_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "out_of_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "#094a82",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                onClick={() => setStockFilter("out_of_stock")}
+              >
+                Out of Stock ({outOfStockCount})
+              </Button>
+            </HStack>
 
-          {/* Category Dropdown & Results count */}
-          <HStack spacing={2} align="center" justify="space-between">
+            {/* Search Bar immediately next to the filter buttons */}
+            <InputGroup size="sm" maxW={{ base: "100%", md: "280px", lg: "320px" }}>
+              <InputLeftElement pointerEvents="none" h="38px">
+                <Icon as={FiSearch} color="gray.400" />
+              </InputLeftElement>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products by name, shop..."
+                borderRadius="12px"
+                h="38px"
+                fontSize="sm"
+                bg="var(--merchant-surface-alt)"
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ borderColor: "brand.400" }}
+                _focus={{
+                  borderColor: "brand.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+                }}
+              />
+              {searchQuery && (
+                <InputRightElement h="38px">
+                  <IconButton
+                    aria-label="Clear search"
+                    icon={<FiX />}
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setSearchQuery("")}
+                  />
+                </InputRightElement>
+              )}
+            </InputGroup>
+          </HStack>
+
+          {/* Right: Category Dropdown & View Mode Switcher */}
+          <HStack spacing={2.5} justify="flex-end">
             {categoryOptions.length > 0 && (
               <Select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                borderRadius="full"
+                borderRadius="12px"
+                h="38px"
                 size="sm"
-                maxW="180px"
+                maxW="170px"
                 fontSize="xs"
                 fontWeight="600"
-                bg={surfaceBg}
-                borderColor={borderCol}
+                bg="var(--merchant-surface-alt)"
+                borderColor="var(--merchant-border-strong)"
+                color="var(--merchant-text)"
               >
-                <option value="all">All Categories</option>
+                <option value="all" style={{ background: "#0d1522", color: "#ffffff" }}>
+                  All Categories
+                </option>
                 {categoryOptions.map(([id, name]) => (
-                  <option key={id} value={id}>
+                  <option key={id} value={id} style={{ background: "#0d1522", color: "#ffffff" }}>
                     {name}
                   </option>
                 ))}
               </Select>
             )}
 
-            <Badge
-              colorScheme="gray"
-              variant="subtle"
-              borderRadius="full"
-              px={2.5}
-              py={1}
-              fontSize="xs"
-              fontWeight="700"
-              whiteSpace="nowrap"
-            >
-              {filteredProducts.length} items
-            </Badge>
+            {/* View Mode Toggle Switcher */}
+            <ButtonGroup isAttached size="sm" variant="outline" borderRadius="12px">
+              <IconButton
+                aria-label="Grid view"
+                icon={<FiGrid size={16} />}
+                h="38px"
+                px={3.5}
+                borderRadius="12px 0 0 12px"
+                bg={viewMode === "grid" ? "#094a82" : "var(--merchant-surface-alt)"}
+                color={viewMode === "grid" ? "white" : "var(--merchant-text-muted)"}
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ color: "white", bg: viewMode === "grid" ? "#063864" : "rgba(255, 255, 255, 0.08)" }}
+                onClick={() => setViewMode("grid")}
+              />
+              <IconButton
+                aria-label="Table view"
+                icon={<FiList size={16} />}
+                h="38px"
+                px={3.5}
+                borderRadius="0 12px 12px 0"
+                bg={viewMode === "table" ? "#094a82" : "var(--merchant-surface-alt)"}
+                color={viewMode === "table" ? "white" : "var(--merchant-text-muted)"}
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ color: "white", bg: viewMode === "table" ? "#063864" : "rgba(255, 255, 255, 0.08)" }}
+                onClick={() => setViewMode("table")}
+              />
+            </ButtonGroup>
           </HStack>
         </Flex>
 
-        {/* Product Cards Grid */}
+        {/* Content View: Grid OR Table */}
         {loading ? (
           <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 3.5, md: 4.5 }}>
             {Array.from({ length: 8 }).map((_, i) => (
               <Box
                 key={i}
-                borderRadius="22px"
+                borderRadius="20px"
                 border="1px solid"
-                borderColor={borderCol}
-                overflow="hidden"
-                bg={surfaceBg}
+                borderColor="var(--merchant-border-strong, #1f2e46)"
                 p={4}
+                bg="var(--merchant-surface-alt, #131d2e)"
               >
                 <Skeleton h="180px" borderRadius="16px" mb={3} />
                 <Skeleton h="14px" w="40%" mb={2} />
-                <Skeleton h="18px" w="80%" mb={3} />
-                <Skeleton h="24px" w="50%" mb={4} />
-                <HStack spacing={2}>
-                  <Skeleton h="32px" flex="1" borderRadius="full" />
-                  <Skeleton h="32px" flex="1" borderRadius="full" />
-                </HStack>
+                <Skeleton h="18px" w="85%" mb={2} />
+                <Skeleton h="20px" w="60%" />
               </Box>
             ))}
           </SimpleGrid>
         ) : filteredProducts.length > 0 ? (
-          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 5 }} spacing={{ base: 3, md: 5 }}>
-            {filteredProducts.map((product: any) => (
-              <ProductCard
-                key={product._id || product.id}
-                product={product}
-                onView={handleViewClick}
-                onEdit={handleEditClick}
-                onDelete={handleDeleteClick}
+          viewMode === "grid" ? (
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 3.5, md: 4.5 }}>
+              {filteredProducts.map((product: any) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onView={handleViewClick}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Box
+              dir="ltr"
+              w="100%"
+              sx={{
+                "& > div": {
+                  bg: "transparent !important",
+                  boxShadow: "none !important",
+                  borderRadius: "0 !important",
+                  "& > div": {
+                    px: "0 !important",
+                    py: "0 !important",
+                    bg: "transparent !important",
+                    "& > div": {
+                      borderRadius: "16px !important",
+                    },
+                  },
+                },
+              }}
+            >
+              <CustomTable
+                columns={ProductColumns}
+                data={filteredProducts}
+                loading={loading}
+                actions={tableActions}
+                serial={{ show: true, text: "S.No." }}
+                {...getMerchantTableProps("62vh")}
               />
-            ))}
-          </SimpleGrid>
+            </Box>
+          )
         ) : (
+          /* Empty State */
           <Box
             py={14}
             textAlign="center"
-            bg={dashboardPalette.surfaceAlt}
+            bg="var(--merchant-surface-alt, #131d2e)"
             borderRadius="20px"
             border="1px dashed"
-            borderColor={borderCol}
+            borderColor="var(--merchant-border-strong, #1f2e46)"
           >
             <Flex
               w="64px"
               h="64px"
               borderRadius="full"
-              bg={dashboardPalette.accentSoft}
+              bg="rgba(59, 130, 246, 0.12)"
               align="center"
               justify="center"
               mx="auto"
               mb={3}
             >
-              <Icon as={FiBox} boxSize={7} color={dashboardPalette.accent} />
+              <Icon as={FiBox} boxSize={7} color="brand.400" />
             </Flex>
-            <Text fontSize="md" fontWeight="700" color={dashboardPalette.text}>
+            <Text fontSize="md" fontWeight="700" color="var(--merchant-text, #ffffff)">
               No products found
             </Text>
-            <Text fontSize="sm" color={textMuted} mt={1} maxW="sm" mx="auto">
-              {searchQuery || selectedCategory !== "all"
-                ? "Try clearing your search query or selecting a different category filter."
+            <Text fontSize="sm" color="var(--merchant-text-muted, #94a3b8)" mt={1} maxW="sm" mx="auto">
+              {searchQuery || selectedCategory !== "all" || stockFilter !== "all"
+                ? "Try clearing your search query or selecting a different filter."
                 : "No products are currently recorded in the marketplace."}
             </Text>
-            {(searchQuery || selectedCategory !== "all") && (
+            {(searchQuery || selectedCategory !== "all" || stockFilter !== "all") && (
               <Button
                 size="sm"
                 variant="outline"
-                borderRadius="full"
+                borderRadius="12px"
                 mt={3.5}
+                borderColor="var(--merchant-border-strong, #1f2e46)"
+                color="var(--merchant-text, #ffffff)"
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("all");
+                  setStockFilter("all");
                 }}
               >
                 Reset Filters
@@ -398,13 +590,13 @@ const SuperAdminProductsPage = observer(() => {
             mt={6}
             pt={4}
             borderTop="1px solid"
-            borderColor={borderCol}
+            borderColor="var(--merchant-border-strong, #1f2e46)"
             align="center"
             justify="space-between"
             flexWrap="wrap"
             gap={3}
           >
-            <Text fontSize="xs" color={textMuted} fontWeight="600">
+            <Text fontSize="xs" color="var(--merchant-text-muted, #94a3b8)" fontWeight="600">
               Page {currentPage} of {totalPages} ({totalProducts} total products)
             </Text>
 
@@ -412,8 +604,9 @@ const SuperAdminProductsPage = observer(() => {
               <Button
                 size="sm"
                 variant="outline"
-                borderRadius="full"
-                borderColor={borderCol}
+                borderRadius="12px"
+                borderColor="var(--merchant-border-strong, #1f2e46)"
+                color="var(--merchant-text, #ffffff)"
                 leftIcon={<FiChevronLeft />}
                 isDisabled={currentPage <= 1 || loading}
                 onClick={() => setCurrentPage(currentPage - 1)}
@@ -431,7 +624,7 @@ const SuperAdminProductsPage = observer(() => {
                       size="sm"
                       aria-label={`Page ${pNum}`}
                       icon={<Text fontSize="xs">{pNum}</Text>}
-                      borderRadius="full"
+                      borderRadius="10px"
                       variant={isCurrent ? "solid" : "ghost"}
                       colorScheme={isCurrent ? "brand" : "gray"}
                       onClick={() => setCurrentPage(pNum)}
@@ -443,8 +636,9 @@ const SuperAdminProductsPage = observer(() => {
               <Button
                 size="sm"
                 variant="outline"
-                borderRadius="full"
-                borderColor={borderCol}
+                borderRadius="12px"
+                borderColor="var(--merchant-border-strong, #1f2e46)"
+                color="var(--merchant-text, #ffffff)"
                 rightIcon={<FiChevronRight />}
                 isDisabled={currentPage >= totalPages || loading}
                 onClick={() => setCurrentPage(currentPage + 1)}
@@ -454,46 +648,43 @@ const SuperAdminProductsPage = observer(() => {
             </HStack>
           </Flex>
         )}
-      </MerchantPanel>
+      </Box>
 
       {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isDeleteOpen}
-        onClose={onDeleteClose}
-        onConfirm={confirmDelete}
-        title="Confirm Delete"
-        message={
-          <Text>
-            Are you sure you want to delete the product{" "}
-            <strong>{selectedProduct?.name}</strong>? This action cannot be
-            undone.
-          </Text>
-        }
-        confirmText="Delete"
-        confirmButtonProps={{ colorScheme: "red" }}
-        isLoading={isDeleting}
-        image={selectedProduct?.images?.[0]}
-      />
+      {selectedProduct && (
+        <ConfirmationModal
+          isOpen={isDeleteOpen}
+          onClose={onDeleteClose}
+          onConfirm={confirmDelete}
+          isLoading={isDeleting}
+          title="Delete Product"
+          message={`Are you sure you want to delete "${selectedProduct?.name}"? This action cannot be undone.`}
+          confirmText="Delete"
+        />
+      )}
 
-      {/* Product Edit / Creation Form (uses CustomDrawer with responsive Bottom Sheet on mobile) */}
-      <ProductForm
-        isOpen={isEditOpen}
-        onClose={onEditClose}
-        initialValues={initialValues}
-        validationSchema={ProductSchema}
-        onSubmit={handleSubmit}
-        categories={activeCategories.filter((c: any) => c !== "")}
-        offersList={offerStore.offers}
-        isEdit={!!editProduct}
-      />
+      {/* Product Edit / Creation Form */}
+      {isEditOpen && (
+        <ProductForm
+          isOpen={isEditOpen}
+          onClose={onEditClose}
+          isEdit={Boolean(editProduct)}
+          onSubmit={handleSubmit}
+          initialValues={initialValues}
+          validationSchema={ProductSchema}
+          categories={activeCategories}
+        />
+      )}
 
-      {/* Product Details View Drawer (BottomSheetDrawer on mobile, CustomDrawer on desktop) */}
+      {/* Product Detail View Drawer */}
       <ProductViewDrawer
         isOpen={isViewOpen}
-        onClose={handleViewClose}
+        onClose={handleCloseView}
         product={selectedViewProduct}
-        onEdit={(prod) => handleEditClick(prod)}
-        onDelete={(prod) => handleDeleteClick(prod)}
+        onEdit={(prod) => {
+          handleCloseView();
+          handleEditClick(prod);
+        }}
       />
     </MerchantPageShell>
   );

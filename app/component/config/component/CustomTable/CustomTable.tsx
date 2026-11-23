@@ -333,7 +333,14 @@ const CustomTable: React.FC<CustomTableProps> = ({
     "0 20px 40px -15px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)"
   );
 
-  const tableHeaderBg = "brand.600";
+  const tableHeaderBg = useColorModeValue(
+    "linear-gradient(180deg, #094a82 0%, #063864 100%)",
+    "linear-gradient(180deg, #0d1e32 0%, #081320 100%)"
+  );
+  const tableHeaderColor = useColorModeValue(
+    "#FFFFFF",
+    "var(--color-text-primary, #F1F5F9)"
+  );
 
   return (
     <Box

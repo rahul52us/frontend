@@ -1,4 +1,5 @@
 "use client";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -6,10 +7,10 @@ import {
   HStack,
   Icon,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  InputRightElement,
   SimpleGrid,
   Spinner,
   Tab,
@@ -23,18 +24,16 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useEffect, useState } from "react";
-import type { IconType } from "react-icons";
 import {
   FiCheckCircle,
-  FiEdit2,
+  FiDatabase,
   FiFolder,
   FiFolderPlus,
   FiLayers,
   FiSliders,
-  FiTrash2,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
-import { HiDotsVertical } from "react-icons/hi";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
@@ -48,305 +47,9 @@ import {
 } from "../../components/common/merchantDashboardUI";
 import CategoryFilterConfigDrawer from "./components/CategoryFilterConfigDrawer";
 import CategoryForm from "./components/CategoryForm";
-
-/* -------------------------------------------------------------------------- */
-/*  Stat card (compact on mobile)                                             */
-/* -------------------------------------------------------------------------- */
-
-type StatCardProps = {
-  label: string;
-  value: number | string;
-  icon: IconType;
-  color: string;
-};
-
-const StatCard = ({ label, value, icon, color }: StatCardProps) => (
-  <Box
-    bg="var(--merchant-surface-alt)"
-    border="1px solid"
-    borderColor="#CDE5FF"
-    borderRadius={{ base: "18px", md: "26px" }}
-    p={{ base: 3, md: 4 }}
-    minW={0}
-    minH={{ base: "112px", md: "162px" }}
-    display="flex"
-    flexDirection="column"
-    justifyContent="center"
-    transition="all 0.2s ease"
-    _hover={{
-      borderColor: color,
-      boxShadow: "0 5px 16px rgba(59, 130, 246, 0.07)",
-    }}
-  >
-    {/* Icon and Label */}
-    <Flex align="center" gap={{ base: 2, md: 3 }} minW={0}>
-      <Flex
-        w={{ base: "36px", md: "50px" }}
-        h={{ base: "36px", md: "50px" }}
-        flexShrink={0}
-        align="center"
-        justify="center"
-        borderRadius="full"
-        bg={`${color}14`}
-      >
-        <Icon as={icon} boxSize={{ base: 4, md: 5 }} color={color} />
-      </Flex>
-
-      <Text
-        fontSize={{ base: "10px", sm: "xs", md: "sm" }}
-        fontWeight="700"
-        letterSpacing={{ base: "0.04em", md: "0.10em" }}
-        textTransform="uppercase"
-        color="var(--merchant-text-muted)"
-        lineHeight="1.4"
-        noOfLines={2}
-        minW={0}
-      >
-        {label}
-      </Text>
-    </Flex>
-
-    {/* Value */}
-    <Text
-      mt={{ base: 3, md: 4 }}
-      fontSize={{ base: "xl", md: "3xl" }}
-      fontWeight="600"
-      lineHeight="1.2"
-      color={color}
-      noOfLines={1}
-    >
-      {value}
-    </Text>
-  </Box>
-);
-
-/* -------------------------------------------------------------------------- */
-/*  Mobile category card: photo on the top half, details below                */
-/* -------------------------------------------------------------------------- */
-
-const categoryColorPalette = [
-  {
-    border: "#3B82F6",
-    bgSoft: "rgba(59, 130, 246, 0.08)",
-    borderStrong: "rgba(59, 130, 246, 0.28)",
-    accent: "#3B82F6",
-    fallbackGrad: "linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.20))",
-  },
-  {
-    border: "#10B981",
-    bgSoft: "rgba(16, 185, 129, 0.08)",
-    borderStrong: "rgba(16, 185, 129, 0.28)",
-    accent: "#10B981",
-    fallbackGrad: "linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(20, 184, 166, 0.20))",
-  },
-  {
-    border: "#8B5CF6",
-    bgSoft: "rgba(139, 92, 246, 0.08)",
-    borderStrong: "rgba(139, 92, 246, 0.28)",
-    accent: "#8B5CF6",
-    fallbackGrad: "linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.20))",
-  },
-  {
-    border: "#F59E0B",
-    bgSoft: "rgba(245, 158, 11, 0.08)",
-    borderStrong: "rgba(245, 158, 11, 0.28)",
-    accent: "#F59E0B",
-    fallbackGrad: "linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(249, 115, 22, 0.20))",
-  },
-  {
-    border: "#EC4899",
-    bgSoft: "rgba(236, 72, 153, 0.08)",
-    borderStrong: "rgba(236, 72, 153, 0.28)",
-    accent: "#EC4899",
-    fallbackGrad: "linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(244, 63, 94, 0.20))",
-  },
-  {
-    border: "#06B6D4",
-    bgSoft: "rgba(6, 182, 212, 0.08)",
-    borderStrong: "rgba(6, 182, 212, 0.28)",
-    accent: "#06B6D4",
-    fallbackGrad: "linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.20))",
-  },
-  {
-    border: "#F97316",
-    bgSoft: "rgba(249, 115, 22, 0.08)",
-    borderStrong: "rgba(249, 115, 22, 0.28)",
-    accent: "#F97316",
-    fallbackGrad: "linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(234, 88, 12, 0.20))",
-  },
-  {
-    border: "#14B8A6",
-    bgSoft: "rgba(20, 184, 166, 0.08)",
-    borderStrong: "rgba(20, 184, 166, 0.28)",
-    accent: "#14B8A6",
-    fallbackGrad: "linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(6, 182, 212, 0.20))",
-  },
-  {
-    border: "#6366F1",
-    bgSoft: "rgba(99, 102, 241, 0.08)",
-    borderStrong: "rgba(99, 102, 241, 0.28)",
-    accent: "#6366F1",
-    fallbackGrad: "linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.20))",
-  },
-  {
-    border: "#E11D48",
-    bgSoft: "rgba(225, 29, 72, 0.08)",
-    borderStrong: "rgba(225, 29, 72, 0.28)",
-    accent: "#E11D48",
-    fallbackGrad: "linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(244, 63, 94, 0.20))",
-  },
-];
-
-const getCategoryColor = (indexOrId: number | string) => {
-  if (typeof indexOrId === "number") {
-    return categoryColorPalette[indexOrId % categoryColorPalette.length];
-  }
-  let hash = 0;
-  const str = String(indexOrId || "");
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
-  }
-  return categoryColorPalette[Math.abs(hash) % categoryColorPalette.length];
-};
-
-type CategoryMobileCardProps = {
-  category: any;
-  index?: number;
-  onEdit: (category: any) => void;
-  onDelete: (category: any) => void;
-};
-
-const CategoryMobileCard = ({
-  category,
-  index = 0,
-  onEdit,
-  onDelete,
-}: CategoryMobileCardProps) => {
-  const filterCount = (category.filterConfig || []).filter(
-    (item: any) => item.isActive !== false,
-  ).length;
-  const parentName = category.parent?.name ?? "Root";
-  const colorTheme = getCategoryColor(index ?? category._id);
-
-  return (
-    <Box
-      bg="var(--merchant-surface-alt)"
-      border="1.5px solid"
-      borderColor={colorTheme.borderStrong}
-      borderRadius="16px"
-      overflow="hidden"
-      position="relative"
-      transition="all 0.2s ease"
-      boxShadow={`0 2px 10px ${colorTheme.bgSoft}`}
-      _hover={{
-        borderColor: colorTheme.border,
-        boxShadow: `0 4px 16px ${colorTheme.bgSoft}`,
-        transform: "translateY(-2px)",
-      }}
-    >
-      {/* Top Color Accent Line */}
-      <Box h="3px" w="100%" bg={colorTheme.accent} />
-
-      {/* Photo (top half) */}
-      <Box position="relative" w="100%" aspectRatio={4 / 3}>
-        {category.image?.url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={category.image.url}
-            alt={category.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <Flex
-            w="100%"
-            h="100%"
-            align="center"
-            justify="center"
-            bg={colorTheme.fallbackGrad}
-          >
-            <Icon as={FiLayers} boxSize={8} color={colorTheme.accent} />
-          </Flex>
-        )}
-
-        <Menu isLazy strategy="fixed" placement="bottom-end">
-          <MenuButton
-            as={IconButton}
-            aria-label="Category actions"
-            icon={<HiDotsVertical />}
-            size="xs"
-            position="absolute"
-            top={2}
-            right={2}
-            borderRadius="full"
-            bg="blackAlpha.600"
-            color="white"
-            _hover={{ bg: "blackAlpha.700" }}
-            _active={{ bg: "blackAlpha.800" }}
-          />
-          <MenuList minW="140px" zIndex={20}>
-            <MenuItem icon={<FiEdit2 />} onClick={() => onEdit(category)}>
-              Edit
-            </MenuItem>
-            <MenuItem
-              icon={<FiTrash2 />}
-              color="red.500"
-              onClick={() => onDelete(category)}
-            >
-              Delete
-            </MenuItem>
-          </MenuList>
-        </Menu>
-      </Box>
-
-      {/* Details (bottom half) */}
-      <Box p={3} bg={colorTheme.bgSoft}>
-        <Text
-          fontSize="sm"
-          fontWeight="700"
-          color="var(--merchant-text)"
-          noOfLines={1}
-        >
-          {category.name}
-        </Text>
-        <Text
-          mt={0.5}
-          fontSize="xs"
-          color="var(--merchant-text-muted)"
-          noOfLines={1}
-        >
-          {parentName}
-        </Text>
-
-        <Flex mt={2} align="center" justify="space-between" gap={2}>
-          <HStack spacing={1.5} minW={0}>
-            <Box
-              w="7px"
-              h="7px"
-              flexShrink={0}
-              borderRadius="full"
-              bg={category.isActive ? "green.400" : "red.400"}
-            />
-            <Text
-              fontSize="xs"
-              fontWeight="600"
-              color={category.isActive ? "green.500" : "red.500"}
-              noOfLines={1}
-            >
-              {category.isActive ? "Active" : "Inactive"}
-            </Text>
-          </HStack>
-          <Text fontSize="xs" color="var(--merchant-text-muted)" flexShrink={0}>
-            {filterCount} {filterCount === 1 ? "filter" : "filters"}
-          </Text>
-        </Flex>
-      </Box>
-    </Box>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/*  Page                                                                      */
-/* -------------------------------------------------------------------------- */
+import CategoryMobileCard from "./components/CategoryMobileCard";
+import CategoryFilterSetupCard from "./components/CategoryFilterSetupCard";
+import CategoryToolbar from "./components/CategoryToolbar";
 
 const CategoryPage = () => {
   const { categoryStore } = stores;
@@ -362,23 +65,108 @@ const CategoryPage = () => {
     onClose: onFilterClose,
   } = useDisclosure();
 
+  const [isSeeding, setIsSeeding] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
-  const [selectedFilterCategory, setSelectedFilterCategory] =
-    useState<any>(null);
+  const [isDrawerReadOnly, setIsDrawerReadOnly] = useState<boolean>(false);
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<any>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [hierarchyFilter, setHierarchyFilter] = useState<"all" | "root" | "sub">("all");
   const toast = useToast();
 
+  const handleSeedCatalog = async () => {
+    const confirmSeed = window.confirm(
+      "Kya aap complete marketplace catalog (1000+ Categories, Subcategories aur Filters) auto-load karna chahte hain? Ye safe hai aur missing categories add kar dega."
+    );
+    if (!confirmSeed) return;
+
+    setIsSeeding(true);
+    try {
+      const res = await categoryStore.seedCatalog(false);
+      if (res.status === "success") {
+        toast({
+          title: "Catalog Seeded Successfully! 🎉",
+          description: res.message || "Full marketplace taxonomy has been loaded.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Seeding Failed",
+          description: res.message || "Failed to load catalog.",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to seed catalog.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const fetchCategories = (page: number = currentPage, search: string = searchQuery, hierarchy: string = hierarchyFilter) => {
+    const params: any = { page, limit: 10 };
+    if (search.trim()) {
+      params.search = search.trim();
+    }
+    if (hierarchy === "root") {
+      params.parent = "null";
+    }
+    categoryStore.getAllCategories(params, true);
+  };
+
   useEffect(() => {
-    categoryStore.getAllCategories();
-  }, [categoryStore]);
+    const handler = setTimeout(() => {
+      fetchCategories(currentPage, searchQuery, hierarchyFilter);
+    }, 350);
+
+    return () => clearTimeout(handler);
+  }, [categoryStore, currentPage, searchQuery, hierarchyFilter]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleHierarchyChange = (type: "all" | "root" | "sub") => {
+    setHierarchyFilter(type);
+    setCurrentPage(1);
+  };
 
   const handleAddClick = () => {
     setSelectedCategory(null);
+    setIsDrawerReadOnly(false);
+    onOpen();
+  };
+
+  const handleViewClick = (category: any) => {
+    setSelectedCategory(category);
+    setIsDrawerReadOnly(true);
     onOpen();
   };
 
   const handleEditClick = (category: any) => {
     setSelectedCategory(category);
+    setIsDrawerReadOnly(false);
     onOpen();
   };
 
@@ -416,7 +204,7 @@ const CategoryPage = () => {
     }
   };
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       headerName: "Image",
       key: "image",
@@ -452,7 +240,23 @@ const CategoryPage = () => {
     {
       headerName: "Name",
       key: "name",
-      type: "text",
+      type: "component",
+      metaData: {
+        component: (data: any) => (
+          <VStack align="start" spacing={0.5}>
+            <Text fontWeight="600" fontSize="sm" color="var(--merchant-text)">
+              {data.name}
+            </Text>
+            {data.parent ? (
+              <Text fontSize="xs" color="gray.400">
+                ↳ under <Text as="span" color="blue.400" fontWeight="500">{data.parent.name}</Text>
+              </Text>
+            ) : (
+              <MerchantBadge tone="accent">★ Master Category</MerchantBadge>
+            )}
+          </VStack>
+        ),
+      },
     },
     {
       headerName: "Slug",
@@ -460,15 +264,15 @@ const CategoryPage = () => {
       type: "text",
     },
     {
-      headerName: "Parent",
+      headerName: "Level / Type",
       key: "parent",
       type: "component",
       metaData: {
         component: (data: any) =>
           data.parent ? (
-            <MerchantBadge tone="accent">{data.parent.name}</MerchantBadge>
+            <MerchantBadge tone="soft">Subcategory</MerchantBadge>
           ) : (
-            <MerchantBadge tone="soft">Root</MerchantBadge>
+            <MerchantBadge tone="success">Master Root</MerchantBadge>
           ),
       },
     },
@@ -508,15 +312,21 @@ const CategoryPage = () => {
       type: "table-actions",
       props: {
         isSticky: true,
-        width: "100px",
+        width: "130px",
       },
     },
-  ];
+  ], []);
 
-  const tableActions = {
+  const tableActions = useMemo(() => ({
     actionBtn: {
+      viewKey: {
+        showViewButton: true,
+        title: "View Category",
+        function: handleViewClick,
+      },
       editKey: {
         showEditButton: true,
+        title: "Edit Category",
         function: handleEditClick,
       },
       deleteKey: {
@@ -526,36 +336,20 @@ const CategoryPage = () => {
     },
     pagination: {
       show: true,
-      currentPage: 1,
-      totalPages: 1,
-      onClick: () => { },
+      currentPage: categoryStore.currentPage || currentPage,
+      totalPages: categoryStore.totalPages || 1,
+      onClick: (page: number) => handlePageChange(page),
     },
-  };
+  }), [currentPage, categoryStore.currentPage, categoryStore.totalPages]);
 
-  // Table box: no vertical scroll, horizontal scrollbar at the bottom.
-  const merchantTableProps: any = getMerchantTableProps("62vh");
-
-  const totalCategories = categoryStore.categories.length;
-  const pct = (n: number) =>
-    totalCategories ? Math.round((n / totalCategories) * 100) : 0;
-
-  const activeCategories = categoryStore.categories.filter(
-    (category: any) => category.isActive,
-  ).length;
-  const rootCategories = categoryStore.categories.filter(
-    (category: any) => !category.parent,
-  ).length;
-  const categoriesWithFilters = categoryStore.categories.filter(
-    (category: any) =>
-      (category.filterConfig || []).some(
-        (item: any) => item.isActive !== false,
-      ),
-  ).length;
+  const totalCategories = categoryStore.totalCategories || categoryStore.categories.length;
+  const activeCategories = categoryStore.activeCategories || categoryStore.categories.filter((c: any) => c.isActive).length;
+  const rootCategories = categoryStore.rootCategories || categoryStore.categories.filter((c: any) => !c.parent).length;
+  const categoriesWithFilters = categoryStore.filterReadyCategories || categoryStore.categories.filter((c: any) => (c.filterConfig || []).length > 0).length;
 
   return (
     <MerchantPageShell>
       {/* ------------------------------ Stat cards ------------------------------ */}
-
       <SimpleGrid
         columns={{ base: 2, xl: 4 }}
         spacing={{ base: 3, md: 4 }}
@@ -602,104 +396,172 @@ const CategoryPage = () => {
         />
       </SimpleGrid>
 
-      {/* ---------------------------- Simple underline tabs ---------------------------- */}
-      <Tabs variant="line" colorScheme="brand">
+      {/* ---------------------------- Clean Modern Tabs ---------------------------- */}
+      <Tabs variant="unstyled" colorScheme="brand">
         <TabList
+          mb={4}
+          gap={2}
+          display="flex"
+          alignItems="center"
           borderBottom="1px solid"
           borderColor="var(--merchant-border-strong)"
+          pb={2.5}
         >
           <Tab
-            px={{ base: 3, md: 5 }}
-            py={3}
-            fontSize={{ base: "sm", md: "md" }}
-            fontWeight="600"
+            px={3.5}
+            py={1.5}
+            borderRadius="10px"
+            fontSize="xs"
+            fontWeight="700"
+            letterSpacing="0.02em"
             color="var(--merchant-text-muted)"
-            _selected={{ color: "brand.500", borderColor: "brand.500" }}
+            bg="transparent"
+            transition="all 0.2s ease"
+            _hover={{
+              color: "var(--merchant-text)",
+              bg: "var(--merchant-surface-alt)",
+            }}
+            _selected={{
+              color: "white",
+              bg: "#094a82",
+              boxShadow: "0 2px 8px rgba(9, 74, 130, 0.4)",
+            }}
           >
-            <Icon as={FiLayers} mr={2} />
+            <Icon as={FiLayers} mr={1.5} boxSize={3.5} />
             Categories
           </Tab>
           <Tab
-            px={{ base: 3, md: 5 }}
-            py={3}
-            fontSize={{ base: "sm", md: "md" }}
-            fontWeight="600"
+            px={3.5}
+            py={1.5}
+            borderRadius="10px"
+            fontSize="xs"
+            fontWeight="700"
+            letterSpacing="0.02em"
             color="var(--merchant-text-muted)"
-            _selected={{ color: "brand.500", borderColor: "brand.500" }}
+            bg="transparent"
+            transition="all 0.2s ease"
+            _hover={{
+              color: "var(--merchant-text)",
+              bg: "var(--merchant-surface-alt)",
+            }}
+            _selected={{
+              color: "white",
+              bg: "#094a82",
+              boxShadow: "0 2px 8px rgba(9, 74, 130, 0.4)",
+            }}
           >
-            <Icon as={FiSliders} mr={2} />
+            <Icon as={FiSliders} mr={1.5} boxSize={3.5} />
             Product Filters
           </Tab>
         </TabList>
 
         <TabPanels>
           {/* ============================ TAB 1: Categories ============================ */}
-          <TabPanel px={0} pb={0} pt={5}>
-            {/* Tablet / desktop: Clean header Flex + Table card */}
+          <TabPanel px={0} pb={0} pt={0}>
+            {/* Tablet / Desktop Table View */}
             <Box display={{ base: "none", md: "block" }} dir="ltr" w="100%">
-              <Flex justify="space-between" align="center" mb={4}>
-                <Text
-                  fontSize="lg"
-                  fontWeight="700"
-                  color="var(--merchant-text)"
-                >
-                  All Categories ({categoryStore.categories.length})
-                </Text>
-                <Button
-                  leftIcon={<FiFolderPlus />}
-                  onClick={handleAddClick}
-                  {...merchantPrimaryButtonProps}
-                >
-                  Add Category
-                </Button>
-              </Flex>
+              <CategoryToolbar
+                hierarchyFilter={hierarchyFilter}
+                onHierarchyChange={handleHierarchyChange}
+                totalCategories={categoryStore.totalCategories || categoryStore.categories.length}
+                rootCategories={categoryStore.rootCategories || 0}
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                onClearSearch={handleClearSearch}
+                onSeedCatalog={handleSeedCatalog}
+                isSeeding={isSeeding}
+                onAddClick={handleAddClick}
+              />
 
-              <CustomTable
-                data={categoryStore.categories}
-                columns={columns}
-                loading={categoryStore.loading}
-                actions={tableActions}
-                serial={{ show: true, text: "S.No." }}
-                {...merchantTableProps}
-                tableProps={{
-                  ...(merchantTableProps.tableProps || {}),
-                  tableBox: {
-                    ...(merchantTableProps.tableProps?.tableBox || {}),
-                    minH: "unset",
-                    maxH: "none",
-                    px: 0,
-                    overflowX: "auto",
-                    overflowY: "hidden",
-                  },
-                  table: {
-                    ...(merchantTableProps.tableProps?.table || {}),
-                    minW: "900px",
+              <Box
+                sx={{
+                  "& > div": {
+                    bg: "transparent !important",
+                    boxShadow: "none !important",
+                    borderRadius: "0 !important",
+                    "& > div": {
+                      px: "0 !important",
+                      py: "0 !important",
+                      bg: "transparent !important",
+                      "& > div": {
+                        borderRadius: "16px !important",
+                      },
+                    },
                   },
                 }}
-              />
+              >
+                <CustomTable
+                  data={categoryStore.categories}
+                  columns={columns}
+                  loading={categoryStore.loading}
+                  actions={tableActions}
+                  serial={{ show: true, text: "S.No." }}
+                  {...getMerchantTableProps("62vh")}
+                />
+              </Box>
             </Box>
 
-            {/* Mobile: 2 photo cards per row */}
+            {/* Mobile View */}
             <Box display={{ base: "block", md: "none" }}>
-              <Flex align="center" justify="space-between" mb={4}>
-                <Text
-                  fontSize="md"
-                  fontWeight="700"
-                  color="var(--merchant-text)"
-                >
-                  All Categories ({categoryStore.categories.length})
-                </Text>
-                <IconButton
-                  aria-label="Add category"
-                  icon={<FiFolderPlus size={20} />}
-                  onClick={handleAddClick}
-                  w="44px"
-                  h="44px"
-                  minW="44px"
-                  borderRadius="14px"
-                  {...merchantPrimaryButtonProps}
-                />
-              </Flex>
+              <VStack spacing={3} align="stretch" mb={4}>
+                <Flex align="center" justify="space-between">
+                  <Text
+                    fontSize="md"
+                    fontWeight="700"
+                    color="var(--merchant-text)"
+                  >
+                    All Categories ({categoryStore.totalCategories || categoryStore.categories.length})
+                  </Text>
+                  <HStack spacing={2}>
+                    <Button
+                      size="xs"
+                      leftIcon={<FiDatabase />}
+                      onClick={handleSeedCatalog}
+                      isLoading={isSeeding}
+                      variant="outline"
+                      colorScheme="blue"
+                      borderRadius="10px"
+                    >
+                      Load Catalog
+                    </Button>
+                    <IconButton
+                      aria-label="Add category"
+                      icon={<FiFolderPlus size={20} />}
+                      onClick={handleAddClick}
+                      w="40px"
+                      h="40px"
+                      minW="40px"
+                      borderRadius="12px"
+                      {...merchantPrimaryButtonProps}
+                    />
+                  </HStack>
+                </Flex>
+
+                <InputGroup size="sm">
+                  <InputLeftElement pointerEvents="none">
+                    <Icon as={FiSearch} color="gray.400" />
+                  </InputLeftElement>
+                  <Input
+                    placeholder="Search categories..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    borderRadius="12px"
+                    bg="var(--merchant-surface-alt)"
+                    borderColor="var(--merchant-border-strong)"
+                  />
+                  {searchQuery && (
+                    <InputRightElement>
+                      <IconButton
+                        aria-label="Clear search"
+                        icon={<FiX />}
+                        size="xs"
+                        variant="ghost"
+                        onClick={handleClearSearch}
+                      />
+                    </InputRightElement>
+                  )}
+                </InputGroup>
+              </VStack>
 
               {categoryStore.loading ? (
                 <Flex justify="center" py={10}>
@@ -721,17 +583,42 @@ const CategoryPage = () => {
                       key={category._id}
                       category={category}
                       index={idx}
+                      onView={handleViewClick}
                       onEdit={handleEditClick}
                       onDelete={handleDeleteClick}
                     />
                   ))}
                 </SimpleGrid>
               )}
+
+              {categoryStore.totalPages > 1 && (
+                <HStack justify="space-between" align="center" mt={4} px={1}>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                    isDisabled={currentPage <= 1 || categoryStore.loading}
+                  >
+                    Previous
+                  </Button>
+                  <Text fontSize="xs" fontWeight="600" color="var(--merchant-text-muted)">
+                    Page {currentPage} of {categoryStore.totalPages}
+                  </Text>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => handlePageChange(Math.min(currentPage + 1, categoryStore.totalPages))}
+                    isDisabled={currentPage >= categoryStore.totalPages || categoryStore.loading}
+                  >
+                    Next
+                  </Button>
+                </HStack>
+              )}
             </Box>
           </TabPanel>
 
           {/* ========================= TAB 2: Product Filters ========================= */}
-          <TabPanel px={0} pb={0} pt={5}>
+          <TabPanel px={0} pb={0} pt={0}>
             <Flex
               justify="space-between"
               align={{ base: "start", md: "center" }}
@@ -765,137 +652,14 @@ const CategoryPage = () => {
               </Text>
             ) : (
               <SimpleGrid columns={{ base: 2, lg: 2, xl: 3 }} spacing={{ base: 3, md: 4 }}>
-                {categoryStore.categories.map((category: any, idx: number) => {
-                  const filterConfig = category.filterConfig || [];
-                  const activeFilterCount = filterConfig.filter(
-                    (item: any) => item.isActive !== false,
-                  ).length;
-                  const previewFilters = filterConfig.slice(0, 3);
-                  const colorTheme = getCategoryColor(idx);
-
-                  return (
-                    <Box
-                      key={category._id}
-                      border="1.5px solid"
-                      borderColor={colorTheme.borderStrong}
-                      borderRadius="16px"
-                      p={{ base: 3, md: 4 }}
-                      bg="var(--merchant-surface-alt)"
-                      display="flex"
-                      flexDirection="column"
-                      justifyContent="space-between"
-                      position="relative"
-                      overflow="hidden"
-                      boxShadow={`0 2px 10px ${colorTheme.bgSoft}`}
-                      transition="all 0.2s ease"
-                      _hover={{
-                        borderColor: colorTheme.border,
-                        boxShadow: `0 4px 16px ${colorTheme.bgSoft}`,
-                        transform: "translateY(-2px)",
-                      }}
-                    >
-                      {/* Top Accent Strip */}
-                      <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        right={0}
-                        h="3px"
-                        bg={colorTheme.accent}
-                      />
-                      <VStack align="stretch" spacing={3}>
-                        {/* Category Name & Status Badges */}
-                        <Box>
-                          <Text
-                            fontWeight="700"
-                            fontSize={{ base: "sm", md: "md" }}
-                            color="var(--merchant-text)"
-                            noOfLines={1}
-                          >
-                            {category.name}
-                          </Text>
-                          <HStack spacing={1.5} mt={1.5} flexWrap="wrap">
-                            <MerchantBadge
-                              tone={category.parent ? "info" : "soft"}
-                              size="sm"
-                            >
-                              {category.parent
-                                ? typeof category.parent === "object"
-                                ? category.parent.name
-                                : "Child"
-                              : "Root"}
-                            </MerchantBadge>
-                            <MerchantBadge
-                              tone={category.isActive ? "success" : "danger"}
-                              size="sm"
-                            >
-                              {category.isActive ? "Active" : "Inactive"}
-                            </MerchantBadge>
-                          </HStack>
-                        </Box>
-
-                        {/* Filter Summary & Preview */}
-                        <Box p={2.5} borderRadius="12px" bg={colorTheme.bgSoft}>
-                          <Text fontSize={{ base: "xs", md: "sm" }} color="var(--merchant-text-muted)" fontWeight="600" mb={1}>
-                            {activeFilterCount} active filter{activeFilterCount === 1 ? "" : "s"}
-                          </Text>
-                          {previewFilters.length > 0 ? (
-                            <HStack spacing={1} flexWrap="wrap">
-                              {previewFilters.map((filter: any, index: number) => (
-                                <MerchantBadge
-                                  key={`${filter.label}-${index}`}
-                                  tone={filter.isActive === false ? "soft" : "accent"}
-                                  size="sm"
-                                >
-                                  {filter.label}
-                                </MerchantBadge>
-                              ))}
-                              {filterConfig.length > previewFilters.length && (
-                                <MerchantBadge tone="soft" size="sm">
-                                  +{filterConfig.length - previewFilters.length}
-                                </MerchantBadge>
-                              )}
-                            </HStack>
-                          ) : (
-                            <Text color="var(--merchant-text-muted)" fontSize="xs">
-                              No filters configured.
-                            </Text>
-                          )}
-                        </Box>
-                      </VStack>
-
-                      {/* Action Button: Icon Button on Mobile, Full Button on Tablet/Desktop */}
-                      <Box mt={4}>
-                        {/* Mobile View */}
-                        <Box display={{ base: "block", md: "none" }}>
-                          <IconButton
-                            aria-label="Configure Filters"
-                            icon={<FiSliders size={16} />}
-                            onClick={() => handleConfigureFilters(category)}
-                            w="100%"
-                            size="sm"
-                            borderRadius="10px"
-                            {...merchantPrimaryButtonProps}
-                          />
-                        </Box>
-
-                        {/* Desktop / Tablet View */}
-                        <Box display={{ base: "none", md: "block" }}>
-                          <Button
-                            leftIcon={<FiSliders />}
-                            onClick={() => handleConfigureFilters(category)}
-                            w="100%"
-                            size="sm"
-                            borderRadius="10px"
-                            {...merchantPrimaryButtonProps}
-                          >
-                            Configure Filters
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Box>
-                  );
-                })}
+                {categoryStore.categories.map((category: any, idx: number) => (
+                  <CategoryFilterSetupCard
+                    key={category._id}
+                    category={category}
+                    index={idx}
+                    onConfigureFilters={handleConfigureFilters}
+                  />
+                ))}
               </SimpleGrid>
             )}
           </TabPanel>
@@ -907,6 +671,7 @@ const CategoryPage = () => {
           isOpen={isOpen}
           onClose={onClose}
           initialValues={selectedCategory}
+          isReadOnly={isDrawerReadOnly}
         />
       )}
 

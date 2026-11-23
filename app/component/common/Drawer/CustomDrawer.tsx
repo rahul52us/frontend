@@ -228,9 +228,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
           {/* HEADER */}
           {hasHeaderContent ? (
             <Box
-              px={{ base: 4, md: 6 }}
-              pt={{ base: 3, md: 5 }}
-              pb={{ base: 3, md: 4.5 }}
+              px={{ base: 4, md: 7 }} py={{ base: 4, md: 5.5 }}
               borderBottomWidth={showDivider ? "1px" : "0px"}
               borderBottomColor={border}
               bg={surface}
@@ -251,8 +249,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                 />
               )}
 
-              <HStack justify="space-between" align="start" spacing={3}>
-                <HStack spacing={{ base: 3, md: 4 }} align="start" flex="1" minW={0}>
+              <HStack justify="space-between" align="center" spacing={3}>
+                <HStack spacing={{ base: 3, md: 4 }} align="center" flex="1" minW={0}>
                   {icon && (
                     <Center
                       boxSize={{ base: "42px", md: "52px" }}
@@ -288,7 +286,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                       typeof title === "string" ? (
                         <Text
                           mt={categoryTag ? 1 : 0}
-                          fontSize={{ base: "lg", md: "xl" }}
+                          fontSize={{ base: "xl", md: "22px" }}
                           fontWeight="700"
                           color={text}
                           lineHeight="1.2"
@@ -322,12 +320,22 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                   {headerActions}
                   <DrawerCloseButton
                     position="relative"
-                    top="unset"
-                    right="unset"
+                    top="auto"
+                    right="auto"
+                    m="0"
+                    w="38px"
+                    h="38px"
+                    minW="38px"
                     borderRadius="full"
-                    size="md"
-                    color={textMuted}
-                    _hover={{ bg: surfaceMuted, color: text }}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    color="var(--merchant-text, #ffffff)"
+                    bg="var(--merchant-surface-alt, rgba(255, 255, 255, 0.08))"
+                    _hover={{
+                      bg: "var(--merchant-surface-soft, rgba(255, 255, 255, 0.16))",
+                      color: "#ffffff",
+                    }}
                     onClick={handleCloseDrawer}
                     {...closeButtonProps}
                   />
@@ -342,8 +350,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
               zIndex={10}
               borderRadius="full"
               size="md"
-              color={textMuted}
-              _hover={{ bg: surfaceMuted, color: text }}
+              color="var(--merchant-text, #ffffff)" bg="var(--merchant-surface-alt, rgba(255, 255, 255, 0.08))" _hover={{ bg: "var(--merchant-surface-soft, rgba(255, 255, 255, 0.16))", color: "#ffffff" }}
               onClick={handleCloseDrawer}
               {...closeButtonProps}
             />

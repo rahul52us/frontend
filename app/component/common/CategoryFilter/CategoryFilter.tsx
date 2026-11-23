@@ -150,7 +150,9 @@ CategoryCardItem.displayName = 'CategoryCardItem';
 // ─── Main CategorySection ─────────────────────────────────────────────────────
 const CategorySection = observer(() => {
   const router = useRouter();
-  const { categories, loading } = categoryStore;
+  const { topCategories, topLoading } = categoryStore;
+  const categories = topCategories;
+  const loading = topLoading;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -167,9 +169,7 @@ const CategorySection = observer(() => {
   const skeletonEnd = useColorModeValue('gray.200', 'gray.700');
 
   useEffect(() => {
-    if (!categoryStore.categories || categoryStore.categories.length === 0) {
-      categoryStore.getAllCategories({ isActive: true, isFeatured: true });
-    }
+    categoryStore.getTopCategories(10);
   }, []);
 
   const checkScroll = useCallback(() => {

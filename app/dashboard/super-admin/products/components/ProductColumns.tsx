@@ -1,4 +1,4 @@
-import { HStack, Box, Image, Text } from "@chakra-ui/react";
+import { HStack, Box, Image, Text, Badge } from "@chakra-ui/react";
 
 export const ProductColumns = [
     {
@@ -7,20 +7,27 @@ export const ProductColumns = [
         type: "component",
         metaData: {
             component: (row: any) => (
-                <HStack>
-                    <Box boxSize="40px" borderRadius="md" overflow="hidden" flexShrink={0}>
+                <HStack spacing={3} align="center">
+                    <Box boxSize="44px" borderRadius="10px" overflow="hidden" flexShrink={0} bg="blackAlpha.200">
                         {row.images && row.images[0] ? (
                             <Image src={row.images[0]} alt={row.name} w="100%" h="100%" objectFit="cover" />
                         ) : (
-                            <Box w="100%" h="100%" bg="gray.200" />
+                            <Box w="100%" h="100%" bg="whiteAlpha.100" />
                         )}
                     </Box>
-                    <Text fontWeight="medium" noOfLines={2} title={row.name}>{row.name}</Text>
+                    <Box minW={0}>
+                        <Text fontWeight="600" fontSize="sm" color="var(--merchant-text, #ffffff)" noOfLines={1} title={row.name}>
+                            {row.name}
+                        </Text>
+                        <Text fontSize="xs" color="var(--merchant-text-muted, #94a3b8)" noOfLines={1}>
+                            {row.company?.name || (typeof row.company === "string" ? row.company : "Direct Store")}
+                        </Text>
+                    </Box>
                 </HStack>
             ),
         },
         props: {
-            column: { minW: "200px" }
+            column: { minW: "260px" }
         }
     },
     {
@@ -30,10 +37,12 @@ export const ProductColumns = [
         metaData: {
             component: (row: any) => (
                 <Box>
-                    <Text fontWeight="bold">{row.category?.name || "--"}</Text>
+                    <Text fontWeight="600" fontSize="sm" color="var(--merchant-text, #ffffff)">
+                        {row.category?.name || "General"}
+                    </Text>
                     {row.subCategories && row.subCategories.length > 0 && (
-                        <Text fontSize="xs" color="gray.500">
-                            {row.subCategories.map((sub: any) => sub.name).join(", ")}
+                        <Text fontSize="xs" color="var(--merchant-text-muted, #94a3b8)">
+                            {row.subCategories.map((sub: any) => sub.name || sub).slice(0, 2).join(", ")}
                         </Text>
                     )}
                 </Box>
@@ -41,14 +50,29 @@ export const ProductColumns = [
         }
     },
     {
-        headerName: "Shop",
-        key: "company",
+        headerName: "Stock",
+        key: "stock",
         type: "component",
         metaData: {
-            component: (row: any) => (
-                // If company is populated, show name, else show ID or --
-                <Text>{row.company?.name || row.company || "--"}</Text>
-            )
+            component: (row: any) => {
+                const stock = row.stock ?? row.quantity;
+                const isOutOfStock = stock !== undefined && stock <= 0;
+                const isLow = stock !== undefined && stock > 0 && stock <= 5;
+
+                return (
+                    <Badge
+                        colorScheme={isOutOfStock ? "red" : isLow ? "orange" : "green"}
+                        variant="subtle"
+                        borderRadius="full"
+                        px={2.5}
+                        py={0.5}
+                        fontSize="xs"
+                        fontWeight="700"
+                    >
+                        {isOutOfStock ? "Out of Stock" : isLow ? `Only ${stock} left` : `In Stock (${stock ?? 0})`}
+                    </Badge>
+                );
+            }
         }
     },
     {
@@ -57,7 +81,16 @@ export const ProductColumns = [
         type: "component",
         metaData: {
             component: (row: any) => (
-                <Text>₹{row.price}</Text>
+                <HStack align="baseline" spacing={1.5}>
+                    <Text fontWeight="700" fontSize="sm" color="var(--merchant-text, #ffffff)">
+                        ₹{(Number(row.price) || 0).toLocaleString("en-IN")}
+                    </Text>
+                    {row.mrp > row.price && (
+                        <Text as="s" fontSize="xs" color="var(--merchant-text-muted, #94a3b8)">
+                            ₹{(Number(row.mrp) || 0).toLocaleString("en-IN")}
+                        </Text>
+                    )}
+                </HStack>
             )
         }
     },
@@ -67,6 +100,9 @@ export const ProductColumns = [
         type: "table-actions",
         props: {
             isSticky: true,
+            width: "130px",
         }
     }
 ];
+
+export default ProductColumns;

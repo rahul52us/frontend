@@ -8,10 +8,6 @@ import {
   HStack,
   Heading,
   Icon,
-  Skeleton,
-  Stat,
-  StatLabel,
-  StatNumber,
   Text,
   // keyframes,
   useColorModeValue,
@@ -164,8 +160,8 @@ export const MerchantPageShell = ({
     "--merchant-surface-soft": useColorModeValue("var(--chakra-colors-gray-100)", dashboardPalette.surfaceSoft),
     "--merchant-text-muted": useColorModeValue("var(--chakra-colors-gray-500)", dashboardPalette.textMuted),
     "--merchant-text": useColorModeValue("var(--chakra-colors-gray-800)", dashboardPalette.text),
-    "--merchant-accent": useColorModeValue("var(--chakra-colors-brand-600)", dashboardPalette.accent),
-    "--merchant-accent-strong": useColorModeValue("var(--chakra-colors-brand-700)", dashboardPalette.accentStrong),
+    "--merchant-accent": useColorModeValue("#094a82", "#3b82f6"),
+    "--merchant-accent-strong": useColorModeValue("#063864", "#2563eb"),
     "--merchant-page-bg": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.page),
   };
 
@@ -417,16 +413,19 @@ export const MerchantPanel = ({
   p?: any;
   [key: string]: any;
 }) => {
-  const bg = useColorModeValue("transparent", dashboardPalette.shell);
-  const borderColor = useColorModeValue("white", dashboardPalette.border);
+  const bg = useColorModeValue("white", dashboardPalette.shell);
+  const borderColor = useColorModeValue("gray.200", dashboardPalette.border);
 
   return (
     <Box
       bg={bg}
       borderRadius={{ base: "20px", md: "24px" }}
-      // border="1px solid"
-      // borderColor={borderColor}
-      boxShadow={useColorModeValue("0 1px 3px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04)", "0 20px 48px rgba(0, 0, 0, 0.26)")}
+      border="1px solid"
+      borderColor={borderColor}
+      boxShadow={useColorModeValue(
+        "0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04)",
+        "0 20px 48px rgba(0, 0, 0, 0.26)"
+      )}
       p={p}
       {...props}
     >
