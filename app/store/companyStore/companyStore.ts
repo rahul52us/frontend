@@ -124,6 +124,15 @@ class CompanyStores {
     }
   };
 
+  getShopStats = async () => {
+    try {
+      const response = await axios.get("/company/stats");
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
   getDashboardSummary = async (companyId: string) => {
     this.isLoading = true;
     try {

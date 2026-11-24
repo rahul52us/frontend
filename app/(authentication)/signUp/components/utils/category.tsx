@@ -1,225 +1,158 @@
-
+import React from 'react';
 import {
-  // Food
-  FaAppleAlt,
-  FaBaby,
-  FaBatteryHalf,
-  FaBicycle,
-  FaBolt,
-  // Books & Media
-  FaBookOpen,
-  FaBoxOpen,
-  FaCamera,
-  FaCampground,
-  // Automotive
-  FaCar,
-  // Pets
-  FaCat,
-  FaCoffee,
-  // Home
-  FaCouch,
-  FaDesktop,
-  FaDog,
-  // Sports
-  FaDumbbell,
-  FaFilm,
-  FaGamepad,
-  FaGem,
-  FaGlasses,
-  // Tools
-  FaHammer,
-  FaHdd,
-  FaHeadphones,
-  FaHeartbeat,
-  // Default
-  FaLayerGroup,
-  FaLightbulb,
-  FaMagic,
-  // Electronics
-  FaMicrochip,
-  FaMobileAlt,
-  FaMusic,
-  FaPenNib,
-  // Health
-  FaPills,
-  // Office
-  FaPrint,
-  // Toys
-  FaPuzzlePiece,
-  // Garden
-  FaSeedling,
-  FaShoePrints,
-  FaShoppingBag,
-  FaSnowflake,
-  FaSoap,
-  FaTag,
-  FaTools,
-  FaTree,
-  // Clothing
-  FaTshirt,
-  FaUtensils,
-  FaWatchmanMonitoring,
-  FaWifi,
-  FaWrench
-} from "react-icons/fa";
-
+  FiSmartphone,
+  FiTv,
+  FiShoppingBag,
+  FiPackage,
+  FiHeart,
+  FiHome,
+  FiTruck,
+  FiBook,
+  FiSmile,
+  FiCoffee,
+  FiActivity,
+  FiHeadphones,
+  FiWatch,
+  FiCamera,
+  FiTool,
+  FiScissors,
+  FiCpu,
+  FiZap,
+  FiLayers,
+  FiFeather,
+  FiCompass,
+  FiAward,
+} from 'react-icons/fi';
+import {
+  HiOutlineSparkles,
+  HiOutlineDeviceMobile,
+  HiOutlineShoppingBag,
+  HiOutlineHeart,
+  HiOutlineHome,
+  HiOutlineTruck,
+  HiOutlineBookOpen,
+  HiOutlineDesktopComputer,
+  HiOutlineScissors,
+  HiOutlineCake,
+  HiOutlineLightBulb,
+  HiOutlineColorSwatch,
+} from 'react-icons/hi';
+import {
+  IoShirtOutline,
+  IoHardwareChipOutline,
+  IoFastFoodOutline,
+  IoFitnessOutline,
+  IoGameControllerOutline,
+  IoCarSportOutline,
+  IoConstructOutline,
+  IoMusicalNotesOutline,
+  IoPawOutline,
+  IoMedkitOutline,
+  IoColorPaletteOutline,
+} from 'react-icons/io5';
 
 export const getCategoryIcon = (
-name: string, size: number, color: string, p0?: number) => {
-  const lower = name.toLowerCase();
+  name: string,
+  size: number = 18,
+  color: string = '#475569',
+  strokeWidth: number = 2
+) => {
+  const lower = (name || '').toLowerCase();
 
-  // Electronics
-  if (['electronics', 'electronic', 'gadget', 'gadgets'].some(k => lower.includes(k)))
-    return <FaBolt size={size} color={color} />;
+  // 1. Electronics & Gadgets
+  if (['mobile', 'smartphone', 'phone', 'cell'].some(k => lower.includes(k)))
+    return <FiSmartphone size={size} color={color} strokeWidth={strokeWidth} />;
+
+  if (['electronics & gadgets', 'gadget', 'gadgets'].some(k => lower.includes(k)))
+    return <IoHardwareChipOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
   if (['processor', 'cpu', 'chip'].some(k => lower.includes(k)))
-    return <FaMicrochip size={size} color={color} />;
+    return <FiCpu size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['graphics card', 'gpu', 'video card', 'vga'].some(k => lower.includes(k)))
-    return <FaDesktop size={size} color={color} />;
+  if (['electronics', 'electronic', 'electrical', 'breaker', 'extension', 'multimeter'].some(k => lower.includes(k)))
+    return <FiZap size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['mobile', 'phone', 'smartphone', 'cell'].some(k => lower.includes(k)))
-    return <FaMobileAlt size={size} color={color} />;
+  if (['computer', 'laptop', 'desktop', 'screen'].some(k => lower.includes(k)))
+    return <HiOutlineDesktopComputer size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['storage', 'hard drive', 'ssd', 'hdd', 'disk'].some(k => lower.includes(k)))
-    return <FaHdd size={size} color={color} />;
+  if (['audio', 'headphone', 'earphone', 'speaker'].some(k => lower.includes(k)))
+    return <FiHeadphones size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['network', 'router', 'wifi', 'internet'].some(k => lower.includes(k)))
-    return <FaWifi size={size} color={color} />;
+  if (['watch', 'smartwatch'].some(k => lower.includes(k)))
+    return <FiWatch size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['battery', 'power bank', 'charger'].some(k => lower.includes(k)))
-    return <FaBatteryHalf size={size} color={color} />;
+  if (['camera', 'photo', 'dslr'].some(k => lower.includes(k)))
+    return <FiCamera size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['headphone', 'earphone', 'earbud', 'audio'].some(k => lower.includes(k)))
-    return <FaHeadphones size={size} color={color} />;
+  // 2. Clothing & Fashion
+  if (['footwear', 'shoe', 'shoes', 'sneaker', 'boots'].some(k => lower.includes(k)))
+    return <IoShirtOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['camera', 'lens', 'photography', 'dslr'].some(k => lower.includes(k)))
-    return <FaCamera size={size} color={color} />;
+  if (['clothing', 'fashion & apparel', 'fashion', 'apparel', 'clothes', 'dress', 'shirt', 't-shirt'].some(k => lower.includes(k)))
+    return <IoShirtOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['watch', 'smartwatch', 'wearable'].some(k => lower.includes(k)))
-    return <FaWatchmanMonitoring size={size} color={color} />;
+  if (['jewelry', 'accessory', 'accessories'].some(k => lower.includes(k)))
+    return <HiOutlineSparkles size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['gaming', 'console', 'playstation', 'xbox'].some(k => lower.includes(k)))
-    return <FaGamepad size={size} color={color} />;
-
-  // Clothing & Fashion
-  if (['clothing', 'clothes', 'apparel', 'fashion', 'wear'].some(k => lower.includes(k)))
-    return <FaTshirt size={size} color={color} />;
-
-  if (['t-shirt', 'tshirt', 'tee'].some(k => lower.includes(k)))
-    return <FaTshirt size={size} color={color} />;
-
-  if (['shoe', 'shoes', 'footwear', 'sneaker', 'boot'].some(k => lower.includes(k)))
-    return <FaShoePrints size={size} color={color} />;
-
-  if (['glass', 'sunglass', 'eyewear', 'spectacle'].some(k => lower.includes(k)))
-    return <FaGlasses size={size} color={color} />;
-
-  if (['jewelry', 'jewel', 'accessory', 'accessories', 'ornament'].some(k => lower.includes(k)))
-    return <FaGem size={size} color={color} />;
-
-  // Home & Furniture
-  if (['furniture', 'sofa', 'chair', 'table', 'bed'].some(k => lower.includes(k)))
-    return <FaCouch size={size} color={color} />;
-
-  if (['light', 'lamp', 'bulb', 'lighting'].some(k => lower.includes(k)))
-    return <FaLightbulb size={size} color={color} />;
-
-  if (['kitchen', 'cookware', 'utensil', 'appliance'].some(k => lower.includes(k)))
-    return <FaUtensils size={size} color={color} />;
-
-  if (['fridge', 'refrigerator', 'freezer'].some(k => lower.includes(k)))
-    return <FaSnowflake size={size} color={color} />;
-
-  if (['washing', 'washer', 'laundry'].some(k => lower.includes(k)))
-    return <FaSoap size={size} color={color} />;
-
-  // Sports & Outdoor
-  if (['sport', 'fitness', 'gym', 'exercise'].some(k => lower.includes(k)))
-    return <FaDumbbell size={size} color={color} />;
-
-  if (['cycle', 'bicycle', 'bike'].some(k => lower.includes(k)))
-    return <FaBicycle size={size} color={color} />;
-
-  if (['camp', 'tent', 'outdoor', 'hiking'].some(k => lower.includes(k)))
-    return <FaCampground size={size} color={color} />;
-
-  // Health & Beauty
-  if (['medicine', 'pharma', 'drug', 'pill'].some(k => lower.includes(k)))
-    return <FaPills size={size} color={color} />;
-
-  if (['health', 'wellness', 'beauty', 'care', 'skincare'].some(k => lower.includes(k)))
-    return <FaHeartbeat size={size} color={color} />;
-
-  // Automotive
-  if (['car', 'auto', 'vehicle', 'automotive'].some(k => lower.includes(k)))
-    return <FaCar size={size} color={color} />;
-
-  if (['tool', 'wrench', 'repair', 'part'].some(k => lower.includes(k)))
-    return <FaWrench size={size} color={color} />;
-
-  // Books & Media
-  if (['book', 'novel', 'literature', 'education'].some(k => lower.includes(k)))
-    return <FaBookOpen size={size} color={color} />;
-
-  if (['music', 'album', 'instrument'].some(k => lower.includes(k)))
-    return <FaMusic size={size} color={color} />;
-
-  if (['movie', 'film', 'video', 'dvd', 'bluray'].some(k => lower.includes(k)))
-    return <FaFilm size={size} color={color} />;
-
-  // Toys & Kids
-  if (['toy', 'game', 'puzzle', 'board game'].some(k => lower.includes(k)))
-    return <FaPuzzlePiece size={size} color={color} />;
-
-  if (['baby', 'kid', 'child', 'maternity'].some(k => lower.includes(k)))
-    return <FaBaby size={size} color={color} />;
-
-  // Food & Grocery
-  if (['food', 'grocery', 'fruit', 'vegetable', 'organic'].some(k => lower.includes(k)))
-    return <FaAppleAlt size={size} color={color} />;
+  // 3. Grocery & Food
+  if (['grocery & gourmet food', 'grocery', 'gourmet', 'food', 'fruit', 'vegetable', 'snack', 'grain'].some(k => lower.includes(k)))
+    return <IoFastFoodOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
   if (['coffee', 'tea', 'beverage', 'drink'].some(k => lower.includes(k)))
-    return <FaCoffee size={size} color={color} />;
+    return <FiCoffee size={size} color={color} strokeWidth={strokeWidth} />;
 
-  // Garden
-  if (['garden', 'plant', 'flower', 'seed'].some(k => lower.includes(k)))
-    return <FaSeedling size={size} color={color} />;
+  // 4. Beauty & Personal Care
+  if (['beauty & personal care', 'beauty', 'skincare', 'cosmetic', 'makeup', 'care', 'hair'].some(k => lower.includes(k)))
+    return <HiOutlineScissors size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['tree', 'lumber', 'wood'].some(k => lower.includes(k)))
-    return <FaTree size={size} color={color} />;
+  // 5. Health & Fitness
+  if (['health, wellness & fitness', 'health', 'wellness', 'fitness', 'gym', 'workout', 'diet'].some(k => lower.includes(k)))
+    return <IoFitnessOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  // Office
-  if (['office', 'stationery', 'paper', 'supply'].some(k => lower.includes(k)))
-    return <FaPrint size={size} color={color} />;
+  if (['medicine', 'pharma', 'medical', 'clinic', 'first aid'].some(k => lower.includes(k)))
+    return <IoMedkitOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['pen', 'pencil', 'art', 'craft', 'paint'].some(k => lower.includes(k)))
-    return <FaPenNib size={size} color={color} />;
+  // 6. Home & Living
+  if (['home, kitchen & living', 'home', 'living', 'furniture', 'kitchen', 'appliance', 'decor'].some(k => lower.includes(k)))
+    return <HiOutlineHome size={size} color={color} strokeWidth={strokeWidth} />;
 
-  // Pets
-  if (['pet', 'cat', 'feline'].some(k => lower.includes(k)))
-    return <FaCat size={size} color={color} />;
+  // 7. Automotive & Motorbike
+  if (['automotive & motorbike', 'automotive', 'motorbike', 'car', 'bike', 'vehicle', 'auto'].some(k => lower.includes(k)))
+    return <IoCarSportOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['dog', 'puppy', 'canine'].some(k => lower.includes(k)))
-    return <FaDog size={size} color={color} />;
+  // 8. Books & Stationery
+  if (['book', 'books', 'stationery', 'education', 'school', 'office'].some(k => lower.includes(k)))
+    return <HiOutlineBookOpen size={size} color={color} strokeWidth={strokeWidth} />;
 
-  // Hardware & Tools
-  if (['hammer', 'nail', 'construction'].some(k => lower.includes(k)))
-    return <FaHammer size={size} color={color} />;
+  // 9. Toys & Games
+  if (['toy', 'toys', 'game', 'games', 'baby', 'kids', 'puzzle'].some(k => lower.includes(k)))
+    return <IoGameControllerOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  if (['drill', 'power tool', 'machinery'].some(k => lower.includes(k)))
-    return <FaTools size={size} color={color} />;
+  // 10. Industrial, Tools & Safety
+  if (['industrial', 'safety', 'tools', 'tool', 'hardware', 'construction', 'repair', 'wrench'].some(k => lower.includes(k)))
+    return <IoConstructOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
-  // Generic fallbacks
-  const firstChar = lower.charCodeAt(0) % 5;
+  // 11. Pets
+  if (['pet', 'dog', 'cat', 'animal'].some(k => lower.includes(k)))
+    return <IoPawOutline size={size} color={color} strokeWidth={strokeWidth} />;
 
+  // 12. Music & Entertainment
+  if (['music', 'song', 'audio', 'instrument'].some(k => lower.includes(k)))
+    return <IoMusicalNotesOutline size={size} color={color} strokeWidth={strokeWidth} />;
+
+  // Fallback Modern Clean Icons
   const fallbacks = [
-    <FaBoxOpen size={size} color={color} />,
-    <FaShoppingBag size={size} color={color} />,
-    <FaMagic size={size} color={color} />,
-    <FaTag size={size} color={color} />,
-    <FaLayerGroup size={size} color={color} />,
+    <HiOutlineShoppingBag size={size} color={color} strokeWidth={strokeWidth} />,
+    <FiShoppingBag size={size} color={color} strokeWidth={strokeWidth} />,
+    <FiPackage size={size} color={color} strokeWidth={strokeWidth} />,
+    <HiOutlineSparkles size={size} color={color} strokeWidth={strokeWidth} />,
+    <FiLayers size={size} color={color} strokeWidth={strokeWidth} />,
   ];
 
-  return fallbacks[firstChar];
+  let hash = 0;
+  for (let i = 0; i < lower.length; i++) {
+    hash = lower.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return fallbacks[Math.abs(hash) % fallbacks.length];
 };

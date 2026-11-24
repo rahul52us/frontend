@@ -4,27 +4,22 @@ import {
   Badge,
   Box,
   Button,
-  Center,
+  ButtonGroup,
   Drawer,
   DrawerBody,
   DrawerContent,
   DrawerOverlay,
   Flex,
-  Grid,
   HStack,
   Icon,
   IconButton,
   Input,
   InputGroup,
   InputLeftElement,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  InputRightElement,
+  Select,
   SimpleGrid,
   Skeleton,
-  SkeletonCircle,
-  SkeletonText,
   Text,
   useBreakpointValue,
   useColorModeValue,
@@ -33,27 +28,42 @@ import {
   VStack
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FaBoxOpen,
-  FaChartLine,
-  FaChevronDown,
-  FaFilter,
-  FaFire,
-  FaLayerGroup,
-  FaPlus,
-  FaSearch,
-} from "react-icons/fa";
+  FiBox,
+  FiCheckCircle,
+  FiDollarSign,
+  FiGrid,
+  FiLayers,
+  FiList,
+  FiPlus,
+  FiRefreshCw,
+  FiSearch,
+  FiTrendingUp,
+  FiX,
+} from "react-icons/fi";
 import * as Yup from "yup";
+import ConfirmationModal from "../../component/common/ConfirmationModal/ConfirmationModal";
+import CustomTable from "../../component/config/component/CustomTable/CustomTable";
 import { useCartToast } from "../../hooks/useCartToast";
 import { dashboardPalette } from "../../layouts/dashboardLayout/dashboardPalette";
 import stores from "../../store/stores";
 import CompanyRequiredState from "../components/common/CompanyRequiredState";
-import DeleteProductDialog from "./components/DeleteProductDialog";
-import ProductCard from "./components/ProductCard";
+import {
+  getMerchantTableProps,
+  MerchantBadge,
+  merchantGhostButtonProps,
+  MerchantPageHeader,
+  MerchantPageShell,
+  merchantPrimaryButtonProps,
+  merchantSpin,
+  MerchantStatCard,
+} from "../components/common/merchantDashboardUI";
+import ProductCard from "../super-admin/products/components/ProductCard";
+import { ProductColumns } from "../super-admin/products/components/ProductColumns";
 import ProductDetailView from "./components/ProductDetailView";
 import ProductForm from "./components/ProductForm";
-import { ProductStatCard } from "./components/ProductStatCard";
+import { SearchableCategorySelect } from "./components/SearchableCategorySelect";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "./utils/stockThreshold";
 
 const emptyToUndefined = (value: any, originalValue: any) =>
@@ -98,325 +108,132 @@ const ProductSchema = Yup.object({
   discountPrice: optionalNumberField("Discount price")
     .min(0, "Discount price cannot be negative")
     .test("discount-not-greater-than-price", "Discount price cannot be greater than the base price", function (value) {
-      if (value === undefined || value === null) {
-        return true;
-      }
-
       const { price } = this.parent;
-      if (price === undefined || price === null) {
-        return true;
+      if (value !== undefined && price !== undefined && value > price) {
+        return false;
       }
-
-      return Number(value) <= Number(price);
+      return true;
     }),
-  taxRate: optionalNumberField("Tax rate")
-    .min(0, "Tax rate cannot be negative")
-    .max(100, "Tax rate cannot be more than 100"),
-  isFeatured: Yup.boolean(),
-  tags: Yup.array().of(Yup.string().trim()),
-  variants: Yup.array().of(
-    Yup.object({
-      name: Yup.string().trim().required("Variant name is required"),
-      options: Yup.array()
-        .of(Yup.string().trim().required("Variant option is required"))
-        .min(1, "At least one option is required"),
-    })
-  ),
-  offers: Yup.array().of(Yup.object()).optional(),
-  images: Yup.array().min(1, "At least one image is required"),
 });
 
-const numericOfferKeys = new Set([
-  "discountPercentage",
-  "maxDiscountAmount",
-  "minCartValue",
-  "buyQuantity",
-  "getQuantity",
-]);
-
-const normalizeNumberish = (value: any) => {
-  if (value === "" || value === null || value === undefined) {
-    return "";
-  }
-
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? value : parsed;
+const defaultProductValues = {
+  name: "",
+  category: "",
+  subCategories: [],
+  price: "",
+  discountPrice: "",
+  brand: "",
+  sku: "",
+  weight: "",
+  description: "",
+  stock: "",
+  lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
+  productDetails: [],
+  information: [],
+  tags: [],
+  offer: "",
+  freebieProducts: [],
+  isFeatured: false,
+  isActive: true,
+  images: [],
 };
 
-const normalizeRowPairs = (rows: any[] = []) =>
-  rows
-    .map((row) => ({
-      key: String(row?.key || "").trim(),
-      value: String(row?.value || "").trim(),
-    }))
-    .filter((row) => row.key || row.value);
-
-const normalizeProductPayload = (values: any) => ({
-  ...values,
-  name: String(values.name || "").trim(),
-  description: String(values.description || "").trim(),
-  sku: String(values.sku || "").trim(),
-  brand: String(values.brand || "").trim(),
-  weight: String(values.weight || "").trim(),
-  price: normalizeNumberish(values.price),
-  stock: normalizeNumberish(values.stock),
-  lowStockThreshold: normalizeNumberish(values.lowStockThreshold),
-  taxRate: normalizeNumberish(values.taxRate),
-  discountPrice: normalizeNumberish(values.discountPrice),
-  tags: (values.tags || []).map((tag: string) => tag.trim()).filter(Boolean),
-  subCategories: (values.subCategories || []).filter(Boolean),
-  productDetails: normalizeRowPairs(values.productDetails),
-  information: normalizeRowPairs(values.information),
-  variants: (values.variants || [])
-    .map((variant: any) => ({
-      ...variant,
-      name: String(variant?.name || "").trim(),
-      options: (variant?.options || []).map((option: string) => option.trim()).filter(Boolean),
-    }))
-    .filter((variant: any) => variant.name || variant.options.length > 0),
-  offers: (values.offers || []).map((offer: any) => ({
-    ...offer,
-    config: Object.fromEntries(
-      Object.entries(offer?.config || {}).map(([key, value]) => [
-        key,
-        numericOfferKeys.has(key) ? normalizeNumberish(value) : value,
-      ])
-    ),
-  })),
-});
-
-const mapProductToFormValues = (product: any) => {
-  if (!product) {
-    return {
-      name: "",
-      description: "",
-      sku: "",
-      category: "",
-      price: "",
-      stock: 0,
-      lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
-      brand: "",
-      weight: "",
-      productDetails: [],
-      information: [],
-      images: [],
-      subCategories: [],
-      discountPrice: "",
-      taxRate: 18,
-      isFeatured: false,
-      tags: [],
-      variants: [],
-      offers: [],
-    };
-  }
-
-  return {
-    ...product,
-    category: typeof product.category === "object" ? product.category?._id : product.category || "",
-    subCategories: Array.isArray(product.subCategories)
-      ? product.subCategories.map((subCategory: any) =>
-          typeof subCategory === "object" ? subCategory?._id : subCategory
-        )
-      : [],
-    images: product.images || [],
-    productDetails: product.productDetails
-      ? Object.entries(product.productDetails).map(([key, value]) => ({ key, value }))
-      : [],
-    information: product.information
-      ? Object.entries(product.information).map(([key, value]) => ({ key, value }))
-      : [],
-    price: product.price ?? "",
-    stock: product.stock ?? 0,
-    lowStockThreshold: product.lowStockThreshold ?? DEFAULT_LOW_STOCK_THRESHOLD,
-    discountPrice: product.discountPrice ?? "",
-    taxRate: product.taxRate ?? 18,
-    isFeatured: Boolean(product.isFeatured),
-    tags: product.tags || [],
-    variants: product.variants || [],
-    offers: product.offers || [],
-  };
+const getParentCategoryId = (category: any) => {
+  if (!category) return null;
+  if (typeof category.parent === "string") return category.parent;
+  if (typeof category.parent === "object" && category.parent?._id) return String(category.parent._id);
+  if (typeof category.parentCategory === "string") return category.parentCategory;
+  if (typeof category.parentCategory === "object" && category.parentCategory?._id) return String(category.parentCategory._id);
+  return null;
 };
 
-const emptyProductSummary = {
-  total: 0,
-  inStock: 0,
-  featured: 0,
-  low: 0,
+const getParentCategoryName = (category: any) => {
+  if (!category) return "";
+  if (typeof category.parent === "object" && category.parent?.name) return String(category.parent.name);
+  if (typeof category.parentCategory === "object" && category.parentCategory?.name) return String(category.parentCategory.name);
+  return "";
 };
 
 const ProductsPage = observer(() => {
+  const { auth, shopStore, categoryStore, offerStore } = stores;
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
   const toast = useToast();
   const { showAddToCartToast } = useCartToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { shopStore, auth, categoryStore, offerStore } = stores;
 
+  // Toolbar & filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "low_stock" | "out_of_stock">("all");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
+  // Data state
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [productToDelete, setProductToDelete] = useState<any | null>(null);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [detailProductId, setDetailProductId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [productSummary, setProductSummary] = useState(emptyProductSummary);
-  const [showInactive, setShowInactive] = useState(false);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [summary, setSummary] = useState({
+    total: 0,
+    inStock: 0,
+    featured: 0,
+    low: 0,
+  });
 
-  const hasCompany = Boolean(auth.user?.company?._id || auth.user?.company || auth.company);
-  const isSuperAdmin = auth.user?.type === "superAdmin" || auth.user?.role === "superAdmin";
-  const isDesktop = useBreakpointValue({ base: false, md: true }) ?? false;
+  // Action states
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [productToDelete, setProductToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<any | null>(null);
 
-  const pageBg = useColorModeValue("transparent", "transparent");
-  const surface = useColorModeValue("white", dashboardPalette.surface);
-  const surfaceMuted = useColorModeValue("#F8FAFC", dashboardPalette.surfaceAlt);
-  const border = useColorModeValue("#E2E8F0", dashboardPalette.border);
-  const borderStrong = useColorModeValue("#CBD5E1", dashboardPalette.borderStrong);
-  const text = useColorModeValue("#0F172A", dashboardPalette.text);
-  const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
-  const textSoft = useColorModeValue("#94A3B8", dashboardPalette.textSoft);
-  const accent = useColorModeValue("brand.500", dashboardPalette.accent);
-  const accentStrong = useColorModeValue("brand.500", dashboardPalette.accentStrong);
-  const accentSoft = useColorModeValue("rgba(37, 99, 235, 0.08)", dashboardPalette.accentSoft);
-  const heroBadgeBg = useColorModeValue("brand.500", "brad.100");
-  const heroBadgeColor = useColorModeValue("brand.50", "brand.100");
-  const shadow = useColorModeValue("0 22px 44px rgba(37, 99, 235, 0.12)", "0 28px 54px rgba(2, 6, 23, 0.34)");
+  const isSuperAdmin = auth.user?.role === "superAdmin";
+  const hasCompany = Boolean(auth.company || auth.user?.company);
 
-  const selectedProduct = useMemo(
-    () => products.find((product) => product._id === selectedProductId) || null,
-    [products, selectedProductId]
-  );
-
-  const detailProduct = useMemo(
-    () => products.find((product) => product._id === detailProductId) || null,
-    [products, detailProductId]
-  );
-
-  const rootCategories = useMemo(
-    () => categoryStore.categories.filter((category: any) => !category.parent && category.isActive !== false),
-    [categoryStore.categories]
-  );
-
-  const getParentCategoryId = (category: any) =>
-    typeof category?.parent === "object" ? category.parent?._id : category?.parent;
-
-  const getParentCategoryName = (category: any) =>
-    typeof category?.parent === "object" ? category.parent?.name : "";
-
+  // Shop categories allowed for seller
   const shopCategoryTokens = useMemo(() => {
-    const company =
-      [auth.company, auth.user?.company].find(
-        (candidate: any) => candidate && typeof candidate === "object" && Array.isArray(candidate.categories)
-      ) ||
-      auth.company ||
-      auth.user?.company;
-    const rawCategories = Array.isArray(company?.categories) ? company.categories : [];
-
+    const rawCategories = auth.company?.categories || auth.user?.company?.categories || [];
     return new Set(
       rawCategories
-        .map((category: any) => {
-          if (typeof category === "string") {
-            return category.trim().toLowerCase();
-          }
-
-          return String(category?.name || category?._id || "").trim().toLowerCase();
+        .map((entry: any) => {
+          if (!entry) return "";
+          if (typeof entry === "string") return entry.trim().toLowerCase();
+          return String(entry.name || entry.slug || entry._id || "").trim().toLowerCase();
         })
         .filter(Boolean)
     );
-  }, [auth.company, auth.user?.company]);
+  }, [auth.company?.categories, auth.user?.company?.categories]);
 
   const allowedRootCategories = useMemo(() => {
-    if (shopCategoryTokens.size === 0) {
-      return rootCategories;
-    }
-
-    return rootCategories.filter(
-      (category: any) =>
-        shopCategoryTokens.has(String(category._id || "").toLowerCase()) ||
-        shopCategoryTokens.has(String(category.name || "").toLowerCase())
+    const rootCategories = categoryStore.categories.filter(
+      (category: any) => !category.parent && category.isActive !== false
     );
-  }, [rootCategories, shopCategoryTokens]);
-
-  const allowedRootCategoryIds = useMemo(
-    () => new Set(allowedRootCategories.map((category: any) => String(category._id))),
-    [allowedRootCategories]
-  );
-
-  const allowedRootCategoryNames = useMemo(
-    () => new Set(allowedRootCategories.map((category: any) => String(category.name || "").toLowerCase())),
-    [allowedRootCategories]
-  );
+    if (shopCategoryTokens.size === 0) return rootCategories;
+    return rootCategories.filter((category: any) => {
+      const idMatch = shopCategoryTokens.has(String(category._id).toLowerCase());
+      const nameMatch = shopCategoryTokens.has(String(category.name || "").trim().toLowerCase());
+      const slugMatch = shopCategoryTokens.has(String(category.slug || "").trim().toLowerCase());
+      return idMatch || nameMatch || slugMatch;
+    });
+  }, [categoryStore.categories, shopCategoryTokens]);
 
   const sellerProductCategories = useMemo(() => {
     const activeCategories = categoryStore.categories.filter((category: any) => category.isActive !== false);
-
-    if (shopCategoryTokens.size === 0) {
-      return activeCategories;
-    }
+    if (shopCategoryTokens.size === 0) return activeCategories;
+    const allowedIds = new Set(allowedRootCategories.map((c: any) => String(c._id)));
+    const allowedNames = new Set(allowedRootCategories.map((c: any) => String(c.name || "").toLowerCase()));
 
     return activeCategories.filter((category: any) => {
       const parentId = getParentCategoryId(category);
       const parentName = getParentCategoryName(category);
-      const isAllowedRoot =
-        !parentId &&
-        (allowedRootCategoryIds.has(String(category._id)) ||
-          allowedRootCategoryNames.has(String(category.name || "").toLowerCase()));
-      const isAllowedChild =
-        Boolean(parentId) &&
-        (allowedRootCategoryIds.has(String(parentId)) ||
-          allowedRootCategoryNames.has(String(parentName || "").toLowerCase()));
-
+      const isAllowedRoot = !parentId && (allowedIds.has(String(category._id)) || allowedNames.has(String(category.name || "").toLowerCase()));
+      const isAllowedChild = Boolean(parentId) && (allowedIds.has(String(parentId)) || allowedNames.has(String(parentName || "").toLowerCase()));
       return isAllowedRoot || isAllowedChild;
     });
-  }, [allowedRootCategoryIds, allowedRootCategoryNames, categoryStore.categories, shopCategoryTokens]);
+  }, [allowedRootCategories, categoryStore.categories, shopCategoryTokens]);
 
-  const selectedRootCategory = useMemo(
-    () =>
-      allowedRootCategories.find(
-        (category: any) => String(category._id) === String(selectedCategory)
-      ) || null,
-    [allowedRootCategories, selectedCategory]
-  );
-
-  const childCategoriesForSelectedRoot = useMemo(() => {
-    if (!selectedRootCategory) {
-      return [];
-    }
-
-    return sellerProductCategories.filter((category: any) => {
-      const parentId = getParentCategoryId(category);
-      const parentName = getParentCategoryName(category);
-
-      return (
-        Boolean(parentId) &&
-        (String(parentId) === String(selectedRootCategory._id) ||
-          String(parentName || "").toLowerCase() ===
-            String(selectedRootCategory.name || "").toLowerCase())
-      );
-    });
-  }, [selectedRootCategory, sellerProductCategories]);
-
-  const selectedChildCategory = useMemo(
-    () =>
-      childCategoriesForSelectedRoot.find(
-        (category: any) => String(category._id) === String(selectedSubCategory)
-      ) || null,
-    [childCategoriesForSelectedRoot, selectedSubCategory]
-  );
-
-  const stats = productSummary;
-
-  const initialValues = useMemo(() => mapProductToFormValues(selectedProduct), [selectedProduct]);
-
+  // Fetch shop products
   const fetchProducts = useCallback(
-    async (
-      page = 1,
-      search = searchTerm,
-      category = selectedCategory,
-      inactiveView = showInactive,
-      subCategory = selectedSubCategory
-    ) => {
+    async (page = 1, search = searchQuery, cat = selectedCategory, stock = stockFilter) => {
       const companyId =
         auth.company?._id ||
         auth.company ||
@@ -425,34 +242,32 @@ const ProductsPage = observer(() => {
 
       if (!companyId) {
         setProducts([]);
-        setTotalCount(0);
+        setTotalProducts(0);
         setTotalPages(1);
         setCurrentPage(1);
-        setProductSummary({ ...emptyProductSummary });
         setLoading(false);
         return;
       }
 
       setLoading(true);
-
       try {
-        const response = await shopStore.getShopProducts({
+        const payload: any = {
           company: companyId,
           page,
           limit: 12,
-          search,
-          category,
-          subCategory,
-          isDeleted: inactiveView ? true : undefined,
-        });
+        };
+        if (search.trim()) payload.search = search.trim();
+        if (cat !== "all") payload.category = cat;
 
+        const response = await shopStore.getShopProducts(payload);
         const nextProducts = response.data?.products || [];
-        const nextSummary = response.data?.summary || emptyProductSummary;
+        const nextSummary = response.data?.summary || {};
+
         setProducts(nextProducts);
         setCurrentPage(page);
         setTotalPages(response.data?.totalPages || 1);
-        setTotalCount(response.data?.total || 0);
-        setProductSummary({
+        setTotalProducts(response.data?.total || 0);
+        setSummary({
           total: Number(nextSummary.total || response.data?.total || 0),
           inStock: Number(nextSummary.inStock || 0),
           featured: Number(nextSummary.featured || 0),
@@ -461,7 +276,7 @@ const ProductsPage = observer(() => {
       } catch (error: any) {
         toast({
           title: "Error fetching products",
-          description: error?.message || "We could not load the product catalog.",
+          description: error?.message || "We could not load your products.",
           status: "error",
           duration: 3500,
           isClosable: true,
@@ -470,7 +285,7 @@ const ProductsPage = observer(() => {
         setLoading(false);
       }
     },
-    [auth.company, auth.user?.company, searchTerm, selectedCategory, selectedSubCategory, shopStore, showInactive, toast]
+    [auth.company, auth.user?.company, searchQuery, selectedCategory, stockFilter, shopStore, toast]
   );
 
   useEffect(() => {
@@ -478,73 +293,53 @@ const ProductsPage = observer(() => {
       categoryStore.getAllCategories();
       offerStore.getAllOffers({ isActive: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.company, auth.user?.company, isSuperAdmin]);
+  }, [auth.company, auth.user?.company, categoryStore, isSuperAdmin, offerStore]);
 
+  // Debounced search
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      fetchProducts(1, searchTerm, selectedCategory, showInactive, selectedSubCategory);
-    }, 300);
+    const handler = setTimeout(() => {
+      fetchProducts(1, searchQuery, selectedCategory, stockFilter);
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [searchQuery, selectedCategory, stockFilter, fetchProducts]);
 
-    return () => {
-      window.clearTimeout(timer);
+  // Stock filter in-memory if needed
+  const filteredProducts = useMemo(() => {
+    if (stockFilter === "all") return products;
+    if (stockFilter === "in_stock") return products.filter((p) => (p.stock ?? p.quantity ?? 0) > 0);
+    if (stockFilter === "low_stock") return products.filter((p) => (p.stock ?? p.quantity ?? 0) > 0 && (p.stock ?? p.quantity ?? 0) <= 5);
+    if (stockFilter === "out_of_stock") return products.filter((p) => (p.stock ?? p.quantity ?? 0) <= 0);
+    return products;
+  }, [products, stockFilter]);
+
+  const inStockCount = summary.inStock;
+  const lowStockCount = summary.low;
+  const outOfStockCount = Math.max(0, totalProducts - inStockCount);
+
+  // Edit / Form management
+  const initialValues = useMemo(() => {
+    if (!selectedProductId) return defaultProductValues;
+    const item = products.find((p) => String(p._id) === String(selectedProductId));
+    if (!item) return defaultProductValues;
+    return {
+      ...defaultProductValues,
+      ...item,
+      category: item.category?._id || item.category || "",
+      subCategories: (item.subCategories || []).map((sub: any) => sub?._id || sub),
+      offer: item.offer?._id || item.offer || "",
+      freebieProducts: (item.freebieProducts || []).map((fp: any) => fp?._id || fp),
     };
-  }, [fetchProducts, searchTerm, selectedCategory, selectedSubCategory, showInactive]);
-
-  useEffect(() => {
-    if (!selectedCategory) {
-      if (selectedSubCategory) {
-        setSelectedSubCategory("");
-      }
-      return;
-    }
-
-    const stillAllowed = allowedRootCategories.some(
-      (category: any) => String(category._id) === String(selectedCategory)
-    );
-    if (!stillAllowed) {
-      setSelectedCategory("");
-      setSelectedSubCategory("");
-    }
-  }, [allowedRootCategories, selectedCategory, selectedSubCategory]);
-
-  useEffect(() => {
-    if (!selectedSubCategory) {
-      return;
-    }
-
-    const stillAllowed = childCategoriesForSelectedRoot.some(
-      (category: any) => String(category._id) === String(selectedSubCategory)
-    );
-
-    if (!stillAllowed) {
-      setSelectedSubCategory("");
-    }
-  }, [childCategoriesForSelectedRoot, selectedSubCategory]);
-
-  if (!isSuperAdmin && !hasCompany) {
-    return <CompanyRequiredState />;
-  }
-
-  const handleRootCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setSelectedSubCategory("");
-  };
+  }, [products, selectedProductId]);
 
   const handleOpenCreate = () => {
     setSelectedProductId(null);
-    setDetailProductId(null);
+    setDetailProduct(null);
     onOpen();
-  };
-
-  const handleCloseForm = () => {
-    onClose();
-    setSelectedProductId(null);
   };
 
   const handleEdit = (product: any) => {
     setSelectedProductId(product?._id || null);
-    setDetailProductId(null);
+    setDetailProduct(null);
     onOpen();
   };
 
@@ -553,108 +348,69 @@ const ProductsPage = observer(() => {
   };
 
   const handleView = (product: any) => {
-    setDetailProductId(product?._id || null);
-  };
-
-  const handleCloseDetail = () => {
-    setDetailProductId(null);
+    setDetailProduct(product);
   };
 
   const confirmDelete = async () => {
-    if (!productToDelete?._id) {
-      return;
-    }
-
-    const nextPage = products.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-
+    if (!productToDelete?._id) return;
+    setIsDeleting(true);
     try {
       await shopStore.deleteProduct(productToDelete._id);
       toast({
         title: "Product deleted",
-        description: "The product has been removed from the active catalog.",
+        description: "The product has been removed successfully.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      if (detailProductId === productToDelete._id) {
-        setDetailProductId(null);
-      }
       setProductToDelete(null);
-      await fetchProducts(nextPage, searchTerm, selectedCategory, showInactive, selectedSubCategory);
+      await fetchProducts(currentPage);
     } catch (error: any) {
       toast({
         title: "Error deleting product",
-        description: error?.message || "We could not delete this product.",
+        description: error?.message || "Could not delete product.",
         status: "error",
-        duration: 3500,
+        duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setIsDeleting(false);
     }
-  };
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages || page === currentPage) {
-      return;
-    }
-
-    fetchProducts(page, searchTerm, selectedCategory, showInactive, selectedSubCategory);
   };
 
   const handleSubmit = async (values: any, actions: any) => {
     try {
-      const cleanImages = (values.images || []).map((image: any) => {
-        if (!image?.buffer) {
-          return image;
-        }
+      const companyId =
+        auth.company?._id ||
+        auth.company ||
+        auth.user?.company?._id ||
+        auth.user?.company;
 
-        return Object.fromEntries(
-          Object.entries(image).filter(([key]) => key !== "preview")
-        );
-      });
+      const payload = {
+        ...values,
+        company: companyId,
+        price: Number(values.price),
+        stock: Number(values.stock),
+        lowStockThreshold: Number(values.lowStockThreshold || DEFAULT_LOW_STOCK_THRESHOLD),
+      };
 
-      const payload = normalizeProductPayload({ ...values, images: cleanImages });
-
-      let response;
+      let response: any;
       if (selectedProductId) {
         response = await shopStore.updateProduct(selectedProductId, payload);
       } else {
         response = await shopStore.createProduct(payload);
       }
 
-      if (
-        response?.success ||
-        response?.data?.success ||
-        response?.status === "success" ||
-        response?.status === 200 ||
-        response?.status === 201 ||
-        response?.statusCode === 200 ||
-        response?.statusCode === 201
-      ) {
-        const toastProduct = {
-          name: payload.name,
-          image: "",
-          images: [],
-        };
-
+      if (response?.status === "success" || response?.statusCode === 200 || response?.statusCode === 201) {
         showAddToCartToast(
-          toastProduct,
+          { name: payload.name, image: "", images: [] },
           selectedProductId ? "Product Updated" : "Product Created",
           selectedProductId ? "Product updated successfully." : "Product created successfully."
         );
-
         actions.resetForm();
-        const nextPage = selectedProductId ? currentPage : 1;
-        if (!selectedProductId) {
-          setShowInactive(false);
-        }
-        handleCloseForm();
-        await fetchProducts(
-          nextPage,
-          searchTerm,
-          selectedCategory,
-          selectedProductId ? showInactive : false,
-          selectedSubCategory
-        );
+        onClose();
+        setSelectedProductId(null);
+        await fetchProducts(selectedProductId ? currentPage : 1);
       }
     } catch (error: any) {
       toast({
@@ -669,253 +425,350 @@ const ProductsPage = observer(() => {
     }
   };
 
-  const hasCategoryFilter = Boolean(selectedCategory || selectedSubCategory);
-  const showFirstProductAction = !searchTerm && !hasCategoryFilter && !showInactive;
+  const tableActions = useMemo(() => ({
+    actionBtn: {
+      viewKey: {
+        showViewButton: true,
+        title: "View Product",
+        function: handleView,
+      },
+      editKey: {
+        showEditButton: true,
+        title: "Edit Product",
+        function: handleEdit,
+      },
+      deleteKey: {
+        showDeleteButton: true,
+        function: (row: any) => handleDelete(row),
+      },
+    },
+    pagination: {
+      show: true,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      onClick: (page: number) => fetchProducts(page),
+    },
+  }), [currentPage, totalPages, fetchProducts]);
 
-  if (!isDesktop && detailProduct) {
-    return <ProductDetailView product={detailProduct} onBack={handleCloseDetail} mode="page" />;
+  if (!isSuperAdmin && !hasCompany) {
+    return <CompanyRequiredState />;
   }
 
   return (
-    <Box bg="transparent">
-      <Box px={{ base: 2, sm: 4, md: 5 }} pb={{ base: 4, md: 6 }} pt={{ base: 2, md: 3 }}>
-        <Flex align="start" justify="space-between" gap={4}>
-          <Box>
-            <HStack
-              spacing={1.5}
-              px={3}
-              py={1.5}
-              display={{base:"none",md:"flex"}}
-              borderRadius="full"
-              bg={heroBadgeBg}
-              color={heroBadgeColor}
-              w="fit-content"
-              fontSize="11px"
-              fontWeight="700"
-              textTransform="uppercase"
-              letterSpacing="0.12em"
+    <MerchantPageShell>
+      {/* ------------------------------ Page Header ------------------------------ */}
+      <MerchantPageHeader
+        icon={FiBox}
+        title="Product Oversight"
+        description="Review inventory, audit product cards, and inspect catalog quality in your store."
+        badges={
+          <HStack spacing={2}>
+            <MerchantBadge tone="accent">
+              {totalProducts} Total Products
+            </MerchantBadge>
+            <MerchantBadge tone="success">
+              {inStockCount} In Stock
+            </MerchantBadge>
+          </HStack>
+        }
+        actions={
+          <HStack spacing={2}>
+            <Button
+              size="sm"
+              onClick={() => fetchProducts(currentPage)}
+              isDisabled={loading}
+              leftIcon={
+                <Icon
+                  as={FiRefreshCw}
+                  animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
+                />
+              }
+              {...merchantGhostButtonProps}
             >
-              <Icon as={FaFire} boxSize={3} />
-              <Text>Inventory</Text>
-            </HStack>
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              leftIcon={<FiPlus />}
+              onClick={handleOpenCreate}
+              {...merchantPrimaryButtonProps}
+              h="38px"
+              px={4}
+            >
+              Add Product
+            </Button>
+          </HStack>
+        }
+        mobileActions={
+          <HStack spacing={2}>
+            <IconButton
+              icon={<Icon as={FiRefreshCw} animation={loading ? `${merchantSpin} 1s linear infinite` : undefined} />}
+              aria-label="Refresh"
+              size="sm"
+              variant="ghost"
+              onClick={() => fetchProducts(currentPage)}
+              isDisabled={loading}
+            />
+            <IconButton
+              icon={<FiPlus />}
+              aria-label="Add"
+              size="sm"
+              {...merchantPrimaryButtonProps}
+              onClick={handleOpenCreate}
+            />
+          </HStack>
+        }
+      />
 
-            <Text mt={3} fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color={text} lineHeight="1.05">
-              Your products
-            </Text>
-            <Text mt={2} fontSize={{ base: "sm", md: "md" }} color={textMuted}>
-              {totalCount} items • {stats.inStock} live in your shop
-            </Text>
+      {/* ------------------------------ Top Stats Grid ------------------------------ */}
+      <SimpleGrid
+        columns={{ base: 2, lg: 4 }}
+        spacing={{ base: 3, md: 4 }}
+        mb={{ base: 4, md: 6 }}
+      >
+        <MerchantStatCard
+          label="Total Products"
+          value={totalProducts}
+          variant="panel"
+          icon={FiBox}
+          iconColor={dashboardPalette.accentStrong}
+          iconBg="rgba(59, 130, 246, 0.12)"
+        />
+        <MerchantStatCard
+          label="With Category"
+          value={products.filter((p) => p.category).length}
+          variant="panel"
+          icon={FiLayers}
+          iconColor={dashboardPalette.success}
+          iconBg="rgba(70, 201, 139, 0.14)"
+          valueColor={dashboardPalette.success}
+        />
+        <MerchantStatCard
+          label="In Stock In View"
+          value={inStockCount}
+          variant="panel"
+          icon={FiCheckCircle}
+          iconColor={dashboardPalette.accent}
+          iconBg="rgba(6, 95, 104, 0.14)"
+        />
+        <MerchantStatCard
+          label="Low Stock Items"
+          value={lowStockCount}
+          variant="panel"
+          icon={FiTrendingUp}
+          iconColor={dashboardPalette.warning}
+          iconBg="rgba(245, 158, 11, 0.14)"
+          valueColor={dashboardPalette.warning}
+        />
+      </SimpleGrid>
+
+      {/* ------------------------------ Main Content Area ------------------------------ */}
+      <Box w="100%">
+        {/* Clean Balanced Toolbar: Filters + Search + Category + View Switcher */}
+        <Flex
+          direction={{ base: "column", lg: "row" }}
+          gap={3}
+          mb={5}
+          px={0.5}
+        >
+          {/* Top row on Mobile: Horizontal scrollable stock chips */}
+          <Box
+            w={{ base: "100%", lg: "auto" }}
+            overflowX="auto"
+            py={0.5}
+            sx={{
+              "&::-webkit-scrollbar": { display: "none" },
+              scrollbarWidth: "none",
+            }}
+          >
+            <HStack spacing={2} minW="max-content">
+              <Button
+                size="sm"
+                h="36px"
+                px={3.5}
+                bg={stockFilter === "all" ? "var(--color-primary, #065F68)" : "transparent"}
+                color={stockFilter === "all" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "all" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "all" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                flexShrink={0}
+                onClick={() => setStockFilter("all")}
+              >
+                All ({totalProducts})
+              </Button>
+              <Button
+                size="sm"
+                h="36px"
+                px={3.5}
+                bg={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "transparent"}
+                color={stockFilter === "in_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "in_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                flexShrink={0}
+                onClick={() => setStockFilter("in_stock")}
+              >
+                In Stock ({inStockCount})
+              </Button>
+              <Button
+                size="sm"
+                h="36px"
+                px={3.5}
+                bg={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "transparent"}
+                color={stockFilter === "low_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "low_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                flexShrink={0}
+                onClick={() => setStockFilter("low_stock")}
+              >
+                Low Stock ({lowStockCount})
+              </Button>
+              <Button
+                size="sm"
+                h="36px"
+                px={3.5}
+                bg={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "transparent"}
+                color={stockFilter === "out_of_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                border="1px solid"
+                borderColor={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
+                _hover={{
+                  bg: stockFilter === "out_of_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
+                }}
+                borderRadius="12px"
+                fontWeight="600"
+                fontSize="xs"
+                flexShrink={0}
+                onClick={() => setStockFilter("out_of_stock")}
+              >
+                Out of Stock ({outOfStockCount})
+              </Button>
+            </HStack>
           </Box>
 
-          <Button
-            display={{ base: "none", md: "inline-flex" }}
-            h="44px"
-            px={5}
-            borderRadius="full"
-            bg={accent}
-            color="white"
-            leftIcon={<FaPlus />}
-            fontWeight="700"
-            boxShadow={{ base: "none", md: shadow }}
-            _hover={{ bg: accentStrong, transform: "translateY(-1px)" }}
-            onClick={handleOpenCreate}
-          >
-            Add product
-          </Button>
-        </Flex>
+          {/* Search Input (Full width on mobile, adjacent on desktop) */}
+          <Box flex={1} w={{ base: "100%", lg: "auto" }}>
+            <InputGroup size="sm" w="100%">
+              <InputLeftElement pointerEvents="none" h="38px">
+                <Icon as={FiSearch} color="gray.400" />
+              </InputLeftElement>
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products by name, brand..."
+                borderRadius="12px"
+                h="38px"
+                fontSize="sm"
+                bg="var(--merchant-surface-alt)"
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ borderColor: "brand.400" }}
+                _focus={{
+                  borderColor: "brand.500",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+                }}
+              />
+              {searchQuery && (
+                <InputRightElement h="38px">
+                  <IconButton
+                    aria-label="Clear search"
+                    icon={<FiX />}
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => setSearchQuery("")}
+                  />
+                </InputRightElement>
+              )}
+            </InputGroup>
+          </Box>
 
-        <Grid
-          templateColumns={{ base: "1fr 1fr", md: "1fr 1fr 1fr 1fr" }}
-          mt={6}
-          gap={4}
-          overflowX="auto"
-          pb={1}
-        >
-          {loading ? (
-            Array.from({ length: 4 }).map((_, index) => <StatCardSkeleton key={index} />)
-          ) : (
-            <>
-              <ProductStatCard icon={FaBoxOpen} label="Total products" value={stats.total} tint="sage" />
-              <ProductStatCard icon={FaChartLine} label="In stock" value={stats.inStock} tint="green" />
-              <ProductStatCard icon={FaFire} label="Featured" value={stats.featured} tint="rose" />
-              <ProductStatCard icon={FaLayerGroup} label="Low stock" value={stats.low} tint="warning" />
-            </>
-          )}
-        </Grid>
-
-        <VStack align="stretch" spacing={3.5} mt={{ base: 4, md: 6 }}>
-          <InputGroup>
-            <InputLeftElement pointerEvents="none" h="100%">
-              <Icon as={FaSearch} color={textSoft} />
-            </InputLeftElement>
-            <Input
-              h={{ base: "40px", md: "48px" }}
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search products, brands..."
-              borderRadius="20px"
-              bg={surface}
-              borderColor={border}
-              color={text}
-              _placeholder={{ color: textSoft }}
-              _hover={{ borderColor: accent }}
-              _focusVisible={{
-                borderColor: accent,
-                boxShadow: `0 0 0 1px ${accent}`,
-              }}
-            />
-          </InputGroup>
-
+          {/* Right: Category Dropdown & View Mode Switcher */}
           <Flex
-            align={{ base: "stretch", md: "center" }}
+            justify={{ base: "space-between", sm: "flex-end" }}
+            align="center"
             gap={2.5}
-            direction={{ base: "column", sm: "row" }}
+            w={{ base: "100%", lg: "auto" }}
           >
-            <CategoryFilterDropdown
-              label="Root category"
-              valueLabel={selectedRootCategory?.name || "All root categories"}
-              active={Boolean(selectedCategory)}
-              icon={FaFilter}
-              minW={{ base: "100%", sm: "220px" }}
-              surface={surface}
-              surfaceMuted={surfaceMuted}
-              border={border}
-              borderStrong={borderStrong}
-              text={text}
-              textMuted={textMuted}
-              accent={accent}
-              accentSoft={accentSoft}
-              shadow={shadow}
-              options={[
-                {
-                  key: "all-categories",
-                  label: "All root categories",
-                  active: !selectedCategory,
-                  onClick: () => handleRootCategorySelect(""),
-                },
-                ...allowedRootCategories.map((category: any) => ({
-                  key: category._id,
-                  label: category.name,
-                  active: String(selectedCategory) === String(category._id),
-                  onClick: () => handleRootCategorySelect(category._id),
-                })),
-              ]}
-            />
-
-            {selectedCategory && childCategoriesForSelectedRoot.length > 0 ? (
-              <CategoryFilterDropdown
-                label="Subcategory"
-                valueLabel={selectedChildCategory?.name || "All subcategories"}
-                active={Boolean(selectedSubCategory)}
-                icon={FaLayerGroup}
-                minW={{ base: "100%", sm: "220px" }}
-                surface={surface}
-                surfaceMuted={surfaceMuted}
-                border={border}
-                borderStrong={borderStrong}
-                text={text}
-                textMuted={textMuted}
-                accent={accent}
-                accentSoft={accentSoft}
-                shadow={shadow}
-                options={[
-                  {
-                    key: "all-subcategories",
-                    label: "All subcategories",
-                    active: !selectedSubCategory,
-                    onClick: () => setSelectedSubCategory(""),
-                  },
-                  ...childCategoriesForSelectedRoot.map((category: any) => ({
-                    key: category._id,
-                    label: category.name,
-                    active: String(selectedSubCategory) === String(category._id),
-                    onClick: () => setSelectedSubCategory(category._id),
-                  })),
-                ]}
+            <Box flex={{ base: 1, sm: "initial" }}>
+              <SearchableCategorySelect
+                value={selectedCategory}
+                onChange={(categoryId) => setSelectedCategory(categoryId)}
+                allowedRootCategories={allowedRootCategories}
+                isSuperAdmin={isSuperAdmin}
               />
-            ) : null}
+            </Box>
+
+            {/* View Mode Toggle Switcher */}
+            <ButtonGroup isAttached size="sm" variant="outline" borderRadius="12px" flexShrink={0}>
+              <IconButton
+                aria-label="Grid view"
+                icon={<FiGrid size={16} />}
+                h="38px"
+                px={3.5}
+                borderRadius="12px 0 0 12px"
+                bg={viewMode === "grid" ? "var(--color-primary, #065F68)" : "var(--merchant-surface-alt)"}
+                color={viewMode === "grid" ? "white" : "var(--merchant-text-muted)"}
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ color: "white", bg: viewMode === "grid" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.08)" }}
+                onClick={() => setViewMode("grid")}
+              />
+              <IconButton
+                aria-label="Table view"
+                icon={<FiList size={16} />}
+                h="38px"
+                px={3.5}
+                borderRadius="0 12px 12px 0"
+                bg={viewMode === "table" ? "var(--color-primary, #065F68)" : "var(--merchant-surface-alt)"}
+                color={viewMode === "table" ? "white" : "var(--merchant-text-muted)"}
+                borderColor="var(--merchant-border-strong)"
+                _hover={{ color: "white", bg: viewMode === "table" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.08)" }}
+                onClick={() => setViewMode("table")}
+              />
+            </ButtonGroup>
           </Flex>
-
-          <HStack spacing={2}>
-            <HStack
-              spacing={1}
-              p={1}
-              borderRadius="full"
-              borderWidth="1px"
-              borderColor={border}
-              bg={surfaceMuted}
-            >
-              <SegmentButton
-                active={!showInactive}
-                label="Active"
-                onClick={() => setShowInactive(false)}
-                activeBg={surface}
-                activeColor={text}
-                inactiveColor={textMuted}
-              />
-              <SegmentButton
-                active={showInactive}
-                label="Trash"
-                onClick={() => setShowInactive(true)}
-                activeBg={surface}
-                activeColor={text}
-                inactiveColor={textMuted}
-              />
-            </HStack>
-          </HStack>
-        </VStack>
-
-        <Flex justify="space-between" align="end" mt={8}>
-          <Text fontSize={{ base: "lg", md: "2xl" }} fontWeight="700" color={text}>
-            {showInactive ? "Recently deleted" : "Active catalog"}
-          </Text>
-          <Badge
-            borderRadius="full"
-            px={{ base: 2.5, md: 3.5 }}
-            py={{ base: 1, md: 1.5 }}
-            bg={accentSoft}
-            color={accentStrong}
-            borderWidth="1px"
-            borderColor={border}
-          >
-            {products.length} shown
-          </Badge>
         </Flex>
 
+        {/* Content View: Grid OR Table */}
         {loading ? (
-          <SimpleGrid columns={{ base: 2, md: 4, xl: 5 }} spacing={{ base: 3, md: 4.5 }} mt={4}>
-            {Array.from({ length: 8 }).map((_, index) => (
-              <ProductCardSkeleton key={index} />
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 3.5, md: 4.5 }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Box
+                key={i}
+                borderRadius="20px"
+                border="1px solid"
+                borderColor="var(--merchant-border-strong, #1f2e46)"
+                p={4}
+                bg="var(--merchant-surface-alt, #131d2e)"
+              >
+                <Skeleton h="180px" borderRadius="16px" mb={3} />
+                <Skeleton h="14px" w="40%" mb={2} />
+                <Skeleton h="18px" w="85%" mb={2} />
+                <Skeleton h="20px" w="60%" />
+              </Box>
             ))}
           </SimpleGrid>
-        ) : products.length === 0 ? (
-          <EmptyState
-            title={
-              searchTerm || hasCategoryFilter
-                ? "No products found"
-                : showInactive
-                  ? "Trash is empty"
-                  : "No products yet"
-            }
-            description={
-              searchTerm || hasCategoryFilter
-                ? "Try changing the search term or filters to find what you need."
-                : showInactive
-                  ? "Deleted products will appear here when your backend returns them."
-                  : "Add your first item to start building the catalog."
-            }
-            onAdd={handleOpenCreate}
-            showAction={showFirstProductAction}
-            text={text}
-            textMuted={textMuted}
-            accent={accent}
-            border={border}
-            surface={surface}
-          />
-        ) : (
-          <>
-            <SimpleGrid columns={{ base: 2, md: 4, xl: 5 }} spacing={{ base: 2.5, md: 4 }} mt={4} px={{ base: 0, md: 1 }}>
-              {products.map((product) => (
+        ) : filteredProducts.length > 0 ? (
+          viewMode === "grid" ? (
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 3.5, md: 4.5 }}>
+              {filteredProducts.map((product: any) => (
                 <ProductCard
                   key={product._id}
                   product={product}
@@ -925,46 +778,99 @@ const ProductsPage = observer(() => {
                 />
               ))}
             </SimpleGrid>
-
-            {totalPages > 1 ? (
-              <HStack justify="center" spacing={3} mt={8} px={{ base: 0, md: 1 }}>
-                <Button
-                  h="40px"
-                  px={5}
-                  borderRadius="full"
-                  variant="outline"
-                  borderColor={border}
-                  color={text}
-                  bg={surface}
-                  isDisabled={currentPage === 1}
-                  _hover={{ bg: surfaceMuted }}
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  Previous
-                </Button>
-                <Text fontSize="sm" fontWeight="700" color={textMuted}>
-                  Page {currentPage} of {totalPages}
-                </Text>
-                <Button
-                  h="40px"
-                  px={5}
-                  borderRadius="full"
-                  variant="outline"
-                  borderColor={border}
-                  color={text}
-                  bg={surface}
-                  isDisabled={currentPage === totalPages}
-                  _hover={{ bg: surfaceMuted }}
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  Next
-                </Button>
-              </HStack>
-            ) : null}
-          </>
+          ) : (
+            <Box
+              dir="ltr"
+              w="100%"
+              sx={{
+                "& > div": {
+                  bg: "transparent !important",
+                  boxShadow: "none !important",
+                  borderRadius: "0 !important",
+                  "& > div": {
+                    px: "0 !important",
+                    py: "0 !important",
+                    bg: "transparent !important",
+                    "& > div": {
+                      borderRadius: "16px !important",
+                    },
+                  },
+                },
+              }}
+            >
+              <CustomTable
+                columns={ProductColumns}
+                data={filteredProducts}
+                loading={loading}
+                actions={tableActions}
+                serial={{ show: true, text: "S.No." }}
+                {...getMerchantTableProps("62vh")}
+              />
+            </Box>
+          )
+        ) : (
+          /* Empty State */
+          <Box
+            py={14}
+            textAlign="center"
+            bg="var(--merchant-surface-alt, #131d2e)"
+            borderRadius="20px"
+            border="1px dashed"
+            borderColor="var(--merchant-border-strong, #1f2e46)"
+          >
+            <Flex
+              w="64px"
+              h="64px"
+              borderRadius="full"
+              bg="rgba(59, 130, 246, 0.12)"
+              align="center"
+              justify="center"
+              mx="auto"
+              mb={3}
+            >
+              <Icon as={FiBox} boxSize={7} color="brand.400" />
+            </Flex>
+            <Text fontSize="md" fontWeight="700" color="var(--merchant-text, #ffffff)">
+              No products found
+            </Text>
+            <Text fontSize="sm" color="var(--merchant-text-muted, #94a3b8)" mt={1} maxW="sm" mx="auto">
+              {searchQuery || selectedCategory !== "all" || stockFilter !== "all"
+                ? "Try clearing your search query or selecting a different filter."
+                : "No products are currently recorded in your shop."}
+            </Text>
+            {(searchQuery || selectedCategory !== "all" || stockFilter !== "all") ? (
+              <Button
+                size="sm"
+                variant="outline"
+                borderRadius="12px"
+                mt={3.5}
+                borderColor="var(--merchant-border-strong, #1f2e46)"
+                color="var(--merchant-text, #ffffff)"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  setStockFilter("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                leftIcon={<FiPlus />}
+                borderRadius="12px"
+                mt={3.5}
+                {...merchantPrimaryButtonProps}
+                onClick={handleOpenCreate}
+              >
+                Add Your First Product
+              </Button>
+            )}
+          </Box>
         )}
       </Box>
 
+      {/* Floating Action Button (Mobile) */}
       <IconButton
         aria-label="Add product"
         display={{ base: "flex", md: "none" }}
@@ -976,18 +882,20 @@ const ProductsPage = observer(() => {
         w="52px"
         minW="52px"
         borderRadius="full"
-        bg={accent}
         color="white"
-        icon={<FaPlus />}
-        boxShadow="0 18px 34px rgba(37, 99, 235, 0.28)"
-        _hover={{ bg: accentStrong }}
-        _active={{ transform: "scale(0.96)" }}
+        icon={<FiPlus size={20} />}
+        boxShadow="0 18px 34px rgba(6, 95, 104, 0.35)"
+        {...merchantPrimaryButtonProps}
         onClick={handleOpenCreate}
       />
 
+      {/* Product Form Modal/Drawer */}
       <ProductForm
         isOpen={isOpen}
-        onClose={handleCloseForm}
+        onClose={() => {
+          onClose();
+          setSelectedProductId(null);
+        }}
         initialValues={initialValues}
         validationSchema={ProductSchema}
         onSubmit={handleSubmit}
@@ -997,241 +905,34 @@ const ProductsPage = observer(() => {
         isEdit={Boolean(selectedProductId)}
       />
 
-      <DeleteProductDialog
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal
         isOpen={Boolean(productToDelete)}
         onClose={() => setProductToDelete(null)}
         onConfirm={confirmDelete}
-        data={productToDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${productToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmButtonProps={{ colorScheme: "red" }}
+        isLoading={isDeleting}
       />
 
+      {/* View Drawer */}
       <Drawer
         isOpen={Boolean(isDesktop && detailProduct)}
         placement="right"
-        onClose={handleCloseDetail}
+        onClose={() => setDetailProduct(null)}
         size="xl"
       >
         <DrawerOverlay bg="rgba(15, 23, 42, 0.28)" backdropFilter="blur(10px)" />
         <DrawerContent maxW="720px" bg="transparent" boxShadow="none">
           <DrawerBody p={0}>
-            {detailProduct ? <ProductDetailView product={detailProduct} onBack={handleCloseDetail} /> : null}
+            {detailProduct ? <ProductDetailView product={detailProduct} onBack={() => setDetailProduct(null)} /> : null}
           </DrawerBody>
         </DrawerContent>
       </Drawer>
-    </Box>
+    </MerchantPageShell>
   );
 });
-
-function StatCardSkeleton() {
-  return (
-    <Box minW={{ base: "148px", md: "unset" }} flexShrink={0} borderRadius="24px" borderWidth="1px" borderColor="transparent" bg="transparent" px={4} py={4}>
-      <SkeletonCircle size="38px" />
-      <Skeleton mt={3} h="28px" w="56px" />
-      <Skeleton mt={2} h="12px" w="92px" />
-    </Box>
-  );
-}
-
-function CategoryFilterDropdown({
-  label,
-  valueLabel,
-  active,
-  icon,
-  options,
-  minW,
-  surface,
-  surfaceMuted,
-  border,
-  borderStrong,
-  text,
-  textMuted,
-  accent,
-  accentSoft,
-  shadow,
-}: {
-  label: string;
-  valueLabel: string;
-  active: boolean;
-  icon: any;
-  options: Array<{
-    key: string;
-    label: string;
-    active?: boolean;
-    onClick: () => void;
-  }>;
-  minW?: any;
-  surface: string;
-  surfaceMuted: string;
-  border: string;
-  borderStrong: string;
-  text: string;
-  textMuted: string;
-  accent: string;
-  accentSoft: string;
-  shadow: string;
-}) {
-  return (
-    <Menu placement="bottom-start">
-      <MenuButton
-        as={Button}
-        h="48px"
-        minW={minW}
-        px={4}
-        borderRadius="18px"
-        borderWidth="1px"
-        borderColor={active ? accent : border}
-        bg={active ? accentSoft : surface}
-        color={text}
-        leftIcon={<Icon as={icon} color={active ? accent : textMuted} boxSize={3.5} />}
-        rightIcon={<Icon as={FaChevronDown} color={textMuted} boxSize={3} />}
-        justifyContent="flex-start"
-        textAlign="left"
-        _hover={{ borderColor: active ? accent : borderStrong, bg: active ? accentSoft : surfaceMuted }}
-        _active={{ bg: active ? accentSoft : surfaceMuted }}
-      >
-        <Box minW={0}>
-          <Text fontSize="10px" fontWeight="800" letterSpacing="0.1em" textTransform="uppercase" color={textMuted} lineHeight="1.1">
-            {label}
-          </Text>
-          <Text mt={0.5} fontSize="sm" fontWeight="800" color={active ? accent : text} noOfLines={1}>
-            {valueLabel}
-          </Text>
-        </Box>
-      </MenuButton>
-      <MenuList bg={surface} borderColor={border} color={text} boxShadow={shadow} borderRadius="18px" p={1.5}>
-        {options.map((option) => (
-          <MenuItem
-            key={option.key}
-            onClick={option.onClick}
-            borderRadius="14px"
-            bg={option.active ? accentSoft : surface}
-            color={option.active ? accent : text}
-            fontWeight={option.active ? "800" : "600"}
-            _hover={{ bg: option.active ? accentSoft : surfaceMuted, color: option.active ? accent : text }}
-          >
-            {option.label}
-          </MenuItem>
-        ))}
-      </MenuList>
-    </Menu>
-  );
-}
-
-function SegmentButton({
-  active,
-  label,
-  onClick,
-  activeBg,
-  activeColor,
-  inactiveColor,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-  activeBg: string;
-  activeColor: string;
-  inactiveColor: string;
-}) {
-  return (
-    <Button
-      h="32px"
-      px={4}
-      borderRadius="full"
-      bg={active ? activeBg : "transparent"}
-      color={active ? activeColor : inactiveColor}
-      fontSize="xs"
-      fontWeight="700"
-      boxShadow={active ? "sm" : "none"}
-      _hover={{ bg: active ? activeBg : "transparent" }}
-      onClick={onClick}
-    >
-      {label}
-    </Button>
-  );
-}
-
-function EmptyState({
-  title,
-  description,
-  onAdd,
-  showAction,
-  text,
-  textMuted,
-  accent,
-  border,
-  surface,
-}: {
-  title: string;
-  description: string;
-  onAdd: () => void;
-  showAction: boolean;
-  text: string;
-  textMuted: string;
-  accent: string;
-  border: string;
-  surface: string;
-}) {
-  const badgeBg = useColorModeValue("#E8F7F1", "rgba(45, 212, 191, 0.14)");
-  const badgeColor = useColorModeValue("#1D7A61", "#7DD3C7");
-  const hoverAccent = useColorModeValue("#1D4ED8", dashboardPalette.accentStrong);
-
-  return (
-    <Box
-      mt={5}
-      borderRadius={{ base: "28px", md: "30px" }}
-      borderWidth="1px"
-      borderStyle="dashed"
-      borderColor={border}
-      bg={surface}
-      px={{ base: 5, md: 8 }}
-      py={{ base: 10, md: 12 }}
-      textAlign="center"
-    >
-      <Center mx="auto" boxSize="56px" borderRadius="22px" bg={badgeBg} color={badgeColor}>
-        <FaBoxOpen />
-      </Center>
-      <Text mt={4} fontSize={{ base: "lg", md: "xl" }} fontWeight="700" color={text}>
-        {title}
-      </Text>
-      <Text mt={2} fontSize="sm" color={textMuted} maxW="md" mx="auto">
-        {description}
-      </Text>
-      {showAction ? (
-        <Button
-          mt={5}
-          h="44px"
-          px={5}
-          borderRadius="full"
-          bg={accent}
-          color="white"
-          leftIcon={<FaPlus />}
-          fontWeight="700"
-          _hover={{ bg: hoverAccent }}
-          onClick={onAdd}
-        >
-          Add product
-        </Button>
-      ) : null}
-    </Box>
-  );
-}
-
-function ProductCardSkeleton() {
-  const border = useColorModeValue("#E2E8F0", dashboardPalette.border);
-  const surface = useColorModeValue("white", dashboardPalette.surface);
-
-  return (
-    <Box borderRadius="24px" borderWidth="1px" borderColor={border} bg={surface} overflow="hidden">
-      <Box position="relative" pt="100%">
-        <Skeleton position="absolute" inset={0} />
-      </Box>
-      <Box p={4}>
-        <Skeleton h="10px" w="54px" />
-        <Skeleton mt={2} h="16px" w="80%" />
-        <Skeleton mt={3} h="20px" w="44%" />
-        <SkeletonText mt={4} noOfLines={1} spacing={2} />
-      </Box>
-    </Box>
-  );
-}
 
 export default ProductsPage;

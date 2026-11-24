@@ -276,9 +276,15 @@ export const MerchantSectionHeader = ({
   right?: React.ReactNode;
   mb?: any;
 }) => (
-  <Flex justify="space-between" align="center" gap={3} mb={mb}>
-    <Box minW={0}>
-      <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700" color="var(--merchant-text)" noOfLines={1}>
+  <Flex
+    justify="space-between"
+    align={{ base: "flex-start", sm: "center" }}
+    direction={{ base: "column", sm: "row" }}
+    gap={{ base: 2, sm: 3 }}
+    mb={mb}
+  >
+    <Box minW={0} flex={1}>
+      <Text fontSize={{ base: "md", md: "lg" }} fontWeight="700" color="var(--merchant-text)" lineHeight="1.3">
         {title}
       </Text>
       {subtitle ? (
@@ -287,7 +293,11 @@ export const MerchantSectionHeader = ({
         </Text>
       ) : null}
     </Box>
-    {right}
+    {right ? (
+      <Box alignSelf={{ base: "stretch", sm: "auto" }}>
+        {right}
+      </Box>
+    ) : null}
   </Flex>
 );
 

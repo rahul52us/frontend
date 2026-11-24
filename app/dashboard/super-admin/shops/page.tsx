@@ -54,6 +54,7 @@ import { ShopColumns } from "./components/ShopColumns";
 import ShopView from "./components/ShopView";
 import { useShopDelete } from "./hooks/useShopDelete";
 import { useShopList } from "./hooks/useShopList";
+import { useShopStats } from "./hooks/useShopStats";
 
 const reviewTabs = [
     { label: "Pending Review", value: "pending" },
@@ -129,6 +130,8 @@ const ShopsPage = observer(() => {
         fetchShops,
     } = useShopList();
 
+    const { stats, loadingStats, fetchStats } = useShopStats();
+
     const {
         isOpen,
         onClose,
@@ -136,7 +139,10 @@ const ShopsPage = observer(() => {
         isDeleting,
         handleDeleteClick,
         confirmDelete,
-    } = useShopDelete(() => fetchShops(currentPage));
+    } = useShopDelete(() => {
+        fetchShops(currentPage);
+        fetchStats();
+    });
 
     const {
         isOpen: isReviewOpen,
@@ -157,9 +163,15 @@ const ShopsPage = observer(() => {
     const { companyStore } = stores;
 
     const currentTabLabel = reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops";
-    const pendingCount = shops.filter((shop: any) => shop.reviewStatus === "pending").length;
-    const approvedCount = shops.filter((shop: any) => shop.reviewStatus === "approved").length;
-    const changesRequestedCount = shops.filter((shop: any) => shop.reviewStatus === "changes_requested").length;
+    const pendingCount = stats.pendingReviewShops;
+    const approvedCount = stats.approvedShops;
+    const changesRequestedCount = stats.changesRequestedShops;
+    const overallTotalShops = stats.totalShops;
+
+    const handleRefreshAll = () => {
+        fetchShops(currentPage, reviewStatus);
+        fetchStats();
+    };
 
     const handleReviewClick = (shop: any) => {
         setReviewingShop(shop);
@@ -189,6 +201,7 @@ const ShopsPage = observer(() => {
             });
             onReviewClose();
             fetchShops(currentPage, reviewStatus);
+            fetchStats();
         } catch (error: any) {
             toast({
                 title: "Review action failed",
@@ -220,6 +233,7 @@ const ShopsPage = observer(() => {
             });
             onReviewClose();
             fetchShops(currentPage, reviewStatus);
+            fetchStats();
         } catch (error: any) {
             toast({
                 title: "Status update failed",
@@ -284,7 +298,7 @@ const ShopsPage = observer(() => {
                         size="sm"
                         w="36px"
                         h="36px"
-                        onClick={() => fetchShops(currentPage, reviewStatus)}
+                        onClick={handleRefreshAll}
                         isDisabled={loading}
                         {...merchantGhostButtonProps}
                     />
@@ -314,7 +328,7 @@ const ShopsPage = observer(() => {
                 actions={
                     <Button
                         size="sm"
-                        onClick={() => fetchShops(currentPage, reviewStatus)}
+                        onClick={handleRefreshAll}
                         isDisabled={loading}
                         leftIcon={
                             <Icon
@@ -333,15 +347,15 @@ const ShopsPage = observer(() => {
             <SimpleGrid columns={{ base: 2, lg: 4 }} spacing={{ base: 3, md: 4 }} mb={{ base: 4, md: 6 }}>
                 <MerchantStatCard
                     label="Total Shops"
-                    value={totalShops}
+                    value={loadingStats ? "…" : overallTotalShops}
                     variant="panel"
                     icon={FiShoppingBag}
                     iconColor={dashboardPalette.accentStrong}
                     iconBg="rgba(59, 130, 246, 0.12)"
                 />
                 <MerchantStatCard
-                    label="Pending In View"
-                    value={pendingCount}
+                    label="Pending Review"
+                    value={loadingStats ? "…" : pendingCount}
                     icon={FiClock}
                     variant="panel"
                     iconColor={dashboardPalette.warning}
@@ -349,8 +363,8 @@ const ShopsPage = observer(() => {
                     valueColor={dashboardPalette.warning}
                 />
                 <MerchantStatCard
-                    label="Approved In View"
-                    value={approvedCount}
+                    label="Approved"
+                    value={loadingStats ? "…" : approvedCount}
                     variant="panel"
                     icon={FiCheckCircle}
                     iconColor={dashboardPalette.success}
@@ -358,7 +372,7 @@ const ShopsPage = observer(() => {
                 />
                 <MerchantStatCard
                     label="Changes Requested"
-                    value={changesRequestedCount}
+                    value={loadingStats ? "…" : changesRequestedCount}
                     icon={FiShield}
                     variant="panel"
                     iconColor={dashboardPalette.info}
@@ -430,11 +444,11 @@ const ShopsPage = observer(() => {
                 </Tabs>
 
                 <HStack spacing={2} flexWrap="wrap">
-                    <MerchantBadge tone={approvedCount > 0 ? "success" : "soft"}>
-                        {approvedCount} Approved In View
+                    <MerchantBadge tone={shops.length > 0 ? "soft" : "soft"}>
+                        {shops.length} In View
                     </MerchantBadge>
                     <Text fontSize="xs" color="var(--merchant-text-muted)" fontWeight="600">
-                        {totalShops} total shops recorded
+                        {loadingStats ? "…" : overallTotalShops} total shops recorded
                     </Text>
                 </HStack>
             </Flex>

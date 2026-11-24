@@ -52,6 +52,7 @@ export const useShopList = () => {
         reviewStatus,
         setReviewStatus,
         setCurrentPage,
-        fetchShops
+        fetchShops,
     };
 };
+

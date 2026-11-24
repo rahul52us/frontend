@@ -121,8 +121,8 @@ class CategoryStore {
     };
 
     getTopCategories = async (limit: number = 10) => {
-        if (this.topCategories.length > 0) {
-            return { status: "success", data: this.topCategories };
+        if (this.topCategories.length >= limit) {
+            return { status: "success", data: this.topCategories.slice(0, limit) };
         }
 
         this.topLoading = true;
@@ -142,6 +142,26 @@ class CategoryStore {
             runInAction(() => {
                 this.topLoading = false;
             });
+        }
+    };
+
+    searchRootCategories = async (search: string = "", page: number = 1, limit: number = 20) => {
+        try {
+            const params: any = {
+                parent: "null",
+                isActive: true,
+                page,
+                limit,
+            };
+            if (search.trim()) {
+                params.search = search.trim();
+            }
+            const response = await axios.get("/category", { params });
+            return response.data;
+        } catch (error: any) {
+            // eslint-disable-next-line no-console
+            console.error("Error searching root categories:", error);
+            return error.response?.data || { status: "error", message: "Failed to search root categories", data: [] };
         }
     };
 

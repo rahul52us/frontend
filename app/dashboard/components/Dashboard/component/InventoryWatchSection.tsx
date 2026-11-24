@@ -61,12 +61,13 @@ export const InventoryWatchSection: React.FC<InventoryWatchSectionProps> = React
         title="Inventory Watch & Low Stock"
         subtitle="Real-time stock depletion and restocking alerts"
         right={
-          <HStack spacing={2}>
+          <Flex align="center" justify={{ base: "space-between", sm: "flex-end" }} gap={2} w="100%">
             <MerchantBadge
               tone={lowStockCount > 0 ? "danger" : "success"}
               fontSize="xs"
               px={2.5}
               py={0.5}
+              flexShrink={0}
             >
               {loading ? "..." : `${lowStockCount} low stock`}
             </MerchantBadge>
@@ -76,10 +77,11 @@ export const InventoryWatchSection: React.FC<InventoryWatchSectionProps> = React
               colorScheme="brand"
               rightIcon={<FiArrowUpRight />}
               onClick={onManageInventory}
+              flexShrink={0}
             >
               Manage Inventory
             </Button>
-          </HStack>
+          </Flex>
         }
       />
 

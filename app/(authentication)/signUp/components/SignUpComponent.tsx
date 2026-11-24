@@ -1371,24 +1371,17 @@ const roleOptions :any= [
   };
 
   const renderSellerCategoriesStep = () => (
-   <Box
-  border="1.5px solid"
-  borderColor="gray.200"
-  borderRadius="2xl"
-  bg="gray.50"
-  p={{ base: 4, md: 5 }}
->
-  <CategorySelector
-    categories={categoryOptions}
-    selected={sellerData.categories}
-    onChange={(categories) =>
-      setSellerData((prev) => ({ ...prev, categories }))
-    }
-    loading={categoryLoading}
-    primaryColor={PRIMARY_COLOR}
-    maxSelection={5}
-  />
-</Box>
+    <CategorySelector
+      categories={categoryOptions}
+      selected={sellerData.categories}
+      onChange={(categories) =>
+        setSellerData((prev) => ({ ...prev, categories }))
+      }
+      loading={categoryLoading}
+      primaryColor={PRIMARY_COLOR}
+      maxSelection={5}
+    />
+  );
     // <VStack align="stretch" spacing={5}>
     //   <Box
     //     border="1.5px solid"
@@ -1465,8 +1458,6 @@ const roleOptions :any= [
     //     </HStack>
     //   ) : null}
     // </VStack>
-  );
-
   const renderSellerLocationStep = () => (
     <VStack align="stretch" spacing={6}>
       {/* Map Card */}
