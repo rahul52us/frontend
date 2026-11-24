@@ -130,10 +130,10 @@ export const CategoryFilterSetupCard: React.FC<CategoryFilterSetupCardProps> = (
             w="100%"
             borderRadius="10px"
             onClick={() => onConfigureFilters(category)}
-            bg="#094a82"
+            bg="var(--color-primary, #065F68)"
             color="white"
             _hover={{
-              bg: "#063864",
+              bg: "var(--color-primary-hover, #044249)",
             }}
           />
         </Box>
@@ -144,11 +144,11 @@ export const CategoryFilterSetupCard: React.FC<CategoryFilterSetupCardProps> = (
             w="100%"
             size="sm"
             borderRadius="10px"
-            bg="#094a82"
+            bg="var(--color-primary, #065F68)"
             color="white"
             fontWeight="600"
             _hover={{
-              bg: "#063864",
+              bg: "var(--color-primary-hover, #044249)",
             }}
           >
             Configure Filters

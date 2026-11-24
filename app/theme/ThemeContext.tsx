@@ -46,6 +46,43 @@ export function ThemeProvider({
     // ChakraProvider context not available
   }
 
+  // Support dynamic primary color stored in localStorage
+  const [activePrimaryColor, setActivePrimaryColor] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("vendor_primary_theme_color") ||
+        localStorage.getItem("business_primary_theme_color") ||
+        config.colors.primary
+      );
+    }
+    return config.colors.primary;
+  });
+
+  useEffect(() => {
+    const handleColorChange = () => {
+      if (typeof window !== "undefined") {
+        const stored =
+          localStorage.getItem("vendor_primary_theme_color") ||
+          localStorage.getItem("business_primary_theme_color");
+        if (stored) {
+          setActivePrimaryColor(stored);
+        }
+      }
+    };
+    window.addEventListener("vendor_theme_color_changed", handleColorChange);
+    return () => {
+      window.removeEventListener("vendor_theme_color_changed", handleColorChange);
+    };
+  }, []);
+
+  const currentColors = useMemo<ThemeColors>(
+    () => ({
+      ...config.colors,
+      primary: activePrimaryColor,
+    }),
+    [config.colors, activePrimaryColor]
+  );
+
   // Get initial state immediately to prevent any flash before mount
   const [mode, setModeState] = useState<ThemeMode>(() => {
     if (typeof window === "undefined") return "system";
@@ -77,8 +114,8 @@ export function ThemeProvider({
 
   const [mounted, setMounted] = useState(false);
 
-  const tokens = useMemo(() => getSemanticTokens(config.colors), [config.colors]);
-  const cssVariables = useMemo(() => generateCssVariables(config.colors), [config.colors]);
+  const tokens = useMemo(() => getSemanticTokens(currentColors), [currentColors]);
+  const cssVariables = useMemo(() => generateCssVariables(currentColors), [currentColors]);
 
   // Determine system preference
   const getSystemTheme = useCallback((): ResolvedTheme => {
@@ -212,11 +249,11 @@ export function ThemeProvider({
       mode,
       resolvedTheme,
       setMode,
-      colors: config.colors,
+      colors: currentColors,
       tokens,
       config,
     }),
-    [mode, resolvedTheme, setMode, config, tokens]
+    [mode, resolvedTheme, setMode, currentColors, config, tokens]
   );
 
   return (

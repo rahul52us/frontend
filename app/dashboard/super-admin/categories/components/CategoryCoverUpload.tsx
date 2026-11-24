@@ -136,7 +136,7 @@ export const CategoryCoverUpload: React.FC<CategoryCoverUploadProps> = ({
                     textAlign="center"
                     transition="all 0.2s ease"
                     _hover={{
-                        borderColor: "#094a82",
+                        borderColor: "var(--color-primary, #065F68)",
                         bg: "var(--color-surface-soft, #EDF2F7)",
                     }}
                 >
@@ -147,8 +147,8 @@ export const CategoryCoverUpload: React.FC<CategoryCoverUploadProps> = ({
                             borderRadius="14px"
                             align="center"
                             justify="center"
-                            bg="rgba(9, 74, 130, 0.12)"
-                            color="#094a82"
+                            bg="var(--color-primary-soft, rgba(6, 95, 104, 0.12))"
+                            color="var(--color-primary, #065F68)"
                         >
                             <FiUploadCloud size={22} />
                         </Flex>
@@ -199,8 +199,8 @@ export const CategoryCoverUpload: React.FC<CategoryCoverUploadProps> = ({
                             borderRadius="14px"
                             align="center"
                             justify="center"
-                            bg="rgba(9, 74, 130, 0.12)"
-                            color="#094a82"
+                            bg="var(--color-primary-soft, rgba(6, 95, 104, 0.12))"
+                            color="var(--color-primary, #065F68)"
                         >
                             <FiUploadCloud size={22} />
                         </Flex>

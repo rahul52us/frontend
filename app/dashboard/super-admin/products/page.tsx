@@ -307,13 +307,13 @@ const SuperAdminProductsPage = observer(() => {
                 size="sm"
                 h="38px"
                 px={4}
-                bg={stockFilter === "all" ? "#094a82" : "transparent"}
+                bg={stockFilter === "all" ? "var(--color-primary, #065F68)" : "transparent"}
                 color={stockFilter === "all" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
                 border="1px solid"
-                borderColor={stockFilter === "all" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                borderColor={stockFilter === "all" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
                 _hover={{
-                  bg: stockFilter === "all" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "#094a82",
+                  bg: stockFilter === "all" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
                 }}
                 borderRadius="12px"
                 fontWeight="600"
@@ -326,13 +326,13 @@ const SuperAdminProductsPage = observer(() => {
                 size="sm"
                 h="38px"
                 px={4}
-                bg={stockFilter === "in_stock" ? "#094a82" : "transparent"}
+                bg={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "transparent"}
                 color={stockFilter === "in_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
                 border="1px solid"
-                borderColor={stockFilter === "in_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                borderColor={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
                 _hover={{
-                  bg: stockFilter === "in_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "#094a82",
+                  bg: stockFilter === "in_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
                 }}
                 borderRadius="12px"
                 fontWeight="600"
@@ -345,13 +345,13 @@ const SuperAdminProductsPage = observer(() => {
                 size="sm"
                 h="38px"
                 px={4}
-                bg={stockFilter === "low_stock" ? "#094a82" : "transparent"}
+                bg={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "transparent"}
                 color={stockFilter === "low_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
                 border="1px solid"
-                borderColor={stockFilter === "low_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                borderColor={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
                 _hover={{
-                  bg: stockFilter === "low_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "#094a82",
+                  bg: stockFilter === "low_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
                 }}
                 borderRadius="12px"
                 fontWeight="600"
@@ -364,13 +364,13 @@ const SuperAdminProductsPage = observer(() => {
                 size="sm"
                 h="38px"
                 px={4}
-                bg={stockFilter === "out_of_stock" ? "#094a82" : "transparent"}
+                bg={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "transparent"}
                 color={stockFilter === "out_of_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
                 border="1px solid"
-                borderColor={stockFilter === "out_of_stock" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+                borderColor={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
                 _hover={{
-                  bg: stockFilter === "out_of_stock" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "#094a82",
+                  bg: stockFilter === "out_of_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                  borderColor: "var(--color-primary, #065F68)",
                 }}
                 borderRadius="12px"
                 fontWeight="600"
@@ -450,10 +450,10 @@ const SuperAdminProductsPage = observer(() => {
                 h="38px"
                 px={3.5}
                 borderRadius="12px 0 0 12px"
-                bg={viewMode === "grid" ? "#094a82" : "var(--merchant-surface-alt)"}
+                bg={viewMode === "grid" ? "var(--color-primary, #065F68)" : "var(--merchant-surface-alt)"}
                 color={viewMode === "grid" ? "white" : "var(--merchant-text-muted)"}
                 borderColor="var(--merchant-border-strong)"
-                _hover={{ color: "white", bg: viewMode === "grid" ? "#063864" : "rgba(255, 255, 255, 0.08)" }}
+                _hover={{ color: "white", bg: viewMode === "grid" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.08)" }}
                 onClick={() => setViewMode("grid")}
               />
               <IconButton
@@ -462,10 +462,10 @@ const SuperAdminProductsPage = observer(() => {
                 h="38px"
                 px={3.5}
                 borderRadius="0 12px 12px 0"
-                bg={viewMode === "table" ? "#094a82" : "var(--merchant-surface-alt)"}
+                bg={viewMode === "table" ? "var(--color-primary, #065F68)" : "var(--merchant-surface-alt)"}
                 color={viewMode === "table" ? "white" : "var(--merchant-text-muted)"}
                 borderColor="var(--merchant-border-strong)"
-                _hover={{ color: "white", bg: viewMode === "table" ? "#063864" : "rgba(255, 255, 255, 0.08)" }}
+                _hover={{ color: "white", bg: viewMode === "table" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.08)" }}
                 onClick={() => setViewMode("table")}
               />
             </ButtonGroup>

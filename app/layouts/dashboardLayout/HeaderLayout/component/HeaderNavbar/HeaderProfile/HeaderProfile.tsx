@@ -5,6 +5,7 @@ import {
   Badge,
   Box,
   Flex,
+  HStack,
   Icon,
   IconButton,
   // keyframes,
@@ -15,13 +16,15 @@ import {
   Portal,
   SimpleGrid,
   Text,
+  Tooltip,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { usePathname, useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { IconType } from "react-icons";
-import { FaHome, FaKey, FaLock, FaSignOutAlt, FaThLarge, FaUser } from "react-icons/fa";
+import { FaCheck, FaHome, FaKey, FaLock, FaPalette, FaSignOutAlt, FaThLarge, FaUser } from "react-icons/fa";
 import { authentication, dashboard, main } from "../../../../../../config/utils/routes";
 import stores from "../../../../../../store/stores";
 import { ThemeModeSwitcher } from "../../../../../../theme/ThemeModeSwitcher";
@@ -36,13 +39,26 @@ const popIn = keyframes`
 `;
 
 /* ---------- tones for icon tiles ---------- */
-type Tone = "blue" | "purple" | "orange" | "red";
+type Tone = "blue" | "purple" | "orange" | "red" | "teal";
 const TONES: Record<Tone, { bg: string; fg: string }> = {
   blue: { bg: "rgba(59, 130, 246, 0.14)", fg: "#3b82f6" },
   purple: { bg: "rgba(139, 92, 246, 0.14)", fg: "#8b5cf6" },
   orange: { bg: "rgba(249, 115, 22, 0.14)", fg: "#f97316" },
   red: { bg: "rgba(239, 68, 68, 0.14)", fg: "#ef4444" },
+  teal: { bg: "rgba(20, 184, 166, 0.14)", fg: "#0d9488" },
 };
+
+/* ---------- preset brand theme colors ---------- */
+const PRESET_THEME_COLORS = [
+  { name: "Teal Brand", code: "#065F68" },
+  { name: "Classic Blue", code: "#094a82" },
+  { name: "Ocean Blue", code: "#007acc" },
+  { name: "Emerald", code: "#10b981" },
+  { name: "Amber Yellow", code: "#d97706" },
+  { name: "Sunset Orange", code: "#ea580c" },
+  { name: "Crimson Red", code: "#e11d48" },
+  { name: "Royal Purple", code: "#7c3aed" },
+];
 
 /* ---------- quick action tile (icon on top, label below) ---------- */
 type TileProps = {
@@ -123,10 +139,53 @@ const Row = ({ icon, label, tone, onClick, textColor, hoverBg, danger }: RowProp
 const HeaderProfile = observer(() => {
   const {
     auth: { user, doLogout },
+    themeStore: { setOpenThemeDrawer, setThemeConfig },
   } = stores;
   const pathname = usePathname();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  // Active theme color state
+  const [activePrimaryColor, setActivePrimaryColor] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("vendor_primary_theme_color") ||
+        localStorage.getItem("business_primary_theme_color") ||
+        "#065F68"
+      );
+    }
+    return "#065F68";
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored =
+        localStorage.getItem("vendor_primary_theme_color") ||
+        localStorage.getItem("business_primary_theme_color");
+      if (stored) {
+        setActivePrimaryColor(stored);
+      }
+    }
+  }, []);
+
+  const handleSelectThemeColor = (colorHex: string) => {
+    setActivePrimaryColor(colorHex);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vendor_primary_theme_color", colorHex);
+      localStorage.setItem("business_primary_theme_color", colorHex);
+      document.documentElement.style.setProperty("--color-primary", colorHex);
+      window.dispatchEvent(new Event("vendor_theme_color_changed"));
+    }
+    setThemeConfig("colors.custom.light.primary", colorHex);
+    setThemeConfig("colors.custom.dark.primary", colorHex);
+    // Notify companyStore if available
+    try {
+      const activeComp = (stores.companyStore as any)?.companyDetails;
+      if (activeComp) {
+        activeComp.primaryThemeColor = colorHex;
+      }
+    } catch {}
+  };
 
   // Reactive Theme Tokens
   const cSurface = useColorModeValue("rgba(255,255,255,0.92)", "rgba(24,26,32,0.92)");
@@ -254,7 +313,7 @@ const HeaderProfile = observer(() => {
                   <Tile {...tileProps} icon={FaLock} label="Password" tone="orange" onClick={onOpen} />
                 </SimpleGrid>
 
-                {/* theme */}
+                {/* theme mode */}
                 <Box mt={1.5} px={2.5} py={2} borderRadius="16px" bg={cTileBg}>
                   <Text
                     fontSize="9px"
@@ -267,6 +326,74 @@ const HeaderProfile = observer(() => {
                     Theme Mode
                   </Text>
                   <ThemeModeSwitcher />
+                </Box>
+
+                {/* color theme palette */}
+                <Box mt={1.5} px={2.5} py={2} borderRadius="16px" bg={cTileBg}>
+                  <Flex align="center" justify="space-between" mb={1.5}>
+                    <Text
+                      fontSize="9px"
+                      fontWeight="700"
+                      color={cTextMuted}
+                      textTransform="uppercase"
+                      letterSpacing="wider"
+                    >
+                      Theme Color
+                    </Text>
+                    <Box
+                      as="button"
+                      onClick={setOpenThemeDrawer}
+                      fontSize="10px"
+                      fontWeight="600"
+                      color="blue.400"
+                      _hover={{ textDecoration: "underline" }}
+                    >
+                      More
+                    </Box>
+                  </Flex>
+                  <SimpleGrid columns={4} spacing={1.5}>
+                    {PRESET_THEME_COLORS.map((item) => {
+                      const isSelected =
+                        activePrimaryColor.toLowerCase() === item.code.toLowerCase();
+                      return (
+                        <Tooltip key={item.code} label={item.name} fontSize="10px" hasArrow>
+                          <Box
+                            as="button"
+                            onClick={() => handleSelectThemeColor(item.code)}
+                            w="100%"
+                            h="26px"
+                            borderRadius="8px"
+                            bg={item.code}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            cursor="pointer"
+                            border={isSelected ? "2px solid white" : "1px solid rgba(0,0,0,0.15)"}
+                            boxShadow={
+                              isSelected
+                                ? `0 0 0 2px ${item.code}, 0 2px 6px rgba(0,0,0,0.25)`
+                                : "none"
+                            }
+                            transition="all 0.15s ease"
+                            _hover={{ transform: "scale(1.08)" }}
+                          >
+                            {isSelected && <FaCheck size={10} color="white" />}
+                          </Box>
+                        </Tooltip>
+                      );
+                    })}
+                  </SimpleGrid>
+                </Box>
+
+                {/* customize theme drawer trigger */}
+                <Box mt={1.5}>
+                  <Row
+                    {...rowProps}
+                    icon={FaPalette}
+                    label="Customize Theme"
+                    tone="teal"
+                    onClick={setOpenThemeDrawer}
+                  />
                 </Box>
 
                 {/* logout */}

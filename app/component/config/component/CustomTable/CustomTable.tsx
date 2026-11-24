@@ -334,7 +334,7 @@ const CustomTable: React.FC<CustomTableProps> = ({
   );
 
   const tableHeaderBg = useColorModeValue(
-    "linear-gradient(180deg, #094a82 0%, #063864 100%)",
+    "linear-gradient(180deg, var(--color-primary, #065F68) 0%, var(--color-primary-hover, #044249) 100%)",
     "linear-gradient(180deg, #0d1e32 0%, #081320 100%)"
   );
   const tableHeaderColor = useColorModeValue(

@@ -423,8 +423,8 @@ const CategoryPage = () => {
             }}
             _selected={{
               color: "white",
-              bg: "#094a82",
-              boxShadow: "0 2px 8px rgba(9, 74, 130, 0.4)",
+              bg: "var(--color-primary, #065F68)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.25)",
             }}
           >
             <Icon as={FiLayers} mr={1.5} boxSize={3.5} />
@@ -446,8 +446,8 @@ const CategoryPage = () => {
             }}
             _selected={{
               color: "white",
-              bg: "#094a82",
-              boxShadow: "0 2px 8px rgba(9, 74, 130, 0.4)",
+              bg: "var(--color-primary, #065F68)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.25)",
             }}
           >
             <Icon as={FiSliders} mr={1.5} boxSize={3.5} />

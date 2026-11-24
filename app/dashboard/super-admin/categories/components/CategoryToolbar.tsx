@@ -52,13 +52,13 @@ export const CategoryToolbar: React.FC<CategoryToolbarProps> = ({
           size="sm"
           h="38px"
           px={4}
-          bg={hierarchyFilter === "all" ? "#094a82" : "transparent"}
+          bg={hierarchyFilter === "all" ? "var(--color-primary, #065F68)" : "transparent"}
           color={hierarchyFilter === "all" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
           border="1px solid"
-          borderColor={hierarchyFilter === "all" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+          borderColor={hierarchyFilter === "all" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
           _hover={{
-            bg: hierarchyFilter === "all" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-            borderColor: "#094a82",
+            bg: hierarchyFilter === "all" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+            borderColor: "var(--color-primary, #065F68)",
           }}
           borderRadius="12px"
           fontWeight="600"
@@ -70,13 +70,13 @@ export const CategoryToolbar: React.FC<CategoryToolbarProps> = ({
           size="sm"
           h="38px"
           px={4}
-          bg={hierarchyFilter === "root" ? "#094a82" : "transparent"}
+          bg={hierarchyFilter === "root" ? "var(--color-primary, #065F68)" : "transparent"}
           color={hierarchyFilter === "root" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
           border="1px solid"
-          borderColor={hierarchyFilter === "root" ? "#094a82" : "var(--merchant-border, #1f2e46)"}
+          borderColor={hierarchyFilter === "root" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
           _hover={{
-            bg: hierarchyFilter === "root" ? "#063864" : "rgba(255, 255, 255, 0.04)",
-            borderColor: "#094a82",
+            bg: hierarchyFilter === "root" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+            borderColor: "var(--color-primary, #065F68)",
           }}
           borderRadius="12px"
           fontWeight="600"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { observer } from "mobx-react-lite";
 import CustomDrawer from "../Drawer/CustomDrawer";
 import {
@@ -9,65 +9,37 @@ import {
   Button,
   Divider,
   Flex,
-  Grid,
   HStack,
-  SystemStyleObject,
+  Icon,
+  SimpleGrid,
   Text,
+  Tooltip,
   VStack,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaUndo } from "react-icons/fa";
+import { FiCheck, FiLayers, FiMoon, FiSun, FiSliders, FiEye } from "react-icons/fi";
 import stores from "../../../store/stores";
 import ColorPickerComponent from "./ColorPicker/ColorPicker";
 import { ThemeModeSwitcher } from "../../../theme/ThemeModeSwitcher";
 import { useAppTheme } from "../../../theme/ThemeContext";
 
-interface ColorOption {
+interface PresetColor {
   name: string;
   code: string;
+  description: string;
 }
 
-interface CustomColorBoxProps {
-  color: string;
-  colorName: string;
-  selected: boolean;
-  onClick: () => void;
-}
-
-const CustomColorBox: React.FC<CustomColorBoxProps> = ({
-  color,
-  colorName,
-  selected,
-  onClick,
-}) => {
-  const boxStyle: SystemStyleObject = {
-    width: "56px",
-    height: "56px",
-    backgroundColor: color,
-    borderRadius: "50%",
-    cursor: "pointer",
-    position: "relative",
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    border: selected ? "3px solid var(--color-primary)" : "2px solid rgba(0,0,0,0.1)",
-    boxShadow: selected ? "0 0 0 2px white, 0 4px 12px rgba(0,0,0,0.15)" : "none",
-    transition: "all 0.2s ease",
-    _hover: { transform: "scale(1.06)" },
-  };
-
-  return (
-    <Box display="flex" flexDir="column" alignItems="center">
-      <Box sx={boxStyle} onClick={onClick}>
-        {selected && <FaCheck color="white" />}
-      </Box>
-      <Text mt={1.5} fontSize="xs" fontWeight="600" color="var(--color-text-secondary)">
-        {colorName}
-      </Text>
-    </Box>
-  );
-};
+const PRESET_COLORS: PresetColor[] = [
+  { name: "Teal Brand", code: "#065F68", description: "Default Marketplace Theme" },
+  { name: "Classic Navy", code: "#094a82", description: "Professional Deep Blue" },
+  { name: "Ocean Blue", code: "#007acc", description: "Modern Electric Blue" },
+  { name: "Emerald", code: "#10b981", description: "Lush Eco Green" },
+  { name: "Amber Yellow", code: "#d97706", description: "Warm Energetic Gold" },
+  { name: "Sunset Orange", code: "#ea580c", description: "Vibrant Punchy Orange" },
+  { name: "Crimson Red", code: "#e11d48", description: "Bold Rose Passion" },
+  { name: "Royal Violet", code: "#7c3aed", description: "Luxury Creative Purple" },
+];
 
 const ThemeChangeContainer: React.FC = observer(() => {
   const {
@@ -75,27 +47,56 @@ const ThemeChangeContainer: React.FC = observer(() => {
   } = stores;
   const { colors: brandColors, mode } = useAppTheme();
 
-  const presetColors: ColorOption[] = [
-    { name: "Teal Brand", code: "var(--color-primary)" },
-    { name: "Ocean Blue", code: "#007acc" },
-    { name: "Emerald", code: "#10b981" },
-    { name: "Amber", code: "#d97706" },
-    { name: "Rose", code: "#e11d48" },
-    { name: "Violet", code: "#7c3aed" },
-  ];
-
-  const [selectedColor, setSelectedColor] = useState<string | null>(brandColors.primary);
-
-  const bannerBg = useColorModeValue("#E5F6FD", "rgba(6, 95, 104, 0.2)");
-  const bannerTextColor = useColorModeValue("#014361", "#A5F3FC");
-
-  const handleColorSelect = (color: ColorOption) => {
-    setSelectedColor(color.code);
-    setThemeConfig("colors.custom.light.primary", color.code);
-    if (typeof document !== "undefined") {
-      document.documentElement.style.setProperty("--color-primary", color.code);
+  const [selectedColor, setSelectedColor] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("vendor_primary_theme_color") ||
+        localStorage.getItem("business_primary_theme_color") ||
+        brandColors.primary ||
+        "#065F68"
+      );
     }
+    return brandColors.primary || "#065F68";
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      if (typeof window !== "undefined") {
+        const stored =
+          localStorage.getItem("vendor_primary_theme_color") ||
+          localStorage.getItem("business_primary_theme_color");
+        if (stored) {
+          setSelectedColor(stored);
+        }
+      }
+    };
+    window.addEventListener("vendor_theme_color_changed", handleSync);
+    return () => window.removeEventListener("vendor_theme_color_changed", handleSync);
+  }, []);
+
+  const handleApplyColor = (colorHex: string) => {
+    setSelectedColor(colorHex);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vendor_primary_theme_color", colorHex);
+      localStorage.setItem("business_primary_theme_color", colorHex);
+      document.documentElement.style.setProperty("--color-primary", colorHex);
+      window.dispatchEvent(new Event("vendor_theme_color_changed"));
+    }
+    setThemeConfig("colors.custom.light.primary", colorHex);
+    setThemeConfig("colors.custom.dark.primary", colorHex);
   };
+
+  const handleReset = () => {
+    resetTheme();
+    const defaultColor = "#065F68";
+    handleApplyColor(defaultColor);
+  };
+
+  const cSurface = useColorModeValue("white", "var(--color-surface, #111C30)");
+  const cSurfaceAlt = useColorModeValue("gray.50", "var(--color-surface-alt, #15223A)");
+  const cBorder = useColorModeValue("gray.200", "var(--color-border, rgba(255,255,255,0.1))");
+  const cText = useColorModeValue("gray.800", "var(--color-text-primary, #F8FAFC)");
+  const cTextMuted = useColorModeValue("gray.500", "var(--color-text-muted, #8AAAC8)");
 
   return (
     <CustomDrawer
@@ -104,181 +105,260 @@ const ThemeChangeContainer: React.FC = observer(() => {
       title="Appearance & Theme"
       size="xs"
     >
-      <Flex flexDir="column" gap={5}>
-        {/* Intro */}
-        <Box bgColor={bannerBg} borderRadius="12px" p={3.5} mt={1}>
-          <Text color={bannerTextColor} fontSize="xs" lineHeight="1.5">
-            Personalize your workspace appearance. Choose between Light, Dark, or System mode, and preview theme colors.
-          </Text>
-        </Box>
-
-        {/* Section 1: Light / Dark / System Switcher */}
-        <Box>
-          <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="var(--color-text-muted)"
-            textTransform="uppercase"
-            letterSpacing="wider"
-            mb={2}
-          >
-            Theme Mode
-          </Text>
+      <Flex flexDir="column" gap={4.5} pb={4}>
+        {/* Section 1: Light / Dark Mode Toggle */}
+        <Box
+          p={3.5}
+          borderRadius="16px"
+          bg={cSurfaceAlt}
+          border="1px solid"
+          borderColor={cBorder}
+        >
+          <Flex align="center" justify="space-between" mb={2}>
+            <Text
+              fontSize="11px"
+              fontWeight="800"
+              color={cTextMuted}
+              textTransform="uppercase"
+              letterSpacing="0.08em"
+            >
+              Display Mode
+            </Text>
+            <Badge
+              textTransform="capitalize"
+              colorScheme="purple"
+              borderRadius="full"
+              px={2}
+              fontSize="10px"
+              fontWeight="700"
+            >
+              {mode}
+            </Badge>
+          </Flex>
           <ThemeModeSwitcher size="md" />
         </Box>
 
-        <Divider borderColor="var(--color-border)" />
+        {/* Section 2: Active Brand Palette Card */}
+        <Box
+          p={3.5}
+          borderRadius="16px"
+          bg={cSurfaceAlt}
+          border="1px solid"
+          borderColor={cBorder}
+        >
+          <Flex align="center" justify="space-between" mb={2.5}>
+            <Text
+              fontSize="11px"
+              fontWeight="800"
+              color={cTextMuted}
+              textTransform="uppercase"
+              letterSpacing="0.08em"
+            >
+              Active Palette
+            </Text>
+            <Badge
+              colorScheme="teal"
+              borderRadius="full"
+              px={2}
+              fontSize="10px"
+              fontWeight="700"
+            >
+              Live Sync
+            </Badge>
+          </Flex>
 
-        {/* Section 2: Active Brand Palette */}
-        <Box>
-          <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="var(--color-text-muted)"
-            textTransform="uppercase"
-            letterSpacing="wider"
-            mb={2.5}
-          >
-            Active Brand Colors
-          </Text>
           <VStack align="stretch" spacing={2}>
             <Flex
               align="center"
               justify="space-between"
               p={2.5}
-              borderRadius="10px"
-              bg="var(--color-surface-alt)"
+              borderRadius="12px"
+              bg={cSurface}
               border="1px solid"
-              borderColor="var(--color-border)"
+              borderColor={cBorder}
+              boxShadow="0 1px 2px rgba(0,0,0,0.03)"
             >
-              <HStack spacing={3}>
+              <HStack spacing={2.5}>
                 <Box
-                  w="24px"
-                  h="24px"
-                  borderRadius="6px"
-                  bg={brandColors.primary}
+                  w="26px"
+                  h="26px"
+                  borderRadius="8px"
+                  bg={selectedColor}
                   border="1px solid rgba(0,0,0,0.15)"
+                  boxShadow={`0 2px 6px ${selectedColor}40`}
                 />
-                <Text fontSize="xs" fontWeight="600">
-                  Primary Color
-                </Text>
+                <Box>
+                  <Text fontSize="xs" fontWeight="700" color={cText} lineHeight="1.2">
+                    Primary Brand
+                  </Text>
+                  <Text fontSize="10px" color={cTextMuted}>
+                    Sidebar, Table, Active Tabs
+                  </Text>
+                </Box>
               </HStack>
-              <Badge variant="subtle" fontSize="10px">
-                {brandColors.primary}
-              </Badge>
+              <Text fontSize="xs" fontFamily="monospace" fontWeight="700" color={selectedColor}>
+                {selectedColor.toUpperCase()}
+              </Text>
             </Flex>
 
             <Flex
               align="center"
               justify="space-between"
               p={2.5}
-              borderRadius="10px"
-              bg="var(--color-surface-alt)"
+              borderRadius="12px"
+              bg={cSurface}
               border="1px solid"
-              borderColor="var(--color-border)"
+              borderColor={cBorder}
+              boxShadow="0 1px 2px rgba(0,0,0,0.03)"
             >
-              <HStack spacing={3}>
+              <HStack spacing={2.5}>
                 <Box
-                  w="24px"
-                  h="24px"
-                  borderRadius="6px"
+                  w="26px"
+                  h="26px"
+                  borderRadius="8px"
                   bg={brandColors.secondary}
                   border="1px solid rgba(0,0,0,0.15)"
                 />
-                <Text fontSize="xs" fontWeight="600">
-                  Secondary Color
-                </Text>
+                <Box>
+                  <Text fontSize="xs" fontWeight="700" color={cText} lineHeight="1.2">
+                    Secondary Accent
+                  </Text>
+                  <Text fontSize="10px" color={cTextMuted}>
+                    Gradients & Sub-actions
+                  </Text>
+                </Box>
               </HStack>
-              <Badge variant="subtle" fontSize="10px">
-                {brandColors.secondary}
-              </Badge>
-            </Flex>
-
-            <Flex
-              align="center"
-              justify="space-between"
-              p={2.5}
-              borderRadius="10px"
-              bg="var(--color-surface-alt)"
-              border="1px solid"
-              borderColor="var(--color-border)"
-            >
-              <HStack spacing={3}>
-                <Box
-                  w="24px"
-                  h="24px"
-                  borderRadius="6px"
-                  bg={brandColors.accent}
-                  border="1px solid rgba(0,0,0,0.15)"
-                />
-                <Text fontSize="xs" fontWeight="600">
-                  Accent Color
-                </Text>
-              </HStack>
-              <Badge variant="subtle" fontSize="10px">
-                {brandColors.accent}
-              </Badge>
+              <Text fontSize="xs" fontFamily="monospace" fontWeight="700" color={brandColors.secondary}>
+                {brandColors.secondary.toUpperCase()}
+              </Text>
             </Flex>
           </VStack>
-          <Text fontSize="10px" color="var(--color-text-muted)" mt={2}>
-            To permanently configure colors, edit <Text as="span" fontFamily="monospace">src/theme/themeConfig.ts</Text>.
-          </Text>
         </Box>
 
-        <Divider borderColor="var(--color-border)" />
-
-        {/* Section 3: Preset Palettes */}
-        <Box>
+        {/* Section 3: Preset Palettes Grid */}
+        <Box
+          p={3.5}
+          borderRadius="16px"
+          bg={cSurfaceAlt}
+          border="1px solid"
+          borderColor={cBorder}
+        >
           <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="var(--color-text-muted)"
+            fontSize="11px"
+            fontWeight="800"
+            color={cTextMuted}
             textTransform="uppercase"
-            letterSpacing="wider"
+            letterSpacing="0.08em"
             mb={3}
           >
             Quick Primary Presets
           </Text>
-          <Grid gridTemplateColumns="repeat(3, 1fr)" gap={3}>
-            {presetColors.map((color) => (
-              <CustomColorBox
-                key={color.code}
-                color={color.code}
-                colorName={color.name}
-                selected={selectedColor === color.code}
-                onClick={() => handleColorSelect(color)}
-              />
-            ))}
-          </Grid>
+
+          <SimpleGrid columns={4} spacing={2.5}>
+            {PRESET_COLORS.map((preset) => {
+              const isSelected = selectedColor.toLowerCase() === preset.code.toLowerCase();
+              return (
+                <Tooltip
+                  key={preset.code}
+                  label={`${preset.name} - ${preset.description}`}
+                  fontSize="10px"
+                  hasArrow
+                >
+                  <Box
+                    as="button"
+                    type="button"
+                    onClick={() => handleApplyColor(preset.code)}
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    gap={1.5}
+                    py={1.5}
+                    px={1}
+                    borderRadius="12px"
+                    bg={isSelected ? "rgba(255,255,255,0.06)" : "transparent"}
+                    border="1px solid"
+                    borderColor={isSelected ? preset.code : "transparent"}
+                    transition="all 0.18s ease"
+                    _hover={{
+                      transform: "scale(1.05)",
+                      borderColor: preset.code,
+                    }}
+                  >
+                    <Box
+                      w="36px"
+                      h="36px"
+                      borderRadius="50%"
+                      bg={preset.code}
+                      border={isSelected ? "3px solid white" : "2px solid rgba(0,0,0,0.15)"}
+                      boxShadow={
+                        isSelected
+                          ? `0 0 0 2px ${preset.code}, 0 4px 10px rgba(0,0,0,0.25)`
+                          : "0 2px 5px rgba(0,0,0,0.1)"
+                      }
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      transition="all 0.18s ease"
+                    >
+                      {isSelected && <FaCheck size={12} color="white" />}
+                    </Box>
+                    <Text
+                      fontSize="10px"
+                      fontWeight={isSelected ? "800" : "600"}
+                      color={isSelected ? cText : cTextMuted}
+                      noOfLines={1}
+                      textAlign="center"
+                    >
+                      {preset.name.split(" ")[0]}
+                    </Text>
+                  </Box>
+                </Tooltip>
+              );
+            })}
+          </SimpleGrid>
         </Box>
 
         {/* Section 4: Custom Color Picker */}
-        <Box>
+        <Box
+          p={3.5}
+          borderRadius="16px"
+          bg={cSurfaceAlt}
+          border="1px solid"
+          borderColor={cBorder}
+        >
           <Text
-            fontSize="xs"
-            fontWeight="700"
-            color="var(--color-text-muted)"
+            fontSize="11px"
+            fontWeight="800"
+            color={cTextMuted}
             textTransform="uppercase"
-            letterSpacing="wider"
-            mb={2}
+            letterSpacing="0.08em"
+            mb={2.5}
           >
-            Custom Color Picker
+            Custom Hex Color
           </Text>
-          <ColorPickerComponent />
+          <ColorPickerComponent
+            currentColor={selectedColor}
+            onColorChange={handleApplyColor}
+          />
         </Box>
 
+        {/* Reset button */}
         <Button
-          mt={2}
+          leftIcon={<FaUndo size={12} />}
           variant="outline"
           size="sm"
+          h="38px"
           borderRadius="12px"
-          onClick={() => {
-            resetTheme();
-            setSelectedColor(brandColors.primary);
-            if (typeof document !== "undefined") {
-              document.documentElement.style.removeProperty("--color-primary");
-            }
+          borderColor={cBorder}
+          color={cTextMuted}
+          fontWeight="600"
+          fontSize="xs"
+          _hover={{
+            bg: "red.50",
+            color: "red.500",
+            borderColor: "red.200",
           }}
+          onClick={handleReset}
         >
           Reset to Config Defaults
         </Button>

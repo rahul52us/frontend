@@ -47,8 +47,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     dashboardPalette.border
   );
   const cardBorderHover = useColorModeValue(
-    "#094a82",
-    "#3b82f6"
+    "var(--color-primary, #065F68)",
+    "var(--color-primary, #3b82f6)"
   );
   const cardShadow = useColorModeValue(
     "0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02)",
@@ -425,7 +425,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               size="sm"
               flex="1"
               variant="solid"
-              bg="#094a82"
+              bg="var(--color-primary, #065F68)"
               color="white"
               borderRadius="10px"
               h="36px"
@@ -433,7 +433,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               fontWeight="700"
               leftIcon={<FiEdit3 size={14} />}
               _hover={{
-                bg: "#063864",
+                bg: "var(--color-primary-hover, #044249)",
               }}
               onClick={() => onEdit(product)}
             >

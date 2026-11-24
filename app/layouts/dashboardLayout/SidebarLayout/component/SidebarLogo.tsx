@@ -3,6 +3,7 @@
 import { observer } from "mobx-react-lite";
 import styled, { keyframes } from "styled-components";
 import { Avatar, useTheme } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import stores from "../../../../store/stores";
 import { dashboard } from "../../../../config/utils/routes";
@@ -43,10 +44,36 @@ const SidebarLogo: React.FC<SidebarLogoProps> = observer(({ showBrand = false, i
 
   const storedThemeColor =
     typeof window !== "undefined"
-      ? localStorage.getItem("vendor_primary_theme_color") || localStorage.getItem("gym_primary_theme_color")
+      ? localStorage.getItem("vendor_primary_theme_color") || localStorage.getItem("business_primary_theme_color")
       : null;
 
+  const [activeThemeColor, setActiveThemeColor] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("vendor_primary_theme_color") ||
+        localStorage.getItem("business_primary_theme_color")
+      );
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleColorChange = () => {
+      if (typeof window !== "undefined") {
+        const stored =
+          localStorage.getItem("vendor_primary_theme_color") ||
+          localStorage.getItem("business_primary_theme_color");
+        setActiveThemeColor(stored);
+      }
+    };
+    window.addEventListener("vendor_theme_color_changed", handleColorChange);
+    return () => {
+      window.removeEventListener("vendor_theme_color_changed", handleColorChange);
+    };
+  }, []);
+
   const userThemeColor =
+    activeThemeColor ||
     user?.companyDetails?.primaryThemeColor ||
     user?.companyOrg?.primaryThemeColor ||
     (typeof user?.company === "object" ? (user.company as any)?.primaryThemeColor : null) ||

@@ -160,8 +160,8 @@ export const MerchantPageShell = ({
     "--merchant-surface-soft": useColorModeValue("var(--chakra-colors-gray-100)", dashboardPalette.surfaceSoft),
     "--merchant-text-muted": useColorModeValue("var(--chakra-colors-gray-500)", dashboardPalette.textMuted),
     "--merchant-text": useColorModeValue("var(--chakra-colors-gray-800)", dashboardPalette.text),
-    "--merchant-accent": useColorModeValue("#094a82", "#3b82f6"),
-    "--merchant-accent-strong": useColorModeValue("#063864", "#2563eb"),
+    "--merchant-accent": useColorModeValue("var(--color-primary, #065F68)", "var(--color-primary, #3b82f6)"),
+    "--merchant-accent-strong": useColorModeValue("var(--color-primary-hover, #044249)", "var(--color-primary, #2563eb)"),
     "--merchant-page-bg": useColorModeValue("var(--chakra-colors-gray-50)", dashboardPalette.page),
   };
 
