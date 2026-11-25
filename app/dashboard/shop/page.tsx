@@ -10,9 +10,12 @@ const ShopPage = dynamic(() => import("./component/Form"), { ssr: false });
 const Page = observer(() => {
     const router = useRouter();
     const { user } = stores.auth;
+    const hasCompany = Boolean(user?.company?._id || user?.company);
     const canAccessShopOnboarding =
         user?.type === 'seller' ||
         user?.type === 'superAdmin' ||
+        user?.role === 'superAdmin' ||
+        hasCompany ||
         user?.onboarding?.state === 'seller_pending_shop';
 
     useEffect(() => {

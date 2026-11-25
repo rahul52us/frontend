@@ -938,36 +938,15 @@ const BentoGridSection = observer(() => {
     };
   }, [toast]);
 
-  // 2. Fetch product images for each category
+  // 2. Map category images (uses category image directly without spamming product API for every category)
   useEffect(() => {
     if (categories.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      const entries = await Promise.all(
-        categories.map(async (cat): Promise<[string, string[]]> => {
-          try {
-            const payload = { category: cat._id, limit: 8 };
-            const res = await shopStore.getAllProducts(payload, true);
-            let products: any[] = [];
-            if (res?.status === 'success') {
-              if (Array.isArray(res.data)) products = res.data;
-              else if (res.data?.products) products = res.data.products;
-            } else if (Array.isArray(res?.data)) products = res.data;
-            else if (Array.isArray(res)) products = res;
-            const images = products.map((p) => p.image || p.images?.[0]).filter(Boolean) as string[];
-            if (images.length === 0) images.push(cat.image || FALLBACK_IMAGE);
-            return [cat._id, images.slice(0, 5)];
-          } catch (err) {
-            console.warn(`Failed to fetch images for ${cat.name}`, err);
-            return [cat._id, [cat.image || FALLBACK_IMAGE]];
-          }
-        })
-      );
-      if (cancelled) return;
-      setCategoryImages(new Map<string, string[]>(entries));
-      setImageIndices(new Map<string, number>(categories.map((c) => [c._id, 0] as [string, number])));
-    })();
-    return () => { cancelled = true; };
+    const entries: [string, string[]][] = categories.slice(0, 7).map((cat) => [
+      cat._id,
+      [cat.image || FALLBACK_IMAGE],
+    ]);
+    setCategoryImages(new Map<string, string[]>(entries));
+    setImageIndices(new Map<string, number>(categories.map((c) => [c._id, 0] as [string, number])));
   }, [categories]);
 
   // 3. Auto-rotate category images (every 3s, off for reduced motion)

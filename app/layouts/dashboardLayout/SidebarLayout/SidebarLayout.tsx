@@ -535,18 +535,16 @@ const SidebarLayout: React.FC<SidebarProps> = observer(
       const rawRoles = Array.isArray(user?.role)
         ? user.role.filter(Boolean)
         : [user?.role, user?.type].filter(Boolean);
-      const hasCompany = Boolean(user?.company?._id || user?.company);
       const isSuperAdmin = rawRoles.includes("superAdmin") || pathname?.startsWith("/dashboard/super-admin");
-      const isBuyerOnlyUser =
-        !isSuperAdmin &&
-        !rawRoles.includes("admin") &&
-        !hasCompany &&
-        user?.type !== "seller";
+      
+      // Clean Role Detection: If user owns a seller_shop in Company collection, they are a Seller!
+      const isSeller = Boolean(user?.company?.companyType === "seller_shop" || user?.company?._id);
+
       const roles = isSuperAdmin
         ? ["superAdmin"]
-        : isBuyerOnlyUser
-        ? ["buyer"]
-        : ["seller", "admin", ...rawRoles];
+        : isSeller
+        ? ["seller", "admin", ...rawRoles]
+        : ["buyer"];
 
       setSidebarData(getSidebarDataByRole(roles));
       setFooterItems(sidebarFooterData);

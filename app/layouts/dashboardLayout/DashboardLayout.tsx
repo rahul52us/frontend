@@ -102,20 +102,14 @@ const DashboardLayout = observer(({ children }: { children: React.ReactNode }) =
     ? user.role.filter(Boolean)
     : [user?.role].filter(Boolean);
   const hasCompany = Boolean(user?.company?._id || user?.company);
+  const isSellerShop = user?.company?.companyType === "seller_shop" || hasCompany;
   const isSuperAdmin =
     user?.type === 'superAdmin' ||
     user?.role === 'superAdmin' ||
     normalizedRoles.includes('superAdmin') ||
     pathname.startsWith('/dashboard/super-admin');
-  const isSeller =
-    user?.type === 'seller' ||
-    user?.role === 'seller' ||
-    normalizedRoles.includes('seller') ||
-    user?.type === 'admin' ||
-    user?.role === 'admin' ||
-    normalizedRoles.includes('admin') ||
-    hasCompany;
-  const isBuyerOnlyUser = !isSuperAdmin && !hasCompany && !isSeller;
+  const isSeller = isSellerShop || user?.type === 'seller' || user?.role === 'seller';
+  const isBuyerOnlyUser = !isSuperAdmin && !isSeller;
   const showMobileBottomNav = isMobile && !isBuyerOnlyUser;
 
   // Navy (#070B14) base with Electric Blue radial glows — elevation replaces near-black

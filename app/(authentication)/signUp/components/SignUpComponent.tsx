@@ -1032,7 +1032,6 @@ const SignUpForm = observer(() => {
         name: userData.name.trim() || undefined,
         phone: userData.phone.trim(),
         email: userData.email.trim() || undefined,
-        onboardingIntent: intent,
       };
 
       const data = await auth.register(payload);
