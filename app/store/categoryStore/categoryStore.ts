@@ -3,9 +3,11 @@ import axios from "axios";
 
 class CategoryStore {
     categories: any[] = [];
+    tableCategories: any[] = [];
     topCategories: any[] = [];
     topLoading: boolean = false;
     loading: boolean = false;
+    tableLoading: boolean = false;
     totalCategories: number = 0;
     activeCategories: number = 0;
     rootCategories: number = 0;
@@ -22,10 +24,15 @@ class CategoryStore {
 
     getAllCategories = async (params: any = {}, forceRefresh: boolean = false) => {
         const currentPayload = JSON.stringify(params);
+        const isPaginated = Boolean(params.page || params.limit);
 
         if (!forceRefresh && this.categoriesCache && this.lastCategoriesPayload === currentPayload) {
             runInAction(() => {
-                this.categories = this.categoriesCache.data;
+                if (isPaginated) {
+                    this.tableCategories = this.categoriesCache.data;
+                } else {
+                    this.categories = this.categoriesCache.data;
+                }
                 this.totalCategories = this.categoriesCache.pagination?.totalCategories ?? this.categoriesCache.data.length;
                 this.activeCategories = this.categoriesCache.stats?.activeCategories ?? this.activeCategories;
                 this.rootCategories = this.categoriesCache.stats?.rootCategories ?? this.rootCategories;
@@ -37,19 +44,28 @@ class CategoryStore {
             return this.categoriesCache;
         }
 
-        this.loading = true;
+        if (isPaginated) {
+            this.tableLoading = true;
+        } else {
+            this.loading = true;
+        }
+
         try {
             const response = await axios.get("/category", { params });
             runInAction(() => {
                 if (response.data.status === "success") {
-                    this.categories = response.data.data;
+                    if (isPaginated) {
+                        this.tableCategories = response.data.data;
+                    } else {
+                        this.categories = response.data.data;
+                    }
                     this.totalCategories = response.data.pagination?.totalCategories ?? response.data.data.length;
                     this.activeCategories = response.data.stats?.activeCategories ?? response.data.data.filter((c: any) => c.isActive).length;
                     this.rootCategories = response.data.stats?.rootCategories ?? response.data.data.filter((c: any) => !c.parent).length;
                     this.filterReadyCategories = response.data.stats?.filterReadyCategories ?? response.data.data.filter((c: any) => (c.filterConfig || []).length > 0).length;
-                    this.currentPage = response.data.pagination?.currentPage ?? 1;
+                    this.currentPage = response.data.pagination?.currentPage ?? (params.page ? Number(params.page) : 1);
                     this.totalPages = response.data.pagination?.totalPages ?? 1;
-                    this.limit = response.data.pagination?.limit ?? 10;
+                    this.limit = response.data.pagination?.limit ?? (params.limit ? Number(params.limit) : 10);
                     this.categoriesCache = response.data;
                     this.lastCategoriesPayload = currentPayload;
                 }
@@ -61,7 +77,11 @@ class CategoryStore {
             return error.response?.data || { status: "error", message: "Failed to fetch categories" };
         } finally {
             runInAction(() => {
-                this.loading = false;
+                if (isPaginated) {
+                    this.tableLoading = false;
+                } else {
+                    this.loading = false;
+                }
             });
         }
     };

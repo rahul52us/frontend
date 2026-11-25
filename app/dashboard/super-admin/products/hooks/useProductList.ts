@@ -4,10 +4,11 @@ import stores from "../../../../store/stores";
 export interface ProductListFilterParams {
     search?: string;
     category?: string;
+    company?: string;
     stockFilter?: "all" | "in_stock" | "low_stock" | "out_of_stock";
 }
 
-export const useProductList = (initialFilters: ProductListFilterParams = {}) => {
+export const useProductList = () => {
     const { shopStore } = stores;
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -15,19 +16,8 @@ export const useProductList = (initialFilters: ProductListFilterParams = {}) => 
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
-    const [summary, setSummary] = useState<{
-        total: number;
-        inStock: number;
-        featured: number;
-        low: number;
-    }>({
-        total: 0,
-        inStock: 0,
-        featured: 0,
-        low: 0,
-    });
 
-    const [filters, setFilters] = useState<ProductListFilterParams>(initialFilters);
+    const [filters, setFilters] = useState<ProductListFilterParams>({});
     const prevPayloadRef = useRef<string>("");
 
     const fetchProducts = useCallback(
@@ -38,7 +28,7 @@ export const useProductList = (initialFilters: ProductListFilterParams = {}) => 
             const payload: any = {
                 limit: 10,
                 page,
-                company: null,
+                company: activeFilters.company && activeFilters.company !== "all" ? activeFilters.company : null,
             };
 
             if (activeFilters.search && activeFilters.search.trim()) {
@@ -68,9 +58,6 @@ export const useProductList = (initialFilters: ProductListFilterParams = {}) => 
                         setProducts(res.data.products || []);
                         setTotalProducts(res.data.total || 0);
                         setTotalPages(res.data.totalPages || 1);
-                        if (res.data.summary) {
-                            setSummary(res.data.summary);
-                        }
                     }
                 })
                 .catch(() => {
@@ -80,16 +67,16 @@ export const useProductList = (initialFilters: ProductListFilterParams = {}) => 
                     setLoading(false);
                 });
         },
-        [shopStore, filters]
+        [shopStore, filters.search, filters.category, filters.company, filters.stockFilter]
     );
 
     useEffect(() => {
-        const payloadKey = `${currentPage}_${filters.search || ""}_${filters.category || ""}_${filters.stockFilter || ""}`;
+        const payloadKey = `${currentPage}_${filters.search || ""}_${filters.category || ""}_${filters.company || ""}_${filters.stockFilter || ""}`;
         if (prevPayloadRef.current !== payloadKey) {
             prevPayloadRef.current = payloadKey;
             fetchProducts(currentPage);
         }
-    }, [fetchProducts, currentPage, filters]);
+    }, [currentPage, filters.search, filters.category, filters.company, filters.stockFilter, fetchProducts]);
 
     return {
         products,
@@ -97,7 +84,6 @@ export const useProductList = (initialFilters: ProductListFilterParams = {}) => 
         currentPage,
         totalPages,
         totalProducts,
-        summary,
         filters,
         setFilters,
         setCurrentPage,

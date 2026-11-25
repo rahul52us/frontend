@@ -63,7 +63,7 @@ import ProductCard from "../super-admin/products/components/ProductCard";
 import { ProductColumns } from "../super-admin/products/components/ProductColumns";
 import ProductDetailView from "./components/ProductDetailView";
 import ProductForm from "./components/ProductForm";
-import { SearchableCategorySelect } from "./components/SearchableCategorySelect";
+import { SearchableCategorySelect } from "../components/common/SearchableCategorySelect";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "./utils/stockThreshold";
 
 const emptyToUndefined = (value: any, originalValue: any) =>

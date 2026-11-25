@@ -163,6 +163,16 @@ class ShopStore {
     }
   };
 
+  getProductStats = async (companyId?: string) => {
+    try {
+      const params = companyId && companyId !== "all" ? { company: companyId } : {};
+      const response = await axios.get("/product/stats", { params });
+      return response.data;
+    } catch (err: any) {
+      return Promise.reject(err?.response?.data || err.message);
+    }
+  };
+
   getAllProducts = async (sendData: any, forceRefresh: boolean = false) => {
     const currentPayload = JSON.stringify(sendData);
 

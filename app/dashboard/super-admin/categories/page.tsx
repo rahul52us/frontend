@@ -26,6 +26,8 @@ import {
 import { observer } from "mobx-react-lite";
 import {
   FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
   FiDatabase,
   FiFolder,
   FiFolderPlus,
@@ -51,7 +53,7 @@ import CategoryMobileCard from "./components/CategoryMobileCard";
 import CategoryFilterSetupCard from "./components/CategoryFilterSetupCard";
 import CategoryToolbar from "./components/CategoryToolbar";
 
-const CategoryPage = () => {
+const CategoryPage = observer(() => {
   const { categoryStore } = stores;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -397,7 +399,15 @@ const CategoryPage = () => {
       </SimpleGrid>
 
       {/* ---------------------------- Clean Modern Tabs ---------------------------- */}
-      <Tabs variant="unstyled" colorScheme="brand">
+      <Tabs
+        variant="unstyled"
+        colorScheme="brand"
+        onChange={(index) => {
+          if (index === 1 && categoryStore.categories.length === 0) {
+            categoryStore.getAllCategories();
+          }
+        }}
+      >
         <TabList
           mb={4}
           gap={2}
@@ -491,14 +501,79 @@ const CategoryPage = () => {
                 }}
               >
                 <CustomTable
-                  data={categoryStore.categories}
+                  data={categoryStore.tableCategories.length > 0 ? categoryStore.tableCategories : categoryStore.categories}
                   columns={columns}
-                  loading={categoryStore.loading}
+                  loading={categoryStore.tableLoading}
                   actions={tableActions}
                   serial={{ show: true, text: "S.No." }}
                   {...getMerchantTableProps("62vh")}
                 />
               </Box>
+
+              {/* Tablet / Desktop Pagination Bar */}
+              {categoryStore.totalPages > 1 && (
+                <Flex
+                  mt={4}
+                  pt={3}
+                  borderTop="1px solid"
+                  borderColor="var(--merchant-border-strong, #1f2e46)"
+                  align="center"
+                  justify="space-between"
+                  flexWrap="wrap"
+                  gap={3}
+                >
+                  <Text fontSize="xs" color="var(--merchant-text-muted, #94a3b8)" fontWeight="600">
+                    Page {currentPage} of {categoryStore.totalPages} ({totalCategories} total categories)
+                  </Text>
+
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      borderRadius="12px"
+                      borderColor="var(--merchant-border-strong, #1f2e46)"
+                      color="var(--merchant-text, #ffffff)"
+                      leftIcon={<FiChevronLeft />}
+                      isDisabled={currentPage <= 1 || categoryStore.loading}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+
+                    <HStack spacing={1}>
+                      {Array.from({ length: Math.min(categoryStore.totalPages, 5) }).map((_, i) => {
+                        const pNum = i + 1;
+                        const isCurrent = pNum === currentPage;
+                        return (
+                          <IconButton
+                            key={pNum}
+                            size="sm"
+                            aria-label={`Page ${pNum}`}
+                            icon={<Text fontSize="xs">{pNum}</Text>}
+                            borderRadius="10px"
+                            variant={isCurrent ? "solid" : "ghost"}
+                            colorScheme={isCurrent ? "brand" : "gray"}
+                            onClick={() => handlePageChange(pNum)}
+                          />
+                        );
+                      })}
+                    </HStack>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      borderRadius="12px"
+                      borderColor="var(--merchant-border-strong, #1f2e46)"
+                      color="var(--merchant-text, #ffffff)"
+                      rightIcon={<FiChevronRight />}
+                      isDisabled={currentPage >= categoryStore.totalPages || categoryStore.loading}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </HStack>
+                </Flex>
+              )}
             </Box>
 
             {/* Mobile View */}
@@ -563,11 +638,11 @@ const CategoryPage = () => {
                 </InputGroup>
               </VStack>
 
-              {categoryStore.loading ? (
+              {categoryStore.tableLoading ? (
                 <Flex justify="center" py={10}>
                   <Spinner />
                 </Flex>
-              ) : categoryStore.categories.length === 0 ? (
+              ) : (categoryStore.tableCategories.length > 0 ? categoryStore.tableCategories : categoryStore.categories).length === 0 ? (
                 <Text
                   textAlign="center"
                   py={10}
@@ -578,7 +653,7 @@ const CategoryPage = () => {
                 </Text>
               ) : (
                 <SimpleGrid columns={2} spacing={3}>
-                  {categoryStore.categories.map((category: any, idx: number) => (
+                  {(categoryStore.tableCategories.length > 0 ? categoryStore.tableCategories : categoryStore.categories).map((category: any, idx: number) => (
                     <CategoryMobileCard
                       key={category._id}
                       category={category}
@@ -646,22 +721,33 @@ const CategoryPage = () => {
               </MerchantBadge>
             </Flex>
 
-            {categoryStore.categories.length === 0 ? (
-              <Text textAlign="center" py={10} fontSize="sm" color="var(--merchant-text-muted)">
-                No categories found.
-              </Text>
-            ) : (
-              <SimpleGrid columns={{ base: 2, lg: 2, xl: 3 }} spacing={{ base: 3, md: 4 }}>
-                {categoryStore.categories.map((category: any, idx: number) => (
-                  <CategoryFilterSetupCard
-                    key={category._id}
-                    category={category}
-                    index={idx}
-                    onConfigureFilters={handleConfigureFilters}
-                  />
-                ))}
-              </SimpleGrid>
-            )}
+            {/* Filter Setup Categories: Show filter-configured categories or all categories with a search/filter */}
+            {(() => {
+              const displayCategories = categoryStore.categories.length > 0
+                ? categoryStore.categories
+                : categoryStore.tableCategories;
+
+              if (displayCategories.length === 0) {
+                return (
+                  <Text textAlign="center" py={10} fontSize="sm" color="var(--merchant-text-muted)">
+                    No categories found.
+                  </Text>
+                );
+              }
+
+              return (
+                <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={{ base: 3, md: 4 }}>
+                  {displayCategories.map((category: any, idx: number) => (
+                    <CategoryFilterSetupCard
+                      key={category._id}
+                      category={category}
+                      index={idx}
+                      onConfigureFilters={handleConfigureFilters}
+                    />
+                  ))}
+                </SimpleGrid>
+              );
+            })()}
           </TabPanel>
         </TabPanels>
       </Tabs>
@@ -697,6 +783,6 @@ const CategoryPage = () => {
       )}
     </MerchantPageShell>
   );
-};
+});
 
-export default observer(CategoryPage);
+export default CategoryPage;

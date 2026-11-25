@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Badge,
   Box,
   Button,
   ButtonGroup,
@@ -13,13 +12,12 @@ import {
   InputGroup,
   InputLeftElement,
   InputRightElement,
-  Select,
   SimpleGrid,
   Skeleton,
   Text,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiBox,
   FiCheckCircle,
@@ -50,17 +48,32 @@ import ProductForm from "../../products/components/ProductForm";
 import ProductCard from "./components/ProductCard";
 import { ProductColumns } from "./components/ProductColumns";
 import ProductViewDrawer from "./components/ProductViewDrawer";
+import { SearchableSellerSelect } from "../../components/common/SearchableSellerSelect";
+import { SearchableCategorySelect } from "../../components/common/SearchableCategorySelect";
 import { useProductDelete } from "./hooks/useProductDelete";
 import { useProductEdit } from "./hooks/useProductEdit";
 import { useProductList } from "./hooks/useProductList";
+import { useProductStats } from "./hooks/useProductStats";
+
+const STOCK_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "in_stock", label: "In Stock" },
+  { key: "low_stock", label: "Low Stock" },
+  { key: "out_of_stock", label: "Out of Stock" },
+] as const;
+
+type StockFilterType = typeof STOCK_FILTERS[number]["key"];
 
 const SuperAdminProductsPage = observer(() => {
   const { offerStore } = stores;
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "low_stock" | "out_of_stock">("all");
+  const [selectedCompany, setSelectedCompany] = useState("all");
+  const [stockFilter, setStockFilter] = useState<StockFilterType>("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [sellerRefreshKey, setSellerRefreshKey] = useState(0);
 
   const {
     products,
@@ -68,15 +81,18 @@ const SuperAdminProductsPage = observer(() => {
     currentPage,
     totalPages,
     totalProducts,
-    summary,
     setFilters,
     setCurrentPage,
     fetchProducts,
-  } = useProductList({
-    search: searchQuery,
-    category: selectedCategory,
-    stockFilter,
-  });
+  } = useProductList();
+
+  const { stats, loadingStats, fetchStats } = useProductStats(selectedCompany);
+
+  const handleRefreshAll = useCallback(() => {
+    fetchProducts(currentPage);
+    fetchStats();
+    setSellerRefreshKey((prev) => prev + 1);
+  }, [fetchProducts, fetchStats, currentPage]);
 
   const {
     isOpen: isDeleteOpen,
@@ -85,7 +101,7 @@ const SuperAdminProductsPage = observer(() => {
     isDeleting,
     handleDeleteClick,
     confirmDelete,
-  } = useProductDelete(() => fetchProducts(currentPage));
+  } = useProductDelete(handleRefreshAll);
 
   const {
     isEditOpen,
@@ -96,81 +112,79 @@ const SuperAdminProductsPage = observer(() => {
     initialValues,
     ProductSchema,
     activeCategories,
-  } = useProductEdit(() => fetchProducts(currentPage));
+  } = useProductEdit(handleRefreshAll);
 
   // Product View Drawer state
   const [selectedViewProduct, setSelectedViewProduct] = useState<any>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
 
-  // Debounced search sync to backend
+  // Debounced search & filter sync to backend
   useEffect(() => {
     const handler = setTimeout(() => {
       setFilters({
         search: searchQuery,
         category: selectedCategory,
+        company: selectedCompany,
         stockFilter,
       });
       setCurrentPage(1);
     }, 350);
 
     return () => clearTimeout(handler);
-  }, [searchQuery, selectedCategory, stockFilter, setFilters, setCurrentPage]);
+  }, [searchQuery, selectedCategory, selectedCompany, stockFilter, setFilters, setCurrentPage]);
 
-  React.useEffect(() => {
+  // Initial setup
+  useEffect(() => {
     offerStore.getAllOffers({ isActive: true });
     if (stores.categoryStore.categories.length === 0) {
       stores.categoryStore.getAllCategories();
     }
   }, [offerStore]);
 
-  const handleViewClick = (product: any) => {
+  const handleViewClick = useCallback((product: any) => {
     setSelectedViewProduct(product);
     setIsViewOpen(true);
-  };
+  }, []);
 
-  const handleCloseView = () => {
+  const handleCloseView = useCallback(() => {
     setIsViewOpen(false);
     setSelectedViewProduct(null);
-  };
+  }, []);
 
-  // Products directly from backend result (server-side filtered)
-  const filteredProducts = products;
+  const handleSellerChange = useCallback((companyId: string) => {
+    setSelectedCompany(companyId);
+    setCurrentPage(1);
+  }, [setCurrentPage]);
 
-  // Real-time backend summary metrics
-  const inStockCount = summary.inStock;
-  const lowStockCount = summary.low;
-  const outOfStockCount = Math.max(0, totalProducts - inStockCount);
+  const handleCategoryChange = useCallback((categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1);
+  }, [setCurrentPage]);
 
-  const populatedCategoryCount = useMemo(() => {
-    return products.filter((p: any) => Boolean(p.category)).length;
-  }, [products]);
+  const handleResetFilters = useCallback(() => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setSelectedCompany("all");
+    setStockFilter("all");
+    setCurrentPage(1);
+  }, [setCurrentPage]);
 
-  const totalValue = useMemo(() => {
-    return products.reduce((acc: number, p: any) => {
-      const price =
-        typeof p.price === "number" ? p.price : parseFloat(p.price) || 0;
-      return acc + price;
-    }, 0);
-  }, [products]);
+  // Real-time backend summary metrics from dedicated global stats
+  const {
+    inStock: inStockCount,
+    lowStock: lowStockCount,
+    outOfStock: outOfStockCount,
+    totalProducts: overallTotalProducts,
+    withCategory: populatedCategoryCount,
+    avgPrice,
+  } = stats;
 
-  const avgPrice =
-    products.length > 0 ? Math.round(totalValue / products.length) : 0;
-
-  // Extract category options from global categoryStore + active product categories
-  const categoryOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    stores.categoryStore.categories.forEach((c: any) => {
-      if (c._id && c.name) {
-        map.set(String(c._id), c.name);
-      }
-    });
-    products.forEach((p: any) => {
-      if (p.category?._id && p.category?.name) {
-        map.set(String(p.category._id), p.category.name);
-      }
-    });
-    return Array.from(map.entries());
-  }, [products]);
+  const stockCounts = useMemo(() => ({
+    all: overallTotalProducts,
+    in_stock: inStockCount,
+    low_stock: lowStockCount,
+    out_of_stock: outOfStockCount,
+  }), [overallTotalProducts, inStockCount, lowStockCount, outOfStockCount]);
 
   const tableActions = useMemo(() => ({
     actionBtn: {
@@ -186,16 +200,66 @@ const SuperAdminProductsPage = observer(() => {
       },
       deleteKey: {
         showDeleteButton: true,
-        function: (row: any) => handleDeleteClick(row),
+        function: handleDeleteClick,
       },
     },
     pagination: {
       show: true,
-      currentPage: currentPage,
-      totalPages: totalPages,
+      currentPage,
+      totalPages,
       onClick: (page: number) => setCurrentPage(page),
     },
-  }), [currentPage, totalPages]);
+  }), [currentPage, totalPages, handleViewClick, handleEditClick, handleDeleteClick, setCurrentPage]);
+
+  // Page header components memoized
+  const headerActions = useMemo(() => (
+    <HStack spacing={3}>
+      <SearchableSellerSelect
+        value={selectedCompany}
+        onChange={handleSellerChange}
+        refreshTrigger={sellerRefreshKey}
+      />
+      <Button
+        size="sm"
+        onClick={handleRefreshAll}
+        isDisabled={loading || loadingStats}
+        leftIcon={
+          <Icon
+            as={FiRefreshCw}
+            animation={loading || loadingStats ? `${merchantSpin} 1s linear infinite` : undefined}
+          />
+        }
+        {...merchantGhostButtonProps}
+      >
+        Refresh
+      </Button>
+    </HStack>
+  ), [selectedCompany, handleSellerChange, sellerRefreshKey, handleRefreshAll, loading, loadingStats]);
+
+  const headerMobileActions = useMemo(() => (
+    <HStack spacing={2}>
+      <SearchableSellerSelect
+        value={selectedCompany}
+        onChange={handleSellerChange}
+        refreshTrigger={sellerRefreshKey}
+      />
+      <IconButton
+        icon={
+          <Icon
+            as={FiRefreshCw}
+            animation={loading || loadingStats ? `${merchantSpin} 1s linear infinite` : undefined}
+          />
+        }
+        aria-label="Refresh products"
+        size="sm"
+        variant="ghost"
+        onClick={handleRefreshAll}
+        isDisabled={loading || loadingStats}
+      />
+    </HStack>
+  ), [selectedCompany, handleSellerChange, sellerRefreshKey, handleRefreshAll, loading, loadingStats]);
+
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedCategory !== "all" || selectedCompany !== "all" || stockFilter !== "all";
 
   return (
     <MerchantPageShell>
@@ -207,44 +271,15 @@ const SuperAdminProductsPage = observer(() => {
         badges={
           <HStack spacing={2}>
             <MerchantBadge tone="accent">
-              {totalProducts} Total Products
+              {loadingStats ? "…" : overallTotalProducts} Total Products
             </MerchantBadge>
             <MerchantBadge tone="success">
-              {inStockCount} In Stock
+              {loadingStats ? "…" : inStockCount} In Stock
             </MerchantBadge>
           </HStack>
         }
-        actions={
-          <Button
-            size="sm"
-            onClick={() => fetchProducts(currentPage)}
-            isDisabled={loading}
-            leftIcon={
-              <Icon
-                as={FiRefreshCw}
-                animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
-              />
-            }
-            {...merchantGhostButtonProps}
-          >
-            Refresh
-          </Button>
-        }
-        mobileActions={
-          <IconButton
-            icon={
-              <Icon
-                as={FiRefreshCw}
-                animation={loading ? `${merchantSpin} 1s linear infinite` : undefined}
-              />
-            }
-            aria-label="Refresh products"
-            size="sm"
-            variant="ghost"
-            onClick={() => fetchProducts(currentPage)}
-            isDisabled={loading}
-          />
-        }
+        actions={headerActions}
+        mobileActions={headerMobileActions}
       />
 
       {/* Top Stats Grid */}
@@ -255,7 +290,7 @@ const SuperAdminProductsPage = observer(() => {
       >
         <MerchantStatCard
           label="Total Products"
-          value={totalProducts}
+          value={loadingStats ? "…" : overallTotalProducts}
           variant="panel"
           icon={FiBox}
           iconColor={dashboardPalette.accentStrong}
@@ -263,7 +298,7 @@ const SuperAdminProductsPage = observer(() => {
         />
         <MerchantStatCard
           label="With Category"
-          value={populatedCategoryCount}
+          value={loadingStats ? "…" : populatedCategoryCount}
           variant="panel"
           icon={FiLayers}
           iconColor={dashboardPalette.success}
@@ -271,16 +306,16 @@ const SuperAdminProductsPage = observer(() => {
           valueColor={dashboardPalette.success}
         />
         <MerchantStatCard
-          label="In Stock In View"
-          value={inStockCount}
+          label="In Stock"
+          value={loadingStats ? "…" : inStockCount}
           variant="panel"
           icon={FiCheckCircle}
           iconColor={dashboardPalette.accent}
           iconBg="rgba(6, 95, 104, 0.14)"
         />
         <MerchantStatCard
-          label="Avg Price In View"
-          value={`₹${avgPrice.toLocaleString("en-IN")}`}
+          label="Avg Price"
+          value={loadingStats ? "…" : `₹${avgPrice.toLocaleString("en-IN")}`}
           variant="panel"
           icon={FiDollarSign}
           iconColor={dashboardPalette.warning}
@@ -290,7 +325,7 @@ const SuperAdminProductsPage = observer(() => {
 
       {/* Main Content Area */}
       <Box w="100%">
-        {/* Clean Balanced Toolbar: [Left: Stock Filter Buttons + Search Bar adjacent] ----- [Right: Category & View Switcher] */}
+        {/* Balanced Toolbar */}
         <Flex
           justify="space-between"
           align="center"
@@ -299,89 +334,38 @@ const SuperAdminProductsPage = observer(() => {
           mb={5}
           px={0.5}
         >
-          {/* Left Cluster: Filters + Search Bar starting immediately next to them */}
+          {/* Left Cluster: Filters + Search Bar */}
           <HStack spacing={3} flexWrap="wrap" flex={1} align="center">
             {/* Quick Stock Filter Buttons */}
             <HStack spacing={2} flexWrap="wrap">
-              <Button
-                size="sm"
-                h="38px"
-                px={4}
-                bg={stockFilter === "all" ? "var(--color-primary, #065F68)" : "transparent"}
-                color={stockFilter === "all" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
-                border="1px solid"
-                borderColor={stockFilter === "all" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
-                _hover={{
-                  bg: stockFilter === "all" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "var(--color-primary, #065F68)",
-                }}
-                borderRadius="12px"
-                fontWeight="600"
-                fontSize="xs"
-                onClick={() => setStockFilter("all")}
-              >
-                All ({totalProducts})
-              </Button>
-              <Button
-                size="sm"
-                h="38px"
-                px={4}
-                bg={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "transparent"}
-                color={stockFilter === "in_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
-                border="1px solid"
-                borderColor={stockFilter === "in_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
-                _hover={{
-                  bg: stockFilter === "in_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "var(--color-primary, #065F68)",
-                }}
-                borderRadius="12px"
-                fontWeight="600"
-                fontSize="xs"
-                onClick={() => setStockFilter("in_stock")}
-              >
-                In Stock ({inStockCount})
-              </Button>
-              <Button
-                size="sm"
-                h="38px"
-                px={4}
-                bg={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "transparent"}
-                color={stockFilter === "low_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
-                border="1px solid"
-                borderColor={stockFilter === "low_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
-                _hover={{
-                  bg: stockFilter === "low_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "var(--color-primary, #065F68)",
-                }}
-                borderRadius="12px"
-                fontWeight="600"
-                fontSize="xs"
-                onClick={() => setStockFilter("low_stock")}
-              >
-                Low Stock ({lowStockCount})
-              </Button>
-              <Button
-                size="sm"
-                h="38px"
-                px={4}
-                bg={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "transparent"}
-                color={stockFilter === "out_of_stock" ? "white" : "var(--merchant-text-muted, #94a3b8)"}
-                border="1px solid"
-                borderColor={stockFilter === "out_of_stock" ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
-                _hover={{
-                  bg: stockFilter === "out_of_stock" ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
-                  borderColor: "var(--color-primary, #065F68)",
-                }}
-                borderRadius="12px"
-                fontWeight="600"
-                fontSize="xs"
-                onClick={() => setStockFilter("out_of_stock")}
-              >
-                Out of Stock ({outOfStockCount})
-              </Button>
+              {STOCK_FILTERS.map(({ key, label }) => {
+                const isActive = stockFilter === key;
+                return (
+                  <Button
+                    key={key}
+                    size="sm"
+                    h="38px"
+                    px={4}
+                    bg={isActive ? "var(--color-primary, #065F68)" : "transparent"}
+                    color={isActive ? "white" : "var(--merchant-text-muted, #94a3b8)"}
+                    border="1px solid"
+                    borderColor={isActive ? "var(--color-primary, #065F68)" : "var(--merchant-border, #1f2e46)"}
+                    _hover={{
+                      bg: isActive ? "var(--color-primary-hover, #044249)" : "rgba(255, 255, 255, 0.04)",
+                      borderColor: "var(--color-primary, #065F68)",
+                    }}
+                    borderRadius="12px"
+                    fontWeight="600"
+                    fontSize="xs"
+                    onClick={() => setStockFilter(key)}
+                  >
+                    {label} ({loadingStats ? "…" : stockCounts[key]})
+                  </Button>
+                );
+              })}
             </HStack>
 
-            {/* Search Bar immediately next to the filter buttons */}
+            {/* Search Bar */}
             <InputGroup size="sm" maxW={{ base: "100%", md: "280px", lg: "320px" }}>
               <InputLeftElement pointerEvents="none" h="38px">
                 <Icon as={FiSearch} color="gray.400" />
@@ -389,7 +373,7 @@ const SuperAdminProductsPage = observer(() => {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products by name, shop..."
+                placeholder="Search products by name, sku, brand..."
                 borderRadius="12px"
                 h="38px"
                 fontSize="sm"
@@ -417,30 +401,11 @@ const SuperAdminProductsPage = observer(() => {
 
           {/* Right: Category Dropdown & View Mode Switcher */}
           <HStack spacing={2.5} justify="flex-end">
-            {categoryOptions.length > 0 && (
-              <Select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                borderRadius="12px"
-                h="38px"
-                size="sm"
-                maxW="170px"
-                fontSize="xs"
-                fontWeight="600"
-                bg="var(--merchant-surface-alt)"
-                borderColor="var(--merchant-border-strong)"
-                color="var(--merchant-text)"
-              >
-                <option value="all" style={{ background: "#0d1522", color: "#ffffff" }}>
-                  All Categories
-                </option>
-                {categoryOptions.map(([id, name]) => (
-                  <option key={id} value={id} style={{ background: "#0d1522", color: "#ffffff" }}>
-                    {name}
-                  </option>
-                ))}
-              </Select>
-            )}
+            <SearchableCategorySelect
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              isSuperAdmin={true}
+            />
 
             {/* View Mode Toggle Switcher */}
             <ButtonGroup isAttached size="sm" variant="outline" borderRadius="12px">
@@ -491,10 +456,10 @@ const SuperAdminProductsPage = observer(() => {
               </Box>
             ))}
           </SimpleGrid>
-        ) : filteredProducts.length > 0 ? (
+        ) : products.length > 0 ? (
           viewMode === "grid" ? (
             <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 4 }} spacing={{ base: 3.5, md: 4.5 }}>
-              {filteredProducts.map((product: any) => (
+              {products.map((product: any) => (
                 <ProductCard
                   key={product._id}
                   product={product}
@@ -526,7 +491,7 @@ const SuperAdminProductsPage = observer(() => {
             >
               <CustomTable
                 columns={ProductColumns}
-                data={filteredProducts}
+                data={products}
                 loading={loading}
                 actions={tableActions}
                 serial={{ show: true, text: "S.No." }}
@@ -560,11 +525,11 @@ const SuperAdminProductsPage = observer(() => {
               No products found
             </Text>
             <Text fontSize="sm" color="var(--merchant-text-muted, #94a3b8)" mt={1} maxW="sm" mx="auto">
-              {searchQuery || selectedCategory !== "all" || stockFilter !== "all"
+              {hasActiveFilters
                 ? "Try clearing your search query or selecting a different filter."
                 : "No products are currently recorded in the marketplace."}
             </Text>
-            {(searchQuery || selectedCategory !== "all" || stockFilter !== "all") && (
+            {hasActiveFilters && (
               <Button
                 size="sm"
                 variant="outline"
@@ -572,11 +537,7 @@ const SuperAdminProductsPage = observer(() => {
                 mt={3.5}
                 borderColor="var(--merchant-border-strong, #1f2e46)"
                 color="var(--merchant-text, #ffffff)"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                  setStockFilter("all");
-                }}
+                onClick={handleResetFilters}
               >
                 Reset Filters
               </Button>

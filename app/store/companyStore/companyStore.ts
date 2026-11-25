@@ -15,6 +15,7 @@ class CompanyStores {
   error: string | null = null;
   shopsCache: any = null;
   lastShopsPayload: string | null = null;
+  shopsInflightPromise: Promise<any> | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -111,17 +112,26 @@ class CompanyStores {
       return this.shopsCache;
     }
 
-    this.isLoading = true;
-    try {
-      const response = await axios.post(`/company`, payload);
-      this.shopsCache = response.data;
-      this.lastShopsPayload = currentPayload;
-      return response.data;
-    } catch (err: any) {
-      return Promise.reject(err?.response?.data || err.message);
-    } finally {
-      this.isLoading = false;
+    if (!forceRefresh && this.shopsInflightPromise && this.lastShopsPayload === currentPayload) {
+      return this.shopsInflightPromise;
     }
+
+    this.isLoading = true;
+    this.lastShopsPayload = currentPayload;
+    this.shopsInflightPromise = (async () => {
+      try {
+        const response = await axios.post(`/company`, payload);
+        this.shopsCache = response.data;
+        return response.data;
+      } catch (err: any) {
+        return Promise.reject(err?.response?.data || err.message);
+      } finally {
+        this.isLoading = false;
+        this.shopsInflightPromise = null;
+      }
+    })();
+
+    return this.shopsInflightPromise;
   };
 
   getShopStats = async () => {
