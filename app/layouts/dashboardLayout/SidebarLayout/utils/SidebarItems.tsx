@@ -72,6 +72,13 @@ const sidebarDatas: SidebarItem[] = [
     role: ["superAdmin"],
   },
   {
+    id: 107,
+    name: "Users",
+    icon: <FaUsers />,
+    url: "/dashboard/super-admin/users",
+    role: ["superAdmin"],
+  },
+  {
     id: 105,
     name: "Offers",
     icon: <FaTag />,
