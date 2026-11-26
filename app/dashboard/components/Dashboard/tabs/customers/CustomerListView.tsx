@@ -74,6 +74,7 @@ export interface CustomerListViewProps {
   buyerOverview: { receivable: number; payable: number; active: number };
   isCompact: boolean;
   canUseDeviceContactImport: boolean;
+  isShopApproved?: boolean;
   onOpenAddBuyer: () => void;
   onOpenImport: () => void;
   onSelectBuyer: (buyer: BuyerProfile) => void;
@@ -96,6 +97,7 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
   buyerOverview,
   isCompact,
   canUseDeviceContactImport,
+  isShopApproved = true,
   onOpenAddBuyer,
   onOpenImport,
   onSelectBuyer,
@@ -166,6 +168,8 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
               h="38px"
               px={4}
               {...merchantPrimaryButtonProps}
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add customers" : undefined}
             >
               Add {partySingularLabel}
             </Button>
@@ -189,6 +193,8 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
               size="sm"
               {...merchantPrimaryButtonProps}
               borderRadius="10px"
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add customers" : undefined}
               onClick={onOpenAddBuyer}
             />
           </HStack>

@@ -186,8 +186,13 @@ const ProductsPage = observer(() => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailProduct, setDetailProduct] = useState<any | null>(null);
 
-  const isSuperAdmin = auth.user?.role === "superAdmin";
+  const isSuperAdmin = auth.user?.role === "superAdmin" || auth.user?.type === "superAdmin";
+  const isAdmin = isSuperAdmin || auth.user?.role === "admin" || auth.user?.type === "admin";
   const hasCompany = Boolean(auth.company || auth.user?.company);
+
+  const shopCompany = auth.company || auth.user?.company;
+  const reviewStatus = typeof shopCompany === "object" ? shopCompany?.reviewStatus : null;
+  const isShopApproved = isAdmin || reviewStatus === "approved";
 
   // Shop categories allowed for seller
   const shopCategoryTokens = useMemo(() => {
@@ -332,6 +337,17 @@ const ProductsPage = observer(() => {
   }, [products, selectedProductId]);
 
   const handleOpenCreate = () => {
+    if (!isShopApproved) {
+      toast({
+        title: "Shop Under Review",
+        description:
+          "Your shop is currently waiting for admin approval. You can create products once your shop is approved.",
+        status: "warning",
+        duration: 4500,
+        isClosable: true,
+      });
+      return;
+    }
     setSelectedProductId(null);
     setDetailProduct(null);
     onOpen();
@@ -380,6 +396,19 @@ const ProductsPage = observer(() => {
 
   const handleSubmit = async (values: any, actions: any) => {
     try {
+      if (!selectedProductId && !isShopApproved) {
+        toast({
+          title: "Shop Under Review",
+          description:
+            "Your shop is currently waiting for admin approval. You can create products once your shop is approved.",
+          status: "warning",
+          duration: 4500,
+          isClosable: true,
+        });
+        actions.setSubmitting(false);
+        return;
+      }
+
       const companyId =
         auth.company?._id ||
         auth.company ||
@@ -494,6 +523,8 @@ const ProductsPage = observer(() => {
               {...merchantPrimaryButtonProps}
               h="38px"
               px={4}
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add products" : undefined}
             >
               Add Product
             </Button>
@@ -515,6 +546,8 @@ const ProductsPage = observer(() => {
               size="sm"
               {...merchantPrimaryButtonProps}
               onClick={handleOpenCreate}
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add products" : undefined}
             />
           </HStack>
         }

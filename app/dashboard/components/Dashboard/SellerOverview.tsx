@@ -12,6 +12,7 @@ import {
   SimpleGrid,
   Text,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
@@ -176,6 +177,7 @@ const BASE_QUICK_ACTIONS = [
 
 const SellerOverview = observer(() => {
   const router = useRouter();
+  const toast = useToast();
   const { auth, companyStore } = stores;
   const companyId = auth.user?.company?._id || auth.user?.company;
 
@@ -208,6 +210,40 @@ const SellerOverview = observer(() => {
       normalizedRoles.includes("superAdmin")
     );
   }, [auth.user]);
+
+  const isAdmin = useMemo(() => {
+    const user = auth.user;
+    const normalizedRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role].filter(Boolean);
+    return (
+      isSuperAdmin ||
+      user?.type === "admin" ||
+      user?.role === "admin" ||
+      normalizedRoles.includes("admin")
+    );
+  }, [auth.user, isSuperAdmin]);
+
+  const isShopApproved = useMemo(() => {
+    if (isAdmin) return true;
+    const reviewStatus = dashboardData.company?.reviewStatus || (typeof auth.user?.company === "object" ? (auth.user?.company as any)?.reviewStatus : null);
+    return reviewStatus === "approved";
+  }, [isAdmin, dashboardData.company?.reviewStatus, auth.user?.company]);
+
+  const handleAddProductClick = useCallback(() => {
+    if (!isShopApproved) {
+      toast({
+        title: "Shop Under Review",
+        description:
+          "Your shop is currently waiting for admin approval. You can create products once your shop is approved.",
+        status: "warning",
+        duration: 4500,
+        isClosable: true,
+      });
+      return;
+    }
+    router.push("/dashboard/products");
+  }, [isShopApproved, router, toast]);
 
   const quickActions = useMemo(() => {
     if (isSuperAdmin) {
@@ -467,7 +503,9 @@ const SellerOverview = observer(() => {
               fontWeight={600}
               boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
               transition="all 0.15s ease"
-              onClick={() => router.push("/dashboard/products")}
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add products" : undefined}
+              onClick={handleAddProductClick}
             >
               Add Product
             </Button>
@@ -498,7 +536,9 @@ const SellerOverview = observer(() => {
               _hover={{ bg: "var(--color-primary-hover, #044249)" }}
               color="white"
               borderRadius="full"
-              onClick={() => router.push("/dashboard/products")}
+              opacity={!isShopApproved ? 0.65 : 1}
+              title={!isShopApproved ? "Shop approval required to add products" : undefined}
+              onClick={handleAddProductClick}
             />
             <IconButton
               size="sm"

@@ -220,6 +220,38 @@ const CustomersTab: React.FC = observer(() => {
   }, [selectedLedgerBuyer]);
 
   const companyId = useMemo(() => auth.company?._id || auth.company || "", [auth.company]);
+  const isSuperAdmin = useMemo(() => {
+    const user = auth.user;
+    const normalizedRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role].filter(Boolean);
+    return (
+      user?.type === "superAdmin" ||
+      user?.role === "superAdmin" ||
+      normalizedRoles.includes("superAdmin")
+    );
+  }, [auth.user]);
+
+  const isAdmin = useMemo(() => {
+    const user = auth.user;
+    const normalizedRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role].filter(Boolean);
+    return (
+      isSuperAdmin ||
+      user?.type === "admin" ||
+      user?.role === "admin" ||
+      normalizedRoles.includes("admin")
+    );
+  }, [auth.user, isSuperAdmin]);
+
+  const isShopApproved = useMemo(() => {
+    if (isAdmin) return true;
+    const company = auth.company || auth.user?.company;
+    const reviewStatus = typeof company === "object" ? (company as any)?.reviewStatus : null;
+    return reviewStatus === "approved";
+  }, [isAdmin, auth.company, auth.user?.company]);
+
   const useCompactLedgerView = isMobileLedgerView || isAndroidRuntime || isMobileDevice;
   const useCompactBuyerView = !isDesktopBuyerView;
   const canUseDeviceContactImport = isAndroidRuntime;
@@ -766,8 +798,32 @@ const CustomersTab: React.FC = observer(() => {
   };
 
   const openManualBuyerModal = () => {
+    if (!isShopApproved) {
+      toast({
+        title: "Shop Under Review",
+        description: `Your shop is waiting for admin approval. You can add ${partyPluralLabel.toLowerCase()} once your shop is approved.`,
+        status: "warning",
+        duration: 4500,
+        isClosable: true,
+      });
+      return;
+    }
     resetForm();
     onOpen();
+  };
+
+  const handleOpenImport = () => {
+    if (!isShopApproved) {
+      toast({
+        title: "Shop Under Review",
+        description: `Your shop is waiting for admin approval. You can import ${partyPluralLabel.toLowerCase()} once your shop is approved.`,
+        status: "warning",
+        duration: 4500,
+        isClosable: true,
+      });
+      return;
+    }
+    onImportOpen();
   };
 
   const openContactReviewForPickedContact = (contact: BuyerImportContact) => {
@@ -1116,6 +1172,17 @@ const CustomersTab: React.FC = observer(() => {
     importContactsWith(fetchContactsFromDevice, "No contacts were returned from the device.");
 
   const handleCreateBuyer = async () => {
+    if (!isShopApproved) {
+      toast({
+        title: "Shop Under Review",
+        description: `Your shop is waiting for admin approval. You can add ${partyPluralLabel.toLowerCase()} once your shop is approved.`,
+        status: "warning",
+        duration: 4500,
+        isClosable: true,
+      });
+      return;
+    }
+
     if (!companyId) {
       toast({
         title: "Company not found",
@@ -1690,8 +1757,9 @@ const CustomersTab: React.FC = observer(() => {
             buyerOverview={buyerOverview}
             isCompact={useCompactBuyerView}
             canUseDeviceContactImport={canUseDeviceContactImport}
+            isShopApproved={isShopApproved}
             onOpenAddBuyer={openManualBuyerModal}
-            onOpenImport={onImportOpen}
+            onOpenImport={handleOpenImport}
             onSelectBuyer={openLedgerView}
             onPageChange={(newPage) => {
               setPage(newPage);
