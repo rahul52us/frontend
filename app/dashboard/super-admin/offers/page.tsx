@@ -37,10 +37,9 @@ import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPale
 import {
   getMerchantTableProps,
   MerchantBadge,
-  merchantPrimaryButtonProps,
+  merchantGhostButtonProps,
   MerchantPageHeader,
   MerchantPageShell,
-  MerchantPanel,
   MerchantStatCard,
 } from "../../components/common/merchantDashboardUI";
 
@@ -215,7 +214,21 @@ const OffersPage = () => {
           <Button
             leftIcon={<FiPlusCircle />}
             onClick={handleAddClick}
-            {...merchantPrimaryButtonProps}
+            bg="var(--color-primary, #065F68)"
+            _hover={{
+              bg: "var(--color-primary-hover, #044249)",
+              transform: "translateY(-1px)",
+              boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+            }}
+            _active={{ bg: "var(--color-primary-dark, #032b30)" }}
+            color="white"
+            borderRadius="12px"
+            fontSize="sm"
+            fontWeight={600}
+            h="40px"
+            px={4}
+            boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
+            transition="all 0.15s ease"
           >
             Add Offer
           </Button>
@@ -223,7 +236,9 @@ const OffersPage = () => {
         mobileActions={
           <Button
             size="sm"
-            colorScheme="brand"
+            bg="var(--color-primary, #065F68)"
+            _hover={{ bg: "var(--color-primary-hover, #044249)" }}
+            color="white"
             borderRadius="full"
             leftIcon={<FiPlusCircle />}
             onClick={handleAddClick}
@@ -274,191 +289,219 @@ const OffersPage = () => {
         />
       </SimpleGrid>
 
-      {/* Main Panel */}
-      <MerchantPanel p={{ base: 3.5, md: 6 }}>
-        {/* <Flex
-          justify="space-between"
-          align="center"
-          gap={3}
-          mb={4}
-          flexWrap="wrap"
-        >
-          <HStack spacing={2} flexWrap="wrap">
-            <Text fontSize="lg" fontWeight="800" color={textCol}>
-              Offers Registry
-            </Text>
-            <Badge
-              bg={shellBg}
-              color={textMuted}
-              borderRadius="full"
-              px={2.5}
-              py={0.5}
-              fontSize="xs"
-              fontWeight="700"
-            >
-              {totalOffers} offers
-            </Badge>
-          </HStack>
-        </Flex> */}
+      {/* Filter and Count Summary Bar matching Shops & Users */}
+      <Flex
+        justify="space-between"
+        align="center"
+        mb={4}
+        flexWrap="wrap"
+        gap={3}
+      >
+        <HStack spacing={2} align="center">
+          <Badge
+            bg="var(--color-primary, #065F68)"
+            color="white"
+            borderRadius="10px"
+            px={3.5}
+            py={1.5}
+            fontSize="xs"
+            fontWeight="700"
+            boxShadow="0 2px 8px rgba(0, 0, 0, 0.25)"
+          >
+            All Offers ({totalOffers})
+          </Badge>
+        </HStack>
 
-        {/* Desktop View: Clean CustomTable */}
-        <Box display={{ base: "none", md: "block" }}>
-          <CustomTable
-            title={`All Offers (${totalOffers})`}
-            data={offerStore.offers}
-            columns={columns}
-            loading={offerStore.loading}
-            actions={tableActions}
-            serial={{ show: true, text: "S.No." }}
-            {...getMerchantTableProps("62vh")}
-          />
-        </Box>
+        <HStack spacing={2} flexWrap="wrap">
+          <MerchantBadge tone={totalOffers > 0 ? "soft" : "soft"}>
+            {totalOffers} In View
+          </MerchantBadge>
+          <Text fontSize="xs" color="var(--merchant-text-muted)" fontWeight="600">
+            {totalOffers} total offers recorded
+          </Text>
+        </HStack>
+      </Flex>
 
-        {/* Mobile View: High-Quality Offer Cards */}
-        <Box display={{ base: "block", md: "none" }}>
-          {offerStore.loading ? (
-            <VStack spacing={3} align="stretch">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Box
-                  key={i}
-                  p={4}
-                  borderRadius="18px"
-                  border="1px solid"
-                  borderColor={borderCol}
-                  bg={surfaceBg}
-                >
-                  <HStack spacing={3} mb={3}>
-                    <Circle size="40px" bg={shellBg} />
-                    <Box flex="1">
-                      <Box h="14px" bg={shellBg} w="60%" borderRadius="md" mb={2} />
-                      <Box h="10px" bg={shellBg} w="35%" borderRadius="md" />
+      {/* Desktop View: Custom Table with clean outer container matching Shops and Users */}
+      <Box
+        display={{ base: "none", md: "block" }}
+        dir="ltr"
+        w="100%"
+        sx={{
+          "& > div": {
+            bg: "transparent !important",
+            boxShadow: "none !important",
+            borderRadius: "0 !important",
+            "& > div": {
+              px: "0 !important",
+              py: "0 !important",
+              bg: "transparent !important",
+              "& > div": {
+                borderRadius: "16px !important",
+              },
+            },
+          },
+        }}
+      >
+        <CustomTable
+          data={offerStore.offers}
+          columns={columns}
+          loading={offerStore.loading}
+          actions={tableActions}
+          {...getMerchantTableProps("62vh")}
+        />
+      </Box>
+
+      {/* Mobile View: High-Quality Activity Cards */}
+      <Box display={{ base: "block", md: "none" }}>
+        {offerStore.loading ? (
+          <VStack spacing={3} align="stretch">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Box
+                key={i}
+                p={4}
+                borderRadius="18px"
+                border="1px solid"
+                borderColor={borderCol}
+                bg={surfaceBg}
+              >
+                <HStack spacing={3} mb={3}>
+                  <Circle size="40px" bg={shellBg} />
+                  <Box flex="1">
+                    <Box h="14px" bg={shellBg} w="60%" borderRadius="md" mb={2} />
+                    <Box h="10px" bg={shellBg} w="35%" borderRadius="md" />
+                  </Box>
+                </HStack>
+                <HStack spacing={2}>
+                  <Box h="22px" bg={shellBg} w="60px" borderRadius="full" />
+                  <Box h="22px" bg={shellBg} w="60px" borderRadius="full" />
+                </HStack>
+              </Box>
+            ))}
+          </VStack>
+        ) : offerStore.offers.length > 0 ? (
+          <VStack spacing={3} align="stretch">
+            {offerStore.offers.map((offer: any) => (
+              <Box
+                key={offer._id || offer.offerId}
+                p={4}
+                borderRadius="18px"
+                border="1px solid"
+                borderColor={borderCol}
+                bg={surfaceBg}
+                boxShadow="0 2px 8px rgba(15, 23, 42, 0.04)"
+                transition="all 0.2s ease"
+                _hover={{ borderColor: dashboardPalette.accent }}
+              >
+                <Flex justify="space-between" align="start" gap={2} mb={2.5}>
+                  <HStack spacing={3} align="center" minW={0}>
+                    <Circle
+                      size="38px"
+                      bg={offer.isActive ? "rgba(70, 201, 139, 0.12)" : shellBg}
+                      flexShrink={0}
+                    >
+                      <Icon
+                        as={FiGift}
+                        boxSize={4}
+                        color={offer.isActive ? "green.500" : textMuted}
+                      />
+                    </Circle>
+                    <Box minW={0}>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="700"
+                        color={textCol}
+                        noOfLines={1}
+                      >
+                        {offer.name}
+                      </Text>
+                      <Text fontSize="xs" color={textMuted} fontWeight="600">
+                        ID: {offer.offerId || "N/A"}
+                      </Text>
                     </Box>
                   </HStack>
-                  <HStack spacing={2}>
-                    <Box h="22px" bg={shellBg} w="60px" borderRadius="full" />
-                    <Box h="22px" bg={shellBg} w="60px" borderRadius="full" />
+
+                  <HStack spacing={1}>
+                    <IconButton
+                      size="sm"
+                      variant="ghost"
+                      color="var(--color-primary, #065F68)"
+                      _hover={{
+                        bg: "var(--color-primary, #065F68)",
+                        color: "white",
+                      }}
+                      borderRadius="full"
+                      icon={<FiEdit3 />}
+                      aria-label="Edit offer"
+                      onClick={() => handleEditClick(offer)}
+                    />
+                    <IconButton
+                      size="sm"
+                      variant="ghost"
+                      colorScheme="red"
+                      borderRadius="full"
+                      icon={<FiTrash2 />}
+                      aria-label="Delete offer"
+                      onClick={() => handleDeleteClick(offer)}
+                    />
                   </HStack>
-                </Box>
-              ))}
-            </VStack>
-          ) : offerStore.offers.length > 0 ? (
-            <VStack spacing={3} align="stretch">
-              {offerStore.offers.map((offer: any) => (
-                <Box
-                  key={offer._id || offer.offerId}
-                  p={4}
-                  borderRadius="18px"
-                  border="1px solid"
-                  borderColor={borderCol}
-                  bg={surfaceBg}
-                  boxShadow="0 2px 8px rgba(15, 23, 42, 0.04)"
-                  transition="all 0.2s ease"
-                  _hover={{ borderColor: dashboardPalette.accent }}
-                >
-                  <Flex justify="space-between" align="start" gap={2} mb={2.5}>
-                    <HStack spacing={3} align="center" minW={0}>
-                      <Circle
-                        size="38px"
-                        bg={offer.isActive ? "rgba(70, 201, 139, 0.12)" : shellBg}
-                        flexShrink={0}
-                      >
-                        <Icon
-                          as={FiGift}
-                          boxSize={4}
-                          color={offer.isActive ? "green.500" : textMuted}
-                        />
-                      </Circle>
-                      <Box minW={0}>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="700"
-                          color={textCol}
-                          noOfLines={1}
-                        >
-                          {offer.name}
-                        </Text>
-                        <Text fontSize="xs" color={textMuted} fontWeight="600">
-                          ID: {offer.offerId || "N/A"}
-                        </Text>
-                      </Box>
-                    </HStack>
+                </Flex>
 
-                    <HStack spacing={1}>
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="brand"
-                        borderRadius="full"
-                        icon={<FiEdit3 />}
-                        aria-label="Edit offer"
-                        onClick={() => handleEditClick(offer)}
-                      />
-                      <IconButton
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="red"
-                        borderRadius="full"
-                        icon={<FiTrash2 />}
-                        aria-label="Delete offer"
-                        onClick={() => handleDeleteClick(offer)}
-                      />
-                    </HStack>
-                  </Flex>
+                {offer.description && (
+                  <Text fontSize="xs" color={textMuted} mb={3} noOfLines={2}>
+                    {offer.description}
+                  </Text>
+                )}
 
-                  {offer.description && (
-                    <Text fontSize="xs" color={textMuted} mb={3} noOfLines={2}>
-                      {offer.description}
-                    </Text>
-                  )}
+                <Divider my={2.5} borderColor={borderCol} />
 
-                  <Divider my={2.5} borderColor={borderCol} />
-
-                  <Flex justify="space-between" align="center" flexWrap="wrap" gap={1.5}>
-                    <HStack spacing={1.5} flexWrap="wrap">
-                      <MerchantBadge tone="accent" textTransform="capitalize">
-                        {offer.type || "standard"}
-                      </MerchantBadge>
-                      {offer.isDefault && (
-                        <MerchantBadge tone="accent">
-                          ★ Default
-                        </MerchantBadge>
-                      )}
-                    </HStack>
-
-                    <MerchantBadge tone={offer.isActive ? "success" : "danger"}>
-                      {offer.isActive ? "Active" : "Inactive"}
+                <Flex justify="space-between" align="center" flexWrap="wrap" gap={1.5}>
+                  <HStack spacing={1.5} flexWrap="wrap">
+                    <MerchantBadge tone="accent" textTransform="capitalize">
+                      {offer.type || "standard"}
                     </MerchantBadge>
-                  </Flex>
-                </Box>
-              ))}
-            </VStack>
-          ) : (
-            <Box
-              py={10}
-              textAlign="center"
-              bg={shellBg}
-              borderRadius="16px"
-              border="1px dashed"
-              borderColor={borderCol}
+                    {offer.isDefault && (
+                      <MerchantBadge tone="accent">
+                        ★ Default
+                      </MerchantBadge>
+                    )}
+                  </HStack>
+
+                  <MerchantBadge tone={offer.isActive ? "success" : "danger"}>
+                    {offer.isActive ? "Active" : "Inactive"}
+                  </MerchantBadge>
+                </Flex>
+              </Box>
+            ))}
+          </VStack>
+        ) : (
+          <Box
+            py={10}
+            textAlign="center"
+            bg={shellBg}
+            borderRadius="16px"
+            border="1px dashed"
+            borderColor={borderCol}
+          >
+            <Icon as={FiGift} boxSize={7} color={textMuted} mb={2} />
+            <Text fontSize="sm" fontWeight="700" color={textCol}>
+              No offers registered
+            </Text>
+            <Button
+              size="sm"
+              bg="var(--color-primary, #065F68)"
+              _hover={{ bg: "var(--color-primary-hover, #044249)" }}
+              color="white"
+              borderRadius="full"
+              mt={3}
+              leftIcon={<FiPlusCircle />}
+              onClick={handleAddClick}
             >
-              <Icon as={FiGift} boxSize={7} color={textMuted} mb={2} />
-              <Text fontSize="sm" fontWeight="700" color={textCol}>
-                No offers registered
-              </Text>
-              <Button
-                size="sm"
-                colorScheme="brand"
-                borderRadius="full"
-                mt={3}
-                leftIcon={<FiPlusCircle />}
-                onClick={handleAddClick}
-              >
-                Create First Offer
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </MerchantPanel>
+              Create First Offer
+            </Button>
+          </Box>
+        )}
+      </Box>
 
       {/* Offer Form Drawer (BottomSheetDrawer on mobile, CustomDrawer on desktop) */}
       {isOpen && (

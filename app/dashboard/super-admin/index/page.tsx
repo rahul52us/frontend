@@ -577,26 +577,15 @@ const SuperAdminDashboard = observer(() => {
                     </>
                 }
                 badges={
-                    <>
-                        <AttentionChip
-                            icon={FiClock}
-                            label="Moderation"
-                            count={alerts.moderationQueue}
-                            color={dashboardPalette.warning}
-                            bg="rgba(224, 179, 91, 0.14)"
-                            loading={loading}
-                            onClick={() => router.push("/dashboard/super-admin/shops")}
-                        />
-                        <AttentionChip
-                            icon={FiBell}
-                            label="Unread"
-                            count={alerts.unreadNotifications}
-                            color={dashboardPalette.danger}
-                            bg="rgba(239, 107, 107, 0.14)"
-                            loading={loading}
-                            onClick={() => router.push("/dashboard/super-admin/notifications")}
-                        />
-                    </>
+                    <AttentionChip
+                        icon={FiClock}
+                        label="Moderation"
+                        count={alerts.moderationQueue}
+                        color={dashboardPalette.warning}
+                        bg="rgba(224, 179, 91, 0.14)"
+                        loading={loading}
+                        onClick={() => router.push("/dashboard/super-admin/shops")}
+                    />
                 }
                 actions={
                     <Button

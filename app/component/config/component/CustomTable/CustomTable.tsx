@@ -345,203 +345,179 @@ const CustomTable: React.FC<CustomTableProps> = ({
   return (
     <Box
       bg={cardBg}
-      borderRadius="3xl"
-      // boxShadow="0 10px 40px -15px rgba(0, 0, 0, 0.15)"
-      shadow={'md'}
-      // border="1px solid"
-      // borderColor={borderColor}
+      borderRadius={tableProps?.compact ? "xl" : "3xl"}
+      shadow={tableProps?.compact ? "none" : "md"}
+      border={tableProps?.compact ? "none" : undefined}
       overflow="hidden"
       transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+      {...tableProps?.cardBox}
     >
       {/* HEADER */}
-      <Flex
-        justify="space-between"
-        align="center"
-        pl={4}
-        pt={2}
-        // bg={headerBg}
-        borderBottom="1px solid"
-        borderColor={borderColor}
-      >
-        <Flex direction="column" gap={0.5} >
-          {title && (
-            <Heading
-              size="md"
-              color={accent}
-              fontWeight="600"
-              letterSpacing="-0.02em"
-            >
-              {title}
-            </Heading>
-          )}
-          {subTitle && (
-            <Text fontSize="sm" color="gray.500" noOfLines={1}>
-              {subTitle}
-            </Text>
-          )}
-        </Flex>
+      {(title ||
+        subTitle ||
+        (!isMobile && actions?.search?.show) ||
+        (actions?.datePicker?.show && !isMobile) ||
+        actions?.downloadExcel?.show ||
+        actions?.bulkActions?.show ||
+        actions?.multidropdown?.show ||
+        actions?.actionBtn?.addKey?.showAddButton ||
+        actions?.resetData?.show) && (
+        <Flex
+          justify="space-between"
+          align="center"
+          pl={4}
+          pt={2}
+          pb={2}
+          borderBottom="1px solid"
+          borderColor={borderColor}
+        >
+          <Flex direction="column" gap={0.5} >
+            {title && (
+              <Heading
+                size="md"
+                color={accent}
+                fontWeight="600"
+                letterSpacing="-0.02em"
+              >
+                {title}
+              </Heading>
+            )}
+            {subTitle && (
+              <Text fontSize="sm" color="gray.500" noOfLines={1}>
+                {subTitle}
+              </Text>
+            )}
+          </Flex>
 
-        <Flex align="center" gap={3} ml="auto" flexWrap="wrap">
-          {!isMobile && actions?.search?.show && (
-            <Input
-              placeholder={actions?.search?.placeholder || "Search..."}
-              value={actions?.search?.searchValue}
-              onChange={actions?.search?.onSearchChange}
-              size="sm"
-              width="260px"
-              borderRadius="full"
-              bg={useColorModeValue("white", "gray.800")}
-              borderColor={borderColor}
-              _focus={{
-                borderColor: accent,
-                boxShadow: "0 0 0 3px var(--color-primary-ring, rgba(37, 99, 235, 0.2))",
-              }}
-              transition="all 0.2s ease"
-            />
-          )}
-
-          {actions?.datePicker?.show && !isMobile && (
-            <HStack spacing={2} align="center">
-              <CustomDateRange
-                startDate={actions?.datePicker?.date?.startDate}
-                endDate={actions?.datePicker?.date?.endDate}
-                onStartDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "startDate")}
-                onEndDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "endDate")}
+          <Flex align="center" gap={3} ml="auto" flexWrap="wrap">
+            {!isMobile && actions?.search?.show && (
+              <Input
+                placeholder={actions?.search?.placeholder || "Search..."}
+                value={actions?.search?.searchValue}
+                onChange={actions?.search?.onSearchChange}
+                size="sm"
+                width="260px"
+                borderRadius="full"
+                bg={useColorModeValue("white", "gray.800")}
+                borderColor={borderColor}
+                _focus={{
+                  borderColor: accent,
+                  boxShadow: "0 0 0 3px var(--color-primary-ring, rgba(37, 99, 235, 0.2))",
+                }}
+                transition="all 0.2s ease"
               />
-              {actions?.datePicker?.onApply && (
-                <Button
-                  size="sm"
-                  bg="var(--color-primary-600, #1D4ED8)"
-                  color="#FFFFFF"
-                  _hover={{
-                    bg: "var(--color-primary-700, #1E40AF)",
-                    transform: "translateY(-1px)",
-                    shadow: "sm",
-                  }}
-                  _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
-                  borderRadius="full"
-                  px={4}
-                  h="36px"
-                  fontWeight="600"
-                  fontSize="xs"
-                  transition="all 0.2s ease"
-                  onClick={actions?.datePicker?.onApply}
-                >
-                  Apply
-                </Button>
-              )}
-              {actions?.datePicker?.onReset && (
-                <IconButton
-                  size="sm"
-                  aria-label="reset"
-                  icon={<RepeatIcon/>}
-                  variant="outline"
-                  borderColor={borderColor}
-                  color={useColorModeValue("gray.700", "gray.200")}
-                  _hover={{
-                    bg: useColorModeValue("gray.100", "gray.700"),
-                    borderColor: "var(--color-primary-500, #2563EB)",
-                  }}
-                  borderRadius="full"
-                  px={4}
-                  h="36px"
-                  fontWeight="500"
-                  fontSize="xs"
-                  transition="all 0.2s ease"
-                  onClick={actions?.datePicker?.onReset}
+            )}
+
+            {actions?.datePicker?.show && !isMobile && (
+              <HStack spacing={2} align="center">
+                <CustomDateRange
+                  startDate={actions?.datePicker?.date?.startDate}
+                  endDate={actions?.datePicker?.date?.endDate}
+                  onStartDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "startDate")}
+                  onEndDateChange={(e: any) => actions?.datePicker?.onDateChange?.(e, "endDate")}
                 />
-               
-              )}
-            </HStack>
-          )}
-
-          {actions?.downloadExcel?.show && (
-            <Button
-              bg="green.600"
-              color="#FFFFFF"
-              _hover={{ bg: "green.700", transform: "translateY(-1px)", shadow: "md" }}
-              _active={{ bg: "green.800" }}
-              borderRadius="full"
-              leftIcon={<FiDownload />}
-              size="sm"
-              isLoading={actions?.downloadExcel?.loading}
-              onClick={actions?.downloadExcel?.onClick}
-              transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-            >
-              {actions?.downloadExcel?.text || "Download Excel"}
-            </Button>
-          )}
-
-          {actions?.bulkActions?.show && (
-            <HStack spacing={2}>
-              {actions.bulkActions.approve?.show && (
-                <Button
-                  size="sm"
-                  rounded="full"
-                  colorScheme="green"
-                  onClick={actions.bulkActions.approve.onClick}
-                  isDisabled={!actions.bulkActions.selectedCount}
-                >
-                  Bulk Approve ({actions.bulkActions.selectedCount})
-                </Button>
-              )}
-              {actions.bulkActions.reject?.show && (
-                <Button
-                  size="sm"
-                  rounded="full"
-                  borderColor="red.500"
-                  _hover={{bg:"red.50"}}
-                  color="red.500"
-                  variant="outline"
-                  onClick={actions.bulkActions.reject.onClick}
-                  isDisabled={!actions.bulkActions.selectedCount}
-                >
-                  Bulk Reject ({actions.bulkActions.selectedCount})
-                </Button>
-              )}
-            </HStack>
-          )}
-
-          {actions?.multidropdown?.show && <MultiDropdown {...actions?.multidropdown} />}
-
-          {(actions?.actionBtn?.addKey?.showAddButton || actions?.resetData?.show) && (
-            <>
-              {actions?.actionBtn?.addKey?.showAddButton && actions?.resetData?.show && !actions?.actionBtn?.addKey?.showAsButton ? (
-                <Menu>
-                  <MenuButton
-                    as={Button}
+                {actions?.datePicker?.onApply && (
+                  <Button
+                    size="sm"
                     bg="var(--color-primary-600, #1D4ED8)"
                     color="#FFFFFF"
-                    _hover={{ bg: "var(--color-primary-700, #1E40AF)", transform: "translateY(-1px)", shadow: "lg" }}
+                    _hover={{
+                      bg: "var(--color-primary-700, #1E40AF)",
+                      transform: "translateY(-1px)",
+                      shadow: "sm",
+                    }}
                     _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
                     borderRadius="full"
-                    leftIcon={<IoMdAdd />}
-                    size="md"
-                    transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                    px={4}
+                    h="36px"
+                    fontWeight="600"
+                    fontSize="xs"
+                    transition="all 0.2s ease"
+                    onClick={actions?.datePicker?.onApply}
                   >
-                    Actions
-                  </MenuButton>
-                  <MenuList borderRadius="2xl" py={2} shadow="xl">
-                    <MenuItem
-                      onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
-                      icon={<IoMdAdd />}
-                      fontWeight="medium"
-                    >
-                      {actions?.actionBtn?.addKey?.text || "Add New"}
-                    </MenuItem>
-                    <MenuItem
-                      onClick={actions?.resetData?.function}
-                      icon={<FcClearFilters />}
-                      fontWeight="medium"
-                    >
-                      {actions?.resetData?.text || "Reset Filters"}
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              ) : (
-                <>
-                  {actions?.actionBtn?.addKey?.showAddButton && (
-                    <Button
+                    Apply
+                  </Button>
+                )}
+                {actions?.datePicker?.onReset && (
+                  <IconButton
+                    size="sm"
+                    aria-label="reset"
+                    icon={<RepeatIcon/>}
+                    variant="outline"
+                    borderColor={borderColor}
+                    color={useColorModeValue("gray.700", "gray.200")}
+                    _hover={{
+                      bg: useColorModeValue("gray.100", "gray.700"),
+                      borderColor: "var(--color-primary-500, #2563EB)",
+                    }}
+                    borderRadius="full"
+                    px={4}
+                    h="36px"
+                    fontWeight="500"
+                    fontSize="xs"
+                    transition="all 0.2s ease"
+                    onClick={actions?.datePicker?.onReset}
+                  />
+                 
+                )}
+              </HStack>
+            )}
+
+            {actions?.downloadExcel?.show && (
+              <Button
+                bg="green.600"
+                color="#FFFFFF"
+                _hover={{ bg: "green.700", transform: "translateY(-1px)", shadow: "md" }}
+                _active={{ bg: "green.800" }}
+                borderRadius="full"
+                leftIcon={<FiDownload />}
+                size="sm"
+                isLoading={actions?.downloadExcel?.loading}
+                onClick={actions?.downloadExcel?.onClick}
+                transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+              >
+                {actions?.downloadExcel?.text || "Download Excel"}
+              </Button>
+            )}
+
+            {actions?.bulkActions?.show && (
+              <HStack spacing={2}>
+                {actions.bulkActions.approve?.show && (
+                  <Button
+                    size="sm"
+                    rounded="full"
+                    colorScheme="green"
+                    onClick={actions.bulkActions.approve.onClick}
+                    isDisabled={!actions.bulkActions.selectedCount}
+                  >
+                    Bulk Approve ({actions.bulkActions.selectedCount})
+                  </Button>
+                )}
+                {actions.bulkActions.reject?.show && (
+                  <Button
+                    size="sm"
+                    rounded="full"
+                    borderColor="red.500"
+                    _hover={{bg:"red.50"}}
+                    color="red.500"
+                    variant="outline"
+                    onClick={actions.bulkActions.reject.onClick}
+                    isDisabled={!actions.bulkActions.selectedCount}
+                  >
+                    Bulk Reject ({actions.bulkActions.selectedCount})
+                  </Button>
+                )}
+              </HStack>
+            )}
+
+            {actions?.multidropdown?.show && <MultiDropdown {...actions?.multidropdown} />}
+
+            {(actions?.actionBtn?.addKey?.showAddButton || actions?.resetData?.show) && (
+              <>
+                {actions?.actionBtn?.addKey?.showAddButton && actions?.resetData?.show && !actions?.actionBtn?.addKey?.showAsButton ? (
+                  <Menu>
+                    <MenuButton
+                      as={Button}
                       bg="var(--color-primary-600, #1D4ED8)"
                       color="#FFFFFF"
                       _hover={{ bg: "var(--color-primary-700, #1E40AF)", transform: "translateY(-1px)", shadow: "lg" }}
@@ -550,35 +526,68 @@ const CustomTable: React.FC<CustomTableProps> = ({
                       leftIcon={<IoMdAdd />}
                       size="md"
                       transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
-                      onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
                     >
-                      {actions?.actionBtn?.addKey?.text || "Add New"}
-                    </Button>
-                  )}
-                  {actions?.resetData?.show && (
-                    <Button
-                      variant="outline"
-                      borderRadius="full"
-                      leftIcon={<FcClearFilters />}
-                      size="md"
-                      onClick={actions?.resetData?.function}
-                    >
-                      Reset
-                    </Button>
-                  )}
-                </>
-              )}
-            </>
-          )}
+                      Actions
+                    </MenuButton>
+                    <MenuList borderRadius="2xl" py={2} shadow="xl">
+                      <MenuItem
+                        onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
+                        icon={<IoMdAdd />}
+                        fontWeight="medium"
+                      >
+                        {actions?.actionBtn?.addKey?.text || "Add New"}
+                      </MenuItem>
+                      <MenuItem
+                        onClick={actions?.resetData?.function}
+                        icon={<FcClearFilters />}
+                        fontWeight="medium"
+                      >
+                        {actions?.resetData?.text || "Reset Filters"}
+                      </MenuItem>
+                    </MenuList>
+                  </Menu>
+                ) : (
+                  <>
+                    {actions?.actionBtn?.addKey?.showAddButton && (
+                      <Button
+                        bg="var(--color-primary-600, #1D4ED8)"
+                        color="#FFFFFF"
+                        _hover={{ bg: "var(--color-primary-700, #1E40AF)", transform: "translateY(-1px)", shadow: "lg" }}
+                        _active={{ bg: "var(--color-primary-800, #1E3A8A)" }}
+                        borderRadius="full"
+                        leftIcon={<IoMdAdd />}
+                        size="md"
+                        transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                        onClick={() => actions?.actionBtn?.addKey?.function?.("add")}
+                      >
+                        {actions?.actionBtn?.addKey?.text || "Add New"}
+                      </Button>
+                    )}
+                    {actions?.resetData?.show && (
+                      <Button
+                        variant="outline"
+                        borderRadius="full"
+                        leftIcon={<FcClearFilters />}
+                        size="md"
+                        onClick={actions?.resetData?.function}
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </Flex>
         </Flex>
-      </Flex>
+      )}
 
 
       {/* TABLE */}
       {/* TABLE */}
 <Box
-  px={{ base: 3, md: 5 }}
-  py={{ base: 3, md: 4 }}
+  px={tableProps?.compact ? 0 : { base: 3, md: 5 }}
+  py={tableProps?.compact ? 0 : { base: 3, md: 4 }}
   bg={cardBg}
 >
   <Box

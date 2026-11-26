@@ -34,7 +34,11 @@ import {
     FiRefreshCw,
     FiShield,
     FiShoppingBag,
+    FiCalendar,
+    FiDownload,
+    FiX,
 } from "react-icons/fi";
+import axios from "axios";
 import ConfirmationModal from "../../../component/common/ConfirmationModal/ConfirmationModal";
 import CustomTable from "../../../component/config/component/CustomTable/CustomTable";
 import { dashboardPalette } from "../../../layouts/dashboardLayout/dashboardPalette";
@@ -125,10 +129,60 @@ const ShopsPage = observer(() => {
         totalPages,
         totalShops,
         reviewStatus,
+        startDate,
+        endDate,
+        setStartDate,
+        setEndDate,
         setReviewStatus,
         setCurrentPage,
         fetchShops,
     } = useShopList();
+
+    const [exporting, setExporting] = React.useState(false);
+    const toast = useToast();
+
+    const exportShopsToExcel = async () => {
+        setExporting(true);
+        try {
+            const params: any = {};
+            if (reviewStatus !== "all") params.reviewStatus = reviewStatus;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+
+            const response = await axios.get("/company/export", {
+                params,
+                responseType: "blob",
+            });
+
+            const blob = new Blob([response.data], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", `shops_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            toast({
+                title: "Excel export successful",
+                description: "Shops spreadsheet downloaded successfully",
+                status: "success",
+                duration: 3000,
+            });
+        } catch (err: any) {
+            toast({
+                title: "Export failed",
+                description: err?.response?.data?.message || err?.message || "Failed to export",
+                status: "error",
+                duration: 3000,
+            });
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const { stats, loadingStats, fetchStats } = useShopStats();
 
@@ -159,7 +213,6 @@ const ShopsPage = observer(() => {
     const [reviewingShop, setReviewingShop] = React.useState<any>(null);
     const [viewingShop, setViewingShop] = React.useState<any>(null);
     const [isReviewing, setIsReviewing] = React.useState(false);
-    const toast = useToast();
     const { companyStore } = stores;
 
     const currentTabLabel = reviewTabs.find((tab) => tab.value === reviewStatus)?.label || "Shops";
@@ -443,7 +496,91 @@ const ShopsPage = observer(() => {
                     </TabList>
                 </Tabs>
 
-                <HStack spacing={2} flexWrap="wrap">
+                <HStack spacing={2.5} flexWrap="wrap" align="center">
+                    {/* Compact Date Range Filter */}
+                    <HStack
+                        spacing={1.5}
+                        bg="var(--merchant-surface-alt)"
+                        px={2.5}
+                        py={1}
+                        borderRadius="12px"
+                        border="1px solid"
+                        borderColor="var(--merchant-border)"
+                        align="center"
+                        h="36px"
+                    >
+                        <Icon as={FiCalendar} color="var(--color-primary, #065F68)" boxSize={3.5} />
+                        <Box as="input"
+                            type="date"
+                            h="24px"
+                            w="115px"
+                            border="none"
+                            bg="transparent"
+                            outline="none"
+                            fontSize="11px"
+                            color="var(--merchant-text)"
+                            value={startDate}
+                            onChange={(e: any) => setStartDate(e.target.value)}
+                        />
+                        <Text fontSize="10px" color="gray.400" fontWeight={700}>
+                            TO
+                        </Text>
+                        <Box as="input"
+                            type="date"
+                            h="24px"
+                            w="115px"
+                            border="none"
+                            bg="transparent"
+                            outline="none"
+                            fontSize="11px"
+                            color="var(--merchant-text)"
+                            value={endDate}
+                            onChange={(e: any) => setEndDate(e.target.value)}
+                        />
+                        {(startDate || endDate) && (
+                            <IconButton
+                                aria-label="Clear dates"
+                                icon={<Icon as={FiX} />}
+                                size="xs"
+                                h="18px"
+                                w="18px"
+                                minW="18px"
+                                variant="ghost"
+                                colorScheme="red"
+                                onClick={() => {
+                                    setStartDate("");
+                                    setEndDate("");
+                                }}
+                            />
+                        )}
+                    </HStack>
+
+                    {/* Export Excel Button with Theme Colors */}
+                    <Button
+                        size="sm"
+                        h="36px"
+                        px={3.5}
+                        bg="var(--color-primary, #065F68)"
+                        _hover={{
+                            bg: "var(--color-primary-hover, #044249)",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+                        }}
+                        _active={{ bg: "var(--color-primary-dark, #032b30)" }}
+                        color="white"
+                        borderRadius="12px"
+                        fontSize="xs"
+                        fontWeight={600}
+                        leftIcon={<Icon as={FiDownload} boxSize={3.5} />}
+                        isLoading={exporting}
+                        loadingText="Exporting..."
+                        boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
+                        transition="all 0.15s ease"
+                        onClick={exportShopsToExcel}
+                    >
+                        Export Excel
+                    </Button>
+
                     <MerchantBadge tone={shops.length > 0 ? "soft" : "soft"}>
                         {shops.length} In View
                     </MerchantBadge>
@@ -542,7 +679,6 @@ const ShopsPage = observer(() => {
                         data={shops}
                         loading={loading}
                         actions={tableActions}
-                        serial={{ show: true, text: "S.No." }}
                         {...getMerchantTableProps("62vh")}
                     />
                 </Box>

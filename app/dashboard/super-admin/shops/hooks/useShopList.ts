@@ -9,39 +9,53 @@ export const useShopList = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalShops, setTotalShops] = useState(0);
     const [reviewStatus, setReviewStatus] = useState("pending");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
-    const fetchShops = useCallback((page: number, nextReviewStatus: string = reviewStatus) => {
-        setLoading(true);
-        companyStore
-            .getAllShops({
+    const fetchShops = useCallback(
+        (
+            page: number,
+            nextReviewStatus: string = reviewStatus,
+            overrideStart: string = startDate,
+            overrideEnd: string = endDate
+        ) => {
+            setLoading(true);
+            const payload: any = {
                 limit: 10,
                 page: page,
                 shopStatus: "all",
                 reviewStatus: nextReviewStatus,
                 includeInactive: true,
-            }, true)
-            .then((res: any) => {
-                if (res?.data?.data) {
-                    setShops(res.data.data);
-                    setTotalPages(res.data.totalPages || 1);
-                    setTotalShops(res.data.total || 0);
-                }
-            })
-            .catch(() => {
-                // Error handling
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [companyStore, reviewStatus]);
+            };
+            if (overrideStart) payload.startDate = overrideStart;
+            if (overrideEnd) payload.endDate = overrideEnd;
+
+            companyStore
+                .getAllShops(payload, true)
+                .then((res: any) => {
+                    if (res?.data?.data) {
+                        setShops(res.data.data);
+                        setTotalPages(res.data.totalPages || 1);
+                        setTotalShops(res.data.total || 0);
+                    }
+                })
+                .catch(() => {
+                    // Error handling
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        },
+        [companyStore, reviewStatus, startDate, endDate]
+    );
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [reviewStatus]);
+    }, [reviewStatus, startDate, endDate]);
 
     useEffect(() => {
-        fetchShops(currentPage, reviewStatus);
-    }, [fetchShops, currentPage, reviewStatus]);
+        fetchShops(currentPage, reviewStatus, startDate, endDate);
+    }, [fetchShops, currentPage, reviewStatus, startDate, endDate]);
 
     return {
         shops,
@@ -50,9 +64,14 @@ export const useShopList = () => {
         totalPages,
         totalShops,
         reviewStatus,
+        startDate,
+        endDate,
+        setStartDate,
+        setEndDate,
         setReviewStatus,
         setCurrentPage,
         fetchShops,
     };
 };
+
 

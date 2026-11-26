@@ -75,6 +75,9 @@ const CategoryPage = observer(() => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [hierarchyFilter, setHierarchyFilter] = useState<"all" | "root" | "sub">("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const toast = useToast();
 
   const handleSeedCatalog = async () => {
@@ -116,7 +119,13 @@ const CategoryPage = observer(() => {
     }
   };
 
-  const fetchCategories = (page: number = currentPage, search: string = searchQuery, hierarchy: string = hierarchyFilter) => {
+  const fetchCategories = (
+    page: number = currentPage,
+    search: string = searchQuery,
+    hierarchy: string = hierarchyFilter,
+    start: string = startDate,
+    end: string = endDate
+  ) => {
     const params: any = { page, limit: 10 };
     if (search.trim()) {
       params.search = search.trim();
@@ -124,16 +133,62 @@ const CategoryPage = observer(() => {
     if (hierarchy === "root") {
       params.parent = "null";
     }
+    if (start) params.startDate = start;
+    if (end) params.endDate = end;
     categoryStore.getAllCategories(params, true);
   };
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      fetchCategories(currentPage, searchQuery, hierarchyFilter);
+      fetchCategories(currentPage, searchQuery, hierarchyFilter, startDate, endDate);
     }, 350);
 
     return () => clearTimeout(handler);
-  }, [categoryStore, currentPage, searchQuery, hierarchyFilter]);
+  }, [categoryStore, currentPage, searchQuery, hierarchyFilter, startDate, endDate]);
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const params: any = {};
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (hierarchyFilter === "root") params.parent = "null";
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const response = await (await import("axios")).default.get("/category/export", {
+        params,
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `categories_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Excel export successful",
+        description: "Categories spreadsheet downloaded successfully",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Export failed",
+        description: err?.response?.data?.message || err?.message || "Failed to export",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -478,6 +533,23 @@ const CategoryPage = observer(() => {
                 searchQuery={searchQuery}
                 onSearchChange={handleSearchChange}
                 onClearSearch={handleClearSearch}
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={(val) => {
+                  setStartDate(val);
+                  setCurrentPage(1);
+                }}
+                onEndDateChange={(val) => {
+                  setEndDate(val);
+                  setCurrentPage(1);
+                }}
+                onClearDates={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  setCurrentPage(1);
+                }}
+                onExportExcel={handleExportExcel}
+                isExporting={isExporting}
                 onSeedCatalog={handleSeedCatalog}
                 isSeeding={isSeeding}
                 onAddClick={handleAddClick}
@@ -505,7 +577,6 @@ const CategoryPage = observer(() => {
                   columns={columns}
                   loading={categoryStore.tableLoading}
                   actions={tableActions}
-                  serial={{ show: true, text: "S.No." }}
                   {...getMerchantTableProps("62vh")}
                 />
               </Box>
