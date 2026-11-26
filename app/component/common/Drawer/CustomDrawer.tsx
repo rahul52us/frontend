@@ -204,12 +204,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
 
       <DrawerContent
         bg={shell}
-        borderRadius={
-          resolvedPlacement === "bottom"
-            ? { base: "28px 28px 0 0", md: "28px 28px 0 0" }
-            : { base: "28px 28px 0 0", md: "32px 0 0 32px" }
-        }
-        borderWidth="1px"
+        borderRadius="0px"
+        borderLeftWidth={{ base: "0px", md: "1px" }}
         borderColor={border}
         boxShadow={{ base: "none", md: sheetShadow }}
         overflow="hidden"
@@ -217,8 +213,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
         w={{ base: "100%", md: resolvedWidth }}
         h={{ base: "100dvh", md: "100dvh" }}
         maxH={{ base: "100dvh", md: "100dvh" }}
-        pt={{ base: "var(--safe-area-top, env(safe-area-inset-top, 0px))", md: 0 }}
-        pb={{ base: "max(env(safe-area-inset-bottom, 0px), 8px)", md: 0 }}
+        pt={0}
+        pb={0}
         ml="auto"
         display="flex"
         flexDirection="column"
@@ -228,10 +224,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
           {/* HEADER */}
           {hasHeaderContent ? (
             <Box
-              px={{ base: 4, md: 7 }} py={{ base: 4, md: 5.5 }}
+              px={{ base: 4, md: 6 }}
+              pt={{ base: "calc(12px + var(--safe-area-top, env(safe-area-inset-top, 0px)))", md: 4 }}
+              pb={{ base: 3, md: 4 }}
               borderBottomWidth={showDivider ? "1px" : "0px"}
               borderBottomColor={border}
-              bg={surface}
+              bg={useColorModeValue("white", "var(--color-surface, #0B1120)")}
               position="relative"
               flexShrink={0}
               {...headerProps}
@@ -240,43 +238,53 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
               {(!isDesktop || resolvedPlacement === "bottom") && showDragHandle && (
                 <Box
                   mx="auto"
-                  mb={3}
-                  h="5px"
-                  w="44px"
+                  mb={2.5}
+                  h="4px"
+                  w="36px"
                   borderRadius="full"
                   bg={borderStrong}
-                  opacity={0.7}
+                  opacity={0.6}
                 />
               )}
 
-              <HStack justify="space-between" align="center" spacing={3}>
-                <HStack spacing={{ base: 3, md: 4 }} align="center" flex="1" minW={0}>
-                  {icon && (
+              <Flex justify="space-between" align="center" gap={3}>
+                <HStack spacing={{ base: 2.5, md: 3 }} align="center" flex="1" minW={0}>
+                  {icon ? (
                     <Center
-                      boxSize={{ base: "42px", md: "52px" }}
-                      borderRadius={{ base: "16px", md: "18px" }}
-                      bgGradient={heroGradient}
-                      color="white"
-                      boxShadow="0 10px 24px rgba(6, 95, 104, 0.22)"
+                      boxSize={{ base: "38px", md: "42px" }}
+                      borderRadius="12px"
+                      bg="var(--color-primary-light, #e6f4f5)"
+                      color="var(--color-primary, #065F68)"
+                      border="1px solid"
+                      borderColor="var(--color-primary-border, rgba(6, 95, 104, 0.28))"
                       flexShrink={0}
                     >
                       {React.isValidElement(icon) ? (
                         icon
                       ) : (
-                        <Icon as={icon} boxSize={{ base: 4, md: 5 }} />
+                        <Icon as={icon} boxSize={5} />
                       )}
                     </Center>
+                  ) : (
+                    <Box
+                      w="3.5px"
+                      h="20px"
+                      borderRadius="full"
+                      bg="var(--color-primary, #065F68)"
+                      flexShrink={0}
+                    />
                   )}
 
                   <Box minW={0} flex="1">
                     {categoryTag && (
                       <Text
-                        fontSize="11px"
+                        fontSize="10px"
                         fontWeight="700"
                         textTransform="uppercase"
-                        letterSpacing="0.14em"
-                        color={accentStrong}
-                        lineHeight="1.2"
+                        letterSpacing="0.08em"
+                        color="var(--color-primary, #065F68)"
+                        lineHeight="1"
+                        mb={0.5}
                       >
                         {categoryTag}
                       </Text>
@@ -285,11 +293,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                     {title && (
                       typeof title === "string" ? (
                         <Text
-                          mt={categoryTag ? 1 : 0}
-                          fontSize={{ base: "xl", md: "22px" }}
+                          fontSize={{ base: "md", md: "17px" }}
                           fontWeight="700"
+                          letterSpacing="-0.01em"
                           color={text}
-                          lineHeight="1.2"
+                          lineHeight="1.25"
+                          noOfLines={1}
                         >
                           {title}
                         </Text>
@@ -301,11 +310,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                     {subtitle && (
                       typeof subtitle === "string" ? (
                         <Text
-                          mt={1.5}
-                          fontSize={{ base: "xs", md: "sm" }}
+                          mt={0.5}
+                          fontSize="xs"
                           color={textMuted}
                           maxW="2xl"
-                          lineHeight="1.4"
+                          lineHeight="1.3"
+                          noOfLines={{ base: 1, md: 2 }}
                         >
                           {subtitle}
                         </Text>
@@ -316,31 +326,37 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
                   </Box>
                 </HStack>
 
-                <HStack spacing={2} align="center" flexShrink={0}>
+                <HStack spacing={1.5} align="center" flexShrink={0}>
                   {headerActions}
                   <DrawerCloseButton
                     position="relative"
                     top="auto"
                     right="auto"
                     m="0"
-                    w="38px"
-                    h="38px"
-                    minW="38px"
-                    borderRadius="full"
+                    w="32px"
+                    h="32px"
+                    minW="32px"
+                    borderRadius="10px"
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
-                    color="var(--merchant-text, #ffffff)"
-                    bg="var(--merchant-surface-alt, rgba(255, 255, 255, 0.08))"
+                    color="var(--merchant-text-muted)"
+                    bg="var(--merchant-surface-alt)"
+                    border="1px solid"
+                    borderColor="var(--merchant-border-strong)"
+                    transition="all 0.15s ease"
                     _hover={{
-                      bg: "var(--merchant-surface-soft, rgba(255, 255, 255, 0.16))",
-                      color: "#ffffff",
+                      bg: "red.50",
+                      color: "red.500",
+                      borderColor: "red.200",
+                      transform: "scale(1.05)",
                     }}
+                    _active={{ transform: "scale(0.95)" }}
                     onClick={handleCloseDrawer}
                     {...closeButtonProps}
                   />
                 </HStack>
-              </HStack>
+              </Flex>
             </Box>
           ) : (
             <DrawerCloseButton
@@ -387,10 +403,11 @@ const CustomDrawer: React.FC<CustomDrawerProps> = observer(({
           {footer && (
             <DrawerFooter
               px={{ base: 4, md: 5 }}
-              py={{ base: 3.5, md: 4 }}
+              pt={{ base: 3, md: 3.5 }}
+              pb={{ base: "max(12px, env(safe-area-inset-bottom, 0px))", md: 3.5 }}
               borderTopWidth={showDivider ? "1px" : "0px"}
               borderTopColor={border}
-              bg={surface}
+              bg={useColorModeValue("white", "var(--color-surface, #0B1120)")}
               flexShrink={0}
               {...footerProps}
             >

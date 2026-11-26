@@ -74,7 +74,8 @@ const ContentContainer = styled.div<{
       ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
       : '0px'};
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   min-height: calc(100vh - ${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} - var(--safe-area-top, env(safe-area-inset-top, 0px)));
   transition: all 0.3s ease-in-out;
   margin-top: calc(${({ $isMobile }) => ($isMobile ? '52px' : headerHeight)} + var(--safe-area-top, env(safe-area-inset-top, 0px)));

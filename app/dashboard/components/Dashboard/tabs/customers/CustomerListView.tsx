@@ -11,26 +11,38 @@ import {
   Heading,
   HStack,
   Icon,
+  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
+  InputRightElement,
   SimpleGrid,
   Skeleton,
   SkeletonCircle,
   Stack,
+  Tab,
+  TabList,
+  Tabs,
   Text,
   useColorModeValue,
   VStack,
 } from "@chakra-ui/react";
 import {
+  FiChevronLeft,
   FiChevronRight,
   FiSearch,
   FiTrendingDown,
   FiTrendingUp,
   FiUserPlus,
   FiUsers,
+  FiX,
 } from "react-icons/fi";
-import { ProductStatCard } from "../../../../products/components/ProductStatCard";
+import {
+  MerchantBadge,
+  MerchantPageHeader,
+  merchantPrimaryButtonProps,
+  MerchantStatCard,
+} from "../../../common/merchantDashboardUI";
 import { useCustomerTheme } from "./theme";
 import {
   BuyerFilterKey,
@@ -93,22 +105,11 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
   const {
     cAccentSoft,
     cAccentStrong,
-    cAccent,
     cTextMuted,
     cText,
     cSurface,
-    cBorder,
-    cPage,
     cDanger,
     cSuccess,
-    cHeroGradient,
-    cGlassSurface,
-    cSoftShadow,
-    cInputMutedBg,
-    cPlaceholder,
-    cSuccessSoftBg,
-    cDangerSoftBg,
-    dashboardPalette,
   } = theme;
 
   const normalizedActivePartyType = activePartyType === "supplier" ? "supplier" : "customer";
@@ -117,278 +118,185 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
   const partyPluralLabel = isSupplierTab ? "Suppliers" : "Customers";
   const blockedCount = Math.max(total - buyerOverview.active, 0);
 
-  const sectionX = { base: 3, md: 6, xl: 0 };
   const heroDescription = isSupplierTab
     ? "Manage supplier relationships, track payables, and keep every payout in one clean flow."
     : "Manage customer relationships, track collections, and keep every balance easy to review.";
 
-  const statCards = [
-    {
-      key: "total",
-      icon: FiUsers,
-      label: `Total ${partyPluralLabel}`,
-      value: String(total),
-      iconBg: cAccentSoft,
-      iconColor: cAccentStrong,
-      valueColor: cText,
-    },
-    {
-      key: "receivable",
-      icon: FiTrendingUp,
-      label: "To receive",
-      value: formatCompactCurrency(buyerOverview.receivable),
-      iconBg: cSuccessSoftBg,
-      iconColor: cSuccess,
-      valueColor: cSuccess,
-    },
-    {
-      key: "payable",
-      icon: FiTrendingDown,
-      label: "To pay",
-      value: formatCompactCurrency(buyerOverview.payable),
-      iconBg: cDangerSoftBg,
-      iconColor: cDanger,
-      valueColor: cDanger,
-    },
-  ];
-
   return (
-    <Box
-      overflow="hidden"
-      mt={{ base: -2, md: 0 }}
-      mx={isCompact ? -2 : 0}
-    >
-      <Box
-        px={sectionX}
-        pt={{ base: 2, md: 0 }}
-        pb={{ base: 14, md: 16 }}
-        position="relative"
-        overflow="hidden"
-      >
-        <Box
-          position="absolute"
-          top="-36px"
-          right="-28px"
-          w={{ base: "164px", md: "220px" }}
-          h={{ base: "164px", md: "220px" }}
-          borderRadius="full"
-          bg="whiteAlpha.180"
-          filter="blur(18px)"
-        />
-        <Box
-          position="absolute"
-          bottom="-74px"
-          left="-24px"
-          w={{ base: "140px", md: "180px" }}
-          h={{ base: "140px", md: "180px" }}
-          borderRadius="full"
-          bg="whiteAlpha.120"
-        />
-
-        <Box position="relative" zIndex={1}>
-          <Flex justify="space-between" align={{ base: "start", md: "center" }} gap={4} flexWrap="wrap">
-            <Box maxW="2xl">
-              <Text fontSize="xs" fontWeight="800" textTransform="uppercase" letterSpacing="0.14em">
-                Workspace
-              </Text>
-              <Heading mt={2} fontSize={{ base: "2xl", md: "4xl" }} lineHeight="0.98" letterSpacing="-0.03em" display={{ base: "none", md: "block" }}>
-                {partyPluralLabel}
-              </Heading>
-              <Text mt={2} color="whiteAlpha.860" fontSize={{ base: "sm", md: "md" }} maxW="xl" display={{ base: "none", md: "block" }}>
-                {heroDescription}
-              </Text>
-
-              <Flex mt={{ base: 2, md: 4 }} gap={2} flexWrap="wrap" align="center">
-                <HStack
-                  spacing={1}
-                  p={1}
-                  borderRadius="16px"
-                  bg={useColorModeValue("blackAlpha.50", "whiteAlpha.100")}
-                  border="1px solid"
-                  borderColor={useColorModeValue("blackAlpha.100", "whiteAlpha.150")}
-                >
-                  <Button
-                    h={{ base: "32px", md: "36px" }}
-                    px={{ base: 3, md: 4 }}
-                    borderRadius="12px"
-                    bg={normalizedActivePartyType === "customer" ? "brand.500" : "transparent"}
-                    color={
-                      normalizedActivePartyType === "customer"
-                        ? "white"
-                        : useColorModeValue("gray.600", "gray.300")
-                    }
-                    fontSize="sm"
-                    fontWeight="700"
-                    boxShadow={
-                      normalizedActivePartyType === "customer"
-                        ? "0 2px 8px rgba(6, 95, 104, 0.25)"
-                        : "none"
-                    }
-                    _hover={{
-                      bg:
-                        normalizedActivePartyType === "customer"
-                          ? "brand.600"
-                          : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
-                      color:
-                        normalizedActivePartyType === "customer"
-                          ? "white"
-                          : useColorModeValue("gray.800", "white"),
-                    }}
-                    _active={{ transform: "scale(0.98)" }}
-                    onClick={() => setActivePartyType("customer")}
-                  >
-                    Customers
-                  </Button>
-                  <Button
-                    h={{ base: "32px", md: "36px" }}
-                    px={{ base: 3, md: 4 }}
-                    borderRadius="12px"
-                    bg={normalizedActivePartyType === "supplier" ? "brand.500" : "transparent"}
-                    color={
-                      normalizedActivePartyType === "supplier"
-                        ? "white"
-                        : useColorModeValue("gray.600", "gray.300")
-                    }
-                    fontSize="sm"
-                    fontWeight="700"
-                    boxShadow={
-                      normalizedActivePartyType === "supplier"
-                        ? "0 2px 8px rgba(6, 95, 104, 0.25)"
-                        : "none"
-                    }
-                    _hover={{
-                      bg:
-                        normalizedActivePartyType === "supplier"
-                          ? "brand.600"
-                          : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
-                      color:
-                        normalizedActivePartyType === "supplier"
-                          ? "white"
-                          : useColorModeValue("gray.800", "white"),
-                    }}
-                    _active={{ transform: "scale(0.98)" }}
-                    onClick={() => setActivePartyType("supplier")}
-                  >
-                    Suppliers
-                  </Button>
-                </HStack>
-
-                {blockedCount > 0 ? (
-                  <Badge px={3} py={1.5} borderRadius="full" bg="rgba(127, 29, 29, 0.26)" color="white" textTransform="none" fontWeight="800">
-                    {blockedCount} blocked
-                  </Badge>
-                ) : null}
-              </Flex>
-            </Box>
-
-            {!isCompact ? (
-              <Stack direction={{ base: "column", sm: "row" }} spacing={3} w={{ base: "full", md: "auto" }}>
-                {canUseDeviceContactImport ? (
-                  <Button
-                    onClick={onOpenImport}
-                    leftIcon={<DownloadIcon />}
-                    minH="46px"
-                    borderRadius="full"
-                    bg="whiteAlpha.180"
-                    color="white"
-                    border="1px solid"
-                    borderColor="whiteAlpha.280"
-                    _hover={{ bg: "whiteAlpha.240" }}
-                    _active={{ transform: "scale(0.98)" }}
-                  >
-                    Import
-                  </Button>
-                ) : null}
-                <Button
-                  leftIcon={<FiUserPlus />}
-                  onClick={onOpenAddBuyer}
-                  minH="46px"
-                  px={5}
-                  borderRadius="full"
-                  bg="white"
-                  color={cAccentStrong}
-                  fontWeight="800"
-                  boxShadow="0 16px 34px rgba(15, 23, 42, 0.14)"
-                  _hover={{ transform: "translateY(-1px)" }}
-                  _active={{ transform: "scale(0.98)" }}
-                >
-                  Add {partySingularLabel}
-                </Button>
-              </Stack>
+    <Box w="100%">
+      {/* ----------------- Standard Page Header matching Shops & Users ----------------- */}
+      <MerchantPageHeader
+        icon={FiUsers}
+        title={partyPluralLabel}
+        description={heroDescription}
+        badges={
+          <HStack spacing={2}>
+            <MerchantBadge tone="accent">
+              {total} {total === 1 ? partySingularLabel : partyPluralLabel}
+            </MerchantBadge>
+            {blockedCount > 0 ? (
+              <MerchantBadge tone="danger">
+                {blockedCount} Blocked
+              </MerchantBadge>
             ) : null}
-          </Flex>
-
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 2, md: 4 }} mt={6}>
-            {statCards.map((stat) => (
-              <ProductStatCard
-                key={stat.key}
-                icon={stat.icon}
-                label={stat.label}
-                value={stat.value}
-                tint="sage"
+          </HStack>
+        }
+        actions={
+          <HStack spacing={2.5}>
+            {canUseDeviceContactImport ? (
+              <Button
+                onClick={onOpenImport}
+                leftIcon={<DownloadIcon />}
+                size="sm"
+                h="38px"
+                px={3.5}
+                borderRadius="12px"
+                variant="outline"
+                borderColor="var(--merchant-border-strong)"
+                color="var(--merchant-text)"
+                _hover={{ bg: "var(--merchant-surface-alt)" }}
+              >
+                Import
+              </Button>
+            ) : null}
+            <Button
+              leftIcon={<FiUserPlus />}
+              onClick={onOpenAddBuyer}
+              size="sm"
+              h="38px"
+              px={4}
+              {...merchantPrimaryButtonProps}
+            >
+              Add {partySingularLabel}
+            </Button>
+          </HStack>
+        }
+        mobileActions={
+          <HStack spacing={2}>
+            {canUseDeviceContactImport ? (
+              <IconButton
+                aria-label="Import contacts"
+                icon={<DownloadIcon />}
+                size="sm"
+                variant="outline"
+                borderRadius="10px"
+                onClick={onOpenImport}
               />
-            ))}
-          </SimpleGrid>
-        </Box>
-      </Box>
-
-      <Box px={sectionX} mt={{ base: -6, md: -7 }} position="sticky" top={0} zIndex={20}>
-        <Box
-          bg={cGlassSurface}
-          border="1px solid"
-          borderColor={cBorder}
-          borderRadius="24px"
-          p={{ base: 2, md: 3 }}
-          boxShadow={cSoftShadow}
-          backdropFilter="blur(18px)"
-        >
-          <InputGroup>
-            <InputLeftElement pointerEvents="none" h="100%">
-              <Icon as={FiSearch} color={cTextMuted} boxSize={4} />
-            </InputLeftElement>
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search ${partyPluralLabel.toLowerCase()} by name or phone`}
-              pl={10}
-              h={{ base: "38px", md: "46px" }}
-              borderRadius="18px"
-              bg={cInputMutedBg}
-              borderColor="transparent"
-              color={cText}
-              fontSize="sm"
-              _placeholder={{ color: cPlaceholder }}
-              _focus={{ borderColor: cAccent, boxShadow: `0 0 0 1px ${cAccent}` }}
+            ) : null}
+            <IconButton
+              aria-label={`Add ${partySingularLabel}`}
+              icon={<FiUserPlus />}
+              size="sm"
+              {...merchantPrimaryButtonProps}
+              borderRadius="10px"
+              onClick={onOpenAddBuyer}
             />
-          </InputGroup>
+          </HStack>
+        }
+      />
 
-          <Flex
-            mt={2}
-            gap={2}
-            overflowX="auto"
-            pb={0.5}
-            sx={{
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": { display: "none" },
-            }}
+      {/* ----------------- Top Stats Grid matching Shops / Users / Products ----------------- */}
+      <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing={{ base: 3, md: 4 }} mb={{ base: 4, md: 6 }}>
+        <MerchantStatCard
+          label={`Total ${partyPluralLabel}`}
+          value={String(total)}
+          icon={FiUsers}
+          color="#3B82F6"
+        />
+        <MerchantStatCard
+          label="To Receive"
+          value={formatCompactCurrency(buyerOverview.receivable)}
+          icon={FiTrendingUp}
+          color="#10B981"
+        />
+        <MerchantStatCard
+          label="To Pay"
+          value={formatCompactCurrency(buyerOverview.payable)}
+          icon={FiTrendingDown}
+          color="#EF4444"
+        />
+      </SimpleGrid>
+
+      {/* ----------------- Filter Tabs & Search Controls Row ----------------- */}
+      <Flex
+        justify="space-between"
+        align="center"
+        direction={{ base: "column", lg: "row" }}
+        gap={3}
+        mb={5}
+        flexWrap="wrap"
+      >
+        {/* Left: Party Type Switcher Tabs (Customers vs Suppliers) + Balance Filters */}
+        <HStack spacing={3} flexWrap="wrap">
+          <Tabs
+            variant="unstyled"
+            index={normalizedActivePartyType === "customer" ? 0 : 1}
+            onChange={(index) => setActivePartyType(index === 0 ? "customer" : "supplier")}
           >
+            <TabList
+              bg="var(--merchant-surface-alt)"
+              border="1px solid"
+              borderColor="var(--merchant-border-strong)"
+              borderRadius="14px"
+              p={1}
+              display="inline-flex"
+              alignItems="center"
+            >
+              {[
+                { label: "Customers", value: "customer" },
+                { label: "Suppliers", value: "supplier" },
+              ].map((tab, idx) => {
+                const isSelected = (normalizedActivePartyType === "customer" ? 0 : 1) === idx;
+                return (
+                  <Tab
+                    key={tab.value}
+                    px={3.5}
+                    py={1.5}
+                    borderRadius="10px"
+                    fontSize="xs"
+                    fontWeight="700"
+                    color="var(--merchant-text-muted)"
+                    bg="transparent"
+                    transition="all 0.2s ease"
+                    _hover={{
+                      color: "var(--merchant-text)",
+                      bg: "var(--merchant-surface)",
+                    }}
+                    _selected={{
+                      color: "white",
+                      bg: "var(--color-primary, #065F68)",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.25)",
+                    }}
+                  >
+                    {tab.label}
+                  </Tab>
+                );
+              })}
+            </TabList>
+          </Tabs>
+
+          {/* Balance Filter Chips */}
+          <HStack spacing={1.5} overflowX="auto" py={0.5}>
             {buyerFilterOptions.map((filterOption) => {
               const isActive = balanceFilter === filterOption.key;
               return (
                 <Button
                   key={filterOption.key}
-                  h="34px"
-                  px={4}
-                  borderRadius="full"
+                  size="sm"
+                  h="36px"
+                  px={3}
+                  borderRadius="10px"
                   flexShrink={0}
-                  bg={isActive ? dashboardPalette.accent : "transparent"}
-                  color={isActive ? "white" : cTextMuted}
+                  bg={isActive ? "var(--color-primary, #065F68)" : "transparent"}
+                  color={isActive ? "white" : "var(--merchant-text-muted)"}
+                  border="1px solid"
+                  borderColor={isActive ? "var(--color-primary, #065F68)" : "var(--merchant-border-strong)"}
                   fontSize="xs"
-                  fontWeight="800"
-                  border={isActive ? "none" : "1px solid"}
-                  borderColor={isActive ? "transparent" : cBorder}
-                  boxShadow={isActive ? "0 12px 24px rgba(69, 104, 255, 0.20)" : "none"}
-                  _hover={{ color: isActive ? "white" : cText }}
+                  fontWeight="600"
+                  _hover={{
+                    bg: isActive ? "var(--color-primary-hover, #044249)" : "var(--merchant-surface-alt)",
+                    color: isActive ? "white" : "var(--merchant-text)",
+                  }}
                   _active={{ transform: "scale(0.98)" }}
                   onClick={() => setBalanceFilter(filterOption.key)}
                 >
@@ -396,22 +304,56 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
                 </Button>
               );
             })}
-          </Flex>
-        </Box>
-      </Box>
+          </HStack>
+        </HStack>
 
-      <Box px={sectionX} mt={4} pb={isCompact ? "104px" : 8}>
+        {/* Right: Search Input matching Shops / Products / Users */}
+        <InputGroup size="sm" maxW={{ base: "100%", lg: "340px" }} w="100%">
+          <InputLeftElement pointerEvents="none" h="38px">
+            <Icon as={FiSearch} color="gray.400" />
+          </InputLeftElement>
+          <Input
+            placeholder={`Search ${partyPluralLabel.toLowerCase()} by name or phone...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            h="38px"
+            pl={9}
+            borderRadius="12px"
+            fontSize="xs"
+            bg="var(--merchant-surface-alt)"
+            borderColor="var(--merchant-border-strong)"
+            _hover={{ borderColor: "brand.400" }}
+            _focus={{
+              borderColor: "brand.500",
+              boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+            }}
+          />
+          {search && (
+            <InputRightElement h="38px">
+              <IconButton
+                aria-label="Clear search"
+                icon={<FiX />}
+                size="xs"
+                variant="ghost"
+                onClick={() => setSearch("")}
+              />
+            </InputRightElement>
+          )}
+        </InputGroup>
+      </Flex>
+
+      {/* ----------------- Cards Grid Area ----------------- */}
+      <Box pb={isCompact ? "104px" : 8}>
         {loading ? (
-          <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={3}>
+          <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={3.5}>
             {Array.from({ length: isCompact ? 4 : 6 }).map((_, index) => (
               <Box
                 key={`buyer-skeleton-${index}`}
-                bg={cSurface}
+                bg="var(--merchant-surface-alt)"
                 border="1px solid"
-                borderColor={cBorder}
-                borderRadius="24px"
+                borderColor="var(--merchant-border-strong)"
+                borderRadius="20px"
                 p={4}
-                boxShadow={cSoftShadow}
               >
                 <HStack align="start" spacing={3}>
                   <SkeletonCircle size="12" />
@@ -436,26 +378,34 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
             textAlign="center"
             py={{ base: 12, md: 16 }}
             px={5}
-            bg={cSurface}
-            border="1px solid"
-            borderColor={cBorder}
-            borderRadius="26px"
-            boxShadow={cSoftShadow}
+            bg="var(--merchant-surface-alt)"
+            border="1px dashed"
+            borderColor="var(--merchant-border-strong)"
+            borderRadius="20px"
           >
             <Circle mx="auto" size="14" bg={cAccentSoft} color={cAccentStrong}>
               <Icon as={FiUsers} boxSize={6} />
             </Circle>
-            <Text mt={4} fontSize="md" fontWeight="800" color={cText}>
+            <Text mt={4} fontSize="md" fontWeight="800" color="var(--merchant-text)">
               No {partyPluralLabel.toLowerCase()} found
             </Text>
-            <Text mt={1} fontSize="sm" color={cTextMuted}>
+            <Text mt={1} fontSize="sm" color="var(--merchant-text-muted)" maxW="md" mx="auto">
               {balanceFilter === "all"
                 ? `Try a different search or add a new ${partySingularLabel.toLowerCase()}.`
                 : `No ${partyPluralLabel.toLowerCase()} match the selected filter.`}
             </Text>
+            <Button
+              mt={4}
+              size="sm"
+              leftIcon={<FiUserPlus />}
+              {...merchantPrimaryButtonProps}
+              onClick={onOpenAddBuyer}
+            >
+              Add {partySingularLabel}
+            </Button>
           </Box>
         ) : (
-          <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={{ base: 1, md: 3 }}>
+          <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={3.5}>
             {filteredBuyers.map((buyer) => {
               const balanceMeta = getBuyerBalanceMeta(buyer, normalizedActivePartyType, {
                 textMuted: cTextMuted,
@@ -473,31 +423,35 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
                   type="button"
                   w="full"
                   textAlign="left"
-                  bg={cSurface}
+                  bg="var(--merchant-surface)"
                   border="1px solid"
-                  borderColor={cBorder}
-                  borderRadius="24px"
-                  px={{ base: 3, md: 4 }}
-                  py={{ base: 2, md: 4 }}
+                  borderColor="var(--merchant-border)"
+                  borderRadius="20px"
+                  px={{ base: 3.5, md: 4.5 }}
+                  py={{ base: 3.5, md: 4 }}
                   boxShadow="sm"
                   transition="all 0.2s ease"
-                  _hover={{ transform: "translateY(-2px)", borderColor: cAccentSoft }}
+                  _hover={{
+                    transform: "translateY(-2px)",
+                    borderColor: "var(--color-primary, #065F68)",
+                    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.08)",
+                  }}
                   _active={{ transform: "scale(0.99)" }}
                   onClick={() => onSelectBuyer(buyer)}
                 >
                   <Flex align="center" gap={3}>
                     <Box position="relative">
                       <Flex
-                        h={{ base: "32px", md: "48px" }}
-                        w={{ base: "32px", md: "48px" }}
+                        h={{ base: "38px", md: "46px" }}
+                        w={{ base: "38px", md: "46px" }}
                         borderRadius="full"
                         align="center"
                         justify="center"
                         color="white"
                         fontWeight="700"
-                        fontSize={{ base: "sm", md: "lg" }}
-                        bg={dashboardPalette.accent}
-                        boxShadow="0 10px 24px rgba(69, 104, 255, 0.18)"
+                        fontSize={{ base: "sm", md: "md" }}
+                        bg="var(--color-primary, #065F68)"
+                        boxShadow="0 4px 12px rgba(6, 95, 104, 0.25)"
                         flexShrink={0}
                       >
                         {getBuyerInitials(buyer)}
@@ -521,24 +475,26 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
                     </Box>
 
                     <Box flex="1" minW={0}>
-                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="800" color={cText} noOfLines={1}>
+                      <Text fontSize={{ base: "sm", md: "md" }} fontWeight="700" color="var(--merchant-text)" noOfLines={1}>
                         {getBuyerDisplayName(buyer)}
                       </Text>
-                      <Text mt={0.5} fontSize="xs" color={cTextMuted} noOfLines={1}>
+                      <Text mt={0.5} fontSize="xs" color="var(--merchant-text-muted)" noOfLines={1}>
                         {getBuyerPrimaryContact(buyer)}
                       </Text>
-                      <Flex mt={1} gap={1.5} flexWrap="wrap">
+                      <Flex mt={1.5} gap={1.5} flexWrap="wrap">
                         {tagList.map((tag) => (
                           <Badge
                             key={`${buyer._id}-${tag}`}
-                            px={2.5}
+                            px={2}
                             py={0.5}
                             borderRadius="full"
-                            bg={cAccentSoft}
-                            color={cAccentStrong}
+                            bg="var(--merchant-surface-alt)"
+                            border="1px solid"
+                            borderColor="var(--merchant-border-strong)"
+                            color="var(--merchant-text-muted)"
                             textTransform="none"
                             fontSize="10px"
-                            fontWeight="700"
+                            fontWeight="600"
                           >
                             {tag}
                           </Badge>
@@ -546,14 +502,14 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
                       </Flex>
                     </Box>
 
-                    <VStack align="end" spacing={1} flexShrink={0}>
-                      <Text fontSize="sm" fontWeight="700" color={balanceMeta.color} textAlign="right">
+                    <VStack align="end" spacing={0.5} flexShrink={0}>
+                      <Text fontSize="sm" fontWeight="800" color={balanceMeta.color} textAlign="right">
                         {balanceMeta.state === "settled" ? "Settled" : formatCurrency(balanceMeta.amount)}
                       </Text>
-                      <Text fontSize="10px" color={cTextMuted}>
+                      <Text fontSize="10px" color="var(--merchant-text-muted)">
                         {balanceMeta.helper}
                       </Text>
-                      <Icon as={FiChevronRight} boxSize={4} color={cTextMuted} />
+                      <Icon as={FiChevronRight} boxSize={4} color="var(--merchant-text-muted)" mt={1} />
                     </VStack>
                   </Flex>
                 </Box>
@@ -563,17 +519,19 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
         )}
 
         {(totalPages || 1) > 1 ? (
-          <Flex justify="space-between" align="center" gap={3} mt={4}>
+          <Flex justify="space-between" align="center" gap={3} mt={5}>
             <Button
               minW="96px"
-              h="38px"
-              borderRadius="full"
-              bg={cSurface}
+              h="36px"
+              borderRadius="12px"
+              bg="var(--merchant-surface)"
               border="1px solid"
-              borderColor={cBorder}
-              color={cTextMuted}
-              boxShadow={cSoftShadow}
-              _hover={{ color: cText }}
+              borderColor="var(--merchant-border-strong)"
+              color="var(--merchant-text)"
+              fontSize="xs"
+              fontWeight="600"
+              leftIcon={<Icon as={FiChevronLeft} />}
+              _hover={{ bg: "var(--merchant-surface-alt)" }}
               _active={{ transform: "scale(0.98)" }}
               isDisabled={page <= 1 || loading}
               onClick={() => {
@@ -583,23 +541,25 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
             >
               Previous
             </Button>
-            <Text fontSize="sm" color={cTextMuted} fontWeight="700">
-              Page {page} of {totalPages || 1}
+            <Text fontSize="xs" color="var(--merchant-text-muted)">
+              Page {page} of {totalPages}
             </Text>
             <Button
               minW="96px"
-              h="38px"
-              borderRadius="full"
-              bg={cSurface}
+              h="36px"
+              borderRadius="12px"
+              bg="var(--merchant-surface)"
               border="1px solid"
-              borderColor={cBorder}
-              color={cTextMuted}
-              boxShadow={cSoftShadow}
-              _hover={{ color: cText }}
+              borderColor="var(--merchant-border-strong)"
+              color="var(--merchant-text)"
+              fontSize="xs"
+              fontWeight="600"
+              rightIcon={<Icon as={FiChevronRight} />}
+              _hover={{ bg: "var(--merchant-surface-alt)" }}
               _active={{ transform: "scale(0.98)" }}
-              isDisabled={page >= (totalPages || 1) || loading}
+              isDisabled={page >= totalPages || loading}
               onClick={() => {
-                if (page >= (totalPages || 1)) return;
+                if (page >= totalPages) return;
                 onPageChange(page + 1);
               }}
             >
@@ -618,13 +578,13 @@ export const CustomerListView: React.FC<CustomerListViewProps> = ({
           h="44px"
           px={4}
           borderRadius="full"
-          bg="brand.500"
+          bg="var(--color-primary, #065F68)"
           color="white"
           leftIcon={<Icon as={FiUserPlus} boxSize={4} />}
           fontWeight="700"
           fontSize="sm"
           boxShadow="0 8px 24px rgba(6, 95, 104, 0.35)"
-          _hover={{ bg: "brand.600" }}
+          _hover={{ bg: "var(--color-primary-hover, #044249)" }}
           _active={{ transform: "scale(0.97)" }}
           onClick={onOpenAddBuyer}
         >

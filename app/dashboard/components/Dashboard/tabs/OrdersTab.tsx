@@ -270,7 +270,6 @@ const OrdersTab = observer(() => {
   return (
     <Box fontFamily="body">
       <Box
-        maxW="1500px"
         mx="auto"
         px={{ base: 3, sm: 4, md: 5 }}
         pb={{ base: 4, md: 6 }}

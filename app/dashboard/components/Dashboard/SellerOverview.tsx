@@ -163,12 +163,11 @@ const formatRelativeTime = (value?: string) => {
 /* Quick Actions Definition                                            */
 /* ------------------------------------------------------------------ */
 
-const QUICK_ACTIONS = [
+const BASE_QUICK_ACTIONS = [
   { label: "New Product", icon: FiPlusCircle, href: "/dashboard/products" },
   { label: "Orders", icon: FiShoppingCart, href: "/dashboard/orders" },
   { label: "Shop Profile", icon: FiShoppingBag, href: "/dashboard/shop" },
   { label: "Customers", icon: FiUsers, href: "/dashboard/customers" },
-  { label: "Broadcasts", icon: FiSend, href: "/dashboard/super-admin/notifications" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -197,6 +196,28 @@ const SellerOverview = observer(() => {
   const borderCol = useColorModeValue("#E2E8F0", dashboardPalette.border);
   const textCol = useColorModeValue("#0F172A", dashboardPalette.text);
   const textMuted = useColorModeValue("#64748B", dashboardPalette.textMuted);
+
+  const isSuperAdmin = useMemo(() => {
+    const user = auth.user;
+    const normalizedRoles = Array.isArray(user?.role)
+      ? user.role.filter(Boolean)
+      : [user?.role].filter(Boolean);
+    return (
+      user?.type === "superAdmin" ||
+      user?.role === "superAdmin" ||
+      normalizedRoles.includes("superAdmin")
+    );
+  }, [auth.user]);
+
+  const quickActions = useMemo(() => {
+    if (isSuperAdmin) {
+      return [
+        ...BASE_QUICK_ACTIONS,
+        { label: "Broadcasts", icon: FiSend, href: "/dashboard/super-admin/notifications" },
+      ];
+    }
+    return BASE_QUICK_ACTIONS;
+  }, [isSuperAdmin]);
 
   const loadDashboard = useCallback(async () => {
     if (!companyId) return;
@@ -357,8 +378,8 @@ const SellerOverview = observer(() => {
               display="inline-flex"
               alignItems="center"
               gap={1.5}
-              borderRadius="full"
-              px={3}
+              borderRadius="10px"
+              px={2.5}
               py={1}
               fontSize="11.5px"
               fontWeight="600"
@@ -404,8 +425,8 @@ const SellerOverview = observer(() => {
                 display="inline-flex"
                 alignItems="center"
                 gap={1.5}
-                borderRadius="full"
-                px={3}
+                borderRadius="10px"
+                px={2.5}
                 py={1}
                 fontSize="11.5px"
                 fontWeight="600"
@@ -430,15 +451,29 @@ const SellerOverview = observer(() => {
           <HStack spacing={2}>
             <Button
               size="sm"
+              h="38px"
+              px={4}
               leftIcon={<FiPlusCircle />}
-              colorScheme="brand"
-              borderRadius="14px"
+              bg="var(--color-primary, #065F68)"
+              _hover={{
+                bg: "var(--color-primary-hover, #044249)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+              }}
+              _active={{ bg: "var(--color-primary-dark, #032b30)" }}
+              color="white"
+              borderRadius="12px"
+              fontSize="xs"
+              fontWeight={600}
+              boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
+              transition="all 0.15s ease"
               onClick={() => router.push("/dashboard/products")}
             >
               Add Product
             </Button>
             <Button
               size="sm"
+              h="38px"
               onClick={loadDashboard}
               isDisabled={loading}
               leftIcon={
@@ -459,7 +494,9 @@ const SellerOverview = observer(() => {
               size="sm"
               aria-label="Add Product"
               icon={<FiPlusCircle />}
-              colorScheme="brand"
+              bg="var(--color-primary, #065F68)"
+              _hover={{ bg: "var(--color-primary-hover, #044249)" }}
+              color="white"
               borderRadius="full"
               onClick={() => router.push("/dashboard/products")}
             />
@@ -519,7 +556,7 @@ const SellerOverview = observer(() => {
 
       {/* Quick Action Navigation Bar */}
       <QuickActionNav
-        actions={QUICK_ACTIONS}
+        actions={quickActions}
         surfaceBg={surfaceBg}
         borderCol={borderCol}
         textCol={textCol}

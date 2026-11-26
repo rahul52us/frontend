@@ -86,13 +86,13 @@ const brandPrimaryBorder = "var(--color-primary-border, rgba(6, 95, 104, 0.28))"
 const brandPrimaryText = "var(--color-primary-text, #065F68)";
 
 const fieldShellStyles = {
-  bg: cssVar("--dashboard-input-bg", "white"),
-  borderColor: cssVar("--dashboard-input-border", "#CBD5E0"),
-  color: cssVar("--dashboard-input-text", "#1A202C"),
+  bg: cssVar("--color-input-bg", cssVar("--dashboard-input-bg", "white")),
+  borderColor: cssVar("--color-input-border", cssVar("--dashboard-input-border", "#CBD5E0")),
+  color: cssVar("--color-text-primary", cssVar("--dashboard-input-text", "#1A202C")),
   borderRadius: "16px",
   minH: "52px",
   _placeholder: {
-    color: cssVar("--dashboard-input-placeholder", "#718096"),
+    color: cssVar("--color-input-placeholder", cssVar("--dashboard-input-placeholder", "#718096")),
     fontSize: "13px",
   },
   _hover: {
@@ -108,7 +108,7 @@ const fieldShellStyles = {
   },
 };
 
-const labelFallback = cssVar("--dashboard-text-muted", "#4A5568");
+const labelFallback = cssVar("--color-text-secondary", cssVar("--dashboard-text-muted", "#4A5568"));
 
 const CustomInput: React.FC<CustomInputProps> = ({
   type,

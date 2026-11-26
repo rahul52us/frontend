@@ -28,6 +28,7 @@ import {
     FiLayers,
     FiPackage,
     FiRefreshCw,
+    FiSend,
     FiShield,
     FiShoppingBag,
     FiShoppingCart,
@@ -480,7 +481,7 @@ const SuperAdminDashboard = observer(() => {
         { label: "Products", icon: FiBox, href: "/dashboard/super-admin/products" },
         { label: "Categories", icon: FiLayers, href: "/dashboard/super-admin/categories" },
         { label: "Offers", icon: FiGift, href: "/dashboard/super-admin/offers" },
-        { label: "Alerts", icon: FiBell, href: "/dashboard/super-admin/notifications" },
+        { label: "Broadcasts", icon: FiSend, href: "/dashboard/super-admin/notifications" },
         { label: "Reviews", icon: FiCheckCircle, href: "/dashboard/super-admin/shops" },
     ];
 

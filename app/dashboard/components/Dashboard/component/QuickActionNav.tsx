@@ -29,8 +29,10 @@ export const QuickActionNav: React.FC<QuickActionNavProps> = React.memo(({
     <Flex
       gap={2}
       overflowX="auto"
-      pb={1}
+      py={1.5}
+      px={1}
       mb={{ base: 3, md: 4 }}
+      align="center"
       sx={{
         scrollbarWidth: "none",
         "&::-webkit-scrollbar": { display: "none" },
@@ -42,7 +44,7 @@ export const QuickActionNav: React.FC<QuickActionNavProps> = React.memo(({
           size="sm"
           leftIcon={<Icon as={action.icon} boxSize={3.5} />}
           variant="outline"
-          borderRadius="full"
+          borderRadius="12px"
           borderColor={borderCol}
           bg={surfaceBg}
           color={textCol}
@@ -52,8 +54,15 @@ export const QuickActionNav: React.FC<QuickActionNavProps> = React.memo(({
           _hover={{
             borderColor: "var(--color-primary, #065F68)",
             color: "var(--color-primary, #065F68)",
-            bg: hoverBg,
+            bg: "var(--color-primary-soft, rgba(6, 95, 104, 0.08))",
+            transform: "translateY(-1px)",
+            boxShadow: "0 2px 8px rgba(6, 95, 104, 0.15)",
           }}
+          _active={{
+            bg: "var(--color-primary-soft, rgba(6, 95, 104, 0.15))",
+            transform: "scale(0.98)",
+          }}
+          transition="all 0.15s ease"
           onClick={() => onNavigate(action.href)}
         >
           {action.label}

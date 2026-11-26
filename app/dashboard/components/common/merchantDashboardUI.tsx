@@ -215,9 +215,19 @@ export const MerchantPageHeader = ({
     <Flex justify="space-between" align="center" gap={3} mb={mb} animation={merchantFadeUp(0)}>
       <HStack spacing={{ base: 2.5, md: 3 }} align="center" minW={0}>
         {icon ? (
-          <Circle size={{ base: "9", md: "12" }} bg={iconBg} flexShrink={0}>
-            <Icon as={icon} boxSize={{ base: 4, md: 6 }} color={iconColor} />
-          </Circle>
+          <Flex
+            w={{ base: "36px", md: "44px" }}
+            h={{ base: "36px", md: "44px" }}
+            borderRadius="12px"
+            align="center"
+            justify="center"
+            bg={iconBg}
+            border="1px solid"
+            borderColor="var(--merchant-border-strong)"
+            flexShrink={0}
+          >
+            <Icon as={icon} boxSize={{ base: 4, md: 5 }} color={iconColor} />
+          </Flex>
         ) : null}
         <Box minW={0}>
           <Heading

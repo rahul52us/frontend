@@ -242,7 +242,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!shouldRender || typeof document === "undefined") {
+    if (!isOpen || typeof document === "undefined") {
       return;
     }
 
@@ -252,10 +252,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [shouldRender]);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (!shouldRender || typeof window === "undefined") {
+    if (!isOpen || typeof window === "undefined") {
       return;
     }
 
@@ -270,7 +270,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [shouldRender, onClose]);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -286,7 +286,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     };
   }, []);
 
-  if (!shouldRender) {
+  if (!isOpen) {
     return null;
   }
 
@@ -1462,14 +1462,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 size="2xl"
                 width="760px"
                 icon={FaBoxOpen}
-                categoryTag={isEdit ? "Edit product" : "New product"}
-                title={isEdit ? "Refine this item" : "Launch a new item"}
+                title={isEdit ? "Edit Product" : "Add Product"}
                 subtitle={
                   isDesktop
-                    ? "All sections stay visible here so you can review everything in one pass."
-                    : `${activeSectionConfig.title} • Step ${
-                        sectionIndex + 1
-                      } of ${FORM_SECTIONS.length}`
+                    ? (isEdit ? "Update inventory details, pricing, and media" : "Enter product details, pricing, and inventory")
+                    : `${activeSectionConfig.title} • Step ${sectionIndex + 1} of ${FORM_SECTIONS.length}`
                 }
                 contentWrapper={Form}
                 contentProps={{ sx: merchantFormSx }}
@@ -1535,14 +1532,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       <HStack spacing={3}>
                         <Button
                           type="button"
-                          h="44px"
+                          h="40px"
                           px={5}
-                          borderRadius="full"
+                          borderRadius="10px"
                           variant="outline"
-                          borderColor={border}
-                          color={text}
-                          bg={surface}
-                          _hover={{ bg: surfaceMuted }}
+                          borderColor={useColorModeValue("red.300", "red.500")}
+                          color={useColorModeValue("red.500", "red.300")}
+                          bg="transparent"
+                          fontWeight="600"
+                          fontSize="sm"
+                          _hover={{
+                            bg: useColorModeValue("red.50", "rgba(239, 68, 68, 0.15)"),
+                            borderColor: useColorModeValue("red.400", "red.400"),
+                            color: useColorModeValue("red.600", "red.200"),
+                          }}
+                          _active={{
+                            bg: useColorModeValue("red.100", "rgba(239, 68, 68, 0.25)"),
+                            transform: "scale(0.98)",
+                          }}
+                          transition="all 0.15s ease"
                           onClick={onClose}
                         >
                           Cancel
@@ -1550,18 +1558,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                         <Button
                           type="button"
-                          h="44px"
+                          h="40px"
                           px={6}
-                          borderRadius="full"
-                          bg={accent}
+                          borderRadius="10px"
+                          bg="var(--color-primary, #065F68)"
                           color="white"
                           fontWeight="700"
+                          fontSize="sm"
+                          boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
                           isLoading={formik.isSubmitting}
                           leftIcon={
                             <Icon as={isEdit ? FaSave : FaPlus} />
                           }
-                          _hover={{ bg: accentStrong }}
-                          _active={{ transform: "scale(0.98)" }}
+                          _hover={{
+                            bg: "var(--color-primary-hover, #044249)",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+                          }}
+                          _active={{
+                            bg: "var(--color-primary-dark, #032b30)",
+                            transform: "scale(0.98)",
+                          }}
+                          transition="all 0.15s ease"
                           onClick={handleSubmitClick}
                         >
                           {isEdit
@@ -1572,18 +1590,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     </Flex>
                   ) : (
                     <VStack align="stretch" spacing={2.5} w="full">
-                      <HStack spacing={2}>
+                      <HStack spacing={3} w="full">
                         <Button
                           type="button"
-                          flex="1"
+                          flex={1}
                           h="40px"
-                          borderRadius="full"
+                          borderRadius="10px"
                           variant="outline"
-                          borderColor={border}
-                          color={text}
-                          bg={surface}
+                          borderColor={sectionIndex === 0 ? useColorModeValue("red.300", "red.500") : border}
+                          color={sectionIndex === 0 ? useColorModeValue("red.500", "red.300") : text}
+                          bg="transparent"
+                          fontWeight="600"
                           fontSize="sm"
-                          _hover={{ bg: surfaceMuted }}
+                          _hover={{
+                            bg: sectionIndex === 0 ? useColorModeValue("red.50", "rgba(239, 68, 68, 0.15)") : surfaceMuted,
+                            borderColor: sectionIndex === 0 ? useColorModeValue("red.400", "red.400") : border,
+                            color: sectionIndex === 0 ? useColorModeValue("red.600", "red.200") : text,
+                          }}
+                          _active={{
+                            bg: sectionIndex === 0 ? useColorModeValue("red.100", "rgba(239, 68, 68, 0.25)") : surfaceMuted,
+                            transform: "scale(0.98)",
+                          }}
+                          transition="all 0.15s ease"
                           onClick={
                             sectionIndex === 0
                               ? onClose
@@ -1597,14 +1625,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
                         <Button
                           type="button"
-                          flex="1"
+                          flex={1}
                           h="40px"
                           px={4}
-                          borderRadius="full"
-                          bg={accent}
+                          borderRadius="10px"
+                          bg="var(--color-primary, #065F68)"
                           color="white"
                           fontSize="sm"
                           fontWeight="700"
+                          boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
                           isLoading={
                             isLastMobileStep
                               ? formik.isSubmitting
@@ -1615,10 +1644,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
                               <FaChevronRight />
                             ) : undefined
                           }
-                          _hover={{ bg: accentStrong }}
+                          _hover={{
+                            bg: "var(--color-primary-hover, #044249)",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+                          }}
                           _active={{
+                            bg: "var(--color-primary-dark, #032b30)",
                             transform: "scale(0.98)",
                           }}
+                          transition="all 0.15s ease"
                           onClick={
                             isLastMobileStep
                               ? handleSubmitClick
@@ -1637,47 +1672,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 }
               >
           {isDesktop ? (
-            <VStack align="stretch" spacing={4}>
-              {FORM_SECTIONS.map((section) => {
+            <VStack align="stretch" spacing={6}>
+              {FORM_SECTIONS.map((section, idx) => {
                 const tone = sectionTone(section.tint);
 
                 return (
                   <Box
                     key={section.id}
-                    borderRadius="26px"
-                    borderWidth="1px"
-                    borderColor={border}
-                    bg={surface}
-                    px={{ base: 4, md: 5 }}
-                    py={{ base: 4, md: 5 }}
-                    boxShadow="0 16px 32px rgba(15, 23, 42, 0.05)"
+                    pt={idx === 0 ? 1 : 5}
+                    borderTopWidth={idx === 0 ? "0px" : "1px"}
+                    borderTopColor={border}
                   >
-                    <HStack align="start" spacing={4} mb={5}>
+                    <HStack align="center" spacing={3} mb={4}>
                       <Center
-                        boxSize="42px"
-                        borderRadius="16px"
+                        boxSize="32px"
+                        borderRadius="10px"
                         bg={tone.bg}
                         color={tone.color}
+                        flexShrink={0}
                       >
                         <Icon
                           as={section.icon}
-                          boxSize={5}
+                          boxSize={4}
                         />
                       </Center>
 
-                      <Box>
+                      <Box minW={0} flex={1}>
                         <Text
-                          fontSize="lg"
+                          fontSize="md"
                           fontWeight="700"
                           color={text}
+                          lineHeight="1.2"
                         >
                           {section.title}
                         </Text>
 
                         <Text
-                          mt={1}
-                          fontSize="sm"
+                          mt={0.5}
+                          fontSize="xs"
                           color={textMuted}
+                          lineHeight="1.3"
                         >
                           {section.subtitle}
                         </Text>
@@ -1695,18 +1729,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
               key={activeSection}
               offsetY="14px"
             >
-              <Box
-                borderRadius="24px"
-                bg={surface}
-                py={4}
-                boxShadow="0 14px 28px rgba(15, 23, 42, 0.06)"
-              >
-                <HStack align="start" spacing={3} mb={5}>
+              <Box py={2}>
+                <HStack align="center" spacing={3} mb={4}>
                   <Center
-                    boxSize="40px"
-                    borderRadius="15px"
+                    boxSize="32px"
+                    borderRadius="10px"
                     bg={activeTone.bg}
                     color={activeTone.color}
+                    flexShrink={0}
                   >
                     <Icon
                       as={activeSectionConfig.icon}
@@ -1714,19 +1744,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     />
                   </Center>
 
-                  <Box>
+                  <Box minW={0} flex={1}>
                     <Text
                       fontSize="md"
                       fontWeight="700"
                       color={text}
+                      lineHeight="1.2"
                     >
                       {activeSectionConfig.title}
                     </Text>
 
                     <Text
-                      mt={1}
-                      fontSize="sm"
+                      mt={0.5}
+                      fontSize="xs"
                       color={textMuted}
+                      lineHeight="1.3"
                     >
                       {activeSectionConfig.subtitle}
                     </Text>

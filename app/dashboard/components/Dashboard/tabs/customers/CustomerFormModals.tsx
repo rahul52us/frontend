@@ -24,6 +24,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import React from "react";
+import { FiUsers, FiX } from "react-icons/fi";
 import BottomSheetDrawer from "../../../../../component/common/Drawer/BottomSheetDrawer";
 import CustomDrawer from "../../../../../component/common/Drawer/CustomDrawer";
 import CustomInput from "../../../../../component/config/component/customInput/CustomInput";
@@ -122,21 +123,6 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
 
     return (
       <VStack spacing={4} align="stretch">
-        <Box
-          p={4}
-          borderRadius="20px"
-          bg={cFormInfoBg}
-          border="1px solid"
-          borderColor={cBorder}
-        >
-          <Text fontSize="sm" fontWeight="800" color={cText}>
-            Quick create
-          </Text>
-          <Text mt={1} fontSize="sm" color={cTextMuted}>
-            Add a name and at least one way to reach this {draftPartyLabelLower}.
-          </Text>
-        </Box>
-
         <CustomInput
           type="text"
           name="fullName"
@@ -158,37 +144,31 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
         />
 
         <FormControl>
-          <FormLabel color={cText} fontWeight="700" mb={2}>
+          <FormLabel color="var(--merchant-text)" fontWeight="700" fontSize="sm" mb={2}>
             Party type
           </FormLabel>
           <HStack
             spacing={1.5}
-            p={1.5}
-            borderRadius="16px"
-            bg={cInputMutedBg}
+            p={1}
+            borderRadius="14px"
+            bg="var(--merchant-surface-alt)"
             border="1px solid"
-            borderColor={cBorder}
+            borderColor="var(--merchant-border-strong)"
           >
             <Button
               flex="1"
-              h="40px"
-              borderRadius="12px"
-              bg={isCustomerActive ? "brand.500" : "transparent"}
-              color={
-                isCustomerActive
-                  ? "white"
-                  : useColorModeValue("gray.600", "gray.300")
-              }
+              h="38px"
+              borderRadius="10px"
+              bg={isCustomerActive ? "var(--color-primary, #065F68)" : "transparent"}
+              color={isCustomerActive ? "white" : "var(--merchant-text-muted)"}
               boxShadow={isCustomerActive ? "0 2px 8px rgba(6, 95, 104, 0.25)" : "none"}
               fontWeight="700"
               fontSize="sm"
               _hover={{
                 bg: isCustomerActive
-                  ? "brand.600"
-                  : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
-                color: isCustomerActive
-                  ? "white"
-                  : useColorModeValue("gray.800", "white"),
+                  ? "var(--color-primary-hover, #044249)"
+                  : "var(--merchant-surface)",
+                color: isCustomerActive ? "white" : "var(--merchant-text)",
               }}
               _active={{ transform: "scale(0.98)" }}
               onClick={() => setFormValues((prev) => ({ ...prev, partyType: "customer" }))}
@@ -197,24 +177,18 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
             </Button>
             <Button
               flex="1"
-              h="40px"
-              borderRadius="12px"
-              bg={isSupplierActive ? "brand.500" : "transparent"}
-              color={
-                isSupplierActive
-                  ? "white"
-                  : useColorModeValue("gray.600", "gray.300")
-              }
+              h="38px"
+              borderRadius="10px"
+              bg={isSupplierActive ? "var(--color-primary, #065F68)" : "transparent"}
+              color={isSupplierActive ? "white" : "var(--merchant-text-muted)"}
               boxShadow={isSupplierActive ? "0 2px 8px rgba(6, 95, 104, 0.25)" : "none"}
               fontWeight="700"
               fontSize="sm"
               _hover={{
                 bg: isSupplierActive
-                  ? "brand.600"
-                  : useColorModeValue("blackAlpha.50", "whiteAlpha.100"),
-                color: isSupplierActive
-                  ? "white"
-                  : useColorModeValue("gray.800", "white"),
+                  ? "var(--color-primary-hover, #044249)"
+                  : "var(--merchant-surface)",
+                color: isSupplierActive ? "white" : "var(--merchant-text)",
               }}
               _active={{ transform: "scale(0.98)" }}
               onClick={() => setFormValues((prev) => ({ ...prev, partyType: "supplier" }))}
@@ -308,12 +282,13 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
           variant="ghost"
           justifyContent="flex-start"
           px={0}
-          color={cAccentStrong}
-          fontWeight="800"
-          _hover={{ bg: "transparent", color: cAccent }}
+          color="var(--color-primary, #065F68)"
+          fontWeight="700"
+          fontSize="xs"
+          _hover={{ bg: "transparent", color: "var(--color-primary-hover, #044249)" }}
           onClick={() => setShowContactExtraFields((prev) => !prev)}
         >
-          {showContactExtraFields ? "Hide address & notes" : "Add address & notes"}
+          {showContactExtraFields ? "– Hide address & notes" : "+ Add address & notes"}
         </Button>
 
         {showContactExtraFields ? (
@@ -578,87 +553,75 @@ export const CustomerFormModals: React.FC<CustomerFormModalsProps> = ({
       </Modal>
 
       {/* Add / Edit Customer Drawer */}
-      {useCompactBuyerView ? (
-        <BottomSheetDrawer
-          isOpen={isOpen}
-          onClose={onClose}
-          title={`Add ${partySingularLabel}`}
-          overlayBg="blackAlpha.600"
-          contentProps={{
-            bg: cSurface,
-            borderTopRadius: "28px",
-          }}
-          headerProps={{
-            borderBottomColor: cBorder,
-            px: 5,
-            py: 4,
-          }}
-          bodyProps={{
-            px: 4,
-            py: 4,
-          }}
-          footerProps={{
-            borderTopColor: cBorder,
-            px: 4,
-            py: 4,
-            flexDirection: "row",
-          }}
-          footer={
-            <>
-              <Button variant="ghost" onClick={onClose} minH="52px" borderRadius="16px">
-                Cancel
-              </Button>
-              <Button
-                onClick={onSubmitBuyer}
-                isLoading={submitting}
-                flex="1"
-                minH="52px"
-                borderRadius="16px"
-                bg="brand.500"
-                color="white"
-                boxShadow="0 14px 28px rgba(6, 95, 104, 0.24)"
-                _hover={{ bg: "brand.600" }}
-              >
-                Save {partySingularLabel}
-              </Button>
-            </>
-          }
-        >
-          {renderBuyerFormFields(true)}
-        </BottomSheetDrawer>
-      ) : (
-        <CustomDrawer
-          isOpen={isOpen}
-          onClose={onClose}
-          title={`Add ${partySingularLabel}`}
-          subtitle={`Create a new ${partySingularLabel.toLowerCase()} record`}
-          size="md"
-          showDivider={true}
-          bodyProps={{
-            px: { base: 4, md: 5 },
-            py: 4,
-            pb: 8,
-          }}
-          footer={
-            <HStack spacing={3} w="full" justify="flex-end">
-              <Button variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={onSubmitBuyer}
-                isLoading={submitting}
-                colorScheme="brand"
-                px={6}
-                fontWeight="800"
-              >
-                Save {partySingularLabel}
-              </Button>
-            </HStack>
-          }
-        >
-          {renderBuyerFormFields(false)}
-        </CustomDrawer>
-      )}
+      <CustomDrawer
+        isOpen={isOpen}
+        onClose={onClose}
+        icon={FiUsers}
+        title={`Add ${partySingularLabel}`}
+        subtitle={`Enter ${partySingularLabel.toLowerCase()} contact details`}
+        size="lg"
+        width="620px"
+        showDivider={true}
+        bodyProps={{
+          px: { base: 4, md: 6 },
+          py: { base: 4, md: 5 },
+          pb: 4,
+        }}
+        footer={
+          <HStack spacing={3} w="full">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              flex={1}
+              h="40px"
+              borderRadius="10px"
+              fontWeight="600"
+              fontSize="sm"
+              borderColor={useColorModeValue("red.300", "red.500")}
+              color={useColorModeValue("red.500", "red.300")}
+              bg="transparent"
+              _hover={{
+                bg: useColorModeValue("red.50", "rgba(239, 68, 68, 0.15)"),
+                borderColor: useColorModeValue("red.400", "red.400"),
+                color: useColorModeValue("red.600", "red.200"),
+              }}
+              _active={{
+                bg: useColorModeValue("red.100", "rgba(239, 68, 68, 0.25)"),
+                transform: "scale(0.98)",
+              }}
+              transition="all 0.15s ease"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={onSubmitBuyer}
+              isLoading={submitting}
+              flex={1}
+              h="40px"
+              bg="var(--color-primary, #065F68)"
+              color="white"
+              _hover={{
+                bg: "var(--color-primary-hover, #044249)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 12px rgba(6, 95, 104, 0.3)",
+              }}
+              _active={{
+                bg: "var(--color-primary-dark, #032b30)",
+                transform: "scale(0.98)",
+              }}
+              borderRadius="10px"
+              fontWeight="700"
+              fontSize="sm"
+              boxShadow="0 2px 6px rgba(6, 95, 104, 0.2)"
+              transition="all 0.15s ease"
+            >
+              Save {partySingularLabel}
+            </Button>
+          </HStack>
+        }
+      >
+        {renderBuyerFormFields(false)}
+      </CustomDrawer>
     </>
   );
 };

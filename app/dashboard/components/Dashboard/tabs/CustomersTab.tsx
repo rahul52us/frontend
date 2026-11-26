@@ -1645,123 +1645,61 @@ const CustomersTab: React.FC = observer(() => {
 
   return (
     <>
-      {useCompactLedgerView ? (
-        <Box
-          pt={{ base: 2, md: 4 }}
-          pb={0}
-          bg={showMobileBuyerManagement ? mobileLedgerPalette.page : cPage}
-        >
-          {selectedLedgerBuyer ? (
-            <CustomerDetailView
-              selectedLedgerBuyer={selectedLedgerBuyer}
-              ledgerEntries={ledgerEntries}
-              ledgerSummary={ledgerSummary}
-              ledgerLoading={ledgerLoading}
-              ledgerTotal={ledgerTotal}
-              ledgerPage={ledgerPage}
-              ledgerTotalPages={ledgerTotalPages}
-              isCompact={true}
-              invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
-              onBack={closeLedgerView}
-              onDeleteBuyer={openDeleteModal}
-              onRecordPayment={() => {
-                resetLedgerForm();
-                onLedgerEntryOpen();
-              }}
-              onAddSaleRecord={onSaleRecordOpen}
-              onPayEntry={openPayModal}
-              onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
-              onDownloadLedgerInvoice={handleDownloadLedgerEntryInvoice}
-              onLedgerPageChange={(newPage) => {
-                setLedgerPage(newPage);
-                fetchLedgerEntries(selectedLedgerBuyer._id, newPage);
-              }}
-            />
-          ) : (
-            <CustomerListView
-              buyers={buyers}
-              filteredBuyers={filteredBuyers}
-              total={total}
-              page={page}
-              totalPages={totalPages}
-              loading={loading}
-              search={search}
-              setSearch={setSearch}
-              activePartyType={activePartyType}
-              setActivePartyType={setActivePartyType}
-              balanceFilter={balanceFilter}
-              setBalanceFilter={setBalanceFilter}
-              buyerFilterOptions={buyerFilterOptions}
-              buyerOverview={buyerOverview}
-              isCompact={true}
-              canUseDeviceContactImport={canUseDeviceContactImport}
-              onOpenAddBuyer={openManualBuyerModal}
-              onOpenImport={onImportOpen}
-              onSelectBuyer={openLedgerView}
-              onPageChange={(newPage) => {
-                setPage(newPage);
-                fetchBuyers(newPage, search);
-              }}
-            />
-          )}
-        </Box>
-      ) : (
-        <MerchantPageShell>
-          {selectedLedgerBuyer ? (
-            <CustomerDetailView
-              selectedLedgerBuyer={selectedLedgerBuyer}
-              ledgerEntries={ledgerEntries}
-              ledgerSummary={ledgerSummary}
-              ledgerLoading={ledgerLoading}
-              ledgerTotal={ledgerTotal}
-              ledgerPage={ledgerPage}
-              ledgerTotalPages={ledgerTotalPages}
-              isCompact={false}
-              invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
-              onBack={closeLedgerView}
-              onDeleteBuyer={openDeleteModal}
-              onRecordPayment={() => {
-                resetLedgerForm();
-                onLedgerEntryOpen();
-              }}
-              onAddSaleRecord={onSaleRecordOpen}
-              onPayEntry={openPayModal}
-              onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
-              onDownloadLedgerInvoice={handleDownloadLedgerEntryInvoice}
-              onLedgerPageChange={(newPage) => {
-                setLedgerPage(newPage);
-                fetchLedgerEntries(selectedLedgerBuyer._id, newPage);
-              }}
-            />
-          ) : (
-            <CustomerListView
-              buyers={buyers}
-              filteredBuyers={filteredBuyers}
-              total={total}
-              page={page}
-              totalPages={totalPages}
-              loading={loading}
-              search={search}
-              setSearch={setSearch}
-              activePartyType={activePartyType}
-              setActivePartyType={setActivePartyType}
-              balanceFilter={balanceFilter}
-              setBalanceFilter={setBalanceFilter}
-              buyerFilterOptions={buyerFilterOptions}
-              buyerOverview={buyerOverview}
-              isCompact={false}
-              canUseDeviceContactImport={canUseDeviceContactImport}
-              onOpenAddBuyer={openManualBuyerModal}
-              onOpenImport={onImportOpen}
-              onSelectBuyer={openLedgerView}
-              onPageChange={(newPage) => {
-                setPage(newPage);
-                fetchBuyers(newPage, search);
-              }}
-            />
-          )}
-        </MerchantPageShell>
-      )}
+      <MerchantPageShell>
+        {selectedLedgerBuyer ? (
+          <CustomerDetailView
+            selectedLedgerBuyer={selectedLedgerBuyer}
+            ledgerEntries={ledgerEntries}
+            ledgerSummary={ledgerSummary}
+            ledgerLoading={ledgerLoading}
+            ledgerTotal={ledgerTotal}
+            ledgerPage={ledgerPage}
+            ledgerTotalPages={ledgerTotalPages}
+            isCompact={useCompactLedgerView}
+            invoiceDownloadingLedgerEntryId={invoiceDownloadingLedgerEntryId}
+            onBack={closeLedgerView}
+            onDeleteBuyer={openDeleteModal}
+            onRecordPayment={() => {
+              resetLedgerForm();
+              onLedgerEntryOpen();
+            }}
+            onAddSaleRecord={onSaleRecordOpen}
+            onPayEntry={openPayModal}
+            onOpenSaleDetailsFromEntry={openSaleDetailsFromLedgerEntry}
+            onDownloadLedgerInvoice={handleDownloadLedgerEntryInvoice}
+            onLedgerPageChange={(newPage) => {
+              setLedgerPage(newPage);
+              fetchLedgerEntries(selectedLedgerBuyer._id, newPage);
+            }}
+          />
+        ) : (
+          <CustomerListView
+            buyers={buyers}
+            filteredBuyers={filteredBuyers}
+            total={total}
+            page={page}
+            totalPages={totalPages}
+            loading={loading}
+            search={search}
+            setSearch={setSearch}
+            activePartyType={activePartyType}
+            setActivePartyType={setActivePartyType}
+            balanceFilter={balanceFilter}
+            setBalanceFilter={setBalanceFilter}
+            buyerFilterOptions={buyerFilterOptions}
+            buyerOverview={buyerOverview}
+            isCompact={useCompactBuyerView}
+            canUseDeviceContactImport={canUseDeviceContactImport}
+            onOpenAddBuyer={openManualBuyerModal}
+            onOpenImport={onImportOpen}
+            onSelectBuyer={openLedgerView}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              fetchBuyers(newPage, search);
+            }}
+          />
+        )}
+      </MerchantPageShell>
 
       {/* Sale Details Modal / Drawer */}
       <SaleDetailsModal
@@ -1782,34 +1720,36 @@ const CustomersTab: React.FC = observer(() => {
       />
 
       {/* Customer Form & Import Modals */}
-      <CustomerFormModals
-        isOpen={isOpen}
-        onClose={closeBuyerModal}
-        isImportOpen={isImportOpen}
-        onCloseImport={closeImportModal}
-        isContactReviewOpen={isContactReviewOpen}
-        onCloseContactReview={closeContactReviewModal}
-        isBuyerSuccessOpen={isBuyerSuccessOpen}
-        onCloseBuyerSuccess={closeBuyerSuccessModal}
-        lastCreatedBuyer={lastCreatedBuyer}
-        formValues={formValues}
-        setFormValues={setFormValues}
-        buyerFormErrors={buyerFormErrors}
-        clearBuyerFormErrors={clearBuyerFormErrors}
-        showContactExtraFields={showContactExtraFields}
-        setShowContactExtraFields={setShowContactExtraFields}
-        submitting={submitting}
-        isImportingContacts={isImportingContacts}
-        importDefaultTags={importDefaultTags}
-        setImportDefaultTags={setImportDefaultTags}
-        canUseDeviceContactImport={canUseDeviceContactImport}
-        useCompactBuyerView={useCompactBuyerView}
-        activePartyType={activePartyType}
-        onSubmitBuyer={handleCreateBuyer}
-        onPickSingleContact={handlePickSingleContact}
-        onImportFromDevice={handleImportFromDevice}
-        onOpenLedgerFromSuccess={openLedgerView}
-      />
+      {isOpen && (
+        <CustomerFormModals
+          isOpen={isOpen}
+          onClose={closeBuyerModal}
+          isImportOpen={isImportOpen}
+          onCloseImport={closeImportModal}
+          isContactReviewOpen={isContactReviewOpen}
+          onCloseContactReview={closeContactReviewModal}
+          isBuyerSuccessOpen={isBuyerSuccessOpen}
+          onCloseBuyerSuccess={closeBuyerSuccessModal}
+          lastCreatedBuyer={lastCreatedBuyer}
+          formValues={formValues}
+          setFormValues={setFormValues}
+          buyerFormErrors={buyerFormErrors}
+          clearBuyerFormErrors={clearBuyerFormErrors}
+          showContactExtraFields={showContactExtraFields}
+          setShowContactExtraFields={setShowContactExtraFields}
+          submitting={submitting}
+          isImportingContacts={isImportingContacts}
+          importDefaultTags={importDefaultTags}
+          setImportDefaultTags={setImportDefaultTags}
+          canUseDeviceContactImport={canUseDeviceContactImport}
+          useCompactBuyerView={useCompactBuyerView}
+          activePartyType={activePartyType}
+          onSubmitBuyer={handleCreateBuyer}
+          onPickSingleContact={handlePickSingleContact}
+          onImportFromDevice={handleImportFromDevice}
+          onOpenLedgerFromSuccess={openLedgerView}
+        />
+      )}
 
       {/* Payment Modal */}
       <PaymentModal

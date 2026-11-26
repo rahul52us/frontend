@@ -889,21 +889,23 @@ const ProductsPage = observer(() => {
         onClick={handleOpenCreate}
       />
 
-      {/* Product Form Modal/Drawer */}
-      <ProductForm
-        isOpen={isOpen}
-        onClose={() => {
-          onClose();
-          setSelectedProductId(null);
-        }}
-        initialValues={initialValues}
-        validationSchema={ProductSchema}
-        onSubmit={handleSubmit}
-        categories={sellerProductCategories}
-        offersList={offerStore.offers}
-        products={products}
-        isEdit={Boolean(selectedProductId)}
-      />
+      {/* Product Form Modal/Drawer - only mounted when open to prevent DOM overhead and scroll leaks */}
+      {isOpen && (
+        <ProductForm
+          isOpen={isOpen}
+          onClose={() => {
+            onClose();
+            setSelectedProductId(null);
+          }}
+          initialValues={initialValues}
+          validationSchema={ProductSchema}
+          onSubmit={handleSubmit}
+          categories={sellerProductCategories}
+          offersList={offerStore.offers}
+          products={products}
+          isEdit={Boolean(selectedProductId)}
+        />
+      )}
 
       {/* Confirmation Modal for Delete */}
       <ConfirmationModal
@@ -918,19 +920,22 @@ const ProductsPage = observer(() => {
       />
 
       {/* View Drawer */}
-      <Drawer
-        isOpen={Boolean(isDesktop && detailProduct)}
-        placement="right"
-        onClose={() => setDetailProduct(null)}
-        size="xl"
-      >
-        <DrawerOverlay bg="rgba(15, 23, 42, 0.28)" backdropFilter="blur(10px)" />
-        <DrawerContent maxW="720px" bg="transparent" boxShadow="none">
-          <DrawerBody p={0}>
-            {detailProduct ? <ProductDetailView product={detailProduct} onBack={() => setDetailProduct(null)} /> : null}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+      {Boolean(isDesktop && detailProduct) && (
+        <Drawer
+          isOpen={Boolean(isDesktop && detailProduct)}
+          placement="right"
+          onClose={() => setDetailProduct(null)}
+          size="xl"
+          blockScrollOnMount={false}
+        >
+          <DrawerOverlay bg="rgba(15, 23, 42, 0.28)" backdropFilter="blur(10px)" />
+          <DrawerContent maxW="720px" bg="transparent" boxShadow="none">
+            <DrawerBody p={0}>
+              {detailProduct ? <ProductDetailView product={detailProduct} onBack={() => setDetailProduct(null)} /> : null}
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
+      )}
     </MerchantPageShell>
   );
 });

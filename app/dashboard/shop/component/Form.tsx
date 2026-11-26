@@ -1368,7 +1368,6 @@ const ShopForm = observer(() => {
   return (
     <Box minH="100%" bg="transparent" sx={merchantFormSx}>
       <Box
-        maxW="1500px"
         mx="auto"
         px={{ base: 3, sm: 4, md: 5 }}
         py={{ base: 2, md: 3 }}

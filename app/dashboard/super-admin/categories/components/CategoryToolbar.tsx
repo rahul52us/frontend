@@ -115,14 +115,18 @@ export const CategoryToolbar: React.FC<CategoryToolbarProps> = ({
             isLoading={isSeeding}
             loadingText="Seeding..."
             variant="outline"
-            colorScheme="blue"
             size="sm"
             h="36px"
             px={3.5}
             borderRadius="10px"
             fontSize="xs"
             fontWeight="600"
-            _hover={{ bg: "blue.50", borderColor: "blue.400" }}
+            borderColor="var(--color-primary, #065F68)"
+            color="var(--color-primary, #065F68)"
+            _hover={{
+              bg: "var(--color-primary-light, #e6f4f5)",
+              borderColor: "var(--color-primary-hover, #055159)",
+            }}
           >
             1-Click Load Full Catalog
           </Button>

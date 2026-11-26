@@ -78,6 +78,33 @@
   /* Global Skeleton Colors (Light Mode) */
   --skeleton-start: #EDF2F7;
   --skeleton-end: #CBD5E1;
+
+  /* Form & Dashboard Variables (Light Mode) */
+  --dashboard-input-bg: var(--color-input-bg, #FFFFFF);
+  --dashboard-input-border: var(--color-input-border, #CBD5E1);
+  --dashboard-input-text: var(--color-text-primary, #0F172A);
+  --dashboard-input-placeholder: var(--color-input-placeholder, #94A3B8);
+  --dashboard-surface: var(--color-surface, #FFFFFF);
+  --dashboard-surface-alt: var(--color-surface-alt, #F8FAFC);
+  --dashboard-surface-soft: var(--color-surface-soft, #EDF2F7);
+  --dashboard-border: var(--color-border, #E2E8F0);
+  --dashboard-border-strong: var(--color-border-strong, #CBD5E1);
+  --dashboard-text: var(--color-text-primary, #0F172A);
+  --dashboard-text-muted: var(--color-text-muted, #64748B);
+  --dashboard-checkbox-bg: #FFFFFF;
+  --dashboard-checkbox-border: #CBD5E1;
+  --dashboard-danger: var(--color-error, #EF4444);
+
+  /* Merchant Tokens (Light Mode) */
+  --merchant-border: var(--color-border, #E2E8F0);
+  --merchant-border-strong: var(--color-border-strong, #CBD5E1);
+  --merchant-surface: var(--color-surface, #FFFFFF);
+  --merchant-surface-alt: var(--color-surface-alt, #F8FAFC);
+  --merchant-surface-soft: var(--color-surface-soft, #EDF2F7);
+  --merchant-text: var(--color-text-primary, #0F172A);
+  --merchant-text-muted: var(--color-text-muted, #64748B);
+  --merchant-accent: var(--color-primary, #065F68);
+  --merchant-accent-strong: var(--color-primary-hover, #055159);
 }
 
 [data-theme="dark"],
@@ -152,6 +179,33 @@ body.chakra-ui-dark {
   --color-info: #60A5FA;
   --color-info-soft: rgba(96, 165, 250, 0.14);
   --color-info-border: rgba(96, 165, 250, 0.28);
+
+  /* Form & Dashboard Variables (Dark Mode) */
+  --dashboard-input-bg: var(--color-input-bg, #0B1120);
+  --dashboard-input-border: var(--color-input-border, #253A5E);
+  --dashboard-input-text: var(--color-text-primary, #F8FAFC);
+  --dashboard-input-placeholder: var(--color-input-placeholder, #5A7FA8);
+  --dashboard-surface: var(--color-surface, #111C30);
+  --dashboard-surface-alt: var(--color-surface-alt, #15223A);
+  --dashboard-surface-soft: var(--color-surface-soft, #1B2A47);
+  --dashboard-border: var(--color-border, rgba(255, 255, 255, 0.10));
+  --dashboard-border-strong: var(--color-border-strong, #253A5E);
+  --dashboard-text: var(--color-text-primary, #F8FAFC);
+  --dashboard-text-muted: var(--color-text-muted, #8AAAC8);
+  --dashboard-checkbox-bg: #0B1120;
+  --dashboard-checkbox-border: #253A5E;
+  --dashboard-danger: var(--color-error, #F87171);
+
+  /* Merchant Tokens (Dark Mode) */
+  --merchant-border: var(--color-border, rgba(255, 255, 255, 0.10));
+  --merchant-border-strong: var(--color-border-strong, #253A5E);
+  --merchant-surface: var(--color-surface, #111C30);
+  --merchant-surface-alt: var(--color-surface-alt, #15223A);
+  --merchant-surface-soft: var(--color-surface-soft, #1B2A47);
+  --merchant-text: var(--color-text-primary, #F8FAFC);
+  --merchant-text-muted: var(--color-text-muted, #8AAAC8);
+  --merchant-accent: var(--color-primary, #065F68);
+  --merchant-accent-strong: var(--color-primary-hover, #12828e);
 }
 
 html,
