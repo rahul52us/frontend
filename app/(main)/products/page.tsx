@@ -39,37 +39,6 @@ const BentoGridSection = dynamic(
   }
 );
 
-// Lazy-render on viewport intersection helper
-const LazySection = ({ children, fallbackHeight = "300px" }: { children: ReactNode; fallbackHeight?: string }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (isVisible) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px 0px" } // Preload 300px before scrolling into view
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isVisible]);
-
-  return (
-    <div ref={containerRef}>
-      {isVisible ? children : <Skeleton height={fallbackHeight} borderRadius="24px" my={4} />}
-    </div>
-  );
-};
-
 // Backward-compatibility: Redirect any legacy `/products?search=...` to `/search?q=...`
 const SearchRedirectWatcher = memo(() => {
   const router = useRouter();
@@ -121,23 +90,15 @@ const Page = memo(
           </Box>
         </Flex>
 
-        {/* Below the fold sections (Mount only when scrolled into viewport) */}
-        <LazySection fallbackHeight="350px">
-          <MapComponent />
-        </LazySection>
-        <LazySection fallbackHeight="280px">
-          <IndianStateFilter />
-        </LazySection>
+        {/* Below the fold sections (Code-split into isolated bundles) */}
+        <MapComponent />
+        <IndianStateFilter />
 
         <Box mb={{ base: 4, md: 6 }}>
-          <LazySection fallbackHeight="320px">
-            <ProductBanner />
-          </LazySection>
+          <ProductBanner />
         </Box>
 
-        <LazySection fallbackHeight="400px">
-          <BentoGridSection />
-        </LazySection>
+        <BentoGridSection />
       </Box>
     );
   })

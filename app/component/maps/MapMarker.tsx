@@ -63,6 +63,11 @@ type NearbyShop = {
   _id?: string;
   name?: string;
   description?: string;
+  coordinates?: any;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
   location?: {
     coordinates?: any;
     address?: string;
@@ -258,7 +263,8 @@ const MapComponent = () => {
 
         const normalized = apiShops
           .map((shop, idx) => {
-            const point = normalizeCoordinates(shop?.location?.coordinates);
+            const rawCoords = shop?.coordinates || shop?.location?.coordinates;
+            const point = normalizeCoordinates(rawCoords);
             if (!point) return null;
             const seed = getStableSeed(shop._id || shop.name || String(idx));
             const fallbackRating = (4.1 + (seed % 9) * 0.1).toFixed(1);
