@@ -246,34 +246,9 @@ const StateFilter = observer(() => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [isStatesLoading, setIsStatesLoading] = useState<boolean>(true);
+  const [isStatesLoading, setIsStatesLoading] = useState<boolean>(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Load states from API, fallback cleanly to MOCK_STATES
-  useEffect(() => {
-    let isMounted = true;
-    const fetchStates = async () => {
-      try {
-        const response = await fetch('/api/states');
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted && data?.status === 'success' && Array.isArray(data.data) && data.data.length > 0) {
-            setStates(data.data);
-            setSelectedState(data.data[0]);
-          }
-        }
-      } catch (error) {
-        console.warn('Using fallback states list:', error);
-      } finally {
-        if (isMounted) setIsStatesLoading(false);
-      }
-    };
-    fetchStates();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Single unified fetch function with in-memory caching
   const fetchProductsForState = useCallback(
@@ -299,7 +274,7 @@ const StateFilter = observer(() => {
           page: 1,
           limit: 12,
         };
-        const response = await shopStore.getAllProducts(payload, true);
+        const response = await shopStore.getAllProducts(payload, false);
         if (abortController.signal.aborted) return;
 
         let productList: any[] = [];

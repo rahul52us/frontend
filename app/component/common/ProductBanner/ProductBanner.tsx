@@ -107,7 +107,7 @@ const ProductBanner = observer(() => {
         ...(searchQuery.trim() && { search: searchQuery.trim() }),
       };
 
-      const response = await shopStore.getAllProducts(payload, true);
+      const response = await shopStore.getAllProducts(payload, false);
       let productList: any[] = [];
 
       if (response?.status === 'success') {

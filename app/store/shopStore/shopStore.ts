@@ -11,6 +11,9 @@ class ShopStore {
   shopsCache: any = null;
   lastShopsPayload: string | null = null;
   allShopProductsCache: any = null;
+  private inFlightProductsPromise: Promise<any> | null = null;
+  private inFlightShopsPromise: Promise<any> | null = null;
+  private inFlightAllShopProductsPromise: Promise<any> | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -78,14 +81,21 @@ class ShopStore {
     if (!forceRefresh && this.allShopProductsCache) {
       return this.allShopProductsCache;
     }
-    try {
-      const response = await axios.get(`/product/allproducts`);
-      this.allShopProductsCache = response.data;
-      return response.data;
-    } catch (err: any) {
-      return Promise.reject(err?.response?.data || err.message);
-    } finally {
+    if (!forceRefresh && this.inFlightAllShopProductsPromise) {
+      return this.inFlightAllShopProductsPromise;
     }
+    this.inFlightAllShopProductsPromise = (async () => {
+      try {
+        const response = await axios.get(`/product/allproducts`);
+        this.allShopProductsCache = response.data;
+        return response.data;
+      } catch (err: any) {
+        return Promise.reject(err?.response?.data || err.message);
+      } finally {
+        this.inFlightAllShopProductsPromise = null;
+      }
+    })();
+    return this.inFlightAllShopProductsPromise;
   };
 
   getProductById = async (id: string) => {
@@ -180,14 +190,24 @@ class ShopStore {
       return this.productsCache;
     }
 
-    try {
-      const response = await axios.post(`/product`, sendData);
-      this.productsCache = response.data;
-      this.lastProductsPayload = currentPayload;
-      return response.data;
-    } catch (err: any) {
-      return Promise.reject(err?.response?.data || err.message);
+    if (!forceRefresh && this.inFlightProductsPromise && this.lastProductsPayload === currentPayload) {
+      return this.inFlightProductsPromise;
     }
+
+    this.lastProductsPayload = currentPayload;
+    this.inFlightProductsPromise = (async () => {
+      try {
+        const response = await axios.post(`/product`, sendData);
+        this.productsCache = response.data;
+        return response.data;
+      } catch (err: any) {
+        return Promise.reject(err?.response?.data || err.message);
+      } finally {
+        this.inFlightProductsPromise = null;
+      }
+    })();
+
+    return this.inFlightProductsPromise;
   };
 
 }

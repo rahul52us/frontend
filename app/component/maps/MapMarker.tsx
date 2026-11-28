@@ -328,12 +328,6 @@ const MapComponent = () => {
     requestCurrentLocation();
   }, [requestCurrentLocation]);
 
-  useEffect(() => {
-    if (userLocation) {
-      fetchShops(userLocation, radiusKm);
-    }
-  }, [radiusKm, userLocation, fetchShops]);
-
   // Client-side instant search & quick filters
   const filteredShops = useMemo(() => {
     return shops.filter((shop) => {

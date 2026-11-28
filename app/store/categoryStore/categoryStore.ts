@@ -17,6 +17,8 @@ class CategoryStore {
     limit: number = 10;
     categoriesCache: any = null;
     lastCategoriesPayload: string | null = null;
+    private inFlightCategoriesPromise: Promise<any> | null = null;
+    private inFlightTopPromise: Promise<any> | null = null;
 
     constructor() {
         makeAutoObservable(this);
@@ -44,46 +46,56 @@ class CategoryStore {
             return this.categoriesCache;
         }
 
+        // Deduplicate simultaneous identical requests
+        if (!forceRefresh && this.inFlightCategoriesPromise && this.lastCategoriesPayload === currentPayload) {
+            return this.inFlightCategoriesPromise;
+        }
+
         if (isPaginated) {
             this.tableLoading = true;
         } else {
             this.loading = true;
         }
 
-        try {
-            const response = await axios.get("/category", { params });
-            runInAction(() => {
-                if (response.data.status === "success") {
-                    if (isPaginated) {
-                        this.tableCategories = response.data.data;
-                    } else {
-                        this.categories = response.data.data;
+        this.lastCategoriesPayload = currentPayload;
+        this.inFlightCategoriesPromise = (async () => {
+            try {
+                const response = await axios.get("/category", { params });
+                runInAction(() => {
+                    if (response.data.status === "success") {
+                        if (isPaginated) {
+                            this.tableCategories = response.data.data;
+                        } else {
+                            this.categories = response.data.data;
+                        }
+                        this.totalCategories = response.data.pagination?.totalCategories ?? response.data.data.length;
+                        this.activeCategories = response.data.stats?.activeCategories ?? response.data.data.filter((c: any) => c.isActive).length;
+                        this.rootCategories = response.data.stats?.rootCategories ?? response.data.data.filter((c: any) => !c.parent).length;
+                        this.filterReadyCategories = response.data.stats?.filterReadyCategories ?? response.data.data.filter((c: any) => (c.filterConfig || []).length > 0).length;
+                        this.currentPage = response.data.pagination?.currentPage ?? (params.page ? Number(params.page) : 1);
+                        this.totalPages = response.data.pagination?.totalPages ?? 1;
+                        this.limit = response.data.pagination?.limit ?? (params.limit ? Number(params.limit) : 10);
+                        this.categoriesCache = response.data;
                     }
-                    this.totalCategories = response.data.pagination?.totalCategories ?? response.data.data.length;
-                    this.activeCategories = response.data.stats?.activeCategories ?? response.data.data.filter((c: any) => c.isActive).length;
-                    this.rootCategories = response.data.stats?.rootCategories ?? response.data.data.filter((c: any) => !c.parent).length;
-                    this.filterReadyCategories = response.data.stats?.filterReadyCategories ?? response.data.data.filter((c: any) => (c.filterConfig || []).length > 0).length;
-                    this.currentPage = response.data.pagination?.currentPage ?? (params.page ? Number(params.page) : 1);
-                    this.totalPages = response.data.pagination?.totalPages ?? 1;
-                    this.limit = response.data.pagination?.limit ?? (params.limit ? Number(params.limit) : 10);
-                    this.categoriesCache = response.data;
-                    this.lastCategoriesPayload = currentPayload;
-                }
-            });
-            return response.data;
-        } catch (error: any) {
-            // eslint-disable-next-line no-console
-            console.error("Error fetching categories:", error);
-            return error.response?.data || { status: "error", message: "Failed to fetch categories" };
-        } finally {
-            runInAction(() => {
-                if (isPaginated) {
-                    this.tableLoading = false;
-                } else {
-                    this.loading = false;
-                }
-            });
-        }
+                });
+                return response.data;
+            } catch (error: any) {
+                // eslint-disable-next-line no-console
+                console.error("Error fetching categories:", error);
+                return error.response?.data || { status: "error", message: "Failed to fetch categories" };
+            } finally {
+                runInAction(() => {
+                    if (isPaginated) {
+                        this.tableLoading = false;
+                    } else {
+                        this.loading = false;
+                    }
+                });
+                this.inFlightCategoriesPromise = null;
+            }
+        })();
+
+        return this.inFlightCategoriesPromise;
     };
 
     createCategory = async (data: FormData) => {
@@ -140,29 +152,38 @@ class CategoryStore {
         }
     };
 
-    getTopCategories = async (limit: number = 10) => {
-        if (this.topCategories.length >= limit) {
+    getTopCategories = async (limit: number = 10, forceRefresh: boolean = false) => {
+        if (!forceRefresh && this.topCategories.length >= limit) {
             return { status: "success", data: this.topCategories.slice(0, limit) };
         }
 
-        this.topLoading = true;
-        try {
-            const response = await axios.get("/category/top", { params: { limit } });
-            runInAction(() => {
-                if (response.data.status === "success") {
-                    this.topCategories = response.data.data;
-                }
-            });
-            return response.data;
-        } catch (error: any) {
-            // eslint-disable-next-line no-console
-            console.error("Error fetching top categories:", error);
-            return error.response?.data || { status: "error", message: "Failed to fetch top categories" };
-        } finally {
-            runInAction(() => {
-                this.topLoading = false;
-            });
+        if (!forceRefresh && this.inFlightTopPromise) {
+            return this.inFlightTopPromise;
         }
+
+        this.topLoading = true;
+        this.inFlightTopPromise = (async () => {
+            try {
+                const response = await axios.get("/category/top", { params: { limit } });
+                runInAction(() => {
+                    if (response.data.status === "success") {
+                        this.topCategories = response.data.data;
+                    }
+                });
+                return response.data;
+            } catch (error: any) {
+                // eslint-disable-next-line no-console
+                console.error("Error fetching top categories:", error);
+                return error.response?.data || { status: "error", message: "Failed to fetch top categories" };
+            } finally {
+                runInAction(() => {
+                    this.topLoading = false;
+                });
+                this.inFlightTopPromise = null;
+            }
+        })();
+
+        return this.inFlightTopPromise;
     };
 
     searchRootCategories = async (search: string = "", page: number = 1, limit: number = 20) => {

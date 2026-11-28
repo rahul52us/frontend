@@ -133,6 +133,7 @@ export const SearchClient = observer(() => {
           search: searchTerm,
           filters: compactAdvancedFilters(advancedFilters),
           sort: sortBy !== "relevance" ? sortBy : undefined,
+          includeFacets: true,
         });
 
         const payload = res?.data || {};
